@@ -1,2 +1,3 @@
 [MASTER]
 ignore=manage.py
+ignore-paths=cosmae/migrations
