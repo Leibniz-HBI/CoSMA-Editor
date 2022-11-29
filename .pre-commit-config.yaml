@@ -17,6 +17,7 @@ repos:
         entry: poetry run black
         types: ['python']
         language: system
+        exclude: ^ui/
 # sort imports with isort
 -   repo: local
     hooks:
@@ -25,6 +26,7 @@ repos:
         entry: poetry run isort --profile black
         types: ['python']
         language: system
+        exclude: ^ui/
 # run pylint against code base
 -   repo: local
     hooks:
@@ -33,3 +35,13 @@ repos:
         entry: poetry run pylint -j 0
         types: ['python']
         language: system
+        exclude: ^ui/
+# run eslint for ui code
+-   repo: local
+    hooks:
+    -   id: system
+        name: eslint
+        entry: bash -c "cd ui && npm run lint"
+        language: system
+        files: ^ui/
+# run eslint for ui code

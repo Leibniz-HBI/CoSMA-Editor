@@ -1,15 +1,13 @@
-import { ComponentBuilder, LayoutState } from "./state";
+import { ComponentBuilder } from './state'
 
-
-export interface LayoutAction { }
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface LayoutAction {}
 export class SetOverlayAction implements LayoutAction {
     blueprint: ComponentBuilder
 
     constructor(blueprint: ComponentBuilder) {
         this.blueprint = blueprint
     }
-
 }
 
-export class CloseOverlayAction implements LayoutAction {
-}
+export class CloseOverlayAction implements LayoutAction {}

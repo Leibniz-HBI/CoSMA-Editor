@@ -1,13 +1,12 @@
-import { useReducer, useCallback, Dispatch, Reducer } from "react"
+import { useReducer, useCallback, Dispatch, Reducer } from 'react'
 
 type ThunkMiddlewareDispatch<T, U> = (action: AsyncAction<T, U> | U) => void
-
 
 /**
  * Base class for asynchronous actions.
  */
-export abstract class AsyncAction<T, U>{
-    abstract run(dispatch: Dispatch<U>, state: T): Promise<void>;
+export abstract class AsyncAction<T, U> {
+    abstract run(dispatch: Dispatch<U>, state: T): Promise<void>
 }
 
 /**
@@ -19,14 +18,12 @@ export abstract class AsyncAction<T, U>{
 function thunker<T, U>(dispatch: Dispatch<U>, state: T): ThunkMiddlewareDispatch<T, U> {
     return function (action: AsyncAction<T, U> | U) {
         if (action instanceof AsyncAction<T, U>) {
-            (action as AsyncAction<T, U>).run(dispatch, state)
-        }
-        else {
+            ;(action as AsyncAction<T, U>).run(dispatch, state)
+        } else {
             dispatch(action)
         }
     }
 }
-
 
 /**
  * Hook for creating a dispatch method that can also handle async actions.
@@ -34,7 +31,14 @@ function thunker<T, U>(dispatch: Dispatch<U>, state: T): ThunkMiddlewareDispatch
  * @param initialState The initial state.
  * @returns The current state and the function for dispatching actions on the state.
  */
-export function useThunkReducer<T, U>(reducer: Reducer<T, U>, initialState: T): [T, ThunkMiddlewareDispatch<T, U>] {
+export function useThunkReducer<T, U>(
+    reducer: Reducer<T, U>,
+    initialState: T
+): [T, ThunkMiddlewareDispatch<T, U>] {
     const [state, dispatch] = useReducer(reducer, initialState)
-    return [state, useCallback(thunker<T, U>((dispatch as Dispatch<U>), state), [initialState])]
+    return [
+        state,
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        useCallback(thunker<T, U>(dispatch as Dispatch<U>, state), [initialState])
+    ]
 }

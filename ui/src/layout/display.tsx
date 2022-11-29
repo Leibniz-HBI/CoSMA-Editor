@@ -1,18 +1,13 @@
-import { LayoutState } from "./state";
-import { layoutReducer } from "./reducer";
-import { ComponentBuilder } from "./state";
-import { createContext, createElement, useContext, useReducer, useState } from "react";
-import { OverlayContext } from "./context";
-import { Form } from "../person_natural/editor";
-import { PersonTable } from "../person_natural/components";
-
+import { LayoutState } from './state'
+import { layoutReducer } from './reducer'
+import { ComponentBuilder } from './state'
+import { createContext, createElement, useReducer } from 'react'
+import { OverlayContext } from './context'
 
 export const overlayContext = createContext<OverlayContext | null>(null)
 
-
-
 export function RenderLayout(builder: ComponentBuilder) {
-    const [state, dispatch] = useReducer(layoutReducer, new LayoutState( builder))
+    const [state, dispatch] = useReducer(layoutReducer, new LayoutState(builder))
     const overlayContextValue = new OverlayContext(dispatch)
     return (
         <div>

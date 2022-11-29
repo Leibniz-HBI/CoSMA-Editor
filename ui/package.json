@@ -24,7 +24,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "jest",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "check": "prettier --check '**/*.((tsx)|(ts)'",
+    "lint": "eslint . --ext .ts --ext .tsx"
   },
   "eslintConfig": {
     "extends": [
@@ -52,9 +54,12 @@
     "@jest/globals": "^29.3.1",
     "@testing-library/react": "^13.4.0",
     "babel-jest": "^29.3.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.3.1",
     "jest-environment-jsdom": "^29.3.1",
+    "prettier": "^2.8.0",
     "react-test-renderer": "^18.2.0"
   }
 }
