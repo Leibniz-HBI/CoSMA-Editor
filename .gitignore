@@ -131,7 +131,6 @@ dmypy.json
 
 # django
 *.sqlite3
-django_project/settings.py
 
 
 # node
@@ -142,3 +141,4 @@ ui/node_modules
 .vscode
 coverage
 .lcov
+.env
