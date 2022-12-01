@@ -7,6 +7,12 @@ from cosmae.entity.models_django import Entity
 from cosmae.person.models_django import Person
 
 
+def test_no_key_mix():
+    person_keys = Person.valid_keys
+    entity_keys = Entity.valid_keys
+    assert entity_keys != person_keys
+
+
 @pytest.fixture
 def person():
     return Person(

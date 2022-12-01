@@ -1,7 +1,7 @@
 """Models for entities."""
 from datetime import datetime
 from sys import modules
-from typing import Optional
+from typing import Optional, Set
 
 from django.db import models
 from django.db.models.aggregates import Count, Max, Min
@@ -30,8 +30,26 @@ class Entity(models.Model):
     previous_version = models.ForeignKey(
         "self", blank=True, null=True, on_delete=models.CASCADE, unique=True
     )
+    # Fields for persons.
     names_personal = models.TextField(null=True)
     names_family = models.TextField(null=True)
+
+    @classmethod
+    @property
+    def valid_keys(cls):
+        "Returns keys valid for this class."
+        return {
+            "id",
+            "display_txt",
+            "id_persistent",
+            "time_edit",
+            "previous_version",
+        }
+
+    def remove_valid_keys(self, provided_keys: Set[str]) -> Set[str]:
+        """Method for removing entries from a set.
+        This is intended for checking constructor arguments."""
+        return provided_keys.difference(self.valid_keys)
 
     def __new__(cls, *args, **kwargs):
         try:
