@@ -2,7 +2,7 @@
 name = "cosmae"
 version = "0.1.0"
 description = ""
-authors = ["Moritz Fürneisen(m.fuerneisen@zbw.eu)"]
+authors = ["Moritz Fürneisen <m.fuerneisen@zbw.eu>"]
 readme = "README.md"
 packages = [{include = "cosmae"}]
 
