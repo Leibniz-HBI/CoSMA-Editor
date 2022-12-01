@@ -27,9 +27,6 @@ jobs:
             pyproject.toml
             poetry.lock
       # workaround for 3.8
-      - name: Install backports timezone
-        run: pip install backports.zoneinfo
-        if: ${{matrix.python-version}} == "3.8"
       - name: Install dependencies
         run: |
           poetry env use ${{ matrix.python-version }}
@@ -48,17 +45,18 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ui
+        working-directory: "ui"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: "npm"
-          cache-dependency-path: subdir/package-lock.json
+          cache-dependency-path: "ui/package-lock.json"
+
       - name: Install frontend dependencies
         run: npm ci
       - name: Lint frontend
         run: npm run lint
       - name: test frontend
-        run: npm test
+        run: npm run test
