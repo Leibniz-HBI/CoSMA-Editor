@@ -142,4 +142,3 @@ ui/node_modules
 .vscode
 coverage
 .lcov
-poetry.lock
