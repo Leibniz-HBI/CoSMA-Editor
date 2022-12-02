@@ -24,3 +24,7 @@ class EntityUpdatedException(Exception):
 
     def __init__(self, id_affected) -> None:
         self.id_affected = id_affected
+
+
+class TooManyFieldsException(Exception):
+    "Indicates that a Django model constructor was called with too many arguments."

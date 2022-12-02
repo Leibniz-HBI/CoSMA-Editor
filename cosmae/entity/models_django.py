@@ -6,7 +6,11 @@ from typing import Optional, Set
 from django.db import models
 from django.db.models.aggregates import Count, Max, Min
 
-from cosmae.exception import EntityExistsException, EntityUpdatedException
+from cosmae.exception import (
+    EntityExistsException,
+    EntityUpdatedException,
+    TooManyFieldsException,
+)
 
 
 class SingleInheritanceManager(models.Manager):
@@ -49,10 +53,11 @@ class Entity(models.Model):
 
         return _entity_keys
 
-    def remove_valid_keys(self, provided_keys: Set[str]) -> Set[str]:
+    @classmethod
+    def remove_valid_keys(cls, provided_keys: Set[str]) -> Set[str]:
         """Method for removing entries from a set.
         This is intended for checking constructor arguments."""
-        return provided_keys.difference(self.valid_keys())
+        return provided_keys.difference(cls.valid_keys())
 
     def __new__(cls, *args, **kwargs):
         try:
@@ -71,6 +76,20 @@ class Entity(models.Model):
             entity_class = cls
         return super().__new__(entity_class)
 
+    def __init__(self, *args, **kwargs) -> None:
+        if kwargs:
+            additional_keys = Entity.remove_valid_keys(set(kwargs.keys()))
+            additional_keys = self.__class__.remove_valid_keys(additional_keys)
+            if len(additional_keys) > 0:
+                raise TooManyFieldsException(
+                    f'The fields { ", ".join(additional_keys)} are not valid for persons.'
+                )
+            super().__init__(*args, **kwargs)
+        else:
+            super().__init__(
+                *args,
+            )
+
     @classmethod
     def most_recent_by_id(cls, id_persistent):
         """Return the most recent version of an entity."""
@@ -86,7 +105,7 @@ class Entity(models.Model):
         time_edit: datetime,
         display_txt: str,
         version: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """Changes an entity in the databse by adding a new version.
         Note:
@@ -109,7 +128,7 @@ class Entity(models.Model):
             time_edit=time_edit,
             id_persistent=id_persistent,
             previous_version=most_recent,
-            **kwargs
+            **kwargs,
         )
         do_write = (not most_recent) or most_recent.check_different_before_save(new)
         if do_write:

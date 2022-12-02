@@ -153,26 +153,6 @@ def test_different_id_persistent(entity0):
 
 
 @pytest.mark.django_db
-def test_different_names_family(entity0):
-    entity1 = Entity(
-        id_persistent=entity0.id_persistent,
-        time_edit=entity0.time_edit,
-        names_family="names test family",
-    )
-    assert entity0.check_different_before_save(entity1)
-
-
-@pytest.mark.django_db
-def test_different_names_personal(entity0):
-    entity1 = Entity(
-        id_persistent=entity0.id_persistent,
-        time_edit=entity0.time_edit,
-        names_personal="names test personal",
-    )
-    assert entity0.check_different_before_save(entity1)
-
-
-@pytest.mark.django_db
 def test_different_version(entity0):
     entity1 = Entity(
         id_persistent=entity0.id_persistent,
