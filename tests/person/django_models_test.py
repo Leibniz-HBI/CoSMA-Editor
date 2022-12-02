@@ -8,9 +8,15 @@ from cosmae.person.models_django import Person
 
 
 def test_no_key_mix():
-    person_keys = Person.valid_keys
-    entity_keys = Entity.valid_keys
+    """Just check if the assumed invariant for combining keys holds.
+    I.e., that the dictionaries are not changed."""
+    person_keys = Person.valid_keys()
+    entity_keys = Entity.valid_keys()
     assert entity_keys != person_keys
+    person_keys_after = Person.valid_keys()
+    entity_keys_after = Entity.valid_keys()
+    assert entity_keys == entity_keys_after
+    assert person_keys == person_keys_after
 
 
 @pytest.fixture

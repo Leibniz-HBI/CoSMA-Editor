@@ -1,19 +1,18 @@
 """Models for natural persons."""
 from cosmae.entity.models_django import Entity, SingleInheritanceManager
 
+_person_keys = {
+    "names_personal",
+    "names_family",
+}
+
 
 class Person(Entity):
     """Models a natural person"""
 
     @classmethod
-    @property
     def valid_keys(cls):
-        return super().valid_keys.union(
-            {
-                "names_personal",
-                "names_family",
-            }
-        )
+        return super().valid_keys().union(_person_keys)
 
     def __init__(
         self,

@@ -18,6 +18,15 @@ class SingleInheritanceManager(models.Manager):
         return super().get_queryset().filter(proxy_name=self.model.__name__.lower())
 
 
+_entity_keys = {
+    "id",
+    "display_txt",
+    "id_persistent",
+    "time_edit",
+    "previous_version",
+}
+
+
 class Entity(models.Model):
     """Model for a general entity"""
 
@@ -35,21 +44,15 @@ class Entity(models.Model):
     names_family = models.TextField(null=True)
 
     @classmethod
-    @property
     def valid_keys(cls):
         "Returns keys valid for this class."
-        return {
-            "id",
-            "display_txt",
-            "id_persistent",
-            "time_edit",
-            "previous_version",
-        }
+
+        return _entity_keys
 
     def remove_valid_keys(self, provided_keys: Set[str]) -> Set[str]:
         """Method for removing entries from a set.
         This is intended for checking constructor arguments."""
-        return provided_keys.difference(self.valid_keys)
+        return provided_keys.difference(self.valid_keys())
 
     def __new__(cls, *args, **kwargs):
         try:
