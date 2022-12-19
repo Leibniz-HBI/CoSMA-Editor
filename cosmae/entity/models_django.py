@@ -4,7 +4,7 @@ from sys import modules
 from typing import Optional, Set
 
 from django.db import models
-from django.db.models.aggregates import Count, Max, Min
+from django.db.models.aggregates import Count, Max
 
 from cosmae.exception import EntityExistsException, TooManyFieldsException
 from cosmae.util.django import change_or_create_versioned
@@ -127,14 +127,14 @@ class Entity(models.Model):
     def get_most_recent_chunked(cls, offset, limit):
         """Get all entities in chunks"""
         # pylint: disable=no-member
-        ids = (
-            cls.objects.values("id_persistent")
-            .annotate(max_id=Max("id"))
-            .annotate(min_id=Min("id"))
-            .order_by("min_id")[offset : offset + limit]
-            .values("max_id")
-        )
-        return list(cls.objects.filter(id__in=ids))
+        return cls.objects.filter(
+            id=models.Subquery(
+                cls.objects.filter(id_persistent=models.OuterRef("id_persistent"))
+                .values("id_persistent")
+                .annotate(max_id=Max("id"))
+                .values("max_id")
+            )
+        )[offset : offset + limit]
 
     @classmethod
     def get_count(cls):
