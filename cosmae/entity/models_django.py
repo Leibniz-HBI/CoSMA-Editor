@@ -6,11 +6,8 @@ from typing import Optional, Set
 from django.db import models
 from django.db.models.aggregates import Count, Max, Min
 
-from cosmae.exception import (
-    EntityExistsException,
-    EntityUpdatedException,
-    TooManyFieldsException,
-)
+from cosmae.exception import EntityExistsException, TooManyFieldsException
+from cosmae.util.django import change_or_create_versioned
 
 
 class SingleInheritanceManager(models.Manager):
@@ -111,29 +108,20 @@ class Entity(models.Model):
         Note:
             The resulting object is not saved.
         Returns:
-            The new object.
+            The new object
+            and a flag indicating wether the object changed from the most recent version.
         """
-        # pylint: disable=no-member
-        if version:
-            most_recent = cls.most_recent_by_id(id_persistent)
-            if most_recent.id != version:
-                raise EntityUpdatedException(id_persistent)
-        else:
-            by_id = cls.objects.filter(id_persistent=id_persistent)
-            if by_id:
-                raise EntityExistsException(display_txt)
-            most_recent = None
-        new = cls(
-            display_txt=display_txt,
-            time_edit=time_edit,
-            id_persistent=id_persistent,
-            previous_version=most_recent,
-            **kwargs,
-        )
-        do_write = (not most_recent) or most_recent.check_different_before_save(new)
-        if do_write:
-            return new, True
-        return most_recent, False
+        try:
+            return change_or_create_versioned(
+                cls,
+                id_persistent,
+                version,
+                display_txt=display_txt,
+                time_edit=time_edit,
+                **kwargs,
+            )
+        except EntityExistsException as exc:
+            raise EntityExistsException(display_txt) from exc
 
     @classmethod
     def get_most_recent_chunked(cls, offset, limit):
