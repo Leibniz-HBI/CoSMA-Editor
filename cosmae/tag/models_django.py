@@ -9,8 +9,9 @@ from cosmae.entity.models_django import Entity
 from cosmae.exception import (
     DbObjectExistsException,
     EntityMissingException,
-    InvalidTagDefinitionException,
     InvalidTagValueException,
+    NoChildTagDefintionsAllowedException,
+    NoParentTagException,
     TagDefinitionExistsException,
     TagDefinitionMissingException,
 )
@@ -61,13 +62,9 @@ class TagDefinition(models.Model):
             try:
                 parent = TagDefinition.most_recent_by_id(id_parent_persistent)
             except IndexError as exc:
-                raise InvalidTagDefinitionException(
-                    f"There is no tag with persistent_id {id_parent_persistent}."
-                ) from exc
+                raise NoParentTagException(id_parent_persistent) from exc
             if not parent.type == TagDefinition.INNER:
-                raise InvalidTagDefinitionException(
-                    f"Tag {parent.name} is not allowed to have child tags."
-                )
+                raise NoChildTagDefintionsAllowedException(id_parent_persistent)
         exists = TagDefinition.objects.filter(  # pylint: disable=no-member
             name=name, id_parent_persistent=id_parent_persistent
         ).exclude(id_persistent=id_persistent)

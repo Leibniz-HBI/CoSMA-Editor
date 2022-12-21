@@ -30,8 +30,18 @@ class TooManyFieldsException(Exception):
     "Indicates that a Django model constructor was called with too many arguments."
 
 
-class InvalidTagDefinitionException(Exception):
-    "Indicates an invalid tag definition."
+class NoChildTagDefintionsAllowedException(Exception):
+    "Indicates that a tag definition is not allowed to have children."
+
+    def __init__(self, id_persistent):
+        self.id_persistent = id_persistent
+
+
+class NoParentTagException(Exception):
+    "Indicates that the tag with the specified id_persistent does not exist."
+
+    def __init__(self, id_persistent):
+        self.id_persistent = id_persistent
 
 
 class InvalidTagValueException(Exception):

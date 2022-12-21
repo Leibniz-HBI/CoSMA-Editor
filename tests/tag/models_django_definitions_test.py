@@ -4,8 +4,9 @@ import pytest
 
 from tests.tag import common as c
 from cosmae.exception import (
-    InvalidTagDefinitionException,
     InvalidTagValueException,
+    NoChildTagDefintionsAllowedException,
+    NoParentTagException,
     TagDefinitionExistsException,
 )
 from cosmae.tag.models_django import TagDefinition
@@ -71,17 +72,14 @@ def test_store_and_retrieve_tag_def(tag_def):
 
 @pytest.mark.django_db
 def test_missing_parent():
-    with pytest.raises(InvalidTagDefinitionException) as exc:
+    with pytest.raises(NoParentTagException) as exc:
         TagDefinition.change_or_create(
             c.id_tag_def_persistent_test,
             c.time_edit_test,
             c.name_tag_def_test,
             c.id_tag_def_parent_persistent_test,
         )
-    assert (
-        exc.value.args[0] == "There is no tag with "
-        f"persistent_id {c.id_tag_def_parent_persistent_test}."
-    )
+    assert exc.value.args[0] == c.id_tag_def_parent_persistent_test
 
 
 @pytest.mark.django_db
@@ -103,17 +101,14 @@ def test_invalid_parent(tag_def):
     tag_def.id_persistent = c.id_tag_def_parent_persistent_test
     tag_def.save()
 
-    with pytest.raises(InvalidTagDefinitionException) as exc:
+    with pytest.raises(NoChildTagDefintionsAllowedException) as exc:
         TagDefinition.change_or_create(
             c.id_tag_def_persistent_test,
             c.time_edit_test,
             c.name_tag_def_test,
             c.id_tag_def_parent_persistent_test,
         )
-    assert (
-        exc.value.args[0] == f"Tag {c.name_tag_def_test} "
-        "is not allowed to have child tags."
-    )
+    assert exc.value.args[0] == c.id_tag_def_parent_persistent_test
 
 
 @pytest.mark.django_db
