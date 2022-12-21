@@ -28,3 +28,33 @@ class EntityUpdatedException(Exception):
 
 class TooManyFieldsException(Exception):
     "Indicates that a Django model constructor was called with too many arguments."
+
+
+class InvalidTagDefinitionException(Exception):
+    "Indicates an invalid tag definition."
+
+
+class InvalidTagValueException(Exception):
+    "Indicates that a given value is not of the type defined by a tag."
+
+
+class TagDefinitionExistsException(Exception):
+    "Indicates that the tag already exists."
+
+    def __init__(self, tag_name, id_parent_persistent):
+        self.tag_name = tag_name
+        self.id_parent_persistent = id_parent_persistent
+
+
+class EntityMissingException(Exception):
+    "Indicates that there is no entity with the given persistent id."
+
+    def __init__(self, id_persistent):
+        self.id_persistent = id_persistent
+
+
+class TagDefinitionMissingException(Exception):
+    "Indicates that there is no tag definition with the given persistent id."
+
+    def __init__(self, id_persistent):
+        self.id_persistent = id_persistent
