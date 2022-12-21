@@ -8,7 +8,7 @@ from ninja import Router, Schema
 
 from cosmae.exception import (
     ApiError,
-    EntityExistsException,
+    DbObjectExistsException,
     EntityUpdatedException,
     ValidationException,
 )
@@ -71,7 +71,7 @@ def persons_post(_, persons: PersonNaturalList):
         person_dbs = [person_api_to_db(person, now) for person in persons.persons]
     except ValidationException as valid_x:
         return 400, ApiError(msg=str(valid_x))
-    except EntityExistsException as exists_x:
+    except DbObjectExistsException as exists_x:
         return 500, ApiError(
             msg=(
                 "Could not generate an id for person "

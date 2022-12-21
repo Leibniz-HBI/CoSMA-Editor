@@ -4,7 +4,7 @@ from typing import Iterable, Optional
 from django.db.models import Model
 from django.db.transaction import atomic
 
-from cosmae.exception import EntityExistsException, EntityUpdatedException
+from cosmae.exception import DbObjectExistsException, EntityUpdatedException
 
 
 def save_many_atomic(models: Iterable[Model]):
@@ -33,7 +33,7 @@ def change_or_create_versioned(
     else:
         by_id = cls.objects.filter(id_persistent=id_persistent)
         if by_id:
-            raise EntityExistsException("UNKNOWN")
+            raise DbObjectExistsException("UNKNOWN")
         most_recent = None
     new = cls(
         id_persistent=id_persistent,

@@ -3,7 +3,7 @@ import pytest
 
 import tests.entity.common as c
 from cosmae.entity.models_django import Entity
-from cosmae.exception import EntityExistsException, EntityUpdatedException
+from cosmae.exception import DbObjectExistsException, EntityUpdatedException
 
 
 @pytest.fixture
@@ -70,7 +70,7 @@ def test_no_update_on_same(entity0):
 @pytest.mark.django_db
 def test_no_update_without_version(entity0):
     entity0.save()
-    with pytest.raises(EntityExistsException):
+    with pytest.raises(DbObjectExistsException):
         Entity.change_or_create(
             id_persistent=entity0.id_persistent,
             display_txt="new_txt",

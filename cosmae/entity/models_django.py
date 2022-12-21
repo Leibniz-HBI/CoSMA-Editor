@@ -6,7 +6,7 @@ from typing import Optional, Set
 from django.db import models
 from django.db.models.aggregates import Count, Max
 
-from cosmae.exception import EntityExistsException, TooManyFieldsException
+from cosmae.exception import DbObjectExistsException, TooManyFieldsException
 from cosmae.util.django import change_or_create_versioned
 
 
@@ -120,8 +120,8 @@ class Entity(models.Model):
                 time_edit=time_edit,
                 **kwargs,
             )
-        except EntityExistsException as exc:
-            raise EntityExistsException(display_txt) from exc
+        except DbObjectExistsException as exc:
+            raise DbObjectExistsException(display_txt) from exc
 
     @classmethod
     def get_most_recent_chunked(cls, offset, limit):

@@ -12,8 +12,8 @@ class ValidationException(Exception):
     """Indicates an error during conversion"""
 
 
-class EntityExistsException(Exception):
-    """Indicates that an entity with that ID already exists."""
+class DbObjectExistsException(Exception):
+    """Indicates that an db object with that persistent id already exists."""
 
     def __init__(self, display_txt) -> None:
         self.display_txt = display_txt
