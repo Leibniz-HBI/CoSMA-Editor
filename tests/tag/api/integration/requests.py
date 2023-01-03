@@ -33,9 +33,13 @@ def post_tag_instances(url, tags):
     )
 
 
-def get_tag_chunked(url, tag_def_id, offset, limit):
+def post_tag_instance_chunks(url, tag_def_id, offset, limit):
     return requests.post(
-        urljoin(url, "/cosmae/api/tags/definitions"),
-        json={"tag_definition_id": tag_def_id, "offset": offset, "limit": limit},
+        urljoin(url, "/cosmae/api/tags/chunk"),
+        json={
+            "id_tag_definition_persistent": tag_def_id,
+            "offset": offset,
+            "limit": limit,
+        },
         timeout=900,
     )

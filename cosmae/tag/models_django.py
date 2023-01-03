@@ -136,7 +136,7 @@ class TagInstance(models.Model):
     id_persistent = models.TextField()
     id_entity_persistent = models.TextField()
     id_tag_definition_persistent = models.TextField()
-    value = models.TextField()
+    value = models.TextField(null=True, blank=True)
     time_edit = models.DateTimeField()
     previous_version = models.ForeignKey(
         "self", blank=True, null=True, on_delete=models.CASCADE, unique=True

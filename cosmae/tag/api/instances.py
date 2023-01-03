@@ -20,6 +20,8 @@ from cosmae.util.django import save_many_atomic
 
 router = Router()
 
+MAX_TAG_INSTANCE_CHUNK_LIMIT = 10000
+
 
 class TagInstancePost(Schema):
     # pylint: disable=too-few-public-methods
@@ -35,6 +37,14 @@ class TagInstancePostList(Schema):
     # pylint: disable=too-few-public-methods
     "Multiple tag instances for post requests."
     tag_instances: List[TagInstancePost]
+
+
+class TagInstancePostChunkRequest(Schema):
+    # pylint: disable=too-few-public-methods
+    "Request body for geting instances of a tag."
+    id_tag_definition_persistent: str
+    offset: int
+    limit: int
 
 
 @router.post("", response={200: TagInstancePostList, 400: ApiError, 500: ApiError})
@@ -75,11 +85,32 @@ def post_tag_instance(_, tag_list: TagInstancePostList):
     tag_db_saves = [tag for tag, do_write in tag_dbs if do_write]
     try:
         save_many_atomic(tag_db_saves)
-    except IntegrityError:
+    except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
     return 200, TagInstancePostList(
         tag_instances=[tag_instance_db_to_api(tag) for tag, _ in tag_dbs]
     )
+
+
+@router.post("chunk", response={200: TagInstancePostList, 400: ApiError, 500: ApiError})
+def post_tag_instance_chunks(_, chunk_req: TagInstancePostChunkRequest):
+    "API method for retrieving a chunk of tag instances."
+    if chunk_req.limit > MAX_TAG_INSTANCE_CHUNK_LIMIT:
+        return 400, ApiError(
+            msg=f"Please specify limit smaller than {MAX_TAG_INSTANCE_CHUNK_LIMIT}."
+        )
+    try:
+        instance_dbs = TagInstanceDb.by_tag_chunked(
+            chunk_req.id_tag_definition_persistent, chunk_req.offset, chunk_req.limit
+        )
+        instance_apis = [tag_instance_db_to_api(tag) for tag in instance_dbs]
+        return 200, TagInstancePostList(tag_instances=instance_apis)
+    except TagDefinitionMissingException as exc:
+        return 400, ApiError(
+            msg=f"Tag definition with id_persistent {exc.id_persistent} does not exist."
+        )
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get requested chunk.")
 
 
 def tag_instance_api_to_db(tag_api: TagInstancePost, time: datetime):
