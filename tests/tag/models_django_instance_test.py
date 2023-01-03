@@ -153,13 +153,15 @@ def test_add_tag_child(entity0, tag_def):
 
 
 @pytest.mark.django_db
-def test_empty_chunk():
-    ret = TagInstance.by_tag_chunked(cp.id_persistent_test, 2, 3)
+def test_empty_chunk(tag_def):
+    tag_def.save()
+    ret = TagInstance.by_tag_chunked(tag_def.id_persistent, 2, 3)
     assert ret == []
 
 
 @pytest.mark.django_db
-def test_chunk_versions():
+def test_chunk_versions(tag_def):
+    tag_def.save()
     last_values = []
     for i in range(10):
         tag = None
@@ -168,7 +170,7 @@ def test_chunk_versions():
             tag = TagInstance(
                 id_persistent=f"id_tag_test{i}",
                 id_entity_persistent=cp.id_persistent_test,
-                id_tag_definition_persistent=c.id_tag_def_persistent_test,
+                id_tag_definition_persistent=tag_def.id_persistent,
                 time_edit=c.time_edit_test + timedelta(hours=j + 1),
                 value=str(float(j)),
                 previous_version=previous_version,
@@ -182,15 +184,57 @@ def test_chunk_versions():
 
 
 @pytest.mark.django_db
-def test_chunk_filter_tag_definition():
+def test_chunk_filter_tag_instance(tag_def):
+    tag_def.save()
     for i in range(10):
         tag = TagInstance(
             id_persistent=f"id_tag_test{i}",
             id_entity_persistent=cp.id_persistent_test,
-            id_tag_definition_persistent=c.id_tag_def_persistent_test + i * "0",
+            id_tag_definition_persistent=tag_def.id_persistent + i * "0",
             time_edit=c.time_edit_test,
             value=str(float(i)),
         )
         tag.save()
     ret = TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, 0, 5)
     assert len(ret) == 1
+
+
+@pytest.mark.django_db
+def test_chunk_filter_childrens_instance(tag_def, tag_def_child_0, tag_def_child_1):
+    tag_def.type = TagDefinition.INNER
+    tag_def.id_persistent = c.id_tag_def_parent_persistent_test
+    tag_def.save()
+    tag_def_child_0.save()
+    tag_def_child_1.save()
+    tag_instance_0 = TagInstance(
+        id_persistent="id_tag_test_0",
+        id_entity_persistent=cp.id_persistent_test,
+        id_tag_definition_persistent=tag_def_child_0.id_persistent,
+        time_edit=c.time_edit_test,
+        value=str(2.3),
+    )
+    tag_instance_0.save()
+    tag_instance_1 = TagInstance(
+        id_persistent="id_tag_test_1",
+        id_entity_persistent=cp.id_persistent_test,
+        id_tag_definition_persistent=tag_def_child_1.id_persistent,
+        time_edit=c.time_edit_test,
+        value=str(5),
+    )
+    tag_instance_1.save()
+    tag_instance_2 = TagInstance(
+        id_persistent="id_tag_test_2",
+        id_entity_persistent=cp.id_persistent_test,
+        id_tag_definition_persistent=tag_def.id_persistent,
+        time_edit=c.time_edit_test,
+    )
+    tag_instance_2.save()
+    tags = TagInstance.by_tag_chunked(tag_def.id_persistent, 0, 5)
+    assert tags == [tag_instance_0, tag_instance_1, tag_instance_2]
+
+
+@pytest.mark.django_db
+def test_not_existing_tag():
+    with pytest.raises(TagDefinitionMissingException) as exc_info:
+        TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, 0, 5)
+    assert exc_info.value.args[0] == c.id_tag_def_persistent_test

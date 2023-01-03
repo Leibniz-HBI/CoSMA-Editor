@@ -1,6 +1,6 @@
 "Database Models for Tags"
 from datetime import datetime
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from django.db import models
 from django.db.models.aggregates import Max
@@ -14,6 +14,7 @@ from cosmae.exception import (
     NoParentTagException,
     TagDefinitionExistsException,
     TagDefinitionMissingException,
+    TagInstanceExistsException,
 )
 from cosmae.util.django import change_or_create_versioned
 
@@ -40,6 +41,22 @@ class TagDefinition(models.Model):
         return cls.objects.filter(id_persistent=id_persistent).order_by(
             "-previous_version"
         )[0]
+
+    def most_recent_children(self):
+        "Ge the most recent versions of child tags."
+        objects = TagDefinition.objects.filter(  # pylint: disable=no-member
+            id_parent_persistent=self.id_persistent
+        )
+        return set(
+            objects.filter(
+                id=models.Subquery(
+                    objects.filter(id_persistent=models.OuterRef("id_persistent"))
+                    .values("id_persistent")
+                    .annotate(max_id=Max("id"))
+                    .values("max_id")
+                )
+            )
+        )
 
     @classmethod
     def change_or_create(  # pylint: disable=too-many-arguments
@@ -98,23 +115,19 @@ class TagDefinition(models.Model):
         return False
 
     def check_value(self, val):
+        # TODO(@mo-fu) parse values, maybe store int as float anyway
+        # TODO(@mo-fu) add handling of string  and string list values. FOR post and get.
         "Check if a value is of the type for this tag."
         if self.type == TagDefinition.INNER:
             if val is not None:
-                raise InvalidTagValueException(
-                    f"Value has to be null for inner tag {self.name}."
-                )
+                raise InvalidTagValueException(self.id_persistent, val, self.type)
             return val
         if self.type == TagDefinition.FLOAT:
             if not isinstance(val, float):
-                raise InvalidTagValueException(
-                    f"Value has to be a float for tag {self.name}."
-                )
+                raise InvalidTagValueException(self.id_persistent, val, self.type)
         if self.type == TagDefinition.INTEGER:
             if not isinstance(val, int):
-                raise InvalidTagValueException(
-                    f"Value has to be an int for tag {self.name}."
-                )
+                raise InvalidTagValueException(self.id_persistent, val, self.type)
         return str(val)
 
 
@@ -144,7 +157,7 @@ class TagInstance(models.Model):
         time_edit: datetime,
         id_entity_persistent: str,
         id_tag_definition_persistent: str,
-        value: Optional[Union[int, float]] = None,
+        value: Optional[Union[int, float, List[str]]] = None,
         version: Optional[int] = None,
         **kwargs,
     ):
@@ -177,13 +190,29 @@ class TagInstance(models.Model):
                 **kwargs,
             )
         except DbObjectExistsException as exc:
-            raise DbObjectExistsException("") from exc
+            raise TagInstanceExistsException(
+                id_entity_persistent, id_tag_definition_persistent, value
+            ) from exc
 
     @classmethod
     def by_tag_chunked(cls, id_tag_definition_persistent, offset, limit):
         "Get tag instances for a tag_id in chunks."
+        # TODO(@mo-fu) There is no proper chunking yet.
+        # The results are not grouped by entity!
+        # Fine for now as we always get the whole column/tag.
+        try:
+            tag = TagDefinition.most_recent_by_id(id_tag_definition_persistent)
+        except IndexError as exc:
+            raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
+        if tag.type == TagDefinition.INNER:
+            tags = tag.most_recent_children()
+            tags.add(tag)
+        else:
+            tags = {tag}
+
+        tag_ids = {tag.id_persistent for tag in tags}
         objects = cls.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=id_tag_definition_persistent
+            id_tag_definition_persistent__in=tag_ids
         )
         return list(
             objects.filter(

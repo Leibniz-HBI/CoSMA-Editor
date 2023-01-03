@@ -1,4 +1,5 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+from datetime import timedelta
 
 import pytest
 
@@ -179,9 +180,9 @@ def test_float_check_valid(tag_def):
 def test_float_check_invalid(tag_def):
     with pytest.raises(InvalidTagValueException) as exc:
         tag_def.check_value(2)
-    assert exc.value.args[0] == (
-        f"Value has to be a float for tag {c.name_tag_def_test}."
-    )
+    assert exc.value.args[0] == tag_def.id_persistent
+    assert exc.value.args[1] == 2
+    assert exc.value.args[2] == "FLT"
 
 
 @pytest.mark.django_db
@@ -195,9 +196,9 @@ def test_int_check_invalid(tag_def):
     tag_def.type = TagDefinition.INTEGER
     with pytest.raises(InvalidTagValueException) as exc:
         tag_def.check_value(2.0)
-    assert exc.value.args[0] == (
-        f"Value has to be an int for tag {c.name_tag_def_test}."
-    )
+    assert exc.value.args[0] == tag_def.id_persistent
+    assert exc.value.args[1] == 2.0
+    assert exc.value.args[2] == "INT"
 
 
 @pytest.mark.django_db
@@ -211,6 +212,45 @@ def test_inner_check_invalid(tag_def):
     tag_def.type = TagDefinition.INNER
     with pytest.raises(InvalidTagValueException) as exc:
         tag_def.check_value(True)
-    assert exc.value.args[0] == (
-        f"Value has to be null for inner tag {c.name_tag_def_test}."
+    assert exc.value.args[0] == tag_def.id_persistent
+    assert exc.value.args[1]
+    assert exc.value.args[2] == "INR"
+
+
+@pytest.mark.django_db
+def test_childrens(tag_def, tag_def_child_0, tag_def_child_1):
+    tag_def.type = TagDefinition.INNER
+    tag_def.id_persistent = c.id_tag_def_parent_persistent_test
+    tag_def.save()
+    tag_def_child_0.save()
+    tag_def_child_1.save()
+    ret = tag_def.most_recent_children()
+    assert ret == {tag_def_child_0, tag_def_child_1}
+
+
+@pytest.mark.django_db
+def test_children_updated(tag_def, tag_def_child_0, tag_def_child_1):
+    tag_def.type = TagDefinition.INNER
+    tag_def.id_persistent = c.id_tag_def_parent_persistent_test
+    tag_def.save()
+    tag_def_child_0.save()
+    tag_def_child_1.save()
+    tag_def_child_0_updated = TagDefinition(
+        id_persistent=tag_def_child_0.id_persistent,
+        type=TagDefinition.INTEGER,
+        id_parent_persistent=c.id_tag_def_parent_persistent_test,
+        name=tag_def_child_0.name,
+        time_edit=tag_def_child_0.time_edit + timedelta(seconds=10),
+        previous_version=tag_def_child_0,
     )
+    tag_def_child_0_updated.save()
+    ret = tag_def.most_recent_children()
+    assert ret == {tag_def_child_0_updated, tag_def_child_1}
+
+
+@pytest.mark.django_db
+def test_children_empty(tag_def):
+    tag_def.type = TagDefinition.INNER
+    tag_def.save()
+    ret = tag_def.most_recent_children()
+    assert ret == set()

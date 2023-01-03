@@ -19,6 +19,15 @@ class DbObjectExistsException(Exception):
         self.display_txt = display_txt
 
 
+class TagInstanceExistsException(Exception):
+    "Indicates that the value for a given tag already exists."
+
+    def __init__(self, id_entity_persistent, id_tag_definition_persistent, value):
+        self.id_entity_persistent = id_entity_persistent
+        self.id_tag_definition_persistent = id_tag_definition_persistent
+        self.value = value
+
+
 class EntityUpdatedException(Exception):
     """Indicates that an entity has been already updated."""
 
@@ -46,6 +55,11 @@ class NoParentTagException(Exception):
 
 class InvalidTagValueException(Exception):
     "Indicates that a given value is not of the type defined by a tag."
+
+    def __init__(self, tag_id_persistent, value, type_name):
+        self.tag_id_persistent = tag_id_persistent
+        self.value = value
+        self.type_name = type_name
 
 
 class TagDefinitionExistsException(Exception):
