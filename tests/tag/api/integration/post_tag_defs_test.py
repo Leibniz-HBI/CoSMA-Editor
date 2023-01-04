@@ -72,11 +72,13 @@ def test_exists(live_server, root_tag_def):
 def test_name_exists(live_server, root_tag_def):
     req = r.post_tag_def(live_server.url, root_tag_def)
     assert req.status_code == 200
+    id_persistent = req.json()["tag_definitions"][0]["id_persistent"]
     req = r.post_tag_def(live_server.url, root_tag_def)
     assert req.status_code == 400
     assert req.json()["msg"] == (
         "There is an existing tag definition with name "
-        f"{c.name_tag_def_test} and id_parent_persistent {None}."
+        f"{c.name_tag_def_test} and id_parent_persistent {None}. "
+        f"Its id_persistent is {id_persistent}."
     )
 
 

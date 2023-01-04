@@ -124,7 +124,8 @@ def test_tag_exists_root(tag_def):
             None,
         )
     assert exc.value.args[0] == c.name_tag_def_test
-    assert exc.value.args[1] is None
+    assert exc.value.args[1] == c.id_tag_def_persistent_test
+    assert exc.value.args[2] is None
 
 
 @pytest.mark.django_db
@@ -148,7 +149,8 @@ def test_tag_exists_child(tag_def):
             c.id_tag_def_parent_persistent_test,
         )
     assert exc.value.args[0] == c.name_tag_def_test
-    assert exc.value.args[1] == c.id_tag_def_parent_persistent_test
+    assert exc.value.args[1] == c.id_tag_def_persistent_test
+    assert exc.value.args[2] == c.id_tag_def_parent_persistent_test
 
 
 @pytest.mark.django_db
@@ -168,7 +170,8 @@ def test_tag_exists_rename(tag_def):
         )
 
     assert exc.value.args[0] == c.name_tag_def_test
-    assert exc.value.args[1] is None
+    assert exc.value.args[1] == c.id_tag_def_parent_persistent_test
+    assert exc.value.args[2] is None
 
 
 @pytest.mark.django_db

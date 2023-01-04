@@ -65,8 +65,9 @@ class InvalidTagValueException(Exception):
 class TagDefinitionExistsException(Exception):
     "Indicates that the tag already exists."
 
-    def __init__(self, tag_name, id_parent_persistent):
+    def __init__(self, tag_name, id_persistent, id_parent_persistent):
         self.tag_name = tag_name
+        self.id_persistent = id_persistent
         self.id_parent_persistent = id_parent_persistent
 
 

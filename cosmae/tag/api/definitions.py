@@ -72,7 +72,8 @@ def post_tag_definitions(_, tag_definition_list: TagDefinitionList):
     except TagDefinitionExistsException as exc:
         return 400, ApiError(
             msg="There is an existing tag definition with name "
-            f"{exc.tag_name} and id_parent_persistent {exc.id_parent_persistent}."
+            f"{exc.tag_name} and id_parent_persistent {exc.id_parent_persistent}. "
+            f"Its id_persistent is {exc.id_persistent}."
         )
     except DbObjectExistsException as exc:
         return 500, ApiError(

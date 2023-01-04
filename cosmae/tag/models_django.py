@@ -85,7 +85,11 @@ class TagDefinition(models.Model):
             name=name, id_parent_persistent=id_parent_persistent
         ).exclude(id_persistent=id_persistent)
         if exists:
-            raise TagDefinitionExistsException(name, id_parent_persistent)
+            raise TagDefinitionExistsException(
+                name,
+                exists.order_by("-previous_version")[0].id_persistent,
+                id_parent_persistent,
+            )
         try:
             return change_or_create_versioned(
                 cls,
