@@ -28,7 +28,7 @@ class TagInstancePost(Schema):
     "A single API tag instance for post requests."
     id_entity_persistent: str
     id_tag_definition_persistent: str
-    value: Union[float, int, None]
+    value: Union[float, None]
     id_persistent: Optional[str]
     version: Optional[int]
 

@@ -34,7 +34,7 @@ def test_concurrent_modification(live_server, root_tag_def):
     created["type"] = "FLOAT"
     req = r.post_tag_def(live_server.url, created)
     assert req.status_code == 200
-    created["type"] = "INTEGER"
+    created["type"] = "INNER"
     req = r.post_tag_def(live_server.url, created)
     assert req.status_code == 500
     assert req.json()["msg"] == (

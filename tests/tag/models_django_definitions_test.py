@@ -44,7 +44,7 @@ def test_different_type(tag_def):
         id_persistent=tag_def.id_persistent,
         time_edit=tag_def.time_edit,
         name=c.name_tag_def_test,
-        type=TagDefinition.INTEGER,
+        type=TagDefinition.INNER,
     )
     assert tag_def.check_different_before_save(tag_def1)
     assert tag_def1.check_different_before_save(tag_def)
@@ -186,22 +186,6 @@ def test_float_check_invalid(tag_def):
 
 
 @pytest.mark.django_db
-def test_int_check_valid(tag_def):
-    tag_def.type = TagDefinition.INTEGER
-    tag_def.check_value(2)
-
-
-@pytest.mark.django_db
-def test_int_check_invalid(tag_def):
-    tag_def.type = TagDefinition.INTEGER
-    with pytest.raises(InvalidTagValueException) as exc:
-        tag_def.check_value(2.0)
-    assert exc.value.args[0] == tag_def.id_persistent
-    assert exc.value.args[1] == 2.0
-    assert exc.value.args[2] == "INT"
-
-
-@pytest.mark.django_db
 def test_inner_check_valid(tag_def):
     tag_def.type = TagDefinition.INNER
     tag_def.check_value(None)
@@ -237,9 +221,9 @@ def test_children_updated(tag_def, tag_def_child_0, tag_def_child_1):
     tag_def_child_1.save()
     tag_def_child_0_updated = TagDefinition(
         id_persistent=tag_def_child_0.id_persistent,
-        type=TagDefinition.INTEGER,
+        type=TagDefinition.FLOAT,
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
-        name=tag_def_child_0.name,
+        name=tag_def_child_0.name + "modified",
         time_edit=tag_def_child_0.time_edit + timedelta(seconds=10),
         previous_version=tag_def_child_0,
     )

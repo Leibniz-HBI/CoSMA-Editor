@@ -23,8 +23,7 @@ class TagDefinition(models.Model):
     "Django ORM model for tag defintions."
     INNER = "INR"
     FLOAT = "FLT"
-    INTEGER = "INT"
-    TYPE_CHOICES = [(INNER, "inner"), (FLOAT, "float"), (INTEGER, "integer")]
+    TYPE_CHOICES = [(INNER, "inner"), (FLOAT, "float")]
     name = models.TextField()
     id_persistent = models.TextField()
     id_parent_persistent = models.TextField(null=True, blank=True)
@@ -124,9 +123,6 @@ class TagDefinition(models.Model):
             return val
         if self.type == TagDefinition.FLOAT:
             if not isinstance(val, float):
-                raise InvalidTagValueException(self.id_persistent, val, self.type)
-        if self.type == TagDefinition.INTEGER:
-            if not isinstance(val, int):
                 raise InvalidTagValueException(self.id_persistent, val, self.type)
         return str(val)
 

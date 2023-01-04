@@ -36,7 +36,7 @@ def tag_def_child_1():
     "Aanother shared child tag definition for tests"
     return TagDefinition(
         id_persistent=c.id_tag_def_persistent_child_1,
-        type=TagDefinition.INTEGER,
+        type=TagDefinition.FLOAT,
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
         name="test tag definition child 1",
         time_edit=c.time_edit_test + timedelta(seconds=10),
