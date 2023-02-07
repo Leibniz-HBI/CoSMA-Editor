@@ -35,7 +35,7 @@ def test_can_slice(live_server, tag_def, entity0):
     entity0.save()
     instances = [
         {
-            "value": float(i) + 0.3,
+            "value": str(float(i) + 0.3),
             "id_entity_persistent": entity0.id_persistent,
             "id_tag_definition_persistent": tag_def.id_persistent,
         }
@@ -48,7 +48,7 @@ def test_can_slice(live_server, tag_def, entity0):
     persons = rsp.json()["tag_instances"]
     assert len(persons) == 4
     for i in range(4):
-        assert persons[i]["value"] == float(i) + 3.3
+        assert persons[i]["value"] == str(float(i) + 3.3)
 
 
 def test_non_existent_slice(live_server, tag_def, entity0):
@@ -86,17 +86,19 @@ def test_get_children(live_server, entity0, tag_def_child_0, tag_def_child_1):
     tag_def_child_1.type = TagDefinition.FLOAT
     tag_def_child_1.save()
     tag_defs = [tag_def_parent, tag_def_child_0, tag_def_child_1]
-    values = [None, 0.2, 0.3]
+    values = [None, "0.2", "0.3"]
     entities = [entity0, entity1]
     instances = [
         {
             "id_entity_persistent": entities[j].id_persistent,
             "id_tag_definition_persistent": tag_defs[i].id_persistent,
-            "value": values[i],
+            "value": str(values[i]),
         }
         for i in range(3)
         for j in range(2)
     ]
+    for idx in range(0, 2):
+        instances[idx].pop("value")
     req = post_tag_instances(live_server.url, instances)
     assert req.status_code == 200
     req = post_tag_instance_chunks(live_server.url, tag_def_parent.id_persistent, 0, 10)

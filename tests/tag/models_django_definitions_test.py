@@ -182,10 +182,26 @@ def test_float_check_valid(tag_def):
 @pytest.mark.django_db
 def test_float_check_invalid(tag_def):
     with pytest.raises(InvalidTagValueException) as exc:
-        tag_def.check_value(2)
+        tag_def.check_value("a")
     assert exc.value.args[0] == tag_def.id_persistent
-    assert exc.value.args[1] == 2
+    assert exc.value.args[1] == "a"
     assert exc.value.args[2] == "FLT"
+
+
+@pytest.mark.django_db
+def test_strint_check_valid(tag_def):
+    tag_def.type = TagDefinition.STRING
+    tag_def.check_value("foo")
+
+
+@pytest.mark.django_db
+def test_string_check_invalid(tag_def):
+    tag_def.type = TagDefinition.STRING
+    with pytest.raises(InvalidTagValueException) as exc:
+        tag_def.check_value(None)
+    assert exc.value.args[0] == tag_def.id_persistent
+    assert exc.value.args[1] is None
+    assert exc.value.args[2] == "STR"
 
 
 @pytest.mark.django_db

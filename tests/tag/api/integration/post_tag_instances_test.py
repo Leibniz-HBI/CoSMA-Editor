@@ -35,10 +35,10 @@ def test_concurrent_modification(live_server, float_tag):
     req = r.post_tag_instance(live_server.url, float_tag)
     assert req.status_code == 200
     created = req.json()["tag_instances"][0]
-    created["value"] = 1.0
+    created["value"] = "1.0"
     req = r.post_tag_instance(live_server.url, created)
     assert req.status_code == 200
-    created["value"] = 3.0
+    created["value"] = "3.0"
     req = r.post_tag_instance(live_server.url, created)
     assert req.status_code == 500
     assert req.json()["msg"] == (
@@ -91,7 +91,7 @@ def test_invalid_value(live_server, float_tag):
 def test_no_tag_def(live_server, entity0):
     entity0.save()
     tag_inst = {
-        "value": 2.0,
+        "value": "2.0",
         "id_tag_definition_persistent": "not_existent_id_persistent_test",
         "id_entity_persistent": entity0.id_persistent,
     }
@@ -105,7 +105,7 @@ def test_no_tag_def(live_server, entity0):
 def test_no_entity(live_server, tag_def):
     tag_def.save()
     tag_inst = {
-        "value": 2.0,
+        "value": "2.0",
         "id_tag_definition_persistent": tag_def.id_persistent,
         "id_entity_persistent": "not_existent_id_persistent_test",
     }

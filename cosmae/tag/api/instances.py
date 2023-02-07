@@ -1,6 +1,6 @@
 "API methods for tag instances."
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import List, Optional
 from uuid import uuid4
 
 from django.db import IntegrityError
@@ -28,7 +28,7 @@ class TagInstancePost(Schema):
     "A single API tag instance for post requests."
     id_entity_persistent: str
     id_tag_definition_persistent: str
-    value: Union[float, None]
+    value: Optional[str]
     id_persistent: Optional[str]
     version: Optional[int]
 

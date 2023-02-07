@@ -23,7 +23,8 @@ class TagDefinition(models.Model):
     "Django ORM model for tag defintions."
     INNER = "INR"
     FLOAT = "FLT"
-    TYPE_CHOICES = [(INNER, "inner"), (FLOAT, "float")]
+    STRING = "STR"
+    TYPE_CHOICES = [(INNER, "inner"), (FLOAT, "float"), (STRING, "string")]
     name = models.TextField()
     id_persistent = models.TextField()
     id_parent_persistent = models.TextField(null=True, blank=True)
@@ -118,17 +119,19 @@ class TagDefinition(models.Model):
         return False
 
     def check_value(self, val):
-        # TODO(@mo-fu) parse values, maybe store int as float anyway
-        # TODO(@mo-fu) add handling of string  and string list values. FOR post and get.
         "Check if a value is of the type for this tag."
-        if self.type == TagDefinition.INNER:
-            if val is not None:
-                raise InvalidTagValueException(self.id_persistent, val, self.type)
-            return val
+        if self.type == TagDefinition.INNER and val is not None:
+            raise InvalidTagValueException(self.id_persistent, val, self.type)
+        if self.type == TagDefinition.STRING and val is None:
+            raise InvalidTagValueException(self.id_persistent, val, self.type)
         if self.type == TagDefinition.FLOAT:
-            if not isinstance(val, float):
-                raise InvalidTagValueException(self.id_persistent, val, self.type)
-        return str(val)
+            try:
+                _ = float(val)
+            except ValueError as exc:
+                raise InvalidTagValueException(
+                    self.id_persistent, val, self.type
+                ) from exc
+        return val
 
 
 class TagInstance(models.Model):

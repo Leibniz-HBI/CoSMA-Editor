@@ -24,11 +24,13 @@ router = Router()
 _tag_type_mapping_api_to_db = {
     "INNER": TagDefintionDb.INNER,
     "FLOAT": TagDefintionDb.FLOAT,
+    "STRING": TagDefintionDb.STRING,
 }
 
 _tag_type_mapping_db_to_api = {
     TagDefintionDb.INNER: "INNER",
     TagDefintionDb.FLOAT: "FLOAT",
+    TagDefintionDb.STRING: "STRING",
 }
 
 

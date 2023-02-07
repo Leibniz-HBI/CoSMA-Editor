@@ -114,7 +114,7 @@ def test_add_tag_root(entity0, tag_def):
         time_edit=c.time_edit_test,
         id_entity_persistent=entity0.id_persistent,
         id_tag_definition_persistent=tag_def.id_persistent,
-        value=2.0,
+        value="2.0",
     )
     assert ret.value == "2.0"
     assert ret.id_persistent == c.id_tag_persistent_test
@@ -142,7 +142,7 @@ def test_add_tag_child(entity0, tag_def):
         time_edit=c.time_edit_test,
         id_entity_persistent=entity0.id_persistent,
         id_tag_definition_persistent=tag_def.id_persistent,
-        value=2.0,
+        value="2.0",
     )
     assert ret.value == "2.0"
     assert ret.id_persistent == c.id_tag_persistent_test
