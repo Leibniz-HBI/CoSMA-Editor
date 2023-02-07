@@ -1,19 +1,45 @@
+import { ColumnType } from './state'
+
 /**
- * Indicates successful data fetch.
+ * Indicates successful entity fetch.
  */
-export class SetTableAction {
+export class SetEntitiesAction {
+    entities: string[]
+    constructor(entities: string[]) {
+        this.entities = entities
+    }
+}
+/**
+ * Indicates successful data fetch
+ */
+export class AppendColumnAction {
+    idPersistent: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    row_objects: any[][]
+    columnData: { [key: string]: any }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(row_objects: any[]) {
-        this.row_objects = row_objects
+    constructor(idPersistent: string, columnData: { [key: string]: any }) {
+        this.idPersistent = idPersistent
+        this.columnData = columnData
     }
 }
 
 /**
  * Indicates the begin of data fetch for table.
  */
-export class SetLoadingAction {}
+export class SetEntityLoadingAction {}
+/**
+ * Indicates fetching of column data.
+ */
+export class SetColumnLoadingAction {
+    idPersistent: string
+    name: string
+    columnType: ColumnType
+    constructor(name: string, idPersistent: string, columnType: ColumnType) {
+        this.name = name
+        this.idPersistent = idPersistent
+        this.columnType = columnType
+    }
+}
 
 /**
  * Indcates an error during table data fetch.
@@ -24,5 +50,9 @@ export class SetErrorAction {
         this.msg = msg
     }
 }
-
-export type TableAction = SetTableAction | SetLoadingAction | SetErrorAction
+export type TableAction =
+    | SetEntitiesAction
+    | AppendColumnAction
+    | SetEntityLoadingAction
+    | SetColumnLoadingAction
+    | SetErrorAction

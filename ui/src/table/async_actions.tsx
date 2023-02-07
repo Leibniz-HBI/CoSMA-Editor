@@ -1,13 +1,16 @@
 import { Dispatch } from 'react'
 import { exceptionMessage } from '../util/exception'
-import { TableState } from './state'
+import { ColumnType, TableState } from './state'
 import {
     TableAction,
-    SetLoadingAction,
+    SetEntityLoadingAction,
     SetErrorAction,
-    SetTableAction
+    SetEntitiesAction,
+    AppendColumnAction,
+    SetColumnLoadingAction
 } from './actions'
 import { AsyncAction } from '../util/state'
+import { fetch_chunk } from '../util/fetch'
 
 /**
  * Async action for fetching table data.
@@ -19,37 +22,31 @@ export class GetTableAsyncAction extends AsyncAction<TableState, TableAction> {
         this.apiPath = apiPath
     }
     async run(dispatch: Dispatch<TableAction>, state: TableState) {
-        if (state.isLoading) {
+        if (state.entities.length > 0 || state.isLoading || state.isLoadingColumn()) {
             return
         }
-        dispatch(new SetLoadingAction())
+        dispatch(new SetEntityLoadingAction())
+        dispatch(
+            new SetColumnLoadingAction(
+                'Display Text',
+                'display_txt_id',
+                ColumnType.String
+            )
+        )
         try {
-            const rsp = await fetch(this.apiPath + '/count')
-            if (rsp.status !== 200) {
-                dispatch(
-                    new SetErrorAction(
-                        'Could not get number of table entries.' +
-                            `Reason: "${(await rsp.json())['msg']}"`
-                    )
-                )
-                return
-            }
-            const json = await rsp.json()
-            const count = json['count']
+            const entities: string[] = []
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const rows: any[] = []
-            for (let i = 0; i < count; i += 100) {
-                const rsp = await fetch(this.apiPath + '/chunk', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ offset: i, limit: 500 })
+            const displayTxts: { [key: string]: any } = {}
+            for (let i = 0; ; i += 500) {
+                const rsp = await fetch_chunk({
+                    api_path: this.apiPath + '/persons/chunk',
+                    offset: i,
+                    limit: 500
                 })
                 if (rsp.status !== 200) {
                     dispatch(
                         new SetErrorAction(
-                            `Could not load chunk ${i}. Reason: "${
+                            `Could not load entities chunk ${i}. Reason: "${
                                 (await rsp.json())['msg']
                             }"`
                         )
@@ -57,14 +54,98 @@ export class GetTableAsyncAction extends AsyncAction<TableState, TableAction> {
                     return
                 }
                 const json = await rsp.json()
-                const rows_api = json['persons']
-                if (rows_api !== null) {
-                    for (const entry_json of rows_api) {
-                        rows.push(entry_json)
+                const rowsApi = json['persons']
+                if (rowsApi !== null) {
+                    for (const entry_json of rowsApi) {
+                        const idPersistent = entry_json['id_persistent']
+                        entities.push(idPersistent)
+                        displayTxts[idPersistent] = {
+                            values: [entry_json['display_txt']]
+                        }
                     }
                 }
+                if (rowsApi.length < 500) {
+                    break
+                }
             }
-            dispatch(new SetTableAction(rows))
+            dispatch(new SetEntitiesAction(entities))
+            dispatch(new AppendColumnAction('display_txt_id', displayTxts))
+        } catch (e: unknown) {
+            dispatch(new SetErrorAction(exceptionMessage(e)))
+        }
+    }
+}
+
+export class GetColumnAsyncAction extends AsyncAction<TableState, TableAction> {
+    apiPath: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    columnDefinition: { [key: string]: any }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(api_path: string, column_definition: { [key: string]: any }) {
+        super()
+        this.apiPath = api_path
+        this.columnDefinition = column_definition
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async run(dispatch: Dispatch<TableAction>, state: TableState) {
+        const id_persistent = this.columnDefinition['id_persistent']
+        const columnType = this.columnDefinition['type']
+        if (
+            state.isLoading ||
+            (id_persistent in state.columnIndices &&
+                state.columnStates[state.columnIndices[id_persistent]]?.isLoading)
+        ) {
+            return
+        }
+        try {
+            const name = this.columnDefinition['name']
+            dispatch(new SetColumnLoadingAction(name, id_persistent, columnType))
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const column_data: { [key: string]: any } = {}
+            for (let i = 0; ; i += 5000) {
+                const rsp = await fetch_chunk({
+                    api_path: this.apiPath + '/tags/chunk',
+                    offset: i,
+                    limit: 5000,
+                    payload: {
+                        id_tag_definition_persistent: id_persistent
+                    }
+                })
+                if (rsp.status !== 200) {
+                    dispatch(
+                        new SetErrorAction(
+                            `Could not load entities chunk ${i}. Reason: "${
+                                (await rsp.json())['msg']
+                            }"`
+                        )
+                    )
+                    return
+                }
+                const json = await rsp.json()
+                const tags = json['tag_instances']
+                let value = undefined
+                for (const tag of tags) {
+                    const id_entity_persistent: string = tag['id_entity_persistent']
+                    if (this.columnDefinition['type'] == ColumnType.Boolean) {
+                        value = true
+                    } else {
+                        value = tag['value']
+                    }
+                    if (id_entity_persistent in column_data) {
+                        const cell = column_data[id_entity_persistent]
+                        cell['values'].add(value)
+                    } else {
+                        column_data[id_entity_persistent] = {
+                            values: [value]
+                        }
+                    }
+                }
+                if (tags.length < 5000) {
+                    break
+                }
+            }
+            dispatch(new AppendColumnAction(id_persistent, column_data))
         } catch (e: unknown) {
             dispatch(new SetErrorAction(exceptionMessage(e)))
         }

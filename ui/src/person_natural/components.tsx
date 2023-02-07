@@ -1,16 +1,26 @@
 import { CosmaeConf } from '../config'
 import { RemoteDataTable } from '../table/components'
+import { all_columns } from './columns'
+
 //eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 export function PersonTable(props: any) {
-    const columns = [
-        { id: 'names_personal', title: 'Personal Names' },
-        { id: 'names_family', title: 'Family Names' },
-        { id: 'display_txt', title: 'Display Text' }
+    const column_defs = [
+        all_columns['Kategorie'],
+        all_columns['Partei'],
+        // all_columns['Soziale Medien'],
+        // all_columns['SM_Twitter'],
+        all_columns['SM_Twitter_id'],
+        all_columns['SM_Twitter_user'],
+        // all_columns['SM_Twitter_verifiziert'],
+        // all_columns['SM_Facebook'],
+        all_columns['SM_Facebook_id'],
+        all_columns['SM_Facebook_user'],
+        all_columns['SM_Facebook_verifiziert']
     ]
     return (
         <RemoteDataTable
-            base_url={CosmaeConf.get().api_base + '/persons'}
-            initialColumns={columns}
+            base_url={CosmaeConf.get().api_base}
+            column_defs={column_defs}
         />
     )
 }
