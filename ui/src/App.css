@@ -68,7 +68,7 @@
     border-width: 0px;
 }
 .cosmae-table-page-header > button:disabled {
-  background-color: #5F9EA044
+    background-color: #5f9ea044;
 }
 .cosmae-table-page-body {
     margin-top: 12px;
@@ -126,4 +126,64 @@
 }
 .cosmae-column-add-button > button:hover {
     background-color: #efeff1;
+}
+.cosmae-column-menu-container,
+.cosmae-header-menu-container {
+    padding: 0px 0;
+    border-radius: 6px;
+    box-shadow: 0px 0px 1px rgba(62, 65, 86, 0.7), 0px 6px 12px rgba(62, 65, 86, 0.35);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+
+    background-color: gainsboro;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.cosmae-column-menu-container {
+    width: 500px;
+}
+.cosmae-header-menu-container {
+    width: 100px;
+}
+
+.cosmae-column-menu-container > .cosmae-column-menu-item > .danger,
+.cosmae-header-menu-container > .cosmae-header-menu-item > .danger {
+    color: rgba(255, 40, 40, 0.8);
+}
+.cosmae-column-menu-container > .danger:hover,
+.cosmae-header-menu-container > .danger:hover {
+    color: rgba(255, 40, 40, 1);
+    font-weight: 700;
+}
+
+.cosmae-column-menu-container > .cosmae-column-menu-item,
+.cosmae-header-menu-container > .cosmae-header-menu-item {
+    padding: 6px 8px;
+    color: rgba(0, 0, 0, 0.7);
+    transition: background-color 100ms;
+    cursor: pointer;
+}
+.cosmae-column-menu-container > .cosmae-column-menu-item:hover,
+.cosmae-header-menu-container > .cosmae-header-menu-item:hover {
+    color: rgba(0, 0, 0, 0.9);
+    font-weight: 700;
+}
+.cosmae-header-menu-close-row {
+    pointer-events: none;
+    padding: 0;
+    margin: 0;
+    align-items: end;
+    display: flex;
+    flex-direction: row-reverse;
+    background-color: gainsboro;
+}
+.cosmae-header-menu-close-row > div {
+    text-align: center;
+    pointer-events: all;
+    margin: 4px;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
 }

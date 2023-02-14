@@ -5,7 +5,13 @@ import {
     SetErrorAction,
     SetEntityLoadingAction,
     SetColumnLoadingAction,
-    TableAction
+    TableAction,
+    ShowColumnAddMenuAction,
+    HideColumnAddMenuAction,
+    ShowHeaderMenuAction,
+    HideHeaderMenuAction,
+    RemoveSelectedColumnAction,
+    SetColumnWidthAction
 } from './actions'
 
 export function tableReducer(state: TableState, action: TableAction) {
@@ -22,7 +28,7 @@ export function tableReducer(state: TableState, action: TableAction) {
             isLoading: false
         })
     } else if (action instanceof AppendColumnAction) {
-        const col_idx = state.columnIndices[action.idPersistent]
+        const col_idx = state.columnIndices.get(action.idPersistent)
         if (col_idx !== undefined) {
             return new TableState({
                 ...state,
@@ -41,13 +47,12 @@ export function tableReducer(state: TableState, action: TableAction) {
         }
     } else if (action instanceof SetColumnLoadingAction) {
         const column_idx =
-            state.columnIndices[action.idPersistent] ?? state.columnStates.length
+            state.columnIndices.get(action.idPersistent) ?? state.columnStates.length
+        const newColumnIndices = new Map(state.columnIndices)
+        newColumnIndices.set(action.idPersistent, column_idx)
         return new TableState({
             ...state,
-            columnIndices: {
-                ...state.columnIndices,
-                [action.idPersistent]: column_idx
-            },
+            columnIndices: newColumnIndices,
             columnStates: [
                 ...state.columnStates.slice(0, column_idx),
                 new ColumnState({
@@ -57,6 +62,75 @@ export function tableReducer(state: TableState, action: TableAction) {
                     columnType: action.columnType
                 }),
                 ...state.columnStates.slice(column_idx + 1)
+            ]
+        })
+    } else if (action instanceof ShowColumnAddMenuAction) {
+        return new TableState({
+            ...state,
+            showColumnAddMenu: true
+        })
+    } else if (action instanceof HideColumnAddMenuAction) {
+        return new TableState({
+            ...state,
+            showColumnAddMenu: false
+        })
+    } else if (action instanceof ShowHeaderMenuAction) {
+        return new TableState({
+            ...state,
+            selectedColumnHeaderByIdPersistent:
+                state.columnStates[action.columnIndex].idPersistent,
+            selectedColumnHeaderBounds: action.bounds
+        })
+    } else if (action instanceof HideHeaderMenuAction) {
+        return new TableState({
+            ...state,
+            selectedColumnHeaderByIdPersistent: undefined,
+            selectedColumnHeaderBounds: undefined
+        })
+    } else if (action instanceof RemoveSelectedColumnAction) {
+        if (state.selectedColumnHeaderByIdPersistent === undefined) {
+            return new TableState({
+                ...state,
+                selectedColumnHeaderBounds: undefined,
+                selectedColumnHeaderByIdPersistent: undefined
+            })
+        }
+        const columnIdx = state.columnIndices.get(
+            state.selectedColumnHeaderByIdPersistent
+        )
+        if (columnIdx === undefined) {
+            return new TableState({
+                ...state,
+                selectedColumnHeaderBounds: undefined,
+                selectedColumnHeaderByIdPersistent: undefined
+            })
+        }
+
+        const columnStates = [
+            ...state.columnStates.slice(undefined, columnIdx),
+            ...state.columnStates.slice(columnIdx + 1, undefined)
+        ]
+        const columnIndices = new Map<string, number>()
+        for (let idx = 0; idx < columnStates.length; ++idx) {
+            columnIndices.set(columnStates[idx].idPersistent, idx)
+        }
+        return new TableState({
+            ...state,
+            columnStates: columnStates,
+            columnIndices: columnIndices,
+            selectedColumnHeaderBounds: undefined,
+            selectedColumnHeaderByIdPersistent: undefined
+        })
+    } else if (action instanceof SetColumnWidthAction) {
+        return new TableState({
+            ...state,
+            columnStates: [
+                ...state.columnStates.slice(0, action.columnIdx),
+                new ColumnState({
+                    ...state.columnStates[action.columnIdx],
+                    width: action.width
+                }),
+                ...state.columnStates.slice(action.columnIdx + 1)
             ]
         })
     } else if (action instanceof SetErrorAction) {

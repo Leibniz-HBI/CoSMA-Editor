@@ -1,4 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
+import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import {
     SetEntityLoadingAction,
     SetColumnLoadingAction,
@@ -7,7 +8,7 @@ import {
     AppendColumnAction
 } from './actions'
 import { GetTableAsyncAction, GetColumnAsyncAction } from './async_actions'
-import { ColumnState, ColumnType, TableState } from './state'
+import { ColumnState, TableState } from './state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {
@@ -188,11 +189,12 @@ describe('get column async action', () => {
     const columnIdTest = 'column_id_test'
     const columnNameTest1 = 'column name test 1'
     const columnIdTest1 = 'column_id_test_1'
-    const columnDefTest = {
-        id_persistent: columnIdTest,
-        name: columnNameTest,
-        type: ColumnType.String
-    }
+    const columnDefTest = new ColumnDefinition({
+        idPersistent: columnIdTest,
+        namePath: [columnNameTest],
+        version: 2,
+        columnType: ColumnType.String
+    })
     const tagResponse = {
         id_entity_persistent: 'test-id-0',
         id_tag_definition_persistent: columnIdTest,
@@ -208,7 +210,7 @@ describe('get column async action', () => {
         await new GetColumnAsyncAction('http://test', columnDefTest).run(
             dispatch,
             new TableState({
-                columnIndices: { column_id_test: 1 },
+                columnIndices: new Map(Object.entries({ column_id_test: 1 })),
                 columnStates: [
                     new ColumnState({
                         name: columnNameTest1,

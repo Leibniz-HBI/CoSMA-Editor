@@ -1,6 +1,6 @@
 import { Dispatch } from 'react'
 import { exceptionMessage } from '../util/exception'
-import { ColumnType, TableState } from './state'
+import { TableState } from './state'
 import {
     TableAction,
     SetEntityLoadingAction,
@@ -11,6 +11,7 @@ import {
 } from './actions'
 import { AsyncAction } from '../util/state'
 import { fetch_chunk } from '../util/fetch'
+import { ColumnDefinition, ColumnType } from '../column_menu/state'
 
 /**
  * Async action for fetching table data.
@@ -79,27 +80,28 @@ export class GetTableAsyncAction extends AsyncAction<TableState, TableAction> {
 export class GetColumnAsyncAction extends AsyncAction<TableState, TableAction> {
     apiPath: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    columnDefinition: { [key: string]: any }
+    columnDefinition: ColumnDefinition
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(api_path: string, column_definition: { [key: string]: any }) {
+    constructor(api_path: string, column_definition: ColumnDefinition) {
         super()
         this.apiPath = api_path
         this.columnDefinition = column_definition
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async run(dispatch: Dispatch<TableAction>, state: TableState) {
-        const id_persistent = this.columnDefinition['id_persistent']
-        const columnType = this.columnDefinition['type']
+        const id_persistent = this.columnDefinition.idPersistent
+        const columnType = this.columnDefinition.columnType
         if (
             state.isLoading ||
-            (id_persistent in state.columnIndices &&
-                state.columnStates[state.columnIndices[id_persistent]]?.isLoading)
+            (state.columnIndices.has(id_persistent) &&
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                state.columnStates[state.columnIndices.get(id_persistent)!].isLoading)
         ) {
             return
         }
         try {
-            const name = this.columnDefinition['name']
+            const name = this.columnDefinition.namePath.join('->')
             dispatch(new SetColumnLoadingAction(name, id_persistent, columnType))
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const column_data: { [key: string]: any } = {}
@@ -127,7 +129,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableState, TableAction> {
                 let value = undefined
                 for (const tag of tags) {
                     const id_entity_persistent: string = tag['id_entity_persistent']
-                    if (this.columnDefinition['type'] == ColumnType.Boolean) {
+                    if (this.columnDefinition.columnType == ColumnType.Boolean) {
                         value = true
                     } else {
                         value = tag['value']

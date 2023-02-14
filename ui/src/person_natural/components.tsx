@@ -1,6 +1,6 @@
 import { CosmaeConf } from '../config'
 import { RemoteDataTable } from '../table/components'
-import { all_columns } from './columns'
+import { all_columns } from '../column_menu/columns'
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 export function PersonTable(props: any) {

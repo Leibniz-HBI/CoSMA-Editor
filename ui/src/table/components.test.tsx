@@ -7,9 +7,9 @@ jest.mock('@glideapps/glide-data-grid', () => ({
     DataEditor: jest.fn().mockImplementation((props: any) => <MockTable />)
 }))
 import { describe } from '@jest/globals'
-import { render, screen } from '@testing-library/react'
-import { DataTable, mkCell, mkCellContentCalback } from './components'
-import { TableState, ColumnState, ColumnType } from './state'
+import { render, renderHook, screen } from '@testing-library/react'
+import { DataTable, mkCell, useCellContentCalback } from './components'
+import { TableState, ColumnState } from './state'
 import {
     BooleanCell,
     BubbleCell,
@@ -17,6 +17,8 @@ import {
     GridCellKind,
     TextCell
 } from '@glideapps/glide-data-grid'
+import { ColumnType } from '../column_menu/state'
+import { ColumnAddButton } from '../column_menu/components'
 
 const testColumns = [
     new ColumnState({
@@ -120,30 +122,58 @@ describe('table from state', () => {
             isLoading: false
         })
         // eslint-disable-next-line @typescript-eslint/no-empty-function
-        const mock_fn = () => {}
-        const { container } = render(<DataTable state={state} cellContent={mock_fn} />)
+        const mockCecllContentFn = jest.fn()
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        const mockHeaderMenuFn = jest.fn()
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        const mockColumnAddMenuFn = jest.fn()
+        const { container } = render(
+            <DataTable
+                state={state}
+                cellContent={mockCecllContentFn}
+                openHeaderMenuCallback={mockHeaderMenuFn}
+                showColumnAddMenuCallback={mockColumnAddMenuFn}
+            />
+        )
         const outer = container.getElementsByClassName('cosmae-table-container-outer')
         expect(outer.length).toBe(1)
         const inner = outer[0].getElementsByClassName('cosmae-table-container-inner')
         expect(inner.length).toBe(1)
         const mock = inner[0].getElementsByClassName('mock')
         expect(mock.length).toBe(1)
-        expect((DataEditor as unknown as jest.Mock).mock.calls).toEqual([
-            [
-                {
-                    rows: 3,
-                    width: '100%',
-                    height: '100%',
-                    getCellContent: mock_fn,
-                    freezeColumns: 1,
-                    columns: [
-                        { title: 'test title 0', id: 'test_column_0', width: 200 },
-                        { title: 'test title 1', id: 'test_column_1', width: 200 }
-                    ]
+        expect(`${(DataEditor as unknown as jest.Mock).mock.calls[0][0]}`).toEqual(
+            `${{
+                rows: 3,
+                width: '100%',
+                height: '100%',
+                getCellContent: mockCecllContentFn,
+                freezeColumns: 1,
+                onHeaderMenuClick: mockHeaderMenuFn,
+                rightElement: (
+                    <ColumnAddButton>
+                        <button onClick={mockColumnAddMenuFn}>+</button>
+                    </ColumnAddButton>
+                ),
+                rightElementProps: {
+                    fill: false,
+                    sticky: true
                 },
-                {}
-            ]
-        ])
+                columns: [
+                    {
+                        title: 'test title 0',
+                        id: 'test_column_0',
+                        width: 200,
+                        hasMenu: false
+                    },
+                    {
+                        title: 'test title 1',
+                        id: 'test_column_1',
+                        width: 200,
+                        hasMenu: true
+                    }
+                ]
+            }}`
+        )
     })
 })
 describe('column types', () => {
@@ -151,7 +181,7 @@ describe('column types', () => {
     const entityId1 = 'id_entity_test_1'
     const entityIdList = [entityId0, entityId1]
     const columnId = 'id_column_test'
-    const columnIndices = { id_column_test: 0 }
+    const columnIndices = new Map(Object.entries({ id_column_test: 0 }))
     test('text column', () => {
         const state = new TableState({
             columnStates: [
@@ -170,7 +200,8 @@ describe('column types', () => {
             entities: entityIdList,
             isLoading: false
         })
-        const cellContentFunction = mkCellContentCalback(state)
+        const { result } = renderHook(() => useCellContentCalback(state))
+        const cellContentFunction = result.current
         expect(cellContentFunction([0, 0])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
@@ -201,7 +232,8 @@ describe('column types', () => {
             entities: entityIdList,
             isLoading: false
         })
-        const cellContentFunction = mkCellContentCalback(state)
+        const { result } = renderHook(() => useCellContentCalback(state))
+        const cellContentFunction = result.current
         expect(cellContentFunction([0, 0])).toEqual({
             kind: 'boolean' as GridCellKind,
             allowOverlay: false,
@@ -229,7 +261,8 @@ describe('column types', () => {
             entities: entityIdList,
             isLoading: false
         })
-        const cellContentFunction = mkCellContentCalback(state)
+        const { result } = renderHook(() => useCellContentCalback(state))
+        const cellContentFunction = result.current
         expect(cellContentFunction([0, 0])).toEqual({
             kind: 'loading' as GridCellKind,
             allowOverlay: true,
