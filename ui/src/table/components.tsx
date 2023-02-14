@@ -16,6 +16,7 @@ import { useThunkReducer } from '../util/state'
 import { ColumnAddButton, ColumnMenu } from '../column_menu/components'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import {
+    ChangeColumnIndexAction,
     HideColumnAddMenuAction,
     HideHeaderMenuAction,
     RemoveSelectedColumnAction,
@@ -84,7 +85,10 @@ export function useCellContentCalback(state: TableState) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function RemoteDataTable(props: any) {
-    const [state, dispatch] = useThunkReducer(tableReducer, new TableState({}))
+    const [state, dispatch] = useThunkReducer(
+        tableReducer,
+        new TableState({ frozenColumns: 1 })
+    )
     useLayoutEffect(() => {
         new GetTableAsyncAction(props.base_url).run(dispatch, state).then(async () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,18 +129,19 @@ export function RemoteDataTable(props: any) {
                         // eslint-disable-next-line react-hooks/exhaustive-deps
                         []
                     )}
-                    removeColumnCallback={() => {
+                    removeColumnCallback={() =>
                         dispatch(new RemoveSelectedColumnAction())
-                    }}
+                    }
                     setColumnWidthCallback={(
                         column: GridColumn,
                         newSize: number,
                         colIndex: number,
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         newSizeWithGrow: number
-                    ) => {
-                        dispatch(new SetColumnWidthAction(colIndex, newSize))
-                    }}
+                    ) => dispatch(new SetColumnWidthAction(colIndex, newSize))}
+                    changeColumnIndexCallback={(startIndex: number, endIndex: number) =>
+                        dispatch(new ChangeColumnIndexAction(startIndex, endIndex))
+                    }
                 />
             </div>
         </div>
@@ -153,7 +158,8 @@ export function DataTable(props: any) {
         closeColumnAddMenuCallback,
         openHeaderMenuCallback,
         closeHeaderMenuCallback,
-        setColumnWidthCallback
+        setColumnWidthCallback,
+        changeColumnIndexCallback
     } = props
     const {
         layerProps: columnAddMenuLayerProps,
@@ -219,7 +225,7 @@ export function DataTable(props: any) {
                 id: columnState.idPersistent,
                 title: columnState.name,
                 width: columnState.width,
-                hasMenu: i > 0
+                hasMenu: i >= state.frozenColumns
             })
         }
 
@@ -233,7 +239,7 @@ export function DataTable(props: any) {
                             getCellContent={cellContent}
                             width="100%"
                             height="100%"
-                            freezeColumns={1}
+                            freezeColumns={state.frozenColumns}
                             rightElement={
                                 <ColumnAddButton>
                                     <button
@@ -250,6 +256,7 @@ export function DataTable(props: any) {
                             }}
                             onHeaderMenuClick={openHeaderMenuCallback}
                             onColumnResize={setColumnWidthCallback}
+                            onColumnMoved={changeColumnIndexCallback}
                         />
                         {state.showColumnAddMenu &&
                             columnAddMenuRenderLayer(

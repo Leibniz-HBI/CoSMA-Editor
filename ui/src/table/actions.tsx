@@ -67,6 +67,14 @@ export class ShowHeaderMenuAction {
  */
 export class HideHeaderMenuAction {}
 
+/**
+ *Indicates that the column for which the header menu was open should be deleted.
+ */
+export class RemoveSelectedColumnAction {}
+
+/**
+ * Indicates that the width of a column has changed
+ */
 export class SetColumnWidthAction {
     columnIdx: number
     width: number
@@ -75,7 +83,18 @@ export class SetColumnWidthAction {
         this.width = width
     }
 }
-export class RemoveSelectedColumnAction {}
+/**
+ * Indicates that a column position has changes
+ */
+export class ChangeColumnIndexAction {
+    startIndex: number
+    endIndex: number
+    constructor(startIndex: number, endIndex: number) {
+        this.startIndex = startIndex
+        this.endIndex = endIndex
+    }
+}
+
 /**
  * Indcates an error during table data fetch.
  */
@@ -97,4 +116,5 @@ export type TableAction =
     | HideHeaderMenuAction
     | RemoveSelectedColumnAction
     | SetColumnWidthAction
+    | ChangeColumnIndexAction
     | SetErrorAction

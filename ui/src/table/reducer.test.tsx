@@ -11,7 +11,8 @@ import {
     ShowHeaderMenuAction,
     HideHeaderMenuAction,
     RemoveSelectedColumnAction,
-    SetColumnWidthAction
+    SetColumnWidthAction,
+    ChangeColumnIndexAction
 } from './actions'
 import { tableReducer } from './reducer'
 import { ColumnState, TableState } from './state'
@@ -342,6 +343,80 @@ describe('reducer tests', () => {
                 new SetColumnWidthAction(1, 400)
             )
             expect(endState).toEqual(expextedState)
+        })
+    })
+    describe('column moves', () => {
+        test('swap columns forward', () => {
+            const initialState = new TableState({
+                columnStates: columnsTest,
+                columnIndices: new Map([
+                    [columnIdTest1, 0],
+                    [columnIdTest, 1]
+                ])
+            })
+            const expectedState = new TableState({
+                columnStates: [columnsTest[1], columnsTest[0]],
+                columnIndices: new Map([
+                    [columnIdTest, 0],
+                    [columnIdTest1, 1]
+                ])
+            })
+            const endState = tableReducer(
+                initialState,
+                new ChangeColumnIndexAction(0, 1)
+            )
+            expect(endState).toEqual(expectedState)
+        })
+        test('swap columns backward', () => {
+            const initialState = new TableState({
+                columnStates: columnsTest,
+                columnIndices: new Map([
+                    [columnIdTest1, 0],
+                    [columnIdTest, 1]
+                ])
+            })
+            const expectedState = new TableState({
+                columnStates: [columnsTest[1], columnsTest[0]],
+                columnIndices: new Map([
+                    [columnIdTest, 0],
+                    [columnIdTest1, 1]
+                ])
+            })
+            const endState = tableReducer(
+                initialState,
+                new ChangeColumnIndexAction(1, 0)
+            )
+            expect(endState).toEqual(expectedState)
+        })
+        test("can't swap frozen columns forward", () => {
+            const initialState = new TableState({
+                frozenColumns: 1,
+                columnStates: columnsTest,
+                columnIndices: new Map([
+                    [columnIdTest1, 0],
+                    [columnIdTest, 1]
+                ])
+            })
+            const endState = tableReducer(
+                initialState,
+                new ChangeColumnIndexAction(0, 1)
+            )
+            expect(endState).toEqual(initialState)
+        })
+        test("can't swap frozen columns backward", () => {
+            const initialState = new TableState({
+                frozenColumns: 1,
+                columnStates: columnsTest,
+                columnIndices: new Map([
+                    [columnIdTest1, 0],
+                    [columnIdTest, 1]
+                ])
+            })
+            const endState = tableReducer(
+                initialState,
+                new ChangeColumnIndexAction(1, 0)
+            )
+            expect(endState).toEqual(initialState)
         })
     })
 })

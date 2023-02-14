@@ -7,10 +7,11 @@ export class TableState {
     columnIndices: Map<string, number>
     entities: string[]
     isLoading?: boolean
-    errorMsg?: string
     showColumnAddMenu: boolean
     selectedColumnHeaderByIdPersistent?: string
     selectedColumnHeaderBounds?: Rectangle
+    frozenColumns: number
+    errorMsg?: string
 
     constructor({
         columnStates: columnStates = [],
@@ -20,6 +21,7 @@ export class TableState {
         showColumnAddMenu = false,
         selectedColumnHeaderByIdPersistent = undefined,
         selectedColumnHeaderBounds = undefined,
+        frozenColumns = 0,
         errorMsg = undefined
     }: {
         columnStates?: ColumnState[]
@@ -31,6 +33,7 @@ export class TableState {
         showColumnAddMenu?: boolean
         selectedColumnHeaderByIdPersistent?: string
         selectedColumnHeaderBounds?: Rectangle
+        frozenColumns?: number
         errorMsg?: string
     }) {
         this.columnIndices = columnIndices
@@ -40,6 +43,7 @@ export class TableState {
         this.showColumnAddMenu = showColumnAddMenu
         this.selectedColumnHeaderByIdPersistent = selectedColumnHeaderByIdPersistent
         this.selectedColumnHeaderBounds = selectedColumnHeaderBounds
+        this.frozenColumns = frozenColumns
         this.errorMsg = errorMsg
     }
 

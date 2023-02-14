@@ -11,7 +11,8 @@ import {
     ShowHeaderMenuAction,
     HideHeaderMenuAction,
     RemoveSelectedColumnAction,
-    SetColumnWidthAction
+    SetColumnWidthAction,
+    ChangeColumnIndexAction
 } from './actions'
 
 export function tableReducer(state: TableState, action: TableAction) {
@@ -132,6 +133,36 @@ export function tableReducer(state: TableState, action: TableAction) {
                 }),
                 ...state.columnStates.slice(action.columnIdx + 1)
             ]
+        })
+    } else if (action instanceof ChangeColumnIndexAction) {
+        if (action.endIndex == action.startIndex) {
+            return state
+        }
+        let smallerIndex, largerIndex
+        if (action.endIndex < action.startIndex) {
+            smallerIndex = action.endIndex
+            largerIndex = action.startIndex
+        } else {
+            smallerIndex = action.startIndex
+            largerIndex = action.endIndex
+        }
+        if (smallerIndex < state.frozenColumns) {
+            return state
+        }
+        const newColumnStates = [
+            ...state.columnStates.slice(0, smallerIndex),
+            ...state.columnStates.slice(smallerIndex + 1, largerIndex + 1),
+            state.columnStates[smallerIndex],
+            ...state.columnStates.slice(largerIndex + 1)
+        ]
+        const newColumnIndices = new Map<string, number>()
+        for (let idx = 0; idx < newColumnStates.length; ++idx) {
+            newColumnIndices.set(newColumnStates[idx].idPersistent, idx)
+        }
+        return new TableState({
+            ...state,
+            columnStates: newColumnStates,
+            columnIndices: newColumnIndices
         })
     } else if (action instanceof SetErrorAction) {
         return new TableState({
