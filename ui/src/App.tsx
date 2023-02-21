@@ -1,6 +1,7 @@
 import './App.css'
 import { PersonTable } from './person_natural/components'
 import '@glideapps/glide-data-grid/dist/index.css'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 function App() {
     return (

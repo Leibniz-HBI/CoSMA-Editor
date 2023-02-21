@@ -141,49 +141,36 @@
     font-weight: 600;
 }
 
-.cosmae-column-menu-container {
-    width: 500px;
+
+span.indent {
+    margin-left: 10px;
+    margin-right: 10px;
 }
-.cosmae-header-menu-container {
-    width: 100px;
+span.icon {
+    margin-right: 5px;
+}
+form > label {
+    width: 100%;
 }
 
-.cosmae-column-menu-container > .cosmae-column-menu-item > .danger,
-.cosmae-header-menu-container > .cosmae-header-menu-item > .danger {
-    color: rgba(255, 40, 40, 0.8);
-}
-.cosmae-column-menu-container > .danger:hover,
-.cosmae-header-menu-container > .danger:hover {
-    color: rgba(255, 40, 40, 1);
-    font-weight: 700;
+form > label > input {
+    vertical-align: top;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.125);
+    width: 100%;
+    height: 32px;
+    font-size: 24px;
 }
 
-.cosmae-column-menu-container > .cosmae-column-menu-item,
-.cosmae-header-menu-container > .cosmae-header-menu-item {
-    padding: 6px 8px;
-    color: rgba(0, 0, 0, 0.7);
-    transition: background-color 100ms;
-    cursor: pointer;
+form > label input:focus {
+    outline: rgba(0, 0, 0, 0.125) solid 1px;
 }
-.cosmae-column-menu-container > .cosmae-column-menu-item:hover,
-.cosmae-header-menu-container > .cosmae-header-menu-item:hover {
-    color: rgba(0, 0, 0, 0.9);
-    font-weight: 700;
+
+div#layers > div > .container {
+    padding: 8px 8px;
 }
-.cosmae-header-menu-close-row {
-    pointer-events: none;
-    padding: 0;
-    margin: 0;
-    align-items: end;
-    display: flex;
-    flex-direction: row-reverse;
-    background-color: gainsboro;
-}
-.cosmae-header-menu-close-row > div {
-    text-align: center;
-    pointer-events: all;
-    margin: 4px;
-    height: 16px;
-    width: 16px;
-    cursor: pointer;
+
+.overflow-y-auto {
+    overflow-y: auto;
 }

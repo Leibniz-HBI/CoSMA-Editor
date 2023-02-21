@@ -1,7 +1,8 @@
 export enum ColumnType {
     String,
     Boolean,
-    Float
+    Float,
+    Inner
 }
 
 export class ColumnDefinition {
@@ -29,5 +30,56 @@ export class ColumnDefinition {
         this.idParentPersistent = idParentPersistent
         this.columnType = columnType
         this.version = version
+    }
+}
+
+export class ColumnSelectionEntry {
+    columnDefinition: ColumnDefinition
+    isExpanded: boolean
+    isLoading: boolean
+    children: ColumnSelectionEntry[]
+
+    constructor({
+        columnDefinition,
+        isExpanded = false,
+        isLoading = false,
+        children = []
+    }: {
+        columnDefinition: ColumnDefinition
+        isExpanded?: boolean
+        isLoading?: boolean
+        children?: ColumnSelectionEntry[]
+    }) {
+        this.columnDefinition = columnDefinition
+        this.isExpanded = isExpanded
+        this.isLoading = isLoading
+        this.children = children
+    }
+    public isExpandable(): boolean {
+        return this.children.length > 0
+    }
+}
+
+export class ColumnSelectionState {
+    navigationEntries: ColumnSelectionEntry[]
+    searchEntries: ColumnSelectionEntry[]
+    isLoading: boolean
+    isSearching: boolean
+
+    constructor({
+        navigationEntries: columnSelectionEntries = [],
+        searchEntries: searchSelectionEntries = [],
+        isLoading = false,
+        isSearching = false
+    }: {
+        navigationEntries?: ColumnSelectionEntry[]
+        searchEntries?: ColumnSelectionEntry[]
+        isLoading?: boolean
+        isSearching?: boolean
+    }) {
+        this.navigationEntries = columnSelectionEntries
+        this.searchEntries = searchSelectionEntries
+        this.isLoading = isLoading
+        this.isSearching = isSearching
     }
 }

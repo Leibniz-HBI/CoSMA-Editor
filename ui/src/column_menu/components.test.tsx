@@ -6,11 +6,11 @@ import { describe } from '@jest/globals'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ColumnAddButton, ColumnMenu, constructColumnTitle } from './components'
-import { useColumnMenu } from './hooks'
-import { ColumnDefinition, ColumnType } from './state'
-jest.mock('./hooks', () => {
+import { allNavigationSelectionEntries } from './columns_structured'
+import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
+jest.mock('./columns_structured', () => {
     return {
-        useColumnMenu: jest.fn().mockImplementation()
+        allNavigationSelectionEntries: jest.fn().mockImplementation()
     }
 })
 
@@ -39,6 +39,7 @@ describe('create column name', () => {
 
 describe('ColumnAddMenu', () => {
     const idTest = 'id_column_test'
+    const idTest1 = 'id_column_test_1'
     const nameTest = 'Name Test'
 
     const columnDefinitionTest = new ColumnDefinition({
@@ -48,17 +49,83 @@ describe('ColumnAddMenu', () => {
         columnType: ColumnType.String,
         version: 0
     })
-    test('click items', async () => {
-        let triggered = undefined
-        function trigger(id: ColumnDefinition) {
-            triggered = id
-        }
-        ;(useColumnMenu as jest.Mock).mockReturnValue([columnDefinitionTest])
-        const user = userEvent.setup()
-        const { container } = render(<ColumnMenu addColumnCallback={trigger} />)
-        const button = container.getElementsByClassName('cosmae-column-menu-item')[0]
-        await user.click(button)
-        expect(triggered).toBe(columnDefinitionTest)
+
+    const singleColumnSelectionEntryTest = new ColumnSelectionEntry({
+        columnDefinition: columnDefinitionTest
+    })
+
+    const nestedColumnSelectionEntryTest = new ColumnSelectionEntry({
+        columnDefinition: new ColumnDefinition({
+            ...columnDefinitionTest,
+            idPersistent: idTest1,
+            columnType: ColumnType.Inner
+        }),
+        children: [
+            new ColumnSelectionEntry({ columnDefinition: columnDefinitionTest })
+        ],
+        isExpanded: false
+    })
+    describe('click items', () => {
+        test('select column', async () => {
+            let triggered = undefined
+            function trigger(id: ColumnDefinition) {
+                triggered = id
+            }
+            ;(allNavigationSelectionEntries as jest.Mock).mockReturnValue([
+                singleColumnSelectionEntryTest
+            ])
+            const user = userEvent.setup()
+            const { container } = render(
+                <ColumnMenu
+                    loadColumnDataCallback={trigger}
+                    columnIndices={new Map()}
+                />
+            )
+            const button = container.getElementsByClassName('list-group-item')[0]
+            await user.click(button)
+            expect(triggered).toBe(columnDefinitionTest)
+        })
+        test('expand', async () => {
+            ;(allNavigationSelectionEntries as jest.Mock).mockReturnValue([
+                nestedColumnSelectionEntryTest
+            ])
+            const user = userEvent.setup()
+            const { container } = render(
+                <ColumnMenu
+                    loadColumnDataCallback={() => {
+                        return
+                    }}
+                    columnIndices={new Map()}
+                />
+            )
+            let buttons = container.getElementsByClassName('list-group-item')
+            expect(buttons.length).toEqual(1)
+            await user.click(buttons[0])
+            buttons = container.getElementsByClassName('list-group-item')
+            expect(buttons.length).toEqual(2)
+        })
+        test('collapse', async () => {
+            ;(allNavigationSelectionEntries as jest.Mock).mockReturnValue([
+                new ColumnSelectionEntry({
+                    ...nestedColumnSelectionEntryTest,
+                    isExpanded: true
+                })
+            ])
+            const user = userEvent.setup()
+            const { container } = render(
+                <ColumnMenu
+                    loadColumnDataCallback={() => {
+                        return
+                    }}
+                    columnIndices={new Map()}
+                />
+            )
+            let buttons = container.getElementsByClassName('list-group-item')
+            expect(buttons.length).toEqual(2)
+            await user.click(buttons[0])
+            buttons = container.getElementsByClassName('list-group-item')
+            expect(buttons.length).toEqual(1)
+        })
     })
 })
 

@@ -261,7 +261,10 @@ export function DataTable(props: any) {
                         {state.showColumnAddMenu &&
                             columnAddMenuRenderLayer(
                                 <div {...columnAddMenuLayerProps}>
-                                    <ColumnMenu addColumnCallback={addColumnCallback} />
+                                    <ColumnMenu
+                                        columnIndices={props.state.columnIndices}
+                                        loadColumnDataCallback={addColumnCallback}
+                                    />
                                 </div>
                             )}
                         {headerMenuOpen &&

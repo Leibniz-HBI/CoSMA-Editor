@@ -215,7 +215,7 @@ describe('get column async action', () => {
                     new ColumnState({
                         name: columnNameTest1,
                         idPersistent: columnIdTest1,
-                        columnType: ColumnType.Float
+                        columnType: ColumnType.Inner
                     }),
                     new ColumnState({
                         name: columnNameTest,
