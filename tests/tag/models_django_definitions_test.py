@@ -227,8 +227,8 @@ def test_childrens(tag_def, tag_def_child_0, tag_def_child_1):
     tag_def.save()
     tag_def_child_0.save()
     tag_def_child_1.save()
-    ret = tag_def.most_recent_children()
-    assert ret == {tag_def_child_0, tag_def_child_1}
+    ret = TagDefinition.most_recent_children(c.id_tag_def_parent_persistent_test)
+    assert ret == [tag_def_child_0, tag_def_child_1]
 
 
 @pytest.mark.django_db
@@ -247,13 +247,20 @@ def test_children_updated(tag_def, tag_def_child_0, tag_def_child_1):
         previous_version=tag_def_child_0,
     )
     tag_def_child_0_updated.save()
-    ret = tag_def.most_recent_children()
-    assert ret == {tag_def_child_0_updated, tag_def_child_1}
+    ret = TagDefinition.most_recent_children(c.id_tag_def_parent_persistent_test)
+    assert ret == [tag_def_child_1, tag_def_child_0_updated]
 
 
 @pytest.mark.django_db
 def test_children_empty(tag_def):
     tag_def.type = TagDefinition.INNER
     tag_def.save()
-    ret = tag_def.most_recent_children()
-    assert ret == set()
+    ret = TagDefinition.most_recent_children(c.id_tag_def_parent_persistent_test)
+    assert not ret
+
+
+@pytest.mark.django_db
+def test_children_root(tag_def):
+    tag_def.save()
+    ret = TagDefinition.most_recent_children(None)
+    assert ret == [tag_def]

@@ -43,3 +43,11 @@ def post_tag_instance_chunks(url, tag_def_id, offset, limit):
         },
         timeout=900,
     )
+
+
+def post_tag_def_children(url, id_persistent):
+    return requests.post(
+        urljoin(url, "cosmae/api/tags/definitions/children"),
+        json={"id_parent_persistent": id_persistent},
+        timeout=900,
+    )

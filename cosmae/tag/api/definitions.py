@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
 
-from django.db import IntegrityError
+from django.db import DatabaseError, IntegrityError
 from ninja import Router, Schema
 
 from cosmae.exception import (
@@ -15,22 +15,22 @@ from cosmae.exception import (
     TagDefinitionExistsException,
     ValidationException,
 )
-from cosmae.tag.models_django import TagDefinition as TagDefintionDb
+from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.util.django import save_many_atomic
 
 router = Router()
 
 
 _tag_type_mapping_api_to_db = {
-    "INNER": TagDefintionDb.INNER,
-    "FLOAT": TagDefintionDb.FLOAT,
-    "STRING": TagDefintionDb.STRING,
+    "INNER": TagDefinitionDb.INNER,
+    "FLOAT": TagDefinitionDb.FLOAT,
+    "STRING": TagDefinitionDb.STRING,
 }
 
 _tag_type_mapping_db_to_api = {
-    TagDefintionDb.INNER: "INNER",
-    TagDefintionDb.FLOAT: "FLOAT",
-    TagDefintionDb.STRING: "STRING",
+    TagDefinitionDb.INNER: "INNER",
+    TagDefinitionDb.FLOAT: "FLOAT",
+    TagDefinitionDb.STRING: "STRING",
 }
 
 
@@ -48,6 +48,12 @@ class TagDefinitionList(Schema):
     "API model for a list of tag definitions."
     # pylint: disable=too-few-public-methods
     tag_definitions: List[TagDefinition]
+
+
+class PostGetChildrenRequest(Schema):
+    "API model for getting tag definitions by parent_id_persistent"
+    # pylint: disable=too-few-public-methods
+    id_parent_persistent: Optional[str]
 
 
 @router.post("", response={200: TagDefinitionList, 400: ApiError, 500: ApiError})
@@ -97,14 +103,32 @@ def post_tag_definitions(_, tag_definition_list: TagDefinitionList):
 
     return 200, TagDefinitionList(
         tag_definitions=[
-            tag_definition_db_to_api(tag_def[0]) for tag_def in tag_def_dbs
+            tag_definition_db_to_api(tag_def) for tag_def, _ in tag_def_dbs
         ]
     )
 
 
+@router.post("/children", response={200: TagDefinitionList, 500: ApiError})
+def post_get_tag_definition_children(_, post_children_request: PostGetChildrenRequest):
+    "Get tag definitions by id_parent_persistent."
+    try:
+        child_definitions_db = list(
+            TagDefinitionDb.most_recent_children(
+                post_children_request.id_parent_persistent
+            )
+        )
+        return 200, TagDefinitionList(
+            tag_definitions=[
+                tag_definition_db_to_api(tag_def) for tag_def in child_definitions_db
+            ]
+        )
+    except DatabaseError:
+        return 500, ApiError(msg="Database Error.")
+
+
 def tag_definition_api_to_db(
     tag_definition: TagDefinition, time_edit: datetime
-) -> TagDefintionDb:
+) -> TagDefinitionDb:
     "Convert a tag definition from API to database model."
     if tag_definition.id_persistent:
         persistent_id = tag_definition.id_persistent
@@ -120,7 +144,7 @@ def tag_definition_api_to_db(
                 "has version but no id_persistent."
             )
         persistent_id = str(uuid4())
-    return TagDefintionDb.change_or_create(
+    return TagDefinitionDb.change_or_create(
         id_persistent=persistent_id,
         id_parent_persistent=tag_definition.id_parent_persistent,
         version=tag_definition.version,
@@ -130,7 +154,7 @@ def tag_definition_api_to_db(
     )
 
 
-def tag_definition_db_to_api(tag_definition: TagDefintionDb) -> TagDefinition:
+def tag_definition_db_to_api(tag_definition: TagDefinitionDb) -> TagDefinition:
     "Convert a tag defintion from database to API model."
     return TagDefinition(
         id_persistent=tag_definition.id_persistent,

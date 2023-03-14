@@ -42,12 +42,13 @@ class TagDefinition(models.Model):
             "-previous_version"
         )[0]
 
-    def most_recent_children(self):
+    @classmethod
+    def most_recent_children(cls, id_persistent: Optional[str]):
         "Ge the most recent versions of child tags."
         objects = TagDefinition.objects.filter(  # pylint: disable=no-member
-            id_parent_persistent=self.id_persistent
+            id_parent_persistent=id_persistent
         )
-        return set(
+        return list(
             objects.filter(
                 id=models.Subquery(
                     objects.filter(id_persistent=models.OuterRef("id_persistent"))
@@ -208,7 +209,7 @@ class TagInstance(models.Model):
         except IndexError as exc:
             raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
         if tag.type == TagDefinition.INNER:
-            tags = tag.most_recent_children()
+            tags = set(TagDefinition.most_recent_children(tag.id_persistent))
             tags.add(tag)
         else:
             tags = {tag}
