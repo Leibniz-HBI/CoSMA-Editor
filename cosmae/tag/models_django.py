@@ -119,9 +119,11 @@ class TagDefinition(models.Model):
             return True
         return False
 
-    def check_value(self, val):
+    def check_value(self, val: str):
         "Check if a value is of the type for this tag."
-        if self.type == TagDefinition.INNER and val is not None:
+        if self.type == TagDefinition.INNER and not (
+            (isinstance(val, str) and val.lower() in {"true", "false"})
+        ):
             raise InvalidTagValueException(self.id_persistent, val, self.type)
         if self.type == TagDefinition.STRING and val is None:
             raise InvalidTagValueException(self.id_persistent, val, self.type)

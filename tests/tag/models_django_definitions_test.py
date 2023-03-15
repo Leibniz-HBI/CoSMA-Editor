@@ -205,9 +205,15 @@ def test_string_check_invalid(tag_def):
 
 
 @pytest.mark.django_db
-def test_inner_check_valid(tag_def):
+def test_inner_check_true_valid(tag_def):
     tag_def.type = TagDefinition.INNER
-    tag_def.check_value(None)
+    tag_def.check_value("true")
+
+
+@pytest.mark.django_db
+def test_inner_check_false_valid(tag_def):
+    tag_def.type = TagDefinition.INNER
+    tag_def.check_value("false")
 
 
 @pytest.mark.django_db

@@ -98,7 +98,7 @@ def test_get_children(live_server, entity0, tag_def_child_0, tag_def_child_1):
         for j in range(2)
     ]
     for idx in range(0, 2):
-        instances[idx].pop("value")
+        instances[idx]["value"] = str(idx == 0)
     req = post_tag_instances(live_server.url, instances)
     assert req.status_code == 200
     req = post_tag_instance_chunks(live_server.url, tag_def_parent.id_persistent, 0, 10)
