@@ -6,11 +6,11 @@ import { describe } from '@jest/globals'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ColumnAddButton, ColumnMenu, constructColumnTitle } from './components'
-import { allNavigationSelectionEntries } from './columns_structured'
 import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
-jest.mock('./columns_structured', () => {
+import { useRemoteColumnMenuData } from './hooks'
+jest.mock('./hooks', () => {
     return {
-        allNavigationSelectionEntries: jest.fn().mockImplementation()
+        useRemoteColumnMenuData: jest.fn().mockImplementation()
     }
 })
 
@@ -71,12 +71,15 @@ describe('ColumnAddMenu', () => {
             function trigger(id: ColumnDefinition) {
                 triggered = id
             }
-            ;(allNavigationSelectionEntries as jest.Mock).mockReturnValue([
-                singleColumnSelectionEntryTest
-            ])
+            ;(useRemoteColumnMenuData as jest.Mock).mockReturnValue({
+                navigationEntries: [singleColumnSelectionEntryTest],
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/no-empty-function
+                toggleExpansionCallback: (path: number[]) => {}
+            })
             const user = userEvent.setup()
             const { container } = render(
                 <ColumnMenu
+                    baseUrl={'http://test.url'}
                     loadColumnDataCallback={trigger}
                     columnIndices={new Map()}
                 />
@@ -85,13 +88,18 @@ describe('ColumnAddMenu', () => {
             await user.click(button)
             expect(triggered).toBe(columnDefinitionTest)
         })
-        test('expand', async () => {
-            ;(allNavigationSelectionEntries as jest.Mock).mockReturnValue([
-                nestedColumnSelectionEntryTest
-            ])
+        test('use expand callback', async () => {
+            let togglePath: number[] = []
+            ;(useRemoteColumnMenuData as jest.Mock).mockReturnValue({
+                navigationEntries: [nestedColumnSelectionEntryTest],
+                toggleExpansionCallback: (path: number[]) => {
+                    togglePath = path
+                }
+            })
             const user = userEvent.setup()
             const { container } = render(
                 <ColumnMenu
+                    baseUrl={'http://test.url'}
                     loadColumnDataCallback={() => {
                         return
                     }}
@@ -102,18 +110,25 @@ describe('ColumnAddMenu', () => {
             expect(buttons.length).toEqual(1)
             await user.click(buttons[0])
             buttons = container.getElementsByClassName('list-group-item')
-            expect(buttons.length).toEqual(2)
+            expect(togglePath).toEqual([0])
         })
-        test('collapse', async () => {
-            ;(allNavigationSelectionEntries as jest.Mock).mockReturnValue([
-                new ColumnSelectionEntry({
-                    ...nestedColumnSelectionEntryTest,
-                    isExpanded: true
-                })
-            ])
+        test('uses collapse callback', async () => {
+            let togglePath: number[] = []
+            ;(useRemoteColumnMenuData as jest.Mock).mockReturnValue({
+                navigationEntries: [
+                    new ColumnSelectionEntry({
+                        ...nestedColumnSelectionEntryTest,
+                        isExpanded: true
+                    })
+                ],
+                toggleExpansionCallback: (path: number[]) => {
+                    togglePath = path
+                }
+            })
             const user = userEvent.setup()
             const { container } = render(
                 <ColumnMenu
+                    baseUrl={'http://test.url'}
                     loadColumnDataCallback={() => {
                         return
                     }}
@@ -124,7 +139,7 @@ describe('ColumnAddMenu', () => {
             expect(buttons.length).toEqual(2)
             await user.click(buttons[0])
             buttons = container.getElementsByClassName('list-group-item')
-            expect(buttons.length).toEqual(1)
+            expect(togglePath).toEqual([0])
         })
     })
 })

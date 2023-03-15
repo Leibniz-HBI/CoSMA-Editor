@@ -1,3 +1,4 @@
+import { ErrorState } from '../util/error'
 import { ColumnSelectionEntry } from './state'
 
 /**Indicates that loading has started */
@@ -36,6 +37,15 @@ export class SetSearchEntriesAction {
  */
 export class ClearSearchEntriesAction {}
 
+/**
+ * Indicates that an error occured
+ */
+export class SetErrorAction {
+    errorState: ErrorState
+    constructor(errorState: ErrorState) {
+        this.errorState = errorState
+    }
+}
 export type ColumnSelectionAction =
     | StartLoadingAction
     | StartSearchAction
@@ -43,6 +53,7 @@ export type ColumnSelectionAction =
     | SetSearchEntriesAction
     | ClearSearchEntriesAction
     | ToggleExpansionAction
+    | SetErrorAction
 
 /**
  * Indicates that expansion of an entry should be toggled

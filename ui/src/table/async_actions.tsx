@@ -126,14 +126,9 @@ export class GetColumnAsyncAction extends AsyncAction<TableState, TableAction> {
                 }
                 const json = await rsp.json()
                 const tags = json['tag_instances']
-                let value = undefined
                 for (const tag of tags) {
                     const id_entity_persistent: string = tag['id_entity_persistent']
-                    if (this.columnDefinition.columnType == ColumnType.Boolean) {
-                        value = true
-                    } else {
-                        value = tag['value']
-                    }
+                    const value = tag['value']
                     if (id_entity_persistent in column_data) {
                         const cell = column_data[id_entity_persistent]
                         cell['values'].add(value)

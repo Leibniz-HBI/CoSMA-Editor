@@ -1,16 +1,8 @@
 import { ReactNode } from 'react'
 import { Form, FormLabel } from 'react-bootstrap'
 import { DashLg, Eye, EyeFill, PlusLg } from 'react-bootstrap-icons'
-import { useThunkReducer } from '../util/state'
-import { ToggleExpansionAction } from './actions'
-import { allNavigationSelectionEntries } from './columns_structured'
-import { columnMenuReducer } from './reducer'
-import {
-    ColumnDefinition,
-    ColumnSelectionEntry,
-    ColumnSelectionState,
-    ColumnType
-} from './state'
+import { useRemoteColumnMenuData } from './hooks'
+import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
 
 export function constructColumnTitle(namePath: string[]): string {
     if (namePath === undefined || namePath.length == 0) {
@@ -25,24 +17,18 @@ export function constructColumnTitle(namePath: string[]): string {
 }
 
 export function ColumnMenu(props: {
+    baseUrl: string
     columnIndices: Map<string, number>
     loadColumnDataCallback: (columnDefinition: ColumnDefinition) => void
 }) {
-    const [state, dispatch] = useThunkReducer(
-        columnMenuReducer,
-        new ColumnSelectionState({
-            isLoading: false,
-            navigationEntries: allNavigationSelectionEntries()
-        })
-    )
-    const columnSelectionEntries = state.navigationEntries
+    const { navigationEntries: columnSelectionEntries, toggleExpansionCallback } =
+        useRemoteColumnMenuData(props.baseUrl)
     const listEntries = mkListItems({
         columnSelectionEntries: columnSelectionEntries,
         path: [],
         columnIndices: props.columnIndices,
         loadColumnDataCallback: props.loadColumnDataCallback,
-        toggleExpansionCallback: (path: number[]) =>
-            dispatch(new ToggleExpansionAction(path)),
+        toggleExpansionCallback: toggleExpansionCallback,
         level: 0
     })
     return (
@@ -106,10 +92,16 @@ export function ColumnExplorerItem(props: {
     const { columnDefinition, isLoading, children, isExpanded } =
         props.columnSelectionEntry
     let callback = undefined
-    if (columnDefinition.columnType == ColumnType.Inner) {
+    const isDisplayedInTable = props.columnIndices.has(columnDefinition.idPersistent)
+    if (
+        columnDefinition.columnType == ColumnType.Inner &&
+        props.columnSelectionEntry.isExpandable()
+    ) {
         callback = () => props.toggleExpansionCallback(props.path)
     } else {
-        callback = () => props.loadColumnDataCallback(columnDefinition)
+        if (!isDisplayedInTable) {
+            callback = () => props.loadColumnDataCallback(columnDefinition)
+        }
     }
     return (
         <li
@@ -126,9 +118,7 @@ export function ColumnExplorerItem(props: {
                     isLoading={isLoading}
                     isExpandable={children.length > 0}
                     isExpanded={isExpanded}
-                    isDisplayedInTable={props.columnIndices.has(
-                        columnDefinition.idPersistent
-                    )}
+                    isDisplayedInTable={isDisplayedInTable}
                 />
             </div>
             {constructColumnTitle(columnDefinition.namePath)}

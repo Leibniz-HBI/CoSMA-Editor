@@ -212,7 +212,7 @@ describe('reducer tests', () => {
                 name: columnNameTest1,
                 isLoading: true,
                 idPersistent: columnIdTest1,
-                columnType: ColumnType.Boolean
+                columnType: ColumnType.Inner
             })
             const state = new TableState({
                 columnIndices: new Map(

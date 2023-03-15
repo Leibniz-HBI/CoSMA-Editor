@@ -69,8 +69,8 @@ describe('create cell', () => {
         expect(cell.displayData).toBe(cellContent.values[0])
     })
     test('boolean type true', () => {
-        const cellContent = { values: [true] }
-        const columnType = ColumnType.Boolean
+        const cellContent = { values: ['true'] }
+        const columnType = ColumnType.Inner
         const cell = mkCell(cellContent, columnType) as BooleanCell
         expect(cell.kind).toEqual('boolean' as GridCellKind)
         expect(cell.data).toEqual(true)
@@ -78,7 +78,7 @@ describe('create cell', () => {
     })
     test('boolean type undefined', () => {
         const cellContent = {}
-        const columnType = ColumnType.Boolean
+        const columnType = ColumnType.Inner
         const cell = mkCell(cellContent, columnType) as BooleanCell
         expect(cell.kind).toEqual('boolean' as GridCellKind)
         expect(cell.data).toEqual(false)
@@ -215,16 +215,16 @@ describe('column types', () => {
             data: 'value 1'
         })
     })
-    test('bool column', () => {
+    test('inner column', () => {
         const state = new TableState({
             columnStates: [
                 new ColumnState({
                     name: 'text column',
                     idPersistent: columnId,
-                    columnType: ColumnType.Boolean,
+                    columnType: ColumnType.Inner,
                     isLoading: false,
                     cellContents: {
-                        id_entity_test_0: { values: [true] }
+                        id_entity_test_0: { values: ['true'] }
                     }
                 })
             ],
@@ -253,7 +253,7 @@ describe('column types', () => {
                 new ColumnState({
                     name: 'text column',
                     idPersistent: columnId,
-                    columnType: ColumnType.Boolean,
+                    columnType: ColumnType.Inner,
                     isLoading: true
                 })
             ],

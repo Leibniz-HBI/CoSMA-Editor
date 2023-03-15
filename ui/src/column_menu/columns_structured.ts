@@ -64,7 +64,7 @@ export function allNavigationSelectionEntries() {
                                 idParentPersistent:
                                     '8e56bb47-c2e5-4cbe-b4c3-2b864beaf7fa',
                                 version: 7,
-                                columnType: ColumnType.Boolean,
+                                columnType: ColumnType.Inner,
                                 namePath: ['Social Media', 'Facebook', 'verified']
                             })
                         })
@@ -105,7 +105,7 @@ export function allNavigationSelectionEntries() {
                                 idParentPersistent:
                                     '56fafcb7-08ab-4cf2-8eb4-b0e37f91f123',
                                 version: 11,
-                                columnType: ColumnType.Boolean,
+                                columnType: ColumnType.Inner,
                                 namePath: ['Social Media', 'Twitter', 'verified']
                             })
                         })
@@ -146,7 +146,7 @@ export function allNavigationSelectionEntries() {
                                 idParentPersistent:
                                     '1effddcc-17a0-453c-90cc-2a10d85e1275',
                                 version: 15,
-                                columnType: ColumnType.Boolean,
+                                columnType: ColumnType.Inner,
                                 namePath: ['Social Media', 'Telegram', 'verified']
                             })
                         })
@@ -187,7 +187,7 @@ export function allNavigationSelectionEntries() {
                                 idParentPersistent:
                                     '07e0bf57-c3a5-4dd8-aa2f-b1e51a4286ad',
                                 version: 19,
-                                columnType: ColumnType.Boolean,
+                                columnType: ColumnType.Inner,
                                 namePath: ['Social Media', 'YouTube', 'verified']
                             })
                         })
@@ -228,7 +228,7 @@ export function allNavigationSelectionEntries() {
                                 idParentPersistent:
                                     '30cbca0e-a80b-4e5c-8d6b-cfaed9636740',
                                 version: 23,
-                                columnType: ColumnType.Boolean,
+                                columnType: ColumnType.Inner,
                                 namePath: ['Social Media', 'Instagram', 'verified']
                             })
                         })

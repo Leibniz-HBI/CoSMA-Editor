@@ -31,13 +31,13 @@ export function mkCell(cellContent: any, columnType: ColumnType): GridCell {
     // workaround for typescript jest compatibility
     let cellKind = 'text' as GridCellKind
     const cellValues = cellContent?.values
-    if (columnType == ColumnType.Boolean) {
+    if (columnType == ColumnType.Inner) {
         // workaround for typescript jest compatibility
         cellKind = 'boolean' as GridCellKind
         if (cellValues === undefined || cellValues === null) {
             cellContent = false
         } else {
-            cellContent = true
+            cellContent = cellValues[0].toLowerCase() == 'true'
         }
     }
     if (columnType == ColumnType.String) {
@@ -70,6 +70,14 @@ export function useCellContentCalback(state: TableState) {
             const [col_idx, row_idx] = cell
             const entity_id_persistent = state.entities[row_idx]
             const col = state.columnStates[col_idx]
+            if (col === undefined) {
+                return {
+                    kind: 'text' as GridCellKind,
+                    allowOverlay: false,
+                    displayData: '',
+                    data: ''
+                } as GridCell
+            }
             if (col.isLoading) {
                 return {
                     kind: 'loading' as GridCellKind,
@@ -109,6 +117,7 @@ export function RemoteDataTable(props: any) {
             <div className="cosmae-table-page-body">
                 <DataTable
                     state={state}
+                    baseUrl={props.base_url}
                     cellContent={cellContent}
                     addColumnCallback={addColumnCallback}
                     showColumnAddMenuCallback={() =>
@@ -262,6 +271,7 @@ export function DataTable(props: any) {
                             columnAddMenuRenderLayer(
                                 <div {...columnAddMenuLayerProps}>
                                     <ColumnMenu
+                                        baseUrl={props.baseUrl}
                                         columnIndices={props.state.columnIndices}
                                         loadColumnDataCallback={addColumnCallback}
                                     />

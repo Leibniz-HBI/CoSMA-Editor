@@ -1,6 +1,7 @@
+import { ErrorState } from '../util/error'
+
 export enum ColumnType {
     String,
-    Boolean,
     Float,
     Inner
 }
@@ -65,21 +66,25 @@ export class ColumnSelectionState {
     searchEntries: ColumnSelectionEntry[]
     isLoading: boolean
     isSearching: boolean
+    errorState?: ErrorState
 
     constructor({
         navigationEntries: columnSelectionEntries = [],
         searchEntries: searchSelectionEntries = [],
         isLoading = false,
-        isSearching = false
+        isSearching = false,
+        errorState = undefined
     }: {
         navigationEntries?: ColumnSelectionEntry[]
         searchEntries?: ColumnSelectionEntry[]
         isLoading?: boolean
         isSearching?: boolean
+        errorState?: ErrorState
     }) {
         this.navigationEntries = columnSelectionEntries
         this.searchEntries = searchSelectionEntries
         this.isLoading = isLoading
         this.isSearching = isSearching
+        this.errorState = errorState
     }
 }

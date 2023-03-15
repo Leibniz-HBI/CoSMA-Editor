@@ -1,6 +1,7 @@
 import {
     ClearSearchEntriesAction,
     ColumnSelectionAction,
+    SetErrorAction,
     SetNavigationEntriesAction,
     SetSearchEntriesAction,
     StartLoadingAction,
@@ -13,7 +14,11 @@ export function columnMenuReducer(
     state: ColumnSelectionState,
     action: ColumnSelectionAction
 ) {
-    if (action instanceof StartSearchAction) {
+    console.log(state)
+    console.log(action)
+    if (action instanceof SetErrorAction) {
+        return new ColumnSelectionState({ errorState: action.errorState })
+    } else if (action instanceof StartSearchAction) {
         return new ColumnSelectionState({ ...state, isSearching: true })
     } else if (action instanceof SetSearchEntriesAction) {
         return new ColumnSelectionState({
@@ -48,7 +53,11 @@ export function columnMenuReducer(
         })
     } else if (action instanceof StartLoadingAction) {
         if (action.path.length == 0) {
-            return new ColumnSelectionState({ ...state, isLoading: true })
+            return new ColumnSelectionState({
+                ...state,
+                isLoading: true,
+                errorState: undefined
+            })
         }
         return new ColumnSelectionState({
             ...state,

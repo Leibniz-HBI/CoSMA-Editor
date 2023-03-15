@@ -30,7 +30,7 @@ export const all_columns = {
         idPersistent: '958e057e-2b4e-4d69-b297-a9ffaad73994',
         idParentPersistent: '8e56bb47-c2e5-4cbe-b4c3-2b864beaf7fa',
         version: 7,
-        columnType: ColumnType.Boolean,
+        columnType: ColumnType.Inner,
         namePath: ['Social Media', 'Facebook', 'verified']
     }),
     SM_Twitter_user: new ColumnDefinition({
@@ -51,7 +51,7 @@ export const all_columns = {
         idPersistent: '08bac543-eb94-4b99-8654-842a1a0e166f',
         idParentPersistent: '56fafcb7-08ab-4cf2-8eb4-b0e37f91f123',
         version: 11,
-        columnType: ColumnType.Boolean,
+        columnType: ColumnType.Inner,
         namePath: ['Social Media', 'Twitter', 'verified']
     }),
     SM_Telegram_user: new ColumnDefinition({
@@ -72,7 +72,7 @@ export const all_columns = {
         idPersistent: '4d86457c-3a3b-4c7d-aab9-6fcac8e4e13c',
         idParentPersistent: '1effddcc-17a0-453c-90cc-2a10d85e1275',
         version: 15,
-        columnType: ColumnType.Boolean,
+        columnType: ColumnType.Inner,
         namePath: ['Social Media', 'Telegram', 'verified']
     }),
     SM_Youtube_user: new ColumnDefinition({
@@ -93,7 +93,7 @@ export const all_columns = {
         idPersistent: '4c17f7e5-b73b-4072-8357-06c8d4a15050',
         idParentPersistent: '07e0bf57-c3a5-4dd8-aa2f-b1e51a4286ad',
         version: 19,
-        columnType: ColumnType.Boolean,
+        columnType: ColumnType.Inner,
         namePath: ['Social Media', 'YouTube', 'verified']
     }),
     SM_Instagram_user: new ColumnDefinition({
@@ -114,7 +114,7 @@ export const all_columns = {
         idPersistent: 'aacca549-5651-4a41-951a-1f7f853717d5',
         idParentPersistent: '30cbca0e-a80b-4e5c-8d6b-cfaed9636740',
         version: 23,
-        columnType: ColumnType.Boolean,
+        columnType: ColumnType.Inner,
         namePath: ['Social Media', 'Instagram', 'verified']
     })
 }
