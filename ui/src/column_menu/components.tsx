@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useLayoutEffect } from 'react'
 import { Form, FormLabel } from 'react-bootstrap'
 import { DashLg, Eye, EyeFill, PlusLg } from 'react-bootstrap-icons'
 import { useRemoteColumnMenuData } from './hooks'
@@ -21,8 +21,18 @@ export function ColumnMenu(props: {
     columnIndices: Map<string, number>
     loadColumnDataCallback: (columnDefinition: ColumnDefinition) => void
 }) {
-    const { navigationEntries: columnSelectionEntries, toggleExpansionCallback } =
-        useRemoteColumnMenuData(props.baseUrl)
+    const {
+        navigationEntries: columnSelectionEntries,
+        toggleExpansionCallback,
+        getHierarchyCallback
+    } = useRemoteColumnMenuData(props.baseUrl)
+    useLayoutEffect(
+        () => {
+            getHierarchyCallback()
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [props.baseUrl]
+    )
     const listEntries = mkListItems({
         columnSelectionEntries: columnSelectionEntries,
         path: [],
@@ -38,7 +48,7 @@ export function ColumnMenu(props: {
         >
             <div className="col">
                 <div className="row ms-1 me-1">
-                    <Form className="ps-0 pe-0">
+                    <Form className="ps-0 pe-0 ms-0 me-0">
                         <FormLabel>
                             <input type="text" name="name" placeholder="Search" />
                         </FormLabel>

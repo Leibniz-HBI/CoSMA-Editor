@@ -14,8 +14,6 @@ export function columnMenuReducer(
     state: ColumnSelectionState,
     action: ColumnSelectionAction
 ) {
-    console.log(state)
-    console.log(action)
     if (action instanceof SetErrorAction) {
         return new ColumnSelectionState({ errorState: action.errorState })
     } else if (action instanceof StartSearchAction) {

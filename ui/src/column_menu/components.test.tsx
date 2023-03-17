@@ -72,9 +72,11 @@ describe('ColumnAddMenu', () => {
                 triggered = id
             }
             ;(useRemoteColumnMenuData as jest.Mock).mockReturnValue({
+                isLoading: false,
                 navigationEntries: [singleColumnSelectionEntryTest],
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/no-empty-function
-                toggleExpansionCallback: (path: number[]) => {}
+                toggleExpansionCallback: (path: number[]) => {},
+                getHierarchyCallback: jest.fn()
             })
             const user = userEvent.setup()
             const { container } = render(
@@ -91,10 +93,12 @@ describe('ColumnAddMenu', () => {
         test('use expand callback', async () => {
             let togglePath: number[] = []
             ;(useRemoteColumnMenuData as jest.Mock).mockReturnValue({
+                isLoading: false,
                 navigationEntries: [nestedColumnSelectionEntryTest],
                 toggleExpansionCallback: (path: number[]) => {
                     togglePath = path
-                }
+                },
+                getHierarchyCallback: jest.fn()
             })
             const user = userEvent.setup()
             const { container } = render(
@@ -115,6 +119,7 @@ describe('ColumnAddMenu', () => {
         test('uses collapse callback', async () => {
             let togglePath: number[] = []
             ;(useRemoteColumnMenuData as jest.Mock).mockReturnValue({
+                isLoading: false,
                 navigationEntries: [
                     new ColumnSelectionEntry({
                         ...nestedColumnSelectionEntryTest,
@@ -123,7 +128,8 @@ describe('ColumnAddMenu', () => {
                 ],
                 toggleExpansionCallback: (path: number[]) => {
                     togglePath = path
-                }
+                },
+                getHierarchyCallback: jest.fn()
             })
             const user = userEvent.setup()
             const { container } = render(

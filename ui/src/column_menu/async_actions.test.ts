@@ -5,12 +5,7 @@ import {
     StartLoadingAction
 } from './actions'
 import { GetHierarchyAction } from './async_actions'
-import {
-    ColumnDefinition,
-    ColumnSelectionEntry,
-    ColumnSelectionState,
-    ColumnType
-} from './state'
+import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {
     const fetchMock = jest.spyOn(global, 'fetch')
@@ -34,14 +29,7 @@ describe('column menu async actions', () => {
         jest.restoreAllMocks()
         jest.clearAllMocks()
     })
-    test('exits early when already loading', async () => {
-        const state = new ColumnSelectionState({ isLoading: true })
-        const dispatch = jest.fn()
-        await new GetHierarchyAction({ apiPath: apiPathTest }).run(dispatch, state)
-        expect(dispatch.mock.calls.length).toBe(0)
-    })
     test('sets error state on initial loading', async () => {
-        const state = new ColumnSelectionState({})
         const dispatch = jest.fn()
         responseSequence([
             [
@@ -54,7 +42,7 @@ describe('column menu async actions', () => {
             ]
         ])
         const action = new GetHierarchyAction({ apiPath: apiPathTest })
-        await action.run(dispatch, state)
+        await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
         const actionFromCall = dispatch.mock.calls[1][0]
@@ -64,13 +52,12 @@ describe('column menu async actions', () => {
         )
     })
     test('handles fetch exception', async () => {
-        const state = new ColumnSelectionState({})
         const dispatch = jest.fn()
         jest.spyOn(global, 'fetch').mockImplementationOnce(() => {
             throw Error('fetch error')
         })
         const action = new GetHierarchyAction({ apiPath: apiPathTest })
-        await action.run(dispatch, state)
+        await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         const actionFromCall = dispatch.mock.calls[1][0]
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
@@ -78,7 +65,6 @@ describe('column menu async actions', () => {
         expect(actionFromCall.errorState.msg).toEqual('fetch error')
     })
     test('handle empty response', async () => {
-        const state = new ColumnSelectionState({})
         const dispatch = jest.fn()
         responseSequence([
             [
@@ -91,7 +77,7 @@ describe('column menu async actions', () => {
             ]
         ])
         const action = new GetHierarchyAction({ apiPath: apiPathTest })
-        await action.run(dispatch, state)
+        await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -106,7 +92,6 @@ describe('column menu async actions', () => {
     const typeRootTest = 'INNER'
     const typeRootTest1 = 'FLOAT'
     test('handle roots only', async () => {
-        const state = new ColumnSelectionState({})
         const dispatch = jest.fn()
         responseSequence([
             [
@@ -148,7 +133,7 @@ describe('column menu async actions', () => {
             ]
         ])
         const action = new GetHierarchyAction({ apiPath: apiPathTest, expand: true })
-        await action.run(dispatch, state)
+        await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -187,7 +172,6 @@ describe('column menu async actions', () => {
     const typeChildTest = 'STRING'
 
     test('handle child', async () => {
-        const state = new ColumnSelectionState({})
         const dispatch = jest.fn()
         responseSequence([
             [
@@ -237,7 +221,7 @@ describe('column menu async actions', () => {
             ]
         ])
         const action = new GetHierarchyAction({ apiPath: apiPathTest, expand: true })
-        await action.run(dispatch, state)
+        await action.run(dispatch)
         // expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
         expect(dispatch.mock.calls[1][0]).toEqual(

@@ -1,212 +1,91 @@
-import {
-    DataEditor,
-    GridCell,
-    GridCellKind,
-    GridColumn,
-    Item,
-    LoadingCell,
-    Rectangle
-} from '@glideapps/glide-data-grid'
-import { useLayoutEffect, useCallback } from 'react'
-import { tableReducer } from './reducer'
+import { DataEditor, GridColumn } from '@glideapps/glide-data-grid'
+import { useCallback, useLayoutEffect } from 'react'
 import { useLayer } from 'react-laag'
-import { TableState } from './state'
-import { GetTableAsyncAction, GetColumnAsyncAction } from './async_actions'
-import { useThunkReducer } from '../util/state'
 import { ColumnAddButton, ColumnMenu } from '../column_menu/components'
-import { ColumnDefinition, ColumnType } from '../column_menu/state'
-import {
-    ChangeColumnIndexAction,
-    HideColumnAddMenuAction,
-    HideHeaderMenuAction,
-    RemoveSelectedColumnAction,
-    SetColumnWidthAction,
-    ShowColumnAddMenuAction,
-    ShowHeaderMenuAction
-} from './actions'
 import { HeaderMenu } from '../header_menu'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mkCell(cellContent: any, columnType: ColumnType): GridCell {
-    // workaround for typescript jest compatibility
-    let cellKind = 'text' as GridCellKind
-    const cellValues = cellContent?.values
-    if (columnType == ColumnType.Inner) {
-        // workaround for typescript jest compatibility
-        cellKind = 'boolean' as GridCellKind
-        if (cellValues === undefined || cellValues === null) {
-            cellContent = false
-        } else {
-            cellContent = cellValues[0].toLowerCase() == 'true'
-        }
-    }
-    if (columnType == ColumnType.String) {
-        if (cellValues === undefined || cellValues === null) {
-            cellContent = ''
-        } else {
-            if (cellValues.length < 2) {
-                cellContent = cellValues[0]
-                if (cellContent === undefined || cellContent === null) {
-                    cellContent = ''
-                }
-            } else {
-                // workaround for typescript jest compatibility
-                cellKind = 'bubble' as GridCellKind
-                cellContent = cellValues
-            }
-        }
-    }
-    return {
-        kind: cellKind as GridCellKind,
-        allowOverlay: false,
-        displayData: cellContent,
-        data: cellContent
-    } as GridCell
-}
-
-export function useCellContentCalback(state: TableState) {
-    return useCallback(
-        (cell: Item): GridCell => {
-            const [col_idx, row_idx] = cell
-            const entity_id_persistent = state.entities[row_idx]
-            const col = state.columnStates[col_idx]
-            if (col === undefined) {
-                return {
-                    kind: 'text' as GridCellKind,
-                    allowOverlay: false,
-                    displayData: '',
-                    data: ''
-                } as GridCell
-            }
-            if (col.isLoading) {
-                return {
-                    kind: 'loading' as GridCellKind,
-                    allowOverlay: true,
-                    style: 'faded'
-                } as LoadingCell
-            }
-            return mkCell(col.cellContents[entity_id_persistent], col.columnType)
-        },
-        [state.entities, state.columnStates]
-    )
-}
+import { useRemoteTableData, LocalTableCallbacks, TableDataProps } from './hooks'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function RemoteDataTable(props: any) {
-    const [state, dispatch] = useThunkReducer(
-        tableReducer,
-        new TableState({ frozenColumns: 1 })
+    const [remoteCallbacks, localCallbacks, syncInfo] = useRemoteTableData(
+        props.base_url,
+        props.column_defs
     )
-    useLayoutEffect(() => {
-        new GetTableAsyncAction(props.base_url).run(dispatch, state).then(async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            props.column_defs.map(async (col: ColumnDefinition) => {
-                await new GetColumnAsyncAction(props.base_url, col).run(dispatch, state)
-            })
-        })
+    useLayoutEffect(
+        () => {
+            remoteCallbacks.loadTableDataCallback()
+        },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.column_defs])
-    const cellContent = useCellContentCalback(state)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function addColumnCallback(columnDefinition: ColumnDefinition) {
-        new GetColumnAsyncAction(props.base_url, columnDefinition).run(dispatch, state)
-    }
+        [props.column_defs, syncInfo.isLoading]
+    )
 
     return (
         <div className="cosmae-table-page-container">
             <div className="cosmae-table-page-body">
                 <DataTable
-                    state={state}
-                    baseUrl={props.base_url}
-                    cellContent={cellContent}
-                    addColumnCallback={addColumnCallback}
-                    showColumnAddMenuCallback={() =>
-                        dispatch(new ShowColumnAddMenuAction())
-                    }
-                    closeColumnAddMenuCallback={() =>
-                        dispatch(new HideColumnAddMenuAction())
-                    }
-                    openHeaderMenuCallback={useCallback(
-                        (columnIdx: number, bounds: Rectangle) => {
-                            dispatch(new ShowHeaderMenuAction(columnIdx, bounds))
-                        },
+                    tableProps={syncInfo}
+                    tableCallbacks={{
+                        ...localCallbacks,
                         // eslint-disable-next-line react-hooks/exhaustive-deps
-                        []
-                    )}
-                    closeHeaderMenuCallback={useCallback(
-                        () => dispatch(new HideHeaderMenuAction()),
-                        // eslint-disable-next-line react-hooks/exhaustive-deps
-                        []
-                    )}
-                    removeColumnCallback={() =>
-                        dispatch(new RemoveSelectedColumnAction())
-                    }
-                    setColumnWidthCallback={(
-                        column: GridColumn,
-                        newSize: number,
-                        colIndex: number,
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        newSizeWithGrow: number
-                    ) => dispatch(new SetColumnWidthAction(colIndex, newSize))}
-                    changeColumnIndexCallback={(startIndex: number, endIndex: number) =>
-                        dispatch(new ChangeColumnIndexAction(startIndex, endIndex))
-                    }
+                        cellContentCallback: useCallback(
+                            localCallbacks.cellContentCallback,
+                            [syncInfo.entities, syncInfo.columnStates]
+                        )
+                    }}
                 />
             </div>
         </div>
     )
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function DataTable(props: any) {
+export function DataTable(props: {
+    tableProps: TableDataProps
+    tableCallbacks: LocalTableCallbacks
+}) {
     const {
-        state,
-        cellContent,
+        entities,
+        columnStates,
+        columnIndices,
+        frozenColumns,
+        selectedColumnHeaderBounds,
+        isShowColumnAddMenu,
+        isLoading,
+        errorMsg,
+        baseUrl
+    } = props.tableProps
+    const {
+        cellContentCallback,
         addColumnCallback,
+        removeColumnCallback,
         showColumnAddMenuCallback,
-        closeColumnAddMenuCallback,
-        openHeaderMenuCallback,
-        closeHeaderMenuCallback,
+        hideColumnAddMenuCallback,
+        showHeaderMenuCallback,
+        hideHeaderMenuCallback,
         setColumnWidthCallback,
-        changeColumnIndexCallback
-    } = props
+        switchColumnsCallback,
+        columnHeaderBoundsCallback
+    } = props.tableCallbacks
     const {
         layerProps: columnAddMenuLayerProps,
         triggerProps: columnAddMenuTriggerProps,
         renderLayer: columnAddMenuRenderLayer
     } = useLayer({
-        isOpen: state.showColumnAddMenu,
+        isOpen: isShowColumnAddMenu,
         placement: 'bottom-end',
-        onOutsideClick: closeColumnAddMenuCallback
+        onOutsideClick: hideColumnAddMenuCallback
     })
-    const headerMenuOpen = state.selectedColumnHeaderBounds !== undefined
+    const headerMenuOpen = selectedColumnHeaderBounds !== undefined
     const { layerProps, renderLayer } = useLayer({
         isOpen: headerMenuOpen,
         auto: true,
         placement: 'bottom-end',
         onOutsideClick: undefined,
         trigger: {
-            getBounds: () => ({
-                left: state.selectedColumnHeaderBounds.x ?? 0,
-                top: state.selectedColumnHeaderBounds.y ?? 0,
-                width: state.selectedColumnHeaderBounds.width ?? 0,
-                height: state.selectedColumnHeaderBounds.height ?? 0,
-                right:
-                    (state.selectedColumnHeaderBounds.x ?? 0) +
-                    (state.selectedColumnHeaderBounds.width ?? 0),
-                bottom:
-                    (state.selectedColumnHeaderBounds.y ?? 0) +
-                    (state.selectedColumnHeaderBounds.height ?? 0)
-            })
+            getBounds: columnHeaderBoundsCallback
         }
     })
 
-    if (
-        state.isLoading === undefined ||
-        state.isLoading === null ||
-        state.isLoading ||
-        state.isLoadingColumn()
-    ) {
+    if (isLoading) {
         return (
             <div className="cosmae-table-container-outer">
                 <div className="cosmae-table-container-inner">
@@ -214,27 +93,21 @@ export function DataTable(props: any) {
                 </div>
             </div>
         )
-    } else if (
-        !(
-            state.errorMsg === undefined ||
-            state.errorMsg === null ||
-            state.errorMsg === ''
-        )
-    ) {
+    } else if (!(errorMsg === undefined || errorMsg === null || errorMsg == '')) {
         return (
             <div>
-                <p>Error: {state.errorMsg}</p>
+                <p>Error: {errorMsg}</p>
             </div>
         )
     } else {
         const columnDefs: GridColumn[] = []
-        for (let i = 0; i < state.columnStates.length; ++i) {
-            const columnState = state.columnStates[i]
+        for (let i = 0; i < columnStates.length; ++i) {
+            const columnState = columnStates[i]
             columnDefs.push({
                 id: columnState.idPersistent,
                 title: columnState.name,
                 width: columnState.width,
-                hasMenu: i >= state.frozenColumns
+                hasMenu: i >= frozenColumns
             })
         }
 
@@ -243,12 +116,12 @@ export function DataTable(props: any) {
                 <div className="cosmae-table-container-inner">
                     <>
                         <DataEditor
-                            rows={state.entities.length}
+                            rows={entities.length}
                             columns={columnDefs}
-                            getCellContent={cellContent}
+                            getCellContent={cellContentCallback}
                             width="100%"
                             height="100%"
-                            freezeColumns={state.frozenColumns}
+                            freezeColumns={frozenColumns}
                             rightElement={
                                 <ColumnAddButton>
                                     <button
@@ -263,16 +136,16 @@ export function DataTable(props: any) {
                                 fill: false,
                                 sticky: true
                             }}
-                            onHeaderMenuClick={openHeaderMenuCallback}
+                            onHeaderMenuClick={showHeaderMenuCallback}
                             onColumnResize={setColumnWidthCallback}
-                            onColumnMoved={changeColumnIndexCallback}
+                            onColumnMoved={switchColumnsCallback}
                         />
-                        {state.showColumnAddMenu &&
+                        {isShowColumnAddMenu &&
                             columnAddMenuRenderLayer(
                                 <div {...columnAddMenuLayerProps}>
                                     <ColumnMenu
-                                        baseUrl={props.baseUrl}
-                                        columnIndices={props.state.columnIndices}
+                                        baseUrl={baseUrl}
+                                        columnIndices={columnIndices}
                                         loadColumnDataCallback={addColumnCallback}
                                     />
                                 </div>
@@ -281,12 +154,8 @@ export function DataTable(props: any) {
                             renderLayer(
                                 <div {...layerProps}>
                                     <HeaderMenu
-                                        closeHeaderMenuCallback={
-                                            closeHeaderMenuCallback
-                                        }
-                                        removeColumnCallback={
-                                            props.removeColumnCallback
-                                        }
+                                        closeHeaderMenuCallback={hideHeaderMenuCallback}
+                                        removeColumnCallback={removeColumnCallback}
                                     />
                                 </div>
                             )}

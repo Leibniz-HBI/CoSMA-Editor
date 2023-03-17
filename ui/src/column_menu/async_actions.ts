@@ -8,17 +8,9 @@ import {
     SetNavigationEntriesAction,
     StartLoadingAction
 } from './actions'
-import {
-    ColumnDefinition,
-    ColumnSelectionEntry,
-    ColumnSelectionState,
-    ColumnType
-} from './state'
+import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
 
-export class GetHierarchyAction extends AsyncAction<
-    ColumnSelectionState,
-    ColumnSelectionAction
-> {
+export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void> {
     apiPath: string
     idParentPersistent?: string
     expand: boolean
@@ -46,10 +38,7 @@ export class GetHierarchyAction extends AsyncAction<
         this.namePath = namePath
     }
 
-    async run(dispatch: Dispatch<ColumnSelectionAction>, state: ColumnSelectionState) {
-        if (state.isLoading) {
-            return
-        }
+    async run(dispatch: Dispatch<ColumnSelectionAction>) {
         dispatch(new StartLoadingAction(this.indexPath))
         const columnSelectionEntries: ColumnSelectionEntry[] = []
         try {
@@ -67,7 +56,7 @@ export class GetHierarchyAction extends AsyncAction<
                             msg: `Could not load column definitions. Reason: "${
                                 (await rsp.json())['msg']
                             }"`,
-                            retryCallback: () => this.run(dispatch, state)
+                            retryCallback: () => this.run(dispatch)
                         })
                     )
                 )
@@ -107,7 +96,7 @@ export class GetHierarchyAction extends AsyncAction<
                                 indexPath: [...this.indexPath, index],
                                 namePath: entry.columnDefinition.namePath,
                                 expand: false
-                            }).run(dispatch, state)
+                            }).run(dispatch)
                         )
                     }
                 }
@@ -120,7 +109,7 @@ export class GetHierarchyAction extends AsyncAction<
                 new SetErrorAction(
                     new ErrorState({
                         msg: exceptionMessage(e),
-                        retryCallback: () => this.run(dispatch, state)
+                        retryCallback: () => this.run(dispatch)
                     })
                 )
             )

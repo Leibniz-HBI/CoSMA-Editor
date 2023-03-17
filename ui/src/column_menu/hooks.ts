@@ -1,4 +1,3 @@
-import { useLayoutEffect } from 'react'
 import { useThunkReducer } from '../util/state'
 import { ToggleExpansionAction } from './actions'
 import { GetHierarchyAction } from './async_actions'
@@ -8,6 +7,7 @@ import { ColumnSelectionState, ColumnSelectionEntry } from './state'
 export type RemoteColumnMenuData = {
     navigationEntries: ColumnSelectionEntry[]
     toggleExpansionCallback: (path: number[]) => void
+    getHierarchyCallback: VoidFunction
 }
 
 export function useRemoteColumnMenuData(baseUrl: string): RemoteColumnMenuData {
@@ -15,20 +15,17 @@ export function useRemoteColumnMenuData(baseUrl: string): RemoteColumnMenuData {
         columnMenuReducer,
         new ColumnSelectionState({})
     )
-    useLayoutEffect(
-        () => {
-            if (!state.isLoading) {
-                dispatch(new GetHierarchyAction({ apiPath: baseUrl, expand: true }))
-            }
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [baseUrl]
-    )
 
     return {
         navigationEntries: state.navigationEntries,
         toggleExpansionCallback(path: number[]) {
             dispatch(new ToggleExpansionAction(path))
+        },
+        getHierarchyCallback: () => {
+            if (state.isLoading) {
+                return
+            }
+            dispatch(new GetHierarchyAction({ apiPath: baseUrl, expand: true }))
         }
     }
 }

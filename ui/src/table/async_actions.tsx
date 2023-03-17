@@ -1,6 +1,5 @@
 import { Dispatch } from 'react'
 import { exceptionMessage } from '../util/exception'
-import { TableState } from './state'
 import {
     TableAction,
     SetEntityLoadingAction,
@@ -16,16 +15,13 @@ import { ColumnDefinition, ColumnType } from '../column_menu/state'
 /**
  * Async action for fetching table data.
  */
-export class GetTableAsyncAction extends AsyncAction<TableState, TableAction> {
+export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
     apiPath: string
     constructor(apiPath: string) {
         super()
         this.apiPath = apiPath
     }
-    async run(dispatch: Dispatch<TableAction>, state: TableState) {
-        if (state.entities.length > 0 || state.isLoading || state.isLoadingColumn()) {
-            return
-        }
+    async run(dispatch: Dispatch<TableAction>) {
         dispatch(new SetEntityLoadingAction())
         dispatch(
             new SetColumnLoadingAction(
@@ -77,7 +73,7 @@ export class GetTableAsyncAction extends AsyncAction<TableState, TableAction> {
     }
 }
 
-export class GetColumnAsyncAction extends AsyncAction<TableState, TableAction> {
+export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
     apiPath: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     columnDefinition: ColumnDefinition
@@ -89,17 +85,9 @@ export class GetColumnAsyncAction extends AsyncAction<TableState, TableAction> {
         this.columnDefinition = column_definition
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async run(dispatch: Dispatch<TableAction>, state: TableState) {
+    async run(dispatch: Dispatch<TableAction>) {
         const id_persistent = this.columnDefinition.idPersistent
         const columnType = this.columnDefinition.columnType
-        if (
-            state.isLoading ||
-            (state.columnIndices.has(id_persistent) &&
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                state.columnStates[state.columnIndices.get(id_persistent)!].isLoading)
-        ) {
-            return
-        }
         try {
             const name = this.columnDefinition.namePath.join('->')
             dispatch(new SetColumnLoadingAction(name, id_persistent, columnType))

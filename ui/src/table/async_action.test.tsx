@@ -8,7 +8,6 @@ import {
     AppendColumnAction
 } from './actions'
 import { GetTableAsyncAction, GetColumnAsyncAction } from './async_actions'
-import { ColumnState, TableState } from './state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {
@@ -50,15 +49,6 @@ const display_txt_column = {
 }
 
 describe('get table async action', () => {
-    test('early exit when already loading', async () => {
-        const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(
-            dispatch,
-            new TableState({ isLoading: true })
-        )
-        expect(dispatch.mock.calls.length).toBe(0)
-    })
-
     test('loads table with one chunk', async () => {
         responseSequence([
             [
@@ -71,7 +61,7 @@ describe('get table async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(dispatch, new TableState({}))
+        await new GetTableAsyncAction('http://test').run(dispatch)
         expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -120,7 +110,7 @@ describe('get table async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(dispatch, new TableState({}))
+        await new GetTableAsyncAction('http://test').run(dispatch)
         expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -146,7 +136,7 @@ describe('get table async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(dispatch, new TableState({}))
+        await new GetTableAsyncAction('http://test').run(dispatch)
         expect(dispatch.mock.calls.length).toBe(3)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -171,7 +161,7 @@ describe('get table async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(dispatch, new TableState({}))
+        await new GetTableAsyncAction('http://test').run(dispatch)
         expect(dispatch.mock.calls.length).toBe(3)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -187,8 +177,6 @@ describe('get table async action', () => {
 describe('get column async action', () => {
     const columnNameTest = 'column name test'
     const columnIdTest = 'column_id_test'
-    const columnNameTest1 = 'column name test 1'
-    const columnIdTest1 = 'column_id_test_1'
     const columnDefTest = new ColumnDefinition({
         idPersistent: columnIdTest,
         namePath: [columnNameTest],
@@ -205,39 +193,6 @@ describe('get column async action', () => {
         id_tag_definition_persistent: columnIdTest,
         value: displayTxt1
     }
-    test('early exit when already loading', async () => {
-        const dispatch = jest.fn()
-        await new GetColumnAsyncAction('http://test', columnDefTest).run(
-            dispatch,
-            new TableState({
-                columnIndices: new Map(Object.entries({ column_id_test: 1 })),
-                columnStates: [
-                    new ColumnState({
-                        name: columnNameTest1,
-                        idPersistent: columnIdTest1,
-                        columnType: ColumnType.Inner
-                    }),
-                    new ColumnState({
-                        name: columnNameTest,
-                        isLoading: true,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
-                    })
-                ]
-            })
-        )
-        expect(dispatch.mock.calls.length).toBe(0)
-    })
-    test('early exit when state is loading', async () => {
-        const dispatch = jest.fn()
-        await new GetColumnAsyncAction('http://test', columnDefTest).run(
-            dispatch,
-            new TableState({
-                isLoading: true
-            })
-        )
-        expect(dispatch.mock.calls.length).toBe(0)
-    })
 
     test('loads column with one chunk', async () => {
         responseSequence([
@@ -251,10 +206,7 @@ describe('get column async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetColumnAsyncAction('http://test', columnDefTest).run(
-            dispatch,
-            new TableState({})
-        )
+        await new GetColumnAsyncAction('http://test', columnDefTest).run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(
             new SetColumnLoadingAction(columnNameTest, columnIdTest, ColumnType.String)
@@ -286,10 +238,7 @@ describe('get column async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetColumnAsyncAction('http://test', columnDefTest).run(
-            dispatch,
-            new TableState({})
-        )
+        await new GetColumnAsyncAction('http://test', columnDefTest).run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(
             new SetColumnLoadingAction(columnNameTest, columnIdTest, ColumnType.String)
