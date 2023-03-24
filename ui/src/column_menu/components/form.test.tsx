@@ -114,7 +114,7 @@ describe('form tests', () => {
         const { container } = render(
             <ColumnTypeCreateForm
                 submitColumnDefinitionCallback={submitCallback}
-                submitError={new ErrorState({ msg: 'test error' })}
+                submitError={new ErrorState('test error')}
                 clearError={closeCallback}
             >
                 {childTest}
@@ -136,9 +136,7 @@ describe('form tests', () => {
         render(
             <ColumnTypeCreateForm
                 submitColumnDefinitionCallback={submitCallback}
-                submitError={
-                    new ErrorState({ msg: 'test error', retryCallback: retryCallback })
-                }
+                submitError={new ErrorState('test error', retryCallback)}
                 clearError={closeCallback}
             >
                 {childTest}

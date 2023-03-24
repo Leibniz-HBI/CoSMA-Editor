@@ -21,6 +21,7 @@ import {
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import { LocalTableCallbacks, TableDataProps } from './hooks'
 import { ColumnAddButton } from '../column_menu/components/misc'
+import { ErrorState } from '../util/error'
 
 const testColumns = [
     new ColumnState({
@@ -51,7 +52,7 @@ describe('table from state', () => {
         isLoading: false,
         frozenColumns: 1,
         isShowColumnAddMenu: false,
-        errorMsg: undefined,
+        loadDataErrorState: undefined,
         selectedColumnHeaderBounds: undefined
     }
     const baseTableCallbacks: LocalTableCallbacks = {
@@ -83,7 +84,7 @@ describe('table from state', () => {
     test('should show error', () => {
         const tableProps = {
             ...baseTableProps,
-            errorMsg: 'test error'
+            loadDataErrorState: new ErrorState('test error')
         }
         render(
             <DataTable tableProps={tableProps} tableCallbacks={baseTableCallbacks} />

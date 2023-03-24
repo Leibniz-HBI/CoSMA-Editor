@@ -106,10 +106,7 @@ export function columnMenuReducer(
         return new ColumnSelectionState({
             ...state,
             isSubmittingDefinition: false,
-            submissionErrorState: new ErrorState({
-                msg: action.msg,
-                retryCallback: action.retryCallback
-            })
+            submissionErrorState: new ErrorState(action.msg, action.retryCallback)
         })
     } else if (action instanceof SubmitColumnDefinitionClearErrorAction) {
         return new ColumnSelectionState({ ...state, submissionErrorState: undefined })

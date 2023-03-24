@@ -51,7 +51,7 @@ export function DataTable(props: {
         selectedColumnHeaderBounds,
         isShowColumnAddMenu,
         isLoading,
-        errorMsg,
+        loadDataErrorState,
         baseUrl
     } = props.tableProps
     const {
@@ -94,10 +94,10 @@ export function DataTable(props: {
                 </div>
             </div>
         )
-    } else if (!(errorMsg === undefined || errorMsg === null || errorMsg == '')) {
+    } else if (!(loadDataErrorState === undefined)) {
         return (
             <div>
-                <p>Error: {errorMsg}</p>
+                <p>Error: {loadDataErrorState.msg}</p>
             </div>
         )
     } else {

@@ -31,7 +31,7 @@ export function useRemoteColumnMenuData(baseUrl: string): RemoteColumnMenuData {
     const [state, dispatch] = useThunkReducer(
         columnMenuReducer,
         new ColumnSelectionState({
-            submissionErrorState: new ErrorState({ msg: 'bla' })
+            submissionErrorState: new ErrorState('bla')
         })
     )
 

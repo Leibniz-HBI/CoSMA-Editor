@@ -221,7 +221,7 @@ describe('Column Menu Reducer', () => {
         })
         test('submit column definition start', () => {
             const initialState = new ColumnSelectionState({
-                submissionErrorState: new ErrorState({ msg: 'error' })
+                submissionErrorState: new ErrorState('error')
             })
             const expectedState = new ColumnSelectionState({
                 isSubmittingDefinition: true
@@ -250,7 +250,7 @@ describe('Column Menu Reducer', () => {
                 isSubmittingDefinition: true
             })
             const expectedState = new ColumnSelectionState({
-                submissionErrorState: new ErrorState({ msg: 'error' })
+                submissionErrorState: new ErrorState('error')
             })
             const endState = columnMenuReducer(
                 initialState,

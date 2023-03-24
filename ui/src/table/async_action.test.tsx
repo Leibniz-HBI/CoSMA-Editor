@@ -3,7 +3,7 @@ import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import {
     SetEntityLoadingAction,
     SetColumnLoadingAction,
-    SetErrorAction,
+    SetLoadDataErrorAction,
     SetEntitiesAction,
     AppendColumnAction
 } from './actions'
@@ -147,7 +147,9 @@ describe('get table async action', () => {
             )
         )
         expect(dispatch.mock.calls[2][0]).toEqual(
-            new SetErrorAction('Could not load entities chunk 0. Reason: "test error"')
+            new SetLoadDataErrorAction(
+                'Could not load entities chunk 0. Reason: "test error"'
+            )
         )
     })
 
@@ -171,7 +173,9 @@ describe('get table async action', () => {
                 ColumnType.String
             )
         )
-        expect(dispatch.mock.calls[2][0]).toEqual(new SetErrorAction('test error'))
+        expect(dispatch.mock.calls[2][0]).toEqual(
+            new SetLoadDataErrorAction('test error')
+        )
     })
 })
 describe('get column async action', () => {

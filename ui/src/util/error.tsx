@@ -4,13 +4,7 @@ export class ErrorState {
     msg: string
     retryCallback?: VoidFunction
 
-    constructor({
-        msg,
-        retryCallback = undefined
-    }: {
-        msg: string
-        retryCallback?: VoidFunction
-    }) {
+    constructor(msg: string, retryCallback?: VoidFunction) {
         this.msg = msg
         this.retryCallback = retryCallback
     }

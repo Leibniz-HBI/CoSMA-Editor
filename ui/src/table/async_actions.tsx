@@ -3,7 +3,7 @@ import { exceptionMessage } from '../util/exception'
 import {
     TableAction,
     SetEntityLoadingAction,
-    SetErrorAction,
+    SetLoadDataErrorAction,
     SetEntitiesAction,
     AppendColumnAction,
     SetColumnLoadingAction
@@ -42,7 +42,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                 })
                 if (rsp.status !== 200) {
                     dispatch(
-                        new SetErrorAction(
+                        new SetLoadDataErrorAction(
                             `Could not load entities chunk ${i}. Reason: "${
                                 (await rsp.json())['msg']
                             }"`
@@ -68,7 +68,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
             dispatch(new SetEntitiesAction(entities))
             dispatch(new AppendColumnAction('display_txt_id', displayTxts))
         } catch (e: unknown) {
-            dispatch(new SetErrorAction(exceptionMessage(e)))
+            dispatch(new SetLoadDataErrorAction(exceptionMessage(e)))
         }
     }
 }
@@ -104,7 +104,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                 })
                 if (rsp.status !== 200) {
                     dispatch(
-                        new SetErrorAction(
+                        new SetLoadDataErrorAction(
                             `Could not load entities chunk ${i}. Reason: "${
                                 (await rsp.json())['msg']
                             }"`
@@ -136,7 +136,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
             }
             dispatch(new AppendColumnAction(id_persistent, column_data))
         } catch (e: unknown) {
-            dispatch(new SetErrorAction(exceptionMessage(e)))
+            dispatch(new SetLoadDataErrorAction(exceptionMessage(e)))
         }
     }
 }

@@ -7,6 +7,7 @@ import {
     Rectangle
 } from '@glideapps/glide-data-grid'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
+import { ErrorState } from '../util/error'
 import { useThunkReducer } from '../util/state'
 import {
     ChangeColumnIndexAction,
@@ -118,7 +119,7 @@ export type TableDataProps = {
     selectedColumnHeaderBounds?: Rectangle
     isShowColumnAddMenu: boolean
     isLoading: boolean
-    errorMsg?: string
+    loadDataErrorState?: ErrorState
     baseUrl: string
 }
 
@@ -196,7 +197,7 @@ export function useRemoteTableData(
             frozenColumns: state.frozenColumns,
             isShowColumnAddMenu: state.showColumnAddMenu,
             selectedColumnHeaderBounds: state.selectedColumnHeaderBounds,
-            errorMsg: state.errorMsg,
+            loadDataErrorState: state.loadDataErrorState,
             isLoading: isLoading,
             baseUrl: apiPath
         }

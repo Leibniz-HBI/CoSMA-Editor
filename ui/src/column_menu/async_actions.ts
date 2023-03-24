@@ -55,12 +55,12 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
             if (rsp.status != 200) {
                 dispatch(
                     new SetErrorAction(
-                        new ErrorState({
-                            msg: `Could not load column definitions. Reason: "${
+                        new ErrorState(
+                            `Could not load column definitions. Reason: "${
                                 (await rsp.json())['msg']
                             }"`,
-                            retryCallback: () => this.run(dispatch)
-                        })
+                            () => this.run(dispatch)
+                        )
                     )
                 )
                 return
@@ -110,10 +110,7 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
         } catch (e: any) {
             dispatch(
                 new SetErrorAction(
-                    new ErrorState({
-                        msg: exceptionMessage(e),
-                        retryCallback: () => this.run(dispatch)
-                    })
+                    new ErrorState(exceptionMessage(e), () => this.run(dispatch))
                 )
             )
         }

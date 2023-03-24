@@ -2,7 +2,7 @@ import { ColumnState, TableState } from './state'
 import {
     SetEntitiesAction,
     AppendColumnAction,
-    SetErrorAction,
+    SetLoadDataErrorAction,
     SetEntityLoadingAction,
     SetColumnLoadingAction,
     TableAction,
@@ -14,18 +14,23 @@ import {
     SetColumnWidthAction,
     ChangeColumnIndexAction
 } from './actions'
+import { ErrorState } from '../util/error'
 
 export function tableReducer(state: TableState, action: TableAction) {
     if (action instanceof SetEntityLoadingAction) {
         return new TableState({
             ...state,
             isLoading: true,
-            errorMsg: undefined
+            loadDataErrorState: undefined
         })
     } else if (action instanceof SetEntitiesAction) {
+        const entityIndices = new Map(
+            action.entities.map((entityId: string, idx: number) => [entityId, idx])
+        )
         return new TableState({
             ...state,
             entities: action.entities,
+            entityIndices: entityIndices,
             isLoading: false
         })
     } else if (action instanceof AppendColumnAction) {
@@ -164,11 +169,11 @@ export function tableReducer(state: TableState, action: TableAction) {
             columnStates: newColumnStates,
             columnIndices: newColumnIndices
         })
-    } else if (action instanceof SetErrorAction) {
+    } else if (action instanceof SetLoadDataErrorAction) {
         return new TableState({
             ...state,
             isLoading: false,
-            errorMsg: action.msg,
+            loadDataErrorState: new ErrorState(action.msg, action.retryCallback),
             rowObjects: undefined
         })
     }

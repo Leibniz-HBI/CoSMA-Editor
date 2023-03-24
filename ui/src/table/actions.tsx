@@ -98,10 +98,12 @@ export class ChangeColumnIndexAction {
 /**
  * Indcates an error during table data fetch.
  */
-export class SetErrorAction {
+export class SetLoadDataErrorAction {
     msg: string
-    constructor(msg: string) {
+    retryCallback?: VoidFunction
+    constructor(msg: string, retryCallback?: VoidFunction) {
         this.msg = msg
+        this.retryCallback = retryCallback
     }
 }
 
@@ -117,4 +119,4 @@ export type TableAction =
     | RemoveSelectedColumnAction
     | SetColumnWidthAction
     | ChangeColumnIndexAction
-    | SetErrorAction
+    | SetLoadDataErrorAction

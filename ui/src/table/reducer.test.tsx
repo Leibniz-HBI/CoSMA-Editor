@@ -1,8 +1,9 @@
 import { describe, expect, test } from '@jest/globals'
 import { ColumnType } from '../column_menu/state'
+import { ErrorState } from '../util/error'
 import {
     SetEntityLoadingAction,
-    SetErrorAction,
+    SetLoadDataErrorAction,
     SetEntitiesAction,
     SetColumnLoadingAction,
     AppendColumnAction,
@@ -41,10 +42,10 @@ describe('reducer tests', () => {
     })
     test('loading to error', () => {
         const state = new TableState({})
-        const end_state = tableReducer(state, new SetErrorAction('test error'))
+        const end_state = tableReducer(state, new SetLoadDataErrorAction('test error'))
         const expected_state = new TableState({
             isLoading: false,
-            errorMsg: 'test error'
+            loadDataErrorState: new ErrorState('test error')
         })
         expect(end_state).toEqual(expected_state)
     })
@@ -54,12 +55,19 @@ describe('reducer tests', () => {
         const end_state = tableReducer(state, new SetEntitiesAction(entities))
         const expected_state = new TableState({
             isLoading: false,
-            entities: entities
+            entities: entities,
+            entityIndices: new Map([
+                ['entity0', 0],
+                ['entity1', 1],
+                ['entity3', 2]
+            ])
         })
         expect(end_state).toEqual(expected_state)
     })
     test('error to loading', () => {
-        const state = new TableState({ errorMsg: 'test error' })
+        const state = new TableState({
+            loadDataErrorState: new ErrorState('test error')
+        })
         const end_state = tableReducer(state, new SetEntityLoadingAction())
         const expected_state = new TableState({ isLoading: true })
         expect(end_state).toEqual(expected_state)
