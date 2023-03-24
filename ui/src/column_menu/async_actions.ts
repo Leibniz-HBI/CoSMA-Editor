@@ -6,7 +6,10 @@ import {
     ColumnSelectionAction,
     SetErrorAction,
     SetNavigationEntriesAction,
-    StartLoadingAction
+    StartLoadingAction,
+    SubmitColumnDefinitionErrorAction,
+    SubmitColumnDefinitionStartAction,
+    SubmitColumnDefinitionSuccessAction
 } from './actions'
 import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
 
@@ -117,9 +120,87 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
     }
 }
 
+export class SubmitColumnDefinitionAction extends AsyncAction<
+    ColumnSelectionAction,
+    boolean
+> {
+    apiPath: string
+    name: string
+    idParentPersistent?: string
+    columnTypeIdx: number
+
+    constructor({
+        apiPath,
+        name,
+        idParentPersistent,
+        columnTypeIdx
+    }: {
+        apiPath: string
+        name: string
+        idParentPersistent?: string
+        columnTypeIdx: number
+    }) {
+        super()
+        this.apiPath = apiPath
+        this.name = name
+        this.idParentPersistent = idParentPersistent
+        this.columnTypeIdx = columnTypeIdx
+    }
+    async run(dispatch: Dispatch<ColumnSelectionAction>): Promise<boolean> {
+        dispatch(new SubmitColumnDefinitionStartAction())
+        try {
+            const rsp = await fetch(this.apiPath + '/tags/definitions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tag_definitions: [
+                        {
+                            name: this.name,
+                            id_parent_persistent: this.idParentPersistent,
+                            type: columnTypeIdxToApi[this.columnTypeIdx]
+                        }
+                    ]
+                })
+            })
+            if (rsp.status == 200) {
+                dispatch(new SubmitColumnDefinitionSuccessAction())
+                return true
+            }
+            const msg = (await rsp.json())['msg']
+            let retryCallback = undefined
+            if (rsp.status >= 500) {
+                retryCallback = () => this.run(dispatch)
+            }
+
+            dispatch(
+                new SubmitColumnDefinitionErrorAction({
+                    msg: msg,
+                    retryCallback: retryCallback
+                })
+            )
+
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+            dispatch(
+                new SubmitColumnDefinitionErrorAction({
+                    msg:
+                        'Submitting the column definition failed: ' +
+                        exceptionMessage(e),
+                    retryCallback: () => this.run(dispatch)
+                })
+            )
+        }
+        return false
+    }
+}
+
 const columnTypeMapApiToApp = new Map<string, ColumnType>([
     ['INNER', ColumnType.Inner],
     ['STRING', ColumnType.String],
     ['FLOAT', ColumnType.Float],
     ['BOOLEAN', ColumnType.Inner]
 ])
+
+const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']

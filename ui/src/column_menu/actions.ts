@@ -38,6 +38,59 @@ export class SetSearchEntriesAction {
 export class ClearSearchEntriesAction {}
 
 /**
+ * Enum for different tabs
+ */
+export enum ColumnMenuTab {
+    SHOW,
+    CREATE_NEW
+}
+/**
+ * Indicate the tab to be shown
+ */
+
+export class SelectTabAction {
+    selectedTab: ColumnMenuTab
+
+    constructor(selectedTab: ColumnMenuTab) {
+        this.selectedTab = selectedTab
+    }
+}
+
+/**
+ * Indicate the start of a column definition submission
+ */
+export class SubmitColumnDefinitionStartAction {}
+
+/**
+ * Indicte that a column definition was successfully submitted
+ */
+export class SubmitColumnDefinitionSuccessAction {}
+
+/**
+ * Indicate that an error occured during column definition submission.
+ */
+export class SubmitColumnDefinitionErrorAction {
+    msg: string
+    retryCallback?: VoidFunction
+
+    constructor({
+        msg,
+        retryCallback = undefined
+    }: {
+        msg: string
+        retryCallback?: VoidFunction
+    }) {
+        this.msg = msg
+        this.retryCallback = retryCallback
+    }
+}
+
+/**
+ * Indicates that the column definition submission error should be cleared
+ */
+export class SubmitColumnDefinitionClearErrorAction {}
+
+/**
  * Indicates that an error occured
  */
 export class SetErrorAction {
@@ -53,6 +106,11 @@ export type ColumnSelectionAction =
     | SetSearchEntriesAction
     | ClearSearchEntriesAction
     | ToggleExpansionAction
+    | SelectTabAction
+    | SubmitColumnDefinitionStartAction
+    | SubmitColumnDefinitionSuccessAction
+    | SubmitColumnDefinitionErrorAction
+    | SubmitColumnDefinitionClearErrorAction
     | SetErrorAction
 
 /**

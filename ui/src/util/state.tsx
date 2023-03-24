@@ -1,6 +1,8 @@
 import { useReducer, useCallback, Dispatch, Reducer } from 'react'
 
-type ThunkMiddlewareDispatch<U> = <V>(action: AsyncAction<U, V> | U) => Promise<U | V>
+type ThunkMiddlewareDispatch<U> = <V>(
+    action: AsyncAction<U, V> | U
+) => Promise<V | undefined>
 
 /**
  * Base class for asynchronous actions.
@@ -15,12 +17,12 @@ export abstract class AsyncAction<U, V> {
  * @returns A dispatch function that can also handle asynchronous actions.
  */
 function thunker<U>(dispatch: Dispatch<U>): ThunkMiddlewareDispatch<U> {
-    return function <V>(action: AsyncAction<U, V> | U): Promise<U | V> {
+    return function <V>(action: AsyncAction<U, V> | U): Promise<V | undefined> {
         if (action instanceof AsyncAction<U, V>) {
             return (action as AsyncAction<U, V>).run(dispatch)
         } else {
             dispatch(action)
-            return Promise.resolve(action)
+            return Promise.resolve(undefined)
         }
     }
 }

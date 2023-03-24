@@ -19,8 +19,8 @@ import {
     Item
 } from '@glideapps/glide-data-grid'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
-import { ColumnAddButton } from '../column_menu/components'
 import { LocalTableCallbacks, TableDataProps } from './hooks'
+import { ColumnAddButton } from '../column_menu/components/misc'
 
 const testColumns = [
     new ColumnState({

@@ -8,12 +8,18 @@ import {
 } from './state'
 import {
     ClearSearchEntriesAction,
+    ColumnMenuTab,
+    SelectTabAction,
     SetNavigationEntriesAction,
     SetSearchEntriesAction,
     StartLoadingAction,
     StartSearchAction,
+    SubmitColumnDefinitionErrorAction,
+    SubmitColumnDefinitionStartAction,
+    SubmitColumnDefinitionSuccessAction,
     ToggleExpansionAction
 } from './actions'
+import { ErrorState } from '../util/error'
 
 describe('Column Menu Reducer', () => {
     const columnSelectionEntryTest10 = new ColumnSelectionEntry({
@@ -199,6 +205,56 @@ describe('Column Menu Reducer', () => {
             const endState = columnMenuReducer(
                 initialState,
                 new ClearSearchEntriesAction()
+            )
+            expect(endState).toEqual(expectedState)
+        })
+        test('select tab', () => {
+            const initialState = new ColumnSelectionState({})
+            const expectedState = new ColumnSelectionState({
+                selectedTab: ColumnMenuTab.CREATE_NEW
+            })
+            const endState = columnMenuReducer(
+                initialState,
+                new SelectTabAction(ColumnMenuTab.CREATE_NEW)
+            )
+            expect(endState).toEqual(expectedState)
+        })
+        test('submit column definition start', () => {
+            const initialState = new ColumnSelectionState({
+                submissionErrorState: new ErrorState({ msg: 'error' })
+            })
+            const expectedState = new ColumnSelectionState({
+                isSubmittingDefinition: true
+            })
+            const endState = columnMenuReducer(
+                initialState,
+                new SubmitColumnDefinitionStartAction()
+            )
+            expect(endState).toEqual(expectedState)
+        })
+        test('submit column definition success', () => {
+            const initialState = new ColumnSelectionState({
+                isSubmittingDefinition: true
+            })
+            const expectedState = new ColumnSelectionState({
+                isSubmittingDefinition: false
+            })
+            const endState = columnMenuReducer(
+                initialState,
+                new SubmitColumnDefinitionSuccessAction()
+            )
+            expect(endState).toEqual(expectedState)
+        })
+        test('submit column definition error', () => {
+            const initialState = new ColumnSelectionState({
+                isSubmittingDefinition: true
+            })
+            const expectedState = new ColumnSelectionState({
+                submissionErrorState: new ErrorState({ msg: 'error' })
+            })
+            const endState = columnMenuReducer(
+                initialState,
+                new SubmitColumnDefinitionErrorAction({ msg: 'error' })
             )
             expect(endState).toEqual(expectedState)
         })

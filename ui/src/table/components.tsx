@@ -1,7 +1,8 @@
 import { DataEditor, GridColumn } from '@glideapps/glide-data-grid'
 import { useCallback, useLayoutEffect } from 'react'
 import { useLayer } from 'react-laag'
-import { ColumnAddButton, ColumnMenu } from '../column_menu/components'
+import { ColumnMenu } from '../column_menu/components/menu'
+import { ColumnAddButton } from '../column_menu/components/misc'
 import { HeaderMenu } from '../header_menu'
 import { useRemoteTableData, LocalTableCallbacks, TableDataProps } from './hooks'
 

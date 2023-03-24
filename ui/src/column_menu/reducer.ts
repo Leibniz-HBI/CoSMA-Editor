@@ -1,12 +1,18 @@
+import { ErrorState } from '../util/error'
 import {
     ClearSearchEntriesAction,
     ColumnSelectionAction,
     SetErrorAction,
     SetNavigationEntriesAction,
     SetSearchEntriesAction,
+    SelectTabAction,
     StartLoadingAction,
     StartSearchAction,
-    ToggleExpansionAction
+    ToggleExpansionAction,
+    SubmitColumnDefinitionStartAction,
+    SubmitColumnDefinitionSuccessAction,
+    SubmitColumnDefinitionErrorAction,
+    SubmitColumnDefinitionClearErrorAction
 } from './actions'
 import { ColumnSelectionEntry, ColumnSelectionState } from './state'
 
@@ -82,6 +88,31 @@ export function columnMenuReducer(
                 ...state.navigationEntries.slice(action.path[0] + 1)
             ]
         })
+    } else if (action instanceof SelectTabAction) {
+        return new ColumnSelectionState({
+            ...state,
+            selectedTab: action.selectedTab,
+            submissionErrorState: undefined
+        })
+    } else if (action instanceof SubmitColumnDefinitionStartAction) {
+        return new ColumnSelectionState({
+            ...state,
+            isSubmittingDefinition: true,
+            submissionErrorState: undefined
+        })
+    } else if (action instanceof SubmitColumnDefinitionSuccessAction) {
+        return new ColumnSelectionState({ ...state, isSubmittingDefinition: false })
+    } else if (action instanceof SubmitColumnDefinitionErrorAction) {
+        return new ColumnSelectionState({
+            ...state,
+            isSubmittingDefinition: false,
+            submissionErrorState: new ErrorState({
+                msg: action.msg,
+                retryCallback: action.retryCallback
+            })
+        })
+    } else if (action instanceof SubmitColumnDefinitionClearErrorAction) {
+        return new ColumnSelectionState({ ...state, submissionErrorState: undefined })
     }
     return state
 }

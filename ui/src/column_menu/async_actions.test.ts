@@ -2,9 +2,12 @@ import { beforeEach, describe, expect, test } from '@jest/globals'
 import {
     SetErrorAction,
     SetNavigationEntriesAction,
-    StartLoadingAction
+    StartLoadingAction,
+    SubmitColumnDefinitionErrorAction,
+    SubmitColumnDefinitionStartAction,
+    SubmitColumnDefinitionSuccessAction
 } from './actions'
-import { GetHierarchyAction } from './async_actions'
+import { GetHierarchyAction, SubmitColumnDefinitionAction } from './async_actions'
 import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {
@@ -24,7 +27,7 @@ function responseSequence(respones: [number, () => any][]) {
 }
 
 const apiPathTest = 'http://test.org'
-describe('column menu async actions', () => {
+describe('getHierarchyAction', () => {
     beforeEach(() => {
         jest.restoreAllMocks()
         jest.clearAllMocks()
@@ -267,5 +270,103 @@ describe('column menu async actions', () => {
                 [0]
             )
         )
+    })
+})
+describe('SubmitColumnDefinition', () => {
+    beforeEach(() => {
+        jest.restoreAllMocks()
+        jest.clearAllMocks()
+    })
+
+    const idParentPersistentTest = 'id-parent-test'
+    const nameTest = 'test column'
+    test('submits definition', async () => {
+        responseSequence([
+            [
+                200,
+                () => {
+                    return true
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        await new SubmitColumnDefinitionAction({
+            apiPath: apiPathTest,
+            columnTypeIdx: 2,
+            idParentPersistent: idParentPersistentTest,
+            name: nameTest
+        }).run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [new SubmitColumnDefinitionStartAction()],
+            [new SubmitColumnDefinitionSuccessAction()]
+        ])
+        expect((fetch as jest.Mock).mock.calls).toEqual([
+            [
+                'http://test.org/tags/definitions',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tag_definitions: [
+                            {
+                                name: nameTest,
+                                id_parent_persistent: idParentPersistentTest,
+                                type: 'INNER'
+                            }
+                        ]
+                    })
+                }
+            ]
+        ])
+    })
+    test('error with retry for server error', async () => {
+        responseSequence([
+            [
+                500,
+                () => {
+                    return { msg: 'Error from server' }
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        await new SubmitColumnDefinitionAction({
+            apiPath: apiPathTest,
+            columnTypeIdx: 2,
+            idParentPersistent: idParentPersistentTest,
+            name: nameTest
+        }).run(dispatch)
+        const mockCalls = dispatch.mock.calls
+        expect(mockCalls.length).toEqual(2)
+        expect(mockCalls[0]).toEqual([new SubmitColumnDefinitionStartAction()])
+        expect(mockCalls[1].length).toEqual(1)
+        const mockCallArg = mockCalls[1][0]
+        expect(mockCallArg).toBeInstanceOf(SubmitColumnDefinitionErrorAction)
+        expect(mockCallArg.msg).toEqual('Error from server')
+        expect(mockCallArg.retryCallback).toBeDefined()
+    })
+    test('error without retry for bad request', async () => {
+        responseSequence([
+            [
+                400,
+                () => {
+                    return { msg: 'Error from server' }
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        await new SubmitColumnDefinitionAction({
+            apiPath: apiPathTest,
+            columnTypeIdx: 2,
+            idParentPersistent: idParentPersistentTest,
+            name: nameTest
+        }).run(dispatch)
+        const mockCalls = dispatch.mock.calls
+        expect(mockCalls.length).toEqual(2)
+        expect(mockCalls[0]).toEqual([new SubmitColumnDefinitionStartAction()])
+        expect(mockCalls[1].length).toEqual(1)
+        const mockCallArg = mockCalls[1][0]
+        expect(mockCallArg).toBeInstanceOf(SubmitColumnDefinitionErrorAction)
+        expect(mockCallArg.msg).toEqual('Error from server')
+        expect(mockCallArg.retryCallback).toBeUndefined()
     })
 })
