@@ -116,13 +116,17 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                 const tags = json['tag_instances']
                 for (const tag of tags) {
                     const id_entity_persistent: string = tag['id_entity_persistent']
-                    const value = tag['value']
+                    const valueString = tag['value']
+                    const parsedValue = parseValue(
+                        this.columnDefinition.columnType,
+                        valueString
+                    )
                     if (id_entity_persistent in column_data) {
                         const cell = column_data[id_entity_persistent]
-                        cell['values'].add(value)
+                        cell['values'].add(parseValue)
                     } else {
                         column_data[id_entity_persistent] = {
-                            values: [value]
+                            values: [parsedValue]
                         }
                     }
                 }
@@ -134,5 +138,22 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
         } catch (e: unknown) {
             dispatch(new SetErrorAction(exceptionMessage(e)))
         }
+    }
+}
+
+export function parseValue(
+    columnType: ColumnType,
+    valueString: string
+): number | boolean | string | undefined {
+    try {
+        if (columnType === ColumnType.Float) {
+            return Number.parseFloat(valueString)
+        }
+        if (columnType === ColumnType.Inner) {
+            return valueString.toLowerCase() == 'true'
+        }
+        return valueString
+    } catch (e: unknown) {
+        return undefined
     }
 }

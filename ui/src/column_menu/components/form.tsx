@@ -8,8 +8,7 @@ import {
     Form,
     Overlay,
     Popover,
-    CloseButton,
-    Container
+    CloseButton
 } from 'react-bootstrap'
 import { ColumnType } from '../state'
 import * as yup from 'yup'

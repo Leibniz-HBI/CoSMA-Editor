@@ -32,10 +32,12 @@ export function mkCell(cellContent: any, columnType: ColumnType): GridCell {
         if (cellValues === undefined || cellValues === null) {
             cellContent = false
         } else {
-            cellContent = cellValues[0].toLowerCase() == 'true'
+            cellContent = cellValues[0]
         }
-    }
-    if (columnType == ColumnType.String) {
+    } else if (columnType == ColumnType.Float) {
+        cellKind = 'number' as GridCellKind
+        cellContent = cellValues[0]
+    } else if (columnType == ColumnType.String) {
         if (cellValues === undefined || cellValues === null) {
             cellContent = ''
         } else {
@@ -59,7 +61,7 @@ export function mkCell(cellContent: any, columnType: ColumnType): GridCell {
     } as GridCell
 }
 
-export function useCellContentCalback(state: TableState) {
+export function useCellContentCalback(state: TableState): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
         const entity_id_persistent = state.entities[row_idx]

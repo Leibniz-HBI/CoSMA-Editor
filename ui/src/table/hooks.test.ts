@@ -3,6 +3,7 @@ import {
     BooleanCell,
     BubbleCell,
     GridCellKind,
+    NumberCell,
     TextCell
 } from '@glideapps/glide-data-grid'
 import { mkCell, useCellContentCalback, useRemoteTableData } from './hooks'
@@ -56,7 +57,7 @@ describe('create cell', () => {
         expect(cell.displayData).toBe(cellContent.values[0])
     })
     test('boolean type true', () => {
-        const cellContent = { values: ['true'] }
+        const cellContent = { values: [true] }
         const columnType = ColumnType.Inner
         const cell = mkCell(cellContent, columnType) as BooleanCell
         expect(cell.kind).toEqual('boolean' as GridCellKind)
@@ -77,6 +78,14 @@ describe('create cell', () => {
         const cell = mkCell(cellContent, columnType) as BubbleCell
         expect(cell.kind).toEqual('bubble' as GridCellKind)
         expect(cell.data).toEqual(cellContent.values)
+        expect(cell.allowOverlay).toBeFalsy()
+    })
+    test('number', () => {
+        const cellContent = { values: [2.3, 2.4] }
+        const columnType = ColumnType.Float
+        const cell = mkCell(cellContent, columnType) as NumberCell
+        expect(cell.kind).toEqual('number' as GridCellKind)
+        expect(cell.data).toEqual(2.3)
         expect(cell.allowOverlay).toBeFalsy()
     })
 })
@@ -127,7 +136,7 @@ describe('column types', () => {
                     columnType: ColumnType.Inner,
                     isLoading: false,
                     cellContents: {
-                        id_entity_test_0: { values: ['true'] }
+                        id_entity_test_0: { values: [true] }
                     }
                 })
             ],

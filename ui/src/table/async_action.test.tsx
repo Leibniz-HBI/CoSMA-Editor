@@ -7,7 +7,7 @@ import {
     SetEntitiesAction,
     AppendColumnAction
 } from './actions'
-import { GetTableAsyncAction, GetColumnAsyncAction } from './async_actions'
+import { GetTableAsyncAction, GetColumnAsyncAction, parseValue } from './async_actions'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {
@@ -245,5 +245,33 @@ describe('get column async action', () => {
         )
         expect(dispatch.mock.calls[1][0]).toBeInstanceOf(AppendColumnAction)
         expect(Object.values(dispatch.mock.calls[1][0].columnData).length).toBe(5001)
+    })
+
+    describe('parse Values', () => {
+        test('parses valid float', () => {
+            const parsedValue = parseValue(ColumnType.Float, '2.3')
+            expect(parsedValue).toEqual(2.3)
+        })
+        test('NaN for invalid float', () => {
+            const parsedValue = parseValue(ColumnType.Float, 'aa')
+            expect(parsedValue).toBeNaN()
+        })
+        test('parses "True"', () => {
+            const parsedValue = parseValue(ColumnType.Inner, 'True')
+            expect(parsedValue).toBe(true)
+        })
+        test('parses "False"', () => {
+            const parsedValue = parseValue(ColumnType.Inner, 'False')
+            expect(parsedValue).toBe(false)
+        })
+        test('invalid boolean is false', () => {
+            const parsedValue = parseValue(ColumnType.Inner, 'djdf')
+            expect(parsedValue).toBe(false)
+        })
+        test('handles string', () => {
+            const stringValue = 'test string'
+            const parsedValue = parseValue(ColumnType.String, stringValue)
+            expect(parsedValue).toEqual(stringValue)
+        })
     })
 })
