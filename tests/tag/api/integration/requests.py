@@ -51,3 +51,25 @@ def post_tag_def_children(url, id_persistent):
         json={"id_parent_persistent": id_persistent},
         timeout=900,
     )
+
+
+def post_tag_instance_values(url, id_entity_persistent, id_tag_definition_persistent):
+    return post_tag_instances_values(
+        url, [(id_entity_persistent, id_tag_definition_persistent)]
+    )
+
+
+def post_tag_instances_values(url, id_persistent_pairs):
+    return requests.post(
+        urljoin(url, "cosmae/api/tags/values"),
+        json={
+            "value_requests": [
+                {
+                    "id_entity_persistent": id_entity_persistent,
+                    "id_tag_definition_persistent": id_tag_definition_persistent,
+                }
+                for id_entity_persistent, id_tag_definition_persistent in id_persistent_pairs
+            ]
+        },
+        timeout=900,
+    )

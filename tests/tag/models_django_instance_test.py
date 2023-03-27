@@ -81,6 +81,24 @@ def test_get_most_recent(tag):
 
 
 @pytest.mark.django_db
+def test_get_most_recent_by_ids(tag):
+    tag.save()
+    new = TagInstance(
+        id_persistent=c.id_tag_persistent_test,
+        id_entity_persistent=cp.id_persistent_test,
+        id_tag_definition_persistent=c.id_tag_def_persistent_test,
+        value="1.0",
+        time_edit=c.time_edit_test + timedelta(hours=1),
+        previous_version=tag,
+    )
+    new.save()
+    results = TagInstance.most_recents_by_entity_and_definition_ids(
+        cp.id_persistent_test, c.id_tag_def_persistent_test
+    )
+    assert results == [new]
+
+
+@pytest.mark.django_db
 def test_entity_missing():
     with pytest.raises(EntityMissingException) as exc:
         TagInstance.change_or_create(

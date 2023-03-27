@@ -21,6 +21,7 @@ from cosmae.util.django import save_many_atomic
 router = Router()
 
 MAX_TAG_INSTANCE_CHUNK_LIMIT = 10000
+MAX_TAG_INSTANCE_VALUE_LIMIT = 50000
 
 
 class TagInstancePost(Schema):
@@ -45,6 +46,33 @@ class TagInstancePostChunkRequest(Schema):
     id_tag_definition_persistent: str
     offset: int
     limit: int
+
+
+class TagInstanceValueRequest(Schema):
+    # pylint: disable=too-few-public-methods
+    "Reuqest body for getting a specific value"
+    id_entity_persistent: str
+    id_tag_definition_persistent: str
+
+
+class TagInstanceValueRequestList(Schema):
+    # pylint: disable=too-few-public-methods
+    "Request body for multiple value request"
+    value_requests: List[TagInstanceValueRequest]
+
+
+class TagInstanceValueResponse(Schema):
+    # pylint: disable=too-few-public-methods
+    "Response for a value request"
+    id_entity_persistent: str
+    id_tag_definition_persistent: str
+    values: List[TagInstancePost]
+
+
+class TagInstanceValueResponseList(Schema):
+    # pylint: disable=too-few-public-methods
+    "Multiple Value request responses"
+    value_responses: List[TagInstanceValueResponse]
 
 
 @router.post("", response={200: TagInstancePostList, 400: ApiError, 500: ApiError})
@@ -111,6 +139,41 @@ def post_tag_instance_chunks(_, chunk_req: TagInstancePostChunkRequest):
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
+
+
+@router.post(
+    "values",
+    response={
+        200: TagInstanceValueResponseList,
+        400: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def post_tag_instance_values(_, values_req: TagInstanceValueRequestList):
+    "API method for obtaining specific tag instance values."
+    if len(values_req.value_requests) > MAX_TAG_INSTANCE_VALUE_LIMIT:
+        return 400, ApiError(
+            msg=f"Please specify limit smaller than {MAX_TAG_INSTANCE_VALUE_LIMIT}."
+        )
+    try:
+        ret = []
+        for req in values_req.value_requests:
+            id_entity_persistent = req.id_entity_persistent
+            id_tag_definition_persistent = req.id_tag_definition_persistent
+            vals = TagInstanceDb.most_recents_by_entity_and_definition_ids(
+                id_entity_persistent, id_tag_definition_persistent
+            )
+            ret.append(
+                TagInstanceValueResponse(
+                    id_entity_persistent=id_entity_persistent,
+                    id_tag_definition_persistent=id_tag_definition_persistent,
+                    values=[tag_instance_db_to_api(val) for val in vals],
+                )
+            )
+        return 200, TagInstanceValueResponseList(value_responses=ret)
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get requested values.")
 
 
 def tag_instance_api_to_db(tag_api: TagInstancePost, time: datetime):

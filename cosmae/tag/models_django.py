@@ -231,6 +231,27 @@ class TagInstance(models.Model):
             )
         )[offset : offset + limit]
 
+    @classmethod
+    def most_recents_by_entity_and_definition_ids(
+        cls, id_entity_persistent: str, id_tag_definition_persistent: str
+    ):
+        """Get all most recent values that match a given id_entity_persistent
+        and id_entity_persistent."""
+        matching = cls.objects.filter(  # pylint: disable=no-member
+            id_entity_persistent=id_entity_persistent,
+            id_tag_definition_persistent=id_tag_definition_persistent,
+        )
+        return list(
+            matching.filter(
+                id=models.Subquery(
+                    matching.filter(id_persistent=models.OuterRef("id_persistent"))
+                    .values("id_persistent")
+                    .annotate(max_id=Max("id"))
+                    .values("max_id")
+                )
+            )
+        )
+
     def check_different_before_save(self, other):
         """Checks structural equality for two tag definitions.
         Note:

@@ -24,3 +24,11 @@ def float_tag(tag_def, entity0):
         "id_tag_definition_persistent": tag_def.id_persistent,
         "id_entity_persistent": entity0.id_persistent,
     }
+
+
+@pytest.fixture
+def person():
+    return {
+        "display_txt": "entity test",
+        "names_personal": "name test",
+    }
