@@ -75,7 +75,22 @@ class TagInstanceValueResponseList(Schema):
     value_responses: List[TagInstanceValueResponse]
 
 
-@router.post("", response={200: TagInstancePostList, 400: ApiError, 500: ApiError})
+class TagInstanceUpdatedResponse(Schema):
+    # pylint: disable=too-few-public-methods
+    "Informatation on updates when submitting values"
+    msg: str
+    tag_instances: List[TagInstancePost]
+
+
+@router.post(
+    "",
+    response={
+        200: TagInstancePostList,
+        400: ApiError,
+        409: TagInstanceUpdatedResponse,
+        500: ApiError,
+    },
+)
 def post_tag_instance(_, tag_list: TagInstancePostList):
     "Create or change a tag instance."
     # pylint: disable=too-many-return-statements
@@ -106,18 +121,18 @@ def post_tag_instance(_, tag_list: TagInstancePostList):
             f"for tag with id_persistent {exc.tag_id_persistent}."
         )
     except EntityUpdatedException as exc:
-        return 500, ApiError(
+        return 409, TagInstanceUpdatedResponse(
             msg="There has been a concurrent modification "
-            f"to the tag instance with id_persistent {exc.id_affected}."
+            f"to the tag instance with id_persistent {exc.new_value.id_persistent}.",
+            tag_instances=[tag_instance_db_to_api(exc.new_value)],
         )
     tag_db_saves = [tag for tag, do_write in tag_dbs if do_write]
     try:
         save_many_atomic(tag_db_saves)
     except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
-    return 200, TagInstancePostList(
-        tag_instances=[tag_instance_db_to_api(tag) for tag, _ in tag_dbs]
-    )
+    response_tag_instances = [tag_instance_db_to_api(tag) for tag, _ in tag_dbs]
+    return 200, TagInstancePostList(tag_instances=response_tag_instances)
 
 
 @router.post("chunk", response={200: TagInstancePostList, 400: ApiError, 500: ApiError})

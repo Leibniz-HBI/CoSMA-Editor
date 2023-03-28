@@ -81,7 +81,7 @@ def persons_post(_, persons: PersonNaturalList):
     except EntityUpdatedException as updated_x:
         return 400, ApiError(
             msg="There has been a concurrent modification "
-            f"to the person with id_persistent {updated_x.id_affected}."
+            f"to the person with id_persistent {updated_x.new_value.id_persistent}."
         )
 
     try:

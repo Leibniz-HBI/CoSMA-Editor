@@ -31,8 +31,8 @@ class TagInstanceExistsException(Exception):
 class EntityUpdatedException(Exception):
     """Indicates that an entity has been already updated."""
 
-    def __init__(self, id_affected) -> None:
-        self.id_affected = id_affected
+    def __init__(self, new_value) -> None:
+        self.new_value = new_value
 
 
 class TooManyFieldsException(Exception):

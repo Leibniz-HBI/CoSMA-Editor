@@ -38,14 +38,17 @@ def test_concurrent_modification(live_server, float_tag):
     created["value"] = "1.0"
     req = r.post_tag_instance(live_server.url, created)
     assert req.status_code == 200
+    changed = req.json()["tag_instances"][0]
     created["value"] = "3.0"
     req = r.post_tag_instance(live_server.url, created)
-    assert req.status_code == 500
-    assert req.json()["msg"] == (
+    assert req.status_code == 409
+    rsp_json = req.json()
+    assert rsp_json["msg"] == (
         "There has been a concurrent modification "
         "to the tag instance with id_persistent "
         f'{created["id_persistent"]}.'
     )
+    assert rsp_json["tag_instances"] == [changed]
 
 
 def test_no_modification_is_returned(live_server, float_tag):

@@ -90,7 +90,7 @@ def post_tag_definitions(_, tag_definition_list: TagDefinitionList):
     except EntityUpdatedException as exc:
         return 500, ApiError(
             msg="There has been a concurrent modification to the tag definition "
-            f"with id_persistent {exc.id_affected}."
+            f"with id_persistent {exc.new_value.id_persistent}."
         )
     except KeyError as exc:
         return 400, ApiError(msg=f"Type {exc.args[0]} is not known.")

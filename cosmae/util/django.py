@@ -29,7 +29,7 @@ def change_or_create_versioned(
     if version:
         most_recent = cls.most_recent_by_id(id_persistent)
         if most_recent.id != version:
-            raise EntityUpdatedException(id_persistent)
+            raise EntityUpdatedException(most_recent)
     else:
         by_id = cls.objects.filter(id_persistent=id_persistent)
         if by_id:

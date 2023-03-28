@@ -215,7 +215,6 @@ class TagInstance(models.Model):
             tags.add(tag)
         else:
             tags = {tag}
-
         tag_ids = {tag.id_persistent for tag in tags}
         objects = cls.objects.filter(  # pylint: disable=no-member
             id_tag_definition_persistent__in=tag_ids
