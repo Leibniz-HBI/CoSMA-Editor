@@ -12,7 +12,11 @@ import {
     HideHeaderMenuAction,
     RemoveSelectedColumnAction,
     SetColumnWidthAction,
-    ChangeColumnIndexAction
+    ChangeColumnIndexAction,
+    SubmitValuesStartAction,
+    SubmitValuesEndAction,
+    SubmitValuesErrorAction,
+    SubmitValuesClearErrorAction
 } from './actions'
 import { ErrorState } from '../util/error'
 
@@ -43,7 +47,11 @@ export function tableReducer(state: TableState, action: TableAction) {
                     new ColumnState({
                         name: state.columnStates[col_idx].name,
                         isLoading: false,
-                        cellContents: action.columnData,
+                        cellContents: state.entities.map((idEntity) =>
+                            idEntity in action.columnData
+                                ? action.columnData[idEntity]
+                                : []
+                        ),
                         idPersistent: state.columnStates[col_idx].idPersistent,
                         columnType: state.columnStates[col_idx].columnType
                     }),
@@ -176,6 +184,66 @@ export function tableReducer(state: TableState, action: TableAction) {
             loadDataErrorState: new ErrorState(action.msg, action.retryCallback),
             rowObjects: undefined
         })
+    } else if (action instanceof SubmitValuesStartAction) {
+        return new TableState({
+            ...state,
+            isSubmittingValues: true,
+            submitValuesErrorState: undefined
+        })
+    } else if (action instanceof SubmitValuesErrorAction) {
+        return new TableState({
+            ...state,
+            isSubmittingValues: false,
+            submitValuesErrorState: new ErrorState(
+                action.errorMsg,
+                action.retryCallback
+            )
+        })
+    } else if (action instanceof SubmitValuesEndAction) {
+        if (action.edits.length == 0) {
+            return new TableState({ ...state, isSubmittingValues: false })
+        }
+        if (action.edits.length > 1) {
+            const batchErrorMsg = 'Batch edits not implemented. Values are not changed.'
+            console.log(batchErrorMsg)
+            return new TableState({
+                ...state,
+                isSubmittingValues: false,
+                submitValuesErrorState: new ErrorState(batchErrorMsg)
+            })
+        }
+        const [idEntity, idPersistentColumn, value] = action.edits[0]
+        const idxColumn = state.columnIndices.get(idPersistentColumn)
+        if (idxColumn === undefined) {
+            return state
+        }
+        const idxEntity = state.entityIndices.get(idEntity)
+        if (idxEntity === undefined) {
+            return state
+        }
+        return new TableState({
+            ...state,
+            isSubmittingValues: false,
+            columnStates: [
+                ...state.columnStates.slice(0, idxColumn),
+                new ColumnState({
+                    ...state.columnStates[idxColumn],
+                    cellContents: [
+                        ...state.columnStates[idxColumn].cellContents.slice(
+                            0,
+                            idxEntity
+                        ),
+                        [value],
+                        ...state.columnStates[idxColumn].cellContents.slice(
+                            idxEntity + 1
+                        )
+                    ]
+                }),
+                ...state.columnStates.slice(idxColumn + 1)
+            ]
+        })
+    } else if (action instanceof SubmitValuesClearErrorAction) {
+        return new TableState({ ...state, submitValuesErrorState: undefined })
     }
     return state
 }

@@ -27,13 +27,13 @@ const testColumns = [
     new ColumnState({
         idPersistent: 'test_column_0',
         name: 'test title 0',
-        cellContents: {},
+        cellContents: [],
         columnType: ColumnType.String
     }),
     new ColumnState({
         idPersistent: 'test_column_1',
         name: 'test title 1',
-        cellContents: {},
+        cellContents: [],
         columnType: ColumnType.String
     })
 ]
@@ -79,7 +79,8 @@ describe('table from state', () => {
             colIndex: number,
             newSizeWithGrow: number
         ) => {},
-        switchColumnsCallback: (startIndex, endIndex) => {}
+        switchColumnsCallback: (startIndex, endIndex) => {},
+        clearSubmitValueErrorCallback: () => {}
     }
     test('should show error', () => {
         const tableProps = {
@@ -87,14 +88,22 @@ describe('table from state', () => {
             loadDataErrorState: new ErrorState('test error')
         }
         render(
-            <DataTable tableProps={tableProps} tableCallbacks={baseTableCallbacks} />
+            <DataTable
+                tableProps={tableProps}
+                tableCallbacks={baseTableCallbacks}
+                submitValueCallback={jest.fn()}
+            />
         )
         screen.getByText('test error', { exact: false })
     })
     test('should show loading with loading set', () => {
         const tableProps = { ...baseTableProps, isLoading: true }
         const { container } = render(
-            <DataTable tableProps={tableProps} tableCallbacks={baseTableCallbacks} />
+            <DataTable
+                tableProps={tableProps}
+                tableCallbacks={baseTableCallbacks}
+                submitValueCallback={jest.fn()}
+            />
         )
         const shimmers = container.getElementsByClassName('shimmer')
         expect(shimmers.length).toBe(1)
@@ -107,7 +116,11 @@ describe('table from state', () => {
             isLoading: false
         }
         const { container } = render(
-            <DataTable tableProps={props} tableCallbacks={baseTableCallbacks} />
+            <DataTable
+                tableProps={props}
+                tableCallbacks={baseTableCallbacks}
+                submitValueCallback={jest.fn()}
+            />
         )
         const outer = container.getElementsByClassName('cosmae-table-container-outer')
         expect(outer.length).toBe(1)

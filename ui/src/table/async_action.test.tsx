@@ -5,9 +5,17 @@ import {
     SetColumnLoadingAction,
     SetLoadDataErrorAction,
     SetEntitiesAction,
-    AppendColumnAction
+    AppendColumnAction,
+    SubmitValuesStartAction,
+    SubmitValuesEndAction,
+    SubmitValuesErrorAction
 } from './actions'
-import { GetTableAsyncAction, GetColumnAsyncAction, parseValue } from './async_actions'
+import {
+    GetTableAsyncAction,
+    GetColumnAsyncAction,
+    parseValue,
+    SubmitValuesAsyncAction
+} from './async_actions'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {
@@ -44,9 +52,15 @@ const entity_ids = ['test-id-0', 'test-id-1']
 const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
 const display_txt_column = {
-    'test-id-0': { values: [displayTxt0] },
-    'test-id-1': { values: [displayTxt1] }
+    'test-id-0': [{ value: displayTxt0, idPersistent: 'test-id-0', version: 0 }],
+    'test-id-1': [{ value: displayTxt1, idPersistent: 'test-id-1', version: 1 }]
 }
+const display_txt_column_as_normal_column = {
+    'test-id-0': [{ value: displayTxt0, idPersistent: 'test-value-id-0', version: 12 }],
+    'test-id-1': [{ value: displayTxt1, idPersistent: 'test-value-id-1', version: 1 }]
+}
+
+const urlTest = 'http://test.url'
 
 describe('get table async action', () => {
     test('loads table with one chunk', async () => {
@@ -190,12 +204,16 @@ describe('get column async action', () => {
     const tagResponse = {
         id_entity_persistent: 'test-id-0',
         id_tag_definition_persistent: columnIdTest,
-        value: displayTxt0
+        value: displayTxt0,
+        id_persistent: 'test-value-id-0',
+        version: 12
     }
     const tagResponse1 = {
         id_entity_persistent: 'test-id-1',
         id_tag_definition_persistent: columnIdTest,
-        value: displayTxt1
+        value: displayTxt1,
+        id_persistent: 'test-value-id-1',
+        version: 1
     }
 
     test('loads column with one chunk', async () => {
@@ -216,7 +234,7 @@ describe('get column async action', () => {
             new SetColumnLoadingAction(columnNameTest, columnIdTest, ColumnType.String)
         )
         expect(dispatch.mock.calls[1][0]).toEqual(
-            new AppendColumnAction(columnIdTest, display_txt_column)
+            new AppendColumnAction(columnIdTest, display_txt_column_as_normal_column)
         )
     })
     test('loads column with chunks', async () => {
@@ -249,6 +267,171 @@ describe('get column async action', () => {
         )
         expect(dispatch.mock.calls[1][0]).toBeInstanceOf(AppendColumnAction)
         expect(Object.values(dispatch.mock.calls[1][0].columnData).length).toBe(5001)
+    })
+
+    describe('submit values', () => {
+        const idValuePersistentTest = 'id-value-persistent'
+        const valueTest = 2
+        const versionTestBefore = 512
+        const versionTestAfter = 513
+        const idEntityTest = 'id-entity0'
+        const idColumnDefTest = 'id-col-def0'
+        test('changes state according to received values', async () => {
+            responseSequence([
+                [
+                    200,
+                    () => {
+                        return {
+                            tag_instances: [
+                                {
+                                    id_entity_persistent: idEntityTest,
+                                    id_tag_definition_persistent: idColumnDefTest,
+                                    id_persistent: idValuePersistentTest,
+                                    value: valueTest,
+                                    version: versionTestAfter
+                                }
+                            ]
+                        }
+                    }
+                ]
+            ])
+            const dispatch = jest.fn()
+            await new SubmitValuesAsyncAction(urlTest, ColumnType.Float, [
+                idEntityTest,
+                idColumnDefTest,
+                {
+                    idPersistent: idValuePersistentTest,
+                    version: versionTestBefore,
+                    value: valueTest
+                }
+            ]).run(dispatch)
+            expect(dispatch.mock.calls).toEqual([
+                [new SubmitValuesStartAction()],
+                [
+                    new SubmitValuesEndAction([
+                        [
+                            idEntityTest,
+                            idColumnDefTest,
+                            {
+                                version: versionTestAfter,
+                                value: valueTest,
+                                idPersistent: idValuePersistentTest
+                            }
+                        ]
+                    ])
+                ]
+            ])
+        })
+        test('changes state on conflict', async () => {
+            responseSequence([
+                [
+                    409,
+                    () => {
+                        return {
+                            tag_instances: [
+                                {
+                                    id_entity_persistent: idEntityTest,
+                                    id_tag_definition_persistent: idColumnDefTest,
+                                    id_persistent: idValuePersistentTest,
+                                    value: valueTest,
+                                    version: versionTestAfter
+                                }
+                            ]
+                        }
+                    }
+                ]
+            ])
+            const dispatch = jest.fn()
+            await new SubmitValuesAsyncAction(urlTest, ColumnType.Float, [
+                idEntityTest,
+                idColumnDefTest,
+                {
+                    idPersistent: idValuePersistentTest,
+                    version: versionTestBefore,
+                    value: valueTest
+                }
+            ]).run(dispatch)
+            expect(dispatch.mock.calls).toEqual([
+                [new SubmitValuesStartAction()],
+                [
+                    new SubmitValuesEndAction([
+                        [
+                            idEntityTest,
+                            idColumnDefTest,
+                            {
+                                version: versionTestAfter,
+                                value: valueTest,
+                                idPersistent: idValuePersistentTest
+                            }
+                        ]
+                    ])
+                ],
+                [
+                    new SubmitValuesErrorAction(
+                        'The data you entered changed in the remote location. ' +
+                            'The new values are updated in the table. Please review them.'
+                    )
+                ]
+            ])
+        })
+        test('sets error with retry', async () => {
+            responseSequence([
+                [
+                    500,
+                    () => {
+                        return {
+                            msg: 'test error'
+                        }
+                    }
+                ]
+            ])
+            const dispatch = jest.fn()
+            await new SubmitValuesAsyncAction(urlTest, ColumnType.Float, [
+                idEntityTest,
+                idColumnDefTest,
+                {
+                    idPersistent: idValuePersistentTest,
+                    version: versionTestBefore,
+                    value: valueTest
+                }
+            ]).run(dispatch)
+            expect(dispatch.mock.calls.length).toEqual(2)
+            expect(dispatch.mock.calls[0]).toEqual([new SubmitValuesStartAction()])
+            const call2args = dispatch.mock.calls[1]
+            expect(call2args.length).toEqual(1)
+            expect(call2args[0]).toBeInstanceOf(SubmitValuesErrorAction)
+            expect(call2args[0].errorMsg).toEqual('test error')
+            expect(call2args[0].retryCallback).toBeDefined()
+        })
+        test('sets error without retry', async () => {
+            responseSequence([
+                [
+                    400,
+                    () => {
+                        return {
+                            msg: 'test error'
+                        }
+                    }
+                ]
+            ])
+            const dispatch = jest.fn()
+            await new SubmitValuesAsyncAction(urlTest, ColumnType.Float, [
+                idEntityTest,
+                idColumnDefTest,
+                {
+                    idPersistent: idValuePersistentTest,
+                    version: versionTestBefore,
+                    value: valueTest
+                }
+            ]).run(dispatch)
+            expect(dispatch.mock.calls.length).toEqual(2)
+            expect(dispatch.mock.calls[0]).toEqual([new SubmitValuesStartAction()])
+            const call2args = dispatch.mock.calls[1]
+            expect(call2args.length).toEqual(1)
+            expect(call2args[0]).toBeInstanceOf(SubmitValuesErrorAction)
+            expect(call2args[0].errorMsg).toEqual('test error')
+            expect(call2args[0].retryCallback).toBeUndefined()
+        })
     })
 
     describe('parse Values', () => {

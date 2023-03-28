@@ -14,6 +14,8 @@ export class TableState {
     selectedColumnHeaderBounds?: Rectangle
     frozenColumns: number
     loadDataErrorState?: ErrorState
+    isSubmittingValues: boolean
+    submitValuesErrorState?: ErrorState
 
     constructor({
         columnStates: columnStates = [],
@@ -25,7 +27,9 @@ export class TableState {
         selectedColumnHeaderByIdPersistent = undefined,
         selectedColumnHeaderBounds = undefined,
         frozenColumns = 0,
-        loadDataErrorState = undefined
+        loadDataErrorState = undefined,
+        isSubmittingValues = false,
+        submitValuesErrorState = undefined
     }: {
         columnStates?: ColumnState[]
         columnIndices?: Map<string, number>
@@ -39,6 +43,8 @@ export class TableState {
         selectedColumnHeaderBounds?: Rectangle
         frozenColumns?: number
         loadDataErrorState?: ErrorState
+        isSubmittingValues?: boolean
+        submitValuesErrorState?: ErrorState
     }) {
         this.columnIndices = columnIndices
         this.columnStates = columnStates
@@ -50,6 +56,8 @@ export class TableState {
         this.selectedColumnHeaderBounds = selectedColumnHeaderBounds
         this.frozenColumns = frozenColumns
         this.loadDataErrorState = loadDataErrorState
+        this.isSubmittingValues = isSubmittingValues
+        this.submitValuesErrorState = submitValuesErrorState
     }
 
     isLoadingColumn(): boolean {
@@ -62,10 +70,15 @@ export class TableState {
     }
 }
 
+export type CellValue = {
+    value: boolean | string | number | undefined
+    idPersistent: string
+    version: number
+}
+
 export class ColumnState {
     isLoading: boolean
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cellContents: { [key: string]: any }
+    cellContents: CellValue[][]
     name: string
     idPersistent: string
     width: number
@@ -74,15 +87,14 @@ export class ColumnState {
     constructor({
         name,
         isLoading = false,
-        cellContents = {},
+        cellContents = [],
         idPersistent = '',
         width = 200,
         columnType
     }: {
         name: string
         isLoading?: boolean
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        cellContents?: { [key: string]: any }
+        cellContents?: CellValue[][]
         idPersistent: string
         width?: number
         columnType: ColumnType

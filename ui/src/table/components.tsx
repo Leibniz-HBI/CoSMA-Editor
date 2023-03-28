@@ -1,5 +1,11 @@
-import { DataEditor, GridColumn } from '@glideapps/glide-data-grid'
+import {
+    DataEditor,
+    EditableGridCell,
+    GridColumn,
+    Item
+} from '@glideapps/glide-data-grid'
 import { useCallback, useLayoutEffect } from 'react'
+import { Button, Row, Toast, ToastContainer } from 'react-bootstrap'
 import { useLayer } from 'react-laag'
 import { ColumnMenu } from '../column_menu/components/menu'
 import { ColumnAddButton } from '../column_menu/components/misc'
@@ -33,6 +39,7 @@ export function RemoteDataTable(props: any) {
                             [syncInfo.entities, syncInfo.columnStates]
                         )
                     }}
+                    submitValueCallback={remoteCallbacks.submitValueCallback}
                 />
             </div>
         </div>
@@ -42,6 +49,7 @@ export function RemoteDataTable(props: any) {
 export function DataTable(props: {
     tableProps: TableDataProps
     tableCallbacks: LocalTableCallbacks
+    submitValueCallback: (cell: Item, newValues: EditableGridCell) => void
 }) {
     const {
         entities,
@@ -52,6 +60,7 @@ export function DataTable(props: {
         isShowColumnAddMenu,
         isLoading,
         loadDataErrorState,
+        submitValuesErrorState,
         baseUrl
     } = props.tableProps
     const {
@@ -64,7 +73,8 @@ export function DataTable(props: {
         hideHeaderMenuCallback,
         setColumnWidthCallback,
         switchColumnsCallback,
-        columnHeaderBoundsCallback
+        columnHeaderBoundsCallback,
+        clearSubmitValueErrorCallback
     } = props.tableCallbacks
     const {
         layerProps: columnAddMenuLayerProps,
@@ -140,6 +150,7 @@ export function DataTable(props: {
                             onHeaderMenuClick={showHeaderMenuCallback}
                             onColumnResize={setColumnWidthCallback}
                             onColumnMoved={switchColumnsCallback}
+                            onCellEdited={props.submitValueCallback}
                         />
                         {isShowColumnAddMenu &&
                             columnAddMenuRenderLayer(
@@ -161,6 +172,34 @@ export function DataTable(props: {
                                 </div>
                             )}
                     </>
+                    {!!submitValuesErrorState && (
+                        <ToastContainer position="bottom-end" className="p-3">
+                            <Toast onClose={clearSubmitValueErrorCallback}>
+                                <Toast.Header
+                                    className="bg-danger"
+                                    closeVariant="white"
+                                >
+                                    <strong className="me-auto">Error</strong>
+                                </Toast.Header>
+                                <Toast.Body>
+                                    <Row>{submitValuesErrorState.msg}</Row>
+                                    {!!submitValuesErrorState.retryCallback && (
+                                        <div className="d-flex justify-content-end">
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                onClick={
+                                                    submitValuesErrorState.retryCallback
+                                                }
+                                            >
+                                                Retry
+                                            </Button>
+                                        </div>
+                                    )}
+                                </Toast.Body>
+                            </Toast>
+                        </ToastContainer>
+                    )}
                 </div>
             </div>
         )

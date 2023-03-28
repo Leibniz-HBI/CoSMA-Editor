@@ -7,7 +7,7 @@ import {
     TextCell
 } from '@glideapps/glide-data-grid'
 import { mkCell, useCellContentCalback, useRemoteTableData } from './hooks'
-import { ColumnState, TableState } from './state'
+import { CellValue, ColumnState, TableState } from './state'
 import { useThunkReducer } from '../util/state'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import { GetColumnAsyncAction } from './async_actions'
@@ -29,70 +29,77 @@ jest.mock('../util/state', () => {
     }
 })
 describe('create cell', () => {
+    const cellTest = { version: 5, idPersistent: 'id-value-persitent-1234' }
     test('text no values', () => {
-        const cellContent = {}
+        const cellContent: CellValue[] = []
         const columnType = ColumnType.String
-        const cell = mkCell(cellContent, columnType) as TextCell
+        const cell = mkCell(columnType, cellContent) as TextCell
         expect(cell.kind).toEqual('text' as GridCellKind)
         expect(cell.data).toEqual('')
-        expect(cell.allowOverlay).toBeFalsy()
+        expect(cell.allowOverlay).toBeTruthy()
         expect(cell.displayData).toBe('')
     })
     test('text  undefined value', () => {
-        const cellContent = { values: [undefined] }
+        const cellContent = [{ ...cellTest, value: undefined }]
         const columnType = ColumnType.String
-        const cell = mkCell(cellContent, columnType) as TextCell
+        const cell = mkCell(columnType, cellContent) as TextCell
         expect(cell.kind).toEqual('text' as GridCellKind)
         expect(cell.data).toEqual('')
-        expect(cell.allowOverlay).toBeFalsy()
+        expect(cell.allowOverlay).toBeTruthy()
         expect(cell.displayData).toBe('')
     })
     test('text type', () => {
-        const cellContent = { values: ['value'] }
+        const cellContent = [{ ...cellTest, value: 'value' }]
         const columnType = ColumnType.String
-        const cell = mkCell(cellContent, columnType) as TextCell
+        const cell = mkCell(columnType, cellContent) as TextCell
         expect(cell.kind).toEqual('text' as GridCellKind)
-        expect(cell.data).toEqual(cellContent.values[0])
-        expect(cell.allowOverlay).toBeFalsy()
-        expect(cell.displayData).toBe(cellContent.values[0])
+        expect(cell.data).toEqual('value')
+        expect(cell.allowOverlay).toBeTruthy()
+        expect(cell.displayData).toBe('value')
     })
     test('boolean type true', () => {
-        const cellContent = { values: [true] }
+        const cellContent = [{ ...cellTest, value: true }]
         const columnType = ColumnType.Inner
-        const cell = mkCell(cellContent, columnType) as BooleanCell
+        const cell = mkCell(columnType, cellContent) as BooleanCell
         expect(cell.kind).toEqual('boolean' as GridCellKind)
         expect(cell.data).toEqual(true)
         expect(cell.allowOverlay).toBeFalsy()
     })
     test('boolean type undefined', () => {
-        const cellContent = {}
+        const cellContent: CellValue[] = []
         const columnType = ColumnType.Inner
-        const cell = mkCell(cellContent, columnType) as BooleanCell
+        const cell = mkCell(columnType, cellContent) as BooleanCell
         expect(cell.kind).toEqual('boolean' as GridCellKind)
-        expect(cell.data).toEqual(false)
+        expect(cell.data).toEqual(undefined)
         expect(cell.allowOverlay).toBeFalsy()
     })
     test('bubble type', () => {
-        const cellContent = { values: ['value0', 'value1'] }
+        const cellContent = [
+            { ...cellTest, value: 'value0' },
+            { ...cellTest, value: 'value1' }
+        ]
         const columnType = ColumnType.String
-        const cell = mkCell(cellContent, columnType) as BubbleCell
+        const cell = mkCell(columnType, cellContent) as BubbleCell
         expect(cell.kind).toEqual('bubble' as GridCellKind)
-        expect(cell.data).toEqual(cellContent.values)
-        expect(cell.allowOverlay).toBeFalsy()
+        expect(cell.data).toEqual(['value0', 'value1'])
+        expect(cell.allowOverlay).toBeTruthy()
     })
     test('number', () => {
-        const cellContent = { values: [2.3, 2.4] }
+        const cellContent = [{ ...cellTest, value: 2.3 }]
         const columnType = ColumnType.Float
-        const cell = mkCell(cellContent, columnType) as NumberCell
+        const cell = mkCell(columnType, cellContent) as NumberCell
         expect(cell.kind).toEqual('number' as GridCellKind)
         expect(cell.data).toEqual(2.3)
-        expect(cell.allowOverlay).toBeFalsy()
+        expect(cell.allowOverlay).toBeTruthy()
     })
 })
 describe('column types', () => {
     const entityId0 = 'id_entity_test_0'
     const entityId1 = 'id_entity_test_1'
     const entityIdList = [entityId0, entityId1]
+    const entityIndices = new Map(
+        entityIdList.map((idEnitity, idx) => [idEnitity, idx])
+    )
     const columnId = 'id_column_test'
     const columnIndices = new Map(Object.entries({ id_column_test: 0 }))
     test('text column', () => {
@@ -103,26 +110,39 @@ describe('column types', () => {
                     idPersistent: columnId,
                     columnType: ColumnType.String,
                     isLoading: false,
-                    cellContents: {
-                        id_entity_test_0: { values: ['value 0'] },
-                        id_entity_test_1: { values: ['value 1'] }
-                    }
+                    cellContents: [
+                        [
+                            {
+                                value: 'value 0',
+                                version: 42,
+                                idPersistent: 'id-value-test-42'
+                            }
+                        ],
+                        [
+                            {
+                                value: 'value 1',
+                                version: 43,
+                                idPersistent: 'id-value-test-43'
+                            }
+                        ]
+                    ]
                 })
             ],
             columnIndices: columnIndices,
             entities: entityIdList,
+            entityIndices: entityIndices,
             isLoading: false
         })
         const cellContentFunction = useCellContentCalback(state)
         expect(cellContentFunction([0, 0])).toEqual({
             kind: 'text' as GridCellKind,
-            allowOverlay: false,
+            allowOverlay: true,
             displayData: 'value 0',
             data: 'value 0'
         })
         expect(cellContentFunction([0, 1])).toEqual({
             kind: 'text' as GridCellKind,
-            allowOverlay: false,
+            allowOverlay: true,
             displayData: 'value 1',
             data: 'value 1'
         })
@@ -135,9 +155,16 @@ describe('column types', () => {
                     idPersistent: columnId,
                     columnType: ColumnType.Inner,
                     isLoading: false,
-                    cellContents: {
-                        id_entity_test_0: { values: [true] }
-                    }
+                    cellContents: [
+                        [
+                            {
+                                value: true,
+                                version: 44,
+                                idPersistent: 'id-value-test-44'
+                            }
+                        ],
+                        []
+                    ]
                 })
             ],
             columnIndices: columnIndices,
@@ -148,14 +175,13 @@ describe('column types', () => {
         expect(cellContentFunction([0, 0])).toEqual({
             kind: 'boolean' as GridCellKind,
             allowOverlay: false,
-            displayData: true,
             data: true
         })
         expect(cellContentFunction([0, 1])).toEqual({
             kind: 'boolean' as GridCellKind,
             allowOverlay: false,
-            displayData: false,
-            data: false
+            displayData: undefined,
+            data: undefined
         })
     })
     test('loading Cell', () => {

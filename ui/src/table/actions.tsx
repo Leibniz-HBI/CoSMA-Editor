@@ -1,5 +1,8 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { ColumnType } from '../column_menu/state'
+import { CellValue } from './state'
+
+export type Edit = [string, string, CellValue]
 
 /**
  * Indicates successful entity fetch.
@@ -15,10 +18,8 @@ export class SetEntitiesAction {
  */
 export class AppendColumnAction {
     idPersistent: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    columnData: { [key: string]: any }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(idPersistent: string, columnData: { [key: string]: any }) {
+    columnData: { [key: string]: CellValue[] }
+    constructor(idPersistent: string, columnData: { [key: string]: CellValue[] }) {
         this.idPersistent = idPersistent
         this.columnData = columnData
     }
@@ -107,6 +108,38 @@ export class SetLoadDataErrorAction {
     }
 }
 
+/**
+ * Indicates that submitting values has started
+ */
+export class SubmitValuesStartAction {}
+
+/**
+ * Indicates that an error has occured during value submission
+ */
+
+export class SubmitValuesErrorAction {
+    errorMsg: string
+    retryCallback?: VoidFunction
+
+    constructor(errorMsg: string, retryCallback?: VoidFunction) {
+        this.errorMsg = errorMsg
+        this.retryCallback = retryCallback
+    }
+}
+
+/**
+ * Indicates that values have been edited.
+ */
+export class SubmitValuesEndAction {
+    edits: Edit[]
+    constructor(edits: Edit[]) {
+        this.edits = edits
+    }
+}
+
+/**Indicates that the SubmitValuesErrorState should be cleared */
+export class SubmitValuesClearErrorAction {}
+
 export type TableAction =
     | SetEntitiesAction
     | AppendColumnAction
@@ -120,3 +153,7 @@ export type TableAction =
     | SetColumnWidthAction
     | ChangeColumnIndexAction
     | SetLoadDataErrorAction
+    | SubmitValuesStartAction
+    | SubmitValuesErrorAction
+    | SubmitValuesEndAction
+    | SubmitValuesClearErrorAction

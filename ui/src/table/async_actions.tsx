@@ -6,12 +6,18 @@ import {
     SetLoadDataErrorAction,
     SetEntitiesAction,
     AppendColumnAction,
-    SetColumnLoadingAction
+    SetColumnLoadingAction,
+    Edit,
+    SubmitValuesStartAction,
+    SubmitValuesEndAction,
+    SubmitValuesErrorAction
 } from './actions'
 import { AsyncAction } from '../util/state'
 import { fetch_chunk } from '../util/fetch'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
+import { CellValue } from './state'
 
+const displayTxtColumnId = 'display_txt_id'
 /**
  * Async action for fetching table data.
  */
@@ -26,14 +32,13 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
         dispatch(
             new SetColumnLoadingAction(
                 'Display Text',
-                'display_txt_id',
+                displayTxtColumnId,
                 ColumnType.String
             )
         )
         try {
             const entities: string[] = []
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const displayTxts: { [key: string]: any } = {}
+            const displayTxts: { [key: string]: CellValue[] } = {}
             for (let i = 0; ; i += 500) {
                 const rsp = await fetch_chunk({
                     api_path: this.apiPath + '/persons/chunk',
@@ -56,9 +61,13 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                     for (const entry_json of rowsApi) {
                         const idPersistent = entry_json['id_persistent']
                         entities.push(idPersistent)
-                        displayTxts[idPersistent] = {
-                            values: [entry_json['display_txt']]
-                        }
+                        displayTxts[idPersistent] = [
+                            {
+                                value: entry_json['display_txt'],
+                                idPersistent: idPersistent,
+                                version: Number.parseInt(entry_json['version'])
+                            }
+                        ]
                     }
                 }
                 if (rowsApi.length < 500) {
@@ -66,7 +75,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                 }
             }
             dispatch(new SetEntitiesAction(entities))
-            dispatch(new AppendColumnAction('display_txt_id', displayTxts))
+            dispatch(new AppendColumnAction(displayTxtColumnId, displayTxts))
         } catch (e: unknown) {
             dispatch(new SetLoadDataErrorAction(exceptionMessage(e)))
         }
@@ -92,7 +101,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
             const name = this.columnDefinition.namePath.join('->')
             dispatch(new SetColumnLoadingAction(name, id_persistent, columnType))
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const column_data: { [key: string]: any } = {}
+            const column_data: { [key: string]: CellValue[] } = {}
             for (let i = 0; ; i += 5000) {
                 const rsp = await fetch_chunk({
                     api_path: this.apiPath + '/tags/chunk',
@@ -117,17 +126,22 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                 for (const tag of tags) {
                     const id_entity_persistent: string = tag['id_entity_persistent']
                     const valueString = tag['value']
+                    const valueIdPersistent = tag['id_persistent']
+                    const valueVersion = Number.parseInt(tag['version'])
                     const parsedValue = parseValue(
                         this.columnDefinition.columnType,
                         valueString
                     )
+                    const versionedValue = {
+                        value: parsedValue,
+                        idPersistent: valueIdPersistent,
+                        version: valueVersion
+                    }
                     if (id_entity_persistent in column_data) {
                         const cell = column_data[id_entity_persistent]
-                        cell['values'].add(parseValue)
+                        cell.push(versionedValue)
                     } else {
-                        column_data[id_entity_persistent] = {
-                            values: [parsedValue]
-                        }
+                        column_data[id_entity_persistent] = [versionedValue]
                     }
                 }
                 if (tags.length < 5000) {
@@ -138,6 +152,78 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
         } catch (e: unknown) {
             dispatch(new SetLoadDataErrorAction(exceptionMessage(e)))
         }
+    }
+}
+
+export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
+    apiPath: string
+    edit: Edit
+    columnType: ColumnType
+
+    constructor(apiPath: string, columnType: ColumnType, edit: Edit) {
+        super()
+        this.apiPath = apiPath
+        this.columnType = columnType
+        this.edit = edit
+    }
+    async run(dispatch: Dispatch<TableAction>) {
+        dispatch(new SubmitValuesStartAction())
+        try {
+            const rsp = await fetch(this.apiPath + '/tags', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tag_instances: [
+                        {
+                            id_entity_persistent: this.edit[0],
+                            id_tag_definition_persistent: this.edit[1],
+                            value: this.edit[2].value,
+                            id_persistent: this.edit[2].idPersistent,
+                            version: this.edit[2].version
+                        }
+                    ]
+                })
+            })
+            if (rsp.status == 200) {
+                const tagInstance = (await rsp.json())['tag_instances'][0]
+
+                dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
+                return
+            }
+            if (rsp.status == 409) {
+                const tagInstance = (await rsp.json())['tag_instances'][0]
+                dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
+                dispatch(
+                    new SubmitValuesErrorAction(
+                        'The data you entered changed in the remote location. ' +
+                            'The new values are updated in the table. Please review them.'
+                    )
+                )
+                return
+            }
+            const msg = (await rsp.json())['msg']
+            let retryCallback = undefined
+            if (rsp.status >= 500) {
+                retryCallback = () => this.run(dispatch)
+            }
+            dispatch(new SubmitValuesErrorAction(msg, retryCallback))
+        } catch (e: unknown) {
+            dispatch(
+                new SubmitValuesErrorAction('Unknown error: ' + exceptionMessage(e))
+            )
+        }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    extractEdit(tagInstance: { [key: string]: any }): Edit {
+        return [
+            this.edit[0],
+            this.edit[1],
+            {
+                value: parseValue(this.columnType, tagInstance['value']),
+                version: tagInstance['version'],
+                idPersistent: tagInstance['id_persistent']
+            }
+        ]
     }
 }
 

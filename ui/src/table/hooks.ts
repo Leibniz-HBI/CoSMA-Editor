@@ -1,4 +1,5 @@
 import {
+    EditableGridCell,
     GridCell,
     GridCellKind,
     GridColumn,
@@ -16,48 +17,65 @@ import {
     RemoveSelectedColumnAction,
     SetColumnWidthAction,
     ShowColumnAddMenuAction,
-    ShowHeaderMenuAction
+    ShowHeaderMenuAction,
+    SubmitValuesClearErrorAction
 } from './actions'
-import { GetColumnAsyncAction, GetTableAsyncAction } from './async_actions'
+import {
+    GetColumnAsyncAction,
+    GetTableAsyncAction,
+    SubmitValuesAsyncAction
+} from './async_actions'
 import { tableReducer } from './reducer'
-import { ColumnState, TableState } from './state'
+import { CellValue, ColumnState, TableState } from './state'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mkCell(cellContent: any, columnType: ColumnType): GridCell {
+export function mkCell(columnType: ColumnType, cellValues: CellValue[]): GridCell {
     // workaround for typescript jest compatibility
     let cellKind = 'text' as GridCellKind
-    const cellValues = cellContent?.values
+    let allowOverlay = true
+    let cellContent
+    let displayData: string | undefined = undefined
     if (columnType == ColumnType.Inner) {
         // workaround for typescript jest compatibility
+        allowOverlay = false
         cellKind = 'boolean' as GridCellKind
-        if (cellValues === undefined || cellValues === null) {
-            cellContent = false
+        if (cellValues.length == 0) {
+            cellContent = undefined
         } else {
-            cellContent = cellValues[0]
+            cellContent = cellValues[0].value
         }
     } else if (columnType == ColumnType.Float) {
+        // workaround for typescript jest compatibility
         cellKind = 'number' as GridCellKind
-        cellContent = cellValues[0]
+        if (cellValues.length == 0) {
+            cellContent = undefined
+            displayData = ''
+        } else {
+            cellContent = cellValues[0].value
+            displayData = cellContent?.toString()
+        }
     } else if (columnType == ColumnType.String) {
-        if (cellValues === undefined || cellValues === null) {
+        if (cellValues.length == 0) {
             cellContent = ''
+            displayData = ''
         } else {
             if (cellValues.length < 2) {
-                cellContent = cellValues[0]
+                cellContent = cellValues[0].value
+                displayData = cellContent?.toString() ?? ''
                 if (cellContent === undefined || cellContent === null) {
                     cellContent = ''
                 }
             } else {
                 // workaround for typescript jest compatibility
                 cellKind = 'bubble' as GridCellKind
-                cellContent = cellValues
+                cellContent = cellValues.map((value) => value.value)
+                displayData = ''
             }
         }
     }
     return {
         kind: cellKind as GridCellKind,
-        allowOverlay: false,
-        displayData: cellContent,
+        allowOverlay: allowOverlay,
+        displayData: displayData,
         data: cellContent
     } as GridCell
 }
@@ -65,7 +83,6 @@ export function mkCell(cellContent: any, columnType: ColumnType): GridCell {
 export function useCellContentCalback(state: TableState): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
-        const entity_id_persistent = state.entities[row_idx]
         const col = state.columnStates[col_idx]
         if (col === undefined) {
             return {
@@ -82,11 +99,14 @@ export function useCellContentCalback(state: TableState): (cell: Item) => GridCe
                 style: 'faded'
             } as LoadingCell
         }
-        return mkCell(col.cellContents[entity_id_persistent], col.columnType)
+        return mkCell(col.columnType, col.cellContents[row_idx])
     }
 }
 
-export type RemoteTableCallbacks = { loadTableDataCallback: VoidFunction }
+export type RemoteTableCallbacks = {
+    loadTableDataCallback: VoidFunction
+    submitValueCallback: (cell: Item, newValue: EditableGridCell) => void
+}
 export type LocalTableCallbacks = {
     cellContentCallback: (cell: Item) => GridCell
     addColumnCallback: (columnDefinition: ColumnDefinition) => void
@@ -110,6 +130,7 @@ export type LocalTableCallbacks = {
         width: number
         height: number
     }
+    clearSubmitValueErrorCallback: VoidFunction
 }
 export type TableDataProps = {
     entities: string[]
@@ -120,6 +141,7 @@ export type TableDataProps = {
     isShowColumnAddMenu: boolean
     isLoading: boolean
     loadDataErrorState?: ErrorState
+    submitValuesErrorState?: ErrorState
     baseUrl: string
 }
 
@@ -155,6 +177,26 @@ export function useRemoteTableData(
                         await dispatch(new GetColumnAsyncAction(apiPath, col))
                     })
                 })
+            },
+            submitValueCallback: (cell, newValue) => {
+                if (state.isSubmittingValues) {
+                    return
+                }
+                const [colIdx, rowIdx] = cell
+                dispatch(
+                    new SubmitValuesAsyncAction(
+                        apiPath,
+                        state.columnStates[colIdx].columnType,
+                        [
+                            state.entities[rowIdx],
+                            state.columnStates[colIdx].idPersistent,
+                            {
+                                ...state.columnStates[colIdx].cellContents[rowIdx][0],
+                                value: newValue.data?.toString()
+                            }
+                        ]
+                    )
+                )
             }
         },
         {
@@ -188,7 +230,9 @@ export function useRemoteTableData(
                 bottom:
                     (state.selectedColumnHeaderBounds?.y ?? 0) +
                     (state.selectedColumnHeaderBounds?.height ?? 0)
-            })
+            }),
+            clearSubmitValueErrorCallback: () =>
+                dispatch(new SubmitValuesClearErrorAction())
         },
         {
             entities: state.entities,
@@ -198,6 +242,7 @@ export function useRemoteTableData(
             isShowColumnAddMenu: state.showColumnAddMenu,
             selectedColumnHeaderBounds: state.selectedColumnHeaderBounds,
             loadDataErrorState: state.loadDataErrorState,
+            submitValuesErrorState: state.submitValuesErrorState,
             isLoading: isLoading,
             baseUrl: apiPath
         }
