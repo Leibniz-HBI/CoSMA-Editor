@@ -14,25 +14,15 @@ from os import environ
 from pathlib import Path
 
 # Load environment file.
-try:
-    import dotenv
-
-    dotenv.load_dotenv(dotenv.find_dotenv())
-except ImportError:
-    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-@property
-def DEBUG():  # pylint: disable=invalid-name
-    "Read debug environment variable."
-    return environ.get("COSMAE_DEBUG").lower == "true"
 
 
 ###################################################################
@@ -50,8 +40,9 @@ def SECRET_KEY():  # pylint: disable=invalid-name
 ###################################################################
 ALLOWED_HOSTS = []
 
-CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:3000", "http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = []
 
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 
@@ -149,3 +140,5 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "cosmae.CosmaeUser"

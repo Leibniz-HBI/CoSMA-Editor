@@ -6,14 +6,16 @@ from django.db import IntegrityError
 from tests.person.api.integration.requests import post_chunk, post_persons
 
 
-def test_empty_chunk(live_server):
-    rsp = post_chunk(live_server.url, 0, 20)
+def test_empty_chunk(auth_server):
+    live_server, cookies = auth_server
+    rsp = post_chunk(live_server.url, 0, 20, cookies=cookies)
     assert rsp.status_code == 200
     json = rsp.json()
     assert len(json["persons"]) == 0
 
 
-def test_can_slice(live_server):
+def test_can_slice(auth_server):
+    live_server, cookies = auth_server
     persons = [
         {
             "names_personal": "test personal",
@@ -22,8 +24,8 @@ def test_can_slice(live_server):
         }
         for i in range(20)
     ]
-    post_persons(live_server.url, persons)
-    rsp = post_chunk(live_server.url, 3, 4)
+    post_persons(live_server.url, persons, cookies=cookies)
+    rsp = post_chunk(live_server.url, 3, 4, cookies=cookies)
     assert rsp.status_code == 200
     persons = rsp.json()["persons"]
     assert len(persons) == 4
@@ -31,7 +33,8 @@ def test_can_slice(live_server):
         assert persons[i]["display_txt"] == f"{i+3}"
 
 
-def test_non_existent_slice(live_server):
+def test_non_existent_slice(auth_server):
+    live_server, cookies = auth_server
     persons = [
         {
             "names_personal": "test personal",
@@ -41,22 +44,29 @@ def test_non_existent_slice(live_server):
         for i in range(2)
     ]
     post_persons(live_server.url, persons)
-    rsp = post_chunk(live_server.url, 3, 4)
+    rsp = post_chunk(live_server.url, 3, 4, cookies=cookies)
     assert rsp.status_code == 200
     persons = rsp.json()["persons"]
     assert len(persons) == 0
 
 
-def test_request_too_large(live_server):
-    rsp = post_chunk(live_server.url, 0, 1001)
+def test_request_too_large(auth_server):
+    live_server, cookies = auth_server
+    rsp = post_chunk(live_server.url, 0, 1001, cookies=cookies)
     assert rsp.status_code == 400
     assert rsp.json()["msg"] == "Please specify limit smaller than 1000."
 
 
-def test_bad_db(live_server):
+def test_bad_db(auth_server):
+    live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
     with patch("cosmae.person.models_django.Person.get_most_recent_chunked", mock):
-        rsp = post_chunk(live_server.url, 0, 2)
+        rsp = post_chunk(live_server.url, 0, 2, cookies=cookies)
     assert rsp.status_code == 500
     assert rsp.json()["msg"] == "Could not get requested chunk."
+
+
+def test_not_signed_in(live_server):
+    rsp = post_chunk(live_server.url, 0, 2, cookies=None)
+    assert rsp.status_code == 401

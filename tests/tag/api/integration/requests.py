@@ -4,36 +4,41 @@ from urllib.parse import urljoin
 import requests
 
 
-def post_tag_def(url, tag_def):
-    return post_tag_defs(url, [tag_def])
+def post_tag_def(url, tag_def, cookies=None):
+    return post_tag_defs(url, [tag_def], cookies)
 
 
-def post_tag_defs(url, tag_defs):
+def post_tag_defs(url, tag_defs, cookies=None):
     return requests.post(
         urljoin(url, "/cosmae/api/tags/definitions"),
         json={"tag_definitions": tag_defs},
+        cookies=cookies,
         timeout=900,
     )
 
 
-def get_tagdefs(url):
+def get_tagdefs(url, cookies=None):
     return requests.get(
         urljoin(url, "/cosmae/api/tags/definitions"),
+        cookies=cookies,
         timeout=900,
     )
 
 
-def post_tag_instance(url, tag):
-    return post_tag_instances(url, [tag])
+def post_tag_instance(url, tag, **kwargs):
+    return post_tag_instances(url, [tag], **kwargs)
 
 
-def post_tag_instances(url, tags):
+def post_tag_instances(url, tags, cookies=None):
     return requests.post(
-        urljoin(url, "/cosmae/api/tags"), json={"tag_instances": tags}, timeout=900
+        urljoin(url, "/cosmae/api/tags"),
+        json={"tag_instances": tags},
+        cookies=cookies,
+        timeout=900,
     )
 
 
-def post_tag_instance_chunks(url, tag_def_id, offset, limit):
+def post_tag_instance_chunks(url, tag_def_id, offset, limit, cookies=None):
     return requests.post(
         urljoin(url, "/cosmae/api/tags/chunk"),
         json={
@@ -41,25 +46,29 @@ def post_tag_instance_chunks(url, tag_def_id, offset, limit):
             "offset": offset,
             "limit": limit,
         },
+        cookies=cookies,
         timeout=900,
     )
 
 
-def post_tag_def_children(url, id_persistent):
+def post_tag_def_children(url, id_persistent, cookies=None):
     return requests.post(
         urljoin(url, "cosmae/api/tags/definitions/children"),
         json={"id_parent_persistent": id_persistent},
         timeout=900,
+        cookies=cookies,
     )
 
 
-def post_tag_instance_values(url, id_entity_persistent, id_tag_definition_persistent):
+def post_tag_instance_values(
+    url, id_entity_persistent, id_tag_definition_persistent, cookies=None
+):
     return post_tag_instances_values(
-        url, [(id_entity_persistent, id_tag_definition_persistent)]
+        url, [(id_entity_persistent, id_tag_definition_persistent)], cookies
     )
 
 
-def post_tag_instances_values(url, id_persistent_pairs):
+def post_tag_instances_values(url, id_persistent_pairs, cookies):
     return requests.post(
         urljoin(url, "cosmae/api/tags/values"),
         json={
@@ -71,5 +80,6 @@ def post_tag_instances_values(url, id_persistent_pairs):
                 for id_entity_persistent, id_tag_definition_persistent in id_persistent_pairs
             ]
         },
+        cookies=cookies,
         timeout=900,
     )

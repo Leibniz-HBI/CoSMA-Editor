@@ -15,9 +15,10 @@ id_value_test1 = "id-value-test1"
 id_value_test2 = "id-value-test2"
 
 
-def test_empty_db(live_server):
+def test_empty_db(auth_server):
+    live_server, cookies = auth_server
     rsp = post_tag_instance_values(
-        live_server.url, c.id_entity_test, c.id_tag_def_persistent_test
+        live_server.url, c.id_entity_test, c.id_tag_def_persistent_test, cookies=cookies
     )
     assert rsp.status_code == 200
     assert rsp.json() == {
@@ -31,11 +32,12 @@ def test_empty_db(live_server):
     }
 
 
-def test_gets_most_recent(live_server, person, child_tag_def):
-    rsp = post_person(live_server.url, person)
+def test_gets_most_recent(auth_server, person, child_tag_def):
+    live_server, cookies = auth_server
+    rsp = post_person(live_server.url, person, cookies=cookies)
     assert rsp.status_code == 200
     id_entity = rsp.json()["persons"][0]["id_persistent"]
-    rsp = post_tag_def(live_server.url, child_tag_def)
+    rsp = post_tag_def(live_server.url, child_tag_def, cookies=cookies)
     id_tag_def = rsp.json()["tag_definitions"][0]["id_persistent"]
     assert rsp.status_code == 200
     rsp = post_tag_instance(
@@ -45,6 +47,7 @@ def test_gets_most_recent(live_server, person, child_tag_def):
             "id_tag_definition_persistent": id_tag_def,
             "value": 1,
         },
+        cookies=cookies,
     )
     assert rsp.status_code == 200
     rsp_instance = rsp.json()["tag_instances"][0]
@@ -59,11 +62,14 @@ def test_gets_most_recent(live_server, person, child_tag_def):
             "version": version,
             "id_persistent": id_instance,
         },
+        cookies=cookies,
     )
     assert rsp.status_code == 200
     rsp_instance = rsp.json()["tag_instances"][0]
     version = rsp_instance["version"]
-    rsp = post_tag_instance_values(live_server.url, id_entity, id_tag_def)
+    rsp = post_tag_instance_values(
+        live_server.url, id_entity, id_tag_def, cookies=cookies
+    )
     assert rsp.status_code == 200
     assert rsp.json() == {
         "value_responses": [
@@ -84,11 +90,12 @@ def test_gets_most_recent(live_server, person, child_tag_def):
     }
 
 
-def test_gets_most_recent_multi_value(live_server, person, child_tag_def):
-    rsp = post_person(live_server.url, person)
+def test_gets_most_recent_multi_value(auth_server, person, child_tag_def):
+    live_server, cookies = auth_server
+    rsp = post_person(live_server.url, person, cookies=cookies)
     assert rsp.status_code == 200
     id_entity = rsp.json()["persons"][0]["id_persistent"]
-    rsp = post_tag_def(live_server.url, child_tag_def)
+    rsp = post_tag_def(live_server.url, child_tag_def, cookies=cookies)
     id_tag_def = rsp.json()["tag_definitions"][0]["id_persistent"]
     assert rsp.status_code == 200
     rsp = post_tag_instances(
@@ -105,6 +112,7 @@ def test_gets_most_recent_multi_value(live_server, person, child_tag_def):
                 "value": 5,
             },
         ],
+        cookies=cookies,
     )
     assert rsp.status_code == 200
     rsp_json = rsp.json()
@@ -121,10 +129,13 @@ def test_gets_most_recent_multi_value(live_server, person, child_tag_def):
             "version": version,
             "id_persistent": id_instance,
         },
+        cookies=cookies,
     )
     assert rsp.status_code == 200
     rsp_instance0 = rsp.json()["tag_instances"][0]
-    rsp = post_tag_instance_values(live_server.url, id_entity, id_tag_def)
+    rsp = post_tag_instance_values(
+        live_server.url, id_entity, id_tag_def, cookies=cookies
+    )
     assert rsp.status_code == 200
     assert rsp.json() == {
         "value_responses": [
@@ -152,7 +163,8 @@ def test_gets_most_recent_multi_value(live_server, person, child_tag_def):
     }
 
 
-def test_bad_db(live_server):
+def test_bad_db(auth_server):
+    live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = Exception()
     with patch(
@@ -160,7 +172,19 @@ def test_bad_db(live_server):
         mock,
     ):
         req = post_tag_instance_values(
-            live_server.url, c.id_entity_test, c.id_tag_def_persistent_test
+            live_server.url,
+            c.id_entity_test,
+            c.id_tag_def_persistent_test,
+            cookies=cookies,
         )
     assert req.status_code == 500
     assert req.json()["msg"] == "Could not get requested values."
+
+
+def test_not_logged_in(live_server):
+    req = post_tag_instance_values(
+        live_server.url,
+        c.id_entity_test,
+        c.id_tag_def_persistent_test,
+    )
+    assert req.status_code == 401

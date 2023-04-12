@@ -12,16 +12,22 @@ from cosmae.entity.models_django import Entity
 from cosmae.tag.models_django import TagDefinition
 
 
-def test_empty_chunk(live_server, tag_def):
+def test_empty_chunk(auth_server, tag_def):
     tag_def.save()
-    rsp = post_tag_instance_chunks(live_server.url, tag_def.id_persistent, 0, 20)
+    live_server, cookies = auth_server
+    rsp = post_tag_instance_chunks(
+        live_server.url, tag_def.id_persistent, 0, 20, cookies=cookies
+    )
     assert rsp.status_code == 200
     json = rsp.json()
     assert len(json["tag_instances"]) == 0
 
 
-def test_missing_tag_def(live_server):
-    rsp = post_tag_instance_chunks(live_server.url, c.id_tag_def_persistent_test, 0, 20)
+def test_missing_tag_def(auth_server):
+    live_server, cookies = auth_server
+    rsp = post_tag_instance_chunks(
+        live_server.url, c.id_tag_def_persistent_test, 0, 20, cookies=cookies
+    )
     assert rsp.status_code == 400
     json = rsp.json()
     assert json["msg"] == (
@@ -30,7 +36,8 @@ def test_missing_tag_def(live_server):
     )
 
 
-def test_can_slice(live_server, tag_def, entity0):
+def test_can_slice(auth_server, tag_def, entity0):
+    live_server, cookies = auth_server
     tag_def.save()
     entity0.save()
     instances = [
@@ -41,9 +48,11 @@ def test_can_slice(live_server, tag_def, entity0):
         }
         for i in range(20)
     ]
-    rsp = post_tag_instances(live_server.url, instances)
+    rsp = post_tag_instances(live_server.url, instances, cookies=cookies)
     assert rsp.status_code == 200
-    rsp = post_tag_instance_chunks(live_server.url, tag_def.id_persistent, 3, 4)
+    rsp = post_tag_instance_chunks(
+        live_server.url, tag_def.id_persistent, 3, 4, cookies=cookies
+    )
     assert rsp.status_code == 200
     persons = rsp.json()["tag_instances"]
     assert len(persons) == 4
@@ -51,7 +60,8 @@ def test_can_slice(live_server, tag_def, entity0):
         assert persons[i]["value"] == str(float(i) + 3.3)
 
 
-def test_non_existent_slice(live_server, tag_def, entity0):
+def test_non_existent_slice(auth_server, tag_def, entity0):
+    live_server, cookies = auth_server
     tag_def.save()
     entity0.save()
     instances = [
@@ -62,14 +72,17 @@ def test_non_existent_slice(live_server, tag_def, entity0):
         }
         for i in range(2)
     ]
-    post_tag_instances(live_server.url, instances)
-    rsp = post_tag_instance_chunks(live_server.url, tag_def.id_persistent, 3, 4)
+    post_tag_instances(live_server.url, instances, cookies=cookies)
+    rsp = post_tag_instance_chunks(
+        live_server.url, tag_def.id_persistent, 3, 4, cookies=cookies
+    )
     assert rsp.status_code == 200
     persons = rsp.json()["tag_instances"]
     assert len(persons) == 0
 
 
-def test_get_children(live_server, entity0, tag_def_child_0, tag_def_child_1):
+def test_get_children(auth_server, entity0, tag_def_child_0, tag_def_child_1):
+    live_server, cookies = auth_server
     entity0.save()
     tag_def_parent = TagDefinition(
         id_persistent=c.id_tag_def_parent_persistent_test,
@@ -99,24 +112,37 @@ def test_get_children(live_server, entity0, tag_def_child_0, tag_def_child_1):
     ]
     for idx in range(0, 2):
         instances[idx]["value"] = str(idx == 0)
-    req = post_tag_instances(live_server.url, instances)
+    req = post_tag_instances(live_server.url, instances, cookies=cookies)
     assert req.status_code == 200
-    req = post_tag_instance_chunks(live_server.url, tag_def_parent.id_persistent, 0, 10)
+    req = post_tag_instance_chunks(
+        live_server.url, tag_def_parent.id_persistent, 0, 10, cookies=cookies
+    )
     assert req.status_code == 200
     api_instances = req.json()["tag_instances"]
     assert len(api_instances) == 6
 
 
-def test_request_too_large(live_server):
-    rsp = post_tag_instance_chunks(live_server.url, "test_id_persistent", 0, 10001)
+def test_request_too_large(auth_server):
+    live_server, cookies = auth_server
+    rsp = post_tag_instance_chunks(
+        live_server.url, "test_id_persistent", 0, 10001, cookies=cookies
+    )
     assert rsp.status_code == 400
     assert rsp.json()["msg"] == "Please specify limit smaller than 10000."
 
 
-def test_bad_db(live_server):
+def test_bad_db(auth_server):
+    live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
     with patch("cosmae.tag.models_django.TagInstance.by_tag_chunked", mock):
-        rsp = post_tag_instance_chunks(live_server.url, "test_id_persistent", 0, 2)
+        rsp = post_tag_instance_chunks(
+            live_server.url, "test_id_persistent", 0, 2, cookies=cookies
+        )
     assert rsp.status_code == 500
     assert rsp.json()["msg"] == "Could not get requested chunk."
+
+
+def test_not_logged_in(live_server):
+    rsp = post_tag_instance_chunks(live_server.url, "test_id_persistent", 0, 2)
+    assert rsp.status_code == 401

@@ -103,7 +103,10 @@ def persons_count_get(_):
         return 500, ApiError(msg="Could not count persons.")
 
 
-@router.post("chunk", response={200: PersonNaturalList, 400: ApiError, 500: ApiError})
+@router.post(
+    "chunk",
+    response={200: PersonNaturalList, 400: ApiError, 500: ApiError},
+)
 def persons_chunks_post(_, req_data: ChunkRequest):
     """Get a chunk of persons.
     Note:

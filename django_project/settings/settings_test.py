@@ -10,23 +10,51 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+from os import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent / "django_test_base"
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-8#cbb6lycby)_fgmns@nv$i45tsr9-#2#a1*n#+g6-c&!t=e@l"
-
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = True
 
+###################################################################
+# SECURITY WARNING: keep the secret key used in production secret!
+# PLEASE add your own secret.
+@property
+def SECRET_KEY():  # pylint: disable=invalid-name
+    "Get the secret key from environment."
+    key = environ.get("DJANGO_KEY")
+    if not key:
+        raise Exception("Please set the DJANGO_KEY environment variable.")
+    return key
+
+
+###################################################################
 ALLOWED_HOSTS = []
 
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:3000", "http://localhost:3000"]
+
+
+SILENCED_SYSTEM_CHECKS = ["corsheaders.E001", "corsheaders.E003"]
+
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = ["Content-Type", "Access-Control-Allow-Credentials"]
+
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
 
 # Application definition
 
@@ -37,12 +65,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "cosmae",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",

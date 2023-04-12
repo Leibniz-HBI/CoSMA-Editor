@@ -22,10 +22,11 @@ def names_only():
     }
 
 
-def test_id_no_version(live_server, names_only):
+def test_id_no_version(auth_server, names_only):
+    live_server, cookies = auth_server
     person = names_only.copy()
     person["id_persistent"] = test_id_persistent_0
-    req = post_person(live_server.url, person)
+    req = post_person(live_server.url, person, cookies=cookies)
     assert req.status_code == 400
     assert (
         req.json()["msg"]
@@ -33,10 +34,11 @@ def test_id_no_version(live_server, names_only):
     )
 
 
-def test_no_id_version(live_server, names_only):
+def test_no_id_version(auth_server, names_only):
+    live_server, cookies = auth_server
     person = names_only.copy()
     person["version"] = 5
-    req = post_person(live_server.url, person)
+    req = post_person(live_server.url, person, cookies=cookies)
     assert req.status_code == 400
     assert (
         req.json()["msg"]
@@ -44,15 +46,16 @@ def test_no_id_version(live_server, names_only):
     )
 
 
-def test_concurrent_modification(live_server, names_only):
+def test_concurrent_modification(auth_server, names_only):
+    live_server, cookies = auth_server
     person = names_only.copy()
-    req = post_person(live_server.url, person)
+    req = post_person(live_server.url, person, cookies=cookies)
     assert req.status_code == 200
     created = req.json()["persons"][0]
     created["display_txt"] = "new test display txt"
-    req = post_person(live_server.url, created)
+    req = post_person(live_server.url, created, cookies=cookies)
     assert req.status_code == 200
-    req = post_person(live_server.url, created)
+    req = post_person(live_server.url, created, cookies=cookies)
     assert req.status_code == 400
     assert req.json()["msg"] == (
         "There has been a concurrent modification "
@@ -61,25 +64,27 @@ def test_concurrent_modification(live_server, names_only):
     )
 
 
-def test_no_modification_is_returned(live_server, names_only):
-    req = post_person(live_server.url, names_only)
+def test_no_modification_is_returned(auth_server, names_only):
+    live_server, cookies = auth_server
+    req = post_person(live_server.url, names_only, cookies=cookies)
     assert req.status_code == 200
     created = req.json()["persons"][0]
-    req = post_person(live_server.url, created)
+    req = post_person(live_server.url, created, cookies=cookies)
     assert req.status_code == 200
     persons = req.json()["persons"]
     assert len(persons) == 1
     assert persons[0] == created
 
 
-def test_exists(live_server, names_only):
+def test_exists(auth_server, names_only):
+    live_server, cookies = auth_server
     mock = MagicMock()
     mock.return_value = "same_id"
     with patch("cosmae.person.api.uuid4", mock):
         person = names_only.copy()
-        req = post_person(live_server.url, person)
+        req = post_person(live_server.url, person, cookies=cookies)
         assert req.status_code == 200
-        req = post_person(live_server.url, person)
+        req = post_person(live_server.url, person, cookies=cookies)
         assert req.status_code == 500
         assert req.json()["msg"] == (
             "Could not generate an id for person with "
@@ -87,22 +92,29 @@ def test_exists(live_server, names_only):
         )
 
 
-def test_bad_db(live_server, names_only):
+def test_bad_db(auth_server, names_only):
+    live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
     with patch("cosmae.person.models_django.Person.save", mock):
-        req = post_person(live_server.url, names_only)
+        req = post_person(live_server.url, names_only, cookies=cookies)
     assert req.status_code == 500
     assert req.json()["msg"] == "Provided data not consistent with database."
 
 
-def test_multiple(live_server, names_only):
+def test_not_signed_in(live_server, names_only):
+    req = post_person(live_server.url, names_only, cookies=None)
+    assert req.status_code == 401
+
+
+def test_multiple(auth_server, names_only):
+    live_server, cookies = auth_server
     count_before = Person.get_count()
-    req = post_person(live_server.url, names_only)
+    req = post_person(live_server.url, names_only, cookies=cookies)
     created = req.json()["persons"][0]
     new_display_txt = "new test display_text"
     created["display_txt"] = new_display_txt
-    req = post_persons(live_server.url, [created, names_only])
+    req = post_persons(live_server.url, [created, names_only], cookies=cookies)
     assert req.status_code == 200
     persons = req.json()["persons"]
     assert len(persons) == 2
