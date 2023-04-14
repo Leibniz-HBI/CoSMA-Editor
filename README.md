@@ -2,9 +2,18 @@
 This repository contains the **Co**laborative **S**ocial **M**edia **A**ccount-**Editor**.
 The CoSMA-Editor is a web application allowing communities to merge and curate lists of social media accounts
 
-# Note
-The repository is still in its infancy.
-More details will be added in the future.
+## Features
+Currently the following features are supported:
+* View social media account metadata
+* Change the displayed metadata fields
+* Create new metadata fields
+* Edit Data
+
+### Planned Features
+The following features will be implemented
+* Bulk data upload
+* Assisted review for merging data from bulk uploads into the database
+
 
 # Running
 Currently there is no recommended way of running CoSMA-Editor.
