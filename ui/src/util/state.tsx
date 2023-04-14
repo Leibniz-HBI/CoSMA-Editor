@@ -1,25 +1,24 @@
 import { useReducer, useCallback, Dispatch, Reducer } from 'react'
+import { LogoutAction } from '../user/actions'
+import { useLogoutCallback } from '../user/hooks'
+import { AsyncAction } from './async_action'
 
 type ThunkMiddlewareDispatch<U> = <V>(
     action: AsyncAction<U, V> | U
 ) => Promise<V | undefined>
 
 /**
- * Base class for asynchronous actions.
- */
-export abstract class AsyncAction<U, V> {
-    abstract run(dispatch: Dispatch<U>): Promise<V>
-}
-
-/**
  * Makes a dispatch function for elementary actions also handle async actions.
  * @param reducer The function that generates a new state from a state and a elementary action.
  * @returns A dispatch function that can also handle asynchronous actions.
  */
-function thunker<U>(dispatch: Dispatch<U>): ThunkMiddlewareDispatch<U> {
+function thunker<U>(
+    dispatch: Dispatch<U>,
+    userDispatch?: Dispatch<LogoutAction>
+): ThunkMiddlewareDispatch<U> {
     return function <V>(action: AsyncAction<U, V> | U): Promise<V | undefined> {
         if (action instanceof AsyncAction<U, V>) {
-            return (action as AsyncAction<U, V>).run(dispatch)
+            return (action as AsyncAction<U, V>).run(dispatch, userDispatch)
         } else {
             dispatch(action)
             return Promise.resolve(undefined)
@@ -37,10 +36,11 @@ export function useThunkReducer<T, U>(
     reducer: Reducer<T, U>,
     initialState: T
 ): [T, ThunkMiddlewareDispatch<U>] {
+    const logoutDispatch = useLogoutCallback()
     const [state, dispatch] = useReducer(reducer, initialState)
     return [
         state,
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        useCallback(thunker<U>(dispatch as Dispatch<U>), [initialState])
+        useCallback(thunker<U>(dispatch as Dispatch<U>, logoutDispatch), [initialState])
     ]
 }

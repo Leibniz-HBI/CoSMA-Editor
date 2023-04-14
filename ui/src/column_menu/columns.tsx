@@ -1,118 +1,118 @@
 import { ColumnDefinition, ColumnType } from './state'
 export const all_columns = {
     Kategorie: new ColumnDefinition({
-        idPersistent: '1346fabe-e25e-4f4e-a89c-04c231f18299',
+        idPersistent: 'd342c412-3c96-49d3-bddd-53da8ed20ce6',
         version: 1,
         columnType: ColumnType.String,
         namePath: ['Parliament']
     }),
     Partei: new ColumnDefinition({
-        idPersistent: 'bc1d0ca4-bfc0-413d-8b5a-b7faaf68e606',
+        idPersistent: 'e593654d-23f7-48a4-af56-4d6687deb6b8',
         version: 2,
         columnType: ColumnType.String,
         namePath: ['Party']
     }),
     SM_Facebook_user: new ColumnDefinition({
-        idPersistent: '06848fb3-1584-453c-a64f-bf896bbcb18e',
-        idParentPersistent: '8e56bb47-c2e5-4cbe-b4c3-2b864beaf7fa',
+        idPersistent: '47222c6d-ba5b-4c92-a8c2-1a80e1173af3',
+        idParentPersistent: '7f39cc52-2296-4936-85a1-622f4126b978',
         version: 5,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'Facebook', 'user']
     }),
     SM_Facebook_id: new ColumnDefinition({
-        idPersistent: 'ce3316ca-5d42-41f2-9ace-d5c4a5b29a76',
-        idParentPersistent: '8e56bb47-c2e5-4cbe-b4c3-2b864beaf7fa',
+        idPersistent: '475fceaa-9321-41ae-ae51-77611ab8af23',
+        idParentPersistent: '7f39cc52-2296-4936-85a1-622f4126b978',
         version: 6,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'Facebook', 'id']
     }),
     SM_Facebook_verifiziert: new ColumnDefinition({
-        idPersistent: '958e057e-2b4e-4d69-b297-a9ffaad73994',
-        idParentPersistent: '8e56bb47-c2e5-4cbe-b4c3-2b864beaf7fa',
+        idPersistent: '92ff64fb-bb04-45e6-95d3-e0e9d4faa629',
+        idParentPersistent: '7f39cc52-2296-4936-85a1-622f4126b978',
         version: 7,
         columnType: ColumnType.Inner,
         namePath: ['Social Media', 'Facebook', 'verified']
     }),
     SM_Twitter_user: new ColumnDefinition({
-        idPersistent: '9faf62df-4015-4d95-b2c2-b4f13d22e448',
-        idParentPersistent: '56fafcb7-08ab-4cf2-8eb4-b0e37f91f123',
+        idPersistent: 'e11a0dc5-5903-4860-a055-45c70b1a5569',
+        idParentPersistent: '391f1d05-287f-4871-aa18-309a633ad453',
         version: 9,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'Twitter', 'user']
     }),
     SM_Twitter_id: new ColumnDefinition({
-        idPersistent: 'ea643d2c-f23e-4dd0-840c-ea22c74cd55d',
-        idParentPersistent: '56fafcb7-08ab-4cf2-8eb4-b0e37f91f123',
+        idPersistent: '01233d42-e28d-4678-8417-8246777bceaa',
+        idParentPersistent: '391f1d05-287f-4871-aa18-309a633ad453',
         version: 10,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'Twitter', 'id']
     }),
     SM_Twitter_verifiziert: new ColumnDefinition({
-        idPersistent: '08bac543-eb94-4b99-8654-842a1a0e166f',
-        idParentPersistent: '56fafcb7-08ab-4cf2-8eb4-b0e37f91f123',
+        idPersistent: '3fa790ae-f585-4abc-b87a-e8210b800e4f',
+        idParentPersistent: '391f1d05-287f-4871-aa18-309a633ad453',
         version: 11,
         columnType: ColumnType.Inner,
         namePath: ['Social Media', 'Twitter', 'verified']
     }),
     SM_Telegram_user: new ColumnDefinition({
-        idPersistent: 'a9325d92-6a7b-45c2-bbde-5f872b5607a1',
-        idParentPersistent: '1effddcc-17a0-453c-90cc-2a10d85e1275',
+        idPersistent: '2ee2de25-f956-4a8c-8f29-bdb67c217625',
+        idParentPersistent: '7d7cc609-538b-4c0c-a4dd-da0c77c7c43e',
         version: 13,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'Telegram', 'user']
     }),
     SM_Telegram_id: new ColumnDefinition({
-        idPersistent: '2e3f4d77-1a39-4bc9-bed9-14de1a71ec8e',
-        idParentPersistent: '1effddcc-17a0-453c-90cc-2a10d85e1275',
+        idPersistent: 'fbccfb1c-4b10-40f8-9bf2-ef8bd57bd71a',
+        idParentPersistent: '7d7cc609-538b-4c0c-a4dd-da0c77c7c43e',
         version: 14,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'Telegram', 'id']
     }),
     SM_Telegram_verifiziert: new ColumnDefinition({
-        idPersistent: '4d86457c-3a3b-4c7d-aab9-6fcac8e4e13c',
-        idParentPersistent: '1effddcc-17a0-453c-90cc-2a10d85e1275',
+        idPersistent: '1ad57d41-9da6-4209-a7c4-25cae53d2ffe',
+        idParentPersistent: '7d7cc609-538b-4c0c-a4dd-da0c77c7c43e',
         version: 15,
         columnType: ColumnType.Inner,
         namePath: ['Social Media', 'Telegram', 'verified']
     }),
     SM_Youtube_user: new ColumnDefinition({
-        idPersistent: '51612bad-c1fd-4ab8-a2a0-0788e8afb9d9',
-        idParentPersistent: '07e0bf57-c3a5-4dd8-aa2f-b1e51a4286ad',
+        idPersistent: 'ed4f8d31-90ac-439a-a628-bddb7c1cabcb',
+        idParentPersistent: 'fb6d9891-58a3-4557-9d94-3b2c30f2a7e9',
         version: 17,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'YouTube', 'user']
     }),
     SM_Youtube_id: new ColumnDefinition({
-        idPersistent: 'c10dbf8a-33e9-49bb-9e10-4e62bf1d1f35',
-        idParentPersistent: '07e0bf57-c3a5-4dd8-aa2f-b1e51a4286ad',
+        idPersistent: 'effaafe2-321e-4a9e-9dfc-717c17995f7f',
+        idParentPersistent: 'fb6d9891-58a3-4557-9d94-3b2c30f2a7e9',
         version: 18,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'YouTube', 'id']
     }),
     SM_Youtube_verifiziert: new ColumnDefinition({
-        idPersistent: '4c17f7e5-b73b-4072-8357-06c8d4a15050',
-        idParentPersistent: '07e0bf57-c3a5-4dd8-aa2f-b1e51a4286ad',
+        idPersistent: '709b96e6-a832-4b44-a045-15b9c478e9ac',
+        idParentPersistent: 'fb6d9891-58a3-4557-9d94-3b2c30f2a7e9',
         version: 19,
         columnType: ColumnType.Inner,
         namePath: ['Social Media', 'YouTube', 'verified']
     }),
     SM_Instagram_user: new ColumnDefinition({
-        idPersistent: '23a2511a-e5e1-4ef8-aa94-c8e11b65cbcd',
-        idParentPersistent: '30cbca0e-a80b-4e5c-8d6b-cfaed9636740',
+        idPersistent: '2fc73117-dec2-4317-a2f1-105b7a1e921d',
+        idParentPersistent: 'bf059550-41ef-405c-adf4-226ff35e3482',
         version: 21,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'Instagram', 'user']
     }),
     SM_Instagram_id: new ColumnDefinition({
-        idPersistent: '52cdcd4d-3428-453d-abba-43948f13de8c',
-        idParentPersistent: '30cbca0e-a80b-4e5c-8d6b-cfaed9636740',
+        idPersistent: '5f5988bc-2797-4b0a-8e9f-db839f1159b6',
+        idParentPersistent: 'bf059550-41ef-405c-adf4-226ff35e3482',
         version: 22,
         columnType: ColumnType.String,
         namePath: ['Social Media', 'Instagram', 'id']
     }),
     SM_Instagram_verifiziert: new ColumnDefinition({
-        idPersistent: 'aacca549-5651-4a41-951a-1f7f853717d5',
-        idParentPersistent: '30cbca0e-a80b-4e5c-8d6b-cfaed9636740',
+        idPersistent: '53346e07-4df4-4ebe-9d73-8522edb527d2',
+        idParentPersistent: 'bf059550-41ef-405c-adf4-226ff35e3482',
         version: 23,
         columnType: ColumnType.Inner,
         namePath: ['Social Media', 'Instagram', 'verified']

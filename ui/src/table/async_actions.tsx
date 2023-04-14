@@ -12,7 +12,7 @@ import {
     SubmitValuesEndAction,
     SubmitValuesErrorAction
 } from './actions'
-import { AsyncAction } from '../util/state'
+import { AsyncAction } from '../util/async_action'
 import { fetch_chunk } from '../util/fetch'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import { CellValue } from './state'

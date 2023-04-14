@@ -15,6 +15,7 @@ jest.mock('../util/state', () => {
 describe('Column menu hook', () => {
     const urlTest = 'http://test.url/'
     test(' get hierarchy callback exits early when already loading', async () => {
+        const emittedActions: any[] = []
         ;(useThunkReducer as jest.Mock).mockReturnValue([
             new ColumnSelectionState({ isLoading: true }),
             (action: any) => {
@@ -23,7 +24,6 @@ describe('Column menu hook', () => {
         ])
         const { getHierarchyCallback } = useRemoteColumnMenuData(urlTest)
         getHierarchyCallback()
-        const emittedActions: any[] = []
         expect(emittedActions.length).toBe(0)
     })
     test('starts async action', () => {

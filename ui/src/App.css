@@ -1,10 +1,5 @@
 .cosmae-container {
-    height: 100vh;
-    width: 100%;
     background-color: gainsboro;
-    overflow: disable;
-    display: flex;
-    flex-direction: column;
 }
 
 .cosmae-header {
@@ -15,7 +10,6 @@
     color: gainsboro;
     height: 70px;
     width: 100%;
-    padding-top: 10px;
 }
 
 .cosmae-table-page-container {
@@ -40,11 +34,8 @@
 }
 
 .cosmae-body {
-    margin-top: 12px;
-    margin-bottom: 24px;
-    width: 96%;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    height: 100%;
     flex-grow: 1;
 }
 
@@ -71,12 +62,7 @@
     background-color: #5f9ea044;
 }
 .cosmae-table-page-body {
-    margin-top: 12px;
-    margin-bottom: 24px;
-    width: 98%;
     display: block;
-    margin-left: auto;
-    margin-right: auto;
     flex-grow: 1;
 }
 
@@ -166,6 +152,10 @@ span.icon {
     padding-right: 0px !important;
 }
 
+form-control {
+    width: 100%;
+}
+
 .form-label input:focus {
     outline: rgba(0, 0, 0, 0.125) solid 1px;
 }
@@ -195,7 +185,10 @@ div#layers > div > .container {
     /* border-bottom: none !important; */
 }
 .no-wrap {
-    display:inline-block;
+    display: inline-block;
     white-space: pre;
+}
 
+.text-transparent {
+    color: transparent;
 }

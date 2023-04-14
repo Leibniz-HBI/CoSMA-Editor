@@ -1,7 +1,7 @@
 import { Dispatch } from 'react'
 import { ErrorState } from '../util/error'
 import { exceptionMessage } from '../util/exception'
-import { AsyncAction } from '../util/state'
+import { AsyncAction } from '../util/async_action'
 import {
     ColumnSelectionAction,
     SetErrorAction,

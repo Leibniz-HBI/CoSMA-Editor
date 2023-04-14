@@ -1,7 +1,8 @@
 /*eslint @typescript-eslint/no-unused-vars: ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]*/
 import { describe } from '@jest/globals'
 import { Dispatch, useCallback, useReducer } from 'react'
-import { AsyncAction, useThunkReducer } from './state'
+import { useThunkReducer } from './state'
+import { AsyncAction } from './async_action'
 
 jest.mock('react', () => {
     const original = jest.requireActual('react')
@@ -9,6 +10,14 @@ jest.mock('react', () => {
         ...original,
         useReducer: jest.fn(),
         useCallback: jest.fn()
+    }
+})
+
+jest.mock('../user/hooks', () => {
+    const original = jest.requireActual('../user/hooks')
+    return {
+        ...original,
+        useLogoutCallback: jest.fn()
     }
 })
 
@@ -43,5 +52,6 @@ describe('thunker', () => {
         const [_state, thunkDispatch] = useThunkReducer(reducer, state)
         thunkDispatch(2)
         expect(dispatch.mock.calls).toEqual([[2]])
+        expect(reducer.mock.calls).toEqual([])
     })
 })

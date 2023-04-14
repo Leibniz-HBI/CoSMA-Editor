@@ -13,7 +13,9 @@ export async function fetch_chunk({
 }) {
     return await fetch(api_path, {
         method: 'POST',
+        credentials: 'include',
         headers: {
+            'Access-Control-Allow-Credentials': 'true',
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ ...payload, offset: offset, limit: limit })
