@@ -1,4 +1,4 @@
-import { constructColumnTitleSpans } from './selection'
+import { constructColumnTitleSpans } from '../selection'
 
 describe('create column name', () => {
     const levels = ['first', 'second', 'third', 'fourth']

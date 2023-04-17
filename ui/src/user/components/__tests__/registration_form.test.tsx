@@ -3,8 +3,8 @@
  */
 
 import { render, screen, waitFor } from '@testing-library/react'
-import { RegistrationForm } from './registration_form'
-import { ErrorState } from '../../util/error'
+import { RegistrationForm } from '../registration_form'
+import { ErrorState } from '../../../util/error'
 
 import userEvent from '@testing-library/user-event'
 test('renders without error set', async () => {

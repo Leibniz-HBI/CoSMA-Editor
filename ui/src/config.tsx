@@ -1,3 +1,12 @@
+;async () => {
+    try {
+        const dotenv = await import('dotenv')
+        dotenv.config()
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 export class CosmaeConf {
     private static instance?: CosmaeConf
     api_base: string
@@ -7,11 +16,11 @@ export class CosmaeConf {
 
     static get() {
         if (CosmaeConf.instance === undefined || CosmaeConf.instance === null) {
-            let base_url = process.env.COSMAE_HOST
-            if (base_url === undefined || base_url == null) {
-                base_url = 'http://127.0.0.1:8000'
+            let api_path = process.env.COSMAE_API_PATH
+            if (api_path === undefined || api_path == null) {
+                api_path = '/api'
             }
-            CosmaeConf.instance = new CosmaeConf({ api_base: base_url + '/cosmae/api' })
+            CosmaeConf.instance = new CosmaeConf({ api_base: api_path })
         }
         return CosmaeConf.instance
     }

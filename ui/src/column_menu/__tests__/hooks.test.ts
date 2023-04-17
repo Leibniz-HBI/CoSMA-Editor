@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useThunkReducer } from '../util/state'
-import { ColumnMenuTab, SelectTabAction, ToggleExpansionAction } from './actions'
-import { GetHierarchyAction, SubmitColumnDefinitionAction } from './async_actions'
-import { useRemoteColumnMenuData } from './hooks'
-import { ColumnSelectionState } from './state'
-jest.mock('../util/state', () => {
-    const original = jest.requireActual('../util/state')
+import { useThunkReducer } from '../../util/state'
+import { ColumnMenuTab, SelectTabAction, ToggleExpansionAction } from '../actions'
+import { GetHierarchyAction, SubmitColumnDefinitionAction } from '../async_actions'
+import { useRemoteColumnMenuData } from '../hooks'
+import { ColumnSelectionState } from '../state'
+jest.mock('../../util/state', () => {
+    const original = jest.requireActual('../../util/state')
     return {
         ...original,
         useThunkReducer: jest.fn().mockImplementation()

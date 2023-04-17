@@ -9,8 +9,8 @@ jest.mock('@glideapps/glide-data-grid', () => ({
 }))
 import { describe } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
-import { DataTable } from './components'
-import { ColumnState } from './state'
+import { DataTable } from '../components'
+import { ColumnState } from '../state'
 import {
     DataEditor,
     GridCell,
@@ -18,10 +18,10 @@ import {
     GridColumn,
     Item
 } from '@glideapps/glide-data-grid'
-import { ColumnDefinition, ColumnType } from '../column_menu/state'
-import { LocalTableCallbacks, TableDataProps } from './hooks'
-import { ColumnAddButton } from '../column_menu/components/misc'
-import { ErrorState } from '../util/error'
+import { ColumnDefinition, ColumnType } from '../../column_menu/state'
+import { LocalTableCallbacks, TableDataProps } from '../hooks'
+import { ColumnAddButton } from '../../column_menu/components/misc'
+import { ErrorState } from '../../util/error'
 
 const testColumns = [
     new ColumnState({

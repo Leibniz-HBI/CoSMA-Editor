@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
-import { ColumnDefinition, ColumnType } from '../column_menu/state'
+import { ColumnDefinition, ColumnType } from '../../column_menu/state'
 import {
     SetEntityLoadingAction,
     SetColumnLoadingAction,
@@ -9,13 +9,13 @@ import {
     SubmitValuesStartAction,
     SubmitValuesEndAction,
     SubmitValuesErrorAction
-} from './actions'
+} from '../actions'
 import {
     GetTableAsyncAction,
     GetColumnAsyncAction,
     parseValue,
     SubmitValuesAsyncAction
-} from './async_actions'
+} from '../async_actions'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {

@@ -3,8 +3,8 @@
  */
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { LoginForm } from './login_form'
-import { ErrorState } from '../../util/error'
+import { LoginForm } from '../login_form'
+import { ErrorState } from '../../../util/error'
 
 test('renders without error set', () => {
     const loginCallback = jest.fn()

@@ -1,5 +1,5 @@
-import { userReducer } from './reducer'
-import { UserInfo, UserState } from './state'
+import { userReducer } from '../reducer'
+import { UserInfo, UserState } from '../state'
 import {
     LoginErrorAction,
     LoginErrorClearAction,
@@ -12,8 +12,8 @@ import {
     RegistrationErrorClearAction,
     RegistrationStartAction,
     ToggleRegistrationAction
-} from './actions'
-import { ErrorState } from '../util/error'
+} from '../actions'
+import { ErrorState } from '../../util/error'
 
 describe('user reducher', () => {
     const userNameTest = 'userTest'

@@ -1,11 +1,11 @@
 import { describe } from '@jest/globals'
-import { columnMenuReducer } from './reducer'
+import { columnMenuReducer } from '../reducer'
 import {
     ColumnDefinition,
     ColumnSelectionEntry,
     ColumnSelectionState,
     ColumnType
-} from './state'
+} from '../state'
 import {
     ClearSearchEntriesAction,
     ColumnMenuTab,
@@ -18,8 +18,8 @@ import {
     SubmitColumnDefinitionStartAction,
     SubmitColumnDefinitionSuccessAction,
     ToggleExpansionAction
-} from './actions'
-import { ErrorState } from '../util/error'
+} from '../actions'
+import { ErrorState } from '../../util/error'
 
 describe('Column Menu Reducer', () => {
     const columnSelectionEntryTest10 = new ColumnSelectionEntry({

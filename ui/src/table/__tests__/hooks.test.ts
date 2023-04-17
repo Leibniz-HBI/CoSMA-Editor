@@ -6,11 +6,11 @@ import {
     NumberCell,
     TextCell
 } from '@glideapps/glide-data-grid'
-import { mkCell, useCellContentCalback, useRemoteTableData } from './hooks'
-import { CellValue, ColumnState, TableState } from './state'
-import { useThunkReducer } from '../util/state'
-import { ColumnDefinition, ColumnType } from '../column_menu/state'
-import { GetColumnAsyncAction } from './async_actions'
+import { mkCell, useCellContentCalback, useRemoteTableData } from '../hooks'
+import { CellValue, ColumnState, TableState } from '../state'
+import { useThunkReducer } from '../../util/state'
+import { ColumnDefinition, ColumnType } from '../../column_menu/state'
+import { GetColumnAsyncAction } from '../async_actions'
 import {
     ChangeColumnIndexAction,
     HideColumnAddMenuAction,
@@ -19,10 +19,10 @@ import {
     SetColumnWidthAction,
     ShowColumnAddMenuAction,
     ShowHeaderMenuAction
-} from './actions'
+} from '../actions'
 
-jest.mock('../util/state', () => {
-    const original = jest.requireActual('../util/state')
+jest.mock('../../util/state', () => {
+    const original = jest.requireActual('../../util/state')
     return {
         ...original,
         useThunkReducer: jest.fn().mockImplementation()

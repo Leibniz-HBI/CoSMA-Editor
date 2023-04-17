@@ -4,8 +4,8 @@
 import { describe } from '@jest/globals'
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ErrorState } from '../../util/error'
-import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from './form'
+import { ErrorState } from '../../../util/error'
+import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from '../form'
 
 describe('form tests', () => {
     function childTest(formProps?: ColumnTypeCreateFormProps) {

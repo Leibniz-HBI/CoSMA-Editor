@@ -6,9 +6,9 @@ import {
     SubmitColumnDefinitionErrorAction,
     SubmitColumnDefinitionStartAction,
     SubmitColumnDefinitionSuccessAction
-} from './actions'
-import { GetHierarchyAction, SubmitColumnDefinitionAction } from './async_actions'
-import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
+} from '../actions'
+import { GetHierarchyAction, SubmitColumnDefinitionAction } from '../async_actions'
+import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from '../state'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {
     const fetchMock = jest.spyOn(global, 'fetch')

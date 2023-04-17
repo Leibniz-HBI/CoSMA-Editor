@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useLogin } from './hooks'
-import { useThunkReducer } from '../util/state'
-import { UserState } from './state'
-import { LoginAction, RefreshAction, RegistrationAction } from './async_actions'
-import { RegistrationErrorClearAction } from './actions'
-import { LoginErrorClearAction } from './actions'
-import { ToggleRegistrationAction } from './actions'
+import { useLogin } from '../hooks'
+import { useThunkReducer } from '../../util/state'
+import { UserState } from '../state'
+import { LoginAction, RefreshAction, RegistrationAction } from '../async_actions'
+import { RegistrationErrorClearAction } from '../actions'
+import { LoginErrorClearAction } from '../actions'
+import { ToggleRegistrationAction } from '../actions'
 
-jest.mock('../util/state', () => {
-    const original = jest.requireActual('../util/state')
+jest.mock('../../util/state', () => {
+    const original = jest.requireActual('../../util/state')
     return {
         ...original,
         useThunkReducer: jest.fn()

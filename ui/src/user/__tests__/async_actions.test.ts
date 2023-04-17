@@ -6,9 +6,9 @@ import {
     RefreshStartAction,
     RegistrationErrorAction,
     RegistrationStartAction
-} from './actions'
-import { LoginAction, RefreshAction, RegistrationAction } from './async_actions'
-import { UserInfo } from './state'
+} from '../actions'
+import { LoginAction, RefreshAction, RegistrationAction } from '../async_actions'
+import { UserInfo } from '../state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(respones: [number, () => any][]) {

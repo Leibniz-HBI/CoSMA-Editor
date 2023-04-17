@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals'
-import { ColumnType } from '../column_menu/state'
-import { ErrorState } from '../util/error'
+import { ColumnType } from '../../column_menu/state'
+import { ErrorState } from '../../util/error'
 import {
     SetEntityLoadingAction,
     SetLoadDataErrorAction,
@@ -18,9 +18,9 @@ import {
     SubmitValuesErrorAction,
     SubmitValuesEndAction,
     SubmitValuesClearErrorAction
-} from './actions'
-import { tableReducer } from './reducer'
-import { ColumnState, TableState } from './state'
+} from '../actions'
+import { tableReducer } from '../reducer'
+import { ColumnState, TableState } from '../state'
 describe('reducer tests', () => {
     const columnNameTest = 'column test name'
     const columnIdTest = 'column_id_test'

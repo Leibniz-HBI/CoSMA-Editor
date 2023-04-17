@@ -5,11 +5,11 @@
 import { describe } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ColumnMenu } from './menu'
-import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from '../state'
-import { useRemoteColumnMenuData } from '../hooks'
-import { ColumnMenuTab } from '../actions'
-jest.mock('../hooks', () => {
+import { ColumnMenu } from '../menu'
+import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from '../../state'
+import { useRemoteColumnMenuData } from '../../hooks'
+import { ColumnMenuTab } from '../../actions'
+jest.mock('../../hooks', () => {
     return {
         useRemoteColumnMenuData: jest.fn().mockImplementation()
     }

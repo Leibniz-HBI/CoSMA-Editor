@@ -4,7 +4,7 @@
 
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { HeaderMenu } from './header_menu'
+import { HeaderMenu } from '../header_menu'
 
 describe('header menu', () => {
     test('close', async () => {
