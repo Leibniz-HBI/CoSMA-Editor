@@ -142,3 +142,4 @@ ui/node_modules
 coverage
 .lcov
 .env
+.secrets

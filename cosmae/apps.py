@@ -3,6 +3,7 @@ import logging
 from typing import List
 
 from django.apps import AppConfig, apps
+from django.db.backends.signals import connection_created
 from django.db.models.signals import post_migrate
 
 logger = logging.getLogger("cosmae.app_config")
@@ -59,12 +60,36 @@ def add_permissions(
             return
 
 
+def add_superuser(
+    sender, connection, verbosity=2, **kwargs
+):  # pylint: disable=unused-argument
+    "Add superuser if no users exist"
+    try:
+        user_model = apps.get_model("cosmae", "cosmaeuser")
+        if user_model.objects.count() == 0:
+            username = "admin"
+            email = "mail@test.url"
+            password = "changeme"
+            print(f"Creating account for {username} ({email})")
+            admin = user_model.objects.create_superuser(
+                email=email, username=username, password=password
+            )
+            admin.is_active = True
+            admin.is_admin = True
+            admin.save()
+    except Exception:  # pylint: disable=broad-except
+        pass
+
+
 class CosmaeConfig(AppConfig):
-    """Configuration for the CoSMA-E Django app"""
+    """Configuration for the CoSMA-Editor Django app"""
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "cosmae"
 
     def ready(self) -> None:
         post_migrate.connect(add_permissions, dispatch_uid="cosmae.create_groups")
+        connection_created.connect(
+            add_superuser, dispatch_uid="cosmae.create_initial_superuser"
+        )
         super().ready()

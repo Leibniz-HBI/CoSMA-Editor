@@ -16,8 +16,26 @@ The following features will be implemented
 
 
 # Running
-Currently there is no recommended way of running CoSMA-Editor.
-Please see the _Development_ section.
+You can run CoSMA-Editor using `docker compose`.
+The following instructions use files for storing secrets and assume that you can create a folder `/srv/cosmae` for SSL certificates.
+To change the mechanism for the secrets or use a different location for the SSL certificates edit the `docker-compose.yml`.
+You can also edit the file to use different ports than the standard 443 for HTTPS and 80 for HTTP
+(only used for SSL certificate renewal challenges).
+For more details how to edit the configuration please check the [Docker Compose file reference](https://docs.docker.com/compose/compose-file/compose-file-v3)
+1. From the base directory of the repository run `docker compose build` to build the containers.
+2. Create a folder `.secrets` that contains four text files:
+  * `cosmae_db_password` contains the database password.
+  * `cosmae_db_user` contains the database user name.
+  * `cosmae_db_name` contains the name of the database.
+  * `cosmae_django_key` contains the django secret key.
+  You can generate it using `< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-64};echo;`
+3. Add a SSL certificate (`cosmae.crt`) and key (`cosmae.key`) to a folder called `/srv/cosmae/ssl`.
+4. Create an empty folder `/srv/cosmae/acme-challenge`.
+5. Run CoSMA-Editor using `docker compose up`
+6. Check that CoSMA-Editor is now accessible over HTTPS's default port 443 on your machine using a browser.
+7. Navigate to `http:127.0.0.1:800` and login using the username `admin` and the password `changeme`.
+8. Change the password and possibly the username in the django admin UI.
+
 
 # Development
 There are two projects in this repository.
@@ -41,7 +59,7 @@ You can find instructions on installing node at [https://github.com/nodesource/d
 The following steps are required for the initial setup.
 You only need to run them once.
 * Create an instance of the environment file by running `cp .template.env .env`
-* Generate a secret key using `< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-64};echo`;.
+* Generate a secret key using `< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-64};echo;`.
 * Copy the secret key and paste it as the value of the variable `DJANGO_KEY` in the `.env` file.
 * Set the variable `COSMAE_DEBUG` to true in the `.env` file.
 * Generate a local database by runing `poetry run ./manage.py migrate`.

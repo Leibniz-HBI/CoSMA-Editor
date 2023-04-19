@@ -1,0 +1,26 @@
+FROM node:19-alpine3.17 AS builder
+RUN apk add --update --no-cache \
+    python3 \
+    pkgconfig \
+    make \
+    g++ \
+    pixman \
+    jpeg-dev \
+    cairo-dev \
+    giflib-dev \
+    pango-dev \
+    libtool
+WORKDIR /cosmae
+COPY ui/package*.json ./
+COPY ui/tsconfig.json ./
+COPY ui/babel.config.js ./
+RUN npm ci --omit=dev
+ADD ui/src/ /cosmae/src
+ADD ui/public /cosmae/public
+RUN cp /cosmae/src/config_production.ts /cosmae/src/config.ts
+RUN npm run build
+
+FROM nginx:1.23.4-alpine
+COPY --from=builder /cosmae/build /srv/cosmae
+COPY container/resources/robots.txt /srv/cosmae
+COPY container/resources/nginx.conf /etc/nginx
