@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-from os import environ
 from pathlib import Path
 
 # Load environment file.
@@ -31,14 +30,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 @property
 def SECRET_KEY():  # pylint: disable=invalid-name
     "Get the secret key from environment."
-    key = environ.get("DJANGO_KEY")
+    return get_docker_compose_secret("django_key")
+
+
+def get_docker_compose_secret(secret_name):
+    "Get scret as provided by docker_compose"
+    with open(f"/run/secrets/{secret_name}", encoding="utf-8") as key_file:
+        key = key_file.readline().rstrip("\n")
     if not key:
-        raise Exception("Please set the DJANGO_KEY environment variable.")
+        raise Exception(f"Please set the {secret_name} secret.")
     return key
 
 
 ###################################################################
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
+
 
 CORS_ALLOWED_ORIGINS = []
 
@@ -94,8 +100,16 @@ WSGI_APPLICATION = "django_project.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": get_docker_compose_secret("db_name"),
+        "USER": get_docker_compose_secret("db_user"),
+        "PASSWORD": get_docker_compose_secret("db_password"),
+        "HOST": "cosmae_db",
+        "PORT": "5432",
+        # "OPTIONS": {
+        # "service": "cosmae_service",
+        # "passfile": "/run/secrets/pgconf",
+        # },
     }
 }
 

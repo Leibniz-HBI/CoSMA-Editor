@@ -8,7 +8,7 @@ try:
 except ImportError:
     pass
 
-if environ.get("COSMAE_DEBUG").lower() == "true":
+if environ.get("COSMAE_DEBUG", "false").lower() == "true":
     from django_project.settings.settings_test import *
 else:
     from django_project.settings.settings_production import *
