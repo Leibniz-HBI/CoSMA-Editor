@@ -1,4 +1,3 @@
-import { CosmaeConf } from '../config'
 import { RemoteDataTable } from '../table/components'
 import { all_columns } from '../column_menu/columns'
 
@@ -17,10 +16,5 @@ export function PersonTable(props: any) {
         all_columns['SM_Facebook_user'],
         all_columns['SM_Facebook_verifiziert']
     ]
-    return (
-        <RemoteDataTable
-            base_url={CosmaeConf.get().api_base}
-            column_defs={column_defs}
-        />
-    )
+    return <RemoteDataTable base_url={props.api_base} column_defs={column_defs} />
 }
