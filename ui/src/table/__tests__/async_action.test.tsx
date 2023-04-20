@@ -60,8 +60,6 @@ const display_txt_column_as_normal_column = {
     'test-id-1': [{ value: displayTxt1, idPersistent: 'test-value-id-1', version: 1 }]
 }
 
-const urlTest = 'http://test.url'
-
 describe('get table async action', () => {
     test('loads table with one chunk', async () => {
         responseSequence([
@@ -75,7 +73,7 @@ describe('get table async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(dispatch)
+        await new GetTableAsyncAction().run(dispatch)
         expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -124,7 +122,7 @@ describe('get table async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(dispatch)
+        await new GetTableAsyncAction().run(dispatch)
         expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -150,7 +148,7 @@ describe('get table async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(dispatch)
+        await new GetTableAsyncAction().run(dispatch)
         expect(dispatch.mock.calls.length).toBe(3)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -177,7 +175,7 @@ describe('get table async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetTableAsyncAction('http://test').run(dispatch)
+        await new GetTableAsyncAction().run(dispatch)
         expect(dispatch.mock.calls.length).toBe(3)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
@@ -228,7 +226,7 @@ describe('get column async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetColumnAsyncAction('http://test', columnDefTest).run(dispatch)
+        await new GetColumnAsyncAction(columnDefTest).run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(
             new SetColumnLoadingAction(columnNameTest, columnIdTest, ColumnType.String)
@@ -260,7 +258,7 @@ describe('get column async action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetColumnAsyncAction('http://test', columnDefTest).run(dispatch)
+        await new GetColumnAsyncAction(columnDefTest).run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(
             new SetColumnLoadingAction(columnNameTest, columnIdTest, ColumnType.String)
@@ -296,7 +294,7 @@ describe('get column async action', () => {
                 ]
             ])
             const dispatch = jest.fn()
-            await new SubmitValuesAsyncAction(urlTest, ColumnType.Float, [
+            await new SubmitValuesAsyncAction(ColumnType.Float, [
                 idEntityTest,
                 idColumnDefTest,
                 {
@@ -342,7 +340,7 @@ describe('get column async action', () => {
                 ]
             ])
             const dispatch = jest.fn()
-            await new SubmitValuesAsyncAction(urlTest, ColumnType.Float, [
+            await new SubmitValuesAsyncAction(ColumnType.Float, [
                 idEntityTest,
                 idColumnDefTest,
                 {
@@ -386,7 +384,7 @@ describe('get column async action', () => {
                 ]
             ])
             const dispatch = jest.fn()
-            await new SubmitValuesAsyncAction(urlTest, ColumnType.Float, [
+            await new SubmitValuesAsyncAction(ColumnType.Float, [
                 idEntityTest,
                 idColumnDefTest,
                 {
@@ -415,7 +413,7 @@ describe('get column async action', () => {
                 ]
             ])
             const dispatch = jest.fn()
-            await new SubmitValuesAsyncAction(urlTest, ColumnType.Float, [
+            await new SubmitValuesAsyncAction(ColumnType.Float, [
                 idEntityTest,
                 idColumnDefTest,
                 {

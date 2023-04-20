@@ -2,17 +2,15 @@
     background-color: gainsboro;
 }
 
-.cosmae-header {
-    text-align: center;
-    font-size: xxx-large;
-    font-weight: 600;
+.cosmae-nav-bar {
     background-color: cadetblue;
     color: gainsboro;
     height: 70px;
     width: 100%;
+    margin-bottom: 20px;
 }
 
-.cosmae-table-page-container {
+.cosmae-page-container {
     height: 100%;
     width: 100%;
     background-color: gainsboro;
@@ -47,23 +45,10 @@
     justify-content: center;
 }
 
-.cosmae-table-page-header > button {
-    padding: 10px;
-    margin-left: 20px;
-    margin-right: 20px;
-    width: 120px;
-    text-align: center;
-    color: whitesmoke;
-    background-color: cadetblue;
-    border-radius: 8px;
-    border-width: 0px;
-}
-.cosmae-table-page-header > button:disabled {
-    background-color: #5f9ea044;
-}
-.cosmae-table-page-body {
+.cosmae-page-body {
     display: block;
     flex-grow: 1;
+    margin: 0px 12px 12px 12px;
 }
 
 .shimmer {

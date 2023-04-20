@@ -216,7 +216,6 @@ describe('table hooks', () => {
     const columnIdTest = 'column_id_test'
     const columnNameTest1 = 'column name test 1'
     const columnIdTest1 = 'column_id_test_1'
-    const urlTest = 'http://test.url'
     test('early exit when already loading column', async () => {
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
@@ -238,7 +237,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [remoteCallbacks] = useRemoteTableData(urlTest, [])
+        const [remoteCallbacks] = useRemoteTableData([])
         remoteCallbacks.loadTableDataCallback()
         expect(dispatch.mock.calls.length).toBe(0)
     })
@@ -250,7 +249,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [remoteCallbacks] = useRemoteTableData(urlTest, [])
+        const [remoteCallbacks] = useRemoteTableData([])
         remoteCallbacks.loadTableDataCallback()
         expect(dispatch.mock.calls.length).toBe(0)
     })
@@ -269,10 +268,10 @@ describe('table hooks', () => {
             columnType: ColumnType.String,
             version: 0
         })
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         localCallbacks.addColumnCallback(columnDefinitionTest)
         expect(dispatch.mock.calls[0][0]).toEqual(
-            new GetColumnAsyncAction(urlTest, columnDefinitionTest)
+            new GetColumnAsyncAction(columnDefinitionTest)
         )
     })
     test('showColumnAddMenuCallback dispatches correct action', () => {
@@ -283,7 +282,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         localCallbacks.showColumnAddMenuCallback()
         expect(dispatch.mock.calls[0][0]).toEqual(new ShowColumnAddMenuAction())
     })
@@ -295,7 +294,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         localCallbacks.hideColumnAddMenuCallback()
         expect(dispatch.mock.calls[0][0]).toEqual(new HideColumnAddMenuAction())
     })
@@ -307,7 +306,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         const rectangleTest = { x: 2, y: 5, width: 10, height: 20 }
         localCallbacks.showHeaderMenuCallback(0, rectangleTest)
         expect(dispatch.mock.calls[0][0]).toEqual(
@@ -322,7 +321,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         localCallbacks.hideHeaderMenuCallback()
         expect(dispatch.mock.calls[0][0]).toEqual(new HideHeaderMenuAction())
     })
@@ -334,7 +333,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         localCallbacks.removeColumnCallback()
         expect(dispatch.mock.calls[0][0]).toEqual(new RemoveSelectedColumnAction())
     })
@@ -346,7 +345,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         const newSizeTest = 500
         const colIndexTest = 15
         localCallbacks.setColumnWidthCallback(
@@ -367,7 +366,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         localCallbacks.switchColumnsCallback(5, 7)
         expect(dispatch.mock.calls[0][0]).toEqual(new ChangeColumnIndexAction(5, 7))
     })
@@ -385,7 +384,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(urlTest, [])
+        const [_a, localCallbacks] = useRemoteTableData([])
         expect(localCallbacks.columnHeaderBoundsCallback()).toEqual({
             left: xTest,
             top: yTest,

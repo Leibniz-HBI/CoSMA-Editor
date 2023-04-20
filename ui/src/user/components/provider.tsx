@@ -1,44 +1,33 @@
 import { ReactElement, useLayoutEffect } from 'react'
-import { UserContext, useLogin, HeaderProps } from '../hooks'
-import { Col, Modal, Row } from 'react-bootstrap'
+import { UserContext, useLogin } from '../hooks'
+import { Modal } from 'react-bootstrap'
 import { LoginForm } from './login_form'
 import { RegistrationForm } from './registration_form'
-import { UserInfo } from '../state'
-export function LoginProvider({
-    apiPath,
-    header,
-    body
-}: {
-    apiPath: string
-    header: (props: HeaderProps) => ReactElement
-    body: (userInfo: UserInfo) => ReactElement
-}) {
+
+export function LoginProvider({ body }: { body: ReactElement }) {
     const {
-        state,
+        userInfoWithLogout,
+        showRegistration,
+        loginErrorState,
+        registrationErrorState,
         refreshCallback,
         loginCallback,
         clearLoginErrorCallback,
         registrationCallback,
         clearRegistrationErrorCallback,
-        logoutCallback,
         toggleRegistrationCallback
-    } = useLogin(apiPath)
+    } = useLogin()
+
     useLayoutEffect(() => {
-        if (state.userInfo === undefined) {
+        if (userInfoWithLogout === undefined) {
             refreshCallback()
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state.userInfo])
+    }, [userInfoWithLogout?.userInfo])
     return (
-        <UserContext.Provider value={state}>
-            {header({
-                logoutCallback:
-                    state.userInfo === undefined ? undefined : logoutCallback
-            })}
-            {state.userInfo !== undefined ? (
-                <Row className="flex-grow-1 m-4">
-                    <Col>{body(state.userInfo)}</Col>
-                </Row>
+        <UserContext.Provider value={userInfoWithLogout}>
+            {userInfoWithLogout !== undefined ? (
+                body
             ) : (
                 <div
                     className="modal show"
@@ -46,20 +35,20 @@ export function LoginProvider({
                 >
                     <Modal.Dialog>
                         <Modal.Body>
-                            {state.showRegistration ? (
+                            {showRegistration ? (
                                 <RegistrationForm
                                     registrationCallback={registrationCallback}
                                     closeRegistrationCallback={
                                         toggleRegistrationCallback
                                     }
-                                    registrationError={state.registrationErrorState}
+                                    registrationError={registrationErrorState}
                                     clearRegistrationErrorCallback={
                                         clearRegistrationErrorCallback
                                     }
                                 />
                             ) : (
                                 <LoginForm
-                                    loginError={state.loginEerrorState}
+                                    loginError={loginErrorState}
                                     clearLoginErrorCallback={clearLoginErrorCallback}
                                     loginCallback={loginCallback}
                                     openRegistrationCallback={

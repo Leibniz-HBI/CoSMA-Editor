@@ -142,11 +142,9 @@ export type TableDataProps = {
     isLoading: boolean
     loadDataErrorState?: ErrorState
     submitValuesErrorState?: ErrorState
-    baseUrl: string
 }
 
 export function useRemoteTableData(
-    apiPath: string,
     columnDefinitionList: ColumnDefinition[]
 ): [RemoteTableCallbacks, LocalTableCallbacks, TableDataProps] {
     const [state, dispatch] = useThunkReducer(
@@ -160,7 +158,7 @@ export function useRemoteTableData(
                 if (state.entities.length > 0 || isLoading) {
                     return
                 }
-                dispatch(new GetTableAsyncAction(apiPath)).then(async () => {
+                dispatch(new GetTableAsyncAction()).then(async () => {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     columnDefinitionList.map(async (col: ColumnDefinition) => {
                         const idPersistent = col.idPersistent
@@ -174,7 +172,7 @@ export function useRemoteTableData(
                         ) {
                             return
                         }
-                        await dispatch(new GetColumnAsyncAction(apiPath, col))
+                        await dispatch(new GetColumnAsyncAction(col))
                     })
                 })
             },
@@ -184,25 +182,21 @@ export function useRemoteTableData(
                 }
                 const [colIdx, rowIdx] = cell
                 dispatch(
-                    new SubmitValuesAsyncAction(
-                        apiPath,
-                        state.columnStates[colIdx].columnType,
-                        [
-                            state.entities[rowIdx],
-                            state.columnStates[colIdx].idPersistent,
-                            {
-                                ...state.columnStates[colIdx].cellContents[rowIdx][0],
-                                value: newValue.data?.toString()
-                            }
-                        ]
-                    )
+                    new SubmitValuesAsyncAction(state.columnStates[colIdx].columnType, [
+                        state.entities[rowIdx],
+                        state.columnStates[colIdx].idPersistent,
+                        {
+                            ...state.columnStates[colIdx].cellContents[rowIdx][0],
+                            value: newValue.data?.toString()
+                        }
+                    ])
                 )
             }
         },
         {
             cellContentCallback: useCellContentCalback(state),
             addColumnCallback: (columnDefinition: ColumnDefinition) =>
-                dispatch(new GetColumnAsyncAction(apiPath, columnDefinition)),
+                dispatch(new GetColumnAsyncAction(columnDefinition)),
             showColumnAddMenuCallback: () => dispatch(new ShowColumnAddMenuAction()),
             hideColumnAddMenuCallback: () => dispatch(new HideColumnAddMenuAction()),
             showHeaderMenuCallback: (columnIdx: number, bounds: Rectangle) => {
@@ -243,8 +237,7 @@ export function useRemoteTableData(
             selectedColumnHeaderBounds: state.selectedColumnHeaderBounds,
             loadDataErrorState: state.loadDataErrorState,
             submitValuesErrorState: state.submitValuesErrorState,
-            isLoading: isLoading,
-            baseUrl: apiPath
+            isLoading: isLoading
         }
     ]
 }

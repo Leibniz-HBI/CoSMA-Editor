@@ -7,7 +7,6 @@ import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from './form'
 import { ColumnSelector, mkListItems } from './selection'
 
 export function ColumnMenu(props: {
-    baseUrl: string
     columnIndices: Map<string, number>
     loadColumnDataCallback: (columnDefinition: ColumnDefinition) => void
 }) {
@@ -20,13 +19,13 @@ export function ColumnMenu(props: {
         selectTabCallback,
         submitColumnDefinitionCallback,
         submitColumnDefinitionClearErrorCallback
-    } = useRemoteColumnMenuData(props.baseUrl)
+    } = useRemoteColumnMenuData()
     useLayoutEffect(
         () => {
             getHierarchyCallback()
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props.baseUrl]
+        []
     )
     let showLinkClass = 'nav-link'
     let createLinkClass = 'nav-link'

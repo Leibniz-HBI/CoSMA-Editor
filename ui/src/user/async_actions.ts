@@ -12,15 +12,14 @@ import {
 import { UserInfo } from './state'
 import { exceptionMessage, unprocessableEntityMessage } from '../util/exception'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
+import { config } from '../config'
 
 export class LoginAction extends AsyncAction<UserAction, void> {
-    apiPath: string
     userName: string
     password: string
 
-    constructor(apiPath: string, userName: string, password: string) {
+    constructor(userName: string, password: string) {
         super()
-        this.apiPath = apiPath
         this.userName = userName
         this.password = password
     }
@@ -28,7 +27,7 @@ export class LoginAction extends AsyncAction<UserAction, void> {
     async run(dispatch: Dispatch<UserAction>) {
         dispatch(new LoginStartAction())
         try {
-            const rsp = await fetch(this.apiPath + '/user/login', {
+            const rsp = await fetch(config.api_path + '/user/login', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -50,6 +49,7 @@ export class LoginAction extends AsyncAction<UserAction, void> {
                                 email: json['email'],
                                 namesPersonal: json['names_personal'],
                                 namesFamily: json['names_family'],
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 columns: (json['columns'] as Array<any>).map(
                                     (tagDefinitionApi) =>
                                         parseColumnDefinitionsFromApi(
@@ -76,17 +76,10 @@ export class LoginAction extends AsyncAction<UserAction, void> {
 }
 
 export class RefreshAction extends AsyncAction<UserAction, void> {
-    apiPath: string
-
-    constructor(apiPath: string) {
-        super()
-        this.apiPath = apiPath
-    }
-
     async run(dispatch: Dispatch<UserAction>) {
         dispatch(new LoginStartAction())
         try {
-            const rsp = await fetch(this.apiPath + '/user/refresh', {
+            const rsp = await fetch(config.api_path + '/user/refresh', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -103,6 +96,7 @@ export class RefreshAction extends AsyncAction<UserAction, void> {
                             email: json['email'],
                             namesPersonal: json['names_personal'],
                             namesFamily: json['names_family'],
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             columns: (json['columns'] as Array<any>).map(
                                 (tagDefinitionApi) =>
                                     parseColumnDefinitionsFromApi(tagDefinitionApi, [])
@@ -120,7 +114,6 @@ export class RefreshAction extends AsyncAction<UserAction, void> {
 }
 
 export class RegistrationAction extends AsyncAction<UserAction, void> {
-    apiPath: string
     userName: string
     namesPersonal: string
     namesFamily?: string
@@ -128,14 +121,12 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
     password: string
 
     constructor({
-        apiPath,
         userName,
         namesPersonal,
         namesFamily = undefined,
         email,
         password
     }: {
-        apiPath: string
         userName: string
         namesPersonal: string
         namesFamily?: string
@@ -143,7 +134,6 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
         password: string
     }) {
         super()
-        this.apiPath = apiPath
         this.userName = userName
         this.namesPersonal = namesPersonal
         this.namesFamily = namesFamily
@@ -154,7 +144,7 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
     async run(dispatch: Dispatch<UserAction>) {
         dispatch(new RegistrationStartAction())
         try {
-            const rsp = await fetch(this.apiPath + '/user/register', {
+            const rsp = await fetch(config.api_path + '/user/register', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -178,6 +168,7 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
                             email: json['email'],
                             namesPersonal: json['names_personal'],
                             namesFamily: json['names_family'],
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             columns: (json['columns'] as Array<any>).map(
                                 (tagDefinitionApi) =>
                                     parseColumnDefinitionsFromApi(tagDefinitionApi, [])

@@ -34,7 +34,7 @@ export class UserState {
     isLoggingIn: boolean
     isRegistering: boolean
     isRefreshing: boolean
-    loginEerrorState?: ErrorState
+    loginErrorState?: ErrorState
     registrationErrorState?: ErrorState
     constructor({
         userInfo = undefined,
@@ -58,7 +58,7 @@ export class UserState {
         this.isLoggingIn = isLoggingIn
         this.isRegistering = isRegistering
         this.isRefreshing = isRefreshing
-        this.loginEerrorState = loginErrorState
+        this.loginErrorState = loginErrorState
         this.registrationErrorState = registrationErrorState
     }
 

@@ -13,7 +13,6 @@ jest.mock('../../util/state', () => {
     }
 })
 describe('Column menu hook', () => {
-    const urlTest = 'http://test.url/'
     test(' get hierarchy callback exits early when already loading', async () => {
         const emittedActions: any[] = []
         ;(useThunkReducer as jest.Mock).mockReturnValue([
@@ -22,7 +21,7 @@ describe('Column menu hook', () => {
                 emittedActions.push(action)
             }
         ])
-        const { getHierarchyCallback } = useRemoteColumnMenuData(urlTest)
+        const { getHierarchyCallback } = useRemoteColumnMenuData()
         getHierarchyCallback()
         expect(emittedActions.length).toBe(0)
     })
@@ -34,11 +33,9 @@ describe('Column menu hook', () => {
                 emittedActions.push(action)
             }
         ])
-        const { getHierarchyCallback } = useRemoteColumnMenuData(urlTest)
+        const { getHierarchyCallback } = useRemoteColumnMenuData()
         getHierarchyCallback()
-        expect(emittedActions).toEqual([
-            new GetHierarchyAction({ apiPath: urlTest, expand: true })
-        ])
+        expect(emittedActions).toEqual([new GetHierarchyAction({ expand: true })])
     })
     test('toggle callback emits action', () => {
         const emittedActions: any[] = []
@@ -52,7 +49,7 @@ describe('Column menu hook', () => {
             }
         ])
         const path = [2, 5, 7, 8]
-        const { toggleExpansionCallback } = useRemoteColumnMenuData(urlTest)
+        const { toggleExpansionCallback } = useRemoteColumnMenuData()
         toggleExpansionCallback(path)
         expect(emittedActions).toEqual([new ToggleExpansionAction(path)])
     })
@@ -67,7 +64,7 @@ describe('Column menu hook', () => {
                 emittedActions.push(action)
             }
         ])
-        const { selectTabCallback } = useRemoteColumnMenuData(urlTest)
+        const { selectTabCallback } = useRemoteColumnMenuData()
         selectTabCallback(ColumnMenuTab.CREATE_NEW)
         expect(emittedActions[0]).toEqual(new SelectTabAction(ColumnMenuTab.CREATE_NEW))
     })
@@ -80,7 +77,7 @@ describe('Column menu hook', () => {
                 return Promise.resolve(true)
             }
         ])
-        const { submitColumnDefinitionCallback } = useRemoteColumnMenuData(urlTest)
+        const { submitColumnDefinitionCallback } = useRemoteColumnMenuData()
         const columnNameTest = 'column name test'
         const idParentPersistentTest = 'id-parent-test'
         submitColumnDefinitionCallback({
@@ -91,12 +88,11 @@ describe('Column menu hook', () => {
         await setTimeout(() => true, 100)
         expect(emittedActions).toEqual([
             new SubmitColumnDefinitionAction({
-                apiPath: urlTest,
                 name: columnNameTest,
                 idParentPersistent: idParentPersistentTest,
                 columnTypeIdx: 1
             }),
-            new GetHierarchyAction({ apiPath: urlTest, expand: true })
+            new GetHierarchyAction({ expand: true })
         ])
     })
     test('submit column definition callback not emitting when already submitting', () => {
@@ -112,7 +108,7 @@ describe('Column menu hook', () => {
                 return Promise.resolve(true)
             }
         ])
-        const { submitColumnDefinitionCallback } = useRemoteColumnMenuData(urlTest)
+        const { submitColumnDefinitionCallback } = useRemoteColumnMenuData()
         const columnNameTest = 'column name test'
         const idParentPersistentTest = 'id-parent-test'
         submitColumnDefinitionCallback({
@@ -134,7 +130,7 @@ describe('Column menu hook', () => {
                 return Promise.resolve(false)
             }
         ])
-        const { submitColumnDefinitionCallback } = useRemoteColumnMenuData(urlTest)
+        const { submitColumnDefinitionCallback } = useRemoteColumnMenuData()
         const columnNameTest = 'column name test'
         const idParentPersistentTest = 'id-parent-test'
         submitColumnDefinitionCallback({
@@ -144,7 +140,6 @@ describe('Column menu hook', () => {
         })
         expect(emittedActions).toEqual([
             new SubmitColumnDefinitionAction({
-                apiPath: urlTest,
                 name: columnNameTest,
                 idParentPersistent: idParentPersistentTest,
                 columnTypeIdx: 1

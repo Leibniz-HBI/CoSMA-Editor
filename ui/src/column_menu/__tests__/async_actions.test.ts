@@ -26,7 +26,6 @@ function responseSequence(respones: [number, () => any][]) {
     }
 }
 
-const apiPathTest = 'http://test.org'
 describe('getHierarchyAction', () => {
     beforeEach(() => {
         jest.restoreAllMocks()
@@ -44,7 +43,7 @@ describe('getHierarchyAction', () => {
                 }
             ]
         ])
-        const action = new GetHierarchyAction({ apiPath: apiPathTest })
+        const action = new GetHierarchyAction({})
         await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
@@ -59,7 +58,7 @@ describe('getHierarchyAction', () => {
         jest.spyOn(global, 'fetch').mockImplementationOnce(() => {
             throw Error('fetch error')
         })
-        const action = new GetHierarchyAction({ apiPath: apiPathTest })
+        const action = new GetHierarchyAction({})
         await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         const actionFromCall = dispatch.mock.calls[1][0]
@@ -79,7 +78,7 @@ describe('getHierarchyAction', () => {
                 }
             ]
         ])
-        const action = new GetHierarchyAction({ apiPath: apiPathTest })
+        const action = new GetHierarchyAction({})
         await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
@@ -135,7 +134,7 @@ describe('getHierarchyAction', () => {
                 }
             ]
         ])
-        const action = new GetHierarchyAction({ apiPath: apiPathTest, expand: true })
+        const action = new GetHierarchyAction({ expand: true })
         await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
@@ -223,7 +222,7 @@ describe('getHierarchyAction', () => {
                 }
             ]
         ])
-        const action = new GetHierarchyAction({ apiPath: apiPathTest, expand: true })
+        const action = new GetHierarchyAction({ expand: true })
         await action.run(dispatch)
         // expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
@@ -291,7 +290,6 @@ describe('SubmitColumnDefinition', () => {
         ])
         const dispatch = jest.fn()
         await new SubmitColumnDefinitionAction({
-            apiPath: apiPathTest,
             columnTypeIdx: 2,
             idParentPersistent: idParentPersistentTest,
             name: nameTest
@@ -302,7 +300,7 @@ describe('SubmitColumnDefinition', () => {
         ])
         expect((fetch as jest.Mock).mock.calls).toEqual([
             [
-                'http://test.org/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -331,7 +329,6 @@ describe('SubmitColumnDefinition', () => {
         ])
         const dispatch = jest.fn()
         await new SubmitColumnDefinitionAction({
-            apiPath: apiPathTest,
             columnTypeIdx: 2,
             idParentPersistent: idParentPersistentTest,
             name: nameTest
@@ -356,7 +353,6 @@ describe('SubmitColumnDefinition', () => {
         ])
         const dispatch = jest.fn()
         await new SubmitColumnDefinitionAction({
-            apiPath: apiPathTest,
             columnTypeIdx: 2,
             idParentPersistent: idParentPersistentTest,
             name: nameTest

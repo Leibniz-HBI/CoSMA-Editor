@@ -16,17 +16,13 @@ import { AsyncAction } from '../util/async_action'
 import { fetch_chunk } from '../util/fetch'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import { CellValue } from './state'
+import { config } from '../config'
 
 const displayTxtColumnId = 'display_txt_id'
 /**
  * Async action for fetching table data.
  */
 export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
-    apiPath: string
-    constructor(apiPath: string) {
-        super()
-        this.apiPath = apiPath
-    }
     async run(dispatch: Dispatch<TableAction>) {
         dispatch(new SetEntityLoadingAction())
         dispatch(
@@ -41,7 +37,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
             const displayTxts: { [key: string]: CellValue[] } = {}
             for (let i = 0; ; i += 500) {
                 const rsp = await fetch_chunk({
-                    api_path: this.apiPath + '/persons/chunk',
+                    api_path: config.api_path + '/persons/chunk',
                     offset: i,
                     limit: 500
                 })
@@ -86,14 +82,11 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
 }
 
 export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
-    apiPath: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     columnDefinition: ColumnDefinition
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(api_path: string, column_definition: ColumnDefinition) {
+    constructor(column_definition: ColumnDefinition) {
         super()
-        this.apiPath = api_path
         this.columnDefinition = column_definition
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -107,7 +100,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
             const column_data: { [key: string]: CellValue[] } = {}
             for (let i = 0; ; i += 5000) {
                 const rsp = await fetch_chunk({
-                    api_path: this.apiPath + '/tags/chunk',
+                    api_path: config.api_path + '/tags/chunk',
                     offset: i,
                     limit: 5000,
                     payload: {
@@ -159,20 +152,18 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
 }
 
 export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
-    apiPath: string
     edit: Edit
     columnType: ColumnType
 
-    constructor(apiPath: string, columnType: ColumnType, edit: Edit) {
+    constructor(columnType: ColumnType, edit: Edit) {
         super()
-        this.apiPath = apiPath
         this.columnType = columnType
         this.edit = edit
     }
     async run(dispatch: Dispatch<TableAction>) {
         dispatch(new SubmitValuesStartAction())
         try {
-            const rsp = await fetch(this.apiPath + '/tags', {
+            const rsp = await fetch(config.api_path + '/tags', {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },

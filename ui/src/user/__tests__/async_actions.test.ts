@@ -32,7 +32,6 @@ const passwordTest = 'password1234'
 const namesPersonalTest = 'names personal test'
 const namesFamilyTest = 'names family test'
 const testError = 'test error message'
-const urlTest = 'http://test.url'
 
 describe('login', () => {
     test('successful login', async () => {
@@ -51,7 +50,7 @@ describe('login', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoginAction(urlTest, userNameTest, passwordTest).run(dispatch)
+        await new LoginAction(userNameTest, passwordTest).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoginStartAction()],
             [
@@ -77,7 +76,7 @@ describe('login', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoginAction(urlTest, userNameTest, passwordTest).run(dispatch)
+        await new LoginAction(userNameTest, passwordTest).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoginStartAction()],
             [new LoginErrorAction(testError)]
@@ -95,7 +94,7 @@ describe('login', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoginAction(urlTest, userNameTest, passwordTest).run(dispatch)
+        await new LoginAction(userNameTest, passwordTest).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoginStartAction()],
             [new LoginErrorAction(testError)]
@@ -111,7 +110,7 @@ describe('login', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoginAction(urlTest, userNameTest, passwordTest).run(dispatch)
+        await new LoginAction(userNameTest, passwordTest).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoginStartAction()],
             [new LoginErrorAction('Unknown error')]
@@ -136,7 +135,7 @@ describe('refresh action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new RefreshAction(urlTest).run(dispatch)
+        await new RefreshAction().run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new RefreshStartAction()],
             [
@@ -160,7 +159,7 @@ describe('refresh action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new RefreshAction(urlTest).run(dispatch)
+        await new RefreshAction().run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoginStartAction()],
             [new LogoutAction()]
@@ -176,7 +175,7 @@ describe('refresh action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoginAction(urlTest, userNameTest, passwordTest).run(dispatch)
+        await new LoginAction(userNameTest, passwordTest).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoginStartAction()],
             [new LoginErrorAction('Unknown error')]
@@ -202,7 +201,6 @@ describe('register action', () => {
         ])
         const dispatch = jest.fn()
         await new RegistrationAction({
-            apiPath: urlTest,
             userName: userNameTest,
             email: emailTest,
             namesPersonal: namesPersonalTest,
@@ -236,7 +234,6 @@ describe('register action', () => {
         ])
         const dispatch = jest.fn()
         await new RegistrationAction({
-            apiPath: urlTest,
             userName: userNameTest,
             email: emailTest,
             namesPersonal: namesPersonalTest,
@@ -261,7 +258,6 @@ describe('register action', () => {
         ])
         const dispatch = jest.fn()
         await new RegistrationAction({
-            apiPath: urlTest,
             userName: userNameTest,
             email: emailTest,
             namesPersonal: namesPersonalTest,
@@ -284,7 +280,6 @@ describe('register action', () => {
         ])
         const dispatch = jest.fn()
         await new RegistrationAction({
-            apiPath: urlTest,
             userName: userNameTest,
             email: emailTest,
             namesPersonal: namesPersonalTest,

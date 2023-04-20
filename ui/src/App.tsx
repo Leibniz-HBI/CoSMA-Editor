@@ -2,46 +2,73 @@ import './App.css'
 import '@glideapps/glide-data-grid/dist/index.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { LoginProvider } from './user/components/provider'
-import { config } from './config'
-import { HeaderProps } from './user/hooks'
-import { Button, Col, Container, Row } from 'react-bootstrap'
+import { Col, Container, Nav, Navbar, Row } from 'react-bootstrap'
 import { RemoteDataTable } from './table/components'
-import { UserInfo } from './user/state'
+import { UserContext } from './user/hooks'
+import { NavLink, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
 
-function CosmaeHeader({ headerProps }: { headerProps: HeaderProps }) {
+export function CosmaeRoot() {
     return (
-        <Row className="cosmae-header justify-content-between ms-0 me-0 ">
-            <Col></Col>
-            <Col md="auto">CoSMA-E</Col>
-            <Col>
-                {headerProps.logoutCallback && (
-                    <Button variant="link" onClick={headerProps.logoutCallback}>
-                        Logout
-                    </Button>
-                )}
+        <Row className="flex-grow-1 m-0">
+            <Col className="ps-0 pe-0">
+                <div className="cosmae-page-container">
+                    <Navbar expand="lg" className="cosmae-nav-bar">
+                        <Container>
+                            <Navbar.Brand href="#home">CoSMA-E</Navbar.Brand>
+                            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                            <Navbar.Collapse id="basic-navbar-nav">
+                                <Nav className="me-auto">
+                                    <Nav.Link as={NavLink} to="/">
+                                        View
+                                    </Nav.Link>
+                                    <Nav.Link as={NavLink} to="/upload">
+                                        Upload
+                                    </Nav.Link>
+                                </Nav>
+                            </Navbar.Collapse>
+                        </Container>{' '}
+                    </Navbar>
+                    <div className="cosmae-page-body">
+                        <Outlet />
+                    </div>
+                </div>
             </Col>
         </Row>
     )
 }
 
+const router = createBrowserRouter([
+    {
+        path: '/',
+        element: <CosmaeRoot />,
+        children: [
+            { path: '', element: <TableConnector />, index: true },
+            { path: 'upload', element: <p>UPLOAD</p> }
+        ]
+    }
+])
+
 function App() {
     return (
         <Container
             fluid
-            className=" min-vh-100 d-flex flex-column ps-0 pe-0 cosmae-container"
+            className=" min-vh-100 d-flex flex-column ps-0 pe-0 ms-0 me-0 cosmae-container"
         >
-            <LoginProvider
-                apiPath={config.api_path}
-                header={(headerProps) => <CosmaeHeader headerProps={headerProps} />}
-                body={(userInfo: UserInfo) => (
-                    <RemoteDataTable
-                        base_url={config.api_path}
-                        column_defs={userInfo.columns}
-                    />
-                )}
-            />
+            <LoginProvider body={<RouterProvider router={router} />} />
         </Container>
     )
 }
-
 export default App
+function TableConnector() {
+    return (
+        <UserContext.Consumer>
+            {(userInfoWithLogout) =>
+                userInfoWithLogout && (
+                    <RemoteDataTable
+                        column_defs={userInfoWithLogout.userInfo.columns}
+                    />
+                )
+            }
+        </UserContext.Consumer>
+    )
+}

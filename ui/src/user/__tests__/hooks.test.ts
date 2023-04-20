@@ -16,14 +16,13 @@ jest.mock('../../util/state', () => {
     }
 })
 
-const testUrl = 'http://test.url'
 test('login cancels early', () => {
     const dispatch = jest.fn()
     ;(useThunkReducer as jest.Mock).mockReturnValue([
         new UserState({ isLoggingIn: true }),
         dispatch
     ])
-    const { loginCallback } = useLogin(testUrl)
+    const { loginCallback } = useLogin()
     loginCallback('user', 'password')
     // expect(dispatch.mock.calls).toEqual([])
     expect(dispatch.mock.calls).toEqual([])
@@ -32,17 +31,15 @@ test('login cancels early', () => {
 test('handles login', () => {
     const dispatch = jest.fn()
     ;(useThunkReducer as jest.Mock).mockReturnValue([new UserState({}), dispatch])
-    const { loginCallback } = useLogin(testUrl)
+    const { loginCallback } = useLogin()
     loginCallback('user', 'password')
-    expect(dispatch.mock.calls).toEqual([
-        [new LoginAction(testUrl, 'user', 'password')]
-    ])
+    expect(dispatch.mock.calls).toEqual([[new LoginAction('user', 'password')]])
 })
 
 test('unset login rror', () => {
     const dispatch = jest.fn()
     ;(useThunkReducer as jest.Mock).mockReturnValue([new UserState({}), dispatch])
-    const { clearLoginErrorCallback } = useLogin(testUrl)
+    const { clearLoginErrorCallback } = useLogin()
     clearLoginErrorCallback()
     expect(dispatch.mock.calls).toEqual([[new LoginErrorClearAction()]])
 })
@@ -50,9 +47,9 @@ test('unset login rror', () => {
 test('handles refresh', () => {
     const dispatch = jest.fn()
     ;(useThunkReducer as jest.Mock).mockReturnValue([new UserState({}), dispatch])
-    const { refreshCallback } = useLogin(testUrl)
+    const { refreshCallback } = useLogin()
     refreshCallback()
-    expect(dispatch.mock.calls).toEqual([[new RefreshAction(testUrl)]])
+    expect(dispatch.mock.calls).toEqual([[new RefreshAction()]])
 })
 
 test('register cancels early', () => {
@@ -61,7 +58,7 @@ test('register cancels early', () => {
         new UserState({ isRegistering: true }),
         dispatch
     ])
-    const { registrationCallback } = useLogin(testUrl)
+    const { registrationCallback } = useLogin()
     registrationCallback({
         userName: 'username',
         namesPersonal: 'names personal',
@@ -74,7 +71,7 @@ test('register cancels early', () => {
 test('handles registration', () => {
     const dispatch = jest.fn()
     ;(useThunkReducer as jest.Mock).mockReturnValue([new UserState({}), dispatch])
-    const { registrationCallback } = useLogin(testUrl)
+    const { registrationCallback } = useLogin()
     registrationCallback({
         userName: 'username',
         namesPersonal: 'names personal',
@@ -84,7 +81,6 @@ test('handles registration', () => {
     expect(dispatch.mock.calls).toEqual([
         [
             new RegistrationAction({
-                apiPath: testUrl,
                 userName: 'username',
                 email: 'mail@test.url',
                 namesPersonal: 'names personal',
@@ -97,7 +93,7 @@ test('handles registration', () => {
 test('unset registration error', () => {
     const dispatch = jest.fn()
     ;(useThunkReducer as jest.Mock).mockReturnValue([new UserState({}), dispatch])
-    const { clearRegistrationErrorCallback } = useLogin(testUrl)
+    const { clearRegistrationErrorCallback } = useLogin()
     clearRegistrationErrorCallback()
     expect(dispatch.mock.calls).toEqual([[new RegistrationErrorClearAction()]])
 })
@@ -105,7 +101,7 @@ test('unset registration error', () => {
 test('can toggle registration', () => {
     const dispatch = jest.fn()
     ;(useThunkReducer as jest.Mock).mockReturnValue([new UserState({}), dispatch])
-    const { toggleRegistrationCallback } = useLogin(testUrl)
+    const { toggleRegistrationCallback } = useLogin()
     toggleRegistrationCallback()
     expect(dispatch.mock.calls).toEqual([[new ToggleRegistrationAction()]])
 })

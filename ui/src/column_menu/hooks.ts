@@ -27,7 +27,7 @@ export type RemoteColumnMenuData = {
     submitColumnDefinitionClearErrorCallback: () => void
 }
 
-export function useRemoteColumnMenuData(baseUrl: string): RemoteColumnMenuData {
+export function useRemoteColumnMenuData(): RemoteColumnMenuData {
     const [state, dispatch] = useThunkReducer(
         columnMenuReducer,
         new ColumnSelectionState({
@@ -39,7 +39,7 @@ export function useRemoteColumnMenuData(baseUrl: string): RemoteColumnMenuData {
         if (state.isLoading) {
             return
         }
-        dispatch(new GetHierarchyAction({ apiPath: baseUrl, expand: true }))
+        dispatch(new GetHierarchyAction({ expand: true }))
     }
     return {
         navigationEntries: state.navigationEntries,
@@ -58,7 +58,6 @@ export function useRemoteColumnMenuData(baseUrl: string): RemoteColumnMenuData {
             }
             dispatch(
                 new SubmitColumnDefinitionAction({
-                    apiPath: baseUrl,
                     name: args.name,
                     idParentPersistent: args.idParentPersistent,
                     columnTypeIdx: args.columnTypeIdx

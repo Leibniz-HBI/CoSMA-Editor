@@ -12,29 +12,26 @@ import {
     SubmitColumnDefinitionSuccessAction
 } from './actions'
 import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
+import { config } from '../config'
 
 export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void> {
-    apiPath: string
     idParentPersistent?: string
     expand: boolean
     indexPath: number[]
     namePath: string[]
 
     constructor({
-        apiPath,
         idParentPersistent = undefined,
         expand = false,
         indexPath = [],
         namePath = []
     }: {
-        apiPath: string
         idParentPersistent?: string
         expand?: boolean
         indexPath?: number[]
         namePath?: string[]
     }) {
         super()
-        this.apiPath = apiPath
         this.idParentPersistent = idParentPersistent
         this.expand = expand
         this.indexPath = indexPath
@@ -45,7 +42,7 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
         dispatch(new StartLoadingAction(this.indexPath))
         const columnSelectionEntries: ColumnSelectionEntry[] = []
         try {
-            const rsp = await fetch(this.apiPath + '/tags/definitions/children', {
+            const rsp = await fetch(config.api_path + '/tags/definitions/children', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -118,24 +115,20 @@ export class SubmitColumnDefinitionAction extends AsyncAction<
     ColumnSelectionAction,
     boolean
 > {
-    apiPath: string
     name: string
     idParentPersistent?: string
     columnTypeIdx: number
 
     constructor({
-        apiPath,
         name,
         idParentPersistent,
         columnTypeIdx
     }: {
-        apiPath: string
         name: string
         idParentPersistent?: string
         columnTypeIdx: number
     }) {
         super()
-        this.apiPath = apiPath
         this.name = name
         this.idParentPersistent = idParentPersistent
         this.columnTypeIdx = columnTypeIdx
@@ -143,7 +136,7 @@ export class SubmitColumnDefinitionAction extends AsyncAction<
     async run(dispatch: Dispatch<ColumnSelectionAction>): Promise<boolean> {
         dispatch(new SubmitColumnDefinitionStartAction())
         try {
-            const rsp = await fetch(this.apiPath + '/tags/definitions', {
+            const rsp = await fetch(config.api_path + '/tags/definitions', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

@@ -1,7 +1,7 @@
-import { Context, createContext, useContext, useReducer } from 'react'
+import { Context, createContext, useReducer } from 'react'
 import { userReducer } from './reducer'
 import { useThunkReducer } from '../util/state'
-import { UserState } from './state'
+import { UserInfo, UserState } from './state'
 import { LoginAction, RefreshAction, RegistrationAction } from './async_actions'
 import {
     LoginErrorClearAction,
@@ -9,9 +9,13 @@ import {
     RegistrationErrorClearAction,
     ToggleRegistrationAction
 } from './actions'
+import { ErrorState } from '../util/error'
 
-export const UserContext: Context<UserState> = createContext(new UserState({}))
+export const UserContext: Context<UserInfoWithLogout | undefined> = createContext<
+    UserInfoWithLogout | undefined
+>(undefined)
 
+export type UserInfoWithLogout = { userInfo: UserInfo; logoutCallback: VoidFunction }
 export type LoginCallback = (userName: string, password: string) => void
 export type RegistrationCallback = ({
     userName,
@@ -29,34 +33,42 @@ export type RegistrationCallback = ({
 
 export type HeaderProps = { logoutCallback?: VoidFunction }
 export type UserProps = {
-    state: UserState
+    userInfoWithLogout?: UserInfoWithLogout
+    showRegistration: boolean
+    loginErrorState?: ErrorState
+    registrationErrorState?: ErrorState
     refreshCallback: VoidFunction
     loginCallback: LoginCallback
     clearLoginErrorCallback: VoidFunction
-    logoutCallback: VoidFunction
     registrationCallback: RegistrationCallback
     toggleRegistrationCallback: VoidFunction
     clearRegistrationErrorCallback: VoidFunction
 }
 
 export function useLogoutCallback() {
-    const stateFromContext = useContext(UserContext)
-    const [_state, dispatch] = useReducer(userReducer, stateFromContext)
+    const [_state, dispatch] = useReducer(userReducer, new UserState({}))
     return dispatch
 }
 
-export function useLogin(apiPath: string): UserProps {
+export function useLogin(): UserProps {
     const [state, dispatch] = useThunkReducer(userReducer, new UserState({}))
     return {
-        state,
-        refreshCallback: () => dispatch(new RefreshAction(apiPath)),
+        userInfoWithLogout: state.userInfo
+            ? {
+                  userInfo: state.userInfo,
+                  logoutCallback: () => dispatch(new LogoutAction())
+              }
+            : undefined,
+        showRegistration: state.showRegistration,
+        loginErrorState: state.loginErrorState,
+        registrationErrorState: state.registrationErrorState,
+        refreshCallback: () => dispatch(new RefreshAction()),
         loginCallback: (userName: string, password: string) => {
             if (!state.isLoggingIn) {
-                dispatch(new LoginAction(apiPath, userName, password))
+                dispatch(new LoginAction(userName, password))
             }
         },
         clearLoginErrorCallback: () => dispatch(new LoginErrorClearAction()),
-        logoutCallback: () => dispatch(new LogoutAction()),
         registrationCallback: ({
             userName,
             namesPersonal,
@@ -67,7 +79,6 @@ export function useLogin(apiPath: string): UserProps {
             if (!state.isRegistering) {
                 dispatch(
                     new RegistrationAction({
-                        apiPath: apiPath,
                         userName: userName,
                         namesPersonal: namesPersonal,
                         namesFamily: namesFamily,

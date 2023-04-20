@@ -15,7 +15,6 @@ import { useRemoteTableData, LocalTableCallbacks, TableDataProps } from './hooks
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function RemoteDataTable(props: any) {
     const [remoteCallbacks, localCallbacks, syncInfo] = useRemoteTableData(
-        props.base_url,
         props.column_defs
     )
     useLayoutEffect(
@@ -27,22 +26,18 @@ export function RemoteDataTable(props: any) {
     )
 
     return (
-        <div className="cosmae-table-page-container">
-            <div className="cosmae-table-page-body">
-                <DataTable
-                    tableProps={syncInfo}
-                    tableCallbacks={{
-                        ...localCallbacks,
-                        // eslint-disable-next-line react-hooks/exhaustive-deps
-                        cellContentCallback: useCallback(
-                            localCallbacks.cellContentCallback,
-                            [syncInfo.entities, syncInfo.columnStates]
-                        )
-                    }}
-                    submitValueCallback={remoteCallbacks.submitValueCallback}
-                />
-            </div>
-        </div>
+        <DataTable
+            tableProps={syncInfo}
+            tableCallbacks={{
+                ...localCallbacks,
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+                cellContentCallback: useCallback(localCallbacks.cellContentCallback, [
+                    syncInfo.entities,
+                    syncInfo.columnStates
+                ])
+            }}
+            submitValueCallback={remoteCallbacks.submitValueCallback}
+        />
     )
 }
 
@@ -60,8 +55,7 @@ export function DataTable(props: {
         isShowColumnAddMenu,
         isLoading,
         loadDataErrorState,
-        submitValuesErrorState,
-        baseUrl
+        submitValuesErrorState
     } = props.tableProps
     const {
         cellContentCallback,
@@ -156,7 +150,6 @@ export function DataTable(props: {
                             columnAddMenuRenderLayer(
                                 <div {...columnAddMenuLayerProps}>
                                     <ColumnMenu
-                                        baseUrl={baseUrl}
                                         columnIndices={columnIndices}
                                         loadColumnDataCallback={addColumnCallback}
                                     />
