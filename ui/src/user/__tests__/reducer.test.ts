@@ -23,12 +23,20 @@ describe('user reducher', () => {
     test('successfull login', () => {
         const initialState = new UserState({})
         const expectedState = new UserState({
-            userInfo: new UserInfo(userNameTest, emailTest, namesPersonalTest, '')
+            userInfo: new UserInfo({
+                userName: userNameTest,
+                email: emailTest,
+                namesPersonal: namesPersonalTest
+            })
         })
         const endState = userReducer(
             initialState,
             new LoginSuccessAction(
-                new UserInfo(userNameTest, emailTest, namesPersonalTest, '')
+                new UserInfo({
+                    userName: userNameTest,
+                    email: emailTest,
+                    namesPersonal: namesPersonalTest
+                })
             )
         )
         expect(endState).toEqual(expectedState)
@@ -98,7 +106,11 @@ describe('user reducher', () => {
     })
     test('logout', () => {
         const initialState = new UserState({
-            userInfo: new UserInfo(userNameTest, emailTest, namesPersonalTest)
+            userInfo: new UserInfo({
+                userName: userNameTest,
+                email: emailTest,
+                namesPersonal: namesPersonalTest
+            })
         })
         const expectedState = new UserState({})
         const endState = userReducer(initialState, new LogoutAction())
@@ -112,7 +124,11 @@ describe('user reducher', () => {
     })
     test('refresh error', () => {
         const initialState = new UserState({
-            userInfo: new UserInfo(userNameTest, emailTest, namesPersonalTest)
+            userInfo: new UserInfo({
+                userName: userNameTest,
+                email: emailTest,
+                namesPersonal: namesPersonalTest
+            })
         })
         const expectedState = new UserState({})
         const endState = userReducer(initialState, new RefreshDeniedAction())

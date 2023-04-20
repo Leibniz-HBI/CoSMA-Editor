@@ -1,3 +1,4 @@
+import { ColumnDefinition } from '../column_menu/state'
 import { ErrorState } from '../util/error'
 
 export class UserInfo {
@@ -5,17 +6,25 @@ export class UserInfo {
     email: string
     namesPersonal: string
     namesFamily?: string
-
-    constructor(
-        userName: string,
-        email: string,
-        namesPersonal: string,
+    columns: ColumnDefinition[]
+    constructor({
+        userName,
+        email,
+        namesPersonal,
+        namesFamily = undefined,
+        columns = []
+    }: {
+        userName: string
+        email: string
+        namesPersonal: string
         namesFamily?: string
-    ) {
+        columns?: ColumnDefinition[]
+    }) {
         this.userName = userName
         this.email = email
         this.namesPersonal = namesPersonal
         this.namesFamily = namesFamily
+        this.columns = columns
     }
 }
 

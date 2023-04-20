@@ -1,11 +1,12 @@
 import './App.css'
-import { PersonTable } from './person_natural/components'
 import '@glideapps/glide-data-grid/dist/index.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { LoginProvider } from './user/components/provider'
 import { config } from './config'
 import { HeaderProps } from './user/hooks'
 import { Button, Col, Container, Row } from 'react-bootstrap'
+import { RemoteDataTable } from './table/components'
+import { UserInfo } from './user/state'
 
 function CosmaeHeader({ headerProps }: { headerProps: HeaderProps }) {
     return (
@@ -32,7 +33,12 @@ function App() {
             <LoginProvider
                 apiPath={config.api_path}
                 header={(headerProps) => <CosmaeHeader headerProps={headerProps} />}
-                body={() => <PersonTable api_base={config.api_path} />}
+                body={(userInfo: UserInfo) => (
+                    <RemoteDataTable
+                        base_url={config.api_path}
+                        column_defs={userInfo.columns}
+                    />
+                )}
             />
         </Container>
     )

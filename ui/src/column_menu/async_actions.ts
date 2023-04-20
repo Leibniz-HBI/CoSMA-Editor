@@ -47,6 +47,7 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
         try {
             const rsp = await fetch(this.apiPath + '/tags/definitions/children', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -68,20 +69,16 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
             const json = await rsp.json()
             const tagDefinitionsApi = await json['tag_definitions']
             for (const tagDefinitionApi of tagDefinitionsApi) {
-                const columnType =
-                    columnTypeMapApiToApp.get(tagDefinitionApi['type']) ??
-                    ColumnType.String
+                const columnDefinition = parseColumnDefinitionsFromApi(
+                    tagDefinitionApi,
+                    this.namePath
+                )
                 columnSelectionEntries.push(
                     new ColumnSelectionEntry({
-                        columnDefinition: new ColumnDefinition({
-                            idPersistent: tagDefinitionApi['id_persistent'],
-                            idParentPersistent:
-                                tagDefinitionApi['id_parent_persistent'],
-                            namePath: [...this.namePath, tagDefinitionApi['name']],
-                            version: tagDefinitionApi['version'],
-                            columnType: columnType
-                        }),
-                        isExpanded: this.expand && columnType == ColumnType.Inner
+                        columnDefinition: columnDefinition,
+                        isExpanded:
+                            this.expand &&
+                            columnDefinition.columnType == ColumnType.Inner
                     })
                 )
             }
@@ -148,6 +145,7 @@ export class SubmitColumnDefinitionAction extends AsyncAction<
         try {
             const rsp = await fetch(this.apiPath + '/tags/definitions', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -201,3 +199,19 @@ const columnTypeMapApiToApp = new Map<string, ColumnType>([
 ])
 
 const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
+
+export function parseColumnDefinitionsFromApi(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tagDefinitionApi: any,
+    namePath: string[]
+): ColumnDefinition {
+    const columnType =
+        columnTypeMapApiToApp.get(tagDefinitionApi['type']) ?? ColumnType.String
+    return new ColumnDefinition({
+        idPersistent: tagDefinitionApi['id_persistent'],
+        idParentPersistent: tagDefinitionApi['id_parent_persistent'],
+        namePath: [...namePath, tagDefinitionApi['name']],
+        version: tagDefinitionApi['version'],
+        columnType: columnType
+    })
+}

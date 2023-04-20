@@ -44,7 +44,8 @@ describe('login', () => {
                         user_name: userNameTest,
                         names_personal: namesPersonalTest,
                         email: emailTest,
-                        namesFamily: ''
+                        namesFamily: '',
+                        columns: []
                     }
                 }
             ]
@@ -55,7 +56,11 @@ describe('login', () => {
             [new LoginStartAction()],
             [
                 new LoginSuccessAction(
-                    new UserInfo(userNameTest, emailTest, namesPersonalTest, undefined)
+                    new UserInfo({
+                        userName: userNameTest,
+                        email: emailTest,
+                        namesPersonal: namesPersonalTest
+                    })
                 )
             ]
         ])
@@ -124,7 +129,8 @@ describe('refresh action', () => {
                         user_name: userNameTest,
                         names_personal: namesPersonalTest,
                         email: emailTest,
-                        namesFamily: ''
+                        namesFamily: '',
+                        columns: []
                     }
                 }
             ]
@@ -135,7 +141,11 @@ describe('refresh action', () => {
             [new RefreshStartAction()],
             [
                 new LoginSuccessAction(
-                    new UserInfo(userNameTest, emailTest, namesPersonalTest, undefined)
+                    new UserInfo({
+                        userName: userNameTest,
+                        email: emailTest,
+                        namesPersonal: namesPersonalTest
+                    })
                 )
             ]
         ])
@@ -184,7 +194,8 @@ describe('register action', () => {
                         user_name: userNameTest,
                         names_personal: namesPersonalTest,
                         email: emailTest,
-                        names_family: namesFamilyTest
+                        names_family: namesFamilyTest,
+                        columns: []
                     }
                 }
             ]
@@ -202,12 +213,12 @@ describe('register action', () => {
             [new RegistrationStartAction()],
             [
                 new LoginSuccessAction(
-                    new UserInfo(
-                        userNameTest,
-                        emailTest,
-                        namesPersonalTest,
-                        namesFamilyTest
-                    )
+                    new UserInfo({
+                        userName: userNameTest,
+                        email: emailTest,
+                        namesPersonal: namesPersonalTest,
+                        namesFamily: namesFamilyTest
+                    })
                 )
             ]
         ])

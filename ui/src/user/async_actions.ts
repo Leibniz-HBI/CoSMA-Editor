@@ -11,6 +11,7 @@ import {
 } from './actions'
 import { UserInfo } from './state'
 import { exceptionMessage, unprocessableEntityMessage } from '../util/exception'
+import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 
 export class LoginAction extends AsyncAction<UserAction, void> {
     apiPath: string
@@ -44,12 +45,19 @@ export class LoginAction extends AsyncAction<UserAction, void> {
                 } else {
                     dispatch(
                         new LoginSuccessAction(
-                            new UserInfo(
-                                json['user_name'],
-                                json['email'],
-                                json['names_personal'],
-                                json['names_family']
-                            )
+                            new UserInfo({
+                                userName: json['user_name'],
+                                email: json['email'],
+                                namesPersonal: json['names_personal'],
+                                namesFamily: json['names_family'],
+                                columns: (json['columns'] as Array<any>).map(
+                                    (tagDefinitionApi) =>
+                                        parseColumnDefinitionsFromApi(
+                                            tagDefinitionApi,
+                                            []
+                                        )
+                                )
+                            })
                         )
                     )
                 }
@@ -90,12 +98,16 @@ export class RefreshAction extends AsyncAction<UserAction, void> {
                 const json = await rsp.json()
                 dispatch(
                     new LoginSuccessAction(
-                        new UserInfo(
-                            json['user_name'],
-                            json['email'],
-                            json['names_personal'],
-                            json['names_family']
-                        )
+                        new UserInfo({
+                            userName: json['user_name'],
+                            email: json['email'],
+                            namesPersonal: json['names_personal'],
+                            namesFamily: json['names_family'],
+                            columns: (json['columns'] as Array<any>).map(
+                                (tagDefinitionApi) =>
+                                    parseColumnDefinitionsFromApi(tagDefinitionApi, [])
+                            )
+                        })
                     )
                 )
             } else {
@@ -161,12 +173,16 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
                 const json = await rsp.json()
                 dispatch(
                     new LoginSuccessAction(
-                        new UserInfo(
-                            json['user_name'],
-                            json['email'],
-                            json['names_personal'],
-                            json['names_family']
-                        )
+                        new UserInfo({
+                            userName: json['user_name'],
+                            email: json['email'],
+                            namesPersonal: json['names_personal'],
+                            namesFamily: json['names_family'],
+                            columns: (json['columns'] as Array<any>).map(
+                                (tagDefinitionApi) =>
+                                    parseColumnDefinitionsFromApi(tagDefinitionApi, [])
+                            )
+                        })
                     )
                 )
             } else {

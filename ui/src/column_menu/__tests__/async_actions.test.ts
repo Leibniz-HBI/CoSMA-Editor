@@ -306,6 +306,7 @@ describe('SubmitColumnDefinition', () => {
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({
                         tag_definitions: [
                             {

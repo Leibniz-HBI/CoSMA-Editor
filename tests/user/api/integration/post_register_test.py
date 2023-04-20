@@ -54,6 +54,7 @@ def test_same_names(auth_server):
         "email": "other@test.org",
         "names_personal": c.test_names_personal,
         "names_family": "",
+        "columns": [],
     }
 
 

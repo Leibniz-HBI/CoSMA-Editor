@@ -3,6 +3,7 @@ import { UserContext, useLogin, HeaderProps } from '../hooks'
 import { Col, Modal, Row } from 'react-bootstrap'
 import { LoginForm } from './login_form'
 import { RegistrationForm } from './registration_form'
+import { UserInfo } from '../state'
 export function LoginProvider({
     apiPath,
     header,
@@ -10,7 +11,7 @@ export function LoginProvider({
 }: {
     apiPath: string
     header: (props: HeaderProps) => ReactElement
-    body: () => ReactElement
+    body: (userInfo: UserInfo) => ReactElement
 }) {
     const {
         state,
@@ -36,7 +37,7 @@ export function LoginProvider({
             })}
             {state.userInfo !== undefined ? (
                 <Row className="flex-grow-1 m-4">
-                    <Col>{body()}</Col>
+                    <Col>{body(state.userInfo)}</Col>
                 </Row>
             ) : (
                 <div

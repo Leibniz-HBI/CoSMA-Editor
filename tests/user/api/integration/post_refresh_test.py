@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,duplicate-code
 import tests.user.common as c
 from tests.user.api.integration.requests import get_refresh
 
@@ -18,4 +18,5 @@ def test_logged_in(auth_server):
         "names_personal": c.test_names_personal,
         "email": c.test_email,
         "names_family": "",
+        "columns": [],
     }

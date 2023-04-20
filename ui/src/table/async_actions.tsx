@@ -45,7 +45,10 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                     offset: i,
                     limit: 500
                 })
-                if (rsp.status !== 200) {
+                if (rsp.status == 404) {
+                    new SetEntitiesAction([])
+                    return
+                } else if (rsp.status !== 200) {
                     dispatch(
                         new SetLoadDataErrorAction(
                             `Could not load entities chunk ${i}. Reason: "${
@@ -171,6 +174,7 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
         try {
             const rsp = await fetch(this.apiPath + '/tags', {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tag_instances: [
