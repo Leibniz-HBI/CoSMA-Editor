@@ -54,7 +54,6 @@ describe('ColumnAddMenu', () => {
             })
             const { container } = render(
                 <ColumnMenu
-                    baseUrl={'http://test.url'}
                     loadColumnDataCallback={jest.fn()}
                     columnIndices={new Map()}
                 />
@@ -82,7 +81,6 @@ describe('ColumnAddMenu', () => {
             })
             render(
                 <ColumnMenu
-                    baseUrl={'http://test.url'}
                     loadColumnDataCallback={jest.fn()}
                     columnIndices={new Map()}
                 />
@@ -108,7 +106,6 @@ describe('ColumnAddMenu', () => {
                 const user = userEvent.setup()
                 const { container } = render(
                     <ColumnMenu
-                        baseUrl={'http://test.url'}
                         loadColumnDataCallback={trigger}
                         columnIndices={new Map()}
                     />
@@ -130,7 +127,6 @@ describe('ColumnAddMenu', () => {
                 const user = userEvent.setup()
                 const { container } = render(
                     <ColumnMenu
-                        baseUrl={'http://test.url'}
                         loadColumnDataCallback={() => {
                             return
                         }}
@@ -161,7 +157,6 @@ describe('ColumnAddMenu', () => {
                 const user = userEvent.setup()
                 const { container } = render(
                     <ColumnMenu
-                        baseUrl={'http://test.url'}
                         loadColumnDataCallback={() => {
                             return
                         }}
@@ -188,7 +183,6 @@ describe('ColumnAddMenu', () => {
             })
             const { container } = render(
                 <ColumnMenu
-                    baseUrl={'http://test.url'}
                     loadColumnDataCallback={jest.fn()}
                     columnIndices={new Map()}
                 />
@@ -225,7 +219,6 @@ describe('ColumnAddMenu', () => {
             })
             render(
                 <ColumnMenu
-                    baseUrl={'http://test.url'}
                     loadColumnDataCallback={jest.fn()}
                     columnIndices={new Map()}
                 />

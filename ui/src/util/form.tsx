@@ -1,5 +1,6 @@
 import { Form } from 'react-bootstrap'
 import { HandleChange } from './type'
+import { ElementType } from 'react'
 
 export function FormField({
     type = 'text',
@@ -8,7 +9,9 @@ export function FormField({
     value,
     isTouched,
     error,
-    handleChange
+    handleChange,
+    as = undefined,
+    className = ''
 }: {
     type?: string
     name: string
@@ -17,6 +20,8 @@ export function FormField({
     isTouched?: boolean
     error?: string
     handleChange: HandleChange
+    as?: ElementType
+    className?: string
 }) {
     const isInvalid = isTouched && !!error
     const field_id = 'formField-' + name
@@ -30,6 +35,8 @@ export function FormField({
                 onChange={handleChange}
                 isValid={isTouched && !error}
                 isInvalid={isInvalid}
+                as={as}
+                className={className}
             />
             <Form.Control.Feedback type="invalid">
                 <span>{error}</span>

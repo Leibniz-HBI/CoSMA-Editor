@@ -1,0 +1,18 @@
+$primary: #197374;
+$secondary: #eceff4;
+
+$theme-colors: (
+    'primary': $primary,
+    'secondary': $secondary,
+    'light': $secondary
+);
+
+$component-active-color: $secondary;
+$component-active-bg: $primary;
+
+$navbar-light-active-color: $secondary;
+$navbar-light-hover-color: $secondary;
+$navbar-light-color: $secondary;
+
+/* import bootstrap to set changes */
+@import '~bootstrap/scss/bootstrap';

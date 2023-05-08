@@ -1,7 +1,7 @@
 /*eslint @typescript-eslint/no-unused-vars: ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]*/
 import { describe } from '@jest/globals'
 import { Dispatch, useCallback, useReducer } from 'react'
-import { useThunkReducer } from '../state'
+import { Remote, useThunkReducer } from '../state'
 import { AsyncAction } from '../async_action'
 
 jest.mock('react', () => {
@@ -53,5 +53,38 @@ describe('thunker', () => {
         thunkDispatch(2)
         expect(dispatch.mock.calls).toEqual([[2]])
         expect(reducer.mock.calls).toEqual([])
+    })
+})
+
+describe('remote', () => {
+    test('sets loading', () => {
+        const initialRemote = new Remote<number[]>([], false, 'error')
+        const expectedRemote = new Remote<number[]>([], true)
+        const receivedRemote = initialRemote.startLoading()
+        expect(receivedRemote).toEqual(expectedRemote)
+    })
+    test('sets success', () => {
+        const initialRemote = new Remote<number[]>([], true)
+        const expectedRemote = new Remote<number[]>([1, 2, 4])
+        const receivedRemote = initialRemote.success([1, 2, 4])
+        expect(receivedRemote).toEqual(expectedRemote)
+    })
+    test('sets error when loading', () => {
+        const initialRemote = new Remote<number[]>([], true)
+        const expectedRemote = new Remote<number[]>([], false, 'error')
+        const receivedRemote = initialRemote.withError('error')
+        expect(receivedRemote).toEqual(expectedRemote)
+    })
+    test('sets error when not loading', () => {
+        const initialRemote = new Remote<number[]>([])
+        const expectedRemote = new Remote<number[]>([], false, 'error')
+        const receivedRemote = initialRemote.withError('error')
+        expect(receivedRemote).toEqual(expectedRemote)
+    })
+    test('clears error', () => {
+        const initialRemote = new Remote<number[]>([], false, 'error')
+        const expectedRemote = new Remote<number[]>([], false)
+        const receivedRemote = initialRemote.withoutError()
+        expect(receivedRemote).toEqual(expectedRemote)
     })
 })

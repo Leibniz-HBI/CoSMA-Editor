@@ -21,3 +21,22 @@ export async function fetch_chunk({
         body: JSON.stringify({ ...payload, offset: offset, limit: limit })
     })
 }
+
+export async function fetch_chunk_get({
+    api_path,
+    offset,
+    limit
+}: {
+    api_path: string
+    offset: number
+    limit: number
+    payload?: { [key: string]: JsonValue }
+}) {
+    return await fetch(api_path + '/' + offset.toString() + '/' + limit.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Access-Control-Allow-Credentials': 'true'
+        }
+    })
+}

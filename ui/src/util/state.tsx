@@ -44,3 +44,31 @@ export function useThunkReducer<T, U>(
         useCallback(thunker<U>(dispatch as Dispatch<U>, logoutDispatch), [initialState])
     ]
 }
+
+export class Remote<U> {
+    value: U
+    isLoading: boolean
+    errorMsg?: string
+
+    constructor(value: U, isLoading?: boolean, errorMsg?: string) {
+        this.value = value
+        this.isLoading = !!isLoading
+        this.errorMsg = errorMsg
+    }
+
+    withoutError() {
+        return new Remote<U>(this.value, this.isLoading)
+    }
+
+    withError(errorMsg: string) {
+        return new Remote<U>(this.value, false, errorMsg)
+    }
+
+    startLoading() {
+        return new Remote<U>(this.value, true)
+    }
+
+    success(value: U) {
+        return new Remote(value, false)
+    }
+}
