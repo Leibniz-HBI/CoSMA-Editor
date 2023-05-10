@@ -44,3 +44,11 @@ def change_or_create_versioned(
     if do_write:
         return new, do_write
     return most_recent, do_write
+
+
+def patch_from_dict(object_db, **kwargs):
+    """Updates a model object from a dict and tracks the updated fields.
+    This is required for (pre)|(post)_save signals to get a list of updated fields."""
+    for key, value in kwargs.items():
+        setattr(object_db, key, value)
+    object_db.save(update_fields=list(kwargs))

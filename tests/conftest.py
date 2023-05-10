@@ -5,6 +5,7 @@ from tests.entity import common as ce
 from tests.user import common as cu
 from tests.user.api.integration.requests import post_login, post_register
 from cosmae.entity.models_django import Entity
+from cosmae.util import CosmaeUser
 
 
 @pytest.fixture
@@ -27,3 +28,42 @@ def auth_server(live_server):
         live_server.url, {"name": cu.test_username, "password": cu.test_password}
     )
     return live_server, rsp.cookies
+
+
+@pytest.fixture()
+def auth_server1(auth_server):
+    live_server, cookies_user0 = auth_server
+    url = live_server.url
+    rsp = post_register(
+        url,
+        {
+            "user_name": cu.test_username1,
+            "password": cu.test_password1,
+            "email": cu.test_email1,
+            "names_personal": cu.test_names_personal1,
+        },
+    )
+    rsp = post_login(url, {"name": cu.test_username1, "password": cu.test_password1})
+    return live_server, cookies_user0, rsp.cookies
+
+
+@pytest.fixture
+def user(db):  # pylint: disable=unused-argument
+    user = CosmaeUser.objects.create_user(
+        username=cu.test_username,
+        password=cu.test_password,
+        email=cu.test_email,
+        first_name=cu.test_names_personal,
+    )
+    return user
+
+
+@pytest.fixture
+def user1(db):  # pylint: disable=unused-argument
+    user = CosmaeUser.objects.create_user(
+        username=cu.test_username1,
+        password=cu.test_password1,
+        email=cu.test_email1,
+        first_name=cu.test_names_personal1,
+    )
+    return user

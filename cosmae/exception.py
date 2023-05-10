@@ -8,6 +8,10 @@ class ApiError(Schema):
     msg: "str"
 
 
+class NotAuthenticatedException(Exception):
+    """Indicates that a user is not authenticated."""
+
+
 class ValidationException(Exception):
     """Indicates an error during conversion"""
 

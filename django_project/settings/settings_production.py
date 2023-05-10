@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """
 Django settings for django_project project.
 
@@ -22,6 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
+CONTRIBUTION_DIRECTORY = "/srv/cosmae/contributions"
 
 
 ###################################################################
