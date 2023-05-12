@@ -1,5 +1,6 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
 import pytest
+from django.db import IntegrityError
 
 from tests.entity import common as ce
 from tests.user import common as cu
@@ -49,21 +50,27 @@ def auth_server1(auth_server):
 
 @pytest.fixture
 def user(db):  # pylint: disable=unused-argument
-    user = CosmaeUser.objects.create_user(
-        username=cu.test_username,
-        password=cu.test_password,
-        email=cu.test_email,
-        first_name=cu.test_names_personal,
-    )
-    return user
+    try:
+        user = CosmaeUser.objects.create_user(
+            username=cu.test_username,
+            password=cu.test_password,
+            email=cu.test_email,
+            first_name=cu.test_names_personal,
+        )
+        return user
+    except IntegrityError:
+        return CosmaeUser.objects.get(email=cu.test_email)  # pylint: disable=no-member
 
 
 @pytest.fixture
 def user1(db):  # pylint: disable=unused-argument
-    user = CosmaeUser.objects.create_user(
-        username=cu.test_username1,
-        password=cu.test_password1,
-        email=cu.test_email1,
-        first_name=cu.test_names_personal1,
-    )
-    return user
+    try:
+        user = CosmaeUser.objects.create_user(
+            username=cu.test_username1,
+            password=cu.test_password1,
+            email=cu.test_email1,
+            first_name=cu.test_names_personal1,
+        )
+        return user
+    except IntegrityError:
+        return CosmaeUser.objects.get(email=cu.test_email1)  # pylint: disable=no-member

@@ -54,7 +54,6 @@ You can find instructions on installing node at [https://github.com/nodesource/d
 * For the backend run `poetry install` from the root of the directory.
 * For the frontend run `npm install` from  the `ui` directory.
 
-
 ## Preparing the backend
 The following steps are required for the initial setup.
 You only need to run them once.
@@ -63,6 +62,9 @@ You only need to run them once.
 * Copy the secret key and paste it as the value of the variable `DJANGO_KEY` in the `.env` file.
 * Set the variable `COSMAE_DEBUG` to true in the `.env` file.
 * Generate a local database by runing `poetry run ./manage.py migrate`.
+## Additional Services
+You need to run a redis instance for managing task queues.
+The easiest way is to launch it in a container: `docker run -p 6379:6379 redis`.
 ## Running
 * Start the backend by running `poetry run ./manage.py  runserver`.
 * In a seperate shell switch to the `ui` directory and run `npm start`.

@@ -8,6 +8,10 @@ class ApiError(Schema):
     msg: "str"
 
 
+class ResourceLockedException(Exception):
+    """Indicates that a resource is locked."""
+
+
 class NotAuthenticatedException(Exception):
     """Indicates that a user is not authenticated."""
 

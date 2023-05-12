@@ -37,7 +37,7 @@ def SECRET_KEY():  # pylint: disable=invalid-name
 
 
 def get_docker_compose_secret(secret_name):
-    "Get scret as provided by docker_compose"
+    "Get secret as provided by docker_compose"
     with open(f"/run/secrets/{secret_name}", encoding="utf-8") as key_file:
         key = key_file.readline().rstrip("\n")
     if not key:
@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "django_rq",
     "cosmae",
 ]
 
@@ -159,3 +160,13 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "cosmae.CosmaeUser"
+
+RQ_QUEUES = {
+    "default": {
+        "HOST": "cosmae_redis",
+        "PORT": 6379,
+        "DB": 0,
+        "DEFAULT_TIMEOUT": 360,
+        "PASSWORD": get_docker_compose_secret("redis_password"),
+    }
+}

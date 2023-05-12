@@ -3,8 +3,9 @@ import logging
 from typing import List
 
 from django.apps import AppConfig, apps
+from django.core.exceptions import AppRegistryNotReady
 from django.db.backends.signals import connection_created
-from django.db.models.signals import post_migrate
+from django.db.models.signals import post_migrate, post_save
 
 logger = logging.getLogger("cosmae.app_config")
 
@@ -92,4 +93,16 @@ class CosmaeConfig(AppConfig):
         connection_created.connect(
             add_superuser, dispatch_uid="cosmae.create_initial_superuser"
         )
+        try:
+            # pylint: disable=import-outside-toplevel
+            from cosmae.contribution.models_django import ContributionCandidate
+            from cosmae.contribution.tag_definition.queue import dispatch_read_csv_head
+
+            post_save.connect(
+                dispatch_read_csv_head,
+                sender=ContributionCandidate,
+                dispatch_uid="cosmae.start_tag_extraction",
+            )
+        except AppRegistryNotReady:
+            pass
         super().ready()

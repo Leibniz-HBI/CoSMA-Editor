@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "django_rq",
     "cosmae",
 ]
 
@@ -158,3 +159,12 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "cosmae.CosmaeUser"
+
+RQ_QUEUES = {
+    "default": {
+        "HOST": "localhost",
+        "PORT": 6379,
+        "DB": 0,
+        "DEFAULT_TIMEOUT": 360,
+    }
+}

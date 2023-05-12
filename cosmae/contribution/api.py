@@ -1,70 +1,29 @@
 "API methods for handling contributions."
 import os
-from typing import List, Optional
 from uuid import uuid4
 
 from django.conf import settings
 from django.db import DatabaseError
-from ninja import File, Form, Router, Schema, UploadedFile
+from ninja import File, Form, Router, UploadedFile
 
+from cosmae.contribution.models_api import (
+    ContributionCandidate,
+    ContributionCandidatePatchRequest,
+    ContributionChunkResponse,
+    ContributionPostRequest,
+    ContributionPostResponse,
+)
+from cosmae.contribution.models_conversion import contribution_db_to_api
 from cosmae.contribution.models_django import (
     ContributionCandidate as ContributionCandidateDb,
 )
-from cosmae.exception import ApiError, NotAuthenticatedException
+from cosmae.contribution.tag_definition.api import router as tag_router
+from cosmae.exception import ApiError, NotAuthenticatedException, ResourceLockedException
 from cosmae.util import CosmaeUser
-from cosmae.util.auth import check_user
-
-
-class ContributionPostRequest(Schema):
-    # pylint: disable=too-few-public-methods
-    "Request data for adding a new contribution"
-    name: str
-    description: str
-    anonymous: bool
-    has_header: bool
-
-
-class ContributionPostResponse(Schema):
-    # pylint: disable=too-few-public-methods
-    "Response data for successful creation of a contribution"
-    id_persistent: str
-
-
-class ContributionChunkRequest(Schema):
-    # pylint: disable=too-few-public-methods
-    "Request body for requesting contribution candidates in chunks"
-    offset: int
-    limit: int
-
-
-class ContributionCandidate(Schema):
-    # pylint: disable=too-few-public-methods
-    "API model for contribution candidates"
-    id_persistent: str
-    name: str
-    description: str
-    anonymous: bool
-    has_header: bool
-    state: str
-    author: Optional[str]
-
-
-class ContributionCandidatePatchRequest(Schema):
-    # pylint: disable=too-few-public-methods
-    "API model for contribution candidate patch requests"
-    name: Optional[str]
-    description: Optional[str]
-    anonymous: Optional[bool]
-    has_header: Optional[bool]
-
-
-class ContributionChunkResponse(Schema):
-    # pylint: disable=too-few-public-methods
-    "Response containing multiple contribution candidates."
-    contributions: List[ContributionCandidate]
-
+from cosmae.util.auth import check_user, cosmae_auth
 
 router = Router()
+router.add_router("/{id_persistent}/tags", tag_router, auth=cosmae_auth)
 
 ALLOWED_CONTENT_TYPES = ["text/csv"]
 
@@ -142,7 +101,7 @@ def contribution_get(request, id_persistent: str):
         try:
             contribution_db = ContributionCandidateDb.by_id_persistent(
                 id_persistent, check_user(request)
-            )
+            ).get()
         except NotAuthenticatedException:
             return 401, ApiError(msg="Not authenticated.")
         except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
@@ -156,7 +115,13 @@ def contribution_get(request, id_persistent: str):
 
 @router.patch(
     "{id_persistent}",
-    response={200: ContributionCandidate, 401: ApiError, 500: ApiError, 404: ApiError},
+    response={
+        200: ContributionCandidate,
+        401: ApiError,
+        500: ApiError,
+        404: ApiError,
+        423: ApiError,
+    },
 )
 def contribution_patch(
     request, id_persistent: str, patch_data: ContributionCandidatePatchRequest
@@ -169,6 +134,8 @@ def contribution_patch(
         )
         return 200, contribution_db_to_api(contribution_db)
 
+    except ResourceLockedException:
+        return 423, ApiError(msg="Contribution candidate is currently locked.")
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
     except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
@@ -192,33 +159,3 @@ def mk_initial_contribution_candidate(
         created_by=user,
         state=ContributionCandidateDb.UPLOADED,
     )
-
-
-def contribution_db_to_api(
-    contribution_db: ContributionCandidateDb,
-) -> ContributionCandidate:
-    "Transform a contribution candidate from DB to API representation."
-    if contribution_db.anonymous:
-        author = None
-    else:
-        author = contribution_db.created_by.username
-    return ContributionCandidate(
-        id_persistent=str(contribution_db.id_persistent),
-        name=contribution_db.name,
-        description=contribution_db.description,
-        anonymous=contribution_db.anonymous,
-        has_header=contribution_db.has_header,
-        state=_contribution_state_mapping_db_to_api[contribution_db.state],
-        author=author,
-    )
-
-
-_contribution_state_mapping_db_to_api = {
-    ContributionCandidateDb.UPLOADED: "UPLOADED",
-    ContributionCandidateDb.COLUMNS_EXTRACTED: "COLUMNS_EXTRACTED",
-    ContributionCandidateDb.COLUMNS_ASSIGNED: "COLUMNS_ASSIGNED",
-    ContributionCandidateDb.ENTITIES_MATCHED: "ENTITIES_MATCHED",
-    ContributionCandidateDb.ENTITIES_ASSIGNED: "ENTITIES_ASSIGNED",
-    ContributionCandidateDb.VALUES_ASSIGNED: "VALUES_ASSIGNED",
-    ContributionCandidateDb.MERGED: "MERGED",
-}

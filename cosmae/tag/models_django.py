@@ -20,7 +20,7 @@ from cosmae.util.django import change_or_create_versioned
 
 
 class TagDefinition(models.Model):
-    "Django ORM model for tag defintions."
+    "Django ORM model for tag definitions."
     INNER = "INR"
     FLOAT = "FLT"
     STRING = "STR"

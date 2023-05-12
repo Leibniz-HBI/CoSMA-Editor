@@ -1,6 +1,8 @@
 "Models for contribution proposals."
-from django.db import models
+from django.db import models, transaction
+from django.db.utils import OperationalError
 
+from cosmae.exception import ResourceLockedException
 from cosmae.util import CosmaeUser
 from cosmae.util.django import patch_from_dict
 
@@ -26,7 +28,7 @@ class ContributionCandidate(models.Model):
 
     name = models.TextField()
     description = models.TextField()
-    id_persistent = models.UUIDField()
+    id_persistent = models.UUIDField(primary_key=True)
     anonymous = models.BooleanField()
     has_header = models.BooleanField()
     created_by = models.ForeignKey("CosmaeUser", on_delete=models.CASCADE)
@@ -43,13 +45,22 @@ class ContributionCandidate(models.Model):
     @classmethod
     def by_id_persistent(cls, id_persistent: str, user: CosmaeUser):
         "Get a single contribution candidate"
-        return ContributionCandidate.objects.get(  # pylint: disable=no-member
+        return ContributionCandidate.objects.filter(  # pylint: disable=no-member
             created_by=user, id_persistent=id_persistent
         )
 
     @classmethod
     def update(cls, id_persistent: str, user: CosmaeUser, **kwargs):
         "Changes a contribution candidate."
-        candidate = ContributionCandidate.by_id_persistent(id_persistent, user)
-        patch_from_dict(candidate, **kwargs)
-        return candidate
+        try:
+            with transaction.atomic():
+                candidate_query = ContributionCandidate.by_id_persistent(
+                    id_persistent, user
+                )
+                candidate = candidate_query.select_for_update(nowait=True).get()
+                patch_from_dict(candidate, **kwargs)
+            return candidate
+        except OperationalError as exc:
+            if str(exc.args[0]).startswith("database is locked"):
+                raise ResourceLockedException() from exc
+            raise exc

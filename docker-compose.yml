@@ -7,9 +7,13 @@ secrets:
     file: .secrets/cosmae_db_name
   django_key:
     file: .secrets/cosmae_django_key
-
+  redis_password:
+    file: .secrets/cosmae_redis_password
+  redis_conf:
+    file: .secrets/cosmae_redis_conf
 volumes:
   cosmae_db_volume:
+  cosmae_redis_volume:
 
 services:
   cosmae_ui:
@@ -38,6 +42,7 @@ services:
       - db_name
       - db_user
       - db_password
+      - redis_password
 
   cosmae_db:
     container_name: cosmae_db
@@ -56,3 +61,17 @@ services:
     - db_name
     volumes:
     - cosmae_db_volume:/var/lib/postgresql/data
+
+  cosmae_redis:
+    container_name: cosmae_redis
+    image: redis:7.0-alpine
+    expose:
+      - 6379
+    volumes:
+      cosmae_redis_volume:/data
+    secrets:
+      - redis_conf
+    cmd: [
+      "redis-server",
+      "run/secrets/redis_conf"
+    ]
