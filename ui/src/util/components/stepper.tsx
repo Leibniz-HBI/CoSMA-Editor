@@ -59,26 +59,31 @@ const inactiveIcons = [
 
 export function StepTitle({
     idx,
-    activeIdx,
-    name
+    selectedIdx,
+    name,
+    onClick
 }: {
     idx: number
-    activeIdx: number
+    selectedIdx: number
     name: string
+    onClick?: VoidFunction
 }) {
-    const icons = activeIdx < idx ? inactiveIcons : activeIcons
+    const icons = selectedIdx < idx ? inactiveIcons : activeIcons
     const icon = icons[idx]
-    console.log(icon)
+    let textClass = 'fs-5'
+    if (onClick == undefined) {
+        textClass = 'fs-5 fw-light'
+    }
     return (
-        <Col sm="auto" className="align-self-start ms-2 me-2">
+        <Col sm="auto" className="align-self-start ms-2 me-2" onClick={onClick}>
             <Row className="justify-content-around align-items-center">
                 <Col className="align-self-center pe-0">
                     <span className="icon">
-                        {createElement(icon, { className: 'fs-5' })}
+                        {createElement(icon, { className: textClass })}
                     </span>
                 </Col>
                 <Col className="align-self-center ps-0">
-                    <span className="fs-5">{name}</span>
+                    <span className={textClass}>{name}</span>
                 </Col>
             </Row>
         </Col>
@@ -87,31 +92,33 @@ export function StepTitle({
 
 export function StepHeader({
     stepNames,
-    activeIdx
+    selectedIdx,
+    activeIdx,
+    navigateCallback
 }: {
     stepNames: string[]
+    selectedIdx: number
     activeIdx: number
+    navigateCallback: (name: string) => void
 }) {
     const stepTitles = stepNames.flatMap((name, idx) => {
-        if (idx == 0) {
-            return [
-                <StepTitle
-                    idx={idx}
-                    activeIdx={activeIdx}
-                    name={name}
-                    key={'step-title-0'}
-                />
-            ]
-        }
-        return [
-            <StepSpacer key={'step-spacer-' + idx.toString()} />,
+        const isAvailable = idx <= activeIdx
+        const onClickCallback = isAvailable
+            ? () => navigateCallback(name.toLowerCase())
+            : undefined
+        const stepTitle = (
             <StepTitle
                 idx={idx}
-                activeIdx={activeIdx}
+                selectedIdx={selectedIdx}
                 name={name}
                 key={'step-title-' + idx.toString()}
+                onClick={onClickCallback}
             />
-        ]
+        )
+        if (idx == 0) {
+            return [stepTitle]
+        }
+        return [<StepSpacer key={'step-spacer-' + idx.toString()} />, stepTitle]
     })
     return (
         <Row className="justify-content-between mb-2">

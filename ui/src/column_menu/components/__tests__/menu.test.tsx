@@ -8,10 +8,17 @@ import userEvent from '@testing-library/user-event'
 import { ColumnMenu } from '../menu'
 import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from '../../state'
 import { useRemoteColumnMenuData } from '../../hooks'
-import { ColumnMenuTab } from '../../actions'
+import { useState } from 'react'
 jest.mock('../../hooks', () => {
     return {
+        ...jest.requireActual('../../hooks'),
         useRemoteColumnMenuData: jest.fn().mockImplementation()
+    }
+})
+jest.mock('react', () => {
+    return {
+        ...jest.requireActual('react'),
+        useState: jest.fn()
     }
 })
 
@@ -52,6 +59,7 @@ describe('ColumnAddMenu', () => {
                 toggleExpansionCallback: jest.fn(),
                 getHierarchyCallback: jest.fn()
             })
+            ;(useState as jest.Mock).mockReturnValue([false, jest.fn()])
             const { container } = render(
                 <ColumnMenu
                     loadColumnDataCallback={jest.fn()}
@@ -79,6 +87,7 @@ describe('ColumnAddMenu', () => {
                 selectTabCallback: selectTabCallback,
                 getHierarchyCallback: jest.fn()
             })
+            ;(useState as jest.Mock).mockReturnValue([false, selectTabCallback])
             render(
                 <ColumnMenu
                     loadColumnDataCallback={jest.fn()}
@@ -88,7 +97,7 @@ describe('ColumnAddMenu', () => {
             const tab = screen.getByText('Create')
             const user = userEvent.setup()
             await user.click(tab)
-            expect(selectTabCallback.mock.calls).toEqual([[ColumnMenuTab.CREATE_NEW]])
+            expect(selectTabCallback.mock.calls).toEqual([[true]])
         })
         describe('click items', () => {
             test('select column', async () => {
@@ -103,6 +112,7 @@ describe('ColumnAddMenu', () => {
                     toggleExpansionCallback: (path: number[]) => {},
                     getHierarchyCallback: jest.fn()
                 })
+                ;(useState as jest.Mock).mockReturnValue([false, jest.fn()])
                 const user = userEvent.setup()
                 const { container } = render(
                     <ColumnMenu
@@ -175,12 +185,12 @@ describe('ColumnAddMenu', () => {
         test('renders components', async () => {
             ;(useRemoteColumnMenuData as jest.Mock).mockReturnValue({
                 isLoading: false,
-                selectedTab: ColumnMenuTab.CREATE_NEW,
                 navigationEntries: [nestedColumnSelectionEntryTest],
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/no-empty-function
                 toggleExpansionCallback: jest.fn(),
                 getHierarchyCallback: jest.fn()
             })
+            ;(useState as jest.Mock).mockReturnValue([true, jest.fn()])
             const { container } = render(
                 <ColumnMenu
                     loadColumnDataCallback={jest.fn()}
@@ -211,12 +221,11 @@ describe('ColumnAddMenu', () => {
             const selectTabCallback = jest.fn()
             ;(useRemoteColumnMenuData as jest.Mock).mockReturnValue({
                 isLoading: false,
-                selectedTab: ColumnMenuTab.CREATE_NEW,
                 navigationEntries: [nestedColumnSelectionEntryTest],
                 toggleExpansionCallback: jest.fn(),
-                selectTabCallback: selectTabCallback,
                 getHierarchyCallback: jest.fn()
             })
+            ;(useState as jest.Mock).mockReturnValue([true, selectTabCallback])
             render(
                 <ColumnMenu
                     loadColumnDataCallback={jest.fn()}
@@ -226,7 +235,7 @@ describe('ColumnAddMenu', () => {
             const tab = screen.getByText('Load')
             const user = userEvent.setup()
             await user.click(tab)
-            expect(selectTabCallback.mock.calls).toEqual([[ColumnMenuTab.SHOW]])
+            expect(selectTabCallback.mock.calls).toEqual([[false]])
         })
     })
 })

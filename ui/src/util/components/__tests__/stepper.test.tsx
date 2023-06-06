@@ -7,7 +7,7 @@ import { StepHeader, StepTitle } from '../stepper'
 
 describe('stepper title', () => {
     test('active smaller', async () => {
-        const { container } = render(<StepTitle idx={1} activeIdx={2} name="test" />)
+        const { container } = render(<StepTitle idx={1} selectedIdx={2} name="test" />)
         const paths = container.getElementsByTagName('path')
         expect(paths.length).toEqual(1)
         expect(paths[0].getAttribute('d')).toEqual(
@@ -16,7 +16,7 @@ describe('stepper title', () => {
         )
     })
     test('active smaller', async () => {
-        const { container } = render(<StepTitle idx={0} activeIdx={0} name="test" />)
+        const { container } = render(<StepTitle idx={0} selectedIdx={0} name="test" />)
         const paths = container.getElementsByTagName('path')
         expect(paths.length).toEqual(2)
         // paths for filed circle with 0
@@ -28,7 +28,7 @@ describe('stepper title', () => {
         )
     })
     test('inactive', async () => {
-        const { container } = render(<StepTitle idx={2} activeIdx={0} name="test" />)
+        const { container } = render(<StepTitle idx={2} selectedIdx={0} name="test" />)
         const paths = container.getElementsByTagName('path')
         expect(paths.length).toEqual(1)
         expect(paths[0].getAttribute('d')).toEqual(
@@ -42,21 +42,29 @@ describe('Stepper Header', () => {
         const step1 = 'Step Number 1'
         const step2 = 'Step Number 2'
         const { container } = render(
-            <StepHeader stepNames={[step1, step2]} activeIdx={0} />
+            <StepHeader
+                stepNames={[step1, step2]}
+                selectedIdx={0}
+                activeIdx={0}
+                navigateCallback={jest.fn()}
+            />
         )
         const elements = container.getElementsByClassName('justify-content-center')
         expect(elements.length).toEqual(1)
         const children = elements[0].children
         expect(children.length).toEqual(3)
+        // ensure space between step title and spacer
         expect(Array.from(children[0].classList)).toEqual(
             'align-self-start ms-2 me-2 col-sm-auto'.split(' ')
         )
         expect(children[0].textContent).toEqual(step1)
+        // make sure spacer is centered
         expect(Array.from(children[1].classList)).toEqual(
             'align-self-center col-sm-1'.split(' ')
         )
-        expect(Array.from(children[2].classList)).toEqual(
-            'align-self-start ms-2 me-2 col-sm-auto'.split(' ')
+        // make sure no space between icon and text, centered in row.
+        expect(Array.from(children[2].children[0].classList)).toEqual(
+            'justify-content-around align-items-center row'.split(' ')
         )
         expect(children[2].textContent).toEqual(step2)
     })

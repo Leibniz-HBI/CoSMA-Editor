@@ -37,7 +37,7 @@ export function ColumnTypeCreateForm({
     submitColumnDefinitionCallback: (args: SubmitColumnDefinitionArgs) => void
     submitError?: ErrorState
     clearError: () => void
-    children: (formProps?: ColumnTypeCreateFormProps) => ReactNode
+    children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }) {
     return (
         <Formik
@@ -79,7 +79,7 @@ function ColumnTypeCreateFormBody(props: {
             : (e: string | ChangeEvent) => void
     }
     formValues: ColumnTypeCreateArgs
-    children: (formProps?: ColumnTypeCreateFormProps) => ReactNode
+    children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }): JSX.Element {
     const containerRef = useRef(null)
     const targetRef = useRef(null)

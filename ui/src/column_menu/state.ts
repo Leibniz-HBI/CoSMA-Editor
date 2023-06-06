@@ -1,5 +1,4 @@
 import { ErrorState } from '../util/error'
-import { ColumnMenuTab } from './actions'
 
 export enum ColumnType {
     String,
@@ -67,7 +66,6 @@ export class ColumnSelectionState {
     searchEntries: ColumnSelectionEntry[]
     isLoading: boolean
     isSearching: boolean
-    selectedTab: ColumnMenuTab
     errorState?: ErrorState
     isSubmittingDefinition: boolean
     submissionErrorState?: ErrorState
@@ -77,7 +75,6 @@ export class ColumnSelectionState {
         searchEntries: searchSelectionEntries = [],
         isLoading = false,
         isSearching = false,
-        selectedTab = ColumnMenuTab.SHOW,
         errorState = undefined,
         isSubmittingDefinition = false,
         submissionErrorState = undefined
@@ -86,7 +83,6 @@ export class ColumnSelectionState {
         searchEntries?: ColumnSelectionEntry[]
         isLoading?: boolean
         isSearching?: boolean
-        selectedTab?: ColumnMenuTab
         errorState?: ErrorState
         isSubmittingDefinition?: boolean
         submissionErrorState?: ErrorState
@@ -95,7 +91,6 @@ export class ColumnSelectionState {
         this.searchEntries = searchSelectionEntries
         this.isLoading = isLoading
         this.isSearching = isSearching
-        this.selectedTab = selectedTab
         this.errorState = errorState
         this.isSubmittingDefinition = isSubmittingDefinition
         this.submissionErrorState = submissionErrorState

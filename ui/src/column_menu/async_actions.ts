@@ -4,9 +4,9 @@ import { exceptionMessage } from '../util/exception'
 import { AsyncAction } from '../util/async_action'
 import {
     ColumnSelectionAction,
-    SetErrorAction,
-    SetNavigationEntriesAction,
-    StartLoadingAction,
+    LoadColumnHierarchySuccessAction,
+    LoadColumnHierarchyErrorAction,
+    LoadColumnHierarchyStartAction,
     SubmitColumnDefinitionErrorAction,
     SubmitColumnDefinitionStartAction,
     SubmitColumnDefinitionSuccessAction
@@ -39,7 +39,7 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
     }
 
     async run(dispatch: Dispatch<ColumnSelectionAction>) {
-        dispatch(new StartLoadingAction(this.indexPath))
+        dispatch(new LoadColumnHierarchyStartAction(this.indexPath))
         const columnSelectionEntries: ColumnSelectionEntry[] = []
         try {
             const rsp = await fetch(config.api_path + '/tags/definitions/children', {
@@ -52,7 +52,7 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
             })
             if (rsp.status != 200) {
                 dispatch(
-                    new SetErrorAction(
+                    new LoadColumnHierarchyErrorAction(
                         new ErrorState(
                             `Could not load column definitions. Reason: "${
                                 (await rsp.json())['msg']
@@ -80,7 +80,10 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
                 )
             }
             dispatch(
-                new SetNavigationEntriesAction(columnSelectionEntries, this.indexPath)
+                new LoadColumnHierarchySuccessAction(
+                    columnSelectionEntries,
+                    this.indexPath
+                )
             )
             const promises: Promise<void>[] = []
             columnSelectionEntries.forEach(
@@ -103,7 +106,7 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
             dispatch(
-                new SetErrorAction(
+                new LoadColumnHierarchyErrorAction(
                     new ErrorState(exceptionMessage(e), () => this.run(dispatch))
                 )
             )
@@ -184,14 +187,14 @@ export class SubmitColumnDefinitionAction extends AsyncAction<
     }
 }
 
-const columnTypeMapApiToApp = new Map<string, ColumnType>([
+export const columnTypeMapApiToApp = new Map<string, ColumnType>([
     ['INNER', ColumnType.Inner],
     ['STRING', ColumnType.String],
     ['FLOAT', ColumnType.Float],
     ['BOOLEAN', ColumnType.Inner]
 ])
 
-const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
+export const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
 
 export function parseColumnDefinitionsFromApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -30,6 +30,7 @@ export function FormField({
             <Form.Control
                 type={type}
                 name={name}
+                placeholder={label}
                 id={field_id}
                 value={value}
                 onChange={handleChange}

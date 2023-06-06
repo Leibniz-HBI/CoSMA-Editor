@@ -184,6 +184,9 @@ div#layers > div > .container {
 .overflow-y-auto {
     overflow-y: auto;
 }
+.overflow-y-scroll {
+    overflow-y: auto;
+}
 
 .nav-link {
     cursor: pointer;

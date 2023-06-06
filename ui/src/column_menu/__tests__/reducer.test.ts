@@ -8,11 +8,9 @@ import {
 } from '../state'
 import {
     ClearSearchEntriesAction,
-    ColumnMenuTab,
-    SelectTabAction,
-    SetNavigationEntriesAction,
+    LoadColumnHierarchySuccessAction,
     SetSearchEntriesAction,
-    StartLoadingAction,
+    LoadColumnHierarchyStartAction,
     StartSearchAction,
     SubmitColumnDefinitionErrorAction,
     SubmitColumnDefinitionStartAction,
@@ -70,7 +68,10 @@ describe('Column Menu Reducer', () => {
                     columnSelectionEntryTest1
                 ]
             })
-            const endState = columnMenuReducer(initialState, new StartLoadingAction([]))
+            const endState = columnMenuReducer(
+                initialState,
+                new LoadColumnHierarchyStartAction([])
+            )
             expect(endState).toEqual(expectedState)
         })
         test('entry loading', () => {
@@ -98,7 +99,7 @@ describe('Column Menu Reducer', () => {
             })
             const endState = columnMenuReducer(
                 initialState,
-                new StartLoadingAction([1, 1])
+                new LoadColumnHierarchyStartAction([1, 1])
             )
             expect(endState).toEqual(expectedState)
         })
@@ -114,7 +115,7 @@ describe('Column Menu Reducer', () => {
             })
             const endState = columnMenuReducer(
                 initialState,
-                new SetNavigationEntriesAction(
+                new LoadColumnHierarchySuccessAction(
                     [columnSelectionEntryTest0, columnSelectionEntryTest1],
                     []
                 )
@@ -144,7 +145,7 @@ describe('Column Menu Reducer', () => {
             })
             const endState = columnMenuReducer(
                 initialState,
-                new SetNavigationEntriesAction(childrenTest, [0])
+                new LoadColumnHierarchySuccessAction(childrenTest, [0])
             )
             expect(endState).toEqual(expectedState)
         })
@@ -205,17 +206,6 @@ describe('Column Menu Reducer', () => {
             const endState = columnMenuReducer(
                 initialState,
                 new ClearSearchEntriesAction()
-            )
-            expect(endState).toEqual(expectedState)
-        })
-        test('select tab', () => {
-            const initialState = new ColumnSelectionState({})
-            const expectedState = new ColumnSelectionState({
-                selectedTab: ColumnMenuTab.CREATE_NEW
-            })
-            const endState = columnMenuReducer(
-                initialState,
-                new SelectTabAction(ColumnMenuTab.CREATE_NEW)
             )
             expect(endState).toEqual(expectedState)
         })

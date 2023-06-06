@@ -111,7 +111,7 @@ export class LoadContributionsAction extends AsyncAction<ContributionAction, voi
     }
 }
 
-const contributionStepApiToUiMap: { [key: string]: ContributionStep } = {
+export const contributionStepApiToUiMap: { [key: string]: ContributionStep } = {
     UPLOADED: ContributionStep.Uploaded,
     COLUMNS_EXTRACTED: ContributionStep.ColumnsExtracted,
     COLUMNS_ASSIGNED: ContributionStep.ColumnsAssigned,

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useThunkReducer } from '../../util/state'
-import { ColumnMenuTab, SelectTabAction, ToggleExpansionAction } from '../actions'
+import { ToggleExpansionAction } from '../actions'
 import { GetHierarchyAction, SubmitColumnDefinitionAction } from '../async_actions'
 import { useRemoteColumnMenuData } from '../hooks'
 import { ColumnSelectionState } from '../state'
@@ -52,21 +52,6 @@ describe('Column menu hook', () => {
         const { toggleExpansionCallback } = useRemoteColumnMenuData()
         toggleExpansionCallback(path)
         expect(emittedActions).toEqual([new ToggleExpansionAction(path)])
-    })
-    test('select tab callback emits action', () => {
-        const emittedActions: any[] = []
-        ;(useThunkReducer as jest.Mock).mockReturnValue([
-            new ColumnSelectionState({
-                // prevent emission of async action.
-                isLoading: true
-            }),
-            (action: any) => {
-                emittedActions.push(action)
-            }
-        ])
-        const { selectTabCallback } = useRemoteColumnMenuData()
-        selectTabCallback(ColumnMenuTab.CREATE_NEW)
-        expect(emittedActions[0]).toEqual(new SelectTabAction(ColumnMenuTab.CREATE_NEW))
     })
     test('submit column definition callback emits two actions', async () => {
         const emittedActions: any[] = []

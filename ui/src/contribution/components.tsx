@@ -81,20 +81,36 @@ export function ContributionList() {
 }
 
 export function ContributionStepper({
-    activeIdx,
-    children
+    selectedIdx,
+    id_persistent,
+    children,
+    step = ContributionStep.Uploaded
 }: {
-    activeIdx?: number
+    selectedIdx?: number
+    id_persistent: string
     children: ReactElement
+    step?: ContributionStep
 }) {
+    const navigate = useNavigate()
+    let maxIdx = 0
+    if (step === ContributionStep.ColumnsExtracted) {
+        maxIdx = 1
+    }
     return (
-        <Col className="d-flex flex-column h-100 ps-1 pe-1">
+        <Col
+            className="d-flex flex-column h-100 ps-1 pe-1"
+            data-testid="contribution-stepper"
+        >
             <StepHeader
                 stepNames={['Metadata', 'Columns', 'Entities', 'Values', 'Submit']}
-                activeIdx={activeIdx ?? 0}
+                selectedIdx={selectedIdx ?? 0}
+                activeIdx={maxIdx}
+                navigateCallback={(name: string) =>
+                    navigate(`/contribute/${id_persistent}/${name.toLowerCase()}`)
+                }
             />
-            <Row className="d-block flex-basis-0 flex-grow-1 overflow-auto scroll-gutter">
-                <Col className="ps-5 pe-5">{children}</Col>
+            <Row className="d-block flex-basis-0 flex-grow-1 overflow-auto scroll-gutter h-100">
+                <Col className="ps-5 pe-5 h-100">{children}</Col>
             </Row>
         </Col>
     )

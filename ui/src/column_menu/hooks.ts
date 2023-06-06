@@ -1,8 +1,7 @@
+import { Context, createContext } from 'react'
 import { ErrorState } from '../util/error'
 import { useThunkReducer } from '../util/state'
 import {
-    ColumnMenuTab,
-    SelectTabAction,
     SubmitColumnDefinitionClearErrorAction,
     ToggleExpansionAction
 } from './actions'
@@ -16,12 +15,13 @@ export type SubmitColumnDefinitionArgs = {
     columnTypeIdx: number
 }
 
+export const ColumnHierarchyContext: Context<RemoteColumnMenuData | undefined> =
+    createContext<RemoteColumnMenuData | undefined>(undefined)
+
 export type RemoteColumnMenuData = {
     navigationEntries: ColumnSelectionEntry[]
-    selectedTab: ColumnMenuTab
     submitColumnError?: ErrorState
     toggleExpansionCallback: (path: number[]) => void
-    selectTabCallback: (tab: ColumnMenuTab) => void
     getHierarchyCallback: VoidFunction
     submitColumnDefinitionCallback: (args: SubmitColumnDefinitionArgs) => void
     submitColumnDefinitionClearErrorCallback: () => void
@@ -30,9 +30,7 @@ export type RemoteColumnMenuData = {
 export function useRemoteColumnMenuData(): RemoteColumnMenuData {
     const [state, dispatch] = useThunkReducer(
         columnMenuReducer,
-        new ColumnSelectionState({
-            submissionErrorState: new ErrorState('bla')
-        })
+        new ColumnSelectionState({})
     )
 
     function getHierarchyCallback() {
@@ -43,13 +41,9 @@ export function useRemoteColumnMenuData(): RemoteColumnMenuData {
     }
     return {
         navigationEntries: state.navigationEntries,
-        selectedTab: state.selectedTab,
         submitColumnError: state.submissionErrorState,
         toggleExpansionCallback(path: number[]) {
             dispatch(new ToggleExpansionAction(path))
-        },
-        selectTabCallback: (tab: ColumnMenuTab) => {
-            dispatch(new SelectTabAction(tab))
         },
         getHierarchyCallback: getHierarchyCallback,
         submitColumnDefinitionCallback: (args: SubmitColumnDefinitionArgs) => {

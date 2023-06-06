@@ -5,9 +5,20 @@ import { LoginProvider } from './user/components/provider'
 import { Col, Container, Nav, Navbar, Row } from 'react-bootstrap'
 import { RemoteDataTable } from './table/components'
 import { UserContext } from './user/hooks'
-import { NavLink, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
+import {
+    NavLink,
+    Outlet,
+    RouterProvider,
+    createBrowserRouter,
+    redirect
+} from 'react-router-dom'
 import { ContributionList } from './contribution/components'
 import { ContributionDetailsStep } from './contribution/details/components'
+import { ColumnDefinitionStep } from './contribution/columns/components'
+import { config } from './config'
+import { contributionStepApiToUiMap } from './contribution/async_actions'
+import { ContributionStep } from './contribution/state'
+import { exceptionMessage } from './util/exception'
 
 export function CosmaeRoot() {
     return (
@@ -50,15 +61,47 @@ const router = createBrowserRouter([
                 element: <ContributionList />
             },
             {
-                path: 'contribute/:idpersistent',
+                path: 'contribute/:idPersistent',
+                loader: async ({ params }) => {
+                    return await redirectContributionStep(params.idPersistent)
+                }
+            },
+            {
+                path: 'contribute/:idPersistent/metadata',
                 element: <ContributionDetailsStep />,
                 loader: ({ params }) => {
-                    return params.idpersistent
+                    return params.idPersistent
+                }
+            },
+            {
+                path: 'contribute/:idPersistent/columns',
+                element: <ColumnDefinitionStep />,
+                loader: ({ params }) => {
+                    return params.idPersistent
                 }
             }
         ]
     }
 ])
+
+async function redirectContributionStep(idPersistent: string | undefined) {
+    if (idPersistent === undefined) {
+        throw new Response('no contribution id specified', { status: 400 })
+    }
+    try {
+        const rsp = await fetch(config.api_path + '/contributions/' + idPersistent, {
+            credentials: 'include'
+        })
+        const json = await rsp.json()
+        const step = contributionStepApiToUiMap[json['state']]
+        if (step == ContributionStep.ColumnsExtracted) {
+            return redirect(`/contribute/${idPersistent}/columns`)
+        }
+        return redirect(`/contribute/${idPersistent}/metadata`)
+    } catch (e: unknown) {
+        throw new Response(exceptionMessage(e), { status: 500 })
+    }
+}
 
 function App() {
     return (

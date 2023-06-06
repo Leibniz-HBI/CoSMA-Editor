@@ -33,7 +33,11 @@ export function ContributionDetailsStep() {
         )
     }
     return (
-        <ContributionStepper activeIdx={0}>
+        <ContributionStepper
+            selectedIdx={0}
+            id_persistent={idPersistent}
+            step={remoteContribution.value.step}
+        >
             <EditForm
                 contribution={remoteContribution.value}
                 onSubmit={patchContributionDetailsCallback}

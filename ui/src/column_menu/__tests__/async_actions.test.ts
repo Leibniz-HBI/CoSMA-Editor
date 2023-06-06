@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from '@jest/globals'
 import {
-    SetErrorAction,
-    SetNavigationEntriesAction,
-    StartLoadingAction,
+    LoadColumnHierarchyErrorAction,
+    LoadColumnHierarchySuccessAction,
+    LoadColumnHierarchyStartAction,
     SubmitColumnDefinitionErrorAction,
     SubmitColumnDefinitionStartAction,
     SubmitColumnDefinitionSuccessAction
@@ -46,9 +46,11 @@ describe('getHierarchyAction', () => {
         const action = new GetHierarchyAction({})
         await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
-        expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
+        expect(dispatch.mock.calls[0][0]).toEqual(
+            new LoadColumnHierarchyStartAction([])
+        )
         const actionFromCall = dispatch.mock.calls[1][0]
-        expect(actionFromCall).toBeInstanceOf(SetErrorAction)
+        expect(actionFromCall).toBeInstanceOf(LoadColumnHierarchyErrorAction)
         expect(actionFromCall.errorState.msg).toEqual(
             'Could not load column definitions. Reason: "loading Error"'
         )
@@ -62,8 +64,10 @@ describe('getHierarchyAction', () => {
         await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         const actionFromCall = dispatch.mock.calls[1][0]
-        expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
-        expect(actionFromCall).toBeInstanceOf(SetErrorAction)
+        expect(dispatch.mock.calls[0][0]).toEqual(
+            new LoadColumnHierarchyStartAction([])
+        )
+        expect(actionFromCall).toBeInstanceOf(LoadColumnHierarchyErrorAction)
         expect(actionFromCall.errorState.msg).toEqual('fetch error')
     })
     test('handle empty response', async () => {
@@ -81,9 +85,11 @@ describe('getHierarchyAction', () => {
         const action = new GetHierarchyAction({})
         await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
-        expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
+        expect(dispatch.mock.calls[0][0]).toEqual(
+            new LoadColumnHierarchyStartAction([])
+        )
         expect(dispatch.mock.calls[1][0]).toEqual(
-            new SetNavigationEntriesAction([], [])
+            new LoadColumnHierarchySuccessAction([], [])
         )
     })
     const idPersistentRootTest = 'tag_id_persistent_test'
@@ -137,9 +143,11 @@ describe('getHierarchyAction', () => {
         const action = new GetHierarchyAction({ expand: true })
         await action.run(dispatch)
         expect(dispatch.mock.calls.length).toBe(4)
-        expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
+        expect(dispatch.mock.calls[0][0]).toEqual(
+            new LoadColumnHierarchyStartAction([])
+        )
         expect(dispatch.mock.calls[1][0]).toEqual(
-            new SetNavigationEntriesAction(
+            new LoadColumnHierarchySuccessAction(
                 [
                     new ColumnSelectionEntry({
                         columnDefinition: new ColumnDefinition({
@@ -163,9 +171,11 @@ describe('getHierarchyAction', () => {
                 []
             )
         )
-        expect(dispatch.mock.calls[2][0]).toEqual(new StartLoadingAction([0]))
+        expect(dispatch.mock.calls[2][0]).toEqual(
+            new LoadColumnHierarchyStartAction([0])
+        )
         expect(dispatch.mock.calls[3][0]).toEqual(
-            new SetNavigationEntriesAction([], [0])
+            new LoadColumnHierarchySuccessAction([], [0])
         )
     })
 
@@ -225,9 +235,11 @@ describe('getHierarchyAction', () => {
         const action = new GetHierarchyAction({ expand: true })
         await action.run(dispatch)
         // expect(dispatch.mock.calls.length).toBe(4)
-        expect(dispatch.mock.calls[0][0]).toEqual(new StartLoadingAction([]))
+        expect(dispatch.mock.calls[0][0]).toEqual(
+            new LoadColumnHierarchyStartAction([])
+        )
         expect(dispatch.mock.calls[1][0]).toEqual(
-            new SetNavigationEntriesAction(
+            new LoadColumnHierarchySuccessAction(
                 [
                     new ColumnSelectionEntry({
                         columnDefinition: new ColumnDefinition({
@@ -251,9 +263,11 @@ describe('getHierarchyAction', () => {
                 []
             )
         )
-        expect(dispatch.mock.calls[2][0]).toEqual(new StartLoadingAction([0]))
+        expect(dispatch.mock.calls[2][0]).toEqual(
+            new LoadColumnHierarchyStartAction([0])
+        )
         expect(dispatch.mock.calls[3][0]).toEqual(
-            new SetNavigationEntriesAction(
+            new LoadColumnHierarchySuccessAction(
                 [
                     new ColumnSelectionEntry({
                         columnDefinition: new ColumnDefinition({

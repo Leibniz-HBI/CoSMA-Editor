@@ -1,49 +1,40 @@
-import { useLayoutEffect } from 'react'
-import { Col, Row } from 'react-bootstrap'
-import { ColumnMenuTab } from '../actions'
-import { useRemoteColumnMenuData } from '../hooks'
+import { useState } from 'react'
+import { Col, Form, Row } from 'react-bootstrap'
 import { ColumnDefinition } from '../state'
 import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from './form'
 import { ColumnSelector, mkListItems } from './selection'
+import { Eye, EyeFill } from 'react-bootstrap-icons'
+import { ColumnHierarchyContext } from '../hooks'
+import { CosmaeLoading } from '../../util/components/misc'
+import { ColumnMenuProvider } from './provider'
 
 export function ColumnMenu(props: {
     columnIndices: Map<string, number>
     loadColumnDataCallback: (columnDefinition: ColumnDefinition) => void
 }) {
-    const {
-        selectedTab,
-        navigationEntries: columnSelectionEntries,
-        submitColumnError,
-        toggleExpansionCallback,
-        getHierarchyCallback,
-        selectTabCallback,
-        submitColumnDefinitionCallback,
-        submitColumnDefinitionClearErrorCallback
-    } = useRemoteColumnMenuData()
-    useLayoutEffect(
-        () => {
-            getHierarchyCallback()
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []
+    return (
+        <ColumnMenuProvider>
+            <ColumnMenuBody
+                columnIndices={props.columnIndices}
+                loadColumnDataCallback={props.loadColumnDataCallback}
+            />
+        </ColumnMenuProvider>
     )
+}
+
+export function ColumnMenuBody(props: {
+    columnIndices: Map<string, number>
+    loadColumnDataCallback: (columnDefinition: ColumnDefinition) => void
+}) {
     let showLinkClass = 'nav-link'
     let createLinkClass = 'nav-link'
-    let level = 0
-    if (selectedTab === ColumnMenuTab.CREATE_NEW) {
+    const additionalEntries = [{ idPersistent: '', name: 'No parent' }]
+    const [createTabSelected, setCreateTabSelected] = useState(false)
+    if (createTabSelected) {
         createLinkClass += ' active bg-light'
-        level = -1
     } else {
         showLinkClass += ' active bg-light'
     }
-    const listEntries = mkListItems({
-        columnSelectionEntries: columnSelectionEntries,
-        path: [],
-        columnIndices: props.columnIndices,
-        loadColumnDataCallback: props.loadColumnDataCallback,
-        toggleExpansionCallback: toggleExpansionCallback,
-        level: level
-    })
     return (
         <div
             className="container text-left bg-light rounded vh-80 ps-0 pe-0"
@@ -54,41 +45,117 @@ export function ColumnMenu(props: {
                     <ul className="nav nav-tabs justify-content-center ">
                         <li
                             className="nav-item "
-                            onClick={() => selectTabCallback(ColumnMenuTab.SHOW)}
+                            onClick={() => setCreateTabSelected(false)}
                         >
                             <a className={showLinkClass}>Load</a>
                         </li>
                         <li
                             className="nav-item "
-                            onClick={() => selectTabCallback(ColumnMenuTab.CREATE_NEW)}
+                            onClick={() => setCreateTabSelected(true)}
                         >
                             <a className={createLinkClass}>Create</a>
                         </li>
                     </ul>
                 </Row>
                 <Row className="ps-2 pe-2">
-                    {selectedTab === ColumnMenuTab.CREATE_NEW ? (
-                        <ColumnTypeCreateForm
-                            submitColumnDefinitionCallback={
-                                submitColumnDefinitionCallback
+                    <ColumnHierarchyContext.Consumer>
+                        {(remoteColumnMenuData) => {
+                            if (remoteColumnMenuData === undefined) {
+                                return <CosmaeLoading />
                             }
-                            submitError={submitColumnError}
-                            clearError={submitColumnDefinitionClearErrorCallback}
-                        >
-                            {(
-                                columnTypeCreateFormProps?: ColumnTypeCreateFormProps
-                            ) => (
+                            if (createTabSelected) {
+                                return (
+                                    <ColumnTypeCreateForm
+                                        submitColumnDefinitionCallback={
+                                            remoteColumnMenuData.submitColumnDefinitionCallback
+                                        }
+                                        submitError={
+                                            remoteColumnMenuData.submitColumnError
+                                        }
+                                        clearError={
+                                            remoteColumnMenuData.submitColumnDefinitionClearErrorCallback
+                                        }
+                                    >
+                                        {(
+                                            columnTypeCreateFormProps: ColumnTypeCreateFormProps
+                                        ) => (
+                                            <ColumnSelector
+                                                listEntries={mkListItems({
+                                                    columnSelectionEntries:
+                                                        remoteColumnMenuData.navigationEntries,
+                                                    path: [],
+                                                    toggleExpansionCallback:
+                                                        remoteColumnMenuData.toggleExpansionCallback,
+                                                    level: 0,
+                                                    additionalEntries:
+                                                        additionalEntries,
+                                                    mkTailElement: (
+                                                        columnDefinition: ColumnDefinition
+                                                    ) => (
+                                                        <Form.Check
+                                                            type="radio"
+                                                            name="parent"
+                                                            value={
+                                                                columnDefinition.idPersistent
+                                                            }
+                                                            onChange={
+                                                                columnTypeCreateFormProps.handleChange
+                                                            }
+                                                            checked={
+                                                                columnTypeCreateFormProps.selectedParent ==
+                                                                columnDefinition.idPersistent
+                                                            }
+                                                        />
+                                                    )
+                                                })}
+                                            />
+                                        )}
+                                    </ColumnTypeCreateForm>
+                                )
+                            }
+
+                            return (
                                 <ColumnSelector
-                                    listEntryBuilderList={listEntries}
-                                    columnTypeCreateFormProps={
-                                        columnTypeCreateFormProps
-                                    }
+                                    listEntries={mkListItems({
+                                        columnSelectionEntries:
+                                            remoteColumnMenuData.navigationEntries,
+                                        path: [],
+                                        toggleExpansionCallback:
+                                            remoteColumnMenuData.toggleExpansionCallback,
+                                        level: 0,
+                                        mkTailElement: (
+                                            columnDefinition: ColumnDefinition
+                                        ) => {
+                                            const isDisplayedInTable =
+                                                props.columnIndices.has(
+                                                    columnDefinition.idPersistent
+                                                )
+                                            if (isDisplayedInTable) {
+                                                return (
+                                                    <span className="icon">
+                                                        <EyeFill height={20} />
+                                                    </span>
+                                                )
+                                            } else {
+                                                return (
+                                                    <span
+                                                        className="icon"
+                                                        onClick={() =>
+                                                            props.loadColumnDataCallback(
+                                                                columnDefinition
+                                                            )
+                                                        }
+                                                    >
+                                                        <Eye height={20} />
+                                                    </span>
+                                                )
+                                            }
+                                        }
+                                    })}
                                 />
-                            )}
-                        </ColumnTypeCreateForm>
-                    ) : (
-                        <ColumnSelector listEntryBuilderList={listEntries} />
-                    )}
+                            )
+                        }}
+                    </ColumnHierarchyContext.Consumer>
                 </Row>
             </Col>
         </div>

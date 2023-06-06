@@ -2,11 +2,10 @@ import { ErrorState } from '../util/error'
 import {
     ClearSearchEntriesAction,
     ColumnSelectionAction,
-    SetErrorAction,
-    SetNavigationEntriesAction,
+    LoadColumnHierarchyErrorAction,
+    LoadColumnHierarchySuccessAction,
     SetSearchEntriesAction,
-    SelectTabAction,
-    StartLoadingAction,
+    LoadColumnHierarchyStartAction,
     StartSearchAction,
     ToggleExpansionAction,
     SubmitColumnDefinitionStartAction,
@@ -20,7 +19,7 @@ export function columnMenuReducer(
     state: ColumnSelectionState,
     action: ColumnSelectionAction
 ) {
-    if (action instanceof SetErrorAction) {
+    if (action instanceof LoadColumnHierarchyErrorAction) {
         return new ColumnSelectionState({ errorState: action.errorState })
     } else if (action instanceof StartSearchAction) {
         return new ColumnSelectionState({ ...state, isSearching: true })
@@ -35,7 +34,7 @@ export function columnMenuReducer(
             ...state,
             searchEntries: []
         })
-    } else if (action instanceof SetNavigationEntriesAction) {
+    } else if (action instanceof LoadColumnHierarchySuccessAction) {
         if (action.path.length == 0) {
             return new ColumnSelectionState({
                 ...state,
@@ -55,7 +54,7 @@ export function columnMenuReducer(
                 ...state.navigationEntries.slice(action.path[0] + 1)
             ]
         })
-    } else if (action instanceof StartLoadingAction) {
+    } else if (action instanceof LoadColumnHierarchyStartAction) {
         if (action.path.length == 0) {
             return new ColumnSelectionState({
                 ...state,
@@ -88,12 +87,6 @@ export function columnMenuReducer(
                 ...state.navigationEntries.slice(action.path[0] + 1)
             ]
         })
-    } else if (action instanceof SelectTabAction) {
-        return new ColumnSelectionState({
-            ...state,
-            selectedTab: action.selectedTab,
-            submissionErrorState: undefined
-        })
     } else if (action instanceof SubmitColumnDefinitionStartAction) {
         return new ColumnSelectionState({
             ...state,
@@ -120,6 +113,10 @@ export function columnSelectionEntryReducer(
     path: number[]
 ): ColumnSelectionEntry {
     if (path.length > 0) {
+        // mismatch between path and state.
+        if (state === undefined) {
+            return state
+        }
         return new ColumnSelectionEntry({
             ...state,
             children: [
@@ -138,13 +135,13 @@ export function columnSelectionEntryReducer(
             ...state,
             isExpanded: !state.isExpanded
         })
-    } else if (action instanceof SetNavigationEntriesAction) {
+    } else if (action instanceof LoadColumnHierarchySuccessAction) {
         return new ColumnSelectionEntry({
             ...state,
             children: action.entries,
             isLoading: false
         })
-    } else if (action instanceof StartLoadingAction) {
+    } else if (action instanceof LoadColumnHierarchyStartAction) {
         return new ColumnSelectionEntry({
             ...state,
             isLoading: true

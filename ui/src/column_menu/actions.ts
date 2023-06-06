@@ -2,7 +2,7 @@ import { ErrorState } from '../util/error'
 import { ColumnSelectionEntry } from './state'
 
 /**Indicates that loading has started */
-export class StartLoadingAction {
+export class LoadColumnHierarchyStartAction {
     path: number[]
     constructor(path: number[]) {
         this.path = path
@@ -14,7 +14,7 @@ export class StartSearchAction {}
 /**
  * Indicates successful return of navigation entries
  */
-export class SetNavigationEntriesAction {
+export class LoadColumnHierarchySuccessAction {
     entries: ColumnSelectionEntry[]
     path: number[]
     constructor(entries: ColumnSelectionEntry[], path: number[]) {
@@ -38,36 +38,17 @@ export class SetSearchEntriesAction {
 export class ClearSearchEntriesAction {}
 
 /**
- * Enum for different tabs
- */
-export enum ColumnMenuTab {
-    SHOW,
-    CREATE_NEW
-}
-/**
- * Indicate the tab to be shown
- */
-
-export class SelectTabAction {
-    selectedTab: ColumnMenuTab
-
-    constructor(selectedTab: ColumnMenuTab) {
-        this.selectedTab = selectedTab
-    }
-}
-
-/**
  * Indicate the start of a column definition submission
  */
 export class SubmitColumnDefinitionStartAction {}
 
 /**
- * Indicte that a column definition was successfully submitted
+ * Indicate that a column definition was successfully submitted
  */
 export class SubmitColumnDefinitionSuccessAction {}
 
 /**
- * Indicate that an error occured during column definition submission.
+ * Indicate that an error occurred during column definition submission.
  */
 export class SubmitColumnDefinitionErrorAction {
     msg: string
@@ -91,34 +72,35 @@ export class SubmitColumnDefinitionErrorAction {
 export class SubmitColumnDefinitionClearErrorAction {}
 
 /**
- * Indicates that an error occured
+ * Indicates that an error occurred
  */
-export class SetErrorAction {
+export class LoadColumnHierarchyErrorAction {
     errorState: ErrorState
     constructor(errorState: ErrorState) {
         this.errorState = errorState
     }
 }
 export type ColumnSelectionAction =
-    | StartLoadingAction
+    | LoadColumnHierarchyErrorAction
+    | LoadColumnHierarchyStartAction
+    | LoadColumnHierarchySuccessAction
     | StartSearchAction
-    | SetNavigationEntriesAction
     | SetSearchEntriesAction
     | ClearSearchEntriesAction
     | ToggleExpansionAction
-    | SelectTabAction
     | SubmitColumnDefinitionStartAction
     | SubmitColumnDefinitionSuccessAction
     | SubmitColumnDefinitionErrorAction
     | SubmitColumnDefinitionClearErrorAction
-    | SetErrorAction
 
 /**
  * Indicates that expansion of an entry should be toggled
  */
 export class ToggleExpansionAction {
     path: number[]
-    constructor(path: number[]) {
+    rootGroup?: string
+    constructor(path: number[], rootGroup?: string) {
         this.path = path
+        this.rootGroup = rootGroup
     }
 }
