@@ -47,9 +47,7 @@ contribution_test_columns_assigned0 = dict(
 tag_def_test0 = dict(
     name=c.name_definition_test0,
     id_persistent=c.id_persistent_tag_def_test0,
-    id_parent_persistent=None,
     id_existing_persistent=None,
-    type=None,
     index_in_file=9000,
     discard=False,
 )

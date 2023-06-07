@@ -23,7 +23,7 @@ from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user, cosmae_auth
 
 router = Router()
-router.add_router("/{id_persistent}/tags", tag_router, auth=cosmae_auth)
+router.add_router("/{id_contribution_persistent}/tags", tag_router, auth=cosmae_auth)
 
 ALLOWED_CONTENT_TYPES = ["text/csv"]
 

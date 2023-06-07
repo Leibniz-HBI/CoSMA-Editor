@@ -8,3 +8,15 @@ def get_tag_definition(url, id_persistent, cookies=None):
         cookies=cookies,
         timeout=900,
     )
+
+
+def patch_tag_definition(
+    url, id_persistent_contribution, id_persistent_tag, patch_data, cookies=None
+):
+    return requests.patch(
+        url + "/cosmae/api/contributions/"
+        f"{id_persistent_contribution}/tags/{id_persistent_tag}",
+        cookies=cookies,
+        timeout=900,
+        json=patch_data,
+    )

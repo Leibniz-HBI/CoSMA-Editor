@@ -10,10 +10,10 @@ import {
 import { GetHierarchyAction, SubmitColumnDefinitionAction } from '../async_actions'
 import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from '../state'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function responseSequence(respones: [number, () => any][]) {
+function responseSequence(responses: [number, () => any][]) {
     const fetchMock = jest.spyOn(global, 'fetch')
     fetchMock.mockClear()
-    for (const tpl of respones) {
+    for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
             jest.fn(() =>

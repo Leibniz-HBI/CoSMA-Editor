@@ -2,27 +2,13 @@
 from django.db import models
 
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.util import CosmaeUser
 
 
 class TagDefinitionContribution(models.Model):
     "ORM Model for newly added contribution tag definitions"
-    INNER = "INR"
-    FLOAT = "FLT"
-    STRING = "STR"
-    EXISTING = "XST"
-    TYPE_CHOICES = [
-        (INNER, "inner"),
-        (FLOAT, "float"),
-        (STRING, "string"),
-    ]
     name = models.TextField()
     id_persistent = models.UUIDField()
     id_existing_persistent = models.TextField(default=None, blank=True, null=True)
-    id_parent_persistent = models.TextField(null=True, blank=True)
-    type = models.CharField(
-        max_length=3, choices=TYPE_CHOICES, default=None, null=True, blank=True
-    )
     contribution_candidate = models.ForeignKey(
         ContributionCandidate, on_delete=models.CASCADE
     )
@@ -39,10 +25,12 @@ class TagDefinitionContribution(models.Model):
         )
 
     @classmethod
-    def get_by_id_persistent(cls, id_persistent: str, user: CosmaeUser):
+    def get_by_id_persistent(
+        cls, id_persistent: str, contribution_candidate: ContributionCandidate
+    ):
         "Get a tag contribution tag definition by id_persistent and user"
         return TagDefinitionContribution.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent, contribution_candidate__created_by=user
+            id_persistent=id_persistent, contribution_candidate=contribution_candidate
         ).get()
 
 

@@ -14,7 +14,9 @@ from cosmae.contribution.tag_definition.models_django import (
     TagDefinitionContribution as TagDefContributionDb,
 )
 from cosmae.exception import ApiError, NotAuthenticatedException
+from cosmae.tag.models_django import TagDefinition
 from cosmae.util.auth import check_user
+from cosmae.util.django import patch_from_dict
 
 router = Router()
 
@@ -25,8 +27,6 @@ class TagDefinitionContribution(Schema):
     name: str
     id_persistent: str
     id_existing_persistent: Optional[str]
-    id_parent_persistent: Optional[str]
-    type: Optional[str]
     index_in_file: int
     discard: bool
 
@@ -36,6 +36,13 @@ class TagDefinitionContributionResponseList(Schema):
     # pylint: disable=too-few-public-methods
     tag_definitions: List[TagDefinitionContribution]
     contribution_candidate: ContributionCandidate
+
+
+class TagDefinitionPatchRequest(Schema):
+    "Request for updating a contribution tag definition"
+    # pylint: disable=too-few-public-methods
+    id_existing_persistent: Optional[str]
+    discard: Optional[bool]
 
 
 @router.get(
@@ -53,10 +60,12 @@ def get_tag_definitions(request: HttpRequest):
     # pylint: disable=too-many-return-statements
     try:
         user = check_user(request)
-        id_persistent = request.resolver_match.captured_kwargs["id_persistent"]
+        id_contribution_persistent = request.resolver_match.captured_kwargs[
+            "id_contribution_persistent"
+        ]
         try:
             candidate = ContributionCandidateDb.by_id_persistent(
-                id_persistent, user
+                id_contribution_persistent, user
             ).get()
         except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
             return 404, ApiError(msg="Contribution candidate does not exist.")
@@ -80,21 +89,73 @@ def get_tag_definitions(request: HttpRequest):
         return 500, ApiError(msg="Could not get the requested tag_definitions.")
 
 
+allowed_additional_fields = {"display_txt", "id_persistent"}
+
+
+@router.patch(
+    "{id_persistent}",
+    response={
+        200: TagDefinitionContribution,
+        400: ApiError,
+        401: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def patch_tag_definition(
+    request: HttpRequest, id_persistent: str, patch_data: TagDefinitionPatchRequest
+):
+    "API method for updating a tag definition of a contribution."
+    # pylint: disable=too-many-return-statements
+    try:
+        user = check_user(request)
+        id_contribution_persistent = request.resolver_match.captured_kwargs[
+            "id_contribution_persistent"
+        ]
+        try:
+            contribution = ContributionCandidateDb.by_id_persistent(
+                id_contribution_persistent, user
+            ).get()
+            if contribution.state != ContributionCandidateDb.COLUMNS_EXTRACTED:
+                return 400, ApiError(
+                    msg="You can only change column assignments,"
+                    ' when the contribution state is "COLUMNS_EXTRACTED".'
+                )
+            candidate_definition = TagDefContributionDb.get_by_id_persistent(
+                id_persistent, contribution
+            )
+            patch_dict = patch_data.dict(exclude_unset=True)
+            id_existing_persistent = patch_dict.get("id_existing_persistent")
+            if (
+                id_existing_persistent is not None
+                and id_existing_persistent not in allowed_additional_fields
+            ):
+                TagDefinition.most_recent_by_id(id_existing_persistent)
+            patch_from_dict(candidate_definition, **patch_dict)
+            print(candidate_definition.__dict__)
+            return 200, tag_definitions_contribution_db_to_api(candidate_definition)
+        except IndexError:
+            return 400, ApiError(msg="Existing tag definition does not exist.")
+        except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
+            return 404, ApiError(msg="Contribution candidate does not exist.")
+        except TagDefContributionDb.DoesNotExist:  # pylint: disable=no-member
+            return 404, ApiError(msg="Tag definition does not exist.")
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    except DatabaseError:
+        return 500, ApiError(
+            msg="Could not update the tag definition from the database."
+        )
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not update the requested tag_definition.")
+
+
 def tag_definitions_contribution_db_to_api(tag_def_db: TagDefinitionContribution):
     "Convert a contribution tag definition from API to database representation."
     return TagDefinitionContribution(
         name=tag_def_db.name,
         id_persistent=str(tag_def_db.id_persistent),
         id_existing_persistent=tag_def_db.id_existing_persistent,
-        id_parent_persistent=tag_def_db.id_parent_persistent,
-        type=_tag_type_mapping_db_to_api.get(tag_def_db.type),
         index_in_file=tag_def_db.index_in_file,
         discard=tag_def_db.discard,
     )
-
-
-_tag_type_mapping_db_to_api = {
-    TagDefContributionDb.INNER: "INNER",
-    TagDefContributionDb.FLOAT: "FLOAT",
-    TagDefContributionDb.STRING: "STRING",
-}
