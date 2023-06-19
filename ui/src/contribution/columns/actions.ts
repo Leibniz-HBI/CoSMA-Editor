@@ -71,6 +71,29 @@ export class PatchColumnDefinitionContributionSuccessAction {
 }
 
 /**
+ * Indicates start of the finalize column assignment request
+ */
+export class FinalizeColumnAssignmentStartAction {}
+/**
+ * Indicates a successful finalize column assignment request
+ */
+export class FinalizeColumnAssignmentSuccessAction {}
+/**
+ * Indicates an error during the finalize column assignment request
+ */
+export class FinalizeColumnAssignmentErrorAction {
+    msg: string
+    constructor(msg: string) {
+        this.msg = msg
+    }
+}
+
+/**
+ * Indicates that the error message of the clear finalize request should be cleared
+ */
+export class FinalizeColumnAssignmentClearErrorAction {}
+
+/**
  * Indicate an error during updating a column definition of a contribution
  */
 export class PatchColumnDefinitionContributionErrorAction {
@@ -88,3 +111,7 @@ export type ColumnDefinitionsContributionAction =
     | PatchColumnDefinitionContributionStartAction
     | PatchColumnDefinitionContributionSuccessAction
     | PatchColumnDefinitionContributionErrorAction
+    | FinalizeColumnAssignmentStartAction
+    | FinalizeColumnAssignmentSuccessAction
+    | FinalizeColumnAssignmentErrorAction
+    | FinalizeColumnAssignmentClearErrorAction

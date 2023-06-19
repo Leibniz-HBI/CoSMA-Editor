@@ -1,10 +1,21 @@
 import { useLoaderData } from 'react-router-dom'
 import { useColumnDefinitionsContribution } from './hooks'
 import { ContributionStepper } from '../components'
-import { Button, Col, Form, ListGroup, Modal, Row } from 'react-bootstrap'
+import {
+    Button,
+    CloseButton,
+    Col,
+    Form,
+    ListGroup,
+    Modal,
+    Overlay,
+    Placeholder,
+    Popover,
+    Row
+} from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
 import { Trash } from 'react-bootstrap-icons'
-import { ChangeEvent, useLayoutEffect } from 'react'
+import { ChangeEvent, useLayoutEffect, useRef } from 'react'
 import { ColumnSelector, mkListItems } from '../../column_menu/components/selection'
 import { CosmaeLoading } from '../../util/components/misc'
 import { ColumnDefinition } from '../../column_menu/state'
@@ -14,9 +25,12 @@ import {
 } from '../../column_menu/components/form'
 import { ColumnHierarchyContext } from '../../column_menu/hooks'
 import { ColumnMenuProvider } from '../../column_menu/components/provider'
+import { Remote } from '../../util/state'
 
 export function ColumnDefinitionStep() {
     const idContributionPersistent = useLoaderData() as string
+    const listViewContainerRef = useRef(null)
+    const buttonRef = useRef(null)
     const {
         loadColumnDefinitionsContributionCallback,
         selectColumnDefinitionContributionCallback,
@@ -25,7 +39,10 @@ export function ColumnDefinitionStep() {
         discardCallback,
         definitions,
         selectedColumnDefinition,
-        createTabSelected
+        createTabSelected,
+        finalizeColumnAssignment,
+        finalizeColumnAssignmentCallback,
+        clearFinalizeColumnAssignmentErrorCallback
     } = useColumnDefinitionsContribution(idContributionPersistent)
     useLayoutEffect(() => {
         loadColumnDefinitionsContributionCallback()
@@ -46,7 +63,43 @@ export function ColumnDefinitionStep() {
                         sm={2}
                         className="h-100 overflow-y-scroll"
                         key="column-definition-selection"
+                        ref={listViewContainerRef}
                     >
+                        <Row className="ms-0 me-12px" ref={buttonRef}>
+                            <CompleteColumnAssignmentButton
+                                remoteState={finalizeColumnAssignment}
+                                onClick={finalizeColumnAssignmentCallback}
+                            />
+                            {
+                                <Overlay
+                                    show={
+                                        finalizeColumnAssignment?.errorMsg !== undefined
+                                    }
+                                    target={buttonRef}
+                                    container={listViewContainerRef}
+                                    placement="bottom"
+                                >
+                                    <Popover id="finalize-column-assignment-error-popover">
+                                        <Popover.Header className="bg-danger text-light">
+                                            <Row className="justify-content-between">
+                                                <Col>Error</Col>
+                                                <CloseButton
+                                                    variant="white"
+                                                    onClick={
+                                                        clearFinalizeColumnAssignmentErrorCallback
+                                                    }
+                                                ></CloseButton>
+                                            </Row>
+                                        </Popover.Header>
+                                        <Popover.Body>
+                                            <span>
+                                                {finalizeColumnAssignment?.errorMsg}
+                                            </span>
+                                        </Popover.Body>
+                                    </Popover>
+                                </Overlay>
+                            }
+                        </Row>
                         <Row className="text-primary">
                             <span>Columns extracted from upload:</span>
                         </Row>
@@ -345,5 +398,42 @@ export function NewColumnModalBody() {
                 )
             }}
         </ColumnHierarchyContext.Consumer>
+    )
+}
+
+export function CompleteColumnAssignmentButton({
+    remoteState,
+    onClick
+}: {
+    remoteState: Remote<boolean>
+    onClick: VoidFunction
+}) {
+    const loading = remoteState.isLoading
+    const success = remoteState.value
+    if (success) {
+        return (
+            <Button active={false} variant="outline-primary">
+                <span className="text-primary fw-bold">
+                    Column assignment successfully finalized
+                </span>
+            </Button>
+        )
+    }
+    const buttonText = 'Finalize Column Assignment'
+    if (loading) {
+        return (
+            <Placeholder.Button variant="primary" animation="wave">
+                <span>{buttonText}</span>
+            </Placeholder.Button>
+        )
+    }
+    return (
+        <Button
+            variant="outline-primary"
+            onClick={onClick}
+            data-testid="complete-column-assignment-button"
+        >
+            <span>{buttonText}</span>
+        </Button>
     )
 }

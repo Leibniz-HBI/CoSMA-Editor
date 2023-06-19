@@ -2,9 +2,11 @@ import { Remote, useThunkReducer } from '../../../util/state'
 import { Contribution, ContributionStep } from '../../state'
 import {
     ColumnDefinitionContributionSelectAction,
+    FinalizeColumnAssignmentClearErrorAction,
     SetColumnDefinitionFormTabAction
 } from '../actions'
 import {
+    FinalizeColumnAssignmentAction,
     LoadColumnDefinitionsContributionAction,
     PatchColumnDefinitionContributionAction
 } from '../async_actions'
@@ -52,7 +54,7 @@ describe('contribution column hook', () => {
                 columns: new Remote(
                     {
                         activeDefinitionsList: [],
-                        discardedDefinitionList: [],
+                        discardedDefinitionsList: [],
                         contributionCandidate: contributionTest
                     },
                     true
@@ -108,7 +110,7 @@ describe('contribution column hook', () => {
             new ColumnDefinitionsContributionState({
                 columns: new Remote({
                     activeDefinitionsList: [],
-                    discardedDefinitionList: [],
+                    discardedDefinitionsList: [],
                     contributionCandidate: contributionTest
                 }),
                 selectedColumnDefinition: new Remote(columnDefinitionTest)
@@ -134,7 +136,7 @@ describe('contribution column hook', () => {
             new ColumnDefinitionsContributionState({
                 columns: new Remote({
                     activeDefinitionsList: [],
-                    discardedDefinitionList: [],
+                    discardedDefinitionsList: [],
                     contributionCandidate: contributionTest
                 }),
                 selectedColumnDefinition: new Remote(columnDefinitionTest)
@@ -152,6 +154,46 @@ describe('contribution column hook', () => {
                     discard: true
                 })
             ]
+        ])
+    })
+    test('finalize column assignment', () => {
+        const dispatch = jest.fn()
+        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
+            new ColumnDefinitionsContributionState({
+                columns: new Remote({
+                    activeDefinitionsList: [],
+                    discardedDefinitionsList: [],
+                    contributionCandidate: contributionTest
+                }),
+                selectedColumnDefinition: new Remote(columnDefinitionTest)
+            }),
+            dispatch
+        ])
+        const { finalizeColumnAssignmentCallback } =
+            useColumnDefinitionsContribution('id-contribution-test')
+        finalizeColumnAssignmentCallback()
+        expect(dispatch.mock.calls).toEqual([
+            [new FinalizeColumnAssignmentAction('id-contribution-test')]
+        ])
+    })
+    test('clear finalize column assignment error', () => {
+        const dispatch = jest.fn()
+        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
+            new ColumnDefinitionsContributionState({
+                columns: new Remote({
+                    activeDefinitionsList: [],
+                    discardedDefinitionsList: [],
+                    contributionCandidate: contributionTest
+                }),
+                selectedColumnDefinition: new Remote(columnDefinitionTest)
+            }),
+            dispatch
+        ])
+        const { clearFinalizeColumnAssignmentErrorCallback } =
+            useColumnDefinitionsContribution('id-contribution-test')
+        clearFinalizeColumnAssignmentErrorCallback()
+        expect(dispatch.mock.calls).toEqual([
+            [new FinalizeColumnAssignmentClearErrorAction()]
         ])
     })
 })

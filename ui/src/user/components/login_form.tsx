@@ -84,7 +84,7 @@ export function LoginFormBody(props: {
                 <Col></Col>
                 <Col sm="auto">
                     <Button
-                        variant="outline-secondary"
+                        variant="outline-primary"
                         onClick={openRegistrationCallback}
                     >
                         Registration

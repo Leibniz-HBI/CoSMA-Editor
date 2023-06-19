@@ -2,6 +2,9 @@ import { Dispatch } from 'react'
 import { AsyncAction } from '../../util/async_action'
 import {
     ColumnDefinitionsContributionAction,
+    FinalizeColumnAssignmentErrorAction,
+    FinalizeColumnAssignmentStartAction,
+    FinalizeColumnAssignmentSuccessAction,
     LoadColumnDefinitionsContributionErrorAction,
     LoadColumnDefinitionsContributionStartAction,
     LoadColumnDefinitionsContributionSuccessAction,
@@ -134,6 +137,35 @@ export class PatchColumnDefinitionContributionAction extends AsyncAction<
         } else {
             const json = await rsp.json()
             dispatch(new PatchColumnDefinitionContributionErrorAction(json['msg']))
+        }
+    }
+}
+
+export class FinalizeColumnAssignmentAction extends AsyncAction<
+    ColumnDefinitionsContributionAction,
+    void
+> {
+    idCandidatePersistent: string
+    constructor(idCandidatePersistent: string) {
+        super()
+        this.idCandidatePersistent = idCandidatePersistent
+    }
+    async run(dispatch: Dispatch<ColumnDefinitionsContributionAction>): Promise<void> {
+        dispatch(new FinalizeColumnAssignmentStartAction())
+        try {
+            const rsp = await fetch(
+                config.api_path +
+                    `/contributions/${this.idCandidatePersistent}/column_assignment_complete`,
+                { credentials: 'include', method: 'POST' }
+            )
+            if (rsp.status == 200) {
+                dispatch(new FinalizeColumnAssignmentSuccessAction())
+            } else {
+                const json = await rsp.json()
+                dispatch(new FinalizeColumnAssignmentErrorAction(json['msg']))
+            }
+        } catch (e: unknown) {
+            dispatch(new FinalizeColumnAssignmentErrorAction(exceptionMessage(e)))
         }
     }
 }

@@ -144,7 +144,9 @@ test('can close error', async () => {
     const repeatPasswordInput = screen.getByLabelText('Repeat password')
     await user.type(repeatPasswordInput, 'password')
     const buttons = container.getElementsByTagName('button')
-    await user.click(buttons[2])
+    const closeButton = buttons[2]
+    expect(closeButton.textContent).toEqual('')
+    await user.click(closeButton)
     waitFor(() => {
         expect(registrationCallback.mock.calls).toEqual([])
         expect(closeRegistrationCallback.mock.calls.length).toEqual(0)

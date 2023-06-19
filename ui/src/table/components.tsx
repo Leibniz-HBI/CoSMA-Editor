@@ -26,18 +26,21 @@ export function RemoteDataTable(props: any) {
     )
 
     return (
-        <DataTable
-            tableProps={syncInfo}
-            tableCallbacks={{
-                ...localCallbacks,
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-                cellContentCallback: useCallback(localCallbacks.cellContentCallback, [
-                    syncInfo.entities,
-                    syncInfo.columnStates
-                ])
-            }}
-            submitValueCallback={remoteCallbacks.submitValueCallback}
-        />
+        <>
+            <DataTable
+                tableProps={syncInfo}
+                tableCallbacks={{
+                    ...localCallbacks,
+                    // eslint-disable-next-line react-hooks/exhaustive-deps
+                    cellContentCallback: useCallback(
+                        localCallbacks.cellContentCallback,
+                        [syncInfo.entities, syncInfo.columnStates]
+                    )
+                }}
+                submitValueCallback={remoteCallbacks.submitValueCallback}
+            />
+            <div id="portal" />
+        </>
     )
 }
 
@@ -90,7 +93,7 @@ export function DataTable(props: {
         }
     })
 
-    if (isLoading) {
+    if (isLoading || entities === undefined) {
         return (
             <div className="cosmae-table-container-outer">
                 <div className="cosmae-table-container-inner">

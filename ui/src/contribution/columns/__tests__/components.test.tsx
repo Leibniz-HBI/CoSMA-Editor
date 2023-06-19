@@ -7,6 +7,7 @@ import { ColumnDefinitionContribution } from '../state'
 import {
     ColumnDefinitionStep,
     ColumnDefinitionStepListItem,
+    CompleteColumnAssignmentButton,
     ContributionColumnAssignmentForm
 } from '../components'
 import { ColumnHierarchyContext } from '../../../column_menu/hooks'
@@ -55,13 +56,50 @@ describe('column definition step', () => {
                 })
             }),
             selectedColumnDefinition: new Remote(columnDefinitionActiveTest),
+            finalizeColumnAssignment: new Remote(false),
             createTabSelected: false
         })
         const { container } = render(<ColumnDefinitionStep />)
         screen.getByTestId('contribution-stepper')
         const listGroups = container.getElementsByClassName('list-group')
         expect(listGroups.length).toEqual(2)
+        screen.getByTestId('complete-column-assignment-button')
         screen.getByTestId('column-assignment-form-column')
+        const errorPopover = screen.queryByRole('tooltip')
+        expect(errorPopover).toBeNull()
+    })
+
+    test('show complete assignment error', () => {
+        ;(useColumnDefinitionsContribution as jest.Mock).mockReturnValue({
+            loadColumnDefinitionsContributionCallback: jest.fn(),
+            selectColumnDefinitionContribution: jest.fn(),
+            selectColumnCreationCallback: jest.fn(),
+            setExistingCallback: jest.fn(),
+            definitions: new Remote({
+                activeDefinitionsList: [columnDefinitionActiveTest],
+                discardedDefinitionsList: [],
+                contributionCandidate: new Contribution({
+                    name: 'test contribution',
+                    idPersistent: 'id-test',
+                    description: 'contribution for tests',
+                    anonymous: true,
+                    hasHeader: true,
+                    step: ContributionStep.ColumnsExtracted
+                })
+            }),
+            selectedColumnDefinition: new Remote(columnDefinitionActiveTest),
+            finalizeColumnAssignment: new Remote(
+                false,
+                false,
+                'column assignment finalization error'
+            ),
+            createTabSelected: false
+        })
+        render(<ColumnDefinitionStep />)
+        const popover = screen.getByRole('tooltip')
+        expect(popover.textContent).toEqual(
+            ['Error', 'column assignment finalization error'].join('')
+        )
     })
 })
 
@@ -254,5 +292,57 @@ describe('assignment-form', () => {
         )
         screen.getAllByRole('radio')[0].click()
         expect(setExistingMock.mock.calls).toEqual([['id_persistent']])
+    })
+})
+
+describe('complete column assignment button', () => {
+    test('default', async () => {
+        const onClick = jest.fn()
+        const remoteState = new Remote(false)
+        render(
+            <CompleteColumnAssignmentButton
+                onClick={onClick}
+                remoteState={remoteState}
+            />
+        )
+        const button = screen.getByRole('button')
+        expect(Array.from(button.classList)).toEqual(['btn', 'btn-outline-primary'])
+        expect(button.textContent).toEqual('Finalize Column Assignment')
+        await button.click()
+        expect(onClick.mock.calls.length).toEqual(1)
+    })
+    test('loading', async () => {
+        const onClick = jest.fn()
+        const remoteState = new Remote(false, true)
+        render(
+            <CompleteColumnAssignmentButton
+                onClick={onClick}
+                remoteState={remoteState}
+            />
+        )
+        const button = screen.getByRole('button')
+        expect(Array.from(button.classList)).toEqual([
+            'placeholder-wave',
+            'btn',
+            'btn-primary'
+        ])
+        expect(button.textContent).toEqual('Finalize Column Assignment')
+        await button.click()
+        expect(onClick.mock.calls.length).toEqual(0)
+    })
+    test('success', async () => {
+        const onClick = jest.fn()
+        const remoteState = new Remote(true)
+        render(
+            <CompleteColumnAssignmentButton
+                onClick={onClick}
+                remoteState={remoteState}
+            />
+        )
+        const button = screen.getByRole('button')
+        expect(Array.from(button.classList)).toEqual(['btn', 'btn-outline-primary'])
+        expect(button.textContent).toEqual('Column assignment successfully finalized')
+        await button.click()
+        expect(onClick.mock.calls.length).toEqual(0)
     })
 })

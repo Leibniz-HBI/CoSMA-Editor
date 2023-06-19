@@ -47,7 +47,7 @@ export function tableReducer(state: TableState, action: TableAction) {
                     new ColumnState({
                         name: state.columnStates[col_idx].name,
                         isLoading: false,
-                        cellContents: state.entities.map((idEntity) =>
+                        cellContents: state.entities?.map((idEntity) =>
                             idEntity in action.columnData
                                 ? action.columnData[idEntity]
                                 : []

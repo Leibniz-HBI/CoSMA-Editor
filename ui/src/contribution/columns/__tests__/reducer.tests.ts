@@ -2,6 +2,10 @@ import { Remote } from '../../../util/state'
 import { Contribution, ContributionStep } from '../../state'
 import {
     ColumnDefinitionContributionSelectAction,
+    FinalizeColumnAssignmentClearErrorAction,
+    FinalizeColumnAssignmentErrorAction,
+    FinalizeColumnAssignmentStartAction,
+    FinalizeColumnAssignmentSuccessAction,
     LoadColumnDefinitionsContributionErrorAction,
     LoadColumnDefinitionsContributionStartAction,
     LoadColumnDefinitionsContributionSuccessAction,
@@ -421,6 +425,60 @@ describe('load contribution column definitions', () => {
                 discardedColumns,
                 contributionCandidateTest1
             )
+        )
+        expect(endState).toEqual(expectedState)
+    })
+})
+describe('finalize column assignment', () => {
+    test('start', () => {
+        const initialState = new ColumnDefinitionsContributionState({
+            finalizeColumnAssignment: new Remote(true)
+        })
+        const expectedState = new ColumnDefinitionsContributionState({
+            finalizeColumnAssignment: new Remote(false, true)
+        })
+        const endState = columnDefinitionContributionReducer(
+            initialState,
+            new FinalizeColumnAssignmentStartAction()
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test('success', () => {
+        const initialState = new ColumnDefinitionsContributionState({
+            finalizeColumnAssignment: new Remote(false, true)
+        })
+        const expectedState = new ColumnDefinitionsContributionState({
+            finalizeColumnAssignment: new Remote(true)
+        })
+        const endState = columnDefinitionContributionReducer(
+            initialState,
+            new FinalizeColumnAssignmentSuccessAction()
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test('error', () => {
+        const initialState = new ColumnDefinitionsContributionState({
+            finalizeColumnAssignment: new Remote(false, true)
+        })
+        const expectedState = new ColumnDefinitionsContributionState({
+            finalizeColumnAssignment: new Remote(false, false, 'error')
+        })
+        const endState = columnDefinitionContributionReducer(
+            initialState,
+            new FinalizeColumnAssignmentErrorAction('error')
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test(' clear error', () => {
+        const initialState = new ColumnDefinitionsContributionState({
+            finalizeColumnAssignment: new Remote(false, false, 'error')
+        })
+        const expectedState = new ColumnDefinitionsContributionState({
+            finalizeColumnAssignment: new Remote(false)
+        })
+        const endState = columnDefinitionContributionReducer(
+            initialState,
+            new FinalizeColumnAssignmentClearErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })

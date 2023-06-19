@@ -133,7 +133,7 @@ export type LocalTableCallbacks = {
     clearSubmitValueErrorCallback: VoidFunction
 }
 export type TableDataProps = {
-    entities: string[]
+    entities?: string[]
     columnStates: ColumnState[]
     columnIndices: Map<string, number>
     frozenColumns: number
@@ -155,7 +155,7 @@ export function useRemoteTableData(
     return [
         {
             loadTableDataCallback: () => {
-                if (state.entities.length > 0 || isLoading) {
+                if (state.entities !== undefined || isLoading) {
                     return
                 }
                 dispatch(new GetTableAsyncAction()).then(async () => {
@@ -177,7 +177,7 @@ export function useRemoteTableData(
                 })
             },
             submitValueCallback: (cell, newValue) => {
-                if (state.isSubmittingValues) {
+                if (state.entities === undefined || state.isSubmittingValues) {
                     return
                 }
                 const [colIdx, rowIdx] = cell

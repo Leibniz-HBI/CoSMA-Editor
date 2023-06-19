@@ -6,7 +6,7 @@ export class TableState {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     columnStates: ColumnState[]
     columnIndices: Map<string, number>
-    entities: string[]
+    entities?: string[]
     entityIndices: Map<string, number>
     isLoading?: boolean
     showColumnAddMenu: boolean
@@ -20,7 +20,7 @@ export class TableState {
     constructor({
         columnStates: columnStates = [],
         columnIndices: columnIndices = new Map<string, number>(),
-        entities = [],
+        entities = undefined,
         entityIndices = new Map<string, number>(),
         isLoading = undefined,
         showColumnAddMenu = false,

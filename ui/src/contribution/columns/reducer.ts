@@ -9,7 +9,11 @@ import {
     SetColumnDefinitionFormTabAction,
     PatchColumnDefinitionContributionStartAction,
     PatchColumnDefinitionContributionSuccessAction,
-    PatchColumnDefinitionContributionErrorAction
+    PatchColumnDefinitionContributionErrorAction,
+    FinalizeColumnAssignmentStartAction,
+    FinalizeColumnAssignmentSuccessAction,
+    FinalizeColumnAssignmentErrorAction,
+    FinalizeColumnAssignmentClearErrorAction
 } from './actions'
 import {
     ColumnDefinitionContribution,
@@ -145,6 +149,32 @@ export function columnDefinitionContributionReducer(
                 action.active[0] ?? action.discarded[0] ?? undefined
             ),
             createTabSelected: false
+        })
+    }
+    if (action instanceof FinalizeColumnAssignmentStartAction) {
+        return new ColumnDefinitionsContributionState({
+            ...state,
+            finalizeColumnAssignment: new Remote(false, true)
+        })
+    }
+    if (action instanceof FinalizeColumnAssignmentSuccessAction) {
+        return new ColumnDefinitionsContributionState({
+            ...state,
+            finalizeColumnAssignment: state.finalizeColumnAssignment.success(true)
+        })
+    }
+    if (action instanceof FinalizeColumnAssignmentErrorAction) {
+        return new ColumnDefinitionsContributionState({
+            ...state,
+            finalizeColumnAssignment: state.finalizeColumnAssignment.withError(
+                action.msg
+            )
+        })
+    }
+    if (action instanceof FinalizeColumnAssignmentClearErrorAction) {
+        return new ColumnDefinitionsContributionState({
+            ...state,
+            finalizeColumnAssignment: state.finalizeColumnAssignment.withoutError()
         })
     }
     if (action instanceof LoadColumnDefinitionsContributionErrorAction) {

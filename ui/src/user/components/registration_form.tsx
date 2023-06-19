@@ -171,7 +171,7 @@ export function RegistrationFormBody({
                 </Col>
                 <Col sm="auto" className="align-self-center">
                     <Button
-                        variant="outline-secondary"
+                        variant="outline-primary"
                         onClick={closeRegistrationCallback}
                     >
                         Login

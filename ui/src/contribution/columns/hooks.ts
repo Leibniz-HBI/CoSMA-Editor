@@ -1,9 +1,11 @@
 import { Remote, useThunkReducer } from '../../util/state'
 import {
+    FinalizeColumnAssignmentClearErrorAction,
     ColumnDefinitionContributionSelectAction,
     SetColumnDefinitionFormTabAction
 } from './actions'
 import {
+    FinalizeColumnAssignmentAction,
     LoadColumnDefinitionsContributionAction,
     PatchColumnDefinitionContributionAction
 } from './async_actions'
@@ -25,6 +27,9 @@ export type ColumnDefinitionsContributionProps = {
     definitions: Remote<ColumnsTriple | undefined>
     selectedColumnDefinition: Remote<ColumnDefinitionContribution | undefined>
     createTabSelected: boolean
+    finalizeColumnAssignmentCallback: VoidFunction
+    finalizeColumnAssignment: Remote<boolean>
+    clearFinalizeColumnAssignmentErrorCallback: VoidFunction
 }
 export function useColumnDefinitionsContribution(
     idPersistent: string
@@ -77,6 +82,15 @@ export function useColumnDefinitionsContribution(
         },
         definitions: state.columns,
         selectedColumnDefinition: state.selectedColumnDefinition,
-        createTabSelected: state.createTabSelected
+        createTabSelected: state.createTabSelected,
+        finalizeColumnAssignmentCallback: () => {
+            if (state.finalizeColumnAssignment.isLoading) {
+                return
+            }
+            dispatch(new FinalizeColumnAssignmentAction(idPersistent))
+        },
+        finalizeColumnAssignment: state.finalizeColumnAssignment,
+        clearFinalizeColumnAssignmentErrorCallback: () =>
+            dispatch(new FinalizeColumnAssignmentClearErrorAction())
     }
 }

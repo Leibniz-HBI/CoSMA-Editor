@@ -1,10 +1,12 @@
 $primary: #197374;
 $secondary: #eceff4;
+$red: #ea5e5f;
 
 $theme-colors: (
     'primary': $primary,
     'secondary': $secondary,
-    'light': $secondary
+    'light': $secondary,
+    'danger': $red
 );
 
 $component-active-color: $secondary;

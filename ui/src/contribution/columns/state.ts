@@ -47,19 +47,23 @@ export class ColumnDefinitionsContributionState {
     columns: Remote<ColumnsTriple | undefined>
     selectedColumnDefinition: Remote<ColumnDefinitionContribution | undefined>
     createTabSelected: boolean
+    finalizeColumnAssignment: Remote<boolean>
 
     constructor({
         columns = new Remote(undefined),
         selectedColumnDefinition = new Remote(undefined),
-        createTabSelected = false
+        createTabSelected = false,
+        finalizeColumnAssignment = new Remote(false)
     }: {
         columns?: Remote<ColumnsTriple | undefined>
         selectedColumnDefinition?: Remote<ColumnDefinitionContribution | undefined>
         createTabSelected?: boolean
         existingColumnSelectionEntries?: Remote<ColumnSelectionEntry[]>
+        finalizeColumnAssignment?: Remote<boolean>
     }) {
         this.columns = columns
         this.selectedColumnDefinition = selectedColumnDefinition
         this.createTabSelected = createTabSelected
+        this.finalizeColumnAssignment = finalizeColumnAssignment
     }
 }

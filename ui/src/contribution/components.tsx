@@ -93,7 +93,10 @@ export function ContributionStepper({
 }) {
     const navigate = useNavigate()
     let maxIdx = 0
-    if (step === ContributionStep.ColumnsExtracted) {
+    if (
+        step === ContributionStep.ColumnsExtracted ||
+        step === ContributionStep.ColumnsAssigned
+    ) {
         maxIdx = 1
     }
     return (
