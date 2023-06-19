@@ -36,7 +36,7 @@ def contribution_other(user1):
         anonymous=False,
         has_header=True,
         file_name=c.file_name_test1,
-        state=ContributionCandidate.MERGED,
+        state=ContributionCandidate.UPLOADED,
         created_by=user1,
     )
 

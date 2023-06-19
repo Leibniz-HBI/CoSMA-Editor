@@ -1,8 +1,6 @@
 "ORM models for tags of contribution candidates."
 from django.db import models
 
-from cosmae.contribution.models_django import ContributionCandidate
-
 
 class TagDefinitionContribution(models.Model):
     "ORM Model for newly added contribution tag definitions"
@@ -10,13 +8,13 @@ class TagDefinitionContribution(models.Model):
     id_persistent = models.UUIDField()
     id_existing_persistent = models.TextField(default=None, blank=True, null=True)
     contribution_candidate = models.ForeignKey(
-        ContributionCandidate, on_delete=models.CASCADE
+        "ContributionCandidate", on_delete=models.CASCADE
     )
     index_in_file = models.IntegerField()
     discard = models.BooleanField(default=False)
 
     @classmethod
-    def get_by_candidate(cls, candidate: ContributionCandidate):
+    def get_by_candidate(cls, candidate):
         "Get the tag definitions for a specific contribution candidate"
         return list(
             TagDefinitionContribution.objects.filter(  # pylint: disable=no-member
@@ -25,9 +23,7 @@ class TagDefinitionContribution(models.Model):
         )
 
     @classmethod
-    def get_by_id_persistent(
-        cls, id_persistent: str, contribution_candidate: ContributionCandidate
-    ):
+    def get_by_id_persistent(cls, id_persistent: str, contribution_candidate):
         "Get a tag contribution tag definition by id_persistent and user"
         return TagDefinitionContribution.objects.filter(  # pylint: disable=no-member
             id_persistent=id_persistent, contribution_candidate=contribution_candidate

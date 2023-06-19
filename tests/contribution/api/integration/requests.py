@@ -35,3 +35,11 @@ def patch_contribution(url, id_persistent, patch_data, cookies=None):
         cookies=cookies,
         timeout=900,
     )
+
+
+def post_column_assignment_complete(url, id_persistent, cookies=None):
+    return requests.post(
+        url + f"/cosmae/api/contributions/{id_persistent}/column_assignment_complete",
+        cookies=cookies,
+        timeout=900,
+    )

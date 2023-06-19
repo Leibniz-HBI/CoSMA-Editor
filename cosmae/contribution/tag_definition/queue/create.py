@@ -1,23 +1,15 @@
-"Queue jobs for processing contribution candidates."
-from os.path import join
+"Queue jobs for creating contribution candidates."
 from uuid import uuid4
 
-import django_rq
-from django.conf import settings
 from django.db import transaction
 from django.db.utils import OperationalError
-from pandas import read_csv
 
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import (
     TagDefinitionContribution,
     TagInstanceContribution,
 )
-
-
-def mk_extract_tags_group_name(contribution: ContributionCandidate):
-    "Create a group name for extracting csvs."
-    return "extract_tags_" + str(contribution.id_persistent)
+from cosmae.contribution.tag_definition.queue.util import read_csv_of_candidate
 
 
 def read_csv_head(id_contribution_persistent):
@@ -36,15 +28,9 @@ def read_csv_head(id_contribution_persistent):
         ).delete()
         # set state correctly
         if contribution.state != ContributionCandidate.UPLOADED:
-            contribution.state = ContributionCandidate.UPLOADED
-            contribution.save()
+            return
         # start extracting tags
-        pth = join(settings.CONTRIBUTION_DIRECTORY, contribution.file_name)
-        if contribution.has_header:
-            header_param = 0
-        else:
-            header_param = None
-        data_frame = read_csv(pth, header=header_param, nrows=10)
+        data_frame = read_csv_of_candidate(contribution, nrows=10)
         definitions = []
         for idx, series_name in enumerate(data_frame):
             uuid = str(uuid4())
@@ -63,15 +49,3 @@ def read_csv_head(id_contribution_persistent):
                 )
         contribution.state = ContributionCandidate.COLUMNS_EXTRACTED
         contribution.save()
-
-
-def dispatch_read_csv_head(
-    sender,
-    instance,
-    created,
-    update_fields,
-    **kwargs  # pylint: disable=unused-argument
-):
-    "Queues the task for extracting tags from columns."
-    if created or (update_fields and "has_header" in update_fields):
-        django_rq.enqueue(read_csv_head, str(instance.id_persistent))

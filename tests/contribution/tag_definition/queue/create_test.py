@@ -4,20 +4,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.contribution.tag_definition import queue as q
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
-
-
-def test_mk_extract_tags_group_name(contribution_user):
-    group_name = q.mk_extract_tags_group_name(contribution_user)
-    assert group_name == "extract_tags_a02649c9-094f-40fd-8403-06c2b9017553"
+from cosmae.contribution.tag_definition.queue.create import read_csv_head
 
 
 def test_deletes_existing_tag_definition(contribution_tag_def):
     conf_mock = MagicMock
     conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/"
-    with patch("cosmae.contribution.tag_definition.queue.settings", conf_mock):
-        q.read_csv_head(contribution_tag_def.contribution_candidate.id_persistent)
+    with patch("cosmae.contribution.tag_definition.queue.util.settings", conf_mock):
+        read_csv_head(contribution_tag_def.contribution_candidate.id_persistent)
     with pytest.raises(
         TagDefinitionContribution.DoesNotExist  # pylint: disable=no-member
     ):
@@ -29,27 +24,11 @@ def test_deletes_existing_tag_definition(contribution_tag_def):
 def test_extracts_without_header(contribution_user):
     conf_mock = MagicMock
     conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/"
-    with patch("cosmae.contribution.tag_definition.queue.settings", conf_mock):
-        q.read_csv_head(contribution_user.id_persistent)
+    with patch("cosmae.contribution.tag_definition.queue.util.settings", conf_mock):
+        read_csv_head(contribution_user.id_persistent)
     tag_defs = TagDefinitionContribution.objects.all()  # pylint: disable=no-member
     for idx, tag_def in enumerate(tag_defs):
         assert tag_def.name == str(idx)
-
-
-def test_extracts_with_header(contribution_other):
-    conf_mock = MagicMock
-    conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/"
-    with patch("cosmae.contribution.tag_definition.queue.settings", conf_mock):
-        q.read_csv_head(contribution_other.id_persistent)
-    tag_defs = TagDefinitionContribution.objects.all()  # pylint: disable=no-member
-    for idx, tag_def in enumerate(tag_defs):
-        assert tag_def.name == _expected_tag_defs[idx]
-    contribution_candidate = (
-        ContributionCandidate.objects.get(  # pylint: disable=no-member
-            id_persistent=contribution_other.id_persistent
-        )
-    )
-    assert contribution_candidate.state == ContributionCandidate.COLUMNS_EXTRACTED
 
 
 _expected_tag_defs = [
@@ -84,3 +63,19 @@ _expected_tag_defs = [
     "modified_at",
     "modified_by",
 ]
+
+
+def test_extracts_with_header(contribution_other):
+    conf_mock = MagicMock
+    conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/"
+    with patch("cosmae.contribution.tag_definition.queue.util.settings", conf_mock):
+        read_csv_head(contribution_other.id_persistent)
+    tag_defs = TagDefinitionContribution.objects.all()  # pylint: disable=no-member
+    for idx, tag_def in enumerate(tag_defs):
+        assert tag_def.name == _expected_tag_defs[idx]
+    contribution_candidate = (
+        ContributionCandidate.objects.get(  # pylint: disable=no-member
+            id_persistent=contribution_other.id_persistent
+        )
+    )
+    assert contribution_candidate.state == ContributionCandidate.COLUMNS_EXTRACTED

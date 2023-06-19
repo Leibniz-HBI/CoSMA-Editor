@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.db import DatabaseError
+from django.http import HttpRequest
 from ninja import File, Form, Router, UploadedFile
 
 from cosmae.contribution.models_api import (
@@ -142,6 +143,50 @@ def contribution_patch(
         return 404, ApiError(msg="Contribution does not exist.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not patch contribution")
+
+
+@router.post(
+    "{id_persistent}/column_assignment_complete",
+    response={200: None, 400: ApiError, 401: ApiError, 404: ApiError, 500: ApiError},
+)
+def post_complete_assignment(request: HttpRequest, id_persistent: str):
+    "Method for completing the column assignment"
+    # pylint: disable=too-many-return-statements
+    try:
+        user = check_user(request)
+        try:
+            contribution = ContributionCandidateDb.by_id_persistent(
+                id_persistent, user
+            ).get()
+        except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
+            return 404, ApiError(msg="Contribution candidate does not exist.")
+        try:
+            contribution.complete_tag_assignment()
+            return 200, None
+        except ContributionCandidateDb.MissingRequiredAssignmentsException as exc:
+            return 400, ApiError(
+                msg="At least one tag has to be assigned to one of the following values: "
+                f"{' '.join(exc.required_fields)}."
+            )
+        except ContributionCandidateDb.InvalidTagAssignmentException as exc:
+            return 400, ApiError(
+                msg="The following tags are neither discarded nor assigned to existing: "
+                f"{', '.join(exc.invalid_column_names_list)}."
+            )
+        except (ContributionCandidateDb.DuplicateAssignmentException) as exc:
+            return 400, ApiError(
+                msg="Assignment to existing tags has to be unique. "
+                "Please check the following tags: "
+                f"{', '.join(exc.duplicate_assignments_list)}."
+            )
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    except DatabaseError as exc:
+        return 500, ApiError(
+            msg="Could not complete the column assignment due to a database error."
+        )
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not complete the column assignment.")
 
 
 def mk_initial_contribution_candidate(
