@@ -7,6 +7,7 @@ from django.db import DatabaseError
 from django.http import HttpRequest
 from ninja import File, Form, Router, UploadedFile
 
+from cosmae.contribution.entity.api import router as entity_router
 from cosmae.contribution.models_api import (
     ContributionCandidate,
     ContributionCandidatePatchRequest,
@@ -25,6 +26,9 @@ from cosmae.util.auth import check_user, cosmae_auth
 
 router = Router()
 router.add_router("/{id_contribution_persistent}/tags", tag_router, auth=cosmae_auth)
+router.add_router(
+    "/{id_contribution_persistent}/entities", entity_router, auth=cosmae_auth
+)
 
 ALLOWED_CONTENT_TYPES = ["text/csv"]
 
@@ -187,6 +191,33 @@ def post_complete_assignment(request: HttpRequest, id_persistent: str):
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not complete the column assignment.")
+
+
+@router.post(
+    "{id_persistent}/entity_assignment_complete",
+    response={200: None, 401: ApiError, 404: ApiError, 500: ApiError},
+)
+def post_complete_entity_assignment(request: HttpRequest, id_persistent: str):
+    "API method to mark an entity assignment as complete."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+
+    try:
+        contribution_candidate = (
+            ContributionCandidateDb.objects.get(  # pylint: disable=no-member
+                id_persistent=id_persistent, created_by=user
+            )
+        )
+        contribution_candidate.complete_entity_assignment()
+        return 200, None
+    except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Contribution candidate does not exist.")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(
+            msg="Could not complete entity assignment for the contribution."
+        )
 
 
 def mk_initial_contribution_candidate(

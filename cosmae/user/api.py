@@ -1,5 +1,6 @@
 "API endpoints for handling user management."
 from typing import List, Union
+from uuid import uuid4
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import AnonymousUser, Group
@@ -28,10 +29,18 @@ class LoginResponse(Schema):
     # pylint: disable=too-few-public-methods
     "API model for response to login requests"
     user_name: str
+    id_persistent: str
     names_personal: str
     names_family: str
     email: str
     columns: List[TagDefinition]
+
+
+class PublicUserInfo(Schema):
+    # pylint: disable=too-few-public-methods
+    "API model for public user information."
+    user_name: str
+    id_persistent: str
 
 
 class RegisterRequest(Schema):
@@ -91,6 +100,7 @@ def register_post(_, registration_info: RegisterRequest):
             email=registration_info.email,
             password=registration_info.password,
             first_name=registration_info.names_personal,
+            id_persistent=uuid4(),
         )
         if user.last_name and user.last_name != "":
             user.last_name = registration_info.names_family
@@ -109,8 +119,16 @@ def user_db_to_login_response(user):
     "Converts a django user to a login response."
     return LoginResponse(
         user_name=user.get_username(),
+        id_persistent=str(user.id_persistent),
         names_personal=user.first_name,
         names_family=user.last_name,
         email=user.email,
         columns=[],
+    )
+
+
+def user_db_to_public_user_info(user):
+    "Convert a django user to a public user info"
+    return PublicUserInfo(
+        user_name=user.get_username(), id_persistent=str(user.id_persistent)
     )

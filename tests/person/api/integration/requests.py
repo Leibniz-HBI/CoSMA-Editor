@@ -17,15 +17,6 @@ def post_persons(url, persons, cookies=None):
     )
 
 
-def get_count(url, cookies=None):
-    return requests.get(
-        urljoin(url, "/cosmae/api/persons/count"),
-        # headers={"Content-Type": "application/json"},
-        cookies=cookies,
-        timeout=9,
-    )
-
-
 def post_chunk(url, offset, limit, cookies=None):
     return requests.post(
         urljoin(url, "cosmae/api/persons/chunk"),

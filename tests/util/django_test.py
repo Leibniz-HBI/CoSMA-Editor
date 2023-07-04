@@ -22,7 +22,7 @@ def test_store_multiple():
 
     entities_test = [entity_test_0, entity_test_1, entity_test_2]
     du.save_many_atomic(entities_test)
-    assert Entity.get_count() == 3
+    assert len(Entity.objects.all()) == 3  # pylint: disable=no-member
 
 
 @pytest.mark.django_db
@@ -48,4 +48,4 @@ def test_does_rollback():
 
     with pytest.raises(IntegrityError):
         du.save_many_atomic(entities_test)
-    assert Entity.get_count() == 0
+    assert len(Entity.objects.all()) == 0  # pylint: disable=no-member

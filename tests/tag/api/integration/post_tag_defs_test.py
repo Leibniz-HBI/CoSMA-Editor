@@ -88,6 +88,22 @@ def test_name_exists(auth_server, root_tag_def):
     )
 
 
+def test_change_type(auth_server, root_tag_def):
+    live_server, cookies = auth_server
+    req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
+    assert req.status_code == 200
+    created = req.json()["tag_definitions"][0]
+    id_persistent = created["id_persistent"]
+    version = created["version"]
+    new_tag_def = root_tag_def.copy()
+    new_tag_def["id_persistent"] = id_persistent
+    new_tag_def["version"] = version
+    new_tag_def["type"] = "FLOAT"
+    req = r.post_tag_def(live_server.url, new_tag_def, cookies=cookies)
+    assert req.status_code == 200
+    assert req.json()["tag_definitions"][0]["owner"] == "test-user"
+
+
 def test_no_parent(auth_server, child_tag_def):
     live_server, cookies = auth_server
     child_tag_def["id_parent_persistent"] = "unknown_id_persistent_test"
@@ -105,25 +121,6 @@ def test_unknown_type(auth_server, root_tag_def):
     req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
     assert req.status_code == 400
     assert req.json()["msg"] == "Type UNKNOWN is not known."
-
-
-def test_no_child_tag_allowed(auth_server, child_tag_def):
-    live_server, cookies = auth_server
-    req = r.post_tag_def(live_server.url, child_tag_def, cookies=cookies)
-    assert req.status_code == 200
-    id_parent_persistent = req.json()["tag_definitions"][0]["id_persistent"]
-    invalid_child_tag_def = {
-        "name": "some child",
-        "type": "FLOAT",
-        "id_parent_persistent": id_parent_persistent,
-    }
-    req = r.post_tag_def(live_server.url, invalid_child_tag_def, cookies=cookies)
-    assert req.status_code == 400
-    assert (
-        req.json()["msg"]
-        == f"Tag definition with id_persistent {id_parent_persistent} "
-        "is not allowed to have child tags."
-    )
 
 
 def test_bad_db(auth_server, root_tag_def):

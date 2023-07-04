@@ -5,11 +5,13 @@ from uuid import uuid4
 
 import pandas as pd
 import pytest
+from django.db.models import Subquery
 
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue.ingest import ingest_values_from_csv
-from cosmae.person.models_django import Person
+from cosmae.entity.models_django import Entity
+from cosmae.merge_request.models_django import MergeRequest
 from cosmae.tag.models_django import TagDefinition, TagInstance
 
 
@@ -93,7 +95,7 @@ def test_ingest_columns_names_only(
     instances = TagInstance.objects.all()  # pylint: disable=no-member
     assert len(instances) == 0
     persons = set(
-        Person.objects.values_list(  # pylint: disable=no-member
+        Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
         )
     )
@@ -104,18 +106,27 @@ def test_ingest_columns_names_only(
         )
         .get()
         .state
-        == ContributionCandidate.MERGED
+        == ContributionCandidate.VALUES_EXTRACTED
     )
 
 
-def get_tag_value(entity_name, id_tag_persistent):
+def get_tag_value_by_mr(entity_name, id_tag_persistent):
 
+    origin_tag = TagDefinition.objects.filter(  # pylint: disable=no-member
+        id_persistent=Subquery(
+            MergeRequest.objects.filter(  # pylint: disable=no-member
+                id_destination_persistent=id_tag_persistent
+            ).values_list("id_origin_persistent", flat=True)
+        )
+    ).get()
     return (
         TagInstance.objects.filter(  # pylint: disable=no-member
-            id_entity_persistent=Person.objects.filter(display_txt=entity_name)
+            id_entity_persistent=Entity.objects.filter(  # pylint: disable=no-member
+                display_txt=entity_name
+            )
             .get()
             .id_persistent,
-            id_tag_definition_persistent=id_tag_persistent,
+            id_tag_definition_persistent=origin_tag.id_persistent,
         )
         .get()
         .value
@@ -133,13 +144,13 @@ def test_ingest_inner(
     with patch("cosmae.contribution.tag_definition.queue.util.read_csv", csv_mock):
         ingest_values_from_csv(contribution_other.id_persistent)
     persons = set(
-        Person.objects.values_list(  # pylint: disable=no-member
+        Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
         )
     )
     assert persons == {"name_0", "name_1"}
-    assert get_tag_value("name_0", verified_tag_def.id_persistent) == "true"
-    assert get_tag_value("name_1", verified_tag_def.id_persistent) == "false"
+    assert get_tag_value_by_mr("name_0", verified_tag_def.id_persistent) == "true"
+    assert get_tag_value_by_mr("name_1", verified_tag_def.id_persistent) == "false"
     instances = TagInstance.objects.all()  # pylint: disable=no-member
     assert len(instances) == 2
     assert (
@@ -148,7 +159,7 @@ def test_ingest_inner(
         )
         .get()
         .state
-        == ContributionCandidate.MERGED
+        == ContributionCandidate.VALUES_EXTRACTED
     )
 
 
@@ -163,13 +174,13 @@ def test_ingest_string(
     with patch("cosmae.contribution.tag_definition.queue.util.read_csv", csv_mock):
         ingest_values_from_csv(contribution_other.id_persistent)
     persons = set(
-        Person.objects.values_list(  # pylint: disable=no-member
+        Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
         )
     )
     assert persons == {"name_0", "name_1"}
-    assert get_tag_value("name_0", party_tag_def.id_persistent) == "party_0"
-    assert get_tag_value("name_1", party_tag_def.id_persistent) == "party_1"
+    assert get_tag_value_by_mr("name_0", party_tag_def.id_persistent) == "party_0"
+    assert get_tag_value_by_mr("name_1", party_tag_def.id_persistent) == "party_1"
     instances = TagInstance.objects.all()  # pylint: disable=no-member
     assert len(instances) == 2
     assert (
@@ -178,5 +189,5 @@ def test_ingest_string(
         )
         .get()
         .state
-        == ContributionCandidate.MERGED
+        == ContributionCandidate.VALUES_EXTRACTED
     )

@@ -1,7 +1,10 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+from datetime import datetime
+
 import pytest
 
 import tests.entity.common as c
+from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
 from cosmae.exception import DbObjectExistsException, EntityUpdatedException
 
@@ -92,21 +95,6 @@ def test_no_update_on_older_version(entity0, updated_entity0):
 
 
 @pytest.mark.django_db
-def test_count_updated_correctly(entity0):
-    entity0.save()
-    prev = entity0
-    for i in range(10):
-        prev, _ = Entity.change_or_create(
-            display_txt=f"display_test_{i}",
-            time_edit=c.time_edit_test_0,
-            id_persistent=c.id_persistent_test_0,
-            version=prev.id,
-        )
-        prev.save()
-    assert Entity.get_count() == 1
-
-
-@pytest.mark.django_db
 def test_chunk_correctly(entity0, updated_entity0):
     entity0.save()
     updated_entity0.save()
@@ -147,5 +135,33 @@ def test_different_version(entity0):
         id_persistent=entity0.id_persistent,
         time_edit=entity0.time_edit,
         previous_version=entity0,
+        display_txt=entity0.display_txt,
     )
     assert not entity0.check_different_before_save(entity1)
+
+
+@pytest.mark.django_db
+def test_keeps_contribution_candidate(entity0, user):
+    contribution = ContributionCandidate.objects.create(  # pylint: disable=no-member
+        name="contribution entity test",
+        description="contribution objects used in entity tests",
+        id_persistent="9c6b5603-6fde-42f3-92a9-7d125449af43",
+        anonymous=True,
+        has_header=True,
+        created_by=user,
+        file_name="test.csv",
+        state=ContributionCandidate.COLUMNS_EXTRACTED,
+    )
+    entity0.contribution_candidate = contribution
+    entity0.save()
+
+    changed, do_write = Entity.change_or_create(
+        id_persistent=entity0.id_persistent,
+        time_edit=datetime.utcnow(),
+        version=entity0.id,
+        display_txt="entity for contribution test",
+    )
+    assert (
+        str(changed.contribution_candidate.id_persistent) == contribution.id_persistent
+    )
+    assert do_write

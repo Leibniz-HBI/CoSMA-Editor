@@ -4,18 +4,21 @@ from typing import List, Optional
 from uuid import uuid4
 
 from django.db import DatabaseError, IntegrityError
+from django.http import HttpRequest
 from ninja import Router, Schema
 
 from cosmae.exception import (
     ApiError,
     DbObjectExistsException,
     EntityUpdatedException,
-    NoChildTagDefintionsAllowedException,
     NoParentTagException,
+    NotAuthenticatedException,
     TagDefinitionExistsException,
     ValidationException,
 )
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
+from cosmae.util import CosmaeUser
+from cosmae.util.auth import check_user
 from cosmae.util.django import save_many_atomic
 
 router = Router()
@@ -42,6 +45,7 @@ class TagDefinition(Schema):
     name: str
     version: Optional[int]
     type: str
+    owner: Optional[str]
 
 
 class TagDefinitionList(Schema):
@@ -57,25 +61,23 @@ class PostGetChildrenRequest(Schema):
 
 
 @router.post("", response={200: TagDefinitionList, 400: ApiError, 500: ApiError})
-def post_tag_definitions(_, tag_definition_list: TagDefinitionList):
+def post_tag_definitions(request: HttpRequest, tag_definition_list: TagDefinitionList):
     "Add tag definitions."
     # pylint: disable=too-many-return-statements
     now = datetime.utcnow()
     tag_def_apis = tag_definition_list.tag_definitions
     try:
+        user = check_user(request)
         tag_def_dbs = [
-            tag_definition_api_to_db(tag_def, now) for tag_def in tag_def_apis
+            tag_definition_api_to_db(tag_def, user, now) for tag_def in tag_def_apis
         ]
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
     except ValidationException as exc:
         return 400, ApiError(msg=str(exc))
     except NoParentTagException as exc:
         return 400, ApiError(
             msg=f"There is no tag definition with id_persistent {exc.id_persistent}."
-        )
-    except NoChildTagDefintionsAllowedException as exc:
-        return 400, ApiError(
-            msg=f"Tag definition with id_persistent {exc.id_persistent} "
-            "is not allowed to have child tags."
         )
     except TagDefinitionExistsException as exc:
         return 400, ApiError(
@@ -127,7 +129,7 @@ def post_get_tag_definition_children(_, post_children_request: PostGetChildrenRe
 
 
 def tag_definition_api_to_db(
-    tag_definition: TagDefinition, time_edit: datetime
+    tag_definition: TagDefinition, owner: CosmaeUser, time_edit: datetime
 ) -> TagDefinitionDb:
     "Convert a tag definition from API to database model."
     if tag_definition.id_persistent:
@@ -151,15 +153,22 @@ def tag_definition_api_to_db(
         time_edit=time_edit,
         name=tag_definition.name,
         type=_tag_type_mapping_api_to_db[tag_definition.type],
+        owner=owner,
     )
 
 
 def tag_definition_db_to_api(tag_definition: TagDefinitionDb) -> TagDefinition:
-    "Convert a tag defintion from database to API model."
+    "Convert a tag definition from database to API model."
+    owner = tag_definition.owner
+    if owner is None:
+        username = None
+    else:
+        username = owner.get_username()
     return TagDefinition(
         id_persistent=tag_definition.id_persistent,
         id_parent_persistent=tag_definition.id_parent_persistent,
         name=tag_definition.name,
         version=tag_definition.id,
         type=_tag_type_mapping_db_to_api[tag_definition.type],
+        owner=username,
     )

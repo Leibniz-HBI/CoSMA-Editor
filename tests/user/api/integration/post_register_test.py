@@ -1,5 +1,6 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
 
 from django.db import DatabaseError
 
@@ -39,15 +40,18 @@ def test_same_email(auth_server):
 
 def test_same_names(auth_server):
     live_server, _ = auth_server
-    rsp = post_register(
-        live_server.url,
-        {
-            "user_name": "other",
-            "email": "other@test.org",
-            "names_personal": c.test_names_personal,
-            "password": c.test_password,
-        },
-    )
+    uuid = uuid4()
+    uuidMock = MagicMock(return_value=uuid)
+    with patch("cosmae.user.api.uuid4", uuidMock):
+        rsp = post_register(
+            live_server.url,
+            {
+                "user_name": "other",
+                "email": "other@test.org",
+                "names_personal": c.test_names_personal,
+                "password": c.test_password,
+            },
+        )
     assert rsp.status_code == 200
     assert rsp.json() == {
         "user_name": "other",
@@ -55,6 +59,7 @@ def test_same_names(auth_server):
         "names_personal": c.test_names_personal,
         "names_family": "",
         "columns": [],
+        "id_persistent": str(uuid),
     }
 
 

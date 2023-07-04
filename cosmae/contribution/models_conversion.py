@@ -8,6 +8,7 @@ _contribution_state_mapping_db_to_api = {
     ContributionCandidateDb.UPLOADED: "UPLOADED",
     ContributionCandidateDb.COLUMNS_EXTRACTED: "COLUMNS_EXTRACTED",
     ContributionCandidateDb.COLUMNS_ASSIGNED: "COLUMNS_ASSIGNED",
+    ContributionCandidateDb.VALUES_EXTRACTED: "VALUES_EXTRACTED",
     ContributionCandidateDb.ENTITIES_MATCHED: "ENTITIES_MATCHED",
     ContributionCandidateDb.ENTITIES_ASSIGNED: "ENTITIES_ASSIGNED",
     ContributionCandidateDb.VALUES_ASSIGNED: "VALUES_ASSIGNED",

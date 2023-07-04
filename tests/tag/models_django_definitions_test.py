@@ -1,12 +1,11 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
-from datetime import timedelta
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
+from datetime import datetime, timedelta
 
 import pytest
 
 from tests.tag import common as c
 from cosmae.exception import (
     InvalidTagValueException,
-    NoChildTagDefintionsAllowedException,
     NoParentTagException,
     TagDefinitionExistsException,
 )
@@ -95,21 +94,6 @@ def test_valid_parent_same_name(tag_def):
         c.id_tag_def_parent_persistent_test,
     )
     assert ret.id_parent_persistent == c.id_tag_def_parent_persistent_test
-
-
-@pytest.mark.django_db
-def test_invalid_parent(tag_def):
-    tag_def.id_persistent = c.id_tag_def_parent_persistent_test
-    tag_def.save()
-
-    with pytest.raises(NoChildTagDefintionsAllowedException) as exc:
-        TagDefinition.change_or_create(
-            c.id_tag_def_persistent_test,
-            c.time_edit_test,
-            c.name_tag_def_test,
-            c.id_tag_def_parent_persistent_test,
-        )
-    assert exc.value.args[0] == c.id_tag_def_parent_persistent_test
 
 
 @pytest.mark.django_db
@@ -270,3 +254,27 @@ def test_children_root(tag_def):
     tag_def.save()
     ret = TagDefinition.most_recent_children(None)
     assert ret == [tag_def]
+
+
+@pytest.mark.django_db
+def test_only_for_user(tag_def_user, tag_def):
+    tag_def_user.save()
+    tag_def.save()
+    ret = TagDefinition.for_user(tag_def_user.owner).get()
+    assert ret == tag_def_user
+
+
+@pytest.mark.django_db
+def test_most_recent_for_user(tag_def_user):
+    tag_def_user.save()
+    tag_def_edited, _ = TagDefinition.change_or_create(
+        id_persistent=tag_def_user.id_persistent,
+        id_parent_persistent=None,
+        time_edit=datetime.utcnow(),
+        name="new_name",
+        owner=tag_def_user.owner,
+        version=tag_def_user.id,
+    )
+    tag_def_edited.save()
+    ret = TagDefinition.for_user(tag_def_user.owner).get()
+    assert ret == tag_def_edited

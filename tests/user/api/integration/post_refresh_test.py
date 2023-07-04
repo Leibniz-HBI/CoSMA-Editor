@@ -19,4 +19,5 @@ def test_logged_in(auth_server):
         "email": c.test_email,
         "names_family": "",
         "columns": [],
+        "id_persistent": c.test_uuid,
     }

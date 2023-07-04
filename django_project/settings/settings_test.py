@@ -11,7 +11,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-from os import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,12 +30,22 @@ CONTRIBUTION_DIRECTORY = "/srv/cosmae/contributions"
 ###################################################################
 # SECURITY WARNING: keep the secret key used in production secret!
 # PLEASE add your own secret.
+
+
 @property
 def SECRET_KEY():  # pylint: disable=invalid-name
     "Get the secret key from environment."
-    key = environ.get("DJANGO_KEY")
+    return get_file_secret("django_key")
+
+
+def get_file_secret(secret_name):
+    "Get secret as provided by docker_compose"
+    with open(
+        f"{BASE_DIR.absolute()}/.secrets_local/{secret_name}", encoding="utf-8"
+    ) as key_file:
+        key = key_file.readline().rstrip("\n")
     if not key:
-        raise Exception("Please set the DJANGO_KEY environment variable.")
+        raise Exception(f"Please set the {secret_name} secret.")
     return key
 
 
@@ -69,6 +78,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # "django.contrib.postgres",
     "corsheaders",
     "django_rq",
     "cosmae",
@@ -111,8 +121,12 @@ WSGI_APPLICATION = "django_project.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": get_file_secret("cosmae_db_name"),
+        "USER": get_file_secret("cosmae_db_user"),
+        "PASSWORD": get_file_secret("cosmae_db_password"),
+        "HOST": "127.0.0.1",
+        "PORT": "5444",
     }
 }
 

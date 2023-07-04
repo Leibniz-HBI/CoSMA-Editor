@@ -1,4 +1,5 @@
 """Utils for Django"""
+import logging
 from typing import Iterable, Optional
 
 from django.db.models import Model
@@ -26,7 +27,7 @@ def change_or_create_versioned(
     Returns:
         The new object and a flag indicating wether the object changed from the most recent version.
     """
-    if version:
+    if version is not None:
         most_recent = cls.most_recent_by_id(id_persistent)
         if most_recent.id != version:
             raise EntityUpdatedException(most_recent)
@@ -35,10 +36,23 @@ def change_or_create_versioned(
         if by_id:
             raise DbObjectExistsException("UNKNOWN")
         most_recent = None
+    if most_recent is None:
+        new_values = {}
+    else:
+        new_values = {
+            field.attname: getattr(most_recent, field.attname)
+            for field in cls._meta.get_fields()  # pylint: disable=protected-access
+            if hasattr(field, "attname")
+        }
+    for field_name, value in kwargs.items():
+        new_values[field_name] = value
+    new_values["id_persistent"] = id_persistent
+    if most_recent:
+        new_values.pop("id")
+        new_values["previous_version_id"] = most_recent.id
     new = cls(
-        id_persistent=id_persistent,
-        previous_version=most_recent,
-        **kwargs,
+        # special handling for relation to previous version necessary
+        **new_values,
     )
     do_write = (not most_recent) or most_recent.check_different_before_save(new)
     if do_write:
@@ -51,4 +65,5 @@ def patch_from_dict(object_db, **kwargs):
     This is required for (pre)|(post)_save signals to get a list of updated fields."""
     for key, value in kwargs.items():
         setattr(object_db, key, value)
+    logging.warning(list(kwargs))
     object_db.save(update_fields=list(kwargs))

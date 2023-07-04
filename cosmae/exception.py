@@ -43,11 +43,7 @@ class EntityUpdatedException(Exception):
         self.new_value = new_value
 
 
-class TooManyFieldsException(Exception):
-    "Indicates that a Django model constructor was called with too many arguments."
-
-
-class NoChildTagDefintionsAllowedException(Exception):
+class NoChildTagDefinitionsAllowedException(Exception):
     "Indicates that a tag definition is not allowed to have children."
 
     def __init__(self, id_persistent):

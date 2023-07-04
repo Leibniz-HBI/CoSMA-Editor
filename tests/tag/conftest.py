@@ -1,4 +1,4 @@
-"Pytest fixtures for all tag tests."
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name, unused-argument
 from datetime import timedelta
 
 import pytest
@@ -7,15 +7,27 @@ from tests.tag import common as c
 from cosmae.tag.models_django import TagDefinition
 
 
-@pytest.fixture()
+@pytest.fixture
 def tag_def():
-    "Shared tag defintion for tests."
+    "Shared tag definition for tests."
     return TagDefinition(
         id_persistent=c.id_tag_def_persistent_test,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
         name=c.name_tag_def_test,
         time_edit=c.time_edit_test,
+    )
+
+
+@pytest.fixture
+def tag_def_user(user):
+    return TagDefinition(
+        id_persistent=c.id_tag_def_persistent_test + "user",
+        type=TagDefinition.FLOAT,
+        id_parent_persistent=None,
+        name=c.name_tag_def_test,
+        time_edit=c.time_edit_test,
+        owner=user,
     )
 
 

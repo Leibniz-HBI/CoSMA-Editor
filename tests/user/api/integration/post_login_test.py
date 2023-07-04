@@ -24,4 +24,5 @@ def test_valid_credentials(auth_server):
         "email": c.test_email,
         "names_family": "",
         "columns": [],
+        "id_persistent": c.test_uuid,
     }

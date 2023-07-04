@@ -61,7 +61,7 @@ def test_bad_db(auth_server):
     live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
-    with patch("cosmae.person.models_django.Person.get_most_recent_chunked", mock):
+    with patch("cosmae.entity.models_django.Entity.get_most_recent_chunked", mock):
         rsp = post_chunk(live_server.url, 0, 2, cookies=cookies)
     assert rsp.status_code == 500
     assert rsp.json()["msg"] == "Could not get requested chunk."

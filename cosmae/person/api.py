@@ -6,13 +6,13 @@ from uuid import uuid4
 from django.db import IntegrityError
 from ninja import Router, Schema
 
+from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.exception import (
     ApiError,
     DbObjectExistsException,
     EntityUpdatedException,
     ValidationException,
 )
-from cosmae.person.models_django import Person as PersonNaturalDb
 from cosmae.util.django import save_many_atomic
 
 router = Router()
@@ -22,8 +22,6 @@ class PersonNatural(Schema):
     # pylint: disable=too-few-public-methods
     """API model for a natural person."""
 
-    names_personal: str
-    names_family: Optional[str]
     display_txt: str
     version: Optional[int]
     """The version of the person that the change is made on.
@@ -93,16 +91,6 @@ def persons_post(_, persons: PersonNaturalList):
     )
 
 
-@router.get("count", response={200: PersonCountResponse, 500: ApiError})
-def persons_count_get(_):
-    """Get the number of unique persons."""
-    try:
-        count = PersonNaturalDb.get_count()
-        return PersonCountResponse(count=count)
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not count persons.")
-
-
 @router.post(
     "chunk",
     response={200: PersonNaturalList, 400: ApiError, 500: ApiError},
@@ -115,16 +103,14 @@ def persons_chunks_post(_, req_data: ChunkRequest):
     if req_data.limit > chunk_limit:
         return 400, ApiError(msg=f"Please specify limit smaller than {chunk_limit}.")
     try:
-        person_dbs = PersonNaturalDb.get_most_recent_chunked(
-            req_data.offset, req_data.limit
-        )
+        person_dbs = EntityDb.get_most_recent_chunked(req_data.offset, req_data.limit)
         person_apis = [person_db_to_api(person) for person in person_dbs]
         return 200, PersonNaturalList(persons=person_apis)
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
 
 
-def person_api_to_db(person: PersonNatural, time_edit: datetime) -> PersonNaturalDb:
+def person_api_to_db(person: PersonNatural, time_edit: datetime) -> EntityDb:
     """Transform an natural person from API to DB model."""
     if person.id_persistent:
         persistent_id = person.id_persistent
@@ -140,21 +126,17 @@ def person_api_to_db(person: PersonNatural, time_edit: datetime) -> PersonNatura
                 "has version but no persistent_id."
             )
         persistent_id = str(uuid4())
-    return PersonNaturalDb.change_or_create(
+    return EntityDb.change_or_create(
         display_txt=person.display_txt,
         time_edit=time_edit,
         id_persistent=persistent_id,
         version=person.version,
-        names_personal=person.names_personal,
-        names_family=person.names_family,
     )
 
 
-def person_db_to_api(person: PersonNaturalDb) -> PersonNatural:
+def person_db_to_api(person: EntityDb) -> PersonNatural:
     """Transform a natural person from DB to API representation."""
     return PersonNatural(
-        names_personal=person.names_personal,
-        names_family=person.names_family,
         display_txt=person.display_txt,
         version=person.id,
         id_persistent=person.id_persistent,

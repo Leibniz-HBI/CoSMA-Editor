@@ -7,6 +7,7 @@ from ninja import NinjaAPI, Schema
 from ninja.constants import NOT_SET
 
 from cosmae.contribution.api import router as contribution_router
+from cosmae.merge_request.api import router as merge_request_router
 from cosmae.person.api import router as person_router
 from cosmae.tag.api import router as tag_router
 from cosmae.user.api import router as user_router
@@ -17,6 +18,7 @@ ninja_api.add_router("user", user_router, auth=NOT_SET)
 ninja_api.add_router("persons", person_router, auth=cosmae_auth)
 ninja_api.add_router("tags", tag_router, auth=cosmae_auth)
 ninja_api.add_router("contributions", contribution_router, auth=cosmae_auth)
+ninja_api.add_router("merge_requests", merge_request_router, auth=cosmae_auth)
 
 
 class LoginRequest(Schema):

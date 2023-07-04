@@ -10,12 +10,12 @@ from cosmae.exception import (
     DbObjectExistsException,
     EntityMissingException,
     InvalidTagValueException,
-    NoChildTagDefintionsAllowedException,
     NoParentTagException,
     TagDefinitionExistsException,
     TagDefinitionMissingException,
     TagInstanceExistsException,
 )
+from cosmae.util import CosmaeUser
 from cosmae.util.django import change_or_create_versioned
 
 
@@ -33,6 +33,10 @@ class TagDefinition(models.Model):
     previous_version = models.ForeignKey(
         "self", blank=True, null=True, on_delete=models.CASCADE, unique=True
     )
+    owner = models.ForeignKey(
+        "CosmaeUser", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    curated = models.BooleanField(default=False)
 
     @classmethod
     def most_recent_by_id(cls, id_persistent):
@@ -65,11 +69,12 @@ class TagDefinition(models.Model):
         id_persistent: str,
         time_edit: datetime,
         name: str,
-        id_parent_persistent: str,
+        id_parent_persistent: Optional[str] = None,
         version: Optional[int] = None,
+        owner: Optional[CosmaeUser] = None,
         **kwargs,
     ):
-        """Changes a tag defintition in the database by adding a new version.
+        """Changes a tag definition in the database by adding a new version.
         Note:
             The resulting object is not saved.
         Returns:
@@ -78,20 +83,19 @@ class TagDefinition(models.Model):
         """
         if id_parent_persistent is not None:
             try:
-                parent = TagDefinition.most_recent_by_id(id_parent_persistent)
+                TagDefinition.most_recent_by_id(id_parent_persistent)
             except IndexError as exc:
                 raise NoParentTagException(id_parent_persistent) from exc
-            if not parent.type == TagDefinition.INNER:
-                raise NoChildTagDefintionsAllowedException(id_parent_persistent)
-        exists = TagDefinition.objects.filter(  # pylint: disable=no-member
-            name=name, id_parent_persistent=id_parent_persistent
-        ).exclude(id_persistent=id_persistent)
-        if exists:
-            raise TagDefinitionExistsException(
-                name,
-                exists.order_by("-previous_version")[0].id_persistent,
-                id_parent_persistent,
-            )
+        if version is None:
+            exists = TagDefinition.objects.filter(  # pylint: disable=no-member
+                name=name, id_parent_persistent=id_parent_persistent
+            ).exclude(id_persistent=id_persistent)
+            if exists:
+                raise TagDefinitionExistsException(
+                    name,
+                    exists.order_by("-previous_version")[0].id_persistent,
+                    id_parent_persistent,
+                )
         try:
             return change_or_create_versioned(
                 cls,
@@ -100,6 +104,7 @@ class TagDefinition(models.Model):
                 name=name,
                 time_edit=time_edit,
                 id_parent_persistent=id_parent_persistent,
+                owner=owner,
                 **kwargs,
             )
         except DbObjectExistsException as exc:
@@ -136,6 +141,19 @@ class TagDefinition(models.Model):
                 ) from exc
         return val
 
+    @classmethod
+    def for_user(cls, user: CosmaeUser):
+        "Get all tag definitions for a user."
+        objects = cls.objects.filter(owner=user)  # pylint: disable=no-member
+        return objects.filter(
+            id=models.Subquery(
+                objects.filter(id_persistent=models.OuterRef("id_persistent"))
+                .values("id_persistent")
+                .annotate(max_id=Max("id"))
+                .values("max_id")
+            )
+        )
+
 
 class TagInstance(models.Model):
     "Django ORM model for tag instances."
@@ -150,11 +168,25 @@ class TagInstance(models.Model):
 
     @classmethod
     def most_recent_by_id(cls, id_persistent):
-        """Return the most recent version of an entity."""
+        """Return the most recent version of a tag_instance."""
         # pylint: disable=no-member
         return cls.objects.filter(id_persistent=id_persistent).order_by(
             "-previous_version"
         )[0]
+
+    @classmethod
+    def most_recent_queryset(cls, manager=None):
+        "Return most recent versions of all_tag_instances"
+        if manager is None:
+            manager = cls.objects  # pylint: disable=no-member
+        return manager.filter(
+            id=models.Subquery(
+                manager.filter(id_persistent=models.OuterRef("id_persistent"))
+                .values("id_persistent")
+                .annotate(max_id=Max("id"))
+                .values("max_id")
+            )
+        )
 
     @classmethod
     def change_or_create(  # pylint: disable=too-many-arguments
@@ -201,7 +233,7 @@ class TagInstance(models.Model):
             ) from exc
 
     @classmethod
-    def by_tag_chunked(cls, id_tag_definition_persistent, offset, limit):
+    def by_tag_chunked(cls, id_tag_definition_persistent, offset, limit, manager=None):
         "Get tag instances for a tag_id in chunks."
         # TODO(@mo-fu) There is no proper chunking yet.
         # The results are not grouped by entity!
@@ -216,7 +248,9 @@ class TagInstance(models.Model):
         else:
             tags = {tag}
         tag_ids = {tag.id_persistent for tag in tags}
-        objects = cls.objects.filter(  # pylint: disable=no-member
+        if manager is None:
+            manager = cls.objects  # pylint: disable=no-member
+        objects = manager.filter(  # pylint: disable=no-member
             id_tag_definition_persistent__in=tag_ids
         )
         return list(
