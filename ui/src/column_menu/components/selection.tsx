@@ -98,10 +98,7 @@ export function mkColumnExplorerItem(props: {
 
     const tailElement = props.mkTailElement(columnDefinition)
     let expandCallback = undefined
-    if (
-        columnDefinition.columnType == ColumnType.Inner &&
-        props.columnSelectionEntry.isExpandable()
-    ) {
+    if (props.columnSelectionEntry.isExpandable()) {
         expandCallback = () =>
             props.toggleExpansionCallback(props.path, props.expansionGroup)
     }

@@ -17,7 +17,7 @@ function thunker<U>(
     userDispatch?: Dispatch<LogoutAction>
 ): ThunkMiddlewareDispatch<U> {
     return function <V>(action: AsyncAction<U, V> | U): Promise<V | undefined> {
-        if (action instanceof AsyncAction<U, V>) {
+        if (action instanceof AsyncAction) {
             return (action as AsyncAction<U, V>).run(dispatch, userDispatch)
         } else {
             dispatch(action)
@@ -70,5 +70,9 @@ export class Remote<U> {
 
     success(value: U) {
         return new Remote(value, false)
+    }
+
+    map<V>(fun: (u: U) => V): Remote<V> {
+        return new Remote<V>(fun(this.value), this.isLoading, this.errorMsg)
     }
 }

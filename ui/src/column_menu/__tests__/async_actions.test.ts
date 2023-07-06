@@ -142,41 +142,39 @@ describe('getHierarchyAction', () => {
         ])
         const action = new GetHierarchyAction({ expand: true })
         await action.run(dispatch)
-        expect(dispatch.mock.calls.length).toBe(4)
-        expect(dispatch.mock.calls[0][0]).toEqual(
-            new LoadColumnHierarchyStartAction([])
-        )
-        expect(dispatch.mock.calls[1][0]).toEqual(
-            new LoadColumnHierarchySuccessAction(
-                [
-                    new ColumnSelectionEntry({
-                        columnDefinition: new ColumnDefinition({
-                            namePath: [nameRootTest],
-                            columnType: ColumnType.Inner,
-                            idPersistent: idPersistentRootTest,
-                            version: versionTest
+        expect(dispatch.mock.calls.length).toBe(6)
+        expect(dispatch.mock.calls).toEqual([
+            [new LoadColumnHierarchyStartAction([])],
+            [
+                new LoadColumnHierarchySuccessAction(
+                    [
+                        new ColumnSelectionEntry({
+                            columnDefinition: new ColumnDefinition({
+                                namePath: [nameRootTest],
+                                columnType: ColumnType.Inner,
+                                idPersistent: idPersistentRootTest,
+                                version: versionTest
+                            }),
+                            isExpanded: true
                         }),
-                        isExpanded: true
-                    }),
-                    new ColumnSelectionEntry({
-                        columnDefinition: new ColumnDefinition({
-                            namePath: [nameRootTest1],
-                            columnType: ColumnType.Float,
-                            idPersistent: idPersistentRootTest1,
-                            version: versionTest
-                        }),
-                        isExpanded: false
-                    })
-                ],
-                []
-            )
-        )
-        expect(dispatch.mock.calls[2][0]).toEqual(
-            new LoadColumnHierarchyStartAction([0])
-        )
-        expect(dispatch.mock.calls[3][0]).toEqual(
-            new LoadColumnHierarchySuccessAction([], [0])
-        )
+                        new ColumnSelectionEntry({
+                            columnDefinition: new ColumnDefinition({
+                                namePath: [nameRootTest1],
+                                columnType: ColumnType.Float,
+                                idPersistent: idPersistentRootTest1,
+                                version: versionTest
+                            }),
+                            isExpanded: true
+                        })
+                    ],
+                    []
+                )
+            ],
+            [new LoadColumnHierarchyStartAction([0])],
+            [new LoadColumnHierarchyStartAction([1])],
+            [new LoadColumnHierarchySuccessAction([], [0])],
+            [new LoadColumnHierarchySuccessAction([], [1])]
+        ])
     })
 
     const idPersistentChildTest = 'id_child_test'
@@ -230,59 +228,69 @@ describe('getHierarchyAction', () => {
                         tag_definitions: []
                     }
                 }
+            ],
+            [
+                200,
+                () => {
+                    return {
+                        tag_definitions: []
+                    }
+                }
             ]
         ])
         const action = new GetHierarchyAction({ expand: true })
         await action.run(dispatch)
         // expect(dispatch.mock.calls.length).toBe(4)
-        expect(dispatch.mock.calls[0][0]).toEqual(
-            new LoadColumnHierarchyStartAction([])
-        )
-        expect(dispatch.mock.calls[1][0]).toEqual(
-            new LoadColumnHierarchySuccessAction(
-                [
-                    new ColumnSelectionEntry({
-                        columnDefinition: new ColumnDefinition({
-                            namePath: [nameRootTest],
-                            columnType: ColumnType.Inner,
-                            idPersistent: idPersistentRootTest,
-                            version: versionTest
+        expect(dispatch.mock.calls).toEqual([
+            [new LoadColumnHierarchyStartAction([])],
+            [
+                new LoadColumnHierarchySuccessAction(
+                    [
+                        new ColumnSelectionEntry({
+                            columnDefinition: new ColumnDefinition({
+                                namePath: [nameRootTest],
+                                columnType: ColumnType.Inner,
+                                idPersistent: idPersistentRootTest,
+                                version: versionTest
+                            }),
+                            isExpanded: true
                         }),
-                        isExpanded: true
-                    }),
-                    new ColumnSelectionEntry({
-                        columnDefinition: new ColumnDefinition({
-                            namePath: [nameRootTest1],
-                            columnType: ColumnType.Float,
-                            idPersistent: idPersistentRootTest1,
-                            version: versionTest
-                        }),
-                        isExpanded: false
-                    })
-                ],
-                []
-            )
-        )
-        expect(dispatch.mock.calls[2][0]).toEqual(
-            new LoadColumnHierarchyStartAction([0])
-        )
-        expect(dispatch.mock.calls[3][0]).toEqual(
-            new LoadColumnHierarchySuccessAction(
-                [
-                    new ColumnSelectionEntry({
-                        columnDefinition: new ColumnDefinition({
-                            namePath: [nameRootTest, nameChildTest],
-                            idPersistent: idPersistentChildTest,
-                            idParentPersistent: idPersistentRootTest,
-                            columnType: ColumnType.String,
-                            version: versionTest
-                        }),
-                        isExpanded: false
-                    })
-                ],
-                [0]
-            )
-        )
+                        new ColumnSelectionEntry({
+                            columnDefinition: new ColumnDefinition({
+                                namePath: [nameRootTest1],
+                                columnType: ColumnType.Float,
+                                idPersistent: idPersistentRootTest1,
+                                version: versionTest
+                            }),
+                            isExpanded: true
+                        })
+                    ],
+                    []
+                )
+            ],
+            [new LoadColumnHierarchyStartAction([0])],
+            [new LoadColumnHierarchyStartAction([1])],
+            [
+                new LoadColumnHierarchySuccessAction(
+                    [
+                        new ColumnSelectionEntry({
+                            columnDefinition: new ColumnDefinition({
+                                namePath: [nameRootTest, nameChildTest],
+                                idPersistent: idPersistentChildTest,
+                                idParentPersistent: idPersistentRootTest,
+                                columnType: ColumnType.String,
+                                version: versionTest
+                            }),
+                            isExpanded: false
+                        })
+                    ],
+                    [0]
+                )
+            ],
+            [new LoadColumnHierarchyStartAction([0, 0])],
+            [new LoadColumnHierarchySuccessAction([], [1])],
+            [new LoadColumnHierarchySuccessAction([], [0, 0])]
+        ])
     })
 })
 describe('SubmitColumnDefinition', () => {

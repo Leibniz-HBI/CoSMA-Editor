@@ -2,9 +2,9 @@ import { Dispatch } from 'react'
 import { AsyncAction } from '../util/async_action'
 import {
     ContributionAction,
-    LoadContributionErrorAction,
-    LoadContributionStartAction,
-    LoadContributionSuccessAction,
+    LoadContributionsErrorAction,
+    LoadContributionsStartAction,
+    LoadContributionsSuccessAction,
     UploadContributionErrorAction,
     UploadContributionStartAction,
     UploadContributionSuccessAction
@@ -75,7 +75,7 @@ export class UploadContributionAction extends AsyncAction<ContributionAction, vo
 
 export class LoadContributionsAction extends AsyncAction<ContributionAction, void> {
     async run(dispatch: Dispatch<ContributionAction>): Promise<void> {
-        dispatch(new LoadContributionStartAction())
+        dispatch(new LoadContributionsStartAction())
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const contributions: Contribution[] = []
@@ -87,7 +87,7 @@ export class LoadContributionsAction extends AsyncAction<ContributionAction, voi
                 })
                 if (rsp.status !== 200) {
                     dispatch(
-                        new LoadContributionErrorAction(
+                        new LoadContributionsErrorAction(
                             `Could not load contributions. Reason: "${
                                 (await rsp.json())['msg']
                             }".`
@@ -104,9 +104,9 @@ export class LoadContributionsAction extends AsyncAction<ContributionAction, voi
                     contributions.push(parseContributionFromApi(contribution_json))
                 }
             }
-            dispatch(new LoadContributionSuccessAction(contributions))
+            dispatch(new LoadContributionsSuccessAction(contributions))
         } catch (e: unknown) {
-            dispatch(new LoadContributionErrorAction(exceptionMessage(e)))
+            dispatch(new LoadContributionsErrorAction(exceptionMessage(e)))
         }
     }
 }
@@ -115,6 +115,7 @@ export const contributionStepApiToUiMap: { [key: string]: ContributionStep } = {
     UPLOADED: ContributionStep.Uploaded,
     COLUMNS_EXTRACTED: ContributionStep.ColumnsExtracted,
     COLUMNS_ASSIGNED: ContributionStep.ColumnsAssigned,
+    VALUES_EXTRACTED: ContributionStep.ValuesExtracted,
     ENTITIES_MATCHED: ContributionStep.EntitiesMatched,
     ENTITIES_ASSIGNED: ContributionStep.EntitiesAssigned,
     VALUES_ASSIGNED: ContributionStep.ValuesAssigned,

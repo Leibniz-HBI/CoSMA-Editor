@@ -2,9 +2,9 @@ import { Remote } from '../util/state'
 import {
     UploadContributionClearErrorAction,
     ContributionAction,
-    LoadContributionErrorAction,
-    LoadContributionStartAction,
-    LoadContributionSuccessAction,
+    LoadContributionsErrorAction,
+    LoadContributionsStartAction,
+    LoadContributionsSuccessAction,
     ToggleShowAddContributionAction,
     UploadContributionErrorAction,
     UploadContributionStartAction,
@@ -16,19 +16,19 @@ export function contributionReducer(
     state: ContributionState,
     action: ContributionAction
 ) {
-    if (action instanceof LoadContributionStartAction) {
+    if (action instanceof LoadContributionsStartAction) {
         return new ContributionState({
             ...state,
             contributions: state.contributions.startLoading()
         })
     }
-    if (action instanceof LoadContributionSuccessAction) {
+    if (action instanceof LoadContributionsSuccessAction) {
         return new ContributionState({
             ...state,
             contributions: state.contributions.success(action.contributions)
         })
     }
-    if (action instanceof LoadContributionErrorAction) {
+    if (action instanceof LoadContributionsErrorAction) {
         return new ContributionState({
             ...state,
             contributions: state.contributions.withError(action.msg)

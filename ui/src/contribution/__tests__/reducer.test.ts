@@ -1,9 +1,9 @@
 import { Remote } from '../../util/state'
 import {
     UploadContributionClearErrorAction,
-    LoadContributionErrorAction,
-    LoadContributionStartAction,
-    LoadContributionSuccessAction,
+    LoadContributionsErrorAction,
+    LoadContributionsStartAction,
+    LoadContributionsSuccessAction,
     ToggleShowAddContributionAction,
     UploadContributionErrorAction,
     UploadContributionStartAction,
@@ -20,7 +20,7 @@ describe('load contributions', () => {
         })
         const endState = contributionReducer(
             initialState,
-            new LoadContributionStartAction()
+            new LoadContributionsStartAction()
         )
         expect(endState).toEqual(expectedState)
     })
@@ -41,7 +41,7 @@ describe('load contributions', () => {
         })
         const endState = contributionReducer(
             initialState,
-            new LoadContributionSuccessAction([contributionTest])
+            new LoadContributionsSuccessAction([contributionTest])
         )
         expect(endState).toEqual(expectedState)
     })
@@ -54,7 +54,7 @@ describe('load contributions', () => {
         })
         const endState = contributionReducer(
             initialState,
-            new LoadContributionErrorAction('test error')
+            new LoadContributionsErrorAction('test error')
         )
         expect(endState).toEqual(expectedState)
     })

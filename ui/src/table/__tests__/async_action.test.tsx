@@ -18,9 +18,9 @@ import {
 } from '../async_actions'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function responseSequence(respones: [number, () => any][]) {
+function responseSequence(responses: [number, () => any][]) {
     const fetchMock = jest.spyOn(global, 'fetch')
-    for (const tpl of respones) {
+    for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
             jest.fn(() =>
@@ -34,15 +34,11 @@ function responseSequence(respones: [number, () => any][]) {
 }
 
 const test_person_rsp_0 = {
-    names_family: 'test names family 0',
-    names_personal: 'test names personal 0',
     display_txt: 'test display txt 0',
     id_persistent: 'test-id-0',
     version: 0
 }
 const test_person_rsp_1 = {
-    names_family: 'test names family 1',
-    names_personal: 'test names personal 1',
     display_txt: 'test display txt 1',
     id_persistent: 'test-id-1',
     version: 1

@@ -19,6 +19,9 @@ import { config } from './config'
 import { contributionStepApiToUiMap } from './contribution/async_actions'
 import { ContributionStep } from './contribution/state'
 import { exceptionMessage } from './util/exception'
+import { EntitiesStep } from './contribution/entity/components'
+import { ReviewList } from './merge_request/components'
+import { CompleteStep } from './contribution/complete/components'
 
 export function CosmaeRoot() {
     return (
@@ -36,6 +39,9 @@ export function CosmaeRoot() {
                                     </Nav.Link>
                                     <Nav.Link as={NavLink} to="/contribute">
                                         Contribute
+                                    </Nav.Link>
+                                    <Nav.Link as={NavLink} to="/review">
+                                        Review
                                     </Nav.Link>
                                 </Nav>
                             </Navbar.Collapse>
@@ -79,6 +85,24 @@ const router = createBrowserRouter([
                 loader: ({ params }) => {
                     return params.idPersistent
                 }
+            },
+            {
+                path: 'contribute/:idPersistent/entities',
+                element: <EntitiesStep />,
+                loader: ({ params }) => {
+                    return params.idPersistent
+                }
+            },
+            {
+                path: 'contribute/:idPersistent/complete',
+                element: <CompleteStep />,
+                loader: ({ params }) => {
+                    return params.idPersistent
+                }
+            },
+            {
+                path: 'review',
+                element: <ReviewList />
             }
         ]
     }
@@ -96,6 +120,12 @@ async function redirectContributionStep(idPersistent: string | undefined) {
         const step = contributionStepApiToUiMap[json['state']]
         if (step == ContributionStep.ColumnsExtracted) {
             return redirect(`/contribute/${idPersistent}/columns`)
+        }
+        if (step == ContributionStep.ValuesExtracted) {
+            return redirect(`/contribute/${idPersistent}/entities`)
+        }
+        if (step == ContributionStep.EntitiesAssigned) {
+            return redirect(`/contribute/${idPersistent}/complete`)
         }
         return redirect(`/contribute/${idPersistent}/metadata`)
     } catch (e: unknown) {

@@ -2,6 +2,7 @@ import { Dispatch } from 'react'
 import { AsyncAction } from '../../util/async_action'
 import {
     ContributionDetailsAction,
+    LoadContributionDetailsAction,
     LoadContributionDetailsErrorAction,
     LoadContributionDetailsStartAction,
     LoadContributionDetailsSuccessAction,
@@ -89,8 +90,8 @@ export class PatchContributionAction extends AsyncAction<
     }
 }
 
-export class LoadContributionDetailsAction extends AsyncAction<
-    ContributionDetailsAction,
+export class LoadContributionDetailsAsyncAction extends AsyncAction<
+    LoadContributionDetailsAction,
     void
 > {
     idPersistent: string

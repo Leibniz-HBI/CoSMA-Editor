@@ -7,12 +7,15 @@ import {
     PatchContributionDetailsStartAction,
     PatchContributionDetailsSuccessAction
 } from '../action'
-import { LoadContributionDetailsAction, PatchContributionAction } from '../async_action'
+import {
+    LoadContributionDetailsAsyncAction,
+    PatchContributionAction
+} from '../async_action'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function responseSequence(respones: [number, () => any][]) {
+function responseSequence(responses: [number, () => any][]) {
     global.fetch = jest.fn()
-    for (const tpl of respones) {
+    for (const tpl of responses) {
         const [status_code, rsp] = tpl
         ;(global.fetch as jest.Mock).mockImplementationOnce(
             jest.fn(() =>
@@ -46,7 +49,7 @@ describe('get details', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoadContributionDetailsAction(idTest0).run(dispatch)
+        await new LoadContributionDetailsAsyncAction(idTest0).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoadContributionDetailsStartAction()],
             [
@@ -79,7 +82,7 @@ describe('get details', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoadContributionDetailsAction(idTest0).run(dispatch)
+        await new LoadContributionDetailsAsyncAction(idTest0).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoadContributionDetailsStartAction()],
             [

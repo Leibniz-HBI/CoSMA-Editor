@@ -73,9 +73,7 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
                 columnSelectionEntries.push(
                     new ColumnSelectionEntry({
                         columnDefinition: columnDefinition,
-                        isExpanded:
-                            this.expand &&
-                            columnDefinition.columnType == ColumnType.Inner
+                        isExpanded: this.expand
                     })
                 )
             }
@@ -88,17 +86,15 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
             const promises: Promise<void>[] = []
             columnSelectionEntries.forEach(
                 async (entry: ColumnSelectionEntry, index: number) => {
-                    if (entry.columnDefinition.columnType === ColumnType.Inner) {
-                        promises.push(
-                            new GetHierarchyAction({
-                                ...this,
-                                idParentPersistent: entry.columnDefinition.idPersistent,
-                                indexPath: [...this.indexPath, index],
-                                namePath: entry.columnDefinition.namePath,
-                                expand: false
-                            }).run(dispatch)
-                        )
-                    }
+                    promises.push(
+                        new GetHierarchyAction({
+                            ...this,
+                            idParentPersistent: entry.columnDefinition.idPersistent,
+                            indexPath: [...this.indexPath, index],
+                            namePath: entry.columnDefinition.namePath,
+                            expand: false
+                        }).run(dispatch)
+                    )
                 }
             )
             await Promise.all(promises)

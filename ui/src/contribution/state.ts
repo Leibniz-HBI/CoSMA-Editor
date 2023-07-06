@@ -4,6 +4,7 @@ export enum ContributionStep {
     Uploaded = 'Uploaded',
     ColumnsExtracted = 'Columns extracted',
     ColumnsAssigned = 'Columns assigned',
+    ValuesExtracted = 'Values extracted',
     EntitiesMatched = 'Entities matched',
     EntitiesAssigned = 'Entities assigned',
     ValuesAssigned = 'Values assigned',

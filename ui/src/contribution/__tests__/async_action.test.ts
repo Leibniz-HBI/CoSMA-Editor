@@ -2,9 +2,9 @@
  * @jest-environment jsdom
  */
 import {
-    LoadContributionErrorAction,
-    LoadContributionStartAction,
-    LoadContributionSuccessAction,
+    LoadContributionsErrorAction,
+    LoadContributionsStartAction,
+    LoadContributionsSuccessAction,
     UploadContributionErrorAction,
     UploadContributionStartAction,
     UploadContributionSuccessAction
@@ -73,9 +73,9 @@ describe('load contributions', () => {
         const dispatch = jest.fn()
         await new LoadContributionsAction().run(dispatch)
         expect(dispatch.mock.calls).toEqual([
-            [new LoadContributionStartAction()],
+            [new LoadContributionsStartAction()],
             [
-                new LoadContributionSuccessAction([
+                new LoadContributionsSuccessAction([
                     new Contribution({
                         name: nameTest0,
                         description: descriptionTest0,
@@ -109,9 +109,9 @@ describe('load contributions', () => {
         const dispatch = jest.fn()
         await new LoadContributionsAction().run(dispatch)
         expect(dispatch.mock.calls).toEqual([
-            [new LoadContributionStartAction()],
+            [new LoadContributionsStartAction()],
             [
-                new LoadContributionErrorAction(
+                new LoadContributionsErrorAction(
                     'Could not load contributions. Reason: "test error".'
                 )
             ]

@@ -33,12 +33,12 @@ export class UploadContributionClearErrorAction {}
 /**
  * Indicates that loading of contribution has started
  */
-export class LoadContributionStartAction {}
+export class LoadContributionsStartAction {}
 
 /**
  * Indicates that contributions where successfully loaded
  */
-export class LoadContributionSuccessAction {
+export class LoadContributionsSuccessAction {
     contributions: Contribution[]
 
     constructor(contributions: Contribution[]) {
@@ -49,7 +49,7 @@ export class LoadContributionSuccessAction {
 /**
  * Indicates that there was an error during loading of contributions.
  */
-export class LoadContributionErrorAction {
+export class LoadContributionsErrorAction {
     msg: string
 
     constructor(msg: string) {
@@ -63,6 +63,6 @@ export type ContributionAction =
     | UploadContributionErrorAction
     | ToggleShowAddContributionAction
     | UploadContributionClearErrorAction
-    | LoadContributionStartAction
-    | LoadContributionSuccessAction
-    | LoadContributionErrorAction
+    | LoadContributionsStartAction
+    | LoadContributionsSuccessAction
+    | LoadContributionsErrorAction

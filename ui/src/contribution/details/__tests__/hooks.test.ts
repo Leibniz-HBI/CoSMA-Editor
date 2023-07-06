@@ -1,6 +1,9 @@
 import { Remote, useThunkReducer } from '../../../util/state'
 import { PatchContributionDetailsClearErrorAction } from '../action'
-import { LoadContributionDetailsAction, PatchContributionAction } from '../async_action'
+import {
+    LoadContributionDetailsAsyncAction,
+    PatchContributionAction
+} from '../async_action'
 import { useContributionDetails } from '../hooks'
 import { ContributionDetailState } from '../state'
 
@@ -23,7 +26,7 @@ describe('contribution details callback', () => {
             useContributionDetails(idPersistentTest)
         loadContributionDetailsCallback()
         expect(dispatch.mock.calls).toEqual([
-            [new LoadContributionDetailsAction(idPersistentTest)]
+            [new LoadContributionDetailsAsyncAction(idPersistentTest)]
         ])
     })
     test('exits early', () => {

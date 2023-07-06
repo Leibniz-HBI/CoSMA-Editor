@@ -9,7 +9,7 @@ import {
     RegistrationStartAction,
     UserAction
 } from './actions'
-import { UserInfo } from './state'
+import { PublicUserInfo, UserInfo } from './state'
 import { exceptionMessage, unprocessableEntityMessage } from '../util/exception'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { config } from '../config'
@@ -46,6 +46,7 @@ export class LoginAction extends AsyncAction<UserAction, void> {
                         new LoginSuccessAction(
                             new UserInfo({
                                 userName: json['user_name'],
+                                idPersistent: json['id_persistent'],
                                 email: json['email'],
                                 namesPersonal: json['names_personal'],
                                 namesFamily: json['names_family'],
@@ -93,6 +94,7 @@ export class RefreshAction extends AsyncAction<UserAction, void> {
                     new LoginSuccessAction(
                         new UserInfo({
                             userName: json['user_name'],
+                            idPersistent: json['id_persistent'],
                             email: json['email'],
                             namesPersonal: json['names_personal'],
                             namesFamily: json['names_family'],
@@ -165,6 +167,7 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
                     new LoginSuccessAction(
                         new UserInfo({
                             userName: json['user_name'],
+                            idPersistent: json['id_persistent'],
                             email: json['email'],
                             namesPersonal: json['names_personal'],
                             namesFamily: json['names_family'],
@@ -194,4 +197,11 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
             dispatch(new RegistrationErrorAction(exceptionMessage(error)))
         }
     }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parsePublicUserInfoFromJson(userInfoJson: any) {
+    const idPersistent = userInfoJson['id_persistent']
+    const userName = userInfoJson['user_name']
+    return new PublicUserInfo({ userName, idPersistent })
 }

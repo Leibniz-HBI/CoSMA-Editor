@@ -92,12 +92,15 @@ export function ContributionStepper({
     step?: ContributionStep
 }) {
     const navigate = useNavigate()
-    let maxIdx = 0
+    let maxIdx = 1
     if (
-        step === ContributionStep.ColumnsExtracted ||
-        step === ContributionStep.ColumnsAssigned
+        step === ContributionStep.ColumnsAssigned ||
+        step === ContributionStep.ValuesExtracted
     ) {
-        maxIdx = 1
+        maxIdx = 2
+    }
+    if (step === ContributionStep.EntitiesAssigned) {
+        maxIdx === 3
     }
     return (
         <Col
@@ -105,7 +108,7 @@ export function ContributionStepper({
             data-testid="contribution-stepper"
         >
             <StepHeader
-                stepNames={['Metadata', 'Columns', 'Entities', 'Values', 'Submit']}
+                stepNames={['Metadata', 'Columns', 'Entities', 'Complete']}
                 selectedIdx={selectedIdx ?? 0}
                 activeIdx={maxIdx}
                 navigateCallback={(name: string) =>

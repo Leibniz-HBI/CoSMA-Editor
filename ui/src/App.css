@@ -188,7 +188,7 @@ div#layers > div > .container {
     overflow-y: auto;
 }
 .overflow-y-scroll {
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .nav-link {

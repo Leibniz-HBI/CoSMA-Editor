@@ -1,26 +1,41 @@
 import { ColumnDefinition } from '../column_menu/state'
 import { ErrorState } from '../util/error'
 
-export class UserInfo {
+export class PublicUserInfo {
+    idPersistent: string
     userName: string
+    constructor({
+        idPersistent,
+        userName
+    }: {
+        idPersistent: string
+        userName: string
+    }) {
+        this.userName = userName
+        this.idPersistent = idPersistent
+    }
+}
+export class UserInfo extends PublicUserInfo {
     email: string
     namesPersonal: string
     namesFamily?: string
     columns: ColumnDefinition[]
     constructor({
         userName,
+        idPersistent,
         email,
         namesPersonal,
         namesFamily = undefined,
         columns = []
     }: {
         userName: string
+        idPersistent: string
         email: string
         namesPersonal: string
         namesFamily?: string
         columns?: ColumnDefinition[]
     }) {
-        this.userName = userName
+        super({ userName, idPersistent })
         this.email = email
         this.namesPersonal = namesPersonal
         this.namesFamily = namesFamily

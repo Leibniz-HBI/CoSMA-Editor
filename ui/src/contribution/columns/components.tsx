@@ -9,7 +9,6 @@ import {
     ListGroup,
     Modal,
     Overlay,
-    Placeholder,
     Popover,
     Row
 } from 'react-bootstrap'
@@ -17,7 +16,7 @@ import { ColumnDefinitionContribution } from './state'
 import { Trash } from 'react-bootstrap-icons'
 import { ChangeEvent, useLayoutEffect, useRef } from 'react'
 import { ColumnSelector, mkListItems } from '../../column_menu/components/selection'
-import { CosmaeLoading } from '../../util/components/misc'
+import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
 import { ColumnDefinition } from '../../column_menu/state'
 import {
     ColumnTypeCreateForm,
@@ -261,7 +260,7 @@ export function ContributionColumnAssignmentForm({
                         onClick={() => selectColumnCreationTabCallback(true)}
                         variant="outline-primary"
                     >
-                        Create new column
+                        Create new tag
                     </Button>
                 </Row>
             </Col>
@@ -272,7 +271,7 @@ export function ContributionColumnAssignmentForm({
                 data-testid="create-column-modal"
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Create a new column</Modal.Title>
+                    <Modal.Title>Create a new tag</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <NewColumnModalBody />
@@ -292,7 +291,10 @@ export function ExistingColumnForm({
     return (
         <Col>
             <Row className="ps-2">
-                <span>Please select an existing column.</span>
+                <span>
+                    Please select the tag that should receive the data of column "
+                    {columnDefinitionContribution.name}":
+                </span>
             </Row>
             <Row className="ps-1 pe-1">
                 <ColumnHierarchyContext.Consumer>
@@ -408,32 +410,12 @@ export function CompleteColumnAssignmentButton({
     remoteState: Remote<boolean>
     onClick: VoidFunction
 }) {
-    const loading = remoteState.isLoading
-    const success = remoteState.value
-    if (success) {
-        return (
-            <Button active={false} variant="outline-primary">
-                <span className="text-primary fw-bold">
-                    Column assignment successfully finalized
-                </span>
-            </Button>
-        )
-    }
-    const buttonText = 'Finalize Column Assignment'
-    if (loading) {
-        return (
-            <Placeholder.Button variant="primary" animation="wave">
-                <span>{buttonText}</span>
-            </Placeholder.Button>
-        )
-    }
     return (
-        <Button
-            variant="outline-primary"
+        <RemoteTriggerButton
+            successLabel="Column assignment successfully finalized"
+            normalLabel="Finalize Column Assignment"
+            remoteState={remoteState}
             onClick={onClick}
-            data-testid="complete-column-assignment-button"
-        >
-            <span>{buttonText}</span>
-        </Button>
+        />
     )
 }

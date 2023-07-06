@@ -1,7 +1,10 @@
 import { contributionDetailsReducer } from './reducer'
 import { ContributionDetailState } from './state'
 import { Remote, useThunkReducer } from '../../util/state'
-import { LoadContributionDetailsAction, PatchContributionAction } from './async_action'
+import {
+    LoadContributionDetailsAsyncAction,
+    PatchContributionAction
+} from './async_action'
 import { Contribution } from '../state'
 import { PatchContributionDetailsClearErrorAction } from './action'
 
@@ -37,7 +40,7 @@ export function useContributionDetails(idPersistent: string): ContributionDetail
             if (state.contribution.isLoading) {
                 return
             }
-            dispatch(new LoadContributionDetailsAction(idPersistent))
+            dispatch(new LoadContributionDetailsAsyncAction(idPersistent))
         },
         patchContributionDetailsCallback: ({
             name,

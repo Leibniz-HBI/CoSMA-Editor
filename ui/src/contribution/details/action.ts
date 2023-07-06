@@ -57,10 +57,13 @@ export class PatchContributionDetailsErrorAction {
  */
 export class PatchContributionDetailsClearErrorAction {}
 
-export type ContributionDetailsAction =
+export type LoadContributionDetailsAction =
     | LoadContributionDetailsStartAction
     | LoadContributionDetailsSuccessAction
     | LoadContributionDetailsErrorAction
+
+export type ContributionDetailsAction =
+    | LoadContributionDetailsAction
     | PatchContributionDetailsStartAction
     | PatchContributionDetailsSuccessAction
     | PatchContributionDetailsErrorAction

@@ -55,8 +55,6 @@ describe('rendering', () => {
         screen.getByText('Metadata')
         screen.getByText('Columns')
         screen.getByText('Entities')
-        screen.getByText('Values')
-        screen.getByText('Submit')
         const inputs = screen.getAllByRole('textbox')
         expect(inputs.length).toEqual(2)
         const checkboxes = screen.getAllByRole('checkbox')
