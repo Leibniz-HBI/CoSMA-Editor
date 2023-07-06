@@ -1,4 +1,5 @@
 "API methods for entities of a contribution"
+import logging
 from typing import Dict, List, Optional
 
 from django.db import transaction
@@ -23,10 +24,17 @@ class ScoredMatch(Schema):
     entity: PersonNatural
 
 
+class ScoredMatchesWithDuplicateAssignment(Schema):
+    "API model for combining scored matches with the id of a selected duplicate"
+    # pylint: disable=too-few-public-methods
+    matches: List[ScoredMatch]
+    assigned_duplicate: Optional[PersonNatural]
+
+
 class ScoredMatchResponse(Schema):
     "API model for multiple scored matches"
     # pylint: disable=too-few-public-methods
-    matches: Dict[str, List[ScoredMatch]]
+    matches: Dict[str, ScoredMatchesWithDuplicateAssignment]
 
 
 class PostSimilarRequest(Schema):
@@ -39,6 +47,12 @@ class PutDuplicateRequest(Schema):
     "API model for requesting similar entities."
     # pylint: disable=too-few-public-methods
     id_entity_destination_persistent: Optional[str]
+
+
+class PutDuplicateResponse(Schema):
+    "API Response for put duplicate request"
+    # pylint: disable=too-few-public-methods
+    assigned_duplicate: Optional[PersonNatural]
 
 
 @router.get(
@@ -65,7 +79,8 @@ def get_entities(request: HttpRequest, start: int, offset: int):
         )
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.warning(None, exc_info=exc)
         return 500, ApiError(msg="Could not get entities of the contribution.")
 
 
@@ -94,10 +109,30 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
             if entity.contribution_candidate.id_persistent != candidate.id_persistent:
                 return 404, ApiError(msg="Entity does not exist")
             matches = find_matches(entity)
+            try:
+                duplicate_query = (
+                    EntityDuplicate.objects.filter(  # pylint: disable=no-member
+                        id_origin_persistent=id_entity_persistent
+                    )
+                )
+                logging.warning(duplicate_query)
+                assigned_duplicate = duplicate_query.get().id_destination_persistent
+            except EntityDuplicate.DoesNotExist:  # pylint: disable=no-member
+                assigned_duplicate = None
+            except EntityDuplicate.MultipleObjectsReturned:  # pylint: disable=no-member
+                assigned_duplicate = duplicate_query[0].id_destination_persistent
+                duplicate_query[1:].delete()
+            if assigned_duplicate:
+                assigned_duplicate = person_db_to_api(
+                    Entity.most_recent_by_id(assigned_duplicate)
+                )
             scored_matches.append(
                 (
                     id_entity_persistent,
-                    [scored_match_db_to_api(match) for match in matches],
+                    ScoredMatchesWithDuplicateAssignment(
+                        matches=[scored_match_db_to_api(match) for match in matches],
+                        assigned_duplicate=assigned_duplicate,
+                    ),
                 )
             )
         return 200, ScoredMatchResponse(matches=dict(scored_matches))
@@ -105,13 +140,14 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
         return 404, ApiError(msg="Contribution candidate does not exist.")
     except IndexError:  # pylint: disable=no-member
         return 404, ApiError(msg="Entity does not exist.")
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.warning(exc)
         return 500, ApiError(msg="Could not get entities of the contribution.")
 
 
 @router.put(
     "{id_entity_origin_persistent}/duplicate",
-    response={200: None, 401: ApiError, 404: ApiError, 500: ApiError},
+    response={200: PutDuplicateResponse, 401: ApiError, 404: ApiError, 500: ApiError},
 )
 def put_duplicate_assignment(
     request: HttpRequest, id_entity_origin_persistent: str, body: PutDuplicateRequest
@@ -135,7 +171,11 @@ def put_duplicate_assignment(
         origin = Entity.most_recent_by_id(id_entity_origin_persistent)
         if origin.contribution_candidate != candidate:
             return 400, ApiError(msg="Origin Entity does not belong to contribution.")
-        destination = Entity.most_recent_by_id(id_entity_destination_persistent)
+        if id_entity_destination_persistent:
+            destination = Entity.most_recent_by_id(id_entity_destination_persistent)
+            assigned_duplicate = person_db_to_api(destination)
+        else:
+            assigned_duplicate = None
         with transaction.atomic():
             # Delete existing duplicate
             EntityDuplicate.objects.filter(  # pylint: disable=no-member
@@ -147,13 +187,14 @@ def put_duplicate_assignment(
                     id_destination_persistent=destination.id_persistent,
                     contribution_candidate=candidate,
                 )
-            return 200, None
+            return 200, PutDuplicateResponse(assigned_duplicate=assigned_duplicate)
 
     except IndexError:
         return 404, ApiError(msg="One of the entities does not exist.")
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.warning("", exc_info=exc)
         return 500, ApiError(
             msg="Could not assign entity duplicates for the contribution."
         )

@@ -15,6 +15,7 @@ def entity_duplicate(contribution_candidate):
         contribution_candidate=contribution_candidate,
     )
     entity_duplicate.save()
+    return entity_duplicate
 
 
 @pytest.fixture
