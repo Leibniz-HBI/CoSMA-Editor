@@ -1,3 +1,4 @@
+import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
 import { Remote } from '../../../util/state'
 import {
     CompleteEntityAssignmentErrorAction,
@@ -9,6 +10,9 @@ import {
     GetContributionEntityDuplicatesErrorAction,
     GetContributionEntityDuplicatesStartAction,
     GetContributionEntityDuplicatesSuccessAction,
+    GetContributionTagInstancesErrorAction,
+    GetContributionTagInstancesStartAction,
+    GetContributionTagInstancesSuccessAction,
     PutDuplicateErrorAction,
     PutDuplicateStartAction,
     PutDuplicateSuccessAction
@@ -17,9 +21,10 @@ import {
     CompleteEntityAssignmentAction,
     GetContributionEntitiesAction,
     GetContributionEntityDuplicateCandidatesAction,
+    GetContributionTagInstancesAsyncAction,
     PutDuplicateAction
 } from '../async_actions'
-import { Entity, EntityWithDuplicates, ScoredEntity } from '../state'
+import { Entity, EntityWithDuplicates, ScoredEntity, TagInstance } from '../state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {
@@ -361,6 +366,135 @@ describe('put duplicate', () => {
         expect(dispatch.mock.calls).toEqual([
             [new PutDuplicateStartAction('id-origin-test')],
             [new PutDuplicateErrorAction('id-origin-test', 'error')]
+        ])
+    })
+})
+
+describe('tag instances', () => {
+    const idTagRelated = 'id-tag-related'
+    const idTagRequested = 'id-tag-requested'
+    const idEntity = 'id-entity-test'
+    const idEntity1 = 'id-entity-test1'
+    const value = 'value-test'
+    const value1 = 'value-test1'
+    const idInstance = 'id-instance-test'
+    const idInstance1 = 'id-instance-test1'
+    const version = 4
+    const version1 = 8
+    test('success', async () => {
+        responseSequence([
+            [
+                200,
+                () => {
+                    return {
+                        value_responses: [
+                            {
+                                is_existing: true,
+                                id_tag_definition_requested_persistent: idTagRequested,
+                                id_entity_persistent: idEntity,
+                                id_tag_definition_persistent: idTagRequested,
+                                value,
+                                id_persistent: idInstance,
+                                version: version
+                            },
+                            {
+                                is_existing: false,
+                                id_tag_definition_requested_persistent: idTagRequested,
+                                id_entity_persistent: idEntity1,
+                                id_tag_definition_persistent: idTagRelated,
+                                value: value1,
+                                id_persistent: idInstance1,
+                                version: version1
+                            }
+                        ]
+                    }
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        const entityGroupMap = new Map([[idEntity, [idEntity, idEntity1]]])
+        const tagDefinitionList = [
+            new ColumnDefinition({
+                namePath: ['tag def test'],
+                idPersistent: idTagRequested,
+                columnType: ColumnType.String,
+                version: 3
+            })
+        ]
+        await new GetContributionTagInstancesAsyncAction({
+            entitiesGroupMap: entityGroupMap,
+            tagDefinitionList: tagDefinitionList,
+            idContributionPersistent: 'id-contribution-test'
+        }).run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [
+                new GetContributionTagInstancesStartAction(
+                    entityGroupMap,
+                    tagDefinitionList
+                )
+            ],
+            [
+                new GetContributionTagInstancesSuccessAction(
+                    entityGroupMap,
+                    tagDefinitionList,
+                    [
+                        new TagInstance(idEntity, idTagRequested, {
+                            idPersistent: idInstance,
+                            value: value,
+                            version: version,
+                            isExisting: true,
+                            isRequested: true
+                        }),
+                        new TagInstance(idEntity1, idTagRequested, {
+                            idPersistent: idInstance1,
+                            value: value1,
+                            version: version1,
+                            isExisting: false,
+                            isRequested: false
+                        })
+                    ]
+                )
+            ]
+        ])
+    })
+    test('error', async () => {
+        responseSequence([
+            [
+                500,
+                () => {
+                    return { msg: 'error' }
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        const entityGroupMap = new Map([[idEntity, [idEntity, idEntity1]]])
+        const tagDefinitionList = [
+            new ColumnDefinition({
+                namePath: ['tag def test'],
+                idPersistent: idTagRequested,
+                columnType: ColumnType.String,
+                version: 3
+            })
+        ]
+        await new GetContributionTagInstancesAsyncAction({
+            entitiesGroupMap: entityGroupMap,
+            tagDefinitionList: tagDefinitionList,
+            idContributionPersistent: 'id-contribution-test'
+        }).run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [
+                new GetContributionTagInstancesStartAction(
+                    entityGroupMap,
+                    tagDefinitionList
+                )
+            ],
+            [
+                new GetContributionTagInstancesErrorAction(
+                    entityGroupMap,
+                    tagDefinitionList,
+                    'error'
+                )
+            ]
         ])
     })
 })

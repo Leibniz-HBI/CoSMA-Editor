@@ -14,13 +14,17 @@ import {
     CompleteEntityAssignmentErrorAction,
     PutDuplicateStartAction,
     PutDuplicateErrorAction,
-    PutDuplicateSuccessAction
+    PutDuplicateSuccessAction,
+    GetContributionTagInstancesStartAction,
+    GetContributionTagInstancesSuccessAction,
+    GetContributionTagInstancesErrorAction
 } from './action'
 import { config } from '../../config'
 import { exceptionMessage } from '../../util/exception'
-import { Entity, EntityWithDuplicates, ScoredEntity } from './state'
+import { Entity, EntityWithDuplicates, ScoredEntity, TagInstance } from './state'
 import { Remote } from '../../util/state'
 import { fetch_chunk_get } from '../../util/fetch'
+import { ColumnDefinition } from '../../column_menu/state'
 
 export class GetContributionEntitiesAction extends AsyncAction<
     ContributionEntityAction,
@@ -148,10 +152,10 @@ export class PutDuplicateAction extends AsyncAction<ContributionEntityAction, vo
 
 export class GetContributionEntityDuplicateCandidatesAction extends AsyncAction<
     GetContributionEntityDuplicatesAction,
-    void
+    Map<string, string[]>
 > {
     idContributionPersistent: string
-    entityIdPersistentList: string[]
+    idEntityPersistentList: string[]
     constructor({
         idContributionPersistent,
         entityIdPersistentList
@@ -161,83 +165,70 @@ export class GetContributionEntityDuplicateCandidatesAction extends AsyncAction<
     }) {
         super()
         this.idContributionPersistent = idContributionPersistent
-        this.entityIdPersistentList = entityIdPersistentList
+        this.idEntityPersistentList = entityIdPersistentList
     }
 
     async run(
         dispatch: Dispatch<GetContributionEntityDuplicatesAction>
-    ): Promise<void> {
+    ): Promise<Map<string, string[]>> {
         try {
-            const chunkSize = 80
-            for (
-                let idx = 0;
-                idx < this.entityIdPersistentList.length;
-                idx += chunkSize
-            ) {
-                const chunk = this.entityIdPersistentList.slice(
-                    idx,
-                    Math.min(idx + chunkSize, this.entityIdPersistentList.length)
+            for (const idEntityPersistent of this.idEntityPersistentList) {
+                dispatch(
+                    new GetContributionEntityDuplicatesStartAction(idEntityPersistent)
                 )
-                for (const idEntityPersistent of chunk) {
+            }
+            const rsp = await fetch(
+                config.api_path +
+                    `/contributions/${this.idContributionPersistent}/entities/similar`,
+                {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        id_entity_persistent_list: this.idEntityPersistentList
+                    })
+                }
+            )
+            if (rsp.status == 200) {
+                const entitiesGroupMap = new Map<string, string[]>()
+                const json = await rsp.json()
+                const matchesMap = json['matches']
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                for (const idEntityPersistent in matchesMap) {
+                    let assignedDuplicate =
+                        matchesMap[idEntityPersistent]['assigned_duplicate']
+                    if (assignedDuplicate !== null && assignedDuplicate !== undefined) {
+                        assignedDuplicate = parseEntityObjectFromJson(assignedDuplicate)
+                    } else {
+                        assignedDuplicate = undefined
+                    }
+                    const matches = matchesMap[idEntityPersistent]['matches'].map(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (scoredEntity: any) => parseScoredEntityFromJson(scoredEntity)
+                    )
+                    entitiesGroupMap.set(idEntityPersistent, [
+                        idEntityPersistent,
+                        ...matches.map((match: ScoredEntity) => match.idPersistent)
+                    ])
                     dispatch(
-                        new GetContributionEntityDuplicatesStartAction(
-                            idEntityPersistent
+                        new GetContributionEntityDuplicatesSuccessAction(
+                            idEntityPersistent,
+                            matches,
+                            assignedDuplicate
                         )
                     )
                 }
-                const rsp = await fetch(
-                    config.api_path +
-                        `/contributions/${this.idContributionPersistent}/entities/similar`,
-                    {
-                        method: 'POST',
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            entity_id_persistent_list: chunk
-                        })
-                    }
+                return entitiesGroupMap
+            }
+            for (const idEntityPersistent of this.idEntityPersistentList) {
+                dispatch(
+                    new GetContributionEntityDuplicatesErrorAction(
+                        idEntityPersistent,
+                        (await rsp.json())['msg']
+                    )
                 )
-                if (rsp.status == 200) {
-                    const json = await rsp.json()
-                    const matchesMap = json['matches']
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    for (const idEntityPersistent in matchesMap) {
-                        let assignedDuplicate =
-                            matchesMap[idEntityPersistent]['assigned_duplicate']
-                        if (
-                            assignedDuplicate !== null &&
-                            assignedDuplicate !== undefined
-                        ) {
-                            assignedDuplicate =
-                                parseEntityObjectFromJson(assignedDuplicate)
-                        } else {
-                            assignedDuplicate = undefined
-                        }
-                        dispatch(
-                            new GetContributionEntityDuplicatesSuccessAction(
-                                idEntityPersistent,
-                                matchesMap[idEntityPersistent]['matches'].map(
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    (scoredEntity: any) =>
-                                        parseScoredEntityFromJson(scoredEntity)
-                                ),
-                                assignedDuplicate
-                            )
-                        )
-                    }
-                } else {
-                    for (const idEntityPersistent of this.entityIdPersistentList) {
-                        dispatch(
-                            new GetContributionEntityDuplicatesErrorAction(
-                                idEntityPersistent,
-                                (await rsp.json())['msg']
-                            )
-                        )
-                    }
-                    return
-                }
             }
         } catch (exc: unknown) {
-            for (const idEntityPersistent of this.entityIdPersistentList) {
+            for (const idEntityPersistent of this.idEntityPersistentList) {
                 dispatch(
                     new GetContributionEntityDuplicatesErrorAction(
                         idEntityPersistent,
@@ -246,6 +237,7 @@ export class GetContributionEntityDuplicateCandidatesAction extends AsyncAction<
                 )
             }
         }
+        return new Map()
     }
 }
 
@@ -282,6 +274,95 @@ export class CompleteEntityAssignmentAction extends AsyncAction<
     }
 }
 
+export class GetContributionTagInstancesAsyncAction extends AsyncAction<
+    ContributionEntityAction,
+    void
+> {
+    entitiesGroupMap: Map<string, string[]>
+    tagDefinitionList: ColumnDefinition[]
+    idContributionPersistent?: string
+    idMergeRequestPersistent?: string
+
+    constructor({
+        entitiesGroupMap,
+        tagDefinitionList,
+        idContributionPersistent = undefined,
+        idMergeRequestPersistent = undefined
+    }: {
+        entitiesGroupMap: Map<string, string[]>
+        tagDefinitionList: ColumnDefinition[]
+        idContributionPersistent?: string
+        idMergeRequestPersistent?: string
+    }) {
+        super()
+        this.entitiesGroupMap = entitiesGroupMap
+        this.tagDefinitionList = tagDefinitionList
+        this.idContributionPersistent = idContributionPersistent
+        this.idMergeRequestPersistent = idMergeRequestPersistent
+    }
+
+    async run(dispatch: Dispatch<ContributionEntityAction>): Promise<void> {
+        try {
+            dispatch(
+                new GetContributionTagInstancesStartAction(
+                    this.entitiesGroupMap,
+                    this.tagDefinitionList
+                )
+            )
+            const entitiesSet = new Set<string>()
+            for (const [
+                _idEntity,
+                entityGroupList
+            ] of this.entitiesGroupMap.entries()) {
+                for (const idEntity of entityGroupList) {
+                    entitiesSet.add(idEntity)
+                }
+            }
+            const rsp = await fetch(config.api_path + '/tags/entities', {
+                method: 'POST',
+                credentials: 'include',
+                body: JSON.stringify({
+                    id_tag_definition_persistent_list: this.tagDefinitionList.map(
+                        (tagDef) => tagDef.idPersistent
+                    ),
+                    id_entity_persistent_list: Array.from(entitiesSet),
+                    id_contribution_persistent: this.idContributionPersistent,
+                    id_merge_request_persistent: this.idMergeRequestPersistent
+                })
+            })
+            if (rsp.status == 200) {
+                const json = await rsp.json()
+                dispatch(
+                    new GetContributionTagInstancesSuccessAction(
+                        this.entitiesGroupMap,
+                        this.tagDefinitionList,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        json['value_responses'].map((instance: any) =>
+                            parseTagInstanceFromJson(instance)
+                        )
+                    )
+                )
+            } else {
+                dispatch(
+                    new GetContributionTagInstancesErrorAction(
+                        this.entitiesGroupMap,
+                        this.tagDefinitionList,
+                        (await rsp.json())['msg']
+                    )
+                )
+            }
+        } catch (e: unknown) {
+            dispatch(
+                new GetContributionTagInstancesErrorAction(
+                    this.entitiesGroupMap,
+                    this.tagDefinitionList,
+                    exceptionMessage(e)
+                )
+            )
+        }
+    }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseEntityObjectFromJson(json: any) {
     return new Entity({
@@ -296,5 +377,17 @@ export function parseScoredEntityFromJson(json: any) {
     return new ScoredEntity({
         ...parseEntityObjectFromJson(json['entity']),
         similarity: json['similarity']
+    })
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parseTagInstanceFromJson(json: any) {
+    const idTagDefinitionPersistent = json['id_tag_definition_requested_persistent']
+    return new TagInstance(json['id_entity_persistent'], idTagDefinitionPersistent, {
+        value: json['value'],
+        idPersistent: json['id_persistent'],
+        version: json['version'],
+        isExisting: json['is_existing'],
+        isRequested: json['id_tag_definition_persistent'] == idTagDefinitionPersistent
     })
 }

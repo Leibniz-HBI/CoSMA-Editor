@@ -71,6 +71,8 @@ export class TableState {
 }
 
 export type CellValue = {
+    isExisting?: boolean
+    isRequested?: boolean
     value: boolean | string | number | undefined
     idPersistent: string
     version: number

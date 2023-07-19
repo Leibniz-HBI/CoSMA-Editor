@@ -1,3 +1,4 @@
+import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
 import { Remote } from '../../../util/state'
 import {
     LoadContributionDetailsErrorAction,
@@ -16,18 +17,30 @@ import {
     GetContributionEntityDuplicatesErrorAction,
     GetContributionEntityDuplicatesStartAction,
     GetContributionEntityDuplicatesSuccessAction,
+    GetContributionTagInstancesErrorAction,
+    GetContributionTagInstancesStartAction,
+    GetContributionTagInstancesSuccessAction,
     PutDuplicateErrorAction,
     PutDuplicateStartAction,
     PutDuplicateSuccessAction
 } from '../action'
 import { contributionEntityReducer } from '../reducer'
-import { ContributionEntityState, EntityWithDuplicates, ScoredEntity } from '../state'
+import {
+    ContributionEntityState,
+    EntityWithDuplicates,
+    ScoredEntity,
+    TagInstance
+} from '../state'
 
 const idPersistentTest = 'test-id'
 const idPersistentTest1 = 'test-id-1'
 const idPersistentTest2 = 'test-id2'
 const displayTxtTest = 'entity for test'
+const displayTxtTest1 = 'entity for test 1'
+const displayTxtTest2 = 'entity for test 2'
 const versionTest = 12
+const versionTest1 = 2
+const versionTest2 = 18
 
 const entity = new EntityWithDuplicates({
     idPersistent: idPersistentTest,
@@ -38,15 +51,15 @@ const entity = new EntityWithDuplicates({
 
 const entity1 = new EntityWithDuplicates({
     idPersistent: idPersistentTest1,
-    displayTxt: 'entity for test 1',
-    version: 2,
+    displayTxt: displayTxtTest1,
+    version: versionTest1,
     similarEntities: new Remote([])
 })
 
 const entity2 = new EntityWithDuplicates({
     idPersistent: idPersistentTest2,
-    displayTxt: 'entity for test 2',
-    version: 18,
+    displayTxt: displayTxtTest2,
+    version: versionTest2,
     similarEntities: new Remote([])
 })
 const entities = [entity, entity1, entity2]
@@ -352,6 +365,315 @@ describe('get duplicates', () => {
         const endState = contributionEntityReducer(
             initialState,
             new GetContributionEntityDuplicatesErrorAction(idPersistentTest2, 'error')
+        )
+        expect(endState).toEqual(expectedState)
+    })
+})
+describe('entities for tag', () => {
+    const idTagDefTest = 'id-tag-def-test'
+    const idTagDefTest1 = 'id-tag-def-test1'
+    const tagDefMapTest = new Map([
+        [idTagDefTest, 0],
+        [idTagDefTest1, 1]
+    ])
+    const tagDefsTest = [
+        new ColumnDefinition({
+            namePath: ['tag definition test'],
+            idPersistent: idTagDefTest,
+            columnType: ColumnType.String,
+            version: 26
+        }),
+        new ColumnDefinition({
+            namePath: ['tag definition test1'],
+            idPersistent: idTagDefTest1,
+            columnType: ColumnType.String,
+            version: 54
+        })
+    ]
+    const entityWithDuplicates0 = new EntityWithDuplicates({
+        idPersistent: idPersistentTest,
+        displayTxt: displayTxtTest,
+        version: versionTest,
+        cellContents: [new Remote([])],
+        similarEntities: new Remote([
+            new ScoredEntity({
+                idPersistent: idPersistentTest1,
+                displayTxt: displayTxtTest1,
+                similarity: 0.8,
+                version: versionTest1,
+                cellContents: [new Remote([])]
+            }),
+            new ScoredEntity({
+                idPersistent: idPersistentTest2,
+                displayTxt: displayTxtTest2,
+                similarity: 0.7,
+                version: versionTest2,
+                cellContents: [new Remote([])]
+            })
+        ])
+    })
+    test('start', () => {
+        const initialState = new ContributionEntityState({
+            entities: new Remote([entityWithDuplicates0]),
+            tagDefinitions: tagDefsTest.slice(0, 1),
+            tagDefinitionMap: new Map([[idTagDefTest, 0]])
+        })
+        const expectedState = new ContributionEntityState({
+            tagDefinitions: tagDefsTest,
+            tagDefinitionMap: tagDefMapTest,
+            entities: new Remote([
+                new EntityWithDuplicates({
+                    idPersistent: idPersistentTest,
+                    displayTxt: displayTxtTest,
+                    version: versionTest,
+                    cellContents: [new Remote([]), new Remote([], true)],
+                    similarEntities: new Remote([
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest1,
+                            displayTxt: displayTxtTest1,
+                            version: versionTest1,
+                            similarity: 0.8,
+                            cellContents: [new Remote([])]
+                        }),
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest2,
+                            displayTxt: displayTxtTest2,
+                            version: versionTest2,
+                            similarity: 0.7,
+                            cellContents: [new Remote([]), new Remote([], true)]
+                        })
+                    ])
+                })
+            ])
+        })
+        const endState = contributionEntityReducer(
+            initialState,
+            new GetContributionTagInstancesStartAction(
+                new Map([[idPersistentTest, [idPersistentTest, idPersistentTest2]]]),
+                tagDefsTest.slice(1, 2)
+            )
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test('success no values', () => {
+        const initialState = new ContributionEntityState({
+            tagDefinitions: tagDefsTest,
+            tagDefinitionMap: tagDefMapTest,
+            entities: new Remote([
+                new EntityWithDuplicates({
+                    idPersistent: idPersistentTest,
+                    displayTxt: displayTxtTest,
+                    version: versionTest,
+                    cellContents: [new Remote([]), new Remote([], true)],
+                    similarEntities: new Remote([
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest1,
+                            displayTxt: displayTxtTest1,
+                            version: versionTest1,
+                            similarity: 0.8,
+                            cellContents: [new Remote([])]
+                        }),
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest2,
+                            displayTxt: displayTxtTest2,
+                            version: versionTest2,
+                            similarity: 0.7,
+                            cellContents: [new Remote([]), new Remote([], true)]
+                        })
+                    ])
+                })
+            ])
+        })
+        const expectedState = new ContributionEntityState({
+            tagDefinitions: tagDefsTest,
+            tagDefinitionMap: tagDefMapTest,
+            entities: new Remote([
+                new EntityWithDuplicates({
+                    idPersistent: idPersistentTest,
+                    displayTxt: displayTxtTest,
+                    version: versionTest,
+                    cellContents: [new Remote([]), new Remote([])],
+                    similarEntities: new Remote([
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest1,
+                            displayTxt: displayTxtTest1,
+                            version: versionTest1,
+                            similarity: 0.8,
+                            cellContents: [new Remote([])]
+                        }),
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest2,
+                            displayTxt: displayTxtTest2,
+                            version: versionTest2,
+                            similarity: 0.7,
+                            cellContents: [new Remote([]), new Remote([])]
+                        })
+                    ])
+                })
+            ])
+        })
+        const endState = contributionEntityReducer(
+            initialState,
+            new GetContributionTagInstancesSuccessAction(
+                new Map([[idPersistentTest, [idPersistentTest, idPersistentTest2]]]),
+                tagDefsTest.slice(1, 2),
+                []
+            )
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test('success with values', () => {
+        const initialState = new ContributionEntityState({
+            tagDefinitions: tagDefsTest,
+            tagDefinitionMap: tagDefMapTest,
+            entities: new Remote([
+                new EntityWithDuplicates({
+                    idPersistent: idPersistentTest,
+                    displayTxt: displayTxtTest,
+                    version: versionTest,
+                    cellContents: [new Remote([]), new Remote([], true)],
+                    similarEntities: new Remote([
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest1,
+                            displayTxt: displayTxtTest1,
+                            version: versionTest1,
+                            similarity: 0.8,
+                            cellContents: [new Remote([])]
+                        }),
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest2,
+                            displayTxt: displayTxtTest2,
+                            version: versionTest2,
+                            similarity: 0.7,
+                            cellContents: [new Remote([]), new Remote([], true)]
+                        })
+                    ])
+                })
+            ])
+        })
+        const instance0 = new TagInstance(idPersistentTest2, idTagDefTest1, {
+            value: 2,
+            idPersistent: 'id-instance-test',
+            version: 8
+        })
+        const instance1 = new TagInstance(idPersistentTest2, idTagDefTest1, {
+            value: 4,
+            idPersistent: 'id-instance-test-1',
+            version: 14
+        })
+        const instance2 = new TagInstance(idPersistentTest, idTagDefTest1, {
+            value: 9,
+            idPersistent: 'id-instance-test-2',
+            version: 28
+        })
+        const expectedState = new ContributionEntityState({
+            tagDefinitions: tagDefsTest,
+            tagDefinitionMap: tagDefMapTest,
+            entities: new Remote([
+                new EntityWithDuplicates({
+                    idPersistent: idPersistentTest,
+                    displayTxt: displayTxtTest,
+                    version: versionTest,
+                    cellContents: [new Remote([]), new Remote([instance2.cellValue])],
+                    similarEntities: new Remote([
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest1,
+                            displayTxt: displayTxtTest1,
+                            version: versionTest1,
+                            similarity: 0.8,
+                            cellContents: [new Remote([])]
+                        }),
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest2,
+                            displayTxt: displayTxtTest2,
+                            version: versionTest2,
+                            similarity: 0.7,
+                            cellContents: [
+                                new Remote([]),
+                                new Remote([instance0.cellValue, instance1.cellValue])
+                            ]
+                        })
+                    ])
+                })
+            ])
+        })
+        const endState = contributionEntityReducer(
+            initialState,
+            new GetContributionTagInstancesSuccessAction(
+                new Map([[idPersistentTest, [idPersistentTest, idPersistentTest2]]]),
+                tagDefsTest.slice(1, 2),
+                [instance0, instance2, instance1]
+            )
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test('error', () => {
+        const initialState = new ContributionEntityState({
+            tagDefinitions: tagDefsTest,
+            tagDefinitionMap: tagDefMapTest,
+            entities: new Remote([
+                new EntityWithDuplicates({
+                    idPersistent: idPersistentTest,
+                    displayTxt: displayTxtTest,
+                    version: versionTest,
+                    cellContents: [new Remote([]), new Remote([], true)],
+                    similarEntities: new Remote([
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest1,
+                            displayTxt: displayTxtTest1,
+                            version: versionTest1,
+                            similarity: 0.8,
+                            cellContents: [new Remote([])]
+                        }),
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest2,
+                            displayTxt: displayTxtTest2,
+                            version: versionTest2,
+                            similarity: 0.7,
+                            cellContents: [new Remote([]), new Remote([], true)]
+                        })
+                    ])
+                })
+            ])
+        })
+        const expectedState = new ContributionEntityState({
+            tagDefinitions: tagDefsTest,
+            tagDefinitionMap: tagDefMapTest,
+            entities: new Remote([
+                new EntityWithDuplicates({
+                    idPersistent: idPersistentTest,
+                    displayTxt: displayTxtTest,
+                    version: versionTest,
+                    cellContents: [new Remote([]), new Remote([], false, 'error')],
+                    similarEntities: new Remote([
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest1,
+                            displayTxt: displayTxtTest1,
+                            version: versionTest1,
+                            similarity: 0.8,
+                            cellContents: [new Remote([])]
+                        }),
+                        new ScoredEntity({
+                            idPersistent: idPersistentTest2,
+                            displayTxt: displayTxtTest2,
+                            version: versionTest2,
+                            similarity: 0.7,
+                            cellContents: [
+                                new Remote([]),
+                                new Remote([], false, 'error')
+                            ]
+                        })
+                    ])
+                })
+            ])
+        })
+        const endState = contributionEntityReducer(
+            initialState,
+            new GetContributionTagInstancesErrorAction(
+                new Map([[idPersistentTest, [idPersistentTest, idPersistentTest2]]]),
+                tagDefsTest.slice(1, 2),
+                'error'
+            )
         )
         expect(endState).toEqual(expectedState)
     })

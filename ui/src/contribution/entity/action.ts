@@ -1,5 +1,6 @@
+import { ColumnDefinition } from '../../column_menu/state'
 import { LoadContributionDetailsAction } from '../details/action'
-import { Entity, EntityWithDuplicates, ScoredEntity } from './state'
+import { Entity, EntityWithDuplicates, ScoredEntity, TagInstance } from './state'
 
 /**
  * Indicate start of loading entities for a contribution
@@ -124,6 +125,58 @@ export class PutDuplicateClearErrorAction extends GetContributionEntityDuplicate
     }
 }
 
+export class GetContributionTagInstancesAction {
+    /**
+     * Groups entities according to their similarity group.
+     * Each group should also contain the entity itself.
+     */
+    idEntityPersistentGroupMap: Map<string, string[]>
+    /**
+     * Contains ids of tagDefinitionIds relevant for this action
+     */
+    tagDefinitionList: ColumnDefinition[]
+
+    constructor(
+        idEntityPersistentGroupMap: Map<string, string[]>,
+        tagDefinitionList: ColumnDefinition[]
+    ) {
+        this.idEntityPersistentGroupMap = idEntityPersistentGroupMap
+        this.tagDefinitionList = tagDefinitionList
+    }
+}
+
+export class GetContributionTagInstancesStartAction extends GetContributionTagInstancesAction {}
+
+export class GetContributionTagInstancesSuccessAction extends GetContributionTagInstancesAction {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    instances: TagInstance[]
+
+    constructor(
+        idEntityPersistentGroupMap: Map<string, string[]>,
+        tagDefinitionList: ColumnDefinition[],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        instances: any
+    ) {
+        super(idEntityPersistentGroupMap, tagDefinitionList)
+        this.instances = instances
+    }
+}
+
+export class GetContributionTagInstancesErrorAction extends GetContributionTagInstancesAction {
+    msg: string
+
+    constructor(
+        idEntityPersistentGroupMap: Map<string, string[]>,
+        tagDefinitionList: ColumnDefinition[],
+        msg: string
+    ) {
+        super(idEntityPersistentGroupMap, tagDefinitionList)
+        this.msg = msg
+    }
+}
+
+export class ToggleTagDefinitionMenuAction {}
+
 export type ContributionEntityAction =
     | GetContributionEntitiesStartAction
     | GetContributionEntitiesSuccessAction
@@ -134,3 +187,5 @@ export type ContributionEntityAction =
     | CompleteEntityAssignmentSuccessAction
     | CompleteEntityAssignmentErrorAction
     | CompleteEntityAssignmentClearErrorAction
+    | GetContributionTagInstancesAction
+    | ToggleTagDefinitionMenuAction
