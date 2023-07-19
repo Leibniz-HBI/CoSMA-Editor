@@ -189,6 +189,17 @@ class TagInstance(models.Model):
         )
 
     @classmethod
+    def for_entities(
+        cls, id_tag_definition_persistent: str, id_entity_persistent_list: List[str]
+    ):
+        "Get most recent values for a tag definition, limited by a list of entities."
+        query_set = cls.objects.filter(  # pylint: disable=no-member
+            id_entity_persistent__in=id_entity_persistent_list,
+            id_tag_definition_persistent=id_tag_definition_persistent,
+        )
+        return cls.most_recent_queryset(query_set)
+
+    @classmethod
     def change_or_create(  # pylint: disable=too-many-arguments
         cls,
         id_persistent: str,

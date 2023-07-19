@@ -25,7 +25,7 @@ def post_similar(
             f"/cosmae/api/contributions/{id_contribution_candidate_persistent}"
             "/entities/similar"
         ),
-        json={"entity_id_persistent_list": id_entity_persistent_list},
+        json={"id_entity_persistent_list": id_entity_persistent_list},
         cookies=cookies,
         timeout=9,
     )

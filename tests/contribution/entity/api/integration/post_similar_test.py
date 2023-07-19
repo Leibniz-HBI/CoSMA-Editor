@@ -48,13 +48,13 @@ def similar_mock():
     mock = MagicMock()
     mock.return_value = [
         {
-            "similarity": 0.95,
+            "levenshtein_similarity": 0.95,
             "id_persistent": ce.id_persistent_test_0,
             "display_txt": ce.display_txt_test0,
             "id": 0,
         },
         {
-            "similarity": 0.90,
+            "levenshtein_similarity": 0.90,
             "id_persistent": ce.id_persistent_test_1,
             "display_txt": ce.display_txt_test1,
             "id": 1,

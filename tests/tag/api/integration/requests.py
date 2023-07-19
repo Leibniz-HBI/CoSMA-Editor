@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-many-arguments
 from urllib.parse import urljoin
 
 import requests
@@ -79,6 +79,27 @@ def post_tag_instances_values(url, id_persistent_pairs, cookies):
                 }
                 for id_entity_persistent, id_tag_definition_persistent in id_persistent_pairs
             ]
+        },
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def post_tag_instances_for_entities(
+    url,
+    id_entity_persistent_list,
+    id_tag_definition_persistent_list,
+    id_contribution_persistent=None,
+    id_merge_request_persistent=None,
+    cookies=None,
+):
+    return requests.post(
+        urljoin(url, "cosmae/api/tags/entities"),
+        json={
+            "id_tag_definition_persistent_list": id_tag_definition_persistent_list,
+            "id_entity_persistent_list": id_entity_persistent_list,
+            "id_contribution_persistent": id_contribution_persistent,
+            "id_merge_request_persistent": id_merge_request_persistent,
         },
         cookies=cookies,
         timeout=900,

@@ -258,7 +258,6 @@ def test_children_root(tag_def):
 
 @pytest.mark.django_db
 def test_only_for_user(tag_def_user, tag_def):
-    tag_def_user.save()
     tag_def.save()
     ret = TagDefinition.for_user(tag_def_user.owner).get()
     assert ret == tag_def_user
@@ -266,7 +265,6 @@ def test_only_for_user(tag_def_user, tag_def):
 
 @pytest.mark.django_db
 def test_most_recent_for_user(tag_def_user):
-    tag_def_user.save()
     tag_def_edited, _ = TagDefinition.change_or_create(
         id_persistent=tag_def_user.id_persistent,
         id_parent_persistent=None,

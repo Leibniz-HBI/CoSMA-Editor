@@ -16,6 +16,14 @@ class NotAuthenticatedException(Exception):
     """Indicates that a user is not authenticated."""
 
 
+class ForbiddenException(Exception):
+    "Indicates that the requested resource can not be accessed."
+
+    def __init__(self, type_name: str, id_resource: str) -> None:
+        self.type_name = type_name
+        self.id_resource = id_resource
+
+
 class ValidationException(Exception):
     """Indicates an error during conversion"""
 

@@ -40,7 +40,7 @@ class ScoredMatchResponse(Schema):
 class PostSimilarRequest(Schema):
     "API model for requesting similar entities."
     # pylint: disable=too-few-public-methods
-    entity_id_persistent_list: List[str]
+    id_entity_persistent_list: List[str]
 
 
 class PutDuplicateRequest(Schema):
@@ -104,7 +104,7 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
         candidate = ContributionCandidate.by_id_persistent(
             id_contribution_persistent, user
         ).get()
-        for id_entity_persistent in similar_request.entity_id_persistent_list:
+        for id_entity_persistent in similar_request.id_entity_persistent_list:
             entity = Entity.most_recent_by_id(id_entity_persistent)
             if entity.contribution_candidate.id_persistent != candidate.id_persistent:
                 return 404, ApiError(msg="Entity does not exist")
@@ -115,7 +115,6 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
                         id_origin_persistent=id_entity_persistent
                     )
                 )
-                logging.warning(duplicate_query)
                 assigned_duplicate = duplicate_query.get().id_destination_persistent
             except EntityDuplicate.DoesNotExist:  # pylint: disable=no-member
                 assigned_duplicate = None
@@ -141,7 +140,7 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
     except IndexError:  # pylint: disable=no-member
         return 404, ApiError(msg="Entity does not exist.")
     except Exception as exc:  # pylint: disable=broad-except
-        logging.warning(exc)
+        logging.warning(None, exc_info=exc)
         return 500, ApiError(msg="Could not get entities of the contribution.")
 
 
@@ -203,7 +202,7 @@ def put_duplicate_assignment(
 def scored_match_db_to_api(match):
     "Converts an entity annotated with a similarity score to a scored match"
     return ScoredMatch(
-        similarity=match["similarity"],
+        similarity=match["levenshtein_similarity"],
         entity=PersonNatural(
             id_persistent=match["id_persistent"],
             display_txt=match["display_txt"],
