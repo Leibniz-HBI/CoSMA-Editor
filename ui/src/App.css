@@ -57,6 +57,10 @@ html {
     min-height: 200px !important;
 }
 
+.w-200px {
+    width: 200px !important;
+}
+
 .flex-basis-0 {
     flex-basis: 0;
 }

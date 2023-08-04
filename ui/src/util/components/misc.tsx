@@ -48,3 +48,28 @@ export function RemoteTriggerButton({
         </Button>
     )
 }
+
+export function ChoiceButton({
+    label,
+    checked,
+    onClick,
+    className = ''
+}: {
+    label: string
+    checked: boolean
+    onClick: VoidFunction
+    className?: string
+}) {
+    if (checked) {
+        return (
+            <Button variant="primary" className={className}>
+                <span>{label}</span>
+            </Button>
+        )
+    }
+    return (
+        <Button variant="outline-primary" onClick={onClick} className={className}>
+            <span>{label}</span>
+        </Button>
+    )
+}

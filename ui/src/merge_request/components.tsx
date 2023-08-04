@@ -3,6 +3,8 @@ import { useMergeRequests } from './hooks'
 import { CosmaeLoading } from '../util/components/misc'
 import { Col, ListGroup, Row } from 'react-bootstrap'
 import { MergeRequest } from './state'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
+import { StringFunction } from '../util/type'
 
 export function ReviewList() {
     const { getMergeRequestsCallback, isLoading, assigned } = useMergeRequests()
@@ -10,6 +12,7 @@ export function ReviewList() {
         getMergeRequestsCallback()
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+    const navigateCallback = useNavigate()
     if (isLoading) {
         return <CosmaeLoading />
     }
@@ -21,7 +24,11 @@ export function ReviewList() {
             <Row className="ms-2" key="merge-request-assigned-list">
                 <ListGroup>
                     {assigned.map((mergeRequest) => (
-                        <MergeRequestListItem mergeRequest={mergeRequest} />
+                        <MergeRequestListItem
+                            mergeRequest={mergeRequest}
+                            navigateCallback={navigateCallback}
+                            key={`${mergeRequest.idPersistent}`}
+                        />
                     ))}
                 </ListGroup>
             </Row>
@@ -31,7 +38,11 @@ export function ReviewList() {
             <Row className="ms-2" key="merge-request-created-list">
                 <ListGroup as="ol">
                     {assigned.map((mergeRequest) => (
-                        <MergeRequestListItem mergeRequest={mergeRequest} />
+                        <MergeRequestListItem
+                            mergeRequest={mergeRequest}
+                            navigateCallback={navigateCallback}
+                            key={`${mergeRequest.idPersistent}`}
+                        />
                     ))}
                 </ListGroup>
             </Row>
@@ -39,9 +50,18 @@ export function ReviewList() {
     )
 }
 
-export function MergeRequestListItem({ mergeRequest }: { mergeRequest: MergeRequest }) {
+export function MergeRequestListItem({
+    mergeRequest,
+    navigateCallback
+}: {
+    mergeRequest: MergeRequest
+    navigateCallback: NavigateFunction
+}) {
     return (
-        <ListGroup.Item as="li" key={`${mergeRequest.idPersistent}`}>
+        <ListGroup.Item
+            as="li"
+            onClick={() => navigateCallback('/review/' + mergeRequest.idPersistent)}
+        >
             {`${mergeRequest.createdBy.userName} wants to merge \n` +
                 `${mergeRequest.originTagDefinition.namePath[0]} \n` +
                 `into ${mergeRequest.destinationTagDefinition.namePath[0]}`}

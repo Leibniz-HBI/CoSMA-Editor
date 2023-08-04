@@ -95,7 +95,6 @@ export function mkColumnExplorerItem(props: {
 }) {
     const { columnDefinition, isLoading, children, isExpanded } =
         props.columnSelectionEntry
-
     const tailElement = props.mkTailElement(columnDefinition)
     let expandCallback = undefined
     if (props.columnSelectionEntry.isExpandable()) {
@@ -151,7 +150,7 @@ export function mkListItems(args: {
         additionalEntries
     } = args
     if (additionalEntries !== undefined) {
-        const additionalItems = additionalEntries.map((entry) =>
+        const additionalItems = additionalEntries.map((entry, idx) =>
             mkColumnExplorerItem({
                 columnSelectionEntry: new ColumnSelectionEntry({
                     columnDefinition: new ColumnDefinition({
@@ -161,7 +160,7 @@ export function mkListItems(args: {
                         version: 0
                     })
                 }),
-                path: [0],
+                path: [idx],
                 toggleExpansionCallback: toggleExpansionCallback,
                 expansionGroup: expansionGroup,
                 level: 0,

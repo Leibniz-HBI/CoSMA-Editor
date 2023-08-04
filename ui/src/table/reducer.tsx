@@ -205,7 +205,6 @@ export function tableReducer(state: TableState, action: TableAction) {
         }
         if (action.edits.length > 1) {
             const batchErrorMsg = 'Batch edits not implemented. Values are not changed.'
-            console.log(batchErrorMsg)
             return new TableState({
                 ...state,
                 isSubmittingValues: false,

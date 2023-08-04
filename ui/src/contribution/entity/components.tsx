@@ -218,7 +218,6 @@ export function EntitySimilarityItem({
                 columnSelect="none"
                 rangeSelect="none"
                 onGridSelectionChange={(selection: GridSelection) => {
-                    console.log(selection)
                     if (selection.current !== undefined) {
                         //Select range
                         return

@@ -16,3 +16,5 @@ export type HandleChange = {
         ? void
         : (e: string | ChangeEvent) => void
 }
+
+export type StringFunction = (str: string) => void

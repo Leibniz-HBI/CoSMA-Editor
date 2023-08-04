@@ -22,6 +22,7 @@ import { exceptionMessage } from './util/exception'
 import { EntitiesStep } from './contribution/entity/components'
 import { ReviewList } from './merge_request/components'
 import { CompleteStep } from './contribution/complete/components'
+import { MergeRequestConflictResolutionView } from './merge_request/conflicts/components'
 
 export function CosmaeRoot() {
     return (
@@ -75,34 +76,31 @@ const router = createBrowserRouter([
             {
                 path: 'contribute/:idPersistent/metadata',
                 element: <ContributionDetailsStep />,
-                loader: ({ params }) => {
-                    return params.idPersistent
-                }
+                loader: ({ params }) => params.idPersistent
             },
             {
                 path: 'contribute/:idPersistent/columns',
                 element: <ColumnDefinitionStep />,
-                loader: ({ params }) => {
-                    return params.idPersistent
-                }
+                loader: ({ params }) => params.idPersistent
             },
             {
                 path: 'contribute/:idPersistent/entities',
                 element: <EntitiesStep />,
-                loader: ({ params }) => {
-                    return params.idPersistent
-                }
+                loader: ({ params }) => params.idPersistent
             },
             {
                 path: 'contribute/:idPersistent/complete',
                 element: <CompleteStep />,
-                loader: ({ params }) => {
-                    return params.idPersistent
-                }
+                loader: ({ params }) => params.idPersistent
             },
             {
                 path: 'review',
                 element: <ReviewList />
+            },
+            {
+                path: 'review/:idPersistent',
+                element: <MergeRequestConflictResolutionView />,
+                loader: ({ params }) => params.idPersistent
             }
         ]
     }
