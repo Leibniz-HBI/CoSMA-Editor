@@ -1,4 +1,5 @@
 "Queue methods for removing duplicates of a contribution candidate."
+import django_rq
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
 from django.db.utils import OperationalError
@@ -6,14 +7,17 @@ from django.db.utils import OperationalError
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
+from cosmae.merge_request.queue import merge_request_fast_forward
 from cosmae.tag.models_django import TagInstance
 from cosmae.util import timestamp
 
 
 def eliminate_duplicates(id_contribution_persistent):
     "Eliminate all marked duplicate entities for a contribution candidate"
-    contribution_query = ContributionCandidate.objects.select_for_update().filter(  # pylint: disable=no-member
-        id_persistent=id_contribution_persistent
+    contribution_query = (
+        ContributionCandidate.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_contribution_persistent
+        ).select_for_update()
     )
     try:
         with transaction.atomic():
@@ -38,10 +42,13 @@ def eliminate_duplicates(id_contribution_persistent):
             "id_persistent",
         )
         update_entities(replaced_entities_with_duplicates)
+        for merge_request in contribution.mergerequest_set.all():
+            django_rq.enqueue(merge_request_fast_forward, merge_request.id_persistent)
     except (Exception,):  # pylint: disable=broad-except
-        contribution_candidate = contribution_query.get()
-        contribution_candidate.state = ContributionCandidate.VALUES_EXTRACTED
-        contribution_candidate.save()
+        with transaction.atomic():
+            contribution_candidate = contribution_query.get()
+            contribution_candidate.state = ContributionCandidate.VALUES_EXTRACTED
+            contribution_candidate.save()
 
 
 def update_tag_instances(tag_instances_with_duplicates, time_edit):

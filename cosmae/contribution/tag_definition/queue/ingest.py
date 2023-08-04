@@ -1,4 +1,5 @@
 "Queue job for ingesting data after columns have been assigned."
+import logging
 from datetime import datetime
 from uuid import uuid4
 
@@ -17,8 +18,10 @@ def ingest_values_from_csv(id_contribution_persistent):
     # pylint: disable=too-many-locals
     "Reads values from a csv files according to column assignments of a contribution candidate"
 
-    contribution_query = ContributionCandidate.objects.select_for_update().filter(  # pylint: disable=no-member
-        id_persistent=id_contribution_persistent
+    contribution_query = (
+        ContributionCandidate.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_contribution_persistent
+        ).select_for_update()
     )
     try:
         with transaction.atomic():
@@ -103,7 +106,9 @@ def ingest_values_from_csv(id_contribution_persistent):
     except (  # pylint: disable=broad-except
         ContributionCandidate.MissingRequiredAssignmentsException,
         Exception,
-    ):
-        contribution_candidate = contribution_query.get()
-        contribution_candidate.state = ContributionCandidate.COLUMNS_EXTRACTED
-        contribution_candidate.save()
+    ) as exc:
+        logging.error(None, exc_info=exc)
+        with transaction.atomic():
+            contribution_candidate = contribution_query.get()
+            contribution_candidate.state = ContributionCandidate.COLUMNS_EXTRACTED
+            contribution_candidate.save()

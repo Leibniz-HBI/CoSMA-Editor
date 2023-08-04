@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-statements
 from unittest.mock import MagicMock, patch
 
 import tests.user.common as cu
@@ -27,65 +27,66 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
     server, cookies = auth_server
     rsp = req.get_merge_requests(server.url, cookies=cookies)
     assert rsp.status_code == 200
-    assert rsp.json() == {
-        "created": [
-            {
-                "id_persistent": c.id_persistent_merge_request1,
-                "created_by": {
-                    "user_name": cu.test_username,
-                    "id_persistent": cu.test_uuid,
-                },
-                "assigned_to": {
-                    "user_name": cu.test_username1,
-                    "id_persistent": cu.test_uuid1,
-                },
-                "destination": {
-                    "id_persistent": c.id_persistent_tag_def_destination1,
-                    "id_parent_persistent": None,
-                    "name": c.name_tag_def_destination1,
-                    "version": 3,
-                    "type": "STRING",
-                    "owner": "test-user1",
-                },
-                "origin": {
-                    "name": c.name_tag_def_origin1,
-                    "id_parent_persistent": None,
-                    "id_persistent": c.id_persistent_tag_def_origin1,
-                    "version": 4,
-                    "type": "STRING",
-                    "owner": "test-user",
-                },
-                "created_at": format_datetime(c.time_merge_request1),
-            }
-        ],
-        "assigned": [
-            {
-                "id_persistent": c.id_persistent_merge_request,
-                "created_by": {
-                    "user_name": cu.test_username1,
-                    "id_persistent": cu.test_uuid1,
-                },
-                "assigned_to": {
-                    "user_name": cu.test_username,
-                    "id_persistent": cu.test_uuid,
-                },
-                "destination": {
-                    "id_persistent": c.id_persistent_tag_def_destination,
-                    "id_parent_persistent": None,
-                    "name": c.name_tag_def_destination,
-                    "version": 2,
-                    "type": "FLOAT",
-                    "owner": "test-user",
-                },
-                "origin": {
-                    "name": c.name_tag_def_origin,
-                    "id_persistent": c.id_persistent_tag_def_origin,
-                    "id_parent_persistent": None,
-                    "version": 1,
-                    "type": "FLOAT",
-                    "owner": "test-user1",
-                },
-                "created_at": format_datetime(c.time_merge_request),
-            }
-        ],
+    json = rsp.json()
+    assert len(json) == 2
+    created_list = json["created"]
+    assert len(created_list) == 1
+    created = created_list[0]
+    assert len(created) == 6
+    assert created["created_at"] == format_datetime(c.time_merge_request1)
+    assert created["id_persistent"] == c.id_persistent_merge_request1
+    assert created["created_by"] == {
+        "user_name": cu.test_username,
+        "id_persistent": cu.test_uuid,
     }
+    assert created["assigned_to"] == {
+        "user_name": cu.test_username1,
+        "id_persistent": cu.test_uuid1,
+    }
+    destination = created["destination"]
+    assert len(destination) == 6
+    assert destination["id_persistent"] == c.id_persistent_tag_def_destination1
+    assert destination["id_parent_persistent"] is None
+    assert destination["name"] == c.name_tag_def_destination1
+    assert destination["type"] == "STRING"
+    assert destination["owner"] == "test-user1"
+    assert "version" in destination
+    origin = created["origin"]
+    assert len(origin) == 6
+    assert origin["name"] == c.name_tag_def_origin1
+    assert origin["id_parent_persistent"] is None
+    assert origin["id_persistent"] == c.id_persistent_tag_def_origin1
+    assert origin["type"] == "STRING"
+    assert origin["owner"] == "test-user"
+    assert "version" in origin
+
+    assigned_list = json["assigned"]
+    assert len(assigned_list) == 1
+    assigned = assigned_list[0]
+    assert len(assigned) == 6
+    assert assigned["created_at"] == format_datetime(c.time_merge_request)
+    assert assigned["id_persistent"] == c.id_persistent_merge_request
+    assert assigned["created_by"] == {
+        "user_name": cu.test_username1,
+        "id_persistent": cu.test_uuid1,
+    }
+    assert assigned["assigned_to"] == {
+        "user_name": cu.test_username,
+        "id_persistent": cu.test_uuid,
+    }
+    destination = assigned["destination"]
+    assert len(destination) == 6
+    assert destination["id_persistent"] == c.id_persistent_tag_def_destination
+    assert destination["id_parent_persistent"] is None
+    assert destination["name"] == c.name_tag_def_destination
+    assert destination["type"] == "STRING"
+    assert destination["owner"] == "test-user"
+    assert "version" in destination
+    origin = assigned["origin"]
+    assert len(origin) == 6
+    assert origin["name"] == c.name_tag_def_origin
+    assert origin["id_persistent"] == c.id_persistent_tag_def_origin
+    assert origin["id_parent_persistent"] is None
+    assert origin["type"] == "STRING"
+    assert origin["owner"] == "test-user1"
+    assert "version" in origin

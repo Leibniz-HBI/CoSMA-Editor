@@ -1,5 +1,4 @@
 "Dispatch of queue functions for contribution candidates."
-import logging
 
 import django_rq
 
@@ -17,9 +16,6 @@ def dispatch_read_csv_head(
     **kwargs  # pylint: disable=unused-argument
 ):
     "Queues the task for extracting tags from columns."
-    logging.warning(created)
-    logging.warning(update_fields)
-    logging.warning(instance.state)
     if created or (
         update_fields
         and "has_header" in update_fields

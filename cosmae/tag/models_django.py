@@ -1,4 +1,6 @@
 "Database Models for Tags"
+from __future__ import annotations
+
 from datetime import datetime
 from typing import List, Optional, Union
 
@@ -43,7 +45,7 @@ class TagDefinition(models.Model):
         """Return the most recent version of an entity."""
         # pylint: disable=no-member
         return cls.objects.filter(id_persistent=id_persistent).order_by(
-            "-previous_version"
+            models.F("previous_version").desc(nulls_last=True)
         )[0]
 
     @classmethod
@@ -93,7 +95,9 @@ class TagDefinition(models.Model):
             if exists:
                 raise TagDefinitionExistsException(
                     name,
-                    exists.order_by("-previous_version")[0].id_persistent,
+                    exists.order_by(models.F("previous_version").desc(nulls_last=True))[
+                        0
+                    ].id_persistent,
                     id_parent_persistent,
                 )
         try:
@@ -153,6 +157,10 @@ class TagDefinition(models.Model):
                 .values("max_id")
             )
         )
+
+    def has_write_access(self, user: CosmaeUser):
+        "Check wether a user can write to the tag definition."
+        return self.owner == user
 
 
 class TagInstance(models.Model):
@@ -296,10 +304,30 @@ class TagInstance(models.Model):
             )
         )
 
+    @classmethod
+    def annotate_entity(cls, manager: Optional[models.BaseManager[TagInstance]]):
+        "Annotate tag instances with the most recent entity and tag instance"
+        if manager is None:
+            manager = TagInstance.objects  # pylint: disable=no-member
+        entity_sub_query = Entity.objects.filter(  # pylint: disable=no-member
+            id_persistent=models.OuterRef("id_entity_persistent")
+        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+        return manager.annotate(
+            entity=models.Subquery(
+                entity_sub_query.values(
+                    json=models.functions.JSONObject(
+                        id="id",
+                        id_persistent="id_persistent",
+                        display_txt="display_txt",
+                    )
+                )
+            ),
+        )
+
     def check_different_before_save(self, other):
         """Checks structural equality for two tag definitions.
         Note:
-            * The version fields are not comapred as this check is intended to
+            * The version fields are not compared as this check is intended to
                prevent unnecessary writes.
             * The time_edit fields are not compared as the operation is invalid."""
         if other.id_entity_persistent != self.id_entity_persistent:

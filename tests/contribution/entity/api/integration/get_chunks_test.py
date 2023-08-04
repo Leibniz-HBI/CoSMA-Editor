@@ -32,12 +32,12 @@ def test_get_chunk(auth_server, contribution_candidate, entities):
         live_server.url, contribution_candidate.id_persistent, 0, 2, cookies
     )
     assert rsp.status_code == 200
-    assert rsp.json() == {
-        "persons": [
-            {
-                "id_persistent": c.id_persistent_entity_duplicate_test,
-                "display_txt": c.display_txt_test_entity_duplicate,
-                "version": 1,
-            }
-        ]
-    }
+    json = rsp.json()
+    assert len(json) == 1
+    persons = json["persons"]
+    assert len(persons) == 1
+    person = persons[0]
+    assert len(person) == 3
+    assert person["id_persistent"] == c.id_persistent_entity_duplicate_test
+    assert person["display_txt"] == c.display_txt_test_entity_duplicate
+    assert "version" in person

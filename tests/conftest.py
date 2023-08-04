@@ -14,20 +14,46 @@ from cosmae.util import CosmaeUser
 
 @pytest.fixture
 def entity0():
-    return Entity(
+    entity = Entity(
         id_persistent=ce.id_persistent_test_0,
         time_edit=ce.time_edit_test_0,
         display_txt=ce.display_txt_test0,
     )
+    entity.save()
+    return entity
 
 
 @pytest.fixture()
 def entity1():
-    return Entity(
+    entity = Entity(
         id_persistent=ce.id_persistent_test_1,
         time_edit=ce.time_edit_test_1,
         display_txt=ce.display_txt_test1,
     )
+    entity.save()
+    return entity
+
+
+@pytest.fixture
+def entity1_changed(entity1):
+
+    Entity.change_or_create(
+        id_persistent=entity1.id_persistent,
+        time_edit=ce.time_edit_test_1_changed,
+        display_txt="edited_entity",
+        version=entity1.id,
+    )[0].save()
+
+
+@pytest.fixture()
+def entity2():
+    entity = Entity(
+        id_persistent=ce.id_persistent_test_2,
+        time_edit=ce.time_edit_test_2,
+        display_txt=ce.display_txt_test2,
+    )
+    entity.save()
+    return entity
 
 
 @pytest.fixture
