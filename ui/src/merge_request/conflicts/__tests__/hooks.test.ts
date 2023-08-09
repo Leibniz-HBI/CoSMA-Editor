@@ -1,7 +1,11 @@
 import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
 import { Entity } from '../../../contribution/entity/state'
 import { Remote, useThunkReducer } from '../../../util/state'
-import { GetMergeRequestConflictAction, ResolveConflictAction } from '../async_actions'
+import {
+    GetMergeRequestConflictAction,
+    ResolveConflictAction,
+    StartMergeAction
+} from '../async_actions'
 import { useMergeRequestConflictResolutions } from '../hooks'
 import { MergeRequestConflictResolutionState, TagInstance } from '../state'
 
@@ -105,4 +109,33 @@ test('resolve conflict callback', () => {
             })
         ]
     ])
+})
+test('start merge callback', () => {
+    const dispatch = jest.fn()
+    ;(useThunkReducer as jest.Mock).mockReturnValue([
+        new MergeRequestConflictResolutionState(
+            new Remote(undefined, true),
+            new Remote(false)
+        ),
+        dispatch
+    ])
+    const idMergeRequest = 'id-merge-request-test'
+    const { startMergeCallback } = useMergeRequestConflictResolutions(idMergeRequest)
+    startMergeCallback()
+    expect(dispatch.mock.calls).toEqual([[new StartMergeAction(idMergeRequest)]])
+})
+
+test('start merge callback exits early', () => {
+    const dispatch = jest.fn()
+    ;(useThunkReducer as jest.Mock).mockReturnValue([
+        new MergeRequestConflictResolutionState(
+            new Remote(undefined, true),
+            new Remote(false, true)
+        ),
+        dispatch
+    ])
+    const idMergeRequest = 'id-merge-request-test'
+    const { startMergeCallback } = useMergeRequestConflictResolutions(idMergeRequest)
+    startMergeCallback()
+    expect(dispatch.mock.calls).toEqual([])
 })

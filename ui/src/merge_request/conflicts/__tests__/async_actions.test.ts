@@ -7,9 +7,16 @@ import {
     GetMergeRequestConflictSuccessAction,
     ResolveConflictErrorAction,
     ResolveConflictStartAction,
-    ResolveConflictSuccessAction
+    ResolveConflictSuccessAction,
+    StartMergeErrorAction,
+    StartMergeStartAction,
+    StartMergeSuccessAction
 } from '../actions'
-import { GetMergeRequestConflictAction, ResolveConflictAction } from '../async_actions'
+import {
+    GetMergeRequestConflictAction,
+    ResolveConflictAction,
+    StartMergeAction
+} from '../async_actions'
 import { MergeRequestConflict, TagInstance } from '../state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -278,6 +285,14 @@ describe('resolve conflict', () => {
                             tagDefDestination.version,
                         id_tag_instance_destination_version:
                             tagInstanceDestination.version,
+                        id_entity_persistent: entity.idPersistent,
+                        id_tag_definition_origin_persistent: tagDefOrigin.idPersistent,
+                        id_tag_instance_origin_persistent:
+                            tagInstanceOrigin.idPersistent,
+                        id_tag_definition_destination_persistent:
+                            tagDefDestination.idPersistent,
+                        id_tag_instance_destination_persistent:
+                            tagInstanceDestination.idPersistent,
                         replace: true
                     })
                 }
@@ -299,6 +314,67 @@ describe('resolve conflict', () => {
         expect(dispatch.mock.calls).toEqual([
             [new ResolveConflictStartAction(entity.idPersistent)],
             [new ResolveConflictErrorAction(entity.idPersistent, 'error')]
+        ])
+    })
+})
+
+describe('start merge', () => {
+    test('success', async () => {
+        responseSequence([[200, {}]])
+        const dispatch = jest.fn()
+        await new StartMergeAction('id-merge-request-test').run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [new StartMergeStartAction()],
+            [new StartMergeSuccessAction()]
+        ])
+    })
+    test('error', async () => {
+        responseSequence([[400, { msg: 'test error from API' }]])
+        const dispatch = jest.fn()
+        await new StartMergeAction('id-merge-request-test').run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [new StartMergeStartAction()],
+            [new StartMergeErrorAction('test error from API')]
+        ])
+    })
+    test('error underlying changes', async () => {
+        responseSequence([
+            [
+                400,
+                {
+                    msg: 'There are conflicts for the merge request, where the underlying data has changed.'
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        await new StartMergeAction('id-merge-request-test').run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [new StartMergeStartAction()],
+            [
+                new StartMergeErrorAction(
+                    'There are conflicts for the merge request, where the underlying data has changed. Reload the page to see the changes.'
+                )
+            ]
+        ])
+    })
+    test('error unresolved conflicts', async () => {
+        responseSequence([
+            [
+                400,
+                {
+                    msg: 'There are unresolved conflicts for the merge request.'
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        await new StartMergeAction('id-merge-request-test').run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [new StartMergeStartAction()],
+            [
+                new StartMergeErrorAction(
+                    'There are unresolved conflicts for the merge request. Reload the page to see the changes.'
+                )
+            ]
         ])
     })
 })

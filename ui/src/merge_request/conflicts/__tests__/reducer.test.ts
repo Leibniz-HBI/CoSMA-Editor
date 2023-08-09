@@ -9,7 +9,9 @@ import {
     ResolveConflictStartAction,
     ResolveConflictSuccessAction,
     StartMergeClearErrorAction,
-    StartMergeErrorAction
+    StartMergeErrorAction,
+    StartMergeStartAction,
+    StartMergeSuccessAction
 } from '../actions'
 import { mergeRequestConflictResolutionReducer } from '../reducer'
 import {
@@ -276,6 +278,36 @@ describe('resolve conflict', () => {
 })
 
 describe('start merge', () => {
+    test('start', () => {
+        const initialState = new MergeRequestConflictResolutionState(
+            new Remote(undefined),
+            new Remote(false)
+        )
+        const expectedState = new MergeRequestConflictResolutionState(
+            new Remote(undefined),
+            new Remote(false, true)
+        )
+        const endState = mergeRequestConflictResolutionReducer(
+            initialState,
+            new StartMergeStartAction()
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test('success', () => {
+        const initialState = new MergeRequestConflictResolutionState(
+            new Remote(undefined),
+            new Remote(false, true)
+        )
+        const expectedState = new MergeRequestConflictResolutionState(
+            new Remote(undefined),
+            new Remote(true)
+        )
+        const endState = mergeRequestConflictResolutionReducer(
+            initialState,
+            new StartMergeSuccessAction()
+        )
+        expect(endState).toEqual(expectedState)
+    })
     test('error', () => {
         const initialState = new MergeRequestConflictResolutionState(
             new Remote(undefined),

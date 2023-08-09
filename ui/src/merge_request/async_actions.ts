@@ -7,7 +7,7 @@ import {
     MergeRequestAction
 } from './actions'
 import { config } from '../config'
-import { MergeRequest } from './state'
+import { MergeRequest, MergeRequestStep } from './state'
 import { parsePublicUserInfoFromJson } from '../user/async_actions'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { exceptionMessage } from '../util/exception'
@@ -50,11 +50,22 @@ export function parseMergeRequestFromJson(mrJson: any) {
         mrJson['destination'],
         []
     )
+    const step = mergeRequestStateFromApiMap[mrJson['state']]
     return new MergeRequest({
         idPersistent,
         assignedTo,
         createdBy,
         destinationTagDefinition,
-        originTagDefinition
+        originTagDefinition,
+        step
     })
+}
+
+const mergeRequestStateFromApiMap: { [key: string]: MergeRequestStep } = {
+    OPEN: MergeRequestStep.Open,
+    CONFLICTS: MergeRequestStep.Conflicts,
+    CLOSED: MergeRequestStep.Closed,
+    RESOLVED: MergeRequestStep.Resolved,
+    MERGED: MergeRequestStep.Merged,
+    ERROR: MergeRequestStep.Error
 }

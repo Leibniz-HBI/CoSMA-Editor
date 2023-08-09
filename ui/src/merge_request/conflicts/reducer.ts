@@ -13,7 +13,9 @@ import {
     ResolveConflictStartAction,
     ResolveConflictSuccessAction,
     StartMergeClearErrorAction,
-    StartMergeErrorAction
+    StartMergeErrorAction,
+    StartMergeStartAction,
+    StartMergeSuccessAction
 } from './actions'
 import { Remote } from '../../util/state'
 
@@ -93,6 +95,18 @@ export function mergeRequestConflictResolutionReducer(
                 })
             ),
             state.startMerge
+        )
+    }
+    if (action instanceof StartMergeStartAction) {
+        return new MergeRequestConflictResolutionState(
+            state.conflicts,
+            state.startMerge.startLoading()
+        )
+    }
+    if (action instanceof StartMergeSuccessAction) {
+        return new MergeRequestConflictResolutionState(
+            state.conflicts,
+            new Remote(true)
         )
     }
     if (action instanceof GetMergeRequestConflictErrorAction) {

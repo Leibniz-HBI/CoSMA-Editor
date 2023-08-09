@@ -7,7 +7,10 @@ import {
     MergeRequestConflictResolutionAction,
     ResolveConflictErrorAction,
     ResolveConflictStartAction,
-    ResolveConflictSuccessAction
+    ResolveConflictSuccessAction,
+    StartMergeErrorAction,
+    StartMergeStartAction,
+    StartMergeSuccessAction
 } from './actions'
 import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
@@ -69,7 +72,8 @@ export class GetMergeRequestConflictAction extends AsyncAction<
                     })
                 )
             } else {
-                dispatch(new GetMergeRequestConflictErrorAction(json['msg']))
+                const msg = json['msg']
+                dispatch(new GetMergeRequestConflictErrorAction(msg))
             }
         } catch (e: unknown) {
             dispatch(new GetMergeRequestConflictErrorAction(exceptionMessage(e)))
@@ -133,6 +137,15 @@ export class ResolveConflictAction extends AsyncAction<
                             this.tagDefinitionDestination.version,
                         id_tag_instance_destination_version:
                             this.tagInstanceDestination?.version,
+                        id_entity_persistent: this.entity.idPersistent,
+                        id_tag_definition_origin_persistent:
+                            this.tagDefinitionOrigin.idPersistent,
+                        id_tag_instance_origin_persistent:
+                            this.tagInstanceOrigin.idPersistent,
+                        id_tag_definition_destination_persistent:
+                            this.tagDefinitionDestination.idPersistent,
+                        id_tag_instance_destination_persistent:
+                            this.tagInstanceDestination?.idPersistent,
                         replace: this.replace
                     })
                 }
@@ -186,4 +199,46 @@ export function parseTagInstanceFromJson(json: any) {
         version: json['version'],
         value: json['value']
     })
+}
+
+export class StartMergeAction extends AsyncAction<
+    MergeRequestConflictResolutionAction,
+    void
+> {
+    idMergeRequestPersistent: string
+
+    constructor(idMergeRequestPersistent: string) {
+        super()
+        this.idMergeRequestPersistent = idMergeRequestPersistent
+    }
+
+    async run(dispatch: Dispatch<MergeRequestConflictResolutionAction>): Promise<void> {
+        dispatch(new StartMergeStartAction())
+        try {
+            const rsp = await fetch(
+                config.api_path +
+                    `/merge_requests/${this.idMergeRequestPersistent}/merge`,
+                {
+                    credentials: 'include',
+                    method: 'POST'
+                }
+            )
+            if (rsp.status == 200) {
+                dispatch(new StartMergeSuccessAction())
+            } else {
+                const json = await rsp.json()
+                let msg = json['msg']
+                if (
+                    msg ==
+                        'There are conflicts for the merge request, where the underlying data has changed.' ||
+                    msg == 'There are unresolved conflicts for the merge request.'
+                ) {
+                    msg = msg + ' Reload the page to see the changes.'
+                }
+                dispatch(new StartMergeErrorAction(msg))
+            }
+        } catch (e: unknown) {
+            dispatch(new StartMergeErrorAction(exceptionMessage(e)))
+        }
+    }
 }

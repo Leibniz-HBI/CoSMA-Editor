@@ -59,6 +59,10 @@ export class ResolveConflictErrorAction extends ResolveConflictBaseAction {
     }
 }
 
+export class StartMergeStartAction {}
+
+export class StartMergeSuccessAction {}
+
 export class StartMergeErrorAction {
     msg: string
     constructor(msg: string) {
@@ -72,5 +76,7 @@ export type MergeRequestConflictResolutionAction =
     | GetMergeRequestConflictStartAction
     | GetMergeRequestConflictSuccessAction
     | GetMergeRequestConflictErrorAction
+    | StartMergeStartAction
+    | StartMergeSuccessAction
     | StartMergeErrorAction
     | StartMergeClearErrorAction
