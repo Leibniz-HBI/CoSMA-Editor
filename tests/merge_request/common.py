@@ -32,6 +32,7 @@ id_instance_origin = "5a0b3229-376e-45d7-8bcf-9aeeb2914250"
 id_instance_origin1 = "827398e2-6d0a-41ee-be60-9f1bc0e143a4"
 id_instance_destination = "672c6cfc-bb6f-4f13-8d82-beaa38df93ff"
 id_instance_destination1 = "7444d34c-8c54-4185-b3cf-a8dce975b053"
+id_instance_destination_same_value = "11597221-d0b1-4629-97ab-2815e1b6c394 "
 
 value_origin = "value origin"
 value_origin1 = "value origin 1"
@@ -43,3 +44,4 @@ time_instance_origin1_changed = datetime(1957, 2, 10)
 time_instance_destination = datetime(1957, 3, 8)
 time_instance_destination_changed = datetime(1957, 3, 9)
 time_instance_destination1 = datetime(1957, 3, 10)
+time_instance_destination_same_value = datetime(1958, 2, 14)

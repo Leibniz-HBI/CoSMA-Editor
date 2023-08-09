@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
@@ -71,6 +71,11 @@ class ConflictResolutionPostRequest(Schema):
     id_tag_instance_origin_version: int
     id_tag_definition_destination_version: int
     id_tag_instance_destination_version: Optional[int]
+    id_entity_persistent: str
+    id_tag_definition_origin_persistent: str
+    id_tag_instance_origin_persistent: str
+    id_tag_definition_destination_persistent: str
+    id_tag_instance_destination_persistent: Optional[str]
     replace: bool
 
 
@@ -184,11 +189,14 @@ def post_resolve_conflict(
             id_merge_request_persistent, user
         )
         ConflictResolution.objects.filter(  # pylint: disable=no-member
-            entity_id=resolution_info.id_entity_version,
-            tag_definition_origin_id=resolution_info.id_tag_definition_origin_version,
-            tag_instance_origin_id=resolution_info.id_tag_instance_origin_version,
-            tag_definition_destination_id=resolution_info.id_tag_definition_destination_version,
-            tag_instance_destination_id=resolution_info.id_tag_instance_destination_version,
+            entity__id_persistent=resolution_info.id_entity_persistent,
+            tag_definition_origin__id_persistent=(
+                resolution_info.id_tag_definition_origin_persistent
+            ),
+            tag_instance_origin__id_persistent=resolution_info.id_tag_instance_origin_persistent,
+            tag_definition_destination__id_persistent=(
+                resolution_info.id_tag_definition_destination_persistent
+            ),
             merge_request=merge_request,
         ).delete()
         resolution = ConflictResolution(
@@ -202,6 +210,8 @@ def post_resolve_conflict(
         )
         resolution.save()
         return 200, None
+    except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Merge request does not exists.")
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
     except ForbiddenException:
@@ -212,6 +222,69 @@ def post_resolve_conflict(
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get the requested merge request conflicts.")
+
+
+@router.post(
+    "/{id_merge_request_persistent}/merge",
+    response={
+        200: None,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def post_merge_request_merge(  # pylint: disable=too-many-return-statements
+    request: HttpRequest, id_merge_request_persistent: str
+):
+    "API method for marking a merge request for merging."
+    try:
+        with transaction.atomic():
+            user = check_user(request)
+            merge_request = (
+                MergeRequestDb.by_id_persistent_query_set(id_merge_request_persistent)
+                .select_for_update()
+                .get()
+            )
+            if not (merge_request.state == MergeRequestDb.OPEN or MergeRequestDb.ERROR):
+                return 400, ApiError(msg="Merge request not available for merging.")
+            tag_definition_destination = TagDefinitionDb.most_recent_by_id(
+                merge_request.id_destination_persistent
+            )
+            if not tag_definition_destination.has_write_access(user):
+                return 403, ApiError(
+                    msg="You do not have write permissions for the destination tag."
+                )
+            resolutions = ConflictResolution.for_merge_request_query_set(merge_request)
+            updated = ConflictResolution.non_recent(resolutions)
+            if len(updated) > 0:
+                return 400, ApiError(
+                    msg="There are conflicts for the merge request, "
+                    "where the underlying data has changed."
+                )
+            conflicts = merge_request.instance_conflicts_all(
+                include_resolved=False, resolution_values=resolutions
+            )
+            if len(conflicts) > 0:
+                return 400, ApiError(
+                    msg="There are unresolved conflicts for the merge request."
+                )
+            merge_request.state = MergeRequestDb.RESOLVED
+            merge_request.save(update_fields=["state"])
+        return 200, None
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Merge Request does not exist.")
+    except TagDefinitionDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Destination tag definition does not exist.")
+    except DatabaseError:
+        return 500, ApiError(
+            msg="Could not mark the merge request for merging in the database."
+        )
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not mark the merge request for merging.")
 
 
 def merge_request_db_to_api(mr_db: MergeRequestDb) -> MergeRequest:

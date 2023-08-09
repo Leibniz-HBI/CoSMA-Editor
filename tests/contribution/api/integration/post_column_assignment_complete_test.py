@@ -15,7 +15,7 @@ from cosmae.util.auth import NotAuthenticatedException, CosmaeUser
 def test_no_cookies(auth_server):
     live_server, _ = auth_server
     rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, "id-test", dict(name="new name")
+        live_server.url, "id-test", {"name": "new name"}
     )
     assert rsp.status_code == 401
 
@@ -52,13 +52,19 @@ def test_wrong_user(auth_server1):
     assert rsp.status_code == 404
 
 
-def test_missing_assignment(auth_server):
+def test_missing_assignment(auth_server, user):
     live_server, cookies = auth_server
-    rsp = req_contrib.post_contribution(
-        live_server.url, c.contribution_post0, cookies=cookies
+    id_persistent = str(uuid4())
+    ContributionCandidate.objects.create(  # pylint: disable=no-member
+        id_persistent=id_persistent,
+        name="contribution test",
+        description="contribution candidate for test",
+        state=ContributionCandidate.COLUMNS_EXTRACTED,
+        has_header=False,
+        anonymous=True,
+        file_name="file-test.csv",
+        created_by=user,
     )
-    assert rsp.status_code == 200
-    id_persistent = rsp.json()["id_persistent"]
     rsp = req_contrib.post_column_assignment_complete(
         live_server.url, id_persistent, cookies=cookies
     )

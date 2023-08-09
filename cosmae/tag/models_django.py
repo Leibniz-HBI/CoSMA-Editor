@@ -179,7 +179,7 @@ class TagInstance(models.Model):
         """Return the most recent version of a tag_instance."""
         # pylint: disable=no-member
         return cls.objects.filter(id_persistent=id_persistent).order_by(
-            "-previous_version"
+            models.F("previous_version").desc(nulls_last=True)
         )[0]
 
     @classmethod

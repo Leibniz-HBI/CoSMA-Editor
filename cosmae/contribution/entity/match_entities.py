@@ -19,7 +19,7 @@ def find_matches(entity: Entity):
             trigram_similarity=TrigramSimilarity("display_txt", entity.display_txt)
         )
         .filter(trigram_similarity__gt=0.3)
-        .order_by("-trigram_similarity")[:10]
+        .order_by("trigram_similarity")[:10]
         .values()
     )
     ret = []

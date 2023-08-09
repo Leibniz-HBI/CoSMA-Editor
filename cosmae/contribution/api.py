@@ -165,6 +165,11 @@ def post_complete_assignment(request: HttpRequest, id_persistent: str):
         except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
             return 404, ApiError(msg="Contribution candidate does not exist.")
         try:
+            if contribution.state != ContributionCandidateDb.COLUMNS_EXTRACTED:
+                return 400, ApiError(
+                    msg="Can only complete column assignment when "
+                    "contribution is in columns extracted state."
+                )
             contribution.complete_tag_assignment()
             return 200, None
         except ContributionCandidateDb.MissingRequiredAssignmentsException as exc:
@@ -195,7 +200,7 @@ def post_complete_assignment(request: HttpRequest, id_persistent: str):
 
 @router.post(
     "{id_persistent}/entity_assignment_complete",
-    response={200: None, 401: ApiError, 404: ApiError, 500: ApiError},
+    response={200: None, 400: ApiError, 401: ApiError, 404: ApiError, 500: ApiError},
 )
 def post_complete_entity_assignment(request: HttpRequest, id_persistent: str):
     "API method to mark an entity assignment as complete."
@@ -210,6 +215,11 @@ def post_complete_entity_assignment(request: HttpRequest, id_persistent: str):
                 id_persistent=id_persistent, created_by=user
             )
         )
+        if contribution_candidate.state != ContributionCandidateDb.VALUES_EXTRACTED:
+            return 400, ApiError(
+                msg="Can only complete entities assignment when "
+                "contribution is in values extracted state."
+            )
         contribution_candidate.complete_entity_assignment()
         return 200, None
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member

@@ -1,6 +1,8 @@
 "Queue methods for merge requests."
+import logging
+
 import django_rq
-from django.db import transaction
+from django.db import models, transaction
 from django.db.utils import OperationalError
 
 from cosmae.exception import EntityUpdatedException
@@ -71,32 +73,53 @@ def merge_request_resolve_conflicts(id_merge_request_persistent):
             except OperationalError:
                 return
             time_merge = timestamp()
-            conflicts_resolution_set = merge_request.conflictresolution_set.filter(
-                replace=True
-            ).select_related()
+            conflicts_resolution_set = (
+                merge_request.conflictresolution_set.select_related()
+            )
             non_recent = ConflictResolution.non_recent(conflicts_resolution_set)
             if len(non_recent) > 0:
                 merge_request.state = merge_request.OPEN
                 merge_request.save()
                 return
-            for resolution in conflicts_resolution_set:
+            recent = ConflictResolution.only_recent(conflicts_resolution_set)
+            conflicts = merge_request.instance_conflicts_all(False, recent)
+            if len(conflicts) > 0:
+                merge_request.state = merge_request.OPEN
+                merge_request.save()
+                return
+            recent = recent.filter(
+                models.Q(replace=True)
+                & ~models.Q(
+                    tag_instance_origin__value=models.F(
+                        "tag_instance_destination__value"
+                    )
+                )
+            )
+            for resolution in recent:
                 try:
-                    tag_definition_destination = resolution.tag_definition.destination
+                    tag_definition_destination = resolution.tag_definition_destination
+                    if resolution.tag_instance_destination is None:
+                        tag_instance_reference = resolution.tag_instance_origin
+                    else:
+                        tag_instance_reference = resolution.tag_instance_destination
                     TagInstance.change_or_create(
-                        id_persistent=resolution.tag_instance_origin.id_persistent,
+                        id_persistent=tag_instance_reference.id_persistent,
                         time_edit=time_merge,
                         id_entity_persistent=resolution.tag_instance_origin.id_entity_persistent,
                         id_tag_definition_persistent=tag_definition_destination.id_persistent,
-                        version=resolution.tag_instance_origin.version,
+                        version=tag_instance_reference.id,
+                        value=resolution.tag_instance_origin.value,
                     )[0].save()
-                except EntityUpdatedException:
+                except EntityUpdatedException as exc:
+                    logging.warning(None, exc_info=exc)
                     merge_request.state = merge_request.OPEN
                     merge_request.save()
                     return
 
             merge_request.state = merge_request.MERGED
             merge_request.save()
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.warning(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
             merge_request.state = MergeRequest.ERROR

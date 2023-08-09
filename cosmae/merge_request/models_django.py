@@ -69,12 +69,17 @@ class MergeRequest(models.Model):
     @classmethod
     def by_id_persistent(cls, id_persistent: str, user: CosmaeUser):
         "Get a merge request by id_persistent"
-        merge_request = cls.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        ).get()
+        merge_request = cls.by_id_persistent_query_set(id_persistent).get()
         if merge_request.has_read_access(user):
             return merge_request
         raise ForbiddenException("merge request", merge_request.id_persistent)
+
+    @classmethod
+    def by_id_persistent_query_set(cls, id_persistent: str):
+        "Query set containing the the merge request referenced by the id give as argument."
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_persistent
+        )
 
     def has_read_access(self, user: CosmaeUser):
         "Check wether a user can read the merge request."
@@ -362,7 +367,11 @@ class ConflictResolution(models.Model):
                 )
             )
         )
-        return non_recent_query_set
+        return non_recent_query_set.exclude(
+            tag_instance_origin_most_recent__value=models.F(
+                "tag_instance_destination_most_recent__value"
+            )
+        )
 
     @classmethod
     def only_recent(cls, manager=None):
