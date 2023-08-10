@@ -28,6 +28,7 @@ class MergeRequest(Schema):
     origin: TagDefinition
     created_at: datetime
     assigned_to: PublicUserInfo
+    state: str
 
 
 class TagInstance(Schema):
@@ -287,6 +288,16 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
         return 500, ApiError(msg="Could not mark the merge request for merging.")
 
 
+merge_request_step_db_to_api_map = {
+    MergeRequestDb.OPEN: "OPEN",
+    MergeRequestDb.CONFLICTS: "CONFLICTS",
+    MergeRequestDb.CLOSED: "CLOSED",
+    MergeRequestDb.RESOLVED: "RESOLVED",
+    MergeRequestDb.MERGED: "MERGED",
+    MergeRequestDb.ERROR: "ERROR",
+}
+
+
 def merge_request_db_to_api(mr_db: MergeRequestDb) -> MergeRequest:
     "Transform a merge request form DB to API representation"
     destination = TagDefinitionDb.most_recent_by_id(mr_db.id_destination_persistent)
@@ -298,6 +309,7 @@ def merge_request_db_to_api(mr_db: MergeRequestDb) -> MergeRequest:
         origin=tag_definition_db_to_api(origin),
         created_at=mr_db.created_at,
         assigned_to=user_db_to_public_user_info(mr_db.assigned_to),
+        state=merge_request_step_db_to_api_map[mr_db.state],
     )
 
 

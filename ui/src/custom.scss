@@ -1,13 +1,8 @@
+
 $primary: #197374;
 $secondary: #eceff4;
 $red: #ea5e5f;
 
-$theme-colors: (
-    'primary': $primary,
-    'secondary': $secondary,
-    'light': $secondary,
-    'danger': $red
-);
 
 $component-active-color: $secondary;
 $component-active-bg: $primary;
@@ -18,3 +13,10 @@ $navbar-light-color: $secondary;
 
 /* import bootstrap to set changes */
 @import '~bootstrap/scss/bootstrap';
+
+$theme-colors: map-merge($theme-colors, (
+    'primary': $primary,
+    'secondary': $secondary,
+    'light': $secondary,
+    'danger': $red
+));

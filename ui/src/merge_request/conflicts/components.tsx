@@ -169,12 +169,25 @@ export function MergeRequestConflictItem({
     }) => void
 }) {
     let fwKeep = 'fw-normal',
-        fwReplace = 'fw-normal'
+        fwReplace = 'fw-normal',
+        bgKeep = '',
+        bgReplace = ''
     if (conflict.value.replace == true) {
         fwReplace = 'fw-bold'
+        bgReplace = 'bg-primary-subtle'
     } else if (conflict.value.replace == false) {
         fwKeep = 'fw-bold'
+        bgKeep = 'bg-primary-subtle'
     }
+    let destinationInstanceValue = conflict.value.tagInstanceDestination?.value,
+        destinationStyle = 'fst-normal'
+    if (destinationInstanceValue === undefined) {
+        destinationStyle = 'fst-italic'
+        destinationInstanceValue = ''
+    }
+    const destinationSpan = (
+        <span className={destinationStyle}>{destinationInstanceValue}</span>
+    )
     return (
         <ListGroup.Item className="mb-1">
             <Row>
@@ -183,10 +196,10 @@ export function MergeRequestConflictItem({
                     <Row className="fw-bold">{conflict.value.entity.displayTxt}</Row>
                 </Col>
                 <Col key="tag-instance-column">
-                    <Row className="border-bottom pb-1 mb-1" key="existing-row">
+                    <Row key="existing-row">
                         <Col xs="auto" key="button-column">
                             <ChoiceButton
-                                className="w-200px"
+                                className="w-200px mb-1"
                                 label="Keep Existing Value"
                                 checked={conflict.value.replace == false}
                                 onClick={() =>
@@ -204,15 +217,19 @@ export function MergeRequestConflictItem({
                                 }
                             />
                         </Col>
-                        <Col className={fwKeep}>
-                            {conflict.value.tagInstanceDestination?.value ??
-                                'No value present'}
+                        <Col
+                            className={
+                                [fwKeep, bgKeep].join(' ') +
+                                ' border-start border-end border-top'
+                            }
+                        >
+                            {destinationSpan}
                         </Col>
                     </Row>
                     <Row key="replace-row">
                         <Col xs="auto" key="button-column">
                             <ChoiceButton
-                                className="w-200px"
+                                className="w-200px mt-1"
                                 label="Use new Value"
                                 checked={conflict.value.replace == true}
                                 onClick={() =>
@@ -230,7 +247,10 @@ export function MergeRequestConflictItem({
                                 }
                             />
                         </Col>
-                        <Col className={fwReplace} key="value-column">
+                        <Col
+                            className={[fwReplace, bgReplace].join(' ') + ' border'}
+                            key="value-column"
+                        >
                             {conflict.value.tagInstanceOrigin.value}
                         </Col>
                     </Row>

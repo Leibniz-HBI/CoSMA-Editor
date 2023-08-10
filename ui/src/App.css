@@ -210,3 +210,7 @@ div#layers > div > .container {
 .text-transparent {
     color: transparent;
 }
+
+.bg-primary-subtle {
+    background-color: #72a39e77;
+}

@@ -32,7 +32,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
     created_list = json["created"]
     assert len(created_list) == 1
     created = created_list[0]
-    assert len(created) == 6
+    assert len(created) == 7
     assert created["created_at"] == format_datetime(c.time_merge_request1)
     assert created["id_persistent"] == c.id_persistent_merge_request1
     assert created["created_by"] == {
@@ -43,6 +43,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
         "user_name": cu.test_username1,
         "id_persistent": cu.test_uuid1,
     }
+    assert created["state"] == "OPEN"
     destination = created["destination"]
     assert len(destination) == 6
     assert destination["id_persistent"] == c.id_persistent_tag_def_destination1
@@ -63,7 +64,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
     assigned_list = json["assigned"]
     assert len(assigned_list) == 1
     assigned = assigned_list[0]
-    assert len(assigned) == 6
+    assert len(assigned) == 7
     assert assigned["created_at"] == format_datetime(c.time_merge_request)
     assert assigned["id_persistent"] == c.id_persistent_merge_request
     assert assigned["created_by"] == {
@@ -74,6 +75,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
         "user_name": cu.test_username,
         "id_persistent": cu.test_uuid,
     }
+    assert assigned["state"] == "OPEN"
     destination = assigned["destination"]
     assert len(destination) == 6
     assert destination["id_persistent"] == c.id_persistent_tag_def_destination
