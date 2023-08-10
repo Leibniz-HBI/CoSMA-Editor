@@ -14,12 +14,12 @@ import {
 } from './actions'
 import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
-import { parseColumnDefinitionsFromApi } from '../../column_menu/async_actions'
 import { MergeRequestConflict, TagInstance } from './state'
 import { parseEntityObjectFromJson } from '../../contribution/entity/async_actions'
 import { Entity } from '../../contribution/entity/state'
 import { ColumnDefinition } from '../../column_menu/state'
 import { Remote } from '../../util/state'
+import { parseMergeRequestFromJson } from '../async_actions'
 
 export class GetMergeRequestConflictAction extends AsyncAction<
     MergeRequestConflictResolutionAction,
@@ -54,21 +54,12 @@ export class GetMergeRequestConflictAction extends AsyncAction<
                     (conflict: any) =>
                         new Remote(parseMergeRequestConflictFromApi(conflict))
                 )
-                const tagDefinitionOrigin = parseColumnDefinitionsFromApi(
-                    json['tag_definition_origin'],
-                    []
-                )
-
-                const tagDefinitionDestination = parseColumnDefinitionsFromApi(
-                    json['tag_definition_destination'],
-                    []
-                )
+                const mergeRequest = parseMergeRequestFromJson(json['merge_request'])
                 dispatch(
                     new GetMergeRequestConflictSuccessAction({
                         updated,
                         conflicts,
-                        tagDefinitionOrigin,
-                        tagDefinitionDestination
+                        mergeRequest
                     })
                 )
             } else {

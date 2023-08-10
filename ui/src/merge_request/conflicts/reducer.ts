@@ -90,8 +90,7 @@ export function mergeRequestConflictResolutionReducer(
                 new MergeRequestConflictsByState({
                     updated: action.updated,
                     conflicts: action.conflicts,
-                    tagDefinitionOrigin: action.tagDefinitionOrigin,
-                    tagDefinitionDestination: action.tagDefinitionDestination
+                    mergeRequest: action.mergeRequest
                 })
             ),
             state.startMerge

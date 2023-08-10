@@ -6,6 +6,8 @@ from uuid import uuid4
 import tests.entity.common as ce
 from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
+from tests.user import common as cu
+from tests.utils import assert_versioned, format_datetime
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import ConflictResolution
 from cosmae.tag.models_django import TagDefinition, TagInstance
@@ -51,26 +53,37 @@ def test_conflicts_no_resolution(
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
-    tag_definition_origin = json["tag_definition_origin"]
-    assert len(tag_definition_origin) == 6
-    assert tag_definition_origin["id_persistent"] == c.id_persistent_tag_def_origin
-    assert tag_definition_origin["id_parent_persistent"] is None
-    assert tag_definition_origin["name"] == c.name_tag_def_origin
-    assert tag_definition_origin["type"] == "STRING"
-    assert tag_definition_origin["owner"] == "test-user1"
-    assert "version" in tag_definition_origin
-    tag_definition_destination = json["tag_definition_destination"]
-    assert len(tag_definition_destination) == 6
-    assert (
-        tag_definition_destination["id_persistent"]
-        == c.id_persistent_tag_def_destination
+    assert len(json) == 3
+    assert_versioned(
+        json["merge_request"],
+        {
+            "assigned_to": {
+                "user_name": cu.test_username,
+                "id_persistent": cu.test_uuid,
+            },
+            "created_by": {
+                "user_name": cu.test_username1,
+                "id_persistent": cu.test_uuid1,
+            },
+            "id_persistent": c.id_persistent_merge_request,
+            "created_at": format_datetime(c.time_merge_request),
+            "state": "OPEN",
+            "origin": {
+                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_origin,
+                "type": "STRING",
+                "owner": "test-user1",
+            },
+            "destination": {
+                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_destination,
+                "type": "STRING",
+                "owner": "test-user",
+            },
+        },
     )
-    assert tag_definition_destination["id_parent_persistent"] is None
-    assert tag_definition_destination["name"] == c.name_tag_def_destination
-    assert tag_definition_destination["type"] == "STRING"
-    assert tag_definition_destination["owner"] == "test-user"
-    assert "version" in tag_definition_destination
 
     conflicts = json["conflicts"]
     assert len(conflicts) == 2
@@ -134,26 +147,37 @@ def test_conflicts_same_value(
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
-    tag_definition_origin = json["tag_definition_origin"]
-    assert len(tag_definition_origin) == 6
-    assert tag_definition_origin["id_persistent"] == c.id_persistent_tag_def_origin
-    assert tag_definition_origin["id_parent_persistent"] is None
-    assert tag_definition_origin["name"] == c.name_tag_def_origin
-    assert tag_definition_origin["type"] == "STRING"
-    assert tag_definition_origin["owner"] == "test-user1"
-    assert "version" in tag_definition_origin
-    tag_definition_destination = json["tag_definition_destination"]
-    assert len(tag_definition_destination) == 6
-    assert (
-        tag_definition_destination["id_persistent"]
-        == c.id_persistent_tag_def_destination
+    assert len(json) == 3
+    assert_versioned(
+        json["merge_request"],
+        {
+            "assigned_to": {
+                "user_name": cu.test_username,
+                "id_persistent": cu.test_uuid,
+            },
+            "created_by": {
+                "user_name": cu.test_username1,
+                "id_persistent": cu.test_uuid1,
+            },
+            "id_persistent": c.id_persistent_merge_request,
+            "created_at": format_datetime(c.time_merge_request),
+            "state": "OPEN",
+            "origin": {
+                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_origin,
+                "type": "STRING",
+                "owner": "test-user1",
+            },
+            "destination": {
+                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_destination,
+                "type": "STRING",
+                "owner": "test-user",
+            },
+        },
     )
-    assert tag_definition_destination["id_parent_persistent"] is None
-    assert tag_definition_destination["name"] == c.name_tag_def_destination
-    assert tag_definition_destination["type"] == "STRING"
-    assert tag_definition_destination["owner"] == "test-user"
-    assert "version" in tag_definition_destination
 
     conflicts = json["conflicts"]
     assert len(conflicts) == 0
@@ -170,27 +194,37 @@ def test_conflict_resolved(
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
-    tag_definition_origin = json["tag_definition_origin"]
-    assert len(tag_definition_origin) == 6
-    assert tag_definition_origin["id_persistent"] == c.id_persistent_tag_def_origin
-    assert tag_definition_origin["id_parent_persistent"] is None
-    assert tag_definition_origin["name"] == c.name_tag_def_origin
-    assert tag_definition_origin["type"] == "STRING"
-    assert tag_definition_origin["owner"] == "test-user1"
-    assert "version" in tag_definition_origin
-    tag_definition_destination = json["tag_definition_destination"]
-    assert len(tag_definition_destination) == 6
-    assert (
-        tag_definition_destination["id_persistent"]
-        == c.id_persistent_tag_def_destination
+    assert len(json) == 3
+    assert_versioned(
+        json["merge_request"],
+        {
+            "assigned_to": {
+                "user_name": cu.test_username,
+                "id_persistent": cu.test_uuid,
+            },
+            "created_by": {
+                "user_name": cu.test_username1,
+                "id_persistent": cu.test_uuid1,
+            },
+            "id_persistent": c.id_persistent_merge_request,
+            "created_at": format_datetime(c.time_merge_request),
+            "state": "OPEN",
+            "origin": {
+                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_origin,
+                "type": "STRING",
+                "owner": "test-user1",
+            },
+            "destination": {
+                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_destination,
+                "type": "STRING",
+                "owner": "test-user",
+            },
+        },
     )
-    assert tag_definition_destination["id_parent_persistent"] is None
-    assert tag_definition_destination["name"] == c.name_tag_def_destination
-    assert tag_definition_destination["type"] == "STRING"
-    assert tag_definition_destination["owner"] == "test-user"
-    assert "version" in tag_definition_destination
-
     conflicts = json["conflicts"]
     assert len(conflicts) == 2
     conflict = conflicts[0]
@@ -246,26 +280,37 @@ def test_conflict_resolved_tag_def_origin_changed(
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
-    tag_definition_origin = json["tag_definition_origin"]
-    assert len(tag_definition_origin) == 6
-    assert tag_definition_origin["id_persistent"] == c.id_persistent_tag_def_origin
-    assert tag_definition_origin["id_parent_persistent"] is None
-    assert tag_definition_origin["name"] == "changed tag definition test"
-    assert tag_definition_origin["type"] == "STRING"
-    assert tag_definition_origin["owner"] == "test-user1"
-    assert "version" in tag_definition_origin
-    tag_definition_destination = json["tag_definition_destination"]
-    assert len(tag_definition_destination) == 6
-    assert (
-        tag_definition_destination["id_persistent"]
-        == c.id_persistent_tag_def_destination
+    assert len(json) == 3
+    assert_versioned(
+        json["merge_request"],
+        {
+            "assigned_to": {
+                "user_name": cu.test_username,
+                "id_persistent": cu.test_uuid,
+            },
+            "created_by": {
+                "user_name": cu.test_username1,
+                "id_persistent": cu.test_uuid1,
+            },
+            "id_persistent": c.id_persistent_merge_request,
+            "created_at": format_datetime(c.time_merge_request),
+            "state": "OPEN",
+            "origin": {
+                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_parent_persistent": None,
+                "name": "changed tag definition test",
+                "type": "STRING",
+                "owner": "test-user1",
+            },
+            "destination": {
+                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_destination,
+                "type": "STRING",
+                "owner": "test-user",
+            },
+        },
     )
-    assert tag_definition_destination["id_parent_persistent"] is None
-    assert tag_definition_destination["name"] == c.name_tag_def_destination
-    assert tag_definition_destination["type"] == "STRING"
-    assert tag_definition_destination["owner"] == "test-user"
-    assert "version" in tag_definition_destination
 
     conflicts = json["conflicts"]
     assert len(conflicts) == 2
@@ -356,26 +401,37 @@ def test_tag_instance_destination_value_added(
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
-    tag_definition_origin = json["tag_definition_origin"]
-    assert len(tag_definition_origin) == 6
-    assert tag_definition_origin["id_persistent"] == c.id_persistent_tag_def_origin
-    assert tag_definition_origin["id_parent_persistent"] is None
-    assert tag_definition_origin["name"] == c.name_tag_def_origin
-    assert tag_definition_origin["type"] == "STRING"
-    assert tag_definition_origin["owner"] == "test-user1"
-    assert "version" in tag_definition_origin
-    tag_definition_destination = json["tag_definition_destination"]
-    assert len(tag_definition_destination) == 6
-    assert (
-        tag_definition_destination["id_persistent"]
-        == c.id_persistent_tag_def_destination
+    assert len(json) == 3
+    assert_versioned(
+        json["merge_request"],
+        {
+            "assigned_to": {
+                "user_name": cu.test_username,
+                "id_persistent": cu.test_uuid,
+            },
+            "created_by": {
+                "user_name": cu.test_username1,
+                "id_persistent": cu.test_uuid1,
+            },
+            "id_persistent": c.id_persistent_merge_request,
+            "created_at": format_datetime(c.time_merge_request),
+            "state": "OPEN",
+            "origin": {
+                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_origin,
+                "type": "STRING",
+                "owner": "test-user1",
+            },
+            "destination": {
+                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_parent_persistent": None,
+                "name": c.name_tag_def_destination,
+                "type": "STRING",
+                "owner": "test-user",
+            },
+        },
     )
-    assert tag_definition_destination["id_parent_persistent"] is None
-    assert tag_definition_destination["name"] == c.name_tag_def_destination
-    assert tag_definition_destination["type"] == "STRING"
-    assert tag_definition_destination["owner"] == "test-user"
-    assert "version" in tag_definition_destination
 
     conflicts = json["conflicts"]
     assert len(conflicts) == 2

@@ -51,10 +51,9 @@ class MergeRequestConflict(Schema):
 class MergeRequestConflictResponse(Schema):
     # pylint: disable=too-few-public-methods
     "API model for multiple merge requests conflicts"
-    tag_definition_destination: TagDefinition
-    tag_definition_origin: TagDefinition
     conflicts: List[MergeRequestConflict]
     updated: List[MergeRequestConflict]
+    merge_request: MergeRequest
 
 
 class MergeRequestResponseList(Schema):
@@ -136,14 +135,6 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
             merge_request.instance_conflicts_all(True, recent)
         )
         return 200, MergeRequestConflictResponse(
-            tag_definition_destination=tag_definition_db_to_api(
-                TagDefinitionDb.most_recent_by_id(
-                    merge_request.id_destination_persistent
-                )
-            ),
-            tag_definition_origin=tag_definition_db_to_api(
-                TagDefinitionDb.most_recent_by_id(merge_request.id_origin_persistent)
-            ),
             conflicts=[
                 annotated_tag_instance_db_to_api(conflict)
                 for conflict in conflict_query_set
@@ -152,6 +143,7 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
                 conflict_with_updated_data_db_to_api(updated)
                 for updated in updated_query_set
             ],
+            merge_request=merge_request_db_to_api(merge_request),
         )
     except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Merge request does not exist.")

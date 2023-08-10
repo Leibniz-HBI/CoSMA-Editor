@@ -69,24 +69,7 @@ export function MergeRequestListItem({
                     </Row>
                 </Col>
                 <Col className="align-self-center ms-2">
-                    <Row>
-                        <Col xs="auto">
-                            <ArrowRightCircleFill />
-                        </Col>
-                        <Col className="ps-0">
-                            <span className="fw-bold">
-                                {mergeRequest.destinationTagDefinition.namePath[0]}
-                            </span>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col xs="auto">
-                            <ArrowLeftCircle />
-                        </Col>
-                        <Col className="ps-0">
-                            <span>{mergeRequest.originTagDefinition.namePath[0]}</span>
-                        </Col>
-                    </Row>
+                    <MergeRequestListItemBody mergeRequest={mergeRequest} />
                 </Col>
                 <Col xs={2}>
                     <Row>
@@ -96,5 +79,35 @@ export function MergeRequestListItem({
                 </Col>
             </Row>
         </ListGroup.Item>
+    )
+}
+export function MergeRequestListItemBody({
+    mergeRequest
+}: {
+    mergeRequest: MergeRequest
+}) {
+    return (
+        <Row>
+            <Col>
+                <Row>
+                    <Col xs="auto">
+                        <ArrowRightCircleFill />
+                    </Col>
+                    <Col className="ps-0">
+                        <span className="fw-bold">
+                            {mergeRequest.destinationTagDefinition.namePath[0]}
+                        </span>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col xs="auto">
+                        <ArrowLeftCircle />
+                    </Col>
+                    <Col className="ps-0">
+                        <span>{mergeRequest.originTagDefinition.namePath[0]}</span>
+                    </Col>
+                </Row>
+            </Col>
+        </Row>
     )
 }

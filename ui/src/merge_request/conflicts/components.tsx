@@ -19,6 +19,8 @@ import { Remote } from '../../util/state'
 import { useLayoutEffect, useRef } from 'react'
 import { Entity } from '../../contribution/entity/state'
 import { ColumnDefinition } from '../../column_menu/state'
+import { MergeRequest } from '../state'
+import { MergeRequestListItemBody } from '../components'
 
 export function MergeRequestConflictResolutionView() {
     const idMergeRequestPersistent = useLoaderData() as string
@@ -75,6 +77,11 @@ export function MergeRequestConflictResolutionView() {
                             </Popover>
                         </Overlay>
                     </Col>
+                    <Col>
+                        <MergeRequestListItemBody
+                            mergeRequest={conflictsByCategoryValue.mergeRequest}
+                        />
+                    </Col>
                 </Row>
                 <Row
                     className="mt-2 h-100 overflow-y-scroll flex-basis-0 flex-grow-1"
@@ -92,11 +99,8 @@ export function MergeRequestConflictResolutionView() {
                                         {conflictsByCategoryValue.updated.map(
                                             (conflict, idx) => (
                                                 <MergeRequestConflictItem
-                                                    tagDefinitionOrigin={
-                                                        conflictsByCategoryValue.tagDefinitionOrigin
-                                                    }
-                                                    tagDefinitionDestination={
-                                                        conflictsByCategoryValue.tagDefinitionDestination
+                                                    mergeRequest={
+                                                        conflictsByCategoryValue.mergeRequest
                                                     }
                                                     conflict={conflict}
                                                     resolveConflictCallback={
@@ -119,11 +123,8 @@ export function MergeRequestConflictResolutionView() {
                                     {conflictsByCategoryValue.conflicts.map(
                                         (conflict, idx) => (
                                             <MergeRequestConflictItem
-                                                tagDefinitionOrigin={
-                                                    conflictsByCategoryValue.tagDefinitionOrigin
-                                                }
-                                                tagDefinitionDestination={
-                                                    conflictsByCategoryValue.tagDefinitionDestination
+                                                mergeRequest={
+                                                    conflictsByCategoryValue.mergeRequest
                                                 }
                                                 conflict={conflict}
                                                 resolveConflictCallback={
@@ -145,13 +146,11 @@ export function MergeRequestConflictResolutionView() {
 
 export function MergeRequestConflictItem({
     conflict,
-    tagDefinitionOrigin,
-    tagDefinitionDestination,
+    mergeRequest,
     resolveConflictCallback
 }: {
     conflict: Remote<MergeRequestConflict>
-    tagDefinitionOrigin: ColumnDefinition
-    tagDefinitionDestination: ColumnDefinition
+    mergeRequest: MergeRequest
     resolveConflictCallback: ({
         entity,
         tagInstanceOrigin,
@@ -207,11 +206,12 @@ export function MergeRequestConflictItem({
                                         entity: conflict.value.entity,
                                         tagInstanceOrigin:
                                             conflict.value.tagInstanceOrigin,
-                                        tagDefinitionOrigin: tagDefinitionOrigin,
+                                        tagDefinitionOrigin:
+                                            mergeRequest.originTagDefinition,
                                         tagInstanceDestination:
                                             conflict.value.tagInstanceDestination,
                                         tagDefinitionDestination:
-                                            tagDefinitionDestination,
+                                            mergeRequest.destinationTagDefinition,
                                         replace: false
                                     })
                                 }
@@ -237,11 +237,12 @@ export function MergeRequestConflictItem({
                                         entity: conflict.value.entity,
                                         tagInstanceOrigin:
                                             conflict.value.tagInstanceOrigin,
-                                        tagDefinitionOrigin: tagDefinitionOrigin,
+                                        tagDefinitionOrigin:
+                                            mergeRequest.originTagDefinition,
                                         tagInstanceDestination:
                                             conflict.value.tagInstanceDestination,
                                         tagDefinitionDestination:
-                                            tagDefinitionDestination,
+                                            mergeRequest.destinationTagDefinition,
                                         replace: true
                                     })
                                 }

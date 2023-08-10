@@ -1,6 +1,6 @@
-import { ColumnDefinition } from '../../column_menu/state'
 import { Entity } from '../../contribution/entity/state'
 import { Remote } from '../../util/state'
+import { MergeRequest } from '../state'
 
 export class TagInstance {
     idPersistent: string
@@ -48,30 +48,26 @@ export class MergeRequestConflict {
 export class MergeRequestConflictsByState {
     updated: Remote<MergeRequestConflict>[]
     conflicts: Remote<MergeRequestConflict>[]
-    tagDefinitionDestination: ColumnDefinition
-    tagDefinitionOrigin: ColumnDefinition
+    mergeRequest: MergeRequest
     updatedEntityIdMap: Map<string, number>
     conflictsEntityIdMap: Map<string, number>
 
     constructor({
         updated,
         conflicts,
-        tagDefinitionDestination,
-        tagDefinitionOrigin,
+        mergeRequest,
         updatedEntityIdMap,
         conflictsEntityIdMap
     }: {
         updated: Remote<MergeRequestConflict>[]
         conflicts: Remote<MergeRequestConflict>[]
-        tagDefinitionDestination: ColumnDefinition
-        tagDefinitionOrigin: ColumnDefinition
+        mergeRequest: MergeRequest
         updatedEntityIdMap?: Map<string, number>
         conflictsEntityIdMap?: Map<string, number>
     }) {
         this.updated = updated
         this.conflicts = conflicts
-        this.tagDefinitionOrigin = tagDefinitionOrigin
-        this.tagDefinitionDestination = tagDefinitionDestination
+        this.mergeRequest = mergeRequest
         if (
             updatedEntityIdMap === undefined ||
             updated.length != updatedEntityIdMap.size

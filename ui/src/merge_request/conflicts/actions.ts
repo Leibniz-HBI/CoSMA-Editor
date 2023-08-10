@@ -1,5 +1,5 @@
-import { ColumnDefinition } from '../../column_menu/state'
 import { Remote } from '../../util/state'
+import { MergeRequest } from '../state'
 import { MergeRequestConflict } from './state'
 
 export class GetMergeRequestConflictStartAction {}
@@ -7,24 +7,20 @@ export class GetMergeRequestConflictStartAction {}
 export class GetMergeRequestConflictSuccessAction {
     updated: Remote<MergeRequestConflict>[]
     conflicts: Remote<MergeRequestConflict>[]
-    tagDefinitionDestination: ColumnDefinition
-    tagDefinitionOrigin: ColumnDefinition
+    mergeRequest: MergeRequest
 
     constructor({
         updated,
         conflicts,
-        tagDefinitionOrigin,
-        tagDefinitionDestination
+        mergeRequest
     }: {
         updated: Remote<MergeRequestConflict>[]
         conflicts: Remote<MergeRequestConflict>[]
-        tagDefinitionOrigin: ColumnDefinition
-        tagDefinitionDestination: ColumnDefinition
+        mergeRequest: MergeRequest
     }) {
         this.updated = updated
         this.conflicts = conflicts
-        this.tagDefinitionDestination = tagDefinitionDestination
-        this.tagDefinitionOrigin = tagDefinitionOrigin
+        this.mergeRequest = mergeRequest
     }
 }
 

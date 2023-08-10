@@ -1,6 +1,8 @@
 import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
 import { Entity } from '../../../contribution/entity/state'
+import { PublicUserInfo } from '../../../user/state'
 import { Remote } from '../../../util/state'
+import { MergeRequest, MergeRequestStep } from '../../state'
 import {
     GetMergeRequestConflictErrorAction,
     GetMergeRequestConflictStartAction,
@@ -174,17 +176,29 @@ describe('get conflicts', () => {
             [
                 200,
                 {
-                    tag_definition_origin: {
-                        name: tagDefOrigin.namePath[0],
-                        id_persistent: tagDefOrigin.idPersistent,
-                        type: 'STRING',
-                        version: tagDefOrigin.version
-                    },
-                    tag_definition_destination: {
-                        name: tagDefDestination.namePath[0],
-                        id_persistent: tagDefDestination.idPersistent,
-                        type: 'STRING',
-                        version: tagDefDestination.version
+                    merge_request: {
+                        id_persistent: 'id-merge-request',
+                        assigned_to: {
+                            user_name: 'user_assigned',
+                            id_persistent: 'id-user-assigned'
+                        },
+                        created_by: {
+                            user_name: 'user_created',
+                            id_persistent: 'id-user-created'
+                        },
+                        state: 'OPEN',
+                        origin: {
+                            name: tagDefOrigin.namePath[0],
+                            id_persistent: tagDefOrigin.idPersistent,
+                            type: 'STRING',
+                            version: tagDefOrigin.version
+                        },
+                        destination: {
+                            name: tagDefDestination.namePath[0],
+                            id_persistent: tagDefDestination.idPersistent,
+                            type: 'STRING',
+                            version: tagDefDestination.version
+                        }
                     },
                     updated: [sharedConflictJson, sharedConflictJson1],
                     conflicts: [
@@ -237,8 +251,20 @@ describe('get conflicts', () => {
                 new GetMergeRequestConflictSuccessAction({
                     updated: updatedConflicts,
                     conflicts: conflicts,
-                    tagDefinitionOrigin: tagDefOrigin,
-                    tagDefinitionDestination: tagDefDestination
+                    mergeRequest: new MergeRequest({
+                        idPersistent: 'id-merge-request',
+                        step: MergeRequestStep.Open,
+                        createdBy: new PublicUserInfo({
+                            userName: 'user_created',
+                            idPersistent: 'id-user-created'
+                        }),
+                        assignedTo: new PublicUserInfo({
+                            userName: 'user_assigned',
+                            idPersistent: 'id-user-assigned'
+                        }),
+                        originTagDefinition: tagDefOrigin,
+                        destinationTagDefinition: tagDefDestination
+                    })
                 })
             ]
         ])

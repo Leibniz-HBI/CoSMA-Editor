@@ -81,7 +81,7 @@ test('can register', async () => {
     const repeatPasswordInput = screen.getByLabelText('Repeat password')
     await user.type(repeatPasswordInput, 'password')
     const buttons = container.getElementsByTagName('button')
-    await user.click(buttons[2])
+    await waitFor(async () => await user.click(buttons[2]))
     waitFor(() => {
         expect(registrationCallback.mock.calls).toEqual([
             ['username', 'mail@test.url', 'names personal', 'password']
@@ -113,7 +113,7 @@ test('can cancel registration', async () => {
     const repeatPasswordInput = screen.getByLabelText('Repeat password')
     await user.type(repeatPasswordInput, 'password')
     const buttons = container.getElementsByTagName('button')
-    await user.click(buttons[1])
+    await waitFor(async () => await user.click(buttons[1]))
     waitFor(() => {
         expect(registrationCallback.mock.calls).toEqual([])
         expect(closeRegistrationCallback.mock.calls.length).toEqual(1)
@@ -143,10 +143,10 @@ test('can close error', async () => {
     await user.type(passwordInput, 'password')
     const repeatPasswordInput = screen.getByLabelText('Repeat password')
     await user.type(repeatPasswordInput, 'password')
-    const buttons = container.getElementsByTagName('button')
-    const closeButton = buttons[2]
+    const buttons = container.getElementsByClassName('btn-close')
+    const closeButton = buttons[0]
     expect(closeButton.textContent).toEqual('')
-    await user.click(closeButton)
+    await waitFor(async () => await user.click(closeButton))
     waitFor(() => {
         expect(registrationCallback.mock.calls).toEqual([])
         expect(closeRegistrationCallback.mock.calls.length).toEqual(0)
