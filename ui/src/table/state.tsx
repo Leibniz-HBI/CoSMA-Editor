@@ -68,6 +68,44 @@ export class TableState {
         }
         return false
     }
+    csvLines(): string[] {
+        const entities = this.entities
+        console.log(entities)
+        if (entities === undefined || entities.length == 0) {
+            return []
+        }
+        const lines = []
+        const header =
+            '"id_entity_persistent","display_txt",' +
+            this.columnStates
+                .slice(1)
+                .map((colState) => '"' + colState.name + '"')
+                .join(',')
+        if (header.endsWith(',')) {
+            lines.push(header.slice(0, header.length - 1) + '\n')
+        } else {
+            lines.push(header + '\n')
+        }
+
+        for (let rowIdx = 0; rowIdx < entities.length; ++rowIdx) {
+            const value =
+                '"' +
+                entities[rowIdx] +
+                '",' +
+                this.columnStates
+                    .map(
+                        (colState) =>
+                            '"' +
+                            (colState.cellContents[rowIdx][0]?.value?.toString() ??
+                                '') +
+                            '"'
+                    )
+                    .join(',') +
+                '\n'
+            lines.push(value)
+        }
+        return lines
+    }
 }
 
 export type CellValue = {
@@ -107,5 +145,53 @@ export class ColumnState {
         this.idPersistent = idPersistent
         this.width = width
         this.columnType = columnType
+    }
+}
+
+export class TableStateCsvIterator implements Iterator<string | undefined> {
+    tableState: TableState
+    rowIdx: number
+
+    constructor(tableState: TableState) {
+        this.tableState = tableState
+        this.rowIdx = -1
+    }
+
+    next(): IteratorResult<string | undefined> {
+        const entities = this.tableState.entities
+        if (entities === undefined || this.rowIdx > entities.length)
+            return { done: true, value: undefined }
+        if (this.rowIdx < 0) {
+            this.rowIdx += 1
+            return {
+                done: entities.length == 0,
+                value:
+                    '"id_entity_persistent","display_txt",' +
+                    this.tableState.columnStates
+                        .map((colState) => '"' + colState.name + '"')
+                        .join(',') +
+                    '\n'
+            }
+        } else {
+            const value =
+                '"' +
+                entities[this.rowIdx] +
+                '",' +
+                this.tableState.columnStates
+                    .map(
+                        (colState) =>
+                            '"' +
+                            (colState.cellContents[this.rowIdx][0].value?.toString() ??
+                                '') +
+                            '"'
+                    )
+                    .join(',') +
+                '\n'
+            this.rowIdx += 1
+            return {
+                done: this.rowIdx >= entities.length,
+                value
+            }
+        }
     }
 }

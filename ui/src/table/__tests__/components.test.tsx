@@ -46,7 +46,6 @@ function MockTable(props: any) {
 describe('table from state', () => {
     const baseTableProps: TableDataProps = {
         entities: [],
-        baseUrl: 'http://test.url',
         columnStates: [],
         columnIndices: new Map(),
         isLoading: false,
@@ -80,7 +79,8 @@ describe('table from state', () => {
             newSizeWithGrow: number
         ) => {},
         switchColumnsCallback: (startIndex, endIndex) => {},
-        clearSubmitValueErrorCallback: () => {}
+        clearSubmitValueErrorCallback: () => {},
+        csvLines: () => []
     }
     test('should show error', () => {
         const tableProps = {
@@ -122,11 +122,7 @@ describe('table from state', () => {
                 submitValueCallback={jest.fn()}
             />
         )
-        const outer = container.getElementsByClassName('cosmae-table-container-outer')
-        expect(outer.length).toBe(1)
-        const inner = outer[0].getElementsByClassName('cosmae-table-container-inner')
-        expect(inner.length).toBe(1)
-        const mock = inner[0].getElementsByClassName('mock')
+        const mock = container.getElementsByClassName('mock')
         expect(mock.length).toBe(1)
         expect(`${(DataEditor as unknown as jest.Mock).mock.calls[0][0]}`).toEqual(
             `${{

@@ -131,6 +131,7 @@ export type LocalTableCallbacks = {
         height: number
     }
     clearSubmitValueErrorCallback: VoidFunction
+    csvLines: () => string[]
 }
 export type TableDataProps = {
     entities?: string[]
@@ -226,7 +227,11 @@ export function useRemoteTableData(
                     (state.selectedColumnHeaderBounds?.height ?? 0)
             }),
             clearSubmitValueErrorCallback: () =>
-                dispatch(new SubmitValuesClearErrorAction())
+                dispatch(new SubmitValuesClearErrorAction()),
+            csvLines: () => {
+                console.log(state)
+                return state.csvLines()
+            }
         },
         {
             entities: state.entities,
