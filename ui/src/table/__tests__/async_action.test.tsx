@@ -70,19 +70,18 @@ describe('get table async action', () => {
         ])
         const dispatch = jest.fn()
         await new GetTableAsyncAction().run(dispatch)
-        expect(dispatch.mock.calls.length).toBe(4)
-        expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
-        expect(dispatch.mock.calls[1][0]).toEqual(
-            new SetColumnLoadingAction(
-                'Display Text',
-                'display_txt_id',
-                ColumnType.String
-            )
-        )
-        expect(dispatch.mock.calls[2][0]).toEqual(new SetEntitiesAction(entity_ids))
-        expect(dispatch.mock.calls[3][0]).toEqual(
-            new AppendColumnAction('display_txt_id', display_txt_column)
-        )
+        expect(dispatch.mock.calls).toEqual([
+            [new SetEntityLoadingAction()],
+            [
+                new SetColumnLoadingAction(
+                    'Display Text',
+                    'display_txt_id',
+                    ColumnType.String
+                )
+            ],
+            [new SetEntitiesAction(entity_ids)],
+            [new AppendColumnAction('display_txt_id', display_txt_column)]
+        ])
     })
 
     test('loads table with chunks', async () => {
@@ -145,20 +144,21 @@ describe('get table async action', () => {
         ])
         const dispatch = jest.fn()
         await new GetTableAsyncAction().run(dispatch)
-        expect(dispatch.mock.calls.length).toBe(3)
-        expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
-        expect(dispatch.mock.calls[1][0]).toEqual(
-            new SetColumnLoadingAction(
-                'Display Text',
-                'display_txt_id',
-                ColumnType.String
-            )
-        )
-        expect(dispatch.mock.calls[2][0]).toEqual(
-            new SetLoadDataErrorAction(
-                'Could not load entities chunk 0. Reason: "test error"'
-            )
-        )
+        expect(dispatch.mock.calls).toEqual([
+            [new SetEntityLoadingAction()],
+            [
+                new SetColumnLoadingAction(
+                    'Display Text',
+                    'display_txt_id',
+                    ColumnType.String
+                )
+            ],
+            [
+                new SetLoadDataErrorAction(
+                    'Could not load entities chunk 0. Reason: "test error"'
+                )
+            ]
+        ])
     })
 
     test('load chunk exception', async () => {
@@ -172,18 +172,17 @@ describe('get table async action', () => {
         ])
         const dispatch = jest.fn()
         await new GetTableAsyncAction().run(dispatch)
-        expect(dispatch.mock.calls.length).toBe(3)
-        expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
-        expect(dispatch.mock.calls[1][0]).toEqual(
-            new SetColumnLoadingAction(
-                'Display Text',
-                'display_txt_id',
-                ColumnType.String
-            )
-        )
-        expect(dispatch.mock.calls[2][0]).toEqual(
-            new SetLoadDataErrorAction('test error')
-        )
+        expect(dispatch.mock.calls).toEqual([
+            [new SetEntityLoadingAction()],
+            [
+                new SetColumnLoadingAction(
+                    'Display Text',
+                    'display_txt_id',
+                    ColumnType.String
+                )
+            ],
+            [new SetLoadDataErrorAction('test error')]
+        ])
     })
 })
 describe('get column async action', () => {

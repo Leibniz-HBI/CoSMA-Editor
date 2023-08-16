@@ -145,10 +145,13 @@ export default App
 function TableConnector() {
     return (
         <UserContext.Consumer>
-            {(userInfoWithLogout) =>
-                userInfoWithLogout && (
+            {(userInfoWithCallbacks) =>
+                userInfoWithCallbacks && (
                     <RemoteDataTable
-                        column_defs={userInfoWithLogout.userInfo.columns}
+                        userInfoPromise={userInfoWithCallbacks.userInfoPromise}
+                        defaultColumnCallbacks={
+                            userInfoWithCallbacks.defaultTagDefinitionsCallbacks
+                        }
                     />
                 )
             }

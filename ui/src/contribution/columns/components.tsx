@@ -269,11 +269,12 @@ export function ContributionColumnAssignmentForm({
                 show={createTabSelected}
                 onHide={() => selectColumnCreationTabCallback(false)}
                 data-testid="create-column-modal"
+                size="lg"
             >
                 <Modal.Header closeButton>
                     <Modal.Title>Create a new tag</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body className="bg-secondary vh-85">
                     <NewColumnModalBody />
                 </Modal.Body>
             </Modal>

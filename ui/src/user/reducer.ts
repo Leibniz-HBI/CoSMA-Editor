@@ -7,6 +7,7 @@ import {
     LogoutAction,
     RefreshDeniedAction,
     RefreshStartAction,
+    RefreshSuccessAction,
     RegistrationErrorAction,
     RegistrationErrorClearAction,
     RegistrationStartAction,
@@ -17,9 +18,11 @@ import { UserState } from './state'
 
 export function userReducer(state: UserState, action: UserAction): UserState {
     if (action instanceof RefreshStartAction) {
-        return new UserState({ isRefreshing: true })
+        return new UserState({ ...state, isRefreshing: true })
     } else if (action instanceof RefreshDeniedAction) {
         return new UserState({})
+    } else if (action instanceof RefreshSuccessAction) {
+        return new UserState({ ...state, isRefreshing: false })
     } else if (action instanceof LoginStartAction) {
         return new UserState({
             userInfo: undefined,

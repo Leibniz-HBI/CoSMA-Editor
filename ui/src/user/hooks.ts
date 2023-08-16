@@ -2,20 +2,43 @@ import { Context, createContext, useReducer } from 'react'
 import { userReducer } from './reducer'
 import { useThunkReducer } from '../util/state'
 import { UserInfo, UserState } from './state'
-import { LoginAction, RefreshAction, RegistrationAction } from './async_actions'
+import {
+    LoginAction,
+    RefreshAction,
+    RegistrationAction,
+    RemoteUserProfileChangeColumIndexAction,
+    RemoteUserProfileColumnAppendAction,
+    RemoteUserProfileColumnDeleteAction
+} from './async_actions'
 import {
     LoginErrorClearAction,
+    LoginSuccessAction,
     LogoutAction,
     RegistrationErrorClearAction,
     ToggleRegistrationAction
 } from './actions'
 import { ErrorState } from '../util/error'
 
-export const UserContext: Context<UserInfoWithLogout | undefined> = createContext<
-    UserInfoWithLogout | undefined
+export const UserContext: Context<UserInfoWithCallbacks | undefined> = createContext<
+    UserInfoWithCallbacks | undefined
 >(undefined)
 
-export type UserInfoWithLogout = { userInfo: UserInfo; logoutCallback: VoidFunction }
+export type AppendToDefaultTagDefinitionsCallback = (idPersistent: string) => void
+export type ChangeDefaultTagDefinitionsCallback = (
+    idxStart: number,
+    idxEnd: number
+) => void
+export type DefaultTagDefinitionsCallbacks = {
+    appendToDefaultTagDefinitionsCallback: AppendToDefaultTagDefinitionsCallback
+    removeFromDefaultTagDefinitionListCallback: AppendToDefaultTagDefinitionsCallback
+    changeDefaultTagDefinitionsCallback: ChangeDefaultTagDefinitionsCallback
+}
+export type UserInfoWithCallbacks = {
+    userInfo: UserInfo
+    logoutCallback: VoidFunction
+    defaultTagDefinitionsCallbacks: DefaultTagDefinitionsCallbacks
+    userInfoPromise: () => Promise<UserInfo | undefined>
+}
 export type LoginCallback = (userName: string, password: string) => void
 export type RegistrationCallback = ({
     userName,
@@ -33,7 +56,7 @@ export type RegistrationCallback = ({
 
 export type HeaderProps = { logoutCallback?: VoidFunction }
 export type UserProps = {
-    userInfoWithLogout?: UserInfoWithLogout
+    userInfoWithCallbacks?: UserInfoWithCallbacks
     showRegistration: boolean
     loginErrorState?: ErrorState
     registrationErrorState?: ErrorState
@@ -53,16 +76,39 @@ export function useLogoutCallback() {
 export function useLogin(): UserProps {
     const [state, dispatch] = useThunkReducer(userReducer, new UserState({}))
     return {
-        userInfoWithLogout: state.userInfo
+        userInfoWithCallbacks: state.userInfo
             ? {
                   userInfo: state.userInfo,
-                  logoutCallback: () => dispatch(new LogoutAction())
+                  userInfoPromise: () => dispatch(new RefreshAction(false)),
+                  logoutCallback: () => dispatch(new LogoutAction()),
+                  defaultTagDefinitionsCallbacks: {
+                      appendToDefaultTagDefinitionsCallback: (idPersistent) =>
+                          dispatch(
+                              new RemoteUserProfileColumnAppendAction(idPersistent)
+                          ),
+                      removeFromDefaultTagDefinitionListCallback: (idPersistent) =>
+                          dispatch(
+                              new RemoteUserProfileColumnDeleteAction(idPersistent)
+                          ),
+                      changeDefaultTagDefinitionsCallback: (idxStart, idxEnd) =>
+                          dispatch(
+                              new RemoteUserProfileChangeColumIndexAction(
+                                  idxStart,
+                                  idxEnd
+                              )
+                          )
+                  }
               }
             : undefined,
         showRegistration: state.showRegistration,
         loginErrorState: state.loginErrorState,
         registrationErrorState: state.registrationErrorState,
-        refreshCallback: () => dispatch(new RefreshAction()),
+        refreshCallback: () =>
+            dispatch(new RefreshAction(true)).then((userInfo) => {
+                if (userInfo !== undefined) {
+                    dispatch(new LoginSuccessAction(userInfo))
+                }
+            }),
         loginCallback: (userName: string, password: string) => {
             if (!state.isLoggingIn) {
                 dispatch(new LoginAction(userName, password))

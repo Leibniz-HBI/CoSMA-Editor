@@ -16,6 +16,7 @@ import {
     HideHeaderMenuAction,
     RemoveSelectedColumnAction,
     SetColumnWidthAction,
+    SetLoadDataErrorAction,
     ShowColumnAddMenuAction,
     ShowHeaderMenuAction,
     SubmitValuesClearErrorAction
@@ -27,6 +28,8 @@ import {
 } from './async_actions'
 import { tableReducer } from './reducer'
 import { CellValue, ColumnState, TableState } from './state'
+import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
+import { UserInfo } from '../user/state'
 
 export function mkCell(columnType: ColumnType, cellValues: CellValue[]): GridCell {
     // workaround for typescript jest compatibility
@@ -146,7 +149,8 @@ export type TableDataProps = {
 }
 
 export function useRemoteTableData(
-    columnDefinitionList: ColumnDefinition[]
+    userInfoPromise: () => Promise<UserInfo | undefined>,
+    defaultColumnCallbacks: DefaultTagDefinitionsCallbacks
 ): [RemoteTableCallbacks, LocalTableCallbacks, TableDataProps] {
     const [state, dispatch] = useThunkReducer(
         tableReducer,
@@ -159,21 +163,29 @@ export function useRemoteTableData(
                 if (state.entities !== undefined || isLoading) {
                     return
                 }
-                dispatch(new GetTableAsyncAction()).then(async () => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    columnDefinitionList.map(async (col: ColumnDefinition) => {
-                        const idPersistent = col.idPersistent
-                        if (
-                            state.isLoading ||
-                            (state.columnIndices.has(idPersistent) &&
-                                state.columnStates[
-                                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                                    state.columnIndices.get(idPersistent)!
-                                ].isLoading)
-                        ) {
-                            return
-                        }
-                        await dispatch(new GetColumnAsyncAction(col))
+                userInfoPromise().then((userInfo) => {
+                    if (userInfo === undefined) {
+                        dispatch(
+                            new SetLoadDataErrorAction(
+                                'Please refresh the page and log in'
+                            )
+                        )
+                    }
+                    dispatch(new GetTableAsyncAction()).then(async () => {
+                        userInfo?.columns.forEach(async (col: ColumnDefinition) => {
+                            const idPersistent = col.idPersistent
+                            if (
+                                state.isLoading ||
+                                (state.columnIndices.has(idPersistent) &&
+                                    state.columnStates[
+                                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                                        state.columnIndices.get(idPersistent)!
+                                    ].isLoading)
+                            ) {
+                                return
+                            }
+                            await dispatch(new GetColumnAsyncAction(col))
+                        })
                     })
                 })
             },
@@ -197,14 +209,25 @@ export function useRemoteTableData(
         {
             cellContentCallback: useCellContentCalback(state),
             addColumnCallback: (columnDefinition: ColumnDefinition) =>
-                dispatch(new GetColumnAsyncAction(columnDefinition)),
+                dispatch(new GetColumnAsyncAction(columnDefinition)).then(() =>
+                    defaultColumnCallbacks.appendToDefaultTagDefinitionsCallback(
+                        columnDefinition.idPersistent
+                    )
+                ),
             showColumnAddMenuCallback: () => dispatch(new ShowColumnAddMenuAction()),
             hideColumnAddMenuCallback: () => dispatch(new HideColumnAddMenuAction()),
             showHeaderMenuCallback: (columnIdx: number, bounds: Rectangle) => {
                 dispatch(new ShowHeaderMenuAction(columnIdx, bounds))
             },
             hideHeaderMenuCallback: () => dispatch(new HideHeaderMenuAction()),
-            removeColumnCallback: () => dispatch(new RemoveSelectedColumnAction()),
+            removeColumnCallback: () => {
+                dispatch(new RemoveSelectedColumnAction())
+                if (state.selectedColumnHeaderByIdPersistent) {
+                    defaultColumnCallbacks.removeFromDefaultTagDefinitionListCallback(
+                        state.selectedColumnHeaderByIdPersistent
+                    )
+                }
+            },
             setColumnWidthCallback: (
                 column: GridColumn,
                 newSize: number,
@@ -212,8 +235,13 @@ export function useRemoteTableData(
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 newSizeWithGrow: number
             ) => dispatch(new SetColumnWidthAction(colIndex, newSize)),
-            switchColumnsCallback: (startIndex: number, endIndex: number) =>
-                dispatch(new ChangeColumnIndexAction(startIndex, endIndex)),
+            switchColumnsCallback: (startIndex: number, endIndex: number) => {
+                dispatch(new ChangeColumnIndexAction(startIndex, endIndex))
+                defaultColumnCallbacks.changeDefaultTagDefinitionsCallback(
+                    startIndex,
+                    endIndex
+                )
+            },
             columnHeaderBoundsCallback: () => ({
                 left: state.selectedColumnHeaderBounds?.x ?? 0,
                 top: state.selectedColumnHeaderBounds?.y ?? 0,

@@ -20,6 +20,7 @@ import {
     ShowColumnAddMenuAction,
     ShowHeaderMenuAction
 } from '../actions'
+import { UserInfo } from '../../user/state'
 
 jest.mock('../../util/state', () => {
     const original = jest.requireActual('../../util/state')
@@ -211,12 +212,30 @@ describe('column types', () => {
         })
     })
 })
+const userInfoPromiseWithNoColumns = () =>
+    Promise.resolve(
+        new UserInfo({
+            userName: 'user-name-test',
+            idPersistent: 'id-user-test',
+            email: 'test@domain.org',
+            namesPersonal: 'names personal test',
+            columns: []
+        })
+    )
+function mkDefaultTagDefinitionCallbacks() {
+    return {
+        appendToDefaultTagDefinitionsCallback: jest.fn(),
+        removeFromDefaultTagDefinitionListCallback: jest.fn(),
+        changeDefaultTagDefinitionsCallback: jest.fn()
+    }
+}
 describe('table hooks', () => {
     const columnNameTest = 'column name test'
     const columnIdTest = 'column_id_test'
     const columnNameTest1 = 'column name test 1'
     const columnIdTest1 = 'column_id_test_1'
     test('early exit when already loading column', async () => {
+        const columnCallbacks = mkDefaultTagDefinitionCallbacks()
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
             new TableState({
@@ -237,7 +256,10 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [remoteCallbacks] = useRemoteTableData([])
+        const [remoteCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            columnCallbacks
+        )
         remoteCallbacks.loadTableDataCallback()
         expect(dispatch.mock.calls.length).toBe(0)
     })
@@ -249,12 +271,17 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [remoteCallbacks] = useRemoteTableData([])
+        const [remoteCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            mkDefaultTagDefinitionCallbacks()
+        )
         remoteCallbacks.loadTableDataCallback()
         expect(dispatch.mock.calls.length).toBe(0)
     })
-    test('column callback dispatches correct action', () => {
+    test('column callback dispatches correct action', async () => {
         const dispatch = jest.fn()
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        dispatch.mockImplementation((_a) => Promise.resolve(() => undefined))
         ;(useThunkReducer as jest.Mock).mockReturnValue([
             new TableState({
                 isLoading: true
@@ -268,11 +295,19 @@ describe('table hooks', () => {
             columnType: ColumnType.String,
             version: 0
         })
-        const [_a, localCallbacks] = useRemoteTableData([])
-        localCallbacks.addColumnCallback(columnDefinitionTest)
-        expect(dispatch.mock.calls[0][0]).toEqual(
-            new GetColumnAsyncAction(columnDefinitionTest)
+        const profileCallbacks = mkDefaultTagDefinitionCallbacks()
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            profileCallbacks
         )
+        localCallbacks.addColumnCallback(columnDefinitionTest)
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        expect(dispatch.mock.calls).toEqual([
+            [new GetColumnAsyncAction(columnDefinitionTest)]
+        ])
+        expect(
+            profileCallbacks.appendToDefaultTagDefinitionsCallback.mock.calls
+        ).toEqual([[columnDefinitionTest.idPersistent]])
     })
     test('showColumnAddMenuCallback dispatches correct action', () => {
         const dispatch = jest.fn()
@@ -282,9 +317,12 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData([])
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            mkDefaultTagDefinitionCallbacks()
+        )
         localCallbacks.showColumnAddMenuCallback()
-        expect(dispatch.mock.calls[0][0]).toEqual(new ShowColumnAddMenuAction())
+        expect(dispatch.mock.calls).toEqual([[new ShowColumnAddMenuAction()]])
     })
     test('hideColumnAddMenuCallback dispatches correct action', () => {
         const dispatch = jest.fn()
@@ -294,9 +332,12 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData([])
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            mkDefaultTagDefinitionCallbacks()
+        )
         localCallbacks.hideColumnAddMenuCallback()
-        expect(dispatch.mock.calls[0][0]).toEqual(new HideColumnAddMenuAction())
+        expect(dispatch.mock.calls).toEqual([[new HideColumnAddMenuAction()]])
     })
     test('showHeaderMenuCallback dispatches correct action', () => {
         const dispatch = jest.fn()
@@ -306,12 +347,15 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData([])
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            mkDefaultTagDefinitionCallbacks()
+        )
         const rectangleTest = { x: 2, y: 5, width: 10, height: 20 }
         localCallbacks.showHeaderMenuCallback(0, rectangleTest)
-        expect(dispatch.mock.calls[0][0]).toEqual(
-            new ShowHeaderMenuAction(0, rectangleTest)
-        )
+        expect(dispatch.mock.calls).toEqual([
+            [new ShowHeaderMenuAction(0, rectangleTest)]
+        ])
     })
     test('hideHeaderMenuCallback dispatches correct action', () => {
         const dispatch = jest.fn()
@@ -321,21 +365,32 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData([])
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            mkDefaultTagDefinitionCallbacks()
+        )
         localCallbacks.hideHeaderMenuCallback()
-        expect(dispatch.mock.calls[0][0]).toEqual(new HideHeaderMenuAction())
+        expect(dispatch.mock.calls).toEqual([[new HideHeaderMenuAction()]])
     })
-    test('removeColumallback dispatches correct action', () => {
+    test('removeColumn callback dispatches correct actions when colum header selected.', () => {
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
             new TableState({
-                isLoading: true
+                isLoading: true,
+                selectedColumnHeaderByIdPersistent: 'id-column-test'
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData([])
+        const profileCallbacks = mkDefaultTagDefinitionCallbacks()
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            profileCallbacks
+        )
         localCallbacks.removeColumnCallback()
-        expect(dispatch.mock.calls[0][0]).toEqual(new RemoveSelectedColumnAction())
+        expect(dispatch.mock.calls).toEqual([[new RemoveSelectedColumnAction()]])
+        expect(
+            profileCallbacks.removeFromDefaultTagDefinitionListCallback.mock.calls
+        ).toEqual([['id-column-test']])
     })
     test('setColumnWidthCallback dispatches correct action', () => {
         const dispatch = jest.fn()
@@ -345,7 +400,10 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData([])
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            mkDefaultTagDefinitionCallbacks()
+        )
         const newSizeTest = 500
         const colIndexTest = 15
         localCallbacks.setColumnWidthCallback(
@@ -354,9 +412,9 @@ describe('table hooks', () => {
             colIndexTest,
             800
         )
-        expect(dispatch.mock.calls[0][0]).toEqual(
-            new SetColumnWidthAction(colIndexTest, newSizeTest)
-        )
+        expect(dispatch.mock.calls).toEqual([
+            [new SetColumnWidthAction(colIndexTest, newSizeTest)]
+        ])
     })
     test('switchCallback dispatches correct action', () => {
         const dispatch = jest.fn()
@@ -366,9 +424,16 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData([])
+        const profileCallbacks = mkDefaultTagDefinitionCallbacks()
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            profileCallbacks
+        )
         localCallbacks.switchColumnsCallback(5, 7)
-        expect(dispatch.mock.calls[0][0]).toEqual(new ChangeColumnIndexAction(5, 7))
+        expect(dispatch.mock.calls).toEqual([[new ChangeColumnIndexAction(5, 7)]])
+        expect(profileCallbacks.changeDefaultTagDefinitionsCallback.mock.calls).toEqual(
+            [[5, 7]]
+        )
     })
     test('returns correct columnHeaderBoundsCallback', () => {
         const dispatch = jest.fn()
@@ -384,7 +449,10 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData([])
+        const [_a, localCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            mkDefaultTagDefinitionCallbacks()
+        )
         expect(localCallbacks.columnHeaderBoundsCallback()).toEqual({
             left: xTest,
             top: yTest,

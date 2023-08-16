@@ -90,7 +90,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
         this.columnDefinition = column_definition
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async run(dispatch: Dispatch<TableAction>) {
+    async run(dispatch: Dispatch<TableAction>): Promise<void> {
         const id_persistent = this.columnDefinition.idPersistent
         const columnType = this.columnDefinition.columnType
         try {

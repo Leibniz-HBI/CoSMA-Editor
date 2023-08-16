@@ -45,10 +45,13 @@ export function parseMergeRequestFromJson(mrJson: any) {
     const idPersistent = mrJson['id_persistent']
     const assignedTo = parsePublicUserInfoFromJson(mrJson['assigned_to'])
     const createdBy = parsePublicUserInfoFromJson(mrJson['created_by'])
-    const originTagDefinition = parseColumnDefinitionsFromApi(mrJson['origin'], [])
+    const originTagDefinition = parseColumnDefinitionsFromApi(
+        mrJson['origin'],
+        undefined
+    )
     const destinationTagDefinition = parseColumnDefinitionsFromApi(
         mrJson['destination'],
-        []
+        undefined
     )
     const step = mergeRequestStateFromApiMap[mrJson['state']]
     return new MergeRequest({

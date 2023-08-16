@@ -2,9 +2,9 @@
 
 import { useLogin } from '../hooks'
 import { useThunkReducer } from '../../util/state'
-import { UserState } from '../state'
+import { UserInfo, UserState } from '../state'
 import { LoginAction, RefreshAction, RegistrationAction } from '../async_actions'
-import { RegistrationErrorClearAction } from '../actions'
+import { LoginSuccessAction, RegistrationErrorClearAction } from '../actions'
 import { LoginErrorClearAction } from '../actions'
 import { ToggleRegistrationAction } from '../actions'
 
@@ -44,12 +44,24 @@ test('unset login rror', () => {
     expect(dispatch.mock.calls).toEqual([[new LoginErrorClearAction()]])
 })
 
-test('handles refresh', () => {
+test('handles refresh', async () => {
     const dispatch = jest.fn()
+    const userInfo = new UserInfo({
+        userName: 'user test',
+        idPersistent: 'id-user-test',
+        namesPersonal: 'name test',
+        columns: [],
+        email: 'mail@test.org'
+    })
+    dispatch.mockImplementation(() => Promise.resolve(userInfo))
     ;(useThunkReducer as jest.Mock).mockReturnValue([new UserState({}), dispatch])
     const { refreshCallback } = useLogin()
     refreshCallback()
-    expect(dispatch.mock.calls).toEqual([[new RefreshAction()]])
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(dispatch.mock.calls).toEqual([
+        [new RefreshAction(true)],
+        [new LoginSuccessAction(userInfo)]
+    ])
 })
 
 test('register cancels early', () => {

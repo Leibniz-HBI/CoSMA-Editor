@@ -195,14 +195,20 @@ export const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
 export function parseColumnDefinitionsFromApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tagDefinitionApi: any,
-    namePath: string[]
+    parentNamePath?: string[]
 ): ColumnDefinition {
     const columnType =
         columnTypeMapApiToApp.get(tagDefinitionApi['type']) ?? ColumnType.String
+    let namePath
+    if (parentNamePath === undefined) {
+        namePath = tagDefinitionApi['name_path']
+    } else {
+        namePath = [...parentNamePath, tagDefinitionApi['name']]
+    }
     return new ColumnDefinition({
         idPersistent: tagDefinitionApi['id_persistent'],
         idParentPersistent: tagDefinitionApi['id_parent_persistent'],
-        namePath: [...namePath, tagDefinitionApi['name']],
+        namePath,
         version: tagDefinitionApi['version'],
         columnType: columnType
     })

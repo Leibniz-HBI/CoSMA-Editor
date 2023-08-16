@@ -40,7 +40,9 @@ html {
 .min-h-0 {
     min-height: 0px;
 }
-
+.vh-85{
+    height: 85vh;
+}
 .min-h-200px {
     min-height: 200px !important;
 }
@@ -194,9 +196,9 @@ div#layers > div > .container {
 .nav-link.active {
     border-bottom: 1px solid #eceff4 !important;
 }
-.no-wrap {
+.pre-wrap {
     display: inline-block;
-    white-space: pre;
+    white-space: pre-wrap;
 }
 
 .text-transparent {

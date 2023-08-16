@@ -26,6 +26,11 @@ export class RefreshStartAction {}
 export class RefreshDeniedAction {}
 
 /**
+ * Indicates that the refresh was successful
+ */
+export class RefreshSuccessAction {}
+
+/**
  * Indicates an error during login
  */
 export class LoginErrorAction {
@@ -83,4 +88,5 @@ export type UserAction =
     | LogoutAction
     | RefreshStartAction
     | RefreshDeniedAction
+    | RefreshSuccessAction
     | ToggleRegistrationAction

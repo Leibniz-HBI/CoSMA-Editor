@@ -5,12 +5,14 @@ import {
     Item
 } from '@glideapps/glide-data-grid'
 import { useCallback, useLayoutEffect } from 'react'
-import { Button, Col, Row, Toast, ToastContainer } from 'react-bootstrap'
+import { Button, Col, Modal, Row, Toast, ToastContainer } from 'react-bootstrap'
 import { useLayer } from 'react-laag'
 import { ColumnMenu } from '../column_menu/components/menu'
 import { ColumnAddButton } from '../column_menu/components/misc'
 import { HeaderMenu } from '../header_menu'
 import { useRemoteTableData, LocalTableCallbacks, TableDataProps } from './hooks'
+import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
+import { UserInfo } from '../user/state'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -32,16 +34,20 @@ export function downloadWorkAround(csvLines: string[]) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function RemoteDataTable(props: any) {
+export function RemoteDataTable(props: {
+    userInfoPromise: () => Promise<UserInfo | undefined>
+    defaultColumnCallbacks: DefaultTagDefinitionsCallbacks
+}) {
     const [remoteCallbacks, localCallbacks, syncInfo] = useRemoteTableData(
-        props.column_defs
+        props.userInfoPromise,
+        props.defaultColumnCallbacks
     )
     useLayoutEffect(
         () => {
             remoteCallbacks.loadTableDataCallback()
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props.column_defs, syncInfo.isLoading]
+        []
     )
 
     return (
@@ -78,6 +84,23 @@ export function RemoteDataTable(props: any) {
                             }}
                             submitValueCallback={remoteCallbacks.submitValueCallback}
                         />
+                        <Modal
+                            show={syncInfo.isShowColumnAddMenu}
+                            onHide={localCallbacks.hideColumnAddMenuCallback}
+                            size="xl"
+                        >
+                            <Modal.Header closeButton>
+                                <Modal.Title>Show Additional Tag Values</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body className="bg-secondary vh-85">
+                                <ColumnMenu
+                                    columnIndices={syncInfo.columnIndices}
+                                    loadColumnDataCallback={
+                                        localCallbacks.addColumnCallback
+                                    }
+                                />
+                            </Modal.Body>
+                        </Modal>
                     </div>
                 </Row>
                 <div id="portal" />
@@ -94,20 +117,16 @@ export function DataTable(props: {
     const {
         entities,
         columnStates,
-        columnIndices,
         frozenColumns,
         selectedColumnHeaderBounds,
-        isShowColumnAddMenu,
         isLoading,
         loadDataErrorState,
         submitValuesErrorState
     } = props.tableProps
     const {
         cellContentCallback,
-        addColumnCallback,
         removeColumnCallback,
         showColumnAddMenuCallback,
-        hideColumnAddMenuCallback,
         showHeaderMenuCallback,
         hideHeaderMenuCallback,
         setColumnWidthCallback,
@@ -115,15 +134,6 @@ export function DataTable(props: {
         columnHeaderBoundsCallback,
         clearSubmitValueErrorCallback
     } = props.tableCallbacks
-    const {
-        layerProps: columnAddMenuLayerProps,
-        triggerProps: columnAddMenuTriggerProps,
-        renderLayer: columnAddMenuRenderLayer
-    } = useLayer({
-        isOpen: isShowColumnAddMenu,
-        placement: 'bottom-end',
-        onOutsideClick: hideColumnAddMenuCallback
-    })
     const headerMenuOpen = selectedColumnHeaderBounds !== undefined
     const { layerProps, renderLayer } = useLayer({
         isOpen: headerMenuOpen,
@@ -166,12 +176,7 @@ export function DataTable(props: {
                     freezeColumns={frozenColumns}
                     rightElement={
                         <ColumnAddButton>
-                            <button
-                                {...columnAddMenuTriggerProps}
-                                onClick={showColumnAddMenuCallback}
-                            >
-                                +
-                            </button>
+                            <button onClick={showColumnAddMenuCallback}>+</button>
                         </ColumnAddButton>
                     }
                     rightElementProps={{
@@ -183,15 +188,6 @@ export function DataTable(props: {
                     onColumnMoved={switchColumnsCallback}
                     onCellEdited={props.submitValueCallback}
                 />
-                {isShowColumnAddMenu &&
-                    columnAddMenuRenderLayer(
-                        <div {...columnAddMenuLayerProps}>
-                            <ColumnMenu
-                                columnIndices={columnIndices}
-                                loadColumnDataCallback={addColumnCallback}
-                            />
-                        </div>
-                    )}
                 {headerMenuOpen &&
                     renderLayer(
                         <div {...layerProps}>

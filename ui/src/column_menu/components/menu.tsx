@@ -36,10 +36,7 @@ export function ColumnMenuBody(props: {
         showLinkClass += ' active bg-light'
     }
     return (
-        <div
-            className="container text-left bg-light rounded vh-80 ps-0 pe-0"
-            style={{ width: '400px' }}
-        >
+        <div className="container text-left bg-light rounded ps-0 pe-0">
             <Col>
                 <Row className="ms-0 me-0">
                     <ul className="nav nav-tabs justify-content-center ">

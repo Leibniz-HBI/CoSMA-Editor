@@ -5,6 +5,9 @@ import {
     LoginStartAction,
     LoginSuccessAction,
     LogoutAction,
+    RefreshDeniedAction,
+    RefreshStartAction,
+    RefreshSuccessAction,
     RegistrationErrorAction,
     RegistrationStartAction,
     UserAction
@@ -50,14 +53,15 @@ export class LoginAction extends AsyncAction<UserAction, void> {
                                 email: json['email'],
                                 namesPersonal: json['names_personal'],
                                 namesFamily: json['names_family'],
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                columns: (json['columns'] as Array<any>).map(
-                                    (tagDefinitionApi) =>
-                                        parseColumnDefinitionsFromApi(
-                                            tagDefinitionApi,
-                                            []
-                                        )
-                                )
+                                columns:
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    (json['tag_definition_list'] as Array<any>).map(
+                                        (tagDefinitionApi) =>
+                                            parseColumnDefinitionsFromApi(
+                                                tagDefinitionApi,
+                                                undefined
+                                            )
+                                    )
                             })
                         )
                     )
@@ -76,9 +80,18 @@ export class LoginAction extends AsyncAction<UserAction, void> {
     }
 }
 
-export class RefreshAction extends AsyncAction<UserAction, void> {
-    async run(dispatch: Dispatch<UserAction>) {
-        dispatch(new LoginStartAction())
+export class RefreshAction extends AsyncAction<UserAction, UserInfo | undefined> {
+    withDispatch: boolean
+
+    constructor(withDispatch: boolean) {
+        super()
+        this.withDispatch = withDispatch
+    }
+
+    async run(dispatch: Dispatch<UserAction>): Promise<UserInfo | undefined> {
+        if (this.withDispatch) {
+            dispatch(new RefreshStartAction())
+        }
         try {
             const rsp = await fetch(config.api_path + '/user/refresh', {
                 method: 'GET',
@@ -90,28 +103,33 @@ export class RefreshAction extends AsyncAction<UserAction, void> {
             })
             if (rsp.status == 200) {
                 const json = await rsp.json()
-                dispatch(
-                    new LoginSuccessAction(
-                        new UserInfo({
-                            userName: json['user_name'],
-                            idPersistent: json['id_persistent'],
-                            email: json['email'],
-                            namesPersonal: json['names_personal'],
-                            namesFamily: json['names_family'],
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            columns: (json['columns'] as Array<any>).map(
-                                (tagDefinitionApi) =>
-                                    parseColumnDefinitionsFromApi(tagDefinitionApi, [])
-                            )
-                        })
-                    )
+                const tagDefinitions = (
+                    json[
+                        'tag_definition_list'
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    ] as Array<any>
+                ).map((tagDefinitionApi) =>
+                    parseColumnDefinitionsFromApi(tagDefinitionApi, undefined)
                 )
+                const userInfo = new UserInfo({
+                    userName: json['user_name'],
+                    idPersistent: json['id_persistent'],
+                    email: json['email'],
+                    namesPersonal: json['names_personal'],
+                    namesFamily: json['names_family'],
+                    columns: tagDefinitions
+                })
+                if (this.withDispatch) {
+                    dispatch(new RefreshSuccessAction())
+                }
+                return userInfo
             } else {
-                dispatch(new LogoutAction())
+                dispatch(new RefreshDeniedAction())
             }
         } catch (error: unknown) {
-            dispatch(new LogoutAction())
+            dispatch(new RefreshDeniedAction())
         }
+        return undefined
     }
 }
 
@@ -171,10 +189,16 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
                             email: json['email'],
                             namesPersonal: json['names_personal'],
                             namesFamily: json['names_family'],
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            columns: (json['columns'] as Array<any>).map(
-                                (tagDefinitionApi) =>
-                                    parseColumnDefinitionsFromApi(tagDefinitionApi, [])
+                            columns: (
+                                json[
+                                    'tag_definition_list'
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                ] as Array<any>
+                            ).map((tagDefinitionApi) =>
+                                parseColumnDefinitionsFromApi(
+                                    tagDefinitionApi,
+                                    undefined
+                                )
                             )
                         })
                     )
@@ -196,6 +220,58 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
         } catch (error: unknown) {
             dispatch(new RegistrationErrorAction(exceptionMessage(error)))
         }
+    }
+}
+export class RemoteUserProfileColumnAppendAction extends AsyncAction<UserAction, void> {
+    idTagPersistent: string
+
+    constructor(idTagPersistent: string) {
+        super()
+        this.idTagPersistent = idTagPersistent
+    }
+
+    async run(_dispatch: Dispatch<UserAction>): Promise<void> {
+        await fetch(
+            config.api_path + `/user/tag_definitions/append/${this.idTagPersistent}`,
+            { credentials: 'include', method: 'POST' }
+        )
+    }
+}
+
+export class RemoteUserProfileColumnDeleteAction extends AsyncAction<UserAction, void> {
+    idTagPersistent: string
+
+    constructor(idTagPersistent: string) {
+        super()
+        this.idTagPersistent = idTagPersistent
+    }
+
+    async run(_dispatch: Dispatch<UserAction>): Promise<void> {
+        await fetch(config.api_path + `/user/tag_definitions/${this.idTagPersistent}`, {
+            credentials: 'include',
+            method: 'DELETE'
+        })
+    }
+}
+
+export class RemoteUserProfileChangeColumIndexAction extends AsyncAction<
+    UserAction,
+    void
+> {
+    idxStart: number
+    idxEnd: number
+
+    constructor(idxStart: number, idxEnd: number) {
+        super()
+        this.idxStart = idxStart
+        this.idxEnd = idxEnd
+    }
+    async run(_dispatch: Dispatch<UserAction>): Promise<void> {
+        await fetch(
+            config.api_path +
+                `/user/tag_definitions/swap/${this.idxStart}/${this.idxEnd}`,
+            { credentials: 'include', method: 'POST' }
+        )
     }
 }
 

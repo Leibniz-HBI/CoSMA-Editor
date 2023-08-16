@@ -1,4 +1,4 @@
-import { ReactElement, useLayoutEffect } from 'react'
+import { ReactElement, useEffect } from 'react'
 import { UserContext, useLogin } from '../hooks'
 import { Modal } from 'react-bootstrap'
 import { LoginForm } from './login_form'
@@ -6,7 +6,7 @@ import { RegistrationForm } from './registration_form'
 
 export function LoginProvider({ body }: { body: ReactElement }) {
     const {
-        userInfoWithLogout,
+        userInfoWithCallbacks,
         showRegistration,
         loginErrorState,
         registrationErrorState,
@@ -18,15 +18,15 @@ export function LoginProvider({ body }: { body: ReactElement }) {
         toggleRegistrationCallback
     } = useLogin()
 
-    useLayoutEffect(() => {
-        if (userInfoWithLogout === undefined) {
+    useEffect(() => {
+        if (userInfoWithCallbacks === undefined) {
             refreshCallback()
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userInfoWithLogout?.userInfo])
+    }, [userInfoWithCallbacks?.userInfo])
     return (
-        <UserContext.Provider value={userInfoWithLogout}>
-            {userInfoWithLogout !== undefined ? (
+        <UserContext.Provider value={userInfoWithCallbacks}>
+            {userInfoWithCallbacks !== undefined ? (
                 body
             ) : (
                 <div

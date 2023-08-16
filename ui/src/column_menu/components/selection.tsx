@@ -10,27 +10,27 @@ export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
     }
     if (namePath.length > 3) {
         return [
-            <span className="no-wrap" key="path-part-0">
+            <span className="pre-wrap" key="path-part-0">
                 {namePath[0] + ' '}
             </span>,
-            <span className="no-wrap" key="path-part-1">
+            <span className="pre-wrap" key="path-part-1">
                 {'-> ... '}
             </span>,
-            <span className="no-wrap" key="path-part-2">
+            <span className="pre-wrap" key="path-part-2">
                 {'-> ' + namePath[namePath.length - 2] + ' '}
             </span>,
-            <span className="no-wrap" key="path-part-3">
+            <span className="pre-wrap" key="path-part-3">
                 {'-> ' + namePath[namePath.length - 1]}
             </span>
         ]
     }
 
     return [
-        <span className="no-wrap" key="path-part-0">
+        <span className="pre-wrap" key="path-part-0">
             {namePath[0] + ' '}
         </span>,
         ...namePath.slice(1).map((namePart: string, idx: number) => (
-            <span className="no-wrap" key={`path-part-${idx + 1}`}>
+            <span className="pre-wrap" key={`path-part-${idx + 1}`}>
                 {'-> ' + namePart + ' '}
             </span>
         ))

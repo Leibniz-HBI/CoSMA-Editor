@@ -189,12 +189,14 @@ describe('get conflicts', () => {
                         state: 'OPEN',
                         origin: {
                             name: tagDefOrigin.namePath[0],
+                            name_path: tagDefOrigin.namePath,
                             id_persistent: tagDefOrigin.idPersistent,
                             type: 'STRING',
                             version: tagDefOrigin.version
                         },
                         destination: {
                             name: tagDefDestination.namePath[0],
+                            name_path: tagDefDestination.namePath,
                             id_persistent: tagDefDestination.idPersistent,
                             type: 'STRING',
                             version: tagDefDestination.version

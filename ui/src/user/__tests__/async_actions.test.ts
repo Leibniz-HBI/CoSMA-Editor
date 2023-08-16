@@ -3,7 +3,9 @@ import {
     LoginStartAction,
     LoginSuccessAction,
     LogoutAction,
+    RefreshDeniedAction,
     RefreshStartAction,
+    RefreshSuccessAction,
     RegistrationErrorAction,
     RegistrationStartAction
 } from '../actions'
@@ -32,6 +34,7 @@ const passwordTest = 'password1234'
 const namesPersonalTest = 'names personal test'
 const namesFamilyTest = 'names family test'
 const testError = 'test error message'
+const idPersistentTest = 'id-user-test'
 
 describe('login', () => {
     test('successful login', async () => {
@@ -44,7 +47,8 @@ describe('login', () => {
                         names_personal: namesPersonalTest,
                         email: emailTest,
                         namesFamily: '',
-                        columns: []
+                        tag_definition_list: [],
+                        id_persistent: 'id-user-test'
                     }
                 }
             ]
@@ -58,7 +62,9 @@ describe('login', () => {
                     new UserInfo({
                         userName: userNameTest,
                         email: emailTest,
-                        namesPersonal: namesPersonalTest
+                        namesPersonal: namesPersonalTest,
+                        columns: [],
+                        idPersistent: 'id-user-test'
                     })
                 )
             ]
@@ -129,24 +135,25 @@ describe('refresh action', () => {
                         names_personal: namesPersonalTest,
                         email: emailTest,
                         namesFamily: '',
-                        columns: []
+                        tag_definition_list: [],
+                        id_persistent: 'id-user-test'
                     }
                 }
             ]
         ])
         const dispatch = jest.fn()
-        await new RefreshAction().run(dispatch)
+        const promiseResult = await new RefreshAction(true).run(dispatch)
+        const userInfo = new UserInfo({
+            userName: userNameTest,
+            email: emailTest,
+            namesPersonal: namesPersonalTest,
+            columns: [],
+            idPersistent: 'id-user-test'
+        })
+        expect(promiseResult).toEqual(userInfo)
         expect(dispatch.mock.calls).toEqual([
             [new RefreshStartAction()],
-            [
-                new LoginSuccessAction(
-                    new UserInfo({
-                        userName: userNameTest,
-                        email: emailTest,
-                        namesPersonal: namesPersonalTest
-                    })
-                )
-            ]
+            [new RefreshSuccessAction()]
         ])
     })
     test('logs out', async () => {
@@ -159,11 +166,9 @@ describe('refresh action', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new RefreshAction().run(dispatch)
-        expect(dispatch.mock.calls).toEqual([
-            [new LoginStartAction()],
-            [new LogoutAction()]
-        ])
+        await new RefreshAction(false).run(dispatch)
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        expect(dispatch.mock.calls).toEqual([[new RefreshDeniedAction()]])
     })
     test('error without msg', async () => {
         responseSequence([
@@ -184,7 +189,7 @@ describe('refresh action', () => {
 })
 
 describe('register action', () => {
-    test('successfull registration', async () => {
+    test('successful registration', async () => {
         responseSequence([
             [
                 200,
@@ -194,7 +199,8 @@ describe('register action', () => {
                         names_personal: namesPersonalTest,
                         email: emailTest,
                         names_family: namesFamilyTest,
-                        columns: []
+                        tag_definition_list: [],
+                        id_persistent: idPersistentTest
                     }
                 }
             ]
@@ -215,7 +221,9 @@ describe('register action', () => {
                         userName: userNameTest,
                         email: emailTest,
                         namesPersonal: namesPersonalTest,
-                        namesFamily: namesFamilyTest
+                        namesFamily: namesFamilyTest,
+                        columns: [],
+                        idPersistent: idPersistentTest
                     })
                 )
             ]

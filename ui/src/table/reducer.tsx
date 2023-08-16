@@ -151,23 +151,28 @@ export function tableReducer(state: TableState, action: TableAction) {
         if (action.endIndex == action.startIndex) {
             return state
         }
-        let smallerIndex, largerIndex
-        if (action.endIndex < action.startIndex) {
-            smallerIndex = action.endIndex
-            largerIndex = action.startIndex
-        } else {
-            smallerIndex = action.startIndex
-            largerIndex = action.endIndex
-        }
-        if (smallerIndex < state.frozenColumns) {
+        if (
+            action.endIndex < state.frozenColumns ||
+            action.startIndex < state.frozenColumns
+        ) {
             return state
         }
-        const newColumnStates = [
-            ...state.columnStates.slice(0, smallerIndex),
-            ...state.columnStates.slice(smallerIndex + 1, largerIndex + 1),
-            state.columnStates[smallerIndex],
-            ...state.columnStates.slice(largerIndex + 1)
-        ]
+        let newColumnStates
+        if (action.startIndex > action.endIndex) {
+            newColumnStates = [
+                ...state.columnStates.slice(0, action.endIndex),
+                state.columnStates[action.startIndex],
+                ...state.columnStates.slice(action.endIndex, action.startIndex),
+                ...state.columnStates.slice(action.startIndex + 1)
+            ]
+        } else {
+            newColumnStates = [
+                ...state.columnStates.slice(0, action.startIndex),
+                ...state.columnStates.slice(action.startIndex + 1, action.endIndex + 1),
+                state.columnStates[action.startIndex],
+                ...state.columnStates.slice(action.endIndex + 1)
+            ]
+        }
         const newColumnIndices = new Map<string, number>()
         for (let idx = 0; idx < newColumnStates.length; ++idx) {
             newColumnIndices.set(newColumnStates[idx].idPersistent, idx)
