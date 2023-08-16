@@ -19,5 +19,10 @@ def assert_versioned(actual, expected):
         for key in actual:
             if key != "version":
                 assert_versioned(actual[key], expected[key])
+    elif isinstance(actual, list):
+        assert isinstance(expected, list)
+        assert len(actual) == len(expected)
+        for actual_element, expected_element in zip(actual, expected):
+            assert_versioned(actual_element, expected_element)
     else:
         assert actual == expected

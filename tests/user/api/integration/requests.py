@@ -19,3 +19,31 @@ def get_refresh(url, cookies=None):
     return requests.get(
         urljoin(url, "/cosmae/api/user/refresh"), cookies=cookies, timeout=900
     )
+
+
+def post_append_id_tag_definition_persistent(
+    url, id_tag_definition_persistent, cookies=None
+):
+    return requests.post(
+        url + f"/cosmae/api/user/tag_definitions/append/{id_tag_definition_persistent}",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def delete_id_tag_definition_persistent(
+    url, id_tag_definition_persistent, cookies=None
+):
+    return requests.delete(
+        url + f"/cosmae/api/user/tag_definitions/{id_tag_definition_persistent}",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def post_change_tag_definitions(url, start_idx, end_idx, cookies=None):
+    return requests.post(
+        url + f"/cosmae/api/user/tag_definitions/change/{start_idx}/{end_idx}",
+        cookies=cookies,
+        timeout=900,
+    )

@@ -134,7 +134,7 @@ def patch_tag_definition(
             patch_from_dict(candidate_definition, **patch_dict)
             print(candidate_definition.__dict__)
             return 200, tag_definitions_contribution_db_to_api(candidate_definition)
-        except IndexError:
+        except TagDefinition.DoesNotExist:  # pylint: disable=no-member
             return 400, ApiError(msg="Existing tag definition does not exist.")
         except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
             return 404, ApiError(msg="Contribution candidate does not exist.")

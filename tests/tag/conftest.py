@@ -49,6 +49,18 @@ def tag_def_user1(user):
 
 
 @pytest.fixture
+def tag_def_parent(db):
+    tag_def = TagDefinition(
+        id_persistent=c.id_tag_def_parent_persistent_test,
+        type=TagDefinition.FLOAT,
+        name="tag_def_parent_test",
+        time_edit=c.time_edit_test + timedelta(seconds=5),
+    )
+    tag_def.save()
+    return tag_def
+
+
+@pytest.fixture
 def tag_def_child_0():
     "A shared child tag definition for tests"
     return TagDefinition(

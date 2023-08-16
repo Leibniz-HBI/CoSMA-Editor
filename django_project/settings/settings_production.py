@@ -41,7 +41,9 @@ def get_docker_compose_secret(secret_name):
     with open(f"/run/secrets/{secret_name}", encoding="utf-8") as key_file:
         key = key_file.readline().rstrip("\n")
     if not key:
-        raise Exception(f"Please set the {secret_name} secret.")
+        raise Exception(  # pylint: disable=broad-exception-raised
+            f"Please set the {secret_name} secret."
+        )
     return key
 
 
@@ -170,4 +172,16 @@ RQ_QUEUES = {
         "DEFAULT_TIMEOUT": 360,
         "PASSWORD": get_docker_compose_secret("redis_password"),
     }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://default:{get_docker_compose_secret}@cosmae_redis:6379",
+    },
+    "tag_definition_name_paths": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://default:{get_docker_compose_secret}@cosmae_redis:6379",
+        "KEY_PREFIX": "tag_definition_name_path",
+    },
 }

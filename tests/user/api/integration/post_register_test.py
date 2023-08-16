@@ -20,7 +20,7 @@ def test_same_name(auth_server):
         },
     )
     assert rsp.status_code == 400
-    assert rsp.json() == {"msg": "Username or mail adress already in use."}
+    assert rsp.json() == {"msg": "Username or mail address already in use."}
 
 
 def test_same_email(auth_server):
@@ -35,7 +35,7 @@ def test_same_email(auth_server):
         },
     )
     assert rsp.status_code == 400
-    assert rsp.json() == {"msg": "Username or mail adress already in use."}
+    assert rsp.json() == {"msg": "Username or mail address already in use."}
 
 
 def test_same_names(auth_server):
@@ -58,7 +58,7 @@ def test_same_names(auth_server):
         "email": "other@test.org",
         "names_personal": c.test_names_personal,
         "names_family": "",
-        "columns": [],
+        "tag_definition_list": [],
         "id_persistent": str(uuid),
     }
 

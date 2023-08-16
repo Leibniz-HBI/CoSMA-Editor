@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import tests.user.common as cu
 from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
-from tests.utils import format_datetime
+from tests.utils import assert_versioned, format_datetime
 from cosmae.exception import NotAuthenticatedException
 
 
@@ -44,23 +44,28 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
         "id_persistent": cu.test_uuid1,
     }
     assert created["state"] == "OPEN"
-    destination = created["destination"]
-    assert len(destination) == 6
-    assert destination["id_persistent"] == c.id_persistent_tag_def_destination1
-    assert destination["id_parent_persistent"] is None
-    assert destination["name"] == c.name_tag_def_destination1
-    assert destination["type"] == "STRING"
-    assert destination["owner"] == "test-user1"
-    assert "version" in destination
-    origin = created["origin"]
-    assert len(origin) == 6
-    assert origin["name"] == c.name_tag_def_origin1
-    assert origin["id_parent_persistent"] is None
-    assert origin["id_persistent"] == c.id_persistent_tag_def_origin1
-    assert origin["type"] == "STRING"
-    assert origin["owner"] == "test-user"
-    assert "version" in origin
-
+    assert_versioned(
+        created["destination"],
+        {
+            "id_persistent": c.id_persistent_tag_def_destination1,
+            "id_parent_persistent": None,
+            "name": c.name_tag_def_destination1,
+            "name_path": [c.name_tag_def_destination1],
+            "type": "STRING",
+            "owner": "test-user1",
+        },
+    )
+    assert_versioned(
+        created["origin"],
+        {
+            "name": c.name_tag_def_origin1,
+            "name_path": [c.name_tag_def_origin1],
+            "id_parent_persistent": None,
+            "id_persistent": c.id_persistent_tag_def_origin1,
+            "type": "STRING",
+            "owner": "test-user",
+        },
+    )
     assigned_list = json["assigned"]
     assert len(assigned_list) == 1
     assigned = assigned_list[0]
@@ -76,19 +81,25 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
         "id_persistent": cu.test_uuid,
     }
     assert assigned["state"] == "OPEN"
-    destination = assigned["destination"]
-    assert len(destination) == 6
-    assert destination["id_persistent"] == c.id_persistent_tag_def_destination
-    assert destination["id_parent_persistent"] is None
-    assert destination["name"] == c.name_tag_def_destination
-    assert destination["type"] == "STRING"
-    assert destination["owner"] == "test-user"
-    assert "version" in destination
-    origin = assigned["origin"]
-    assert len(origin) == 6
-    assert origin["name"] == c.name_tag_def_origin
-    assert origin["id_persistent"] == c.id_persistent_tag_def_origin
-    assert origin["id_parent_persistent"] is None
-    assert origin["type"] == "STRING"
-    assert origin["owner"] == "test-user1"
-    assert "version" in origin
+    assert_versioned(
+        assigned["destination"],
+        {
+            "id_persistent": c.id_persistent_tag_def_destination,
+            "id_parent_persistent": None,
+            "name": c.name_tag_def_destination,
+            "name_path": [c.name_tag_def_destination],
+            "type": "STRING",
+            "owner": "test-user",
+        },
+    )
+    assert_versioned(
+        assigned["origin"],
+        {
+            "name": c.name_tag_def_origin,
+            "name_path": [c.name_tag_def_origin],
+            "id_persistent": c.id_persistent_tag_def_origin,
+            "id_parent_persistent": None,
+            "type": "STRING",
+            "owner": "test-user1",
+        },
+    )

@@ -10,7 +10,7 @@ from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedExcep
 from cosmae.merge_request.models_django import ConflictResolution
 from cosmae.merge_request.models_django import MergeRequest as MergeRequestDb
 from cosmae.person.api import PersonNatural
-from cosmae.tag.api.definitions import TagDefinition, tag_definition_db_to_api
+from cosmae.tag.api.definitions import TagDefinitionResponse, tag_definition_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.tag.models_django import TagInstance as TagInstanceDb
 from cosmae.user.api import PublicUserInfo, user_db_to_public_user_info
@@ -24,8 +24,8 @@ class MergeRequest(Schema):
     "API Model for a single merge request"
     id_persistent: str
     created_by: PublicUserInfo
-    destination: TagDefinition
-    origin: TagDefinition
+    destination: TagDefinitionResponse
+    origin: TagDefinitionResponse
     created_at: datetime
     assigned_to: PublicUserInfo
     state: str

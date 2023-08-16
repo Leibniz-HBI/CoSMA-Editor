@@ -45,7 +45,9 @@ def get_file_secret(secret_name):
     ) as key_file:
         key = key_file.readline().rstrip("\n")
     if not key:
-        raise Exception(f"Please set the {secret_name} secret.")
+        raise Exception(  # pylint: disable=broad-exception-raised
+            f"Please set the {secret_name} secret."
+        )
     return key
 
 
@@ -181,4 +183,16 @@ RQ_QUEUES = {
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
     }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://localhost:6379",
+    },
+    "tag_definition_name_paths": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://localhost:6379",
+        "KEY_PREFIX": "tag_definition_name_path",
+    },
 }

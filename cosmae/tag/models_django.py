@@ -42,11 +42,15 @@ class TagDefinition(models.Model):
 
     @classmethod
     def most_recent_by_id(cls, id_persistent):
-        """Return the most recent version of an entity."""
-        # pylint: disable=no-member
-        return cls.objects.filter(id_persistent=id_persistent).order_by(
-            models.F("previous_version").desc(nulls_last=True)
-        )[0]
+        """Return the most recent version of a tag definition."""
+        return cls.most_recent_by_id_query_set(id_persistent).get()
+
+    @classmethod
+    def most_recent_by_id_query_set(cls, id_persistent):
+        """Return a query for the most recent version of a tag definition."""
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_persistent
+        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
 
     @classmethod
     def most_recent_children(cls, id_persistent: Optional[str]):
@@ -86,7 +90,7 @@ class TagDefinition(models.Model):
         if id_parent_persistent is not None:
             try:
                 TagDefinition.most_recent_by_id(id_parent_persistent)
-            except IndexError as exc:
+            except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
                 raise NoParentTagException(id_parent_persistent) from exc
         if version is None:
             exists = TagDefinition.objects.filter(  # pylint: disable=no-member
@@ -232,7 +236,7 @@ class TagInstance(models.Model):
         try:
             tag_def = TagDefinition.most_recent_by_id(id_tag_definition_persistent)
             value = tag_def.check_value(value)
-        except IndexError as exc:
+        except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
             raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
 
         try:
@@ -259,7 +263,7 @@ class TagInstance(models.Model):
         # Fine for now as we always get the whole column/tag.
         try:
             tag = TagDefinition.most_recent_by_id(id_tag_definition_persistent)
-        except IndexError as exc:
+        except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
             raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
         if tag.type == TagDefinition.INNER:
             tags = set(TagDefinition.most_recent_children(tag.id_persistent))

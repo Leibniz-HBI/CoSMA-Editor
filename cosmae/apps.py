@@ -6,43 +6,32 @@ from django.apps import AppConfig, apps
 from django.core.exceptions import AppRegistryNotReady
 from django.db.backends.signals import connection_created
 from django.db.models.signals import post_migrate, post_save
+from django.db.utils import OperationalError
 
 logger = logging.getLogger("cosmae.app_config")
 
-READ_PERMISSIONS = [
-    "view_person",
-    "view_entity",
-    "view_taginstance",
-    "view_tagdefinition",
-]
-
-WRITE_PERMISSIONS = [
-    "add_person",
-    "add_entity",
-    "add_taginstance",
-    "add_tagdefinition",
-]
 
 added_permissions = {
     "CosmaeGroup.APPLICANT": [],
-    "CosmaeGroup.READER": [READ_PERMISSIONS],
-    "CosmaeGroup.CONTRIBUTOR": [READ_PERMISSIONS],
-    "CosmaeGroup.EDITOR": [READ_PERMISSIONS, WRITE_PERMISSIONS],
-    "CosmaeGroup.COMMISSIONER": [READ_PERMISSIONS, WRITE_PERMISSIONS],
+    "CosmaeGroup.READER": [],
+    "CosmaeGroup.CONTRIBUTOR": [],
+    "CosmaeGroup.EDITOR": [],
+    "CosmaeGroup.COMMISSIONER": [],
 }
 
 
 def add_permission_for_group(group: str, permission_list_list: List[List[str]]):
     "Method for granting permissions to groups."
     group_model = apps.get_model("auth", "Group")
-    permission_model = apps.get_model("auth", "Permission")
+    permission_model = apps.get_model("auth", "group_permissions")
     group_name = str(group)
 
     group, _created_group = group_model.objects.get_or_create(name=group_name)
     for permission_list in permission_list_list:
         for permission_name in permission_list:
-            permission = permission_model.objects.get(codename=permission_name)
-            group.permissions.add(permission)
+            permission = permission_model.objects.filter(codename=permission_name).get()
+            if not permission in group.permissions:
+                group.permissions.add(permission)
     group.save()
 
 
@@ -110,6 +99,25 @@ class CosmaeConfig(AppConfig):
                 dispatch_merge_request_queue_process,
                 sender=MergeRequest,
                 dispatch_uid="cosmae_merge_request_queue",
+            )
+            from django_rq import enqueue
+
+            from cosmae.tag.models_django import TagDefinition
+            from cosmae.tag.queue import (
+                dispatch_tag_definition_queue_process,
+                update_tag_definition_name_path,
+            )
+
+            try:
+                roots = TagDefinition.most_recent_children(None)
+                for root in roots:
+                    enqueue(update_tag_definition_name_path, root.id_persistent, [])
+            except OperationalError:
+                pass  #
+            post_save.connect(
+                dispatch_tag_definition_queue_process,
+                sender=TagDefinition,
+                dispatch_uid="cosmae_tag_definition_queue",
             )
         except AppRegistryNotReady:
             pass

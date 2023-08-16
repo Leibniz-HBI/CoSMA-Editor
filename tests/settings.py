@@ -136,3 +136,13 @@ RQ_QUEUES = {
         "DEFAULT_TIMEOUT": 360,
     }
 }
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/tmp/django_cache",
+    },
+    "tag_definition_name_paths": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/tmp/django_cache_tag_definition_name_paths",
+    },
+}

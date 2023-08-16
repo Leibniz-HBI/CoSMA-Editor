@@ -23,6 +23,6 @@ def test_valid_credentials(auth_server):
         "names_personal": c.test_names_personal,
         "email": c.test_email,
         "names_family": "",
-        "columns": [],
+        "tag_definition_list": [],
         "id_persistent": c.test_uuid,
     }
