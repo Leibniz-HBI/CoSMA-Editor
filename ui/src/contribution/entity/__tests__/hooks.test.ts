@@ -11,6 +11,7 @@ import {
 } from '../async_actions'
 import { mkCellContentCallback, useContributionEntities } from '../hooks'
 import { ContributionEntityState, EntityWithDuplicates, ScoredEntity } from '../state'
+import { AssignType } from '../../../table/draw'
 
 jest.mock('../../../util/state', () => {
     return { ...jest.requireActual('../../../util/state'), useThunkReducer: jest.fn() }
@@ -274,6 +275,10 @@ describe('cell contents callback', () => {
     test('handles original entity', () => {
         const cellCallback = mkCellContentCallback(entityTest, columnTypes)
         expect(cellCallback([0, 0])).toEqual({
+            kind: 'custom' as GridCellKind,
+            data: new AssignType(false, true)
+        })
+        expect(cellCallback([1, 0])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'group entity test',
@@ -281,15 +286,15 @@ describe('cell contents callback', () => {
             contentAlign: 'left',
             themeOverride: { baseFontStyle: 'bold 13px' }
         })
-        expect(cellCallback([1, 0])).toEqual({
+        expect(cellCallback([2, 0])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
-            displayData: 'Create new entity',
-            data: 'Create new entity',
-            contentAlign: 'center',
+            displayData: '',
+            data: '',
+            contentAlign: 'right',
             themeOverride: { baseFontStyle: 'bold 13px' }
         })
-        expect(cellCallback([2, 0])).toEqual({
+        expect(cellCallback([3, 0])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'value group',
@@ -301,6 +306,10 @@ describe('cell contents callback', () => {
     test('handles similar entities', () => {
         const cellCallback = mkCellContentCallback(entityTest, columnTypes)
         expect(cellCallback([0, 1])).toEqual({
+            kind: 'custom' as GridCellKind,
+            data: new AssignType(true, false)
+        })
+        expect(cellCallback([1, 1])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'similar entity test',
@@ -308,7 +317,7 @@ describe('cell contents callback', () => {
             contentAlign: 'left',
             themeOverride: undefined
         })
-        expect(cellCallback([1, 1])).toEqual({
+        expect(cellCallback([2, 1])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: '90 %',
@@ -316,7 +325,7 @@ describe('cell contents callback', () => {
             contentAlign: 'right',
             themeOverride: undefined
         })
-        expect(cellCallback([2, 1])).toEqual({
+        expect(cellCallback([3, 1])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'value similar',
@@ -325,6 +334,10 @@ describe('cell contents callback', () => {
             themeOverride: undefined
         })
         expect(cellCallback([0, 2])).toEqual({
+            kind: 'custom' as GridCellKind,
+            data: new AssignType(true, false)
+        })
+        expect(cellCallback([1, 2])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'similar entity test 1',
@@ -332,7 +345,7 @@ describe('cell contents callback', () => {
             contentAlign: 'left',
             themeOverride: undefined
         })
-        expect(cellCallback([1, 2])).toEqual({
+        expect(cellCallback([2, 2])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: '80 %',
@@ -340,7 +353,7 @@ describe('cell contents callback', () => {
             contentAlign: 'right',
             themeOverride: undefined
         })
-        expect(cellCallback([2, 2])).toEqual({
+        expect(cellCallback([3, 2])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'value similar 1',

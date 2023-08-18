@@ -179,7 +179,7 @@ export function parseMergeRequestConflictFromApi(json: any) {
         entity: parseEntityObjectFromJson(json['entity']),
         tagInstanceOrigin: parseTagInstanceFromJson(json['tag_instance_origin']),
         tagInstanceDestination: tagInstanceDestination,
-        replace: json['replace']
+        replace: json['replace'] ?? undefined
     })
 }
 

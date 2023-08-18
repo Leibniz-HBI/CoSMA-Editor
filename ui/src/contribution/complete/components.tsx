@@ -8,7 +8,7 @@ export function CompleteStep() {
     const navigate = useNavigate()
     return (
         <ContributionStepper
-            selectedIdx={2}
+            selectedIdx={3}
             id_persistent={idContributionPersistent}
             step={ContributionStep.EntitiesAssigned}
         >

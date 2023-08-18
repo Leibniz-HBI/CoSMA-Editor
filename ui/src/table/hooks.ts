@@ -1,10 +1,10 @@
 import {
+    CustomCell,
     EditableGridCell,
     GridCell,
     GridCellKind,
     GridColumn,
     Item,
-    LoadingCell,
     Rectangle
 } from '@glideapps/glide-data-grid'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
@@ -30,6 +30,14 @@ import { tableReducer } from './reducer'
 import { CellValue, ColumnState, TableState } from './state'
 import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
 import { UserInfo } from '../user/state'
+import { LoadingType } from './draw'
+
+const emptyCell = {
+    kind: 'text' as GridCellKind,
+    allowOverlay: false,
+    displayData: '',
+    data: ''
+} as GridCell
 
 export function mkCell(columnType: ColumnType, cellValues: CellValue[]): GridCell {
     // workaround for typescript jest compatibility
@@ -83,24 +91,22 @@ export function mkCell(columnType: ColumnType, cellValues: CellValue[]): GridCel
     } as GridCell
 }
 
+const loadingInstance = new LoadingType()
+
 export function useCellContentCalback(state: TableState): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
         const col = state.columnStates[col_idx]
         if (col === undefined) {
-            return {
-                kind: 'text' as GridCellKind,
-                allowOverlay: false,
-                displayData: '',
-                data: ''
-            } as GridCell
+            return emptyCell
         }
         if (col.isLoading) {
             return {
-                kind: 'loading' as GridCellKind,
+                kind: 'custom' as GridCellKind,
                 allowOverlay: true,
-                style: 'faded'
-            } as LoadingCell
+                style: 'faded',
+                data: loadingInstance
+            } as CustomCell<LoadingType>
         }
         return mkCell(col.columnType, col.cellContents[row_idx])
     }
@@ -156,7 +162,7 @@ export function useRemoteTableData(
         tableReducer,
         new TableState({ frozenColumns: 1 })
     )
-    const isLoading = state.isLoading || state.isLoadingColumn()
+    const isLoading = state.isLoading || false
     return [
         {
             loadTableDataCallback: () => {
@@ -257,7 +263,6 @@ export function useRemoteTableData(
             clearSubmitValueErrorCallback: () =>
                 dispatch(new SubmitValuesClearErrorAction()),
             csvLines: () => {
-                console.log(state)
                 return state.csvLines()
             }
         },

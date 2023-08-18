@@ -5,6 +5,7 @@ import { Badge, Col, ListGroup, Row } from 'react-bootstrap'
 import { MergeRequest } from './state'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
+import { constructColumnTitleSpans } from '../column_menu/components/selection'
 
 export function ReviewList() {
     const { getMergeRequestsCallback, isLoading, assigned } = useMergeRequests()
@@ -95,7 +96,9 @@ export function MergeRequestListItemBody({
                     </Col>
                     <Col className="ps-0">
                         <span className="fw-bold">
-                            {mergeRequest.destinationTagDefinition.namePath[0]}
+                            {constructColumnTitleSpans(
+                                mergeRequest.destinationTagDefinition.namePath
+                            )}
                         </span>
                     </Col>
                 </Row>
@@ -104,7 +107,11 @@ export function MergeRequestListItemBody({
                         <ArrowLeftCircle />
                     </Col>
                     <Col className="ps-0">
-                        <span>{mergeRequest.originTagDefinition.namePath[0]}</span>
+                        <span>
+                            {constructColumnTitleSpans(
+                                mergeRequest.originTagDefinition.namePath
+                            )}
+                        </span>
                     </Col>
                 </Row>
             </Col>

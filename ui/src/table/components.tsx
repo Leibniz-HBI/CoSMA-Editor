@@ -13,6 +13,7 @@ import { HeaderMenu } from '../header_menu'
 import { useRemoteTableData, LocalTableCallbacks, TableDataProps } from './hooks'
 import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
 import { UserInfo } from '../user/state'
+import { drawCell } from './draw'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -168,6 +169,7 @@ export function DataTable(props: {
         return (
             <>
                 <DataEditor
+                    drawCell={drawCell}
                     rows={entities.length}
                     columns={columnDefs}
                     getCellContent={cellContentCallback}

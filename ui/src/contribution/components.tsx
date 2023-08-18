@@ -100,7 +100,7 @@ export function ContributionStepper({
         maxIdx = 2
     }
     if (step === ContributionStep.EntitiesAssigned) {
-        maxIdx === 3
+        maxIdx = 3
     }
     return (
         <Col

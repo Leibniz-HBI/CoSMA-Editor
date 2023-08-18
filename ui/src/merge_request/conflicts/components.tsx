@@ -12,6 +12,7 @@ import {
     ListGroup,
     Overlay,
     Popover,
+    ProgressBar,
     Row
 } from 'react-bootstrap'
 import { MergeRequestConflict, TagInstance } from './state'
@@ -30,7 +31,9 @@ export function MergeRequestConflictResolutionView() {
         resolveConflictCallback,
         startMerge,
         startMergeCallback,
-        startMergeClearErrorCallback
+        startMergeClearErrorCallback,
+        resolvedCount,
+        conflictsCount
     } = useMergeRequestConflictResolutions(idMergeRequestPersistent)
     //eslint-disable-next-line react-hooks/exhaustive-deps
     useLayoutEffect(getMergeRequestConflictsCallback, [idMergeRequestPersistent])
@@ -49,8 +52,8 @@ export function MergeRequestConflictResolutionView() {
                 <Row key="merge-button-row">
                     <Col xs="auto" ref={buttonRef}>
                         <RemoteTriggerButton
-                            normalLabel="Merge"
-                            successLabel="Merge started successfully"
+                            normalLabel="Apply Resolutions to Destination"
+                            successLabel="Application of Resolutions started."
                             onClick={startMergeCallback}
                             remoteState={startMerge}
                         />
@@ -82,6 +85,12 @@ export function MergeRequestConflictResolutionView() {
                             mergeRequest={conflictsByCategoryValue.mergeRequest}
                         />
                     </Col>
+                </Row>
+                <Row>
+                    <MergeRequestConflictProgressBar
+                        resolvedCount={resolvedCount}
+                        conflictsCount={conflictsCount}
+                    />
                 </Row>
                 <Row
                     className="mt-2 h-100 overflow-y-scroll flex-basis-0 flex-grow-1"
@@ -259,4 +268,29 @@ export function MergeRequestConflictItem({
             </Row>
         </ListGroup.Item>
     )
+}
+
+export function MergeRequestConflictProgressBar({
+    resolvedCount,
+    conflictsCount
+}: {
+    resolvedCount?: number
+    conflictsCount?: number
+}) {
+    let variant = 'warning'
+    let label = 'Merge Requests not yet loaded'
+    let striped = true
+    let now = 100
+    if (conflictsCount !== undefined && resolvedCount !== undefined) {
+        if (resolvedCount == conflictsCount) {
+            striped = false
+            variant = 'success'
+            label = 'All conflicts resolved.'
+        } else {
+            variant = 'primary'
+            label = `Resolved ${resolvedCount}/${conflictsCount} conflicts`
+            now = Math.round(100 * (resolvedCount / conflictsCount))
+        }
+    }
+    return <ProgressBar variant={variant} label={label} striped={striped} now={now} />
 }

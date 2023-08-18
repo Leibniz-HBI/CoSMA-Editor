@@ -1,4 +1,5 @@
 import {
+    CustomCell,
     GridCell,
     GridCellKind,
     GridColumn,
@@ -23,6 +24,7 @@ import {
 import { contributionEntityReducer } from './reducer'
 import { ContributionEntityState, EntityWithDuplicates } from './state'
 import { CellValue } from '../../table/state'
+import { AssignType } from '../../table/draw'
 
 export type GridColumWithType = GridColumn & { columnType: ColumnType }
 
@@ -122,12 +124,30 @@ export function mkCellContentCallback(
         if (row_idx == 0) {
             themeOverride = { baseFontStyle: 'bold 13px' }
         }
-        if (col_idx < 2) {
-            let displayTxt = entityGroup.displayTxt
-            if (col_idx == 1) {
+        if (col_idx < 3) {
+            if (col_idx == 0) {
+                let replaceInfo = undefined
                 if (row_idx == 0) {
-                    displayTxt = 'Create new entity'
-                    contentAlign = 'center'
+                    replaceInfo = new AssignType(
+                        false,
+                        entityGroup.assignedDuplicate.value?.idPersistent == undefined
+                    )
+                } else {
+                    replaceInfo = new AssignType(
+                        true,
+                        entityGroup.similarEntities.value[row_idx - 1].idPersistent ==
+                            entityGroup.assignedDuplicate.value?.idPersistent
+                    )
+                }
+                return {
+                    kind: 'custom' as GridCellKind,
+                    data: replaceInfo
+                } as CustomCell<AssignType>
+            }
+            let displayTxt = entityGroup.displayTxt
+            if (col_idx == 2) {
+                if (row_idx == 0) {
+                    displayTxt = ''
                 } else {
                     displayTxt =
                         Math.round(
@@ -154,13 +174,13 @@ export function mkCellContentCallback(
         }
         let cellContents
         if (row_idx == 0) {
-            cellContents = entityGroup.cellContents[col_idx - 2]
+            cellContents = entityGroup.cellContents[col_idx - 3]
         } else {
             if (entityGroup.similarEntities.isLoading) {
                 return loadingCell
             }
             cellContents =
-                entityGroup.similarEntities.value[row_idx - 1].cellContents[col_idx - 2]
+                entityGroup.similarEntities.value[row_idx - 1].cellContents[col_idx - 3]
         }
         if (cellContents === undefined) {
             return emptyCell
@@ -169,7 +189,7 @@ export function mkCellContentCallback(
             return loadingCell
         }
         return mkComparisonCell(
-            columnTypes[col_idx].columnType,
+            columnTypes[col_idx - 3].columnType,
             cellContents.value,
             themeOverride
         )
@@ -233,6 +253,12 @@ export function useContributionEntities(idContributionPersistent: string) {
         isLoading: isLoading,
         columnDefs: [
             {
+                id: 'Assignment',
+                title: 'Assignment',
+                width: 200,
+                columnType: ColumnType.Inner
+            } as GridColumWithType,
+            {
                 id: 'display_txt',
                 title: 'Display Text',
                 width: 200,
@@ -241,7 +267,7 @@ export function useContributionEntities(idContributionPersistent: string) {
             {
                 id: 'similarity',
                 title: 'Similarity',
-                width: 200,
+                width: 100,
                 columnType: ColumnType.String
             } as GridColumWithType,
             ...state.tagDefinitions.map((colDef) => {

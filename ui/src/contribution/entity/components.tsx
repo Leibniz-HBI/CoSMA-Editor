@@ -22,7 +22,8 @@ import { useLayoutEffect, useRef } from 'react'
 import { EntityWithDuplicates } from './state'
 import { ColumnMenuProvider } from '../../column_menu/components/provider'
 import { ColumnMenuBody } from '../../column_menu/components/menu'
-import { CompactSelection, DataEditor, GridSelection } from '@glideapps/glide-data-grid'
+import { DataEditor, GridSelection } from '@glideapps/glide-data-grid'
+import { drawCell } from '../../table/draw'
 
 export function EntitiesStep() {
     const idContributionPersistent = useLoaderData() as string
@@ -71,8 +72,8 @@ export function EntitiesStep() {
                                 key="entities-step-complete-button"
                             >
                                 <RemoteTriggerButton
-                                    normalLabel="Merge Assigned Entities"
-                                    successLabel="Entities Successfully Merged"
+                                    normalLabel="Confirm Assigned Duplicates"
+                                    successLabel="Duplicates Successfully Assigned"
                                     remoteState={completeEntityAssignment}
                                     onClick={completeEntityAssignmentCallback}
                                 />
@@ -108,8 +109,8 @@ export function EntitiesStep() {
                                 }
                             </Col>
                             <Col key="entities-step-hint">
-                                Please check for duplicate values. Select the first Row
-                                to indicate that there is no duplicate.
+                                Please check for duplicate entities. Select the first
+                                Row to indicate that there is no duplicate.
                             </Col>
                             <Col sm="auto" key="entities-step-add-tag-button">
                                 <Button onClick={toggleTagDefinitionsMenuCallback}>
@@ -195,48 +196,33 @@ export function EntitySimilarityItem({
     if (similarEntities.value.length == 0) {
         return <></>
     }
-    let selectedRows = CompactSelection.empty()
-    if (entity.assignedDuplicate.value === undefined) {
-        selectedRows = selectedRows.add(0)
-    } else {
-        const idx = entity.entityMap.get(entity.assignedDuplicate.value?.idPersistent)
-        if (idx !== undefined) {
-            selectedRows = selectedRows.add(idx + 1)
-        }
-    }
-    const selection = { rows: selectedRows, columns: CompactSelection.empty() }
     return (
         <ListGroup.Item key={idPersistent} className="mb-1">
             <DataEditor
+                drawCell={drawCell}
                 rows={entity.similarEntities.value.length + 1}
                 getCellContent={mkCellContentCallback(entity, columnDefs)}
-                freezeColumns={2}
+                freezeColumns={3}
                 columns={columnDefs}
-                rowMarkers="checkbox"
-                rowSelect="single"
-                gridSelection={selection}
+                rowSelect="none"
                 columnSelect="none"
-                rangeSelect="none"
+                rangeSelect="cell"
                 onGridSelectionChange={(selection: GridSelection) => {
-                    if (selection.current !== undefined) {
+                    const current = selection.current
+                    if (current !== undefined) {
                         //Select range
-                        return
-                    }
-                    if (selection.columns.length > 0) {
-                        // select columns
-                        return
-                    }
-                    if (selection.rows.length > 1) {
-                        return
-                    }
-                    const selected = selection.rows.first()
-                    if (selected === undefined || selected == 0) {
-                        putDuplicateCallback(entity.idPersistent, undefined)
-                    } else {
-                        putDuplicateCallback(
-                            entity.idPersistent,
-                            entity.similarEntities.value[selected - 1].idPersistent
-                        )
+                        const [colIdx, rowIdx] = current.cell
+                        if (colIdx != 0) {
+                            return
+                        }
+                        if (rowIdx === undefined || rowIdx == 0) {
+                            putDuplicateCallback(entity.idPersistent, undefined)
+                        } else {
+                            putDuplicateCallback(
+                                entity.idPersistent,
+                                entity.similarEntities.value[rowIdx - 1].idPersistent
+                            )
+                        }
                     }
                 }}
             />

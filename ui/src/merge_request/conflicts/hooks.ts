@@ -18,6 +18,7 @@ export function useMergeRequestConflictResolutions(idMergeRequestPersistent: str
             new Remote(false)
         )
     )
+    const [resolvedCount, conflictsCount] = computePercentResolved(state)
 
     return {
         getMergeRequestConflictsCallback: () => {
@@ -60,6 +61,20 @@ export function useMergeRequestConflictResolutions(idMergeRequestPersistent: str
             }
             dispatch(new StartMergeAction(idMergeRequestPersistent))
         },
+        resolvedCount,
+        conflictsCount,
         startMergeClearErrorCallback: () => dispatch(new StartMergeClearErrorAction())
     }
+}
+function computePercentResolved(state: MergeRequestConflictResolutionState) {
+    let numResolved
+    if (state.conflicts.value !== undefined) {
+        numResolved = 0
+        for (let idx = 0; idx < state.conflicts.value.conflicts.length; ++idx) {
+            if (state.conflicts.value.conflicts[idx].value?.replace !== undefined) {
+                numResolved++
+            }
+        }
+    }
+    return [numResolved, state.conflicts.value?.conflicts.length]
 }
