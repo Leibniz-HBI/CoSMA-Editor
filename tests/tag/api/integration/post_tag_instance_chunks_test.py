@@ -8,8 +8,6 @@ from tests.tag.api.integration.requests import (
     post_tag_instance_chunks,
     post_tag_instances,
 )
-from cosmae.entity.models_django import Entity
-from cosmae.tag.models_django import TagDefinition
 
 
 def test_empty_chunk(auth_server, tag_def):
@@ -79,47 +77,6 @@ def test_non_existent_slice(auth_server, tag_def, entity0):
     assert rsp.status_code == 200
     persons = rsp.json()["tag_instances"]
     assert len(persons) == 0
-
-
-def test_get_children(auth_server, entity0, tag_def_child_0, tag_def_child_1):
-    live_server, cookies = auth_server
-    entity0.save()
-    tag_def_parent = TagDefinition(
-        id_persistent=c.id_tag_def_parent_persistent_test,
-        type=TagDefinition.INNER,
-        name=c.name_tag_def_test,
-        time_edit=c.time_edit_test,
-    )
-    tag_def_parent.save()
-    entity1 = Entity(id_persistent="id_persistent_test_1", time_edit=c.time_edit_test)
-    entity1.save()
-    tag_def_child_0.id_parent_tag_definition = tag_def_parent.id_persistent
-    tag_def_child_0.save()
-    tag_def_child_1.id_parent_tag_definition = tag_def_parent.id_persistent
-    tag_def_child_1.type = TagDefinition.FLOAT
-    tag_def_child_1.save()
-    tag_defs = [tag_def_parent, tag_def_child_0, tag_def_child_1]
-    values = [None, "0.2", "0.3"]
-    entities = [entity0, entity1]
-    instances = [
-        {
-            "id_entity_persistent": entities[j].id_persistent,
-            "id_tag_definition_persistent": tag_defs[i].id_persistent,
-            "value": str(values[i]),
-        }
-        for i in range(3)
-        for j in range(2)
-    ]
-    for idx in range(0, 2):
-        instances[idx]["value"] = str(idx == 0)
-    req = post_tag_instances(live_server.url, instances, cookies=cookies)
-    assert req.status_code == 200
-    req = post_tag_instance_chunks(
-        live_server.url, tag_def_parent.id_persistent, 0, 10, cookies=cookies
-    )
-    assert req.status_code == 200
-    api_instances = req.json()["tag_instances"]
-    assert len(api_instances) == 6
 
 
 def test_request_too_large(auth_server):

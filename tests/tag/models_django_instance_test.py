@@ -218,40 +218,6 @@ def test_chunk_filter_tag_instance(tag_def):
 
 
 @pytest.mark.django_db
-def test_chunk_filter_childrens_instance(tag_def, tag_def_child_0, tag_def_child_1):
-    tag_def.type = TagDefinition.INNER
-    tag_def.id_persistent = c.id_tag_def_parent_persistent_test
-    tag_def.save()
-    tag_def_child_0.save()
-    tag_def_child_1.save()
-    tag_instance_0 = TagInstance(
-        id_persistent="id_tag_test_0",
-        id_entity_persistent=cp.id_persistent_test,
-        id_tag_definition_persistent=tag_def_child_0.id_persistent,
-        time_edit=c.time_edit_test,
-        value=str(2.3),
-    )
-    tag_instance_0.save()
-    tag_instance_1 = TagInstance(
-        id_persistent="id_tag_test_1",
-        id_entity_persistent=cp.id_persistent_test,
-        id_tag_definition_persistent=tag_def_child_1.id_persistent,
-        time_edit=c.time_edit_test,
-        value=str(5),
-    )
-    tag_instance_1.save()
-    tag_instance_2 = TagInstance(
-        id_persistent="id_tag_test_2",
-        id_entity_persistent=cp.id_persistent_test,
-        id_tag_definition_persistent=tag_def.id_persistent,
-        time_edit=c.time_edit_test,
-    )
-    tag_instance_2.save()
-    tags = TagInstance.by_tag_chunked(tag_def.id_persistent, 0, 5)
-    assert tags == [tag_instance_0, tag_instance_1, tag_instance_2]
-
-
-@pytest.mark.django_db
 def test_not_existing_tag():
     with pytest.raises(TagDefinitionMissingException) as exc_info:
         TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, 0, 5)

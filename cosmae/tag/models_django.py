@@ -265,16 +265,10 @@ class TagInstance(models.Model):
             tag = TagDefinition.most_recent_by_id(id_tag_definition_persistent)
         except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
             raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
-        if tag.type == TagDefinition.INNER:
-            tags = set(TagDefinition.most_recent_children(tag.id_persistent))
-            tags.add(tag)
-        else:
-            tags = {tag}
-        tag_ids = {tag.id_persistent for tag in tags}
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
         objects = manager.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent__in=tag_ids
+            id_tag_definition_persistent=tag.id_persistent
         )
         return list(
             objects.filter(
