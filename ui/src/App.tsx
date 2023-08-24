@@ -23,31 +23,61 @@ import { EntitiesStep } from './contribution/entity/components'
 import { ReviewList } from './merge_request/components'
 import { CompleteStep } from './contribution/complete/components'
 import { MergeRequestConflictResolutionView } from './merge_request/conflicts/components'
+import { UserPermissionGroup } from './user/state'
+import { UserPermissionGroupComponent } from './user/permission_groups/components'
 
 export function CosmaeRoot() {
     return (
         <Row className="flex-grow-1 m-0 h-100">
             <Col className="ps-0 pe-0 h-100">
                 <div className="cosmae-page-container">
-                    <Navbar expand="lg" className="bg-primary flex-shrink-0 mb-3">
-                        <Container className="text-secondary">
-                            <Navbar.Brand href="#home">CoSMA-E</Navbar.Brand>
-                            <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                            <Navbar.Collapse id="basic-navbar-nav">
-                                <Nav className="me-auto">
-                                    <Nav.Link as={NavLink} to="/">
-                                        View
-                                    </Nav.Link>
-                                    <Nav.Link as={NavLink} to="/contribute">
-                                        Contribute
-                                    </Nav.Link>
-                                    <Nav.Link as={NavLink} to="/review">
-                                        Review
-                                    </Nav.Link>
-                                </Nav>
-                            </Navbar.Collapse>
-                        </Container>
-                    </Navbar>
+                    <UserContext.Consumer>
+                        {(userInfoWithCallbacks) => (
+                            <Navbar
+                                expand="lg"
+                                className="bg-primary flex-shrink-0 mb-3"
+                            >
+                                <Container className="text-secondary">
+                                    <Navbar.Brand href="/">CoSMA-E</Navbar.Brand>
+                                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                                    <Navbar.Collapse id="basic-navbar-nav">
+                                        <Nav className="me-auto">
+                                            <Nav.Link as={NavLink} to="/">
+                                                View
+                                            </Nav.Link>
+                                            <Nav.Link as={NavLink} to="/contribute">
+                                                Contribute
+                                            </Nav.Link>
+                                            <Nav.Link as={NavLink} to="/review">
+                                                Review
+                                            </Nav.Link>
+                                        </Nav>
+                                        <Nav>
+                                            {userInfoWithCallbacks?.userInfo
+                                                .permissionGroup ==
+                                                UserPermissionGroup.COMMISSIONER && (
+                                                <Nav.Link
+                                                    as={NavLink}
+                                                    to="/user-management"
+                                                >
+                                                    Users
+                                                </Nav.Link>
+                                            )}
+                                        </Nav>
+                                        <Nav>
+                                            <Nav.Link
+                                                onClick={
+                                                    userInfoWithCallbacks?.logoutCallback
+                                                }
+                                            >
+                                                Logout
+                                            </Nav.Link>
+                                        </Nav>
+                                    </Navbar.Collapse>
+                                </Container>
+                            </Navbar>
+                        )}
+                    </UserContext.Consumer>
                     <div className="cosmae-page-body flex-grow-1 flex-basis-0 flex-fill">
                         <Outlet />
                     </div>
@@ -101,7 +131,8 @@ const router = createBrowserRouter([
                 path: 'review/:idPersistent',
                 element: <MergeRequestConflictResolutionView />,
                 loader: ({ params }) => params.idPersistent
-            }
+            },
+            { path: 'user-management', element: <UserPermissionGroupComponent /> }
         ]
     }
 ])

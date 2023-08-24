@@ -254,6 +254,12 @@ describe('cell contents callback', () => {
     })
     const columnTypes = [
         {
+            id: 'Assignment',
+            title: 'Assignment',
+            width: 200,
+            columnType: ColumnType.Inner
+        },
+        {
             columnType: ColumnType.String,
             width: 200,
             id: 'display-text-test',

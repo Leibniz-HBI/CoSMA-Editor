@@ -1,5 +1,5 @@
 import { userReducer } from '../reducer'
-import { UserInfo, UserState } from '../state'
+import { UserInfo, UserPermissionGroup, UserState } from '../state'
 import {
     LoginErrorAction,
     LoginErrorClearAction,
@@ -26,7 +26,9 @@ describe('user reducher', () => {
             userInfo: new UserInfo({
                 userName: userNameTest,
                 email: emailTest,
-                namesPersonal: namesPersonalTest
+                namesPersonal: namesPersonalTest,
+                idPersistent: 'idUserTest',
+                permissionGroup: UserPermissionGroup.EDITOR
             })
         })
         const endState = userReducer(
@@ -35,7 +37,9 @@ describe('user reducher', () => {
                 new UserInfo({
                     userName: userNameTest,
                     email: emailTest,
-                    namesPersonal: namesPersonalTest
+                    namesPersonal: namesPersonalTest,
+                    idPersistent: 'idUserTest',
+                    permissionGroup: UserPermissionGroup.EDITOR
                 })
             )
         )
@@ -109,7 +113,9 @@ describe('user reducher', () => {
             userInfo: new UserInfo({
                 userName: userNameTest,
                 email: emailTest,
-                namesPersonal: namesPersonalTest
+                namesPersonal: namesPersonalTest,
+                idPersistent: 'idUserTest',
+                permissionGroup: UserPermissionGroup.EDITOR
             })
         })
         const expectedState = new UserState({})
@@ -127,7 +133,9 @@ describe('user reducher', () => {
             userInfo: new UserInfo({
                 userName: userNameTest,
                 email: emailTest,
-                namesPersonal: namesPersonalTest
+                namesPersonal: namesPersonalTest,
+                idPersistent: 'idUserTest',
+                permissionGroup: UserPermissionGroup.EDITOR
             })
         })
         const expectedState = new UserState({})

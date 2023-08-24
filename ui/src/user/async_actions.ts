@@ -4,7 +4,6 @@ import {
     LoginErrorAction,
     LoginStartAction,
     LoginSuccessAction,
-    LogoutAction,
     RefreshDeniedAction,
     RefreshStartAction,
     RefreshSuccessAction,
@@ -12,7 +11,7 @@ import {
     RegistrationStartAction,
     UserAction
 } from './actions'
-import { PublicUserInfo, UserInfo } from './state'
+import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { exceptionMessage, unprocessableEntityMessage } from '../util/exception'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { config } from '../config'
@@ -45,26 +44,7 @@ export class LoginAction extends AsyncAction<UserAction, void> {
                 if (msg !== undefined) {
                     dispatch(new LoginErrorAction(json['msg']))
                 } else {
-                    dispatch(
-                        new LoginSuccessAction(
-                            new UserInfo({
-                                userName: json['user_name'],
-                                idPersistent: json['id_persistent'],
-                                email: json['email'],
-                                namesPersonal: json['names_personal'],
-                                namesFamily: json['names_family'],
-                                columns:
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    (json['tag_definition_list'] as Array<any>).map(
-                                        (tagDefinitionApi) =>
-                                            parseColumnDefinitionsFromApi(
-                                                tagDefinitionApi,
-                                                undefined
-                                            )
-                                    )
-                            })
-                        )
-                    )
+                    dispatch(new LoginSuccessAction(parseUserInfoFromJson(json)))
                 }
             } else {
                 const json = await rsp.json()
@@ -103,22 +83,7 @@ export class RefreshAction extends AsyncAction<UserAction, UserInfo | undefined>
             })
             if (rsp.status == 200) {
                 const json = await rsp.json()
-                const tagDefinitions = (
-                    json[
-                        'tag_definition_list'
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ] as Array<any>
-                ).map((tagDefinitionApi) =>
-                    parseColumnDefinitionsFromApi(tagDefinitionApi, undefined)
-                )
-                const userInfo = new UserInfo({
-                    userName: json['user_name'],
-                    idPersistent: json['id_persistent'],
-                    email: json['email'],
-                    namesPersonal: json['names_personal'],
-                    namesFamily: json['names_family'],
-                    columns: tagDefinitions
-                })
+                const userInfo = parseUserInfoFromJson(json)
                 if (this.withDispatch) {
                     dispatch(new RefreshSuccessAction())
                 }
@@ -181,28 +146,7 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
             })
             if (rsp.status == 200) {
                 const json = await rsp.json()
-                dispatch(
-                    new LoginSuccessAction(
-                        new UserInfo({
-                            userName: json['user_name'],
-                            idPersistent: json['id_persistent'],
-                            email: json['email'],
-                            namesPersonal: json['names_personal'],
-                            namesFamily: json['names_family'],
-                            columns: (
-                                json[
-                                    'tag_definition_list'
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                ] as Array<any>
-                            ).map((tagDefinitionApi) =>
-                                parseColumnDefinitionsFromApi(
-                                    tagDefinitionApi,
-                                    undefined
-                                )
-                            )
-                        })
-                    )
-                )
+                dispatch(new LoginSuccessAction(parseUserInfoFromJson(json)))
             } else {
                 if (rsp.status == 422) {
                     const json = await rsp.json()
@@ -275,9 +219,35 @@ export class RemoteUserProfileChangeColumIndexAction extends AsyncAction<
     }
 }
 
+const permissionGroupApiMap: { [key: string]: UserPermissionGroup } = {
+    APPLICANT: UserPermissionGroup.APPLICANT,
+    READER: UserPermissionGroup.READER,
+    CONTRIBUTOR: UserPermissionGroup.CONTRIBUTOR,
+    EDITOR: UserPermissionGroup.EDITOR,
+    COMMISSIONER: UserPermissionGroup.COMMISSIONER
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parseUserInfoFromJson(json: any): UserInfo {
+    return new UserInfo({
+        userName: json['user_name'],
+        idPersistent: json['id_persistent'],
+        email: json['email'],
+        namesPersonal: json['names_personal'],
+        namesFamily: json['names_family'],
+        columns:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (json['tag_definition_list'] as Array<any>).map((tagDefinitionApi) =>
+                parseColumnDefinitionsFromApi(tagDefinitionApi, undefined)
+            ),
+        permissionGroup: permissionGroupApiMap[json['permission_group']]
+    })
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parsePublicUserInfoFromJson(userInfoJson: any) {
     const idPersistent = userInfoJson['id_persistent']
     const userName = userInfoJson['user_name']
-    return new PublicUserInfo({ userName, idPersistent })
+    const permissionGroup = permissionGroupApiMap[userInfoJson['permission_group']]
+    return new PublicUserInfo({ userName, idPersistent, permissionGroup })
 }

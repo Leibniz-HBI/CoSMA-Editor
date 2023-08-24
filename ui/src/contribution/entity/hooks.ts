@@ -189,7 +189,7 @@ export function mkCellContentCallback(
             return loadingCell
         }
         return mkComparisonCell(
-            columnTypes[col_idx - 3].columnType,
+            columnTypes[col_idx].columnType,
             cellContents.value,
             themeOverride
         )

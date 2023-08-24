@@ -2,7 +2,6 @@ import {
     LoginErrorAction,
     LoginStartAction,
     LoginSuccessAction,
-    LogoutAction,
     RefreshDeniedAction,
     RefreshStartAction,
     RefreshSuccessAction,
@@ -10,7 +9,7 @@ import {
     RegistrationStartAction
 } from '../actions'
 import { LoginAction, RefreshAction, RegistrationAction } from '../async_actions'
-import { UserInfo } from '../state'
+import { UserInfo, UserPermissionGroup } from '../state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {
@@ -48,7 +47,8 @@ describe('login', () => {
                         email: emailTest,
                         namesFamily: '',
                         tag_definition_list: [],
-                        id_persistent: 'id-user-test'
+                        id_persistent: 'id-user-test',
+                        permission_group: 'CONTRIBUTOR'
                     }
                 }
             ]
@@ -64,7 +64,8 @@ describe('login', () => {
                         email: emailTest,
                         namesPersonal: namesPersonalTest,
                         columns: [],
-                        idPersistent: 'id-user-test'
+                        idPersistent: 'id-user-test',
+                        permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     })
                 )
             ]
@@ -136,7 +137,8 @@ describe('refresh action', () => {
                         email: emailTest,
                         namesFamily: '',
                         tag_definition_list: [],
-                        id_persistent: 'id-user-test'
+                        id_persistent: 'id-user-test',
+                        permission_group: 'CONTRIBUTOR'
                     }
                 }
             ]
@@ -148,7 +150,8 @@ describe('refresh action', () => {
             email: emailTest,
             namesPersonal: namesPersonalTest,
             columns: [],
-            idPersistent: 'id-user-test'
+            idPersistent: 'id-user-test',
+            permissionGroup: UserPermissionGroup.CONTRIBUTOR
         })
         expect(promiseResult).toEqual(userInfo)
         expect(dispatch.mock.calls).toEqual([
@@ -200,7 +203,8 @@ describe('register action', () => {
                         email: emailTest,
                         names_family: namesFamilyTest,
                         tag_definition_list: [],
-                        id_persistent: idPersistentTest
+                        id_persistent: idPersistentTest,
+                        permission_group: 'CONTRIBUTOR'
                     }
                 }
             ]
@@ -223,7 +227,8 @@ describe('register action', () => {
                         namesPersonal: namesPersonalTest,
                         namesFamily: namesFamilyTest,
                         columns: [],
-                        idPersistent: idPersistentTest
+                        idPersistent: idPersistentTest,
+                        permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     })
                 )
             ]

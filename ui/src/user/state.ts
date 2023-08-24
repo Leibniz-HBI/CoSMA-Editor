@@ -1,20 +1,33 @@
 import { ColumnDefinition } from '../column_menu/state'
 import { ErrorState } from '../util/error'
 
+export enum UserPermissionGroup {
+    APPLICANT = 'Applicant',
+    READER = 'Reader',
+    CONTRIBUTOR = 'Contributor',
+    EDITOR = 'Editor',
+    COMMISSIONER = 'Commissioner'
+}
+
 export class PublicUserInfo {
     idPersistent: string
     userName: string
+    permissionGroup: UserPermissionGroup
     constructor({
         idPersistent,
-        userName
+        userName,
+        permissionGroup
     }: {
         idPersistent: string
         userName: string
+        permissionGroup: UserPermissionGroup
     }) {
         this.userName = userName
         this.idPersistent = idPersistent
+        this.permissionGroup = permissionGroup
     }
 }
+
 export class UserInfo extends PublicUserInfo {
     email: string
     namesPersonal: string
@@ -26,6 +39,7 @@ export class UserInfo extends PublicUserInfo {
         email,
         namesPersonal,
         namesFamily = undefined,
+        permissionGroup,
         columns = []
     }: {
         userName: string
@@ -33,9 +47,10 @@ export class UserInfo extends PublicUserInfo {
         email: string
         namesPersonal: string
         namesFamily?: string
+        permissionGroup: UserPermissionGroup
         columns?: ColumnDefinition[]
     }) {
-        super({ userName, idPersistent })
+        super({ userName, idPersistent, permissionGroup })
         this.email = email
         this.namesPersonal = namesPersonal
         this.namesFamily = namesFamily

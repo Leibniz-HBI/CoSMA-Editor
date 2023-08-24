@@ -20,7 +20,8 @@ import {
     ShowColumnAddMenuAction,
     ShowHeaderMenuAction
 } from '../actions'
-import { UserInfo } from '../../user/state'
+import { UserInfo, UserPermissionGroup } from '../../user/state'
+import { LoadingType } from '../draw'
 
 jest.mock('../../util/state', () => {
     const original = jest.requireActual('../../util/state')
@@ -201,12 +202,14 @@ describe('column types', () => {
         })
         const cellContentFunction = useCellContentCalback(state)
         expect(cellContentFunction([0, 0])).toEqual({
-            kind: 'loading' as GridCellKind,
+            kind: 'custom' as GridCellKind,
+            data: new LoadingType(),
             allowOverlay: true,
             style: 'faded'
         })
         expect(cellContentFunction([0, 1])).toEqual({
-            kind: 'loading' as GridCellKind,
+            kind: 'custom' as GridCellKind,
+            data: new LoadingType(),
             allowOverlay: true,
             style: 'faded'
         })
@@ -219,7 +222,8 @@ const userInfoPromiseWithNoColumns = () =>
             idPersistent: 'id-user-test',
             email: 'test@domain.org',
             namesPersonal: 'names personal test',
-            columns: []
+            columns: [],
+            permissionGroup: UserPermissionGroup.APPLICANT
         })
     )
 function mkDefaultTagDefinitionCallbacks() {

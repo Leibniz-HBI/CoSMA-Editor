@@ -169,7 +169,7 @@ export function useRemoteTableData(
                 if (state.entities !== undefined || isLoading) {
                     return
                 }
-                userInfoPromise().then((userInfo) => {
+                userInfoPromise().then(async (userInfo) => {
                     if (userInfo === undefined) {
                         dispatch(
                             new SetLoadDataErrorAction(
@@ -177,21 +177,20 @@ export function useRemoteTableData(
                             )
                         )
                     }
-                    dispatch(new GetTableAsyncAction()).then(async () => {
-                        userInfo?.columns.forEach(async (col: ColumnDefinition) => {
-                            const idPersistent = col.idPersistent
-                            if (
-                                state.isLoading ||
-                                (state.columnIndices.has(idPersistent) &&
-                                    state.columnStates[
-                                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                                        state.columnIndices.get(idPersistent)!
-                                    ].isLoading)
-                            ) {
-                                return
-                            }
-                            await dispatch(new GetColumnAsyncAction(col))
-                        })
+                    await dispatch(new GetTableAsyncAction())
+                    userInfo?.columns.forEach(async (col: ColumnDefinition) => {
+                        const idPersistent = col.idPersistent
+                        if (
+                            state.isLoading ||
+                            (state.columnIndices.has(idPersistent) &&
+                                state.columnStates[
+                                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                                    state.columnIndices.get(idPersistent)!
+                                ].isLoading)
+                        ) {
+                            return
+                        }
+                        await dispatch(new GetColumnAsyncAction(col))
                     })
                 })
             },

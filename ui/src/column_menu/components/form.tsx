@@ -114,7 +114,7 @@ function ColumnTypeCreateFormBody(props: {
                         inline
                         type="radio"
                         name="columnType"
-                        label="parent"
+                        label="boolean"
                         value={ColumnType.Inner}
                         onChange={props.handleChange}
                         isInvalid={

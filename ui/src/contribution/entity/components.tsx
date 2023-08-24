@@ -133,22 +133,24 @@ export function EntitiesStep() {
                         </Row>
                         <Row className="h-100 ms-2 mt-3 overflow-y-scroll">
                             {isDuplicates ? (
-                                <ListGroup>
-                                    {entities.value
-                                        .filter(
-                                            (entity) =>
-                                                !entity.similarEntities.isLoading
-                                        )
-                                        .map((entity) => (
-                                            <EntitySimilarityItem
-                                                entity={entity}
-                                                putDuplicateCallback={
-                                                    putDuplicateCallback
-                                                }
-                                                columnDefs={columnDefs}
-                                            />
-                                        ))}
-                                </ListGroup>
+                                minLoadingIdx === undefined && (
+                                    <ListGroup>
+                                        {entities.value
+                                            .filter(
+                                                (entity) =>
+                                                    !entity.similarEntities.isLoading
+                                            )
+                                            .map((entity) => (
+                                                <EntitySimilarityItem
+                                                    entity={entity}
+                                                    putDuplicateCallback={
+                                                        putDuplicateCallback
+                                                    }
+                                                    columnDefs={columnDefs}
+                                                />
+                                            ))}
+                                    </ListGroup>
+                                )
                             ) : (
                                 <span>There are no duplicates</span>
                             )}

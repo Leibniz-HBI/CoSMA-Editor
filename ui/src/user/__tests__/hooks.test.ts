@@ -2,7 +2,7 @@
 
 import { useLogin } from '../hooks'
 import { useThunkReducer } from '../../util/state'
-import { UserInfo, UserState } from '../state'
+import { UserInfo, UserPermissionGroup, UserState } from '../state'
 import { LoginAction, RefreshAction, RegistrationAction } from '../async_actions'
 import { LoginSuccessAction, RegistrationErrorClearAction } from '../actions'
 import { LoginErrorClearAction } from '../actions'
@@ -51,7 +51,8 @@ test('handles refresh', async () => {
         idPersistent: 'id-user-test',
         namesPersonal: 'name test',
         columns: [],
-        email: 'mail@test.org'
+        email: 'mail@test.org',
+        permissionGroup: UserPermissionGroup.CONTRIBUTOR
     })
     dispatch.mockImplementation(() => Promise.resolve(userInfo))
     ;(useThunkReducer as jest.Mock).mockReturnValue([new UserState({}), dispatch])
