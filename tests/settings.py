@@ -146,3 +146,5 @@ CACHES = {
         "LOCATION": "/tmp/django_cache_tag_definition_name_paths",
     },
 }
+
+IS_UNITTEST = False

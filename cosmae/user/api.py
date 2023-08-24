@@ -1,4 +1,5 @@
 "API endpoints for handling user management."
+
 from typing import List, Union
 from uuid import uuid4
 
@@ -36,6 +37,14 @@ class LoginResponse(Schema):
     names_family: str
     email: str
     tag_definition_list: List[TagDefinitionResponse]
+    permission_group: str
+
+
+class LoginResponseList(Schema):
+    # pylint: disable=too-few-public-methods
+    "API model for multiple complete user infos."
+    user_list: List[LoginResponse]
+    next_offset: int
 
 
 class PublicUserInfo(Schema):
@@ -43,10 +52,12 @@ class PublicUserInfo(Schema):
     "API model for public user information."
     user_name: str
     id_persistent: str
+    permission_group: str
 
 
 class RegisterRequest(Schema):
     "API model for register requests."
+
     user_name: str = Field(None, min_length=2, max_length=150)
     names_personal: str = Field(None, min_length=2, max_length=150)
     names_family: str = Field(None, min_length=2, max_length=150)
@@ -57,6 +68,12 @@ class RegisterRequest(Schema):
         as_dict = super().dict()
         as_dict.pop("password")
         return str(as_dict)
+
+
+class PutGroupRequest(Schema):
+    # pylint: disable=too-few-public-methods
+    "API model for body of request setting the permission group of a user."
+    permission_group: str
 
 
 router = Router()
@@ -103,6 +120,7 @@ def register_post(_, registration_info: RegisterRequest):
             password=registration_info.password,
             first_name=registration_info.names_personal,
             id_persistent=uuid4(),
+            permission_group=CosmaeUser.APPLICANT,
         )
         if user.last_name and user.last_name != "":
             user.last_name = registration_info.names_family
@@ -200,6 +218,104 @@ def change_tag_definitions_by_idx(request: HttpRequest, start_idx: int, end_idx:
         )
 
 
+@router.put(
+    "/{id_user_persistent}/permission_group",
+    response={
+        200: LoginResponse,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def put_user_permission_group(  # pylint: disable=too-many-return-statements
+    request: HttpRequest, id_user_persistent: str, request_body: PutGroupRequest
+):
+    "API method for setting the user permission group"
+    try:
+        try:
+            request_user = check_user(request)
+        except NotAuthenticatedException:
+            return 401, ApiError(msg="Not authenticated")
+        if request_user.permission_group != CosmaeUser.COMMISSIONER:
+            return 403, ApiError(msg="Insufficient permissions.")
+        user = CosmaeUser.objects.filter(
+            id_persistent=id_user_persistent
+        ).get()  # pylint: disable=no-member
+        if user == request_user:
+            return 400, ApiError(msg="You can not change your own permission group.")
+        if user.is_superuser:
+            return 400, ApiError(
+                msg="Can not change the permission group  of a super user."
+            )
+
+        user.permission_group = permission_group_api_to_db[
+            request_body.permission_group
+        ]
+        user.save()
+        return 200, user_db_to_login_response(user)
+    except CosmaeUser.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="User does not exist.")
+    except KeyError:
+        return 400, ApiError(msg="Unknown permission group")
+    except DatabaseError:
+        return 500, ApiError(msg="Could not store the permission in the database.")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not set permission group of user.")
+
+
+@router.get(
+    "chunks/{offset}/{count}",
+    response={
+        200: LoginResponseList,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
+)
+def get_user_chunk(request: HttpRequest, offset: int, count: int):
+    "API method for getting users in chunks."
+    try:
+        try:
+            user = check_user(request)
+        except NotAuthenticatedException:
+            return 401, ApiError(msg="Not authorized.")
+        if user.permission_group != CosmaeUser.COMMISSIONER:
+            return 403, ApiError(msg="Insufficient permissions.")
+        if count > 5000:
+            return 400, ApiError(msg="Request count to large.")
+        users = CosmaeUser.chunk_query_set(offset, count)
+        max_id = -1
+        for user in users:
+            if user.id > max_id:
+                max_id = user.id
+        return 200, LoginResponseList(
+            user_list=[user_db_to_login_response(user) for user in users],
+            next_offset=max_id + 1,
+        )
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get requested chunk.")
+
+
+permission_group_api_to_db = {
+    "APPLICANT": CosmaeUser.APPLICANT,
+    "READER": CosmaeUser.READER,
+    "CONTRIBUTOR": CosmaeUser.CONTRIBUTOR,
+    "EDITOR": CosmaeUser.EDITOR,
+    "COMMISSIONER": CosmaeUser.COMMISSIONER,
+}
+
+permission_group_db_to_api = {
+    CosmaeUser.APPLICANT: "APPLICANT",
+    CosmaeUser.READER: "READER",
+    CosmaeUser.CONTRIBUTOR: "CONTRIBUTOR",
+    CosmaeUser.EDITOR: "EDITOR",
+    CosmaeUser.COMMISSIONER: "COMMISSIONER",
+}
+
+
 def user_db_to_login_response(user: CosmaeUser):
     "Converts a django user to a login response."
     tag_definition_db = user.tag_definitions.copy()
@@ -219,11 +335,14 @@ def user_db_to_login_response(user: CosmaeUser):
         names_family=user.last_name,
         email=user.email,
         tag_definition_list=tag_definitions,
+        permission_group=permission_group_db_to_api[user.permission_group],
     )
 
 
 def user_db_to_public_user_info(user):
     "Convert a django user to a public user info"
     return PublicUserInfo(
-        user_name=user.get_username(), id_persistent=str(user.id_persistent)
+        user_name=user.get_username(),
+        id_persistent=str(user.id_persistent),
+        permission_group=permission_group_db_to_api[user.permission_group],
     )

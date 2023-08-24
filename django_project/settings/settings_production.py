@@ -185,3 +185,5 @@ CACHES = {
         "KEY_PREFIX": "tag_definition_name_path",
     },
 }
+
+IS_UNITTEST = False

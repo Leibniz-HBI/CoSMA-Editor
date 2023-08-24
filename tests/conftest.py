@@ -95,6 +95,33 @@ def auth_server1(auth_server):
 
 
 @pytest.fixture
+def auth_server_commissioner(live_server):
+    user_id_persistent = UUID(cu.test_uuid_commissioner)
+    uuidMock = MagicMock(return_value=user_id_persistent)
+    with patch("cosmae.user.api.uuid4", uuidMock):
+        rsp = post_register(
+            live_server.url,
+            {
+                "user_name": cu.test_username_commissioner,
+                "password": cu.test_password_commissioner,
+                "email": cu.test_email_commissioner,
+                "names_personal": cu.test_names_personal_commissioner,
+            },
+        )
+    user = CosmaeUser.objects.filter(id_persistent=user_id_persistent).get()
+    user.permission_group = CosmaeUser.COMMISSIONER
+    user.save()
+    rsp = post_login(
+        live_server.url,
+        {
+            "name": cu.test_username_commissioner,
+            "password": cu.test_password_commissioner,
+        },
+    )
+    return live_server, rsp.cookies
+
+
+@pytest.fixture
 def user(db):  # pylint: disable=unused-argument
     try:
         user = CosmaeUser.objects.create_user(
@@ -122,3 +149,14 @@ def user1(db):  # pylint: disable=unused-argument
         return user
     except IntegrityError:
         return CosmaeUser.objects.get(email=cu.test_email1)  # pylint: disable=no-member
+
+
+@pytest.fixture
+def super_user(db):  # pylint: disable=unused-argument
+    super_user = CosmaeUser.objects.create_superuser(
+        email=cu.test_email_super,
+        username=cu.test_username_super,
+        password=cu.test_password,
+        id_persistent=cu.test_uuid_super,
+    )
+    return super_user

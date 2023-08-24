@@ -1,4 +1,6 @@
 "Queue methods for removing duplicates of a contribution candidate."
+import logging
+
 import django_rq
 from django.db import transaction
 from django.db.models import OuterRef, Subquery
@@ -44,7 +46,8 @@ def eliminate_duplicates(id_contribution_persistent):
         update_entities(replaced_entities_with_duplicates)
         for merge_request in contribution.mergerequest_set.all():
             django_rq.enqueue(merge_request_fast_forward, merge_request.id_persistent)
-    except (Exception,):  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.warning(None, exc_info=exc)
         with transaction.atomic():
             contribution_candidate = contribution_query.get()
             contribution_candidate.state = ContributionCandidate.VALUES_EXTRACTED

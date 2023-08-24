@@ -54,7 +54,8 @@ def merge_request_fast_forward(id_merge_request_persistent):
                 return
             merge_request.state = merge_request.CONFLICTS
             merge_request.save(update_fields=["state"])
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.warning(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
             merge_request.state = MergeRequest.ERROR

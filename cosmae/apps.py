@@ -1,8 +1,10 @@
 """Django app configuration for CoSMA-Editor"""
+
 import logging
 from typing import List
 
 from django.apps import AppConfig, apps
+from django.conf import settings
 from django.core.exceptions import AppRegistryNotReady
 from django.db.backends.signals import connection_created
 from django.db.models.signals import post_migrate, post_save
@@ -83,42 +85,47 @@ class CosmaeConfig(AppConfig):
             add_superuser, dispatch_uid="cosmae.create_initial_superuser"
         )
         try:
-            # pylint: disable=import-outside-toplevel
-            from cosmae.contribution.models_django import ContributionCandidate
-            from cosmae.contribution.tag_definition.queue import dispatch_read_csv_head
+            if not settings.IS_UNITTEST:
+                # pylint: disable=import-outside-toplevel
+                from cosmae.contribution.models_django import ContributionCandidate
+                from cosmae.contribution.tag_definition.queue import (
+                    dispatch_read_csv_head,
+                )
 
-            post_save.connect(
-                dispatch_read_csv_head,
-                sender=ContributionCandidate,
-                dispatch_uid="cosmae.start_tag_extraction",
-            )
-            from cosmae.merge_request.models_django import MergeRequest
-            from cosmae.merge_request.queue import dispatch_merge_request_queue_process
+                post_save.connect(
+                    dispatch_read_csv_head,
+                    sender=ContributionCandidate,
+                    dispatch_uid="cosmae.start_tag_extraction",
+                )
+                from cosmae.merge_request.models_django import MergeRequest
+                from cosmae.merge_request.queue import (
+                    dispatch_merge_request_queue_process,
+                )
 
-            post_save.connect(
-                dispatch_merge_request_queue_process,
-                sender=MergeRequest,
-                dispatch_uid="cosmae_merge_request_queue",
-            )
-            from django_rq import enqueue
+                post_save.connect(
+                    dispatch_merge_request_queue_process,
+                    sender=MergeRequest,
+                    dispatch_uid="cosmae_merge_request_queue",
+                )
+                from django_rq import enqueue
 
-            from cosmae.tag.models_django import TagDefinition
-            from cosmae.tag.queue import (
-                dispatch_tag_definition_queue_process,
-                update_tag_definition_name_path,
-            )
+                from cosmae.tag.models_django import TagDefinition
+                from cosmae.tag.queue import (
+                    dispatch_tag_definition_queue_process,
+                    update_tag_definition_name_path,
+                )
 
-            try:
-                roots = TagDefinition.most_recent_children(None)
-                for root in roots:
-                    enqueue(update_tag_definition_name_path, root.id_persistent, [])
-            except OperationalError:
-                pass  #
-            post_save.connect(
-                dispatch_tag_definition_queue_process,
-                sender=TagDefinition,
-                dispatch_uid="cosmae_tag_definition_queue",
-            )
+                try:
+                    roots = TagDefinition.most_recent_children(None)
+                    for root in roots:
+                        enqueue(update_tag_definition_name_path, root.id_persistent, [])
+                except OperationalError:
+                    pass  #
+                post_save.connect(
+                    dispatch_tag_definition_queue_process,
+                    sender=TagDefinition,
+                    dispatch_uid="cosmae_tag_definition_queue",
+                )
         except AppRegistryNotReady:
             pass
         super().ready()

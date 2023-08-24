@@ -47,3 +47,20 @@ def post_change_tag_definitions(url, start_idx, end_idx, cookies=None):
         cookies=cookies,
         timeout=900,
     )
+
+
+def get_user_chunk(url, offset, limit, cookies=None):
+    return requests.get(
+        url + f"/cosmae/api/user/chunks/{offset}/{limit}",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def put_permission_group(url, id_user_persistent, permission_group, cookies=None):
+    return requests.put(
+        url + f"/cosmae/api/user/{id_user_persistent}/permission_group",
+        json={"permission_group": permission_group},
+        cookies=cookies,
+        timeout=900,
+    )

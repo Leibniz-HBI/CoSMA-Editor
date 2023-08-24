@@ -60,10 +60,12 @@ def test_conflicts_no_resolution(
             "assigned_to": {
                 "user_name": cu.test_username,
                 "id_persistent": cu.test_uuid,
+                "permission_group": "APPLICANT",
             },
             "created_by": {
                 "user_name": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
+                "permission_group": "APPLICANT",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -156,10 +158,12 @@ def test_conflicts_same_value(
             "assigned_to": {
                 "user_name": cu.test_username,
                 "id_persistent": cu.test_uuid,
+                "permission_group": "APPLICANT",
             },
             "created_by": {
                 "user_name": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
+                "permission_group": "APPLICANT",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -205,10 +209,12 @@ def test_conflict_resolved(
             "assigned_to": {
                 "user_name": cu.test_username,
                 "id_persistent": cu.test_uuid,
+                "permission_group": "APPLICANT",
             },
             "created_by": {
                 "user_name": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
+                "permission_group": "APPLICANT",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -293,10 +299,12 @@ def test_conflict_resolved_tag_def_origin_changed(
             "assigned_to": {
                 "user_name": cu.test_username,
                 "id_persistent": cu.test_uuid,
+                "permission_group": "APPLICANT",
             },
             "created_by": {
                 "user_name": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
+                "permission_group": "APPLICANT",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -416,10 +424,12 @@ def test_tag_instance_destination_value_added(
             "assigned_to": {
                 "user_name": cu.test_username,
                 "id_persistent": cu.test_uuid,
+                "permission_group": "APPLICANT",
             },
             "created_by": {
                 "user_name": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
+                "permission_group": "APPLICANT",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),

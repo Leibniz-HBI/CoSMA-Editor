@@ -7,11 +7,23 @@ test_email = "user@test.org"
 test_names_personal = "test name personal"
 test_uuid = "6af69cf4-7227-4bb4-af4a-b8e020731b86"
 
+
 test_username1 = "test-user1"
 test_password1 = "test5678"
 test_email1 = "user1@test.org"
 test_names_personal1 = "test other name"
 test_uuid1 = "2e858c5e-60cf-4ce5-946f-6b4559a21211"
+
+test_username_commissioner = "test-user-commissioner"
+test_password_commissioner = "test1538"
+test_email_commissioner = "commissioner@test.org"
+test_names_personal_commissioner = "test commissioner name"
+test_uuid_commissioner = "91c23612-fc8d-4bb1-a16c-d868fffeb916"
+
+test_username_super = "test-user-super"
+test_email_super = "super@test.org"
+test_password_super = "test2794"
+test_uuid_super = "608b4853-dbd6-4a47-8a25-8e0c66b910d4"
 
 test_login_api = {"name": test_username, "password": test_password}
 

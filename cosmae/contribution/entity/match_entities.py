@@ -1,5 +1,6 @@
 "Queue method for finding duplicates in entity names for contribution candidate."
 from django.contrib.postgres.search import TrigramSimilarity
+from django.db import models
 from Levenshtein import distance
 
 from cosmae.entity.models_django import Entity
@@ -19,7 +20,7 @@ def find_matches(entity: Entity):
             trigram_similarity=TrigramSimilarity("display_txt", entity.display_txt)
         )
         .filter(trigram_similarity__gt=0.3)
-        .order_by("trigram_similarity")[:10]
+        .order_by(models.F("trigram_similarity").desc())[:10]
         .values()
     )
     ret = []

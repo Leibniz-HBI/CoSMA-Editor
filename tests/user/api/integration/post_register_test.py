@@ -60,6 +60,7 @@ def test_same_names(auth_server):
         "names_family": "",
         "tag_definition_list": [],
         "id_persistent": str(uuid),
+        "permission_group": "APPLICANT",
     }
 
 

@@ -25,4 +25,5 @@ def test_valid_credentials(auth_server):
         "names_family": "",
         "tag_definition_list": [],
         "id_persistent": c.test_uuid,
+        "permission_group": "APPLICANT",
     }
