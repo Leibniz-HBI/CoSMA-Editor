@@ -25,6 +25,9 @@ import { CompleteStep } from './contribution/complete/components'
 import { MergeRequestConflictResolutionView } from './merge_request/conflicts/components'
 import { UserPermissionGroup } from './user/state'
 import { UserPermissionGroupComponent } from './user/permission_groups/components'
+import { ErrorToasts } from './util/error/components'
+import { Provider } from 'react-redux'
+import store from './store'
 
 export function CosmaeRoot() {
     return (
@@ -164,12 +167,15 @@ async function redirectContributionStep(idPersistent: string | undefined) {
 
 function App() {
     return (
-        <Container
-            fluid
-            className="vh-100 d-flex flex-column ps-0 pe-0 ms-0 me-0 cosmae-container"
-        >
-            <LoginProvider body={<RouterProvider router={router} />} />
-        </Container>
+        <Provider store={store}>
+            <Container
+                fluid
+                className="vh-100 d-flex flex-column ps-0 pe-0 ms-0 me-0 cosmae-container"
+            >
+                <LoginProvider body={<RouterProvider router={router} />} />
+            </Container>
+            <ErrorToasts />
+        </Provider>
     )
 }
 export default App

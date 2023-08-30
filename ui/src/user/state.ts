@@ -1,5 +1,5 @@
 import { ColumnDefinition } from '../column_menu/state'
-import { ErrorState } from '../util/error'
+import { ErrorState } from '../util/error/slice'
 
 export enum UserPermissionGroup {
     APPLICANT = 'Applicant',

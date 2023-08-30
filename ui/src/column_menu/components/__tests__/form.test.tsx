@@ -4,7 +4,7 @@
 import { describe } from '@jest/globals'
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ErrorState } from '../../../util/error'
+import { ErrorState } from '../../../util/error/slice'
 import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from '../form'
 
 describe('form tests', () => {

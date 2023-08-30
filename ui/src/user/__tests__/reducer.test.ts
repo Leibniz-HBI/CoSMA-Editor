@@ -13,7 +13,7 @@ import {
     RegistrationStartAction,
     ToggleRegistrationAction
 } from '../actions'
-import { ErrorState } from '../../util/error'
+import { ErrorState } from '../../util/error/slice'
 
 describe('user reducher', () => {
     const userNameTest = 'userTest'
@@ -48,9 +48,12 @@ describe('user reducher', () => {
     test('loginError', () => {
         const initialState = new UserState({ isLoggingIn: true })
         const expectedState = new UserState({
-            loginErrorState: new ErrorState(testError)
+            loginErrorState: new ErrorState(testError, undefined, 'id-error-test')
         })
-        const endState = userReducer(initialState, new LoginErrorAction(testError))
+        const endState = userReducer(
+            initialState,
+            new LoginErrorAction(new ErrorState(testError, undefined, 'id-error-test'))
+        )
         expect(endState).toEqual(expectedState)
     })
     test('loginStart', () => {
@@ -84,11 +87,17 @@ describe('user reducher', () => {
     test('registrationError', () => {
         const initialState = new UserState({ isRegistering: true })
         const expectedState = new UserState({
-            registrationErrorState: new ErrorState(testError)
+            registrationErrorState: new ErrorState(
+                testError,
+                undefined,
+                'id-error-test'
+            )
         })
         const endState = userReducer(
             initialState,
-            new RegistrationErrorAction(testError)
+            new RegistrationErrorAction(
+                new ErrorState(testError, undefined, 'id-error-test')
+            )
         )
         expect(endState).toEqual(expectedState)
     })

@@ -15,6 +15,7 @@ import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { exceptionMessage, unprocessableEntityMessage } from '../util/exception'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { config } from '../config'
+import { ErrorState } from '../util/error/slice'
 
 export class LoginAction extends AsyncAction<UserAction, void> {
     userName: string
@@ -55,7 +56,7 @@ export class LoginAction extends AsyncAction<UserAction, void> {
                 dispatch(new LoginErrorAction(msg))
             }
         } catch (e: unknown) {
-            dispatch(new LoginErrorAction(exceptionMessage(e)))
+            dispatch(new LoginErrorAction(new ErrorState(exceptionMessage(e))))
         }
     }
 }
@@ -151,7 +152,7 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
                 if (rsp.status == 422) {
                     const json = await rsp.json()
                     const msg = unprocessableEntityMessage(json)
-                    dispatch(new RegistrationErrorAction(msg))
+                    dispatch(new RegistrationErrorAction(new ErrorState(msg)))
                 } else {
                     const json = await rsp.json()
                     let msg = json['msg']
@@ -162,7 +163,9 @@ export class RegistrationAction extends AsyncAction<UserAction, void> {
                 }
             }
         } catch (error: unknown) {
-            dispatch(new RegistrationErrorAction(exceptionMessage(error)))
+            dispatch(
+                new RegistrationErrorAction(new ErrorState(exceptionMessage(error)))
+            )
         }
     }
 }

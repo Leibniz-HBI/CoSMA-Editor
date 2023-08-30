@@ -8,7 +8,7 @@ import {
     Rectangle
 } from '@glideapps/glide-data-grid'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
-import { ErrorState } from '../util/error'
+import { ErrorState } from '../util/error/slice'
 import { useThunkReducer } from '../util/state'
 import {
     ChangeColumnIndexAction,
@@ -173,7 +173,7 @@ export function useRemoteTableData(
                     if (userInfo === undefined) {
                         dispatch(
                             new SetLoadDataErrorAction(
-                                'Please refresh the page and log in'
+                                new ErrorState('Please refresh the page and log in')
                             )
                         )
                     }

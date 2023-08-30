@@ -17,7 +17,7 @@ import {
     RegistrationErrorClearAction,
     ToggleRegistrationAction
 } from './actions'
-import { ErrorState } from '../util/error'
+import { ErrorState } from '../util/error/slice'
 
 export const UserContext: Context<UserInfoWithCallbacks | undefined> = createContext<
     UserInfoWithCallbacks | undefined

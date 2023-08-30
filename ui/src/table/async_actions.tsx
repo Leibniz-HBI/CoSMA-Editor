@@ -17,6 +17,7 @@ import { fetch_chunk } from '../util/fetch'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import { CellValue } from './state'
 import { config } from '../config'
+import { ErrorState } from '../util/error/slice'
 
 const displayTxtColumnId = 'display_txt_id'
 /**
@@ -47,9 +48,11 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                 } else if (rsp.status !== 200) {
                     dispatch(
                         new SetLoadDataErrorAction(
-                            `Could not load entities chunk ${i}. Reason: "${
-                                (await rsp.json())['msg']
-                            }"`
+                            new ErrorState(
+                                `Could not load entities chunk ${i}. Reason: "${
+                                    (await rsp.json())['msg']
+                                }"`
+                            )
                         )
                     )
                     return
@@ -76,7 +79,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
             dispatch(new SetEntitiesAction(entities))
             dispatch(new AppendColumnAction(displayTxtColumnId, displayTxts))
         } catch (e: unknown) {
-            dispatch(new SetLoadDataErrorAction(exceptionMessage(e)))
+            dispatch(new SetLoadDataErrorAction(new ErrorState(exceptionMessage(e))))
         }
     }
 }
@@ -110,9 +113,11 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                 if (rsp.status !== 200) {
                     dispatch(
                         new SetLoadDataErrorAction(
-                            `Could not load entities chunk ${i}. Reason: "${
-                                (await rsp.json())['msg']
-                            }"`
+                            new ErrorState(
+                                `Could not load entities chunk ${i}. Reason: "${
+                                    (await rsp.json())['msg']
+                                }"`
+                            )
                         )
                     )
                     return
@@ -146,7 +151,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
             }
             dispatch(new AppendColumnAction(id_persistent, column_data))
         } catch (e: unknown) {
-            dispatch(new SetLoadDataErrorAction(exceptionMessage(e)))
+            dispatch(new SetLoadDataErrorAction(new ErrorState(exceptionMessage(e))))
         }
     }
 }
@@ -190,8 +195,10 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                 dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
                 dispatch(
                     new SubmitValuesErrorAction(
-                        'The data you entered changed in the remote location. ' +
-                            'The new values are updated in the table. Please review them.'
+                        new ErrorState(
+                            'The data you entered changed in the remote location. ' +
+                                'The new values are updated in the table. Please review them.'
+                        )
                     )
                 )
                 return
@@ -201,10 +208,12 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
             if (rsp.status >= 500) {
                 retryCallback = () => this.run(dispatch)
             }
-            dispatch(new SubmitValuesErrorAction(msg, retryCallback))
+            dispatch(new SubmitValuesErrorAction(new ErrorState(msg, retryCallback)))
         } catch (e: unknown) {
             dispatch(
-                new SubmitValuesErrorAction('Unknown error: ' + exceptionMessage(e))
+                new SubmitValuesErrorAction(
+                    new ErrorState('Unknown error: ' + exceptionMessage(e))
+                )
             )
         }
     }

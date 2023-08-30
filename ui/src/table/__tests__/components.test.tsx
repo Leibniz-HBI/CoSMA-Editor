@@ -21,7 +21,7 @@ import {
 import { ColumnDefinition, ColumnType } from '../../column_menu/state'
 import { LocalTableCallbacks, TableDataProps } from '../hooks'
 import { ColumnAddButton } from '../../column_menu/components/misc'
-import { ErrorState } from '../../util/error'
+import { ErrorState } from '../../util/error/slice'
 
 const testColumns = [
     new ColumnState({

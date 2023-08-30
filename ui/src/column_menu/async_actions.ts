@@ -1,5 +1,5 @@
 import { Dispatch } from 'react'
-import { ErrorState } from '../util/error'
+import { ErrorState } from '../util/error/slice'
 import { exceptionMessage } from '../util/exception'
 import { AsyncAction } from '../util/async_action'
 import {
@@ -162,21 +162,21 @@ export class SubmitColumnDefinitionAction extends AsyncAction<
             }
 
             dispatch(
-                new SubmitColumnDefinitionErrorAction({
-                    msg: msg,
-                    retryCallback: retryCallback
-                })
+                new SubmitColumnDefinitionErrorAction(
+                    new ErrorState(msg, retryCallback)
+                )
             )
 
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
             dispatch(
-                new SubmitColumnDefinitionErrorAction({
-                    msg:
+                new SubmitColumnDefinitionErrorAction(
+                    new ErrorState(
                         'Submitting the column definition failed: ' +
-                        exceptionMessage(e),
-                    retryCallback: () => this.run(dispatch)
-                })
+                            exceptionMessage(e),
+                        () => this.run(dispatch)
+                    )
+                )
             )
         }
         return false

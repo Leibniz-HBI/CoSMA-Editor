@@ -1,11 +1,12 @@
 import * as yup from 'yup'
-import { ErrorPopover, ErrorState } from '../../util/error'
 import { LoginCallback } from '../hooks'
 import { Formik } from 'formik'
 import { FormEvent, useRef } from 'react'
 import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
+import { ErrorState } from '../../util/error/slice'
+import { ErrorPopover } from '../../util/error/components'
 
 type LoginFormArgs = { userName: string; password: string }
 

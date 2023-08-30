@@ -1,4 +1,3 @@
-import { ErrorState } from '../util/error'
 import {
     ClearSearchEntriesAction,
     ColumnSelectionAction,
@@ -99,7 +98,7 @@ export function columnMenuReducer(
         return new ColumnSelectionState({
             ...state,
             isSubmittingDefinition: false,
-            submissionErrorState: new ErrorState(action.msg, action.retryCallback)
+            submissionErrorState: action.error
         })
     } else if (action instanceof SubmitColumnDefinitionClearErrorAction) {
         return new ColumnSelectionState({ ...state, submissionErrorState: undefined })

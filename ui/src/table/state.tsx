@@ -1,6 +1,6 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { ColumnType } from '../column_menu/state'
-import { ErrorState } from '../util/error'
+import { ErrorState } from '../util/error/slice'
 
 export class TableState {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

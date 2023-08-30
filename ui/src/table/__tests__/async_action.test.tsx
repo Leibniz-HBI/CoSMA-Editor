@@ -16,6 +16,13 @@ import {
     parseValue,
     SubmitValuesAsyncAction
 } from '../async_actions'
+import { ErrorState } from '../../util/error/slice'
+
+jest.mock('uuid', () => {
+    return {
+        v4: () => 'id-error-test'
+    }
+})
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {
@@ -155,7 +162,9 @@ describe('get table async action', () => {
             ],
             [
                 new SetLoadDataErrorAction(
-                    'Could not load entities chunk 0. Reason: "test error"'
+                    new ErrorState(
+                        'Could not load entities chunk 0. Reason: "test error"'
+                    )
                 )
             ]
         ])
@@ -181,7 +190,7 @@ describe('get table async action', () => {
                     ColumnType.String
                 )
             ],
-            [new SetLoadDataErrorAction('test error')]
+            [new SetLoadDataErrorAction(new ErrorState('test error'))]
         ])
     })
 })
@@ -361,8 +370,12 @@ describe('get column async action', () => {
                 ],
                 [
                     new SubmitValuesErrorAction(
-                        'The data you entered changed in the remote location. ' +
-                            'The new values are updated in the table. Please review them.'
+                        new ErrorState(
+                            'The data you entered changed in the remote location. ' +
+                                'The new values are updated in the table. Please review them.',
+                            undefined,
+                            'id-error-test'
+                        )
                     )
                 ]
             ])
@@ -393,8 +406,8 @@ describe('get column async action', () => {
             const call2args = dispatch.mock.calls[1]
             expect(call2args.length).toEqual(1)
             expect(call2args[0]).toBeInstanceOf(SubmitValuesErrorAction)
-            expect(call2args[0].errorMsg).toEqual('test error')
-            expect(call2args[0].retryCallback).toBeDefined()
+            expect(call2args[0].error.msg).toEqual('test error')
+            expect(call2args[0].error.retryCallback).toBeDefined()
         })
         test('sets error without retry', async () => {
             responseSequence([
@@ -422,8 +435,8 @@ describe('get column async action', () => {
             const call2args = dispatch.mock.calls[1]
             expect(call2args.length).toEqual(1)
             expect(call2args[0]).toBeInstanceOf(SubmitValuesErrorAction)
-            expect(call2args[0].errorMsg).toEqual('test error')
-            expect(call2args[0].retryCallback).toBeUndefined()
+            expect(call2args[0].error.msg).toEqual('test error')
+            expect(call2args[0].error.retryCallback).toBeUndefined()
         })
     })
 

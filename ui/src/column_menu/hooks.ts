@@ -1,5 +1,5 @@
 import { Context, createContext } from 'react'
-import { ErrorState } from '../util/error'
+import { ErrorState } from '../util/error/slice'
 import { useThunkReducer } from '../util/state'
 import {
     SubmitColumnDefinitionClearErrorAction,

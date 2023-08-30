@@ -1,6 +1,7 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { ColumnType } from '../column_menu/state'
 import { CellValue } from './state'
+import { ErrorState } from '../util/error/slice'
 
 export type Edit = [string, string, CellValue]
 
@@ -97,14 +98,12 @@ export class ChangeColumnIndexAction {
 }
 
 /**
- * Indcates an error during table data fetch.
+ * Indicates an error during table data fetch.
  */
 export class SetLoadDataErrorAction {
-    msg: string
-    retryCallback?: VoidFunction
-    constructor(msg: string, retryCallback?: VoidFunction) {
-        this.msg = msg
-        this.retryCallback = retryCallback
+    error: ErrorState
+    constructor(error: ErrorState) {
+        this.error = error
     }
 }
 
@@ -114,16 +113,14 @@ export class SetLoadDataErrorAction {
 export class SubmitValuesStartAction {}
 
 /**
- * Indicates that an error has occured during value submission
+ * Indicates that an error has occurred during value submission
  */
 
 export class SubmitValuesErrorAction {
-    errorMsg: string
-    retryCallback?: VoidFunction
+    error: ErrorState
 
-    constructor(errorMsg: string, retryCallback?: VoidFunction) {
-        this.errorMsg = errorMsg
-        this.retryCallback = retryCallback
+    constructor(error: ErrorState) {
+        this.error = error
     }
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals'
 import { ColumnType } from '../../column_menu/state'
-import { ErrorState } from '../../util/error'
+import { ErrorState } from '../../util/error/slice'
 import {
     SetEntityLoadingAction,
     SetLoadDataErrorAction,
@@ -46,10 +46,15 @@ describe('reducer tests', () => {
     })
     test('loading to error', () => {
         const state = new TableState({})
-        const end_state = tableReducer(state, new SetLoadDataErrorAction('test error'))
+        const end_state = tableReducer(
+            state,
+            new SetLoadDataErrorAction(
+                new ErrorState('test error', undefined, 'id-error-test')
+            )
+        )
         const expected_state = new TableState({
             isLoading: false,
-            loadDataErrorState: new ErrorState('test error')
+            loadDataErrorState: new ErrorState('test error', undefined, 'id-error-test')
         })
         expect(end_state).toEqual(expected_state)
     })
@@ -502,7 +507,7 @@ describe('reducer tests', () => {
                 entities: entities,
                 entityIndices: entityIndices
             })
-            const testError = new ErrorState('error test')
+            const testError = new ErrorState('error test', undefined, 'id-error-test')
             const expectedState = new TableState({
                 submitValuesErrorState: testError,
                 entities: entities,
@@ -510,7 +515,13 @@ describe('reducer tests', () => {
             })
             const endState = tableReducer(
                 initialState,
-                new SubmitValuesErrorAction(testError.msg, testError.retryCallback)
+                new SubmitValuesErrorAction(
+                    new ErrorState(
+                        testError.msg,
+                        testError.retryCallback,
+                        'id-error-test'
+                    )
+                )
             )
             expect(endState).toEqual(expectedState)
         })
@@ -659,7 +670,9 @@ describe('reducer tests', () => {
                 entities: entities,
                 entityIndices: entityIndices,
                 submitValuesErrorState: new ErrorState(
-                    'Batch edits not implemented. Values are not changed.'
+                    'Batch edits not implemented. Values are not changed.',
+                    undefined,
+                    'id-error-batch'
                 )
             })
             const endState = tableReducer(

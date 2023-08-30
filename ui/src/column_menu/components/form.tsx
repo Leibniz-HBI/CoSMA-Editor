@@ -13,7 +13,7 @@ import {
 import { ColumnType } from '../state'
 import * as yup from 'yup'
 import { SubmitColumnDefinitionArgs } from '../hooks'
-import { ErrorState } from '../../util/error'
+import { ErrorState } from '../../util/error/slice'
 
 const schema = yup.object({
     columnType: yup.number().required(),

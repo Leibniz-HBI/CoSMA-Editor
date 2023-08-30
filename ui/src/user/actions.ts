@@ -1,3 +1,4 @@
+import { ErrorState } from '../util/error/slice'
 import { UserInfo } from './state'
 
 /**
@@ -34,10 +35,9 @@ export class RefreshSuccessAction {}
  * Indicates an error during login
  */
 export class LoginErrorAction {
-    msg: string
-
-    constructor(msg: string) {
-        this.msg = msg
+    error: ErrorState
+    constructor(error: ErrorState) {
+        this.error = error
     }
 }
 
@@ -55,10 +55,9 @@ export class RegistrationStartAction {}
  * Indicates an error during registration
  */
 export class RegistrationErrorAction {
-    msg: string
-
-    constructor(msg: string) {
-        this.msg = msg
+    error: ErrorState
+    constructor(error: ErrorState) {
+        this.error = error
     }
 }
 

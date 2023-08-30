@@ -15,9 +15,10 @@ import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange, SetFieldValue } from '../util/type'
 import { ChangeEvent, FormEvent, ReactElement, useEffect, useRef } from 'react'
 import { FormField } from '../util/form'
-import { ErrorPopover, ErrorState } from '../util/error'
 import { useNavigate } from 'react-router-dom'
 import { StepHeader } from '../util/components/stepper'
+import { ErrorPopover } from '../util/error/components'
+import { ErrorState } from '../util/error/slice'
 
 export function ContributionList() {
     const {

@@ -1,7 +1,6 @@
 import * as yup from 'yup'
 import { FormEvent, useLayoutEffect, useRef } from 'react'
 import { PatchContributionCallback, useContributionDetails } from './hooks'
-import { ErrorPopover, ErrorState } from '../../util/error'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
@@ -9,6 +8,8 @@ import { FormField } from '../../util/form'
 import { ContributionStepper } from '../components'
 import { useLoaderData } from 'react-router-dom'
 import { Contribution } from '../state'
+import { ErrorPopover } from '../../util/error/components'
+import { ErrorState } from '../../util/error/slice'
 
 export function ContributionDetailsStep() {
     const idPersistent = useLoaderData() as string

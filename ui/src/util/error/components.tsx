@@ -1,18 +1,9 @@
 import { MutableRefObject } from 'react'
-import { Button, CloseButton, Col, Overlay, Popover, Row } from 'react-bootstrap'
+import { Button, CloseButton, Col, Overlay, Popover, Row, Toast } from 'react-bootstrap'
 import { ArrowClockwise } from 'react-bootstrap-icons'
 import { Placement } from 'react-bootstrap/esm/types'
-
-export class ErrorState {
-    msg: string
-    retryCallback?: VoidFunction
-
-    constructor(msg: string, retryCallback?: VoidFunction) {
-        this.msg = msg
-        this.retryCallback = retryCallback
-    }
-}
-
+import { ErrorState, removeError, errorListSelector } from './slice'
+import { useSelector } from 'react-redux'
 /**
  * Component for showing an error message and a retry button.
  * @param props
@@ -75,5 +66,23 @@ export function ErrorPopover(props: {
                 </Popover.Body>
             </Popover>
         </Overlay>
+    )
+}
+
+export function ErrorToasts() {
+    const errors = useSelector(errorListSelector)
+    return (
+        <>
+            {errors.map((error) => (
+                <Toast onClose={() => removeError(error.id)}>
+                    <Toast.Header
+                        closeButton={true}
+                        closeVariant="white"
+                        className="bg-danger"
+                    ></Toast.Header>
+                    <Toast.Body>{error.msg}</Toast.Body>
+                </Toast>
+            ))}
+        </>
     )
 }

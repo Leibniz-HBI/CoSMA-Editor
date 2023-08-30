@@ -1,11 +1,12 @@
 import * as yup from 'yup'
 import { RegistrationCallback } from '../hooks'
-import { ErrorPopover, ErrorState } from '../../util/error'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { FormEvent, useRef } from 'react'
 import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
+import { ErrorState } from '../../util/error/slice'
+import { ErrorPopover } from '../../util/error/components'
 
 type RegistrationFormArgs = {
     userName: string

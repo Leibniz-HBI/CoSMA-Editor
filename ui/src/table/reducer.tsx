@@ -18,7 +18,7 @@ import {
     SubmitValuesErrorAction,
     SubmitValuesClearErrorAction
 } from './actions'
-import { ErrorState } from '../util/error'
+import { ErrorState } from '../util/error/slice'
 
 export function tableReducer(state: TableState, action: TableAction) {
     if (action instanceof SetEntityLoadingAction) {
@@ -186,7 +186,7 @@ export function tableReducer(state: TableState, action: TableAction) {
         return new TableState({
             ...state,
             isLoading: false,
-            loadDataErrorState: new ErrorState(action.msg, action.retryCallback),
+            loadDataErrorState: action.error,
             rowObjects: undefined
         })
     } else if (action instanceof SubmitValuesStartAction) {
@@ -199,10 +199,7 @@ export function tableReducer(state: TableState, action: TableAction) {
         return new TableState({
             ...state,
             isSubmittingValues: false,
-            submitValuesErrorState: new ErrorState(
-                action.errorMsg,
-                action.retryCallback
-            )
+            submitValuesErrorState: action.error
         })
     } else if (action instanceof SubmitValuesEndAction) {
         if (action.edits.length == 0) {
@@ -213,7 +210,11 @@ export function tableReducer(state: TableState, action: TableAction) {
             return new TableState({
                 ...state,
                 isSubmittingValues: false,
-                submitValuesErrorState: new ErrorState(batchErrorMsg)
+                submitValuesErrorState: new ErrorState(
+                    batchErrorMsg,
+                    undefined,
+                    'id-error-batch'
+                )
             })
         }
         const [idEntity, idPersistentColumn, value] = action.edits[0]

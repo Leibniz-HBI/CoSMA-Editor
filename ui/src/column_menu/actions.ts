@@ -1,4 +1,4 @@
-import { ErrorState } from '../util/error'
+import { ErrorState } from '../util/error/slice'
 import { ColumnSelectionEntry } from './state'
 
 /**Indicates that loading has started */
@@ -51,18 +51,10 @@ export class SubmitColumnDefinitionSuccessAction {}
  * Indicate that an error occurred during column definition submission.
  */
 export class SubmitColumnDefinitionErrorAction {
-    msg: string
-    retryCallback?: VoidFunction
+    error: ErrorState
 
-    constructor({
-        msg,
-        retryCallback = undefined
-    }: {
-        msg: string
-        retryCallback?: VoidFunction
-    }) {
-        this.msg = msg
-        this.retryCallback = retryCallback
+    constructor(error: ErrorState) {
+        this.error = error
     }
 }
 

@@ -1,4 +1,3 @@
-import { ErrorState } from '../util/error'
 import {
     LoginErrorAction,
     LoginErrorClearAction,
@@ -34,7 +33,7 @@ export function userReducer(state: UserState, action: UserAction): UserState {
         })
     } else if (action instanceof LoginErrorAction) {
         return new UserState({
-            loginErrorState: new ErrorState(action.msg)
+            loginErrorState: action.error
         })
     } else if (action instanceof LoginErrorClearAction) {
         return new UserState({})
@@ -45,7 +44,7 @@ export function userReducer(state: UserState, action: UserAction): UserState {
         })
     } else if (action instanceof RegistrationErrorAction) {
         return new UserState({
-            registrationErrorState: new ErrorState(action.msg),
+            registrationErrorState: action.error,
             showRegistration: state.showRegistration
         })
     } else if (action instanceof RegistrationErrorClearAction) {
