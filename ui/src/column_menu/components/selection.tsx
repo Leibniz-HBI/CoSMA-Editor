@@ -2,7 +2,12 @@ import { ReactElement, ReactNode } from 'react'
 import { Col, Form, Row } from 'react-bootstrap'
 
 import { DashLg, PlusLg, RecordFill } from 'react-bootstrap-icons'
-import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from '../state'
+import {
+    ColumnDefinition,
+    ColumnSelectionEntry,
+    ColumnType,
+    newColumnDefinition
+} from '../state'
 
 export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
     if (namePath === undefined || namePath.length == 0) {
@@ -153,10 +158,11 @@ export function mkListItems(args: {
         const additionalItems = additionalEntries.map((entry, idx) =>
             mkColumnExplorerItem({
                 columnSelectionEntry: new ColumnSelectionEntry({
-                    columnDefinition: new ColumnDefinition({
+                    columnDefinition: newColumnDefinition({
                         namePath: [entry.name],
                         idPersistent: entry.idPersistent,
                         columnType: ColumnType.Inner,
+                        curated: false,
                         version: 0
                     })
                 }),

@@ -8,7 +8,7 @@ import {
     SubmitColumnDefinitionSuccessAction
 } from '../actions'
 import { GetHierarchyAction, SubmitColumnDefinitionAction } from '../async_actions'
-import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from '../state'
+import { ColumnSelectionEntry, ColumnType, newColumnDefinition } from '../state'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {
     const fetchMock = jest.spyOn(global, 'fetch')
@@ -99,6 +99,8 @@ describe('getHierarchyAction', () => {
     const versionTest = 0
     const typeRootTest = 'INNER'
     const typeRootTest1 = 'FLOAT'
+    const curatedTest = true
+    const curatedTest1 = false
     test('handle roots only', async () => {
         const dispatch = jest.fn()
         responseSequence([
@@ -111,11 +113,13 @@ describe('getHierarchyAction', () => {
                                 id_persistent: idPersistentRootTest,
                                 name: nameRootTest,
                                 version: versionTest,
+                                curated: curatedTest,
                                 type: typeRootTest
                             },
                             {
                                 id_persistent: idPersistentRootTest1,
                                 name: nameRootTest1,
+                                curated: curatedTest1,
                                 version: versionTest,
                                 type: typeRootTest1
                             }
@@ -149,19 +153,21 @@ describe('getHierarchyAction', () => {
                 new LoadColumnHierarchySuccessAction(
                     [
                         new ColumnSelectionEntry({
-                            columnDefinition: new ColumnDefinition({
+                            columnDefinition: newColumnDefinition({
                                 namePath: [nameRootTest],
                                 columnType: ColumnType.Inner,
                                 idPersistent: idPersistentRootTest,
+                                curated: curatedTest,
                                 version: versionTest
                             }),
                             isExpanded: true
                         }),
                         new ColumnSelectionEntry({
-                            columnDefinition: new ColumnDefinition({
+                            columnDefinition: newColumnDefinition({
                                 namePath: [nameRootTest1],
                                 columnType: ColumnType.Float,
                                 idPersistent: idPersistentRootTest1,
+                                curated: curatedTest1,
                                 version: versionTest
                             }),
                             isExpanded: true
@@ -180,6 +186,7 @@ describe('getHierarchyAction', () => {
     const idPersistentChildTest = 'id_child_test'
     const nameChildTest = 'name child test'
     const typeChildTest = 'STRING'
+    const curatedChildTest = false
 
     test('handle child', async () => {
         const dispatch = jest.fn()
@@ -192,12 +199,14 @@ describe('getHierarchyAction', () => {
                             {
                                 id_persistent: idPersistentRootTest,
                                 name: nameRootTest,
+                                curated: curatedTest,
                                 version: versionTest,
                                 type: typeRootTest
                             },
                             {
                                 id_persistent: idPersistentRootTest1,
                                 name: nameRootTest1,
+                                curated: curatedTest1,
                                 version: versionTest,
                                 type: typeRootTest1
                             }
@@ -215,6 +224,7 @@ describe('getHierarchyAction', () => {
                                 id_parent_persistent: idPersistentRootTest,
                                 name: nameChildTest,
                                 type: typeChildTest,
+                                curated: curatedChildTest,
                                 version: versionTest
                             }
                         ]
@@ -247,19 +257,21 @@ describe('getHierarchyAction', () => {
                 new LoadColumnHierarchySuccessAction(
                     [
                         new ColumnSelectionEntry({
-                            columnDefinition: new ColumnDefinition({
+                            columnDefinition: newColumnDefinition({
                                 namePath: [nameRootTest],
                                 columnType: ColumnType.Inner,
                                 idPersistent: idPersistentRootTest,
+                                curated: curatedTest,
                                 version: versionTest
                             }),
                             isExpanded: true
                         }),
                         new ColumnSelectionEntry({
-                            columnDefinition: new ColumnDefinition({
+                            columnDefinition: newColumnDefinition({
                                 namePath: [nameRootTest1],
                                 columnType: ColumnType.Float,
                                 idPersistent: idPersistentRootTest1,
+                                curated: curatedTest1,
                                 version: versionTest
                             }),
                             isExpanded: true
@@ -274,11 +286,12 @@ describe('getHierarchyAction', () => {
                 new LoadColumnHierarchySuccessAction(
                     [
                         new ColumnSelectionEntry({
-                            columnDefinition: new ColumnDefinition({
+                            columnDefinition: newColumnDefinition({
                                 namePath: [nameRootTest, nameChildTest],
                                 idPersistent: idPersistentChildTest,
                                 idParentPersistent: idPersistentRootTest,
                                 columnType: ColumnType.String,
+                                curated: curatedChildTest,
                                 version: versionTest
                             }),
                             isExpanded: false

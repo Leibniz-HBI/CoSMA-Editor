@@ -1,10 +1,10 @@
 import { describe } from '@jest/globals'
 import { columnMenuReducer } from '../reducer'
 import {
-    ColumnDefinition,
     ColumnSelectionEntry,
     ColumnSelectionState,
-    ColumnType
+    ColumnType,
+    newColumnDefinition
 } from '../state'
 import {
     ClearSearchEntriesAction,
@@ -21,33 +21,37 @@ import { ErrorState } from '../../util/error/slice'
 
 describe('Column Menu Reducer', () => {
     const columnSelectionEntryTest10 = new ColumnSelectionEntry({
-        columnDefinition: new ColumnDefinition({
+        columnDefinition: newColumnDefinition({
             namePath: ['parent1', 'child0'],
             idPersistent: 'column_id_test_10',
+            curated: false,
             version: 2,
             columnType: ColumnType.String
         })
     })
     const columnSelectionEntryTest11 = new ColumnSelectionEntry({
-        columnDefinition: new ColumnDefinition({
+        columnDefinition: newColumnDefinition({
             namePath: ['parent1', 'child1'],
             idPersistent: 'column_id_test_11',
             version: 3,
+            curated: false,
             columnType: ColumnType.String
         })
     })
     const columnSelectionEntryTest0 = new ColumnSelectionEntry({
-        columnDefinition: new ColumnDefinition({
+        columnDefinition: newColumnDefinition({
             namePath: ['parent1'],
             idPersistent: 'column_id_test_0',
+            curated: false,
             version: 0,
             columnType: ColumnType.Inner
         })
     })
     const columnSelectionEntryTest1 = new ColumnSelectionEntry({
-        columnDefinition: new ColumnDefinition({
+        columnDefinition: newColumnDefinition({
             namePath: ['parent0'],
             idPersistent: 'column_id_test_1',
+            curated: false,
             version: 1,
             columnType: ColumnType.Inner
         }),

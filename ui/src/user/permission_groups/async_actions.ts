@@ -11,7 +11,7 @@ import {
 } from './actions'
 import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
-import { parseUserInfoFromJson } from '../async_actions'
+import { parseUserInfoFromJson } from '../thunks'
 import { UserInfo, UserPermissionGroup } from '../state'
 
 export class GetUserInfoListAction extends AsyncAction<

@@ -1,6 +1,6 @@
-import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
+import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
 import { Entity } from '../../../contribution/entity/state'
-import { PublicUserInfo } from '../../../user/state'
+import { PublicUserInfo, UserPermissionGroup } from '../../../user/state'
 import { Remote } from '../../../util/state'
 import { MergeRequest, MergeRequestStep } from '../../state'
 import {
@@ -121,15 +121,17 @@ const conflicts = [
     ),
     sharedConflict
 ]
-const tagDefOrigin = new ColumnDefinition({
+const tagDefOrigin = newColumnDefinition({
     namePath: ['tag def origin test'],
     idPersistent: 'id-tag-def-origin-test',
+    curated: false,
     version: 84,
     columnType: ColumnType.String
 })
-const tagDefDestination = new ColumnDefinition({
+const tagDefDestination = newColumnDefinition({
     namePath: ['tag def destination test'],
     idPersistent: 'id-tag-def-destination-test',
+    curated: false,
     version: 841,
     columnType: ColumnType.String
 })
@@ -180,11 +182,13 @@ describe('get conflicts', () => {
                         id_persistent: 'id-merge-request',
                         assigned_to: {
                             user_name: 'user_assigned',
-                            id_persistent: 'id-user-assigned'
+                            id_persistent: 'id-user-assigned',
+                            permission_group: 'CONTRIBUTOR'
                         },
                         created_by: {
                             user_name: 'user_created',
-                            id_persistent: 'id-user-created'
+                            id_persistent: 'id-user-created',
+                            permission_group: 'CONTRIBUTOR'
                         },
                         state: 'OPEN',
                         origin: {
@@ -192,6 +196,7 @@ describe('get conflicts', () => {
                             name_path: tagDefOrigin.namePath,
                             id_persistent: tagDefOrigin.idPersistent,
                             type: 'STRING',
+                            curated: false,
                             version: tagDefOrigin.version
                         },
                         destination: {
@@ -199,6 +204,7 @@ describe('get conflicts', () => {
                             name_path: tagDefDestination.namePath,
                             id_persistent: tagDefDestination.idPersistent,
                             type: 'STRING',
+                            curated: false,
                             version: tagDefDestination.version
                         }
                     },
@@ -258,11 +264,13 @@ describe('get conflicts', () => {
                         step: MergeRequestStep.Open,
                         createdBy: new PublicUserInfo({
                             userName: 'user_created',
-                            idPersistent: 'id-user-created'
+                            idPersistent: 'id-user-created',
+                            permissionGroup: UserPermissionGroup.CONTRIBUTOR
                         }),
                         assignedTo: new PublicUserInfo({
                             userName: 'user_assigned',
-                            idPersistent: 'id-user-assigned'
+                            idPersistent: 'id-user-assigned',
+                            permissionGroup: UserPermissionGroup.CONTRIBUTOR
                         }),
                         originTagDefinition: tagDefOrigin,
                         destinationTagDefinition: tagDefDestination

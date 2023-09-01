@@ -1,27 +1,16 @@
-import { Context, createContext, useReducer } from 'react'
-import { userReducer } from './reducer'
-import { useThunkReducer } from '../util/state'
-import { UserInfo, UserState } from './state'
-import {
-    LoginAction,
-    RefreshAction,
-    RegistrationAction,
-    RemoteUserProfileChangeColumIndexAction,
-    RemoteUserProfileColumnAppendAction,
-    RemoteUserProfileColumnDeleteAction
-} from './async_actions'
-import {
-    LoginErrorClearAction,
-    LoginSuccessAction,
-    LogoutAction,
-    RegistrationErrorClearAction,
-    ToggleRegistrationAction
-} from './actions'
+import { UserInfo } from './state'
 import { ErrorState } from '../util/error/slice'
-
-export const UserContext: Context<UserInfoWithCallbacks | undefined> = createContext<
-    UserInfoWithCallbacks | undefined
->(undefined)
+import { useDispatch, useSelector } from 'react-redux'
+import { selectUser, selectUserInfo } from './selectors'
+import { login, refresh, registration } from './thunks'
+import {
+    loginErrorClear,
+    loginSuccess,
+    logout,
+    registrationErrorClear,
+    toggleRegistration
+} from './slice'
+import { AppDispatch } from '../store'
 
 export type AppendToDefaultTagDefinitionsCallback = (idPersistent: string) => void
 export type ChangeDefaultTagDefinitionsCallback = (
@@ -36,7 +25,6 @@ export type DefaultTagDefinitionsCallbacks = {
 export type UserInfoWithCallbacks = {
     userInfo: UserInfo
     logoutCallback: VoidFunction
-    defaultTagDefinitionsCallbacks: DefaultTagDefinitionsCallbacks
     userInfoPromise: () => Promise<UserInfo | undefined>
 }
 export type LoginCallback = (userName: string, password: string) => void
@@ -68,53 +56,33 @@ export type UserProps = {
     clearRegistrationErrorCallback: VoidFunction
 }
 
-export function useLogoutCallback() {
-    const [_state, dispatch] = useReducer(userReducer, new UserState({}))
-    return dispatch
-}
-
 export function useLogin(): UserProps {
-    const [state, dispatch] = useThunkReducer(userReducer, new UserState({}))
+    const state = useSelector(selectUser)
+    const userInfo = useSelector(selectUserInfo)
+    const dispatch: AppDispatch = useDispatch()
     return {
-        userInfoWithCallbacks: state.userInfo
+        userInfoWithCallbacks: userInfo
             ? {
-                  userInfo: state.userInfo,
-                  userInfoPromise: () => dispatch(new RefreshAction(false)),
-                  logoutCallback: () => dispatch(new LogoutAction()),
-                  defaultTagDefinitionsCallbacks: {
-                      appendToDefaultTagDefinitionsCallback: (idPersistent) =>
-                          dispatch(
-                              new RemoteUserProfileColumnAppendAction(idPersistent)
-                          ),
-                      removeFromDefaultTagDefinitionListCallback: (idPersistent) =>
-                          dispatch(
-                              new RemoteUserProfileColumnDeleteAction(idPersistent)
-                          ),
-                      changeDefaultTagDefinitionsCallback: (idxStart, idxEnd) =>
-                          dispatch(
-                              new RemoteUserProfileChangeColumIndexAction(
-                                  idxStart,
-                                  idxEnd
-                              )
-                          )
-                  }
+                  userInfo: userInfo,
+                  userInfoPromise: () => dispatch(refresh({ withDispatch: false })),
+                  logoutCallback: logout
               }
             : undefined,
         showRegistration: state.showRegistration,
         loginErrorState: state.loginErrorState,
         registrationErrorState: state.registrationErrorState,
         refreshCallback: () =>
-            dispatch(new RefreshAction(true)).then((userInfo) => {
+            dispatch(refresh({})).then((userInfo) => {
                 if (userInfo !== undefined) {
-                    dispatch(new LoginSuccessAction(userInfo))
+                    loginSuccess(userInfo)
                 }
             }),
         loginCallback: (userName: string, password: string) => {
             if (!state.isLoggingIn) {
-                dispatch(new LoginAction(userName, password))
+                dispatch(login(userName, password))
             }
         },
-        clearLoginErrorCallback: () => dispatch(new LoginErrorClearAction()),
+        clearLoginErrorCallback: loginErrorClear,
         registrationCallback: ({
             userName,
             namesPersonal,
@@ -124,7 +92,7 @@ export function useLogin(): UserProps {
         }) => {
             if (!state.isRegistering) {
                 dispatch(
-                    new RegistrationAction({
+                    registration({
                         userName: userName,
                         namesPersonal: namesPersonal,
                         namesFamily: namesFamily,
@@ -134,8 +102,7 @@ export function useLogin(): UserProps {
                 )
             }
         },
-        clearRegistrationErrorCallback: () =>
-            dispatch(new RegistrationErrorClearAction()),
-        toggleRegistrationCallback: () => dispatch(new ToggleRegistrationAction())
+        clearRegistrationErrorCallback: () => dispatch(registrationErrorClear()),
+        toggleRegistrationCallback: () => dispatch(toggleRegistration())
     }
 }

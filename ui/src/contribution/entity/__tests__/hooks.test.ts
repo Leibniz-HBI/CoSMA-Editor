@@ -1,5 +1,9 @@
 import { GridCellKind } from '@glideapps/glide-data-grid'
-import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
+import {
+    ColumnDefinition,
+    ColumnType,
+    newColumnDefinition
+} from '../../../column_menu/state'
 import { Remote, useThunkReducer } from '../../../util/state'
 import { LoadContributionDetailsAsyncAction } from '../../details/async_action'
 import {
@@ -23,10 +27,11 @@ const entityTest = new EntityWithDuplicates({
     version: 0,
     similarEntities: new Remote([])
 })
-const tagDefTest = new ColumnDefinition({
+const tagDefTest = newColumnDefinition({
     namePath: ['tag-def-test'],
     idPersistent: 'id-tag-def-test',
     columnType: ColumnType.String,
+    curated: false,
     version: 0
 })
 describe('contribution entity hooks', () => {

@@ -1,4 +1,3 @@
-import { version } from 'os'
 import { Entity } from '../../../contribution/entity/state'
 import { Remote } from '../../../util/state'
 import {
@@ -20,7 +19,22 @@ import {
     MergeRequestConflictsByState,
     TagInstance
 } from '../state'
-import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
+import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
+import { MergeRequest, MergeRequestStep } from '../../state'
+import { PublicUserInfo, UserPermissionGroup } from '../../../user/state'
+
+const idMergeRequestTest = 'id-merge-request-test'
+const assignedToUserTest = new PublicUserInfo({
+    idPersistent: 'id-assigned-to-test',
+    userName: 'assignedToTest',
+    permissionGroup: UserPermissionGroup.APPLICANT
+})
+
+const createdByUserTest = new PublicUserInfo({
+    idPersistent: 'id-created-by-test',
+    userName: 'createdByTest',
+    permissionGroup: UserPermissionGroup.CONTRIBUTOR
+})
 
 const sharedConflict1 = new Remote(
     new MergeRequestConflict({
@@ -103,15 +117,17 @@ const conflicts = [
     ),
     sharedConflict
 ]
-const tagDefOrigin = new ColumnDefinition({
+const tagDefOrigin = newColumnDefinition({
     namePath: ['tag def origin test'],
     idPersistent: 'id-tag-def-origin-test',
+    curated: false,
     version: 84,
     columnType: ColumnType.String
 })
-const tagDefDestination = new ColumnDefinition({
+const tagDefDestination = newColumnDefinition({
     namePath: ['tag def destination test'],
     idPersistent: 'id-tag-def-destination-test',
+    curated: false,
     version: 841,
     columnType: ColumnType.String
 })
@@ -141,8 +157,14 @@ describe('get conflicts', () => {
                 new MergeRequestConflictsByState({
                     conflicts: conflicts,
                     updated: updatedConflicts,
-                    tagDefinitionOrigin: tagDefOrigin,
-                    tagDefinitionDestination: tagDefDestination
+                    mergeRequest: new MergeRequest({
+                        idPersistent: idMergeRequestTest,
+                        assignedTo: assignedToUserTest,
+                        createdBy: createdByUserTest,
+                        step: MergeRequestStep.Conflicts,
+                        originTagDefinition: tagDefOrigin,
+                        destinationTagDefinition: tagDefDestination
+                    })
                 })
             ),
             new Remote(false)
@@ -152,8 +174,14 @@ describe('get conflicts', () => {
             new GetMergeRequestConflictSuccessAction({
                 conflicts: conflicts,
                 updated: updatedConflicts,
-                tagDefinitionOrigin: tagDefOrigin,
-                tagDefinitionDestination: tagDefDestination
+                mergeRequest: new MergeRequest({
+                    idPersistent: idMergeRequestTest,
+                    assignedTo: assignedToUserTest,
+                    createdBy: createdByUserTest,
+                    step: MergeRequestStep.Conflicts,
+                    originTagDefinition: tagDefOrigin,
+                    destinationTagDefinition: tagDefDestination
+                })
             })
         )
         expect(endState).toEqual(expectedState)
@@ -181,8 +209,14 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: updatedConflicts,
                     conflicts: conflicts,
-                    tagDefinitionOrigin: tagDefOrigin,
-                    tagDefinitionDestination: tagDefDestination
+                    mergeRequest: new MergeRequest({
+                        idPersistent: idMergeRequestTest,
+                        assignedTo: assignedToUserTest,
+                        createdBy: createdByUserTest,
+                        step: MergeRequestStep.Conflicts,
+                        originTagDefinition: tagDefOrigin,
+                        destinationTagDefinition: tagDefDestination
+                    })
                 })
             ),
             new Remote(false)
@@ -193,8 +227,14 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [changedSharedConflict, sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), changedSharedConflict],
-                    tagDefinitionOrigin: tagDefOrigin,
-                    tagDefinitionDestination: tagDefDestination
+                    mergeRequest: new MergeRequest({
+                        idPersistent: idMergeRequestTest,
+                        assignedTo: assignedToUserTest,
+                        createdBy: createdByUserTest,
+                        step: MergeRequestStep.Conflicts,
+                        originTagDefinition: tagDefOrigin,
+                        destinationTagDefinition: tagDefDestination
+                    })
                 })
             ),
             new Remote(false)
@@ -212,8 +252,14 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [changedSharedConflict, sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), changedSharedConflict],
-                    tagDefinitionOrigin: tagDefOrigin,
-                    tagDefinitionDestination: tagDefDestination
+                    mergeRequest: new MergeRequest({
+                        idPersistent: idMergeRequestTest,
+                        assignedTo: assignedToUserTest,
+                        createdBy: createdByUserTest,
+                        step: MergeRequestStep.Conflicts,
+                        originTagDefinition: tagDefOrigin,
+                        destinationTagDefinition: tagDefDestination
+                    })
                 })
             ),
             new Remote(false)
@@ -226,8 +272,14 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), expectedSharedConflict],
-                    tagDefinitionOrigin: tagDefOrigin,
-                    tagDefinitionDestination: tagDefDestination
+                    mergeRequest: new MergeRequest({
+                        idPersistent: idMergeRequestTest,
+                        assignedTo: assignedToUserTest,
+                        createdBy: createdByUserTest,
+                        step: MergeRequestStep.Conflicts,
+                        originTagDefinition: tagDefOrigin,
+                        destinationTagDefinition: tagDefDestination
+                    })
                 })
             ),
             new Remote(false)
@@ -248,8 +300,14 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [changedSharedConflict, sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), changedSharedConflict],
-                    tagDefinitionOrigin: tagDefOrigin,
-                    tagDefinitionDestination: tagDefDestination
+                    mergeRequest: new MergeRequest({
+                        idPersistent: idMergeRequestTest,
+                        assignedTo: assignedToUserTest,
+                        createdBy: createdByUserTest,
+                        step: MergeRequestStep.Conflicts,
+                        originTagDefinition: tagDefOrigin,
+                        destinationTagDefinition: tagDefDestination
+                    })
                 })
             ),
             new Remote(false)
@@ -260,8 +318,14 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [expectedSharedConflict, sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), expectedSharedConflict],
-                    tagDefinitionOrigin: tagDefOrigin,
-                    tagDefinitionDestination: tagDefDestination
+                    mergeRequest: new MergeRequest({
+                        idPersistent: idMergeRequestTest,
+                        assignedTo: assignedToUserTest,
+                        createdBy: createdByUserTest,
+                        step: MergeRequestStep.Conflicts,
+                        originTagDefinition: tagDefOrigin,
+                        destinationTagDefinition: tagDefDestination
+                    })
                 })
             ),
             new Remote(false)

@@ -1,4 +1,4 @@
-import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
+import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
 import { Entity } from '../../../contribution/entity/state'
 import { Remote, useThunkReducer } from '../../../util/state'
 import {
@@ -66,10 +66,11 @@ test('resolve conflict callback', () => {
         idPersistent: 'id-entity-test',
         version: 92
     })
-    const tagDefinitionOrigin = new ColumnDefinition({
+    const tagDefinitionOrigin = newColumnDefinition({
         namePath: ['tag definition origin test'],
         idPersistent: 'id-origin-test',
         columnType: ColumnType.String,
+        curated: false,
         version: 3
     })
     const tagInstanceOrigin = new TagInstance({
@@ -77,10 +78,11 @@ test('resolve conflict callback', () => {
         version: 12,
         value: 'test value origin'
     })
-    const tagDefinitionDestination = new ColumnDefinition({
+    const tagDefinitionDestination = newColumnDefinition({
         namePath: ['tag definition destination test'],
         idPersistent: 'id-destination-test',
         columnType: ColumnType.String,
+        curated: false,
         version: 3
     })
     const tagInstanceDestination = new TagInstance({

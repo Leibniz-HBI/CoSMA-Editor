@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
-import { ColumnDefinition, ColumnType } from '../../column_menu/state'
+import { ColumnType, newColumnDefinition } from '../../column_menu/state'
 import {
     SetEntityLoadingAction,
     SetColumnLoadingAction,
@@ -197,10 +197,11 @@ describe('get table async action', () => {
 describe('get column async action', () => {
     const columnNameTest = 'column name test'
     const columnIdTest = 'column_id_test'
-    const columnDefTest = new ColumnDefinition({
+    const columnDefTest = newColumnDefinition({
         idPersistent: columnIdTest,
         namePath: [columnNameTest],
         version: 2,
+        curated: false,
         columnType: ColumnType.String
     })
     const tagResponse = {

@@ -9,7 +9,7 @@ import {
 import { mkCell, useCellContentCalback, useRemoteTableData } from '../hooks'
 import { CellValue, ColumnState, TableState } from '../state'
 import { useThunkReducer } from '../../util/state'
-import { ColumnDefinition, ColumnType } from '../../column_menu/state'
+import { ColumnType, newColumnDefinition } from '../../column_menu/state'
 import { GetColumnAsyncAction } from '../async_actions'
 import {
     ChangeColumnIndexAction,
@@ -292,11 +292,12 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const columnDefinitionTest = new ColumnDefinition({
+        const columnDefinitionTest = newColumnDefinition({
             namePath: ['column_test'],
             idPersistent: 'id_column_test',
             idParentPersistent: undefined,
             columnType: ColumnType.String,
+            curated: false,
             version: 0
         })
         const profileCallbacks = mkDefaultTagDefinitionCallbacks()

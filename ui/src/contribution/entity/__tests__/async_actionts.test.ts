@@ -1,4 +1,4 @@
-import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
+import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
 import { Remote } from '../../../util/state'
 import {
     CompleteEntityAssignmentErrorAction,
@@ -414,10 +414,11 @@ describe('tag instances', () => {
         const dispatch = jest.fn()
         const entityGroupMap = new Map([[idEntity, [idEntity, idEntity1]]])
         const tagDefinitionList = [
-            new ColumnDefinition({
+            newColumnDefinition({
                 namePath: ['tag def test'],
                 idPersistent: idTagRequested,
                 columnType: ColumnType.String,
+                curated: false,
                 version: 3
             })
         ]
@@ -469,10 +470,12 @@ describe('tag instances', () => {
         const dispatch = jest.fn()
         const entityGroupMap = new Map([[idEntity, [idEntity, idEntity1]]])
         const tagDefinitionList = [
-            new ColumnDefinition({
+            newColumnDefinition({
                 namePath: ['tag def test'],
                 idPersistent: idTagRequested,
                 columnType: ColumnType.String,
+                curated: false,
+
                 version: 3
             })
         ]

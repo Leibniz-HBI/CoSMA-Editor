@@ -1,4 +1,4 @@
-import { ColumnDefinition, ColumnType } from '../../../column_menu/state'
+import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
 import { Remote } from '../../../util/state'
 import {
     LoadContributionDetailsErrorAction,
@@ -377,16 +377,18 @@ describe('entities for tag', () => {
         [idTagDefTest1, 1]
     ])
     const tagDefsTest = [
-        new ColumnDefinition({
+        newColumnDefinition({
             namePath: ['tag definition test'],
             idPersistent: idTagDefTest,
             columnType: ColumnType.String,
+            curated: false,
             version: 26
         }),
-        new ColumnDefinition({
+        newColumnDefinition({
             namePath: ['tag definition test1'],
             idPersistent: idTagDefTest1,
             columnType: ColumnType.String,
+            curated: false,
             version: 54
         })
     ]

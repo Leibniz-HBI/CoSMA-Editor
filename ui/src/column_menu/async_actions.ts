@@ -11,7 +11,12 @@ import {
     SubmitColumnDefinitionStartAction,
     SubmitColumnDefinitionSuccessAction
 } from './actions'
-import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from './state'
+import {
+    ColumnDefinition,
+    ColumnSelectionEntry,
+    ColumnType,
+    newColumnDefinition
+} from './state'
 import { config } from '../config'
 
 export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void> {
@@ -205,11 +210,12 @@ export function parseColumnDefinitionsFromApi(
     } else {
         namePath = [...parentNamePath, tagDefinitionApi['name']]
     }
-    return new ColumnDefinition({
+    return newColumnDefinition({
         idPersistent: tagDefinitionApi['id_persistent'],
         idParentPersistent: tagDefinitionApi['id_parent_persistent'],
         namePath,
         version: tagDefinitionApi['version'],
+        curated: tagDefinitionApi['curated'],
         columnType: columnType
     })
 }

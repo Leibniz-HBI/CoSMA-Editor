@@ -58,7 +58,7 @@ export class UserInfo extends PublicUserInfo {
     }
 }
 
-export class UserState {
+export interface UserState {
     userInfo?: UserInfo
     showRegistration: boolean
     isLoggingIn: boolean
@@ -66,37 +66,32 @@ export class UserState {
     isRefreshing: boolean
     loginErrorState?: ErrorState
     registrationErrorState?: ErrorState
-    constructor({
-        userInfo = undefined,
-        showRegistration = false,
-        isLoggingIn = false,
-        isRegistering = false,
-        isRefreshing = false,
-        loginErrorState = undefined,
-        registrationErrorState = undefined
-    }: {
-        userInfo?: UserInfo
-        showRegistration?: boolean
-        isLoggingIn?: boolean
-        isRegistering?: boolean
-        isRefreshing?: boolean
-        loginErrorState?: ErrorState
-        registrationErrorState?: ErrorState
-    }) {
-        this.userInfo = userInfo
-        this.showRegistration = showRegistration
-        this.isLoggingIn = isLoggingIn
-        this.isRegistering = isRegistering
-        this.isRefreshing = isRefreshing
-        this.loginErrorState = loginErrorState
-        this.registrationErrorState = registrationErrorState
-    }
+}
 
-    isLoggedIn() {
-        return !(this.userInfo === undefined || this.userInfo === null)
-    }
-
-    isActive() {
-        return this.isRegistering || this.isLoggingIn
+export function mkUserState({
+    userInfo = undefined,
+    showRegistration = false,
+    isLoggingIn = false,
+    isRegistering = false,
+    isRefreshing = false,
+    loginErrorState = undefined,
+    registrationErrorState = undefined
+}: {
+    userInfo?: UserInfo
+    showRegistration?: boolean
+    isLoggingIn?: boolean
+    isRegistering?: boolean
+    isRefreshing?: boolean
+    loginErrorState?: ErrorState
+    registrationErrorState?: ErrorState
+}): UserState {
+    return {
+        userInfo: userInfo,
+        showRegistration: showRegistration,
+        isLoggingIn: isLoggingIn,
+        isRegistering: isRegistering,
+        isRefreshing: isRefreshing,
+        loginErrorState: loginErrorState,
+        registrationErrorState: registrationErrorState
     }
 }

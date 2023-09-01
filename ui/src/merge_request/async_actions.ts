@@ -8,7 +8,7 @@ import {
 } from './actions'
 import { config } from '../config'
 import { MergeRequest, MergeRequestStep } from './state'
-import { parsePublicUserInfoFromJson } from '../user/async_actions'
+import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { exceptionMessage } from '../util/exception'
 

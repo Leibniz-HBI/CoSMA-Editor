@@ -1,6 +1,5 @@
 import { useReducer, useCallback, Dispatch, Reducer } from 'react'
 import { LogoutAction } from '../user/actions'
-import { useLogoutCallback } from '../user/hooks'
 import { AsyncAction } from './async_action'
 
 type ThunkMiddlewareDispatch<U> = <V>(
@@ -36,12 +35,11 @@ export function useThunkReducer<T, U>(
     reducer: Reducer<T, U>,
     initialState: T
 ): [T, ThunkMiddlewareDispatch<U>] {
-    const logoutDispatch = useLogoutCallback()
     const [state, dispatch] = useReducer(reducer, initialState)
     return [
         state,
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        useCallback(thunker<U>(dispatch as Dispatch<U>, logoutDispatch), [initialState])
+        useCallback(thunker<U>(dispatch as Dispatch<U>), [initialState])
     ]
 }
 

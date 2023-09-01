@@ -1,4 +1,5 @@
 import { ChangeEvent } from 'react'
+import { AppDispatch, RootState } from '../store'
 
 export type JsonValue =
     | string
@@ -18,3 +19,14 @@ export type HandleChange = {
 }
 
 export type StringFunction = (str: string) => void
+
+type Fetch = (
+    input: RequestInfo | URL,
+    init?: RequestInit | undefined
+) => Promise<Response>
+
+export type ThunkWithFetch<T> = (
+    dispatch: AppDispatch,
+    getState: () => RootState,
+    fetch: Fetch
+) => Promise<T>

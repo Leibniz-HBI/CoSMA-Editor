@@ -6,7 +6,12 @@ import { describe } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ColumnMenu } from '../menu'
-import { ColumnDefinition, ColumnSelectionEntry, ColumnType } from '../../state'
+import {
+    ColumnDefinition,
+    ColumnSelectionEntry,
+    ColumnType,
+    newColumnDefinition
+} from '../../state'
 import { useRemoteColumnMenuData } from '../../hooks'
 import { useState } from 'react'
 jest.mock('../../hooks', () => {
@@ -27,11 +32,12 @@ describe('ColumnAddMenu', () => {
     const idTest1 = 'id_column_test_1'
     const nameTest = 'Name Test'
 
-    const columnDefinitionTest = new ColumnDefinition({
+    const columnDefinitionTest = newColumnDefinition({
         namePath: [nameTest],
         idPersistent: idTest,
         idParentPersistent: undefined,
         columnType: ColumnType.String,
+        curated: false,
         version: 0
     })
 
@@ -40,7 +46,7 @@ describe('ColumnAddMenu', () => {
     })
 
     const nestedColumnSelectionEntryTest = new ColumnSelectionEntry({
-        columnDefinition: new ColumnDefinition({
+        columnDefinition: newColumnDefinition({
             ...columnDefinitionTest,
             idPersistent: idTest1,
             columnType: ColumnType.Inner

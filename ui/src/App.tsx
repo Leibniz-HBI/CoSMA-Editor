@@ -4,7 +4,6 @@ import './App.scss'
 import { LoginProvider } from './user/components/provider'
 import { Col, Container, Nav, Navbar, Row } from 'react-bootstrap'
 import { RemoteDataTable } from './table/components'
-import { UserContext } from './user/hooks'
 import {
     NavLink,
     Outlet,
@@ -26,61 +25,56 @@ import { MergeRequestConflictResolutionView } from './merge_request/conflicts/co
 import { UserPermissionGroup } from './user/state'
 import { UserPermissionGroupComponent } from './user/permission_groups/components'
 import { ErrorToasts } from './util/error/components'
-import { Provider } from 'react-redux'
+import { Provider, useDispatch, useSelector } from 'react-redux'
 import store from './store'
+import { selectUserInfo } from './user/selectors'
+import { logout } from './user/slice'
+import {
+    refresh,
+    remoteUserProfileChangeColumIndex,
+    remoteUserProfileColumnAppend,
+    remoteUserProfileColumnDelete
+} from './user/thunks'
 
 export function CosmaeRoot() {
+    const userInfo = useSelector(selectUserInfo)
+    const dispatch = useDispatch()
     return (
         <Row className="flex-grow-1 m-0 h-100">
             <Col className="ps-0 pe-0 h-100">
                 <div className="cosmae-page-container">
-                    <UserContext.Consumer>
-                        {(userInfoWithCallbacks) => (
-                            <Navbar
-                                expand="lg"
-                                className="bg-primary flex-shrink-0 mb-3"
-                            >
-                                <Container className="text-secondary">
-                                    <Navbar.Brand href="/">CoSMA-E</Navbar.Brand>
-                                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                                    <Navbar.Collapse id="basic-navbar-nav">
-                                        <Nav className="me-auto">
-                                            <Nav.Link as={NavLink} to="/">
-                                                View
-                                            </Nav.Link>
-                                            <Nav.Link as={NavLink} to="/contribute">
-                                                Contribute
-                                            </Nav.Link>
-                                            <Nav.Link as={NavLink} to="/review">
-                                                Review
-                                            </Nav.Link>
-                                        </Nav>
-                                        <Nav>
-                                            {userInfoWithCallbacks?.userInfo
-                                                .permissionGroup ==
-                                                UserPermissionGroup.COMMISSIONER && (
-                                                <Nav.Link
-                                                    as={NavLink}
-                                                    to="/user-management"
-                                                >
-                                                    Users
-                                                </Nav.Link>
-                                            )}
-                                        </Nav>
-                                        <Nav>
-                                            <Nav.Link
-                                                onClick={
-                                                    userInfoWithCallbacks?.logoutCallback
-                                                }
-                                            >
-                                                Logout
-                                            </Nav.Link>
-                                        </Nav>
-                                    </Navbar.Collapse>
-                                </Container>
-                            </Navbar>
-                        )}
-                    </UserContext.Consumer>
+                    <Navbar expand="lg" className="bg-primary flex-shrink-0 mb-3">
+                        <Container className="text-secondary">
+                            <Navbar.Brand href="/">CoSMA-E</Navbar.Brand>
+                            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                            <Navbar.Collapse id="basic-navbar-nav">
+                                <Nav className="me-auto">
+                                    <Nav.Link as={NavLink} to="/">
+                                        View
+                                    </Nav.Link>
+                                    <Nav.Link as={NavLink} to="/contribute">
+                                        Contribute
+                                    </Nav.Link>
+                                    <Nav.Link as={NavLink} to="/review">
+                                        Review
+                                    </Nav.Link>
+                                </Nav>
+                                <Nav>
+                                    {userInfo?.permissionGroup ==
+                                        UserPermissionGroup.COMMISSIONER && (
+                                        <Nav.Link as={NavLink} to="/user-management">
+                                            Users
+                                        </Nav.Link>
+                                    )}
+                                </Nav>
+                                <Nav>
+                                    <Nav.Link onClick={() => dispatch(logout())}>
+                                        Logout
+                                    </Nav.Link>
+                                </Nav>
+                            </Navbar.Collapse>
+                        </Container>
+                    </Navbar>
                     <div className="cosmae-page-body flex-grow-1 flex-basis-0 flex-fill">
                         <Outlet />
                     </div>
@@ -180,18 +174,18 @@ function App() {
 }
 export default App
 function TableConnector() {
+    const dispatch = useDispatch()
     return (
-        <UserContext.Consumer>
-            {(userInfoWithCallbacks) =>
-                userInfoWithCallbacks && (
-                    <RemoteDataTable
-                        userInfoPromise={userInfoWithCallbacks.userInfoPromise}
-                        defaultColumnCallbacks={
-                            userInfoWithCallbacks.defaultTagDefinitionsCallbacks
-                        }
-                    />
-                )
+        <RemoteDataTable
+            userInfoPromise={() =>
+                refresh({ withDispatch: false })(dispatch, store.getState, fetch)
             }
-        </UserContext.Consumer>
+            defaultColumnCallbacks={{
+                appendToDefaultTagDefinitionsCallback: remoteUserProfileColumnAppend,
+                removeFromDefaultTagDefinitionListCallback:
+                    remoteUserProfileColumnDelete,
+                changeDefaultTagDefinitionsCallback: remoteUserProfileChangeColumIndex
+            }}
+        />
     )
 }
