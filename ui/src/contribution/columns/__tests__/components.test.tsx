@@ -108,7 +108,7 @@ describe('column definition list item', () => {
         ...columnDefinitionActiveTest,
         discard: true
     })
-    test('not selected active render', async () => {
+    test('not selected render', async () => {
         render(
             <ColumnDefinitionStepListItem
                 columnDefinition={columnDefinitionActiveTest}
@@ -124,10 +124,9 @@ describe('column definition list item', () => {
         expect(columnIdxElement?.textContent).toEqual('Column 0')
         const listGroupItem = nameColumn?.parentElement?.parentElement
         expect(listGroupItem?.className).toEqual('list-group-item')
-        const button = screen.getByRole('button')
-        expect(button.className).toEqual('btn btn-outline-primary')
+        screen.getByRole('checkbox')
     })
-    test('selected inactive render', async () => {
+    test('selected render', async () => {
         render(
             <ColumnDefinitionStepListItem
                 columnDefinition={columnDefinitionActiveTest}
@@ -142,47 +141,10 @@ describe('column definition list item', () => {
         const columnIdxElement = nameColumn?.children[0]
         expect(columnIdxElement?.textContent).toEqual('Column 0')
         const listGroupItem = nameColumn?.parentElement?.parentElement
-        expect(listGroupItem?.className).toEqual('list-group-item active')
-        const button = screen.getByRole('button')
-        expect(button.className).toEqual('text-primary btn btn-secondary')
-    })
-    test('not selected active render', async () => {
-        render(
-            <ColumnDefinitionStepListItem
-                columnDefinition={columnDefinitionInactiveTest}
-                selected={false}
-                onClick={jest.fn()}
-                discardCallback={jest.fn()}
-            />
+        expect(listGroupItem?.className).toEqual(
+            'bg-primary-subtle text-black list-group-item active'
         )
-        const nameElement = screen.getByText('column definition test')
-        expect(nameElement.className).toEqual('d-inline-block text-truncate')
-        const nameColumn = nameElement.parentElement?.parentElement
-        const columnIdxElement = nameColumn?.children[0]
-        expect(columnIdxElement?.textContent).toEqual('Column 0')
-        const listGroupItem = nameColumn?.parentElement?.parentElement
-        expect(listGroupItem?.className).toEqual('list-group-item')
-        const button = screen.getByRole('button')
-        expect(button.className).toEqual('text-secondary btn btn-primary')
-    })
-    test('selected inactive render', async () => {
-        render(
-            <ColumnDefinitionStepListItem
-                columnDefinition={columnDefinitionInactiveTest}
-                selected={true}
-                onClick={jest.fn()}
-                discardCallback={jest.fn()}
-            />
-        )
-        const nameElement = screen.getByText('column definition test')
-        expect(nameElement.className).toEqual('d-inline-block text-truncate')
-        const nameColumn = nameElement.parentElement?.parentElement
-        const columnIdxElement = nameColumn?.children[0]
-        expect(columnIdxElement?.textContent).toEqual('Column 0')
-        const listGroupItem = nameColumn?.parentElement?.parentElement
-        expect(listGroupItem?.className).toEqual('list-group-item active')
-        const button = screen.getByRole('button')
-        expect(button.className).toEqual('btn btn-outline-secondary')
+        screen.getByRole('checkbox')
     })
     test('handle click', async () => {
         const onClickMock = jest.fn()
@@ -211,8 +173,8 @@ describe('column definition list item', () => {
             />
         )
         const user = userEvent.setup()
-        const discardButton = screen.getByRole('button')
-        await user.click(discardButton)
+        const discardToggle = screen.getByRole('checkbox')
+        await user.click(discardToggle)
         expect(onDiscardMock.mock.calls.length).toEqual(1)
     })
 })

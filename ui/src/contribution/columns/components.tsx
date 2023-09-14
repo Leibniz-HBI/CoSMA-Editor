@@ -6,6 +6,7 @@ import {
     CloseButton,
     Col,
     Form,
+    FormCheck,
     ListGroup,
     Modal,
     Overlay,
@@ -13,7 +14,6 @@ import {
     Row
 } from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
-import { Trash } from 'react-bootstrap-icons'
 import { ChangeEvent, useLayoutEffect, useRef } from 'react'
 import { ColumnSelector, mkListItems } from '../../column_menu/components/selection'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
@@ -59,7 +59,7 @@ export function ColumnDefinitionStep() {
             <ColumnMenuProvider>
                 <Row className="overflow-hidden h-100">
                     <Col
-                        sm={2}
+                        xs={3}
                         className="h-100 overflow-y-scroll"
                         key="column-definition-selection"
                         ref={listViewContainerRef}
@@ -175,27 +175,13 @@ export function ColumnDefinitionStepListItem({
     onClick: VoidFunction
     discardCallback: (idPersistent: string, discard: boolean) => void
 }) {
-    let buttonText = ''
-    let buttonVariant = 'primary'
+    let itemClassName = ''
 
     if (selected) {
-        if (columnDefinition.discard) {
-            buttonVariant = 'outline-secondary'
-        } else {
-            buttonVariant = 'secondary'
-            buttonText = 'text-primary'
-        }
-    } else {
-        if (columnDefinition.discard) {
-            buttonVariant = 'primary'
-            buttonText = 'text-secondary'
-        } else {
-            buttonVariant = 'outline-primary'
-        }
+        itemClassName = 'bg-primary-subtle text-black'
     }
-    const buttonClass = buttonText
     return (
-        <ListGroup.Item active={selected} onClick={onClick}>
+        <ListGroup.Item active={selected} onClick={onClick} className={itemClassName}>
             <Row>
                 <Col sm={9} key="column-heading">
                     <Row key="index-in-file">Column {columnDefinition.indexInFile}</Row>
@@ -205,21 +191,21 @@ export function ColumnDefinitionStepListItem({
                         </span>
                     </Row>
                 </Col>
-                <Col sm="auto">
-                    <Button
-                        variant={buttonVariant}
-                        key="discard-button"
-                        className={buttonClass}
-                        onClick={(evt) => {
+                <Col xs={2} className="align-self-center">
+                    <span>Import</span>
+                    <FormCheck
+                        className="ms-2"
+                        type="switch"
+                        // value={columnDefinition.idPersistent}
+                        checked={!columnDefinition.discard}
+                        onChange={(evt) => {
                             evt.stopPropagation()
                             discardCallback(
                                 columnDefinition.idPersistent,
                                 !columnDefinition.discard
                             )
                         }}
-                    >
-                        <Trash />
-                    </Button>
+                    />
                 </Col>
             </Row>
         </ListGroup.Item>
