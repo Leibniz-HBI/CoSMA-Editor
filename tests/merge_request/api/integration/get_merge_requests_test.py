@@ -55,6 +55,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
             "name_path": [c.name_tag_def_destination1],
             "type": "STRING",
             "owner": "test-user1",
+            "curated": False,
         },
     )
     assert_versioned(
@@ -66,6 +67,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
             "id_persistent": c.id_persistent_tag_def_origin1,
             "type": "STRING",
             "owner": "test-user",
+            "curated": False,
         },
     )
     assigned_list = json["assigned"]
@@ -94,6 +96,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
             "name_path": [c.name_tag_def_destination],
             "type": "STRING",
             "owner": "test-user",
+            "curated": False,
         },
     )
     assert_versioned(
@@ -105,5 +108,6 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
             "id_parent_persistent": None,
             "type": "STRING",
             "owner": "test-user1",
+            "curated": False,
         },
     )

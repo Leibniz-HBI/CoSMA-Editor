@@ -16,9 +16,13 @@ from cosmae.exception import (
     TagDefinitionExistsException,
     ValidationException,
 )
+from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
-from cosmae.tag.queue import get_tag_definition_name_path
-from cosmae.util import CosmaeUser
+from cosmae.tag.queue import (
+    get_tag_definition_name_path,
+    get_tag_definition_name_path_from_parts,
+)
+from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
 router = Router()
@@ -54,18 +58,6 @@ class TagDefinitionRequestList(Schema):
     tag_definitions: List[TagDefinitionRequest]
 
 
-class TagDefinitionResponse(Schema):
-    "API model for a tag definition as a response object."
-    # pylint: disable=too-few-public-methods
-    id_persistent: Optional[str]
-    id_parent_persistent: Optional[str]
-    name: str
-    name_path: List[str]
-    version: int
-    type: str
-    owner: Optional[str]
-
-
 class TagDefinitionResponseList(Schema):
     "API model for a list of response tag definition objects."
     # pylint: disable=too-few-public-methods
@@ -78,6 +70,13 @@ class PostGetChildrenRequest(Schema):
     id_parent_persistent: Optional[str]
 
 
+class CurationPostRequest(Schema):
+    "Request for changing the curation state of a tag definition"
+    # pylint: disable=too-few-public-methods
+    id_persistent: bool
+    is_curated: bool
+
+
 @router.post(
     "", response={200: TagDefinitionResponseList, 400: ApiError, 500: ApiError}
 )
@@ -86,7 +85,7 @@ def post_tag_definitions(
 ):
     "Add tag definitions."
     # pylint: disable=too-many-return-statements
-    now = datetime.utcnow()
+    now = timestamp()
     tag_def_apis = tag_definition_list.tag_definitions
     try:
         user = check_user(request)
@@ -196,4 +195,24 @@ def tag_definition_db_to_api(tag_definition: TagDefinitionDb) -> TagDefinitionRe
         version=tag_definition.id,
         type=_tag_type_mapping_db_to_api[tag_definition.type],
         owner=username,
+        curated=tag_definition.curated,
+    )
+
+
+def tag_definition_db_dict_to_api(
+    tag_definition: TagDefinitionDb,
+) -> TagDefinitionResponse:
+    "Convert a tag definition from database to API model."
+    id_persistent = tag_definition["id_persistent"]
+    name = tag_definition["name"]
+    owner = tag_definition["owner"]["username"]
+    return TagDefinitionResponse(
+        id_persistent=id_persistent,
+        id_parent_persistent=tag_definition["id_parent_persistent"],
+        name=name,
+        name_path=get_tag_definition_name_path_from_parts(id_persistent, name),
+        version=tag_definition["id"],
+        type=_tag_type_mapping_db_to_api[tag_definition["type"]],
+        owner=owner,
+        curated=tag_definition["curated"],
     )

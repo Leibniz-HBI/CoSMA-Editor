@@ -9,7 +9,7 @@ from ninja.constants import NOT_SET
 from cosmae.contribution.api import router as contribution_router
 from cosmae.merge_request.api import router as merge_request_router
 from cosmae.person.api import router as person_router
-from cosmae.tag.api import router as tag_router
+from cosmae.tag.api.router import router as tag_router
 from cosmae.user.api import router as user_router
 from cosmae.util.auth import cosmae_auth
 

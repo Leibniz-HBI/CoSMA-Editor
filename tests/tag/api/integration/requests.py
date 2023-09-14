@@ -104,3 +104,47 @@ def post_tag_instances_for_entities(
         cookies=cookies,
         timeout=900,
     )
+
+
+def post_curation(url, id_tag_definition_persistent, cookies=None):
+    return requests.post(
+        url
+        + f"/cosmae/api/tags/definitions/permissions/{id_tag_definition_persistent}/curate",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def post_owner(url, id_tag_definition_persistent, id_user_persistent, cookies=None):
+    return requests.post(
+        url + "/cosmae/api/tags/definitions/permissions/"
+        f"{id_tag_definition_persistent}/owner/{id_user_persistent}",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def post_accept(url, id_request_persistent, cookies=None):
+    return requests.post(
+        url + "/cosmae/api/tags/definitions/permissions/owner/"
+        f"{id_request_persistent}/accept",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def get_ownership_requests(url, cookies=None):
+    return requests.get(
+        url + "/cosmae/api/tags/definitions/permissions/ownership_requests",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def delete_ownership(url, id_request_persistent, cookies=None):
+    return requests.delete(
+        url + "/cosmae/api/tags/definitions/permissions/owner/"
+        f"{id_request_persistent}",
+        cookies=cookies,
+        timeout=900,
+    )

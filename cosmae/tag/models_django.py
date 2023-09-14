@@ -40,6 +40,30 @@ class TagDefinition(models.Model):
     )
     curated = models.BooleanField(default=False)
 
+    def set_curated(self, time_edit):
+        "Set curated state for a tag definition."
+        return self.change_or_create(
+            self.id_persistent,
+            time_edit,
+            name=self.name,
+            id_parent_persistent=self.id_parent_persistent,
+            version=self.id,  # pylint: disable=no-member
+            owner_id=None,
+            curated=True,
+        )
+
+    def set_owner(self, user: CosmaeUser, time_edit):
+        "Set curated state for a tag definition."
+        return self.change_or_create(
+            self.id_persistent,
+            time_edit,
+            name=self.name,
+            id_parent_persistent=self.id_parent_persistent,
+            version=self.id,  # pylint: disable=no-member
+            owner_id=user.id,
+            curated=False,
+        )
+
     @classmethod
     def most_recent_by_id(cls, id_persistent):
         """Return the most recent version of a tag definition."""
@@ -130,6 +154,10 @@ class TagDefinition(models.Model):
             return True
         if other.type != self.type:
             return True
+        if other.owner != self.owner:
+            return True
+        if other.curated != self.curated:
+            return True
         return False
 
     def check_value(self, val: str):
@@ -164,7 +192,14 @@ class TagDefinition(models.Model):
 
     def has_write_access(self, user: CosmaeUser):
         "Check wether a user can write to the tag definition."
-        return self.owner == user
+        return self.is_owner(user)
+
+    def is_owner(self, user: CosmaeUser):
+        "Check wether a user owns the tag definition."
+        return self.owner == user or (
+            self.owner is None
+            and user.permission_group in {CosmaeUser.COMMISSIONER, CosmaeUser.EDITOR}
+        )
 
 
 class TagInstance(models.Model):
@@ -335,3 +370,89 @@ class TagInstance(models.Model):
         if other.value != self.value:
             return True
         return False
+
+
+class OwnershipRequest(models.Model):
+    "Django ORM Model for ownership change requests."
+    id_persistent = models.UUIDField(unique=True)
+    id_tag_definition_persistent = models.TextField()
+    receiver = models.ForeignKey(
+        "CosmaeUser", blank=True, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    petitioner = models.ForeignKey(
+        "CosmaeUser", blank=True, null=True, on_delete=models.CASCADE, related_name="+"
+    )
+
+    @classmethod
+    def by_id_tag_definition_persistent(cls, id_tag_definition_persistent: str):
+        "Get an ownership request by tag definition"
+        cls.by_id_tag_definition_persistent_query_set(
+            id_tag_definition_persistent
+        ).get()
+
+    @classmethod
+    def by_id_tag_definition_persistent_query_set(cls, id_tag_definition_persistent):
+        "Get an ownership request by tag definition as a query set."
+        return cls.objects.filter(  # pylint: disable = no-member
+            id_tag_definition_persistent=id_tag_definition_persistent
+        )
+
+    @classmethod
+    def by_id_persistent(cls, id_ownership_request_persistent):
+        "Get an Ownership request by its persistent id."
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_ownership_request_persistent
+        ).get()
+
+    @classmethod
+    def _annotate_tag_definitions(cls, manager):
+        tag_definition_sub_query = (
+            TagDefinition.objects.filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("id_tag_definition_persistent")
+            )
+            .order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+            .values(
+                tag_definition=models.functions.JSONObject(
+                    id="id",
+                    name="name",
+                    id_persistent="id_persistent",
+                    id_parent_persistent="id_parent_persistent",
+                    time_edit="time_edit",
+                    type="type",
+                    previous_version="previous_version",
+                    owner=models.functions.JSONObject(
+                        username="owner__username",
+                        id_persistent="owner__id_persistent",
+                        permission_group="owner__permission_group",
+                    ),
+                    curated="curated",
+                )
+            )
+        )
+        return manager.annotate(tag_definition=tag_definition_sub_query)
+
+    @classmethod
+    def received_by_user_query_set(cls, user: CosmaeUser):
+        "Get the ownership requests received by a user."
+        return cls._annotate_tag_definitions(
+            cls.objects.filter(receiver=user)  # pylint: disable=no-member
+        )
+
+    @classmethod
+    def petitioned_by_user_query_set(cls, user: CosmaeUser):
+        """Get the ownership requests petitioned by a user.
+        If the user is a commissioner or an editor,
+        curated tags will also be included."""
+        petitioned_self = cls._annotate_tag_definitions(
+            cls.objects.filter(petitioner=user)  # pylint: disable=no-member
+        )
+        if user.permission_group in {CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER}:
+            petitioned_curated = cls._annotate_tag_definitions(
+                cls.objects.all()  # pylint: disable=no-member
+            ).filter(
+                tag_definition__isnull=False,
+                # JSONObject will make this an int.
+                tag_definition__curated=1,
+            )
+            return petitioned_self.union(petitioned_curated)
+        return petitioned_self

@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db import models
 from ninja import Schema
 
@@ -32,6 +33,17 @@ class CosmaeUser(AbstractUser):
     permission_group = models.TextField(
         choices=PERMISSION_GROUP_CHOICES, default=APPLICANT, max_length=4
     )
+
+    @classmethod
+    def search_username(cls, search_term: str):
+        "Search for users by username"
+        vector = SearchVector("username")
+        query = SearchQuery(search_term)
+        return (
+            cls.objects.filter(is_superuser=False)
+            .annotate(rank=SearchRank(vector, query))  # pylint: disable=no-member
+            .order_by("-rank")[:10]
+        )
 
     @classmethod
     def chunk_query_set(cls, offset, count, include_superuser=False):
@@ -67,6 +79,10 @@ class CosmaeUser(AbstractUser):
         at_start = tag_definitions[start_idx]
         tag_definitions[start_idx] = tag_definitions[end_idx]
         tag_definitions[end_idx] = at_start
+
+    def has_elevated_rights(self):
+        "Method for checking if a user has elevated rights."
+        return self.permission_group in {CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER}
 
 
 def timestamp():

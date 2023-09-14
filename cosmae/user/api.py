@@ -1,6 +1,6 @@
 "API endpoints for handling user management."
-
-from typing import List, Union
+from typing import Union
+from urllib.parse import unquote
 from uuid import uuid4
 
 from django.contrib.auth import authenticate, login, logout
@@ -9,65 +9,20 @@ from django.db import DatabaseError, IntegrityError
 from django.http import HttpRequest
 from ninja import Router, Schema
 from ninja.constants import NOT_SET
-from pydantic import Field
 
 from cosmae.exception import ApiError, NotAuthenticatedException
-from cosmae.tag.api.definitions import TagDefinitionResponse, tag_definition_db_to_api
+from cosmae.tag.api.definitions import tag_definition_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
+from cosmae.user.models_api import (
+    LoginRequest,
+    LoginResponse,
+    LoginResponseList,
+    PublicUserInfo,
+    RegisterRequest,
+    SearchResponse,
+)
 from cosmae.util import EmptyResponse, CosmaeUser
 from cosmae.util.auth import CosmaeGroup, check_user, cosmae_auth
-
-
-class LoginRequest(Schema):
-    # pylint: disable=too-few-public-methods
-    "API model for login requests"
-    name: str
-    password: str
-
-    def __str__(self):
-        return f"LoginRequest: {{'name': {self.name}}}"
-
-
-class LoginResponse(Schema):
-    # pylint: disable=too-few-public-methods
-    "API model for response to login requests"
-    user_name: str
-    id_persistent: str
-    names_personal: str
-    names_family: str
-    email: str
-    tag_definition_list: List[TagDefinitionResponse]
-    permission_group: str
-
-
-class LoginResponseList(Schema):
-    # pylint: disable=too-few-public-methods
-    "API model for multiple complete user infos."
-    user_list: List[LoginResponse]
-    next_offset: int
-
-
-class PublicUserInfo(Schema):
-    # pylint: disable=too-few-public-methods
-    "API model for public user information."
-    user_name: str
-    id_persistent: str
-    permission_group: str
-
-
-class RegisterRequest(Schema):
-    "API model for register requests."
-
-    user_name: str = Field(None, min_length=2, max_length=150)
-    names_personal: str = Field(None, min_length=2, max_length=150)
-    names_family: str = Field(None, min_length=2, max_length=150)
-    email: str = Field(None, min_length=2, max_length=150)
-    password: str = Field(None, min_length=8, max_length=50)
-
-    def __str__(self) -> str:
-        as_dict = super().dict()
-        as_dict.pop("password")
-        return str(as_dict)
 
 
 class PutGroupRequest(Schema):
@@ -297,6 +252,30 @@ def get_user_chunk(request: HttpRequest, offset: int, count: int):
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
+
+
+@router.get(
+    "search/{username}",
+    response={200: SearchResponse, 400: ApiError, 401: ApiError, 500: ApiError},
+)
+def get_search(request: HttpRequest, username: str):
+    "API method for searching user by username"
+    try:
+        user = check_user(request)
+        unquoted_username = unquote(username)
+        results_db = CosmaeUser.search_username(unquoted_username)
+        has_elevated_rights = user.has_elevated_rights()
+        if has_elevated_rights:
+            results_api = [user_db_to_login_response(user) for user in results_db]
+        else:
+            results_api = [user_db_to_public_user_info(user) for user in results_db]
+        return 200, SearchResponse(
+            results=results_api, contains_complete_info=has_elevated_rights
+        )
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="not authenticated")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not search users.")
 
 
 permission_group_api_to_db = {

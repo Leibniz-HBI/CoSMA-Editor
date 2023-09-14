@@ -133,7 +133,7 @@ def merge_request(user, user1):
     return mr
 
 
-@pytest.mark.db
+@pytest.mark.django_db
 def test_related_by_merge_request(
     auth_server,
     tag_def_user,
@@ -209,7 +209,7 @@ def test_related_by_merge_request(
     assert "version" in value_responses[3]
 
 
-@pytest.mark.db
+@pytest.mark.django_db
 def test_related_by_contribution(
     auth_server,
     tag_def_user,

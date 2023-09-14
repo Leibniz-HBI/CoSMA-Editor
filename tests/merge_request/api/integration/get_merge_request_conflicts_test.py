@@ -77,6 +77,7 @@ def test_conflicts_no_resolution(
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
                 "owner": "test-user1",
+                "curated": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -85,6 +86,7 @@ def test_conflicts_no_resolution(
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
                 "owner": "test-user",
+                "curated": False,
             },
         },
     )
@@ -175,6 +177,7 @@ def test_conflicts_same_value(
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
                 "owner": "test-user1",
+                "curated": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -183,6 +186,7 @@ def test_conflicts_same_value(
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
                 "owner": "test-user",
+                "curated": False,
             },
         },
     )
@@ -226,6 +230,7 @@ def test_conflict_resolved(
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
                 "owner": "test-user1",
+                "curated": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -234,6 +239,7 @@ def test_conflict_resolved(
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
                 "owner": "test-user",
+                "curated": False,
             },
         },
     )
@@ -316,6 +322,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "name_path": ["changed tag definition test"],
                 "type": "STRING",
                 "owner": "test-user1",
+                "curated": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -324,6 +331,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
                 "owner": "test-user",
+                "curated": False,
             },
         },
     )
@@ -441,6 +449,7 @@ def test_tag_instance_destination_value_added(
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
                 "owner": "test-user1",
+                "curated": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -449,6 +458,7 @@ def test_tag_instance_destination_value_added(
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
                 "owner": "test-user",
+                "curated": False,
             },
         },
     )

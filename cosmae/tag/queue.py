@@ -15,10 +15,19 @@ def get_tag_definition_name_path(tag_definition: TagDefinition):
     """Get the name path of a tag definition.
     This will retrieve the name path from the cache if present.
     Otherwise only the name is returned and an update to the cache is triggered."""
-    name_path = tag_definition_name_path_cache.get(tag_definition.id_persistent)
+    return get_tag_definition_name_path_from_parts(
+        tag_definition.id_persistent, tag_definition.name
+    )
+
+
+def get_tag_definition_name_path_from_parts(id_persistent: str, name: str):
+    """Get the name path of a tag definition using its id_persistent and name.
+    This will retrieve the name path from the cache if present.
+    Otherwise only the name is returned and an update to the cache is triggered."""
+    name_path = tag_definition_name_path_cache.get(id_persistent)
     if name_path is None:
-        name_path = [tag_definition.name]
-        enqueue(update_tag_definition_name_path, tag_definition.id_persistent)
+        name_path = [name]
+        enqueue(update_tag_definition_name_path, id_persistent)
     return name_path
 
 
