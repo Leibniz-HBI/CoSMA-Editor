@@ -4,7 +4,7 @@
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { LoginForm } from '../login_form'
-import { ErrorState } from '../../../util/error/slice'
+import { newErrorState } from '../../../util/error/slice'
 
 test('renders without error set', () => {
     const loginCallback = jest.fn()
@@ -38,7 +38,7 @@ test('renders with error set', () => {
             loginCallback={loginCallback}
             clearLoginErrorCallback={clearLoginErrorCallback}
             openRegistrationCallback={toggleRegistrationCallback}
-            loginError={new ErrorState('error')}
+            loginError={newErrorState('error')}
         />
     )
     const textInputs = screen.getAllByRole('textbox')
@@ -109,7 +109,7 @@ test('Can close error', async () => {
             loginCallback={loginCallback}
             clearLoginErrorCallback={clearLoginErrorCallback}
             openRegistrationCallback={toggleRegistrationCallback}
-            loginError={new ErrorState('error')}
+            loginError={newErrorState('error')}
         />
     )
     const user = userEvent.setup()

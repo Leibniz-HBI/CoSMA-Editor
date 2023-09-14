@@ -375,7 +375,6 @@ describe('SubmitColumnDefinition', () => {
         const mockCallArg = mockCalls[1][0]
         expect(mockCallArg).toBeInstanceOf(SubmitColumnDefinitionErrorAction)
         expect(mockCallArg.error.msg).toEqual('Error from server')
-        expect(mockCallArg.error.retryCallback).toBeDefined()
     })
     test('error without retry for bad request', async () => {
         responseSequence([
@@ -399,6 +398,5 @@ describe('SubmitColumnDefinition', () => {
         const mockCallArg = mockCalls[1][0]
         expect(mockCallArg).toBeInstanceOf(SubmitColumnDefinitionErrorAction)
         expect(mockCallArg.error.msg).toEqual('Error from server')
-        expect(mockCallArg.error.retryCallback).toBeUndefined()
     })
 })

@@ -4,7 +4,7 @@
 
 import { render, screen, waitFor } from '@testing-library/react'
 import { RegistrationForm } from '../registration_form'
-import { ErrorState } from '../../../util/error/slice'
+import { newErrorState } from '../../../util/error/slice'
 
 import userEvent from '@testing-library/user-event'
 test('renders without error set', async () => {
@@ -39,7 +39,7 @@ test('renders with error set', async () => {
             registrationCallback={registrationCallback}
             closeRegistrationCallback={closeRegistrationCallback}
             clearRegistrationErrorCallback={clearRegistrationErrorCallback}
-            registrationError={new ErrorState('error')}
+            registrationError={newErrorState('error')}
         />
     )
     const textInputs = screen.getAllByRole('textbox')
@@ -130,23 +130,13 @@ test('can close error', async () => {
             registrationCallback={registrationCallback}
             closeRegistrationCallback={closeRegistrationCallback}
             clearRegistrationErrorCallback={clearRegistrationErrorCallback}
-            registrationError={new ErrorState('error')}
+            registrationError={newErrorState('error')}
         />
     )
-    const user = userEvent.setup()
-    const textInputs = screen.getAllByRole('textbox')
-    expect(textInputs.length).toEqual(4)
-    await user.type(textInputs[0], 'username')
-    await user.type(textInputs[1], 'mail@test.url')
-    await user.type(textInputs[2], 'names personal')
-    const passwordInput = screen.getByLabelText('Password')
-    await user.type(passwordInput, 'password')
-    const repeatPasswordInput = screen.getByLabelText('Repeat password')
-    await user.type(repeatPasswordInput, 'password')
     const buttons = container.getElementsByClassName('btn-close')
     const closeButton = buttons[0]
     expect(closeButton.textContent).toEqual('')
-    await waitFor(async () => await user.click(closeButton))
+    ;(closeButton as HTMLElement).click()
     waitFor(() => {
         expect(registrationCallback.mock.calls).toEqual([])
         expect(closeRegistrationCallback.mock.calls.length).toEqual(0)

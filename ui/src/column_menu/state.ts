@@ -13,6 +13,7 @@ export interface ColumnDefinition {
     columnType: ColumnType
     curated: boolean
     version: number
+    owner?: string
 }
 
 export function newColumnDefinition({
@@ -21,6 +22,7 @@ export function newColumnDefinition({
     idParentPersistent,
     columnType,
     curated,
+    owner = 'Unknown User',
     version
 }: {
     namePath: string[]
@@ -28,15 +30,17 @@ export function newColumnDefinition({
     idParentPersistent?: string
     columnType: ColumnType
     curated: boolean
+    owner?: string
     version: number
 }) {
     return {
-        namePath: namePath,
-        idPersistent: idPersistent,
-        idParentPersistent: idParentPersistent,
-        columnType: columnType,
-        curated: curated,
-        version: version
+        namePath,
+        idPersistent,
+        idParentPersistent,
+        columnType,
+        curated,
+        owner,
+        version
     }
 }
 

@@ -1,5 +1,5 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
-import { ColumnType } from '../column_menu/state'
+import { ColumnDefinition } from '../column_menu/state'
 import { CellValue } from './state'
 import { ErrorState } from '../util/error/slice'
 
@@ -34,13 +34,9 @@ export class SetEntityLoadingAction {}
  * Indicates fetching of column data.
  */
 export class SetColumnLoadingAction {
-    idPersistent: string
-    name: string
-    columnType: ColumnType
-    constructor(name: string, idPersistent: string, columnType: ColumnType) {
-        this.name = name
-        this.idPersistent = idPersistent
-        this.columnType = columnType
+    tagDefinition: ColumnDefinition
+    constructor(tagDefinition: ColumnDefinition) {
+        this.tagDefinition = tagDefinition
     }
 }
 /**
@@ -134,8 +130,59 @@ export class SubmitValuesEndAction {
     }
 }
 
-/**Indicates that the SubmitValuesErrorState should be cleared */
+/**
+ * Indicates that the SubmitValuesErrorState should be cleared
+ */
 export class SubmitValuesClearErrorAction {}
+
+/**
+ * Indicate that a tag definition has changed
+ */
+export class TagDefinitionChangeAction {
+    tagDefinition: ColumnDefinition
+
+    constructor(tagDefinition: ColumnDefinition) {
+        this.tagDefinition = tagDefinition
+    }
+}
+
+/**Indicate start of submitting a curation request */
+export class CurateTagDefinitionStartAction {}
+
+/**
+ * Indicate a successful curation request
+ */
+export class CurateTagDefinitionSuccessAction extends TagDefinitionChangeAction {
+    constructor(tagDefinition: ColumnDefinition) {
+        super(tagDefinition)
+    }
+}
+
+/**
+ * Indicate an error during a curation request
+ */
+export class CurateTagDefinitionErrorAction {
+    error: ErrorState
+
+    constructor(error: ErrorState) {
+        this.error = error
+    }
+}
+
+/**
+ * Indicate that a tag ownership change UI element should be shown
+ */
+export class TagChangeOwnershipShowAction {
+    columnDefinition: ColumnDefinition
+    constructor(columnDefinition: ColumnDefinition) {
+        this.columnDefinition = columnDefinition
+    }
+}
+
+/**
+ * Indicate that the tag ownership change UI element should be hidden.
+ */
+export class TagChangeOwnershipHideAction {}
 
 export type TableAction =
     | SetEntitiesAction
@@ -154,3 +201,9 @@ export type TableAction =
     | SubmitValuesErrorAction
     | SubmitValuesEndAction
     | SubmitValuesClearErrorAction
+    | CurateTagDefinitionStartAction
+    | CurateTagDefinitionSuccessAction
+    | CurateTagDefinitionErrorAction
+    | TagChangeOwnershipShowAction
+    | TagChangeOwnershipHideAction
+    | TagDefinitionChangeAction

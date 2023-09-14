@@ -9,7 +9,8 @@ import { UserPermissionGroup, UserState, mkUserState } from '../../state'
 import userReducer from '../../slice'
 import { LoginProvider } from '../provider'
 import userEvent from '@testing-library/user-event'
-import { ErrorState } from '../../../util/error/slice'
+import { newErrorState } from '../../../util/error/slice'
+import { newRemote } from '../../../util/state'
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: { user: UserState }
 }
@@ -43,8 +44,7 @@ export function renderWithProviders(
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(mock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
@@ -141,7 +141,7 @@ describe('login', () => {
         })
         expect(store.getState()).toEqual({
             user: mkUserState({
-                loginErrorState: new ErrorState(testError, undefined, idErrorTest)
+                loginErrorState: newErrorState(testError, idErrorTest)
             })
         })
     })
@@ -159,11 +159,7 @@ describe('login', () => {
         await waitFor(async () => {
             expect(store.getState()).toEqual({
                 user: mkUserState({
-                    loginErrorState: new ErrorState(
-                        'Unknown error',
-                        undefined,
-                        idErrorTest
-                    )
+                    loginErrorState: newErrorState('Unknown error', idErrorTest)
                 })
             })
         })
@@ -233,15 +229,12 @@ describe('registration', () => {
         expect(store.getState().user).toEqual({
             userInfo: undefined,
             showRegistration: true,
-            registrationErrorState: new ErrorState(
-                'registration error',
-                undefined,
-                idErrorTest
-            ),
+            registrationErrorState: newErrorState('registration error', idErrorTest),
             isLoggingIn: false,
             isRefreshing: false,
             isRegistering: false,
-            loginErrorState: undefined
+            loginErrorState: undefined,
+            userSearchResults: newRemote([])
         })
     })
     test('error without message', async () => {
@@ -262,15 +255,12 @@ describe('registration', () => {
         expect(store.getState().user).toEqual({
             userInfo: undefined,
             showRegistration: true,
-            registrationErrorState: new ErrorState(
-                'Unknown error',
-                undefined,
-                idErrorTest
-            ),
+            registrationErrorState: newErrorState('Unknown error', idErrorTest),
             isLoggingIn: false,
             isRefreshing: false,
             isRegistering: false,
-            loginErrorState: undefined
+            loginErrorState: undefined,
+            userSearchResults: newRemote([])
         })
     })
 })

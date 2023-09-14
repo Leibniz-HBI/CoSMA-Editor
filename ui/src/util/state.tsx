@@ -2,7 +2,7 @@ import { useReducer, useCallback, Dispatch, Reducer } from 'react'
 import { LogoutAction } from '../user/actions'
 import { AsyncAction } from './async_action'
 
-type ThunkMiddlewareDispatch<U> = <V>(
+export type ThunkMiddlewareDispatch<U> = <V>(
     action: AsyncAction<U, V> | U
 ) => Promise<V | undefined>
 
@@ -43,7 +43,21 @@ export function useThunkReducer<T, U>(
     ]
 }
 
-export class Remote<U> {
+export interface RemoteInterface<U> {
+    value: U
+    isLoading: boolean
+    errorMsg?: string
+}
+
+export function newRemote<U>(
+    value: U,
+    isLoading?: boolean,
+    errorMsg?: string
+): RemoteInterface<U> {
+    return { value, isLoading: isLoading ?? false, errorMsg }
+}
+
+export class Remote<U> implements RemoteInterface<U> {
     value: U
     isLoading: boolean
     errorMsg?: string

@@ -1,4 +1,5 @@
 import { ColumnType } from '../../column_menu/state'
+import { Remote } from '../../util/state'
 import { ColumnState, TableState } from '../state'
 
 describe('csv iterator', () => {
@@ -16,16 +17,21 @@ describe('csv iterator', () => {
     const nameEntity2 = 'name entity 2'
     const nameEntity3 = 'name entity 3'
     const entities = [idEntity, idEntity1, idEntity2, idEntity3]
+    const tagDefTest = {
+        namePath: ['Display Text'],
+        idPersistent: 'id-column-display-text-test',
+        columnType: ColumnType.String,
+        curated: false,
+        version: 3
+    }
     const displayTextCol = new ColumnState({
-        name: 'Display Text',
-        cellContents: [
+        tagDefinition: tagDefTest,
+        cellContents: new Remote([
             [{ value: nameEntity, idPersistent: 'id-value00', version: 0 }],
             [{ value: nameEntity1, idPersistent: 'id-value01', version: 1 }],
             [{ value: nameEntity2, idPersistent: 'id-value02', version: 11 }],
             [{ value: nameEntity3, idPersistent: 'id-value03', version: 111 }]
-        ],
-        idPersistent: 'id-column-display-text-test',
-        columnType: ColumnType.String
+        ])
     })
     test('entities only', () => {
         const state = new TableState({
@@ -49,15 +55,13 @@ describe('csv iterator', () => {
         const idCol = 'id-col-test'
         const nameCol = 'column test'
         const otherCol = new ColumnState({
-            name: nameCol,
-            idPersistent: idCol,
-            cellContents: [
+            tagDefinition: { ...tagDefTest, idPersistent: idCol, namePath: [nameCol] },
+            cellContents: new Remote([
                 [{ value: colValue, idPersistent: 'id-value10', version: 0 }],
                 [{ value: colValue1, idPersistent: 'id-value11', version: 2 }],
                 [{ value: colValue2, idPersistent: 'id-value12', version: 22 }],
                 [{ value: colValue3, idPersistent: 'id-value13', version: 222 }]
-            ],
-            columnType: ColumnType.String
+            ])
         })
         const state = new TableState({
             entities: entities,

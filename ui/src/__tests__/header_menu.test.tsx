@@ -9,26 +9,18 @@ import { HeaderMenu } from '../header_menu'
 describe('header menu', () => {
     test('close', async () => {
         let closed = false
-        let hidden = false
         function doClose() {
             closed = true
         }
-        function doHide() {
-            hidden = true
-        }
         const user = userEvent.setup()
         const { container } = render(
-            <HeaderMenu
-                closeHeaderMenuCallback={doClose}
-                removeColumnCallback={doHide}
-            />
+            <HeaderMenu closeHeaderMenuCallback={doClose} menuEntries={[]} />
         )
         const button = container.getElementsByClassName('btn-close')[0]
         await user.click(button)
         expect(closed).toBeTruthy()
-        expect(hidden).toBeFalsy()
     })
-    test('hide and close', async () => {
+    test('uses callback', async () => {
         let closed = false
         let hidden = false
         function doClose() {
@@ -41,7 +33,7 @@ describe('header menu', () => {
         const { container } = render(
             <HeaderMenu
                 closeHeaderMenuCallback={doClose}
-                removeColumnCallback={doHide}
+                menuEntries={[{ label: 'action', labelClassName: '', onClick: doHide }]}
             />
         )
         const button = container.getElementsByClassName('list-group-item')[0]

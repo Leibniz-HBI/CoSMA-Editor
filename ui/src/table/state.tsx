@@ -1,6 +1,7 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
-import { ColumnType } from '../column_menu/state'
+import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import { ErrorState } from '../util/error/slice'
+import { Remote } from '../util/state'
 
 export class TableState {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -10,12 +11,13 @@ export class TableState {
     entityIndices: Map<string, number>
     isLoading?: boolean
     showColumnAddMenu: boolean
-    selectedColumnHeaderByIdPersistent?: string
+    selectedTagDefinition?: ColumnDefinition
     selectedColumnHeaderBounds?: Rectangle
     frozenColumns: number
     loadDataErrorState?: ErrorState
     isSubmittingValues: boolean
     submitValuesErrorState?: ErrorState
+    ownershipChangeTagDefinition?: ColumnDefinition
 
     constructor({
         columnStates: columnStates = [],
@@ -24,12 +26,13 @@ export class TableState {
         entityIndices = new Map<string, number>(),
         isLoading = undefined,
         showColumnAddMenu = false,
-        selectedColumnHeaderByIdPersistent = undefined,
+        selectedTagDefinition = undefined,
         selectedColumnHeaderBounds = undefined,
         frozenColumns = 0,
         loadDataErrorState = undefined,
         isSubmittingValues = false,
-        submitValuesErrorState = undefined
+        submitValuesErrorState = undefined,
+        ownershipChangeTagDefinition = undefined
     }: {
         columnStates?: ColumnState[]
         columnIndices?: Map<string, number>
@@ -39,12 +42,13 @@ export class TableState {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         rowObjects?: { [key: string]: any }[]
         showColumnAddMenu?: boolean
-        selectedColumnHeaderByIdPersistent?: string
+        selectedTagDefinition?: ColumnDefinition
         selectedColumnHeaderBounds?: Rectangle
         frozenColumns?: number
         loadDataErrorState?: ErrorState
         isSubmittingValues?: boolean
         submitValuesErrorState?: ErrorState
+        ownershipChangeTagDefinition?: ColumnDefinition
     }) {
         this.columnIndices = columnIndices
         this.columnStates = columnStates
@@ -52,17 +56,18 @@ export class TableState {
         this.entityIndices = entityIndices
         this.isLoading = isLoading
         this.showColumnAddMenu = showColumnAddMenu
-        this.selectedColumnHeaderByIdPersistent = selectedColumnHeaderByIdPersistent
+        this.selectedTagDefinition = selectedTagDefinition
         this.selectedColumnHeaderBounds = selectedColumnHeaderBounds
         this.frozenColumns = frozenColumns
         this.loadDataErrorState = loadDataErrorState
         this.isSubmittingValues = isSubmittingValues
         this.submitValuesErrorState = submitValuesErrorState
+        this.ownershipChangeTagDefinition = ownershipChangeTagDefinition
     }
 
     isLoadingColumn(): boolean {
         for (const col of this.columnStates) {
-            if (col.isLoading) {
+            if (col.cellContents.isLoading) {
                 return true
             }
         }
@@ -79,7 +84,7 @@ export class TableState {
             '"id_entity_persistent","display_txt",' +
             this.columnStates
                 .slice(1)
-                .map((colState) => '"' + colState.name + '"')
+                .map((colState) => '"' + colState.name() + '"')
                 .join(',')
         if (header.endsWith(',')) {
             lines.push(header.slice(0, header.length - 1) + '\n')
@@ -96,8 +101,9 @@ export class TableState {
                     .map(
                         (colState) =>
                             '"' +
-                            (colState.cellContents[rowIdx][0]?.value?.toString() ??
-                                '') +
+                            (colState.cellContents.value[
+                                rowIdx
+                            ][0]?.value?.toString() ?? '') +
                             '"'
                     )
                     .join(',') +
@@ -117,34 +123,32 @@ export type CellValue = {
 }
 
 export class ColumnState {
-    isLoading: boolean
-    cellContents: CellValue[][]
-    name: string
-    idPersistent: string
+    tagDefinition: ColumnDefinition
+    cellContents: Remote<CellValue[][]>
     width: number
-    columnType: ColumnType
 
     constructor({
-        name,
-        isLoading = false,
-        cellContents = [],
-        idPersistent = '',
-        width = 200,
-        columnType
+        tagDefinition = {
+            idPersistent: '',
+            namePath: [],
+            columnType: ColumnType.String,
+            curated: false,
+            version: 0
+        },
+        cellContents = new Remote([]),
+        width = 200
     }: {
-        name: string
-        isLoading?: boolean
-        cellContents?: CellValue[][]
-        idPersistent: string
+        tagDefinition: ColumnDefinition
+        cellContents?: Remote<CellValue[][]>
         width?: number
-        columnType: ColumnType
     }) {
-        this.name = name
-        this.isLoading = isLoading
+        this.tagDefinition = tagDefinition
         this.cellContents = cellContents
-        this.idPersistent = idPersistent
         this.width = width
-        this.columnType = columnType
+    }
+
+    name(): string {
+        return this.tagDefinition.namePath[this.tagDefinition.namePath.length - 1]
     }
 }
 
@@ -168,7 +172,7 @@ export class TableStateCsvIterator implements Iterator<string | undefined> {
                 value:
                     '"id_entity_persistent","display_txt",' +
                     this.tableState.columnStates
-                        .map((colState) => '"' + colState.name + '"')
+                        .map((colState) => '"' + colState.name() + '"')
                         .join(',') +
                     '\n'
             }
@@ -181,8 +185,9 @@ export class TableStateCsvIterator implements Iterator<string | undefined> {
                     .map(
                         (colState) =>
                             '"' +
-                            (colState.cellContents[this.rowIdx][0].value?.toString() ??
-                                '') +
+                            (colState.cellContents.value[
+                                this.rowIdx
+                            ][0].value?.toString() ?? '') +
                             '"'
                     )
                     .join(',') +

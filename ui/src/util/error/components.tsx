@@ -1,68 +1,54 @@
 import { MutableRefObject } from 'react'
-import { Button, CloseButton, Col, Overlay, Popover, Row, Toast } from 'react-bootstrap'
-import { ArrowClockwise } from 'react-bootstrap-icons'
+import { CloseButton, Col, Overlay, Popover, Row, Toast } from 'react-bootstrap'
 import { Placement } from 'react-bootstrap/esm/types'
 import { ErrorState, removeError, errorListSelector } from './slice'
 import { useSelector } from 'react-redux'
+import { MouseEvent } from 'react'
 /**
  * Component for showing an error message and a retry button.
  * @param props
  * @returns
  */
 export function ErrorContainer(props: { errorState: ErrorState }) {
-    const { msg, retryCallback } = props.errorState
-    if (retryCallback === undefined) {
-        return (
-            <div className="column bg-danger-subtle">
-                <div>{msg}</div>
-            </div>
-        )
-    }
+    const { msg } = props.errorState
     return (
         <div className="column bg-danger-subtle">
-            <ArrowClockwise onClick={retryCallback} />
             <div>{msg}</div>
         </div>
     )
 }
 
-export function ErrorPopover(props: {
-    errorState: ErrorState
+export function ErrorPopover({
+    errorState,
+    placement,
+    clearError,
+    show = true,
+    targetRef,
+    containerRef
+}: {
+    errorState: { msg: string }
     placement: Placement
-    clearError: VoidFunction
+    clearError: ((event: MouseEvent<HTMLElement>) => void) | VoidFunction
+    show?: boolean
     targetRef: MutableRefObject<null>
     containerRef?: MutableRefObject<null>
 }) {
     return (
         <Overlay
-            show={true}
-            target={props.targetRef}
-            container={props.containerRef}
-            placement={props.placement}
+            show={show}
+            target={targetRef}
+            container={containerRef}
+            placement={placement}
         >
             <Popover id="submit-column-definition-error-popover">
                 <Popover.Header className="bg-danger text-light">
                     <Row className="justify-content-between">
                         <Col>Error</Col>
-                        <CloseButton
-                            variant="white"
-                            onClick={props.clearError}
-                        ></CloseButton>
+                        <CloseButton variant="white" onClick={clearError}></CloseButton>
                     </Row>
                 </Popover.Header>
                 <Popover.Body>
-                    <Row>{props.errorState?.msg}</Row>
-                    {!!props.errorState?.retryCallback && (
-                        <div className="d-flex justify-content-end">
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={props.errorState?.retryCallback}
-                            >
-                                Retry
-                            </Button>
-                        </div>
-                    )}
+                    <Row>{errorState.msg}</Row>
                 </Popover.Body>
             </Popover>
         </Overlay>

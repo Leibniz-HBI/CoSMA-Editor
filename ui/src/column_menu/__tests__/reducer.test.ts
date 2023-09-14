@@ -17,7 +17,7 @@ import {
     SubmitColumnDefinitionSuccessAction,
     ToggleExpansionAction
 } from '../actions'
-import { ErrorState } from '../../util/error/slice'
+import { newErrorState } from '../../util/error/slice'
 
 describe('Column Menu Reducer', () => {
     const columnSelectionEntryTest10 = new ColumnSelectionEntry({
@@ -215,7 +215,7 @@ describe('Column Menu Reducer', () => {
         })
         test('submit column definition start', () => {
             const initialState = new ColumnSelectionState({
-                submissionErrorState: new ErrorState('error')
+                submissionErrorState: newErrorState('error')
             })
             const expectedState = new ColumnSelectionState({
                 isSubmittingDefinition: true
@@ -244,16 +244,12 @@ describe('Column Menu Reducer', () => {
                 isSubmittingDefinition: true
             })
             const expectedState = new ColumnSelectionState({
-                submissionErrorState: new ErrorState(
-                    'error',
-                    undefined,
-                    'id-error-test'
-                )
+                submissionErrorState: newErrorState('error', 'id-error-test')
             })
             const endState = columnMenuReducer(
                 initialState,
                 new SubmitColumnDefinitionErrorAction(
-                    new ErrorState('error', undefined, 'id-error-test')
+                    newErrorState('error', 'id-error-test')
                 )
             )
             expect(endState).toEqual(expectedState)

@@ -21,27 +21,42 @@ import {
 import { ColumnDefinition, ColumnType } from '../../column_menu/state'
 import { LocalTableCallbacks, TableDataProps } from '../hooks'
 import { ColumnAddButton } from '../../column_menu/components/misc'
-import { ErrorState } from '../../util/error/slice'
-
-const testColumns = [
-    new ColumnState({
-        idPersistent: 'test_column_0',
-        name: 'test title 0',
-        cellContents: [],
-        columnType: ColumnType.String
-    }),
-    new ColumnState({
-        idPersistent: 'test_column_1',
-        name: 'test title 1',
-        cellContents: [],
-        columnType: ColumnType.String
-    })
-]
+import { newErrorState } from '../../util/error/slice'
+import { Remote } from '../../util/state'
+jest.mock('react-redux', () => {
+    return {
+        // eslint-disable-next-line
+        useSelector: (_selector: any) => [],
+        useDispatch: jest.fn()
+    }
+})
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
     return <div className="mock"></div>
 }
+const testColumns = [
+    new ColumnState({
+        tagDefinition: {
+            idPersistent: 'test_column_0',
+            namePath: ['test title 0'],
+            columnType: ColumnType.String,
+            curated: false,
+            version: 0
+        },
+        cellContents: new Remote([])
+    }),
+    new ColumnState({
+        tagDefinition: {
+            idPersistent: 'test_column_1',
+            namePath: ['test title 1'],
+            columnType: ColumnType.String,
+            curated: false,
+            version: 0
+        },
+        cellContents: new Remote([])
+    })
+]
 
 describe('table from state', () => {
     const baseTableProps: TableDataProps = {
@@ -52,7 +67,8 @@ describe('table from state', () => {
         frozenColumns: 1,
         isShowColumnAddMenu: false,
         loadDataErrorState: undefined,
-        selectedColumnHeaderBounds: undefined
+        selectedColumnHeaderBounds: undefined,
+        columnHeaderMenuEntries: []
     }
     const baseTableCallbacks: LocalTableCallbacks = {
         addColumnCallback: (columnDefinition: ColumnDefinition) => {},
@@ -80,12 +96,13 @@ describe('table from state', () => {
         ) => {},
         switchColumnsCallback: (startIndex, endIndex) => {},
         clearSubmitValueErrorCallback: () => {},
+        hideTagDefinitionOwnershipCallback: () => {},
         csvLines: () => []
     }
     test('should show error', () => {
         const tableProps = {
             ...baseTableProps,
-            loadDataErrorState: new ErrorState('test error')
+            loadDataErrorState: newErrorState('test error')
         }
         render(
             <DataTable

@@ -6,9 +6,9 @@ import {
     NumberCell,
     TextCell
 } from '@glideapps/glide-data-grid'
-import { mkCell, useCellContentCalback, useRemoteTableData } from '../hooks'
+import { mkCell, useCellContentCallback, useRemoteTableData } from '../hooks'
 import { CellValue, ColumnState, TableState } from '../state'
-import { useThunkReducer } from '../../util/state'
+import { Remote, useThunkReducer } from '../../util/state'
 import { ColumnType, newColumnDefinition } from '../../column_menu/state'
 import { GetColumnAsyncAction } from '../async_actions'
 import {
@@ -28,6 +28,13 @@ jest.mock('../../util/state', () => {
     return {
         ...original,
         useThunkReducer: jest.fn().mockImplementation()
+    }
+})
+
+jest.mock('react-redux', () => {
+    return {
+        // eslint-disable-next-line
+        useSelector: (_selector: any) => 'EDITOR' as UserPermissionGroup
     }
 })
 describe('create cell', () => {
@@ -108,11 +115,14 @@ describe('column types', () => {
         const state = new TableState({
             columnStates: [
                 new ColumnState({
-                    name: 'text column',
-                    idPersistent: columnId,
-                    columnType: ColumnType.String,
-                    isLoading: false,
-                    cellContents: [
+                    tagDefinition: {
+                        curated: false,
+                        namePath: ['text column'],
+                        idPersistent: columnId,
+                        columnType: ColumnType.String,
+                        version: 0
+                    },
+                    cellContents: new Remote([
                         [
                             {
                                 value: 'value 0',
@@ -127,7 +137,7 @@ describe('column types', () => {
                                 idPersistent: 'id-value-test-43'
                             }
                         ]
-                    ]
+                    ])
                 })
             ],
             columnIndices: columnIndices,
@@ -135,7 +145,7 @@ describe('column types', () => {
             entityIndices: entityIndices,
             isLoading: false
         })
-        const cellContentFunction = useCellContentCalback(state)
+        const cellContentFunction = useCellContentCallback(state)
         expect(cellContentFunction([0, 0])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: true,
@@ -153,11 +163,14 @@ describe('column types', () => {
         const state = new TableState({
             columnStates: [
                 new ColumnState({
-                    name: 'text column',
-                    idPersistent: columnId,
-                    columnType: ColumnType.Inner,
-                    isLoading: false,
-                    cellContents: [
+                    tagDefinition: {
+                        namePath: ['text column'],
+                        idPersistent: columnId,
+                        columnType: ColumnType.Inner,
+                        curated: false,
+                        version: 0
+                    },
+                    cellContents: new Remote([
                         [
                             {
                                 value: true,
@@ -166,14 +179,14 @@ describe('column types', () => {
                             }
                         ],
                         []
-                    ]
+                    ])
                 })
             ],
             columnIndices: columnIndices,
             entities: entityIdList,
             isLoading: false
         })
-        const cellContentFunction = useCellContentCalback(state)
+        const cellContentFunction = useCellContentCallback(state)
         expect(cellContentFunction([0, 0])).toEqual({
             kind: 'boolean' as GridCellKind,
             allowOverlay: false,
@@ -190,17 +203,21 @@ describe('column types', () => {
         const state = new TableState({
             columnStates: [
                 new ColumnState({
-                    name: 'text column',
-                    idPersistent: columnId,
-                    columnType: ColumnType.Inner,
-                    isLoading: true
+                    tagDefinition: {
+                        namePath: ['text column'],
+                        idPersistent: columnId,
+                        columnType: ColumnType.Inner,
+                        curated: false,
+                        version: 0
+                    },
+                    cellContents: new Remote([], true)
                 })
             ],
             columnIndices: columnIndices,
             entities: entityIdList,
             isLoading: false
         })
-        const cellContentFunction = useCellContentCalback(state)
+        const cellContentFunction = useCellContentCallback(state)
         expect(cellContentFunction([0, 0])).toEqual({
             kind: 'custom' as GridCellKind,
             data: new LoadingType(),
@@ -246,15 +263,65 @@ describe('table hooks', () => {
                 columnIndices: new Map(Object.entries({ column_id_test: 1 })),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest1,
-                        idPersistent: columnIdTest1,
-                        columnType: ColumnType.Inner
+                        tagDefinition: {
+                            namePath: [columnNameTest1],
+                            idPersistent: columnIdTest1,
+                            columnType: ColumnType.Inner,
+                            curated: false,
+                            version: 0
+                        }
                     }),
                     new ColumnState({
-                        name: columnNameTest,
-                        isLoading: true,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        tagDefinition: {
+                            namePath: [columnNameTest],
+                            idPersistent: columnIdTest,
+                            columnType: ColumnType.String,
+                            curated: false,
+                            version: 0
+                        },
+                        cellContents: new Remote([], true)
+                    })
+                ]
+            }),
+            dispatch
+        ])
+        const [remoteCallbacks] = useRemoteTableData(
+            userInfoPromiseWithNoColumns,
+            columnCallbacks
+        )
+        remoteCallbacks.loadTableDataCallback()
+        expect(dispatch.mock.calls.length).toBe(0)
+    })
+    test('early exit when data present', async () => {
+        const columnCallbacks = mkDefaultTagDefinitionCallbacks()
+        const dispatch = jest.fn()
+        const cellValueTest: CellValue = {
+            value: 'test-value',
+            idPersistent: 'id-value-test',
+            version: 3
+        }
+        ;(useThunkReducer as jest.Mock).mockReturnValue([
+            new TableState({
+                columnIndices: new Map(Object.entries({ column_id_test: 1 })),
+                columnStates: [
+                    new ColumnState({
+                        tagDefinition: {
+                            namePath: [columnNameTest1],
+                            idPersistent: columnIdTest1,
+                            columnType: ColumnType.Inner,
+                            curated: false,
+                            version: 0
+                        }
+                    }),
+                    new ColumnState({
+                        tagDefinition: {
+                            namePath: [columnNameTest],
+                            idPersistent: columnIdTest,
+                            columnType: ColumnType.String,
+                            curated: false,
+                            version: 0
+                        },
+                        cellContents: new Remote([[cellValueTest]])
                     })
                 ]
             }),
@@ -382,7 +449,13 @@ describe('table hooks', () => {
         ;(useThunkReducer as jest.Mock).mockReturnValue([
             new TableState({
                 isLoading: true,
-                selectedColumnHeaderByIdPersistent: 'id-column-test'
+                selectedTagDefinition: {
+                    namePath: ['id-column-test'],
+                    idPersistent: columnIdTest,
+                    columnType: ColumnType.String,
+                    curated: false,
+                    version: 0
+                }
             }),
             dispatch
         ])
@@ -395,7 +468,7 @@ describe('table hooks', () => {
         expect(dispatch.mock.calls).toEqual([[new RemoveSelectedColumnAction()]])
         expect(
             profileCallbacks.removeFromDefaultTagDefinitionListCallback.mock.calls
-        ).toEqual([['id-column-test']])
+        ).toEqual([[columnIdTest]])
     })
     test('setColumnWidthCallback dispatches correct action', () => {
         const dispatch = jest.fn()

@@ -2,19 +2,19 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { v4 as uuid4 } from 'uuid'
 import { AppDispatch, RootState } from '../../store'
 
-export class ErrorState {
+export interface ErrorState {
     id: string
     msg: string
-    retryCallback?: VoidFunction
+}
 
-    constructor(msg: string, retryCallback?: VoidFunction, id?: string) {
-        this.msg = msg
-        this.retryCallback = retryCallback
-        if (id === undefined) {
-            this.id = uuid4()
-        } else {
-            this.id = id
-        }
+export function newErrorState(msg: string, id?: string) {
+    let errorId = id
+    if (errorId === undefined) {
+        errorId = uuid4()
+    }
+    return {
+        msg,
+        id: errorId
     }
 }
 

@@ -35,6 +35,7 @@ import {
     remoteUserProfileColumnAppend,
     remoteUserProfileColumnDelete
 } from './user/thunks'
+import { TagManagementPage } from './tag_management/components'
 
 export function CosmaeRoot() {
     const userInfo = useSelector(selectUserInfo)
@@ -57,6 +58,9 @@ export function CosmaeRoot() {
                                     </Nav.Link>
                                     <Nav.Link as={NavLink} to="/review">
                                         Review
+                                    </Nav.Link>
+                                    <Nav.Link as={NavLink} to="/tags">
+                                        Tags
                                     </Nav.Link>
                                 </Nav>
                                 <Nav>
@@ -128,6 +132,10 @@ const router = createBrowserRouter([
                 path: 'review/:idPersistent',
                 element: <MergeRequestConflictResolutionView />,
                 loader: ({ params }) => params.idPersistent
+            },
+            {
+                path: 'tags',
+                element: <TagManagementPage />
             },
             { path: 'user-management', element: <UserPermissionGroupComponent /> }
         ]

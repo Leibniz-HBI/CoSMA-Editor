@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals'
 import { ColumnType } from '../../column_menu/state'
-import { ErrorState } from '../../util/error/slice'
+import { newErrorState } from '../../util/error/slice'
 import {
     SetEntityLoadingAction,
     SetLoadDataErrorAction,
@@ -21,22 +21,31 @@ import {
 } from '../actions'
 import { tableReducer } from '../reducer'
 import { ColumnState, TableState } from '../state'
+import { Remote } from '../../util/state'
 describe('reducer tests', () => {
     const columnNameTest = 'column test name'
     const columnIdTest = 'column_id_test'
     const columnNameTest1 = 'test column 1'
     const columnIdTest1 = 'column_id_test_1'
+    const tagDefTest = {
+        namePath: [columnNameTest],
+        idPersistent: columnIdTest,
+        columnType: ColumnType.String,
+        curated: true,
+        version: 0
+    }
+    const tagDefTest1 = {
+        namePath: [columnNameTest1],
+        idPersistent: columnIdTest1,
+        columnType: ColumnType.Inner,
+        curated: false,
+        version: 0
+    }
     const columnsTest = [
         new ColumnState({
-            idPersistent: columnIdTest1,
-            columnType: ColumnType.String,
-            name: columnNameTest1
+            tagDefinition: tagDefTest1
         }),
-        new ColumnState({
-            idPersistent: columnIdTest,
-            columnType: ColumnType.String,
-            name: columnNameTest
-        })
+        new ColumnState({ tagDefinition: tagDefTest })
     ]
     test('init to loading', () => {
         const state = new TableState({})
@@ -48,13 +57,11 @@ describe('reducer tests', () => {
         const state = new TableState({})
         const end_state = tableReducer(
             state,
-            new SetLoadDataErrorAction(
-                new ErrorState('test error', undefined, 'id-error-test')
-            )
+            new SetLoadDataErrorAction(newErrorState('test error', 'id-error-test'))
         )
         const expected_state = new TableState({
             isLoading: false,
-            loadDataErrorState: new ErrorState('test error', undefined, 'id-error-test')
+            loadDataErrorState: newErrorState('test error', 'id-error-test')
         })
         expect(end_state).toEqual(expected_state)
     })
@@ -75,7 +82,7 @@ describe('reducer tests', () => {
     })
     test('error to loading', () => {
         const state = new TableState({
-            loadDataErrorState: new ErrorState('test error')
+            loadDataErrorState: newErrorState('test error')
         })
         const end_state = tableReducer(state, new SetEntityLoadingAction())
         const expected_state = new TableState({ isLoading: true })
@@ -96,20 +103,14 @@ describe('reducer tests', () => {
     })
     describe('start column load', () => {
         test('when empty', () => {
-            const action = new SetColumnLoadingAction(
-                columnNameTest,
-                columnIdTest,
-                ColumnType.String
-            )
+            const action = new SetColumnLoadingAction(tagDefTest)
             const state = new TableState({})
             const expectedState = new TableState({
                 columnIndices: new Map(Object.entries({ column_id_test: 0 })),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest,
-                        isLoading: true,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        tagDefinition: tagDefTest,
+                        cellContents: new Remote([], true)
                     })
                 ]
             })
@@ -117,30 +118,21 @@ describe('reducer tests', () => {
             expect(endState).toEqual(expectedState)
         })
         test('when already present', () => {
-            const action = new SetColumnLoadingAction(
-                columnNameTest,
-                columnIdTest,
-                ColumnType.String
-            )
+            const action = new SetColumnLoadingAction(tagDefTest1)
             const state = new TableState({
-                columnIndices: new Map(Object.entries({ column_id_test: 0 })),
+                columnIndices: new Map(Object.entries({ column_id_test_1: 0 })),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest,
-                        isLoading: true,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        tagDefinition: tagDefTest1
                     })
                 ]
             })
             const expectedState = new TableState({
-                columnIndices: new Map(Object.entries({ column_id_test: 0 })),
+                columnIndices: new Map(Object.entries({ column_id_test_1: 0 })),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest,
-                        isLoading: true,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        tagDefinition: tagDefTest1,
+                        cellContents: new Remote([], true)
                     })
                 ]
             })
@@ -148,19 +140,13 @@ describe('reducer tests', () => {
             expect(endState).toEqual(expectedState)
         })
         test('when other column is present', () => {
-            const action = new SetColumnLoadingAction(
-                columnNameTest,
-                columnIdTest,
-                ColumnType.String
-            )
+            const action = new SetColumnLoadingAction(tagDefTest)
             const state = new TableState({
                 columnIndices: new Map(Object.entries({ column_id_test_1: 0 })),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest1,
-                        isLoading: true,
-                        idPersistent: columnIdTest1,
-                        columnType: ColumnType.String
+                        tagDefinition: tagDefTest1,
+                        cellContents: new Remote([], true)
                     })
                 ]
             })
@@ -170,16 +156,12 @@ describe('reducer tests', () => {
                 ),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest1,
-                        isLoading: true,
-                        idPersistent: columnIdTest1,
-                        columnType: ColumnType.String
+                        tagDefinition: tagDefTest1,
+                        cellContents: new Remote([], true)
                     }),
                     new ColumnState({
-                        name: columnNameTest,
-                        isLoading: true,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        tagDefinition: tagDefTest,
+                        cellContents: new Remote([], true)
                     })
                 ]
             })
@@ -207,10 +189,8 @@ describe('reducer tests', () => {
                 entityIndices: new Map([['id_entity_test', 0]]),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest,
-                        isLoading: true,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        tagDefinition: tagDefTest,
+                        cellContents: new Remote([], true)
                     })
                 ]
             })
@@ -221,8 +201,7 @@ describe('reducer tests', () => {
                 entityIndices: new Map([['id_entity_test', 0]]),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest,
-                        cellContents: [
+                        cellContents: new Remote([
                             [
                                 {
                                     value: 'foo',
@@ -230,10 +209,8 @@ describe('reducer tests', () => {
                                     version: 23
                                 }
                             ]
-                        ],
-                        isLoading: false,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        ]),
+                        tagDefinition: tagDefTest
                     })
                 ]
             })
@@ -242,10 +219,7 @@ describe('reducer tests', () => {
         })
         test('when other column is present', () => {
             const otherColumn = new ColumnState({
-                name: columnNameTest1,
-                isLoading: true,
-                idPersistent: columnIdTest1,
-                columnType: ColumnType.Inner
+                tagDefinition: tagDefTest1
             })
             const state = new TableState({
                 entities: ['id_entity_test'],
@@ -255,10 +229,7 @@ describe('reducer tests', () => {
                 ),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest,
-                        isLoading: true,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        tagDefinition: tagDefTest
                     }),
                     otherColumn
                 ]
@@ -272,8 +243,8 @@ describe('reducer tests', () => {
                 ),
                 columnStates: [
                     new ColumnState({
-                        name: columnNameTest,
-                        cellContents: [
+                        tagDefinition: tagDefTest,
+                        cellContents: new Remote([
                             [
                                 {
                                     value: 'foo',
@@ -281,10 +252,7 @@ describe('reducer tests', () => {
                                     version: 23
                                 }
                             ]
-                        ],
-                        isLoading: false,
-                        idPersistent: columnIdTest,
-                        columnType: ColumnType.String
+                        ])
                     }),
                     otherColumn
                 ]
@@ -314,7 +282,7 @@ describe('reducer tests', () => {
                 columnStates: columnsTest
             })
             const expectedState = new TableState({
-                selectedColumnHeaderByIdPersistent: columnIdTest,
+                selectedTagDefinition: tagDefTest,
                 selectedColumnHeaderBounds: rectangleTest,
                 columnStates: columnsTest
             })
@@ -326,7 +294,7 @@ describe('reducer tests', () => {
         })
         test('hide header menu', () => {
             const initialState = new TableState({
-                selectedColumnHeaderByIdPersistent: columnIdTest,
+                selectedTagDefinition: tagDefTest,
                 selectedColumnHeaderBounds: rectangleTest,
                 columnStates: columnsTest
             })
@@ -338,7 +306,7 @@ describe('reducer tests', () => {
         })
         test('remove selected column', () => {
             const initialState = new TableState({
-                selectedColumnHeaderByIdPersistent: columnIdTest1,
+                selectedTagDefinition: columnsTest[0].tagDefinition,
                 selectedColumnHeaderBounds: rectangleTest,
                 columnStates: columnsTest,
                 columnIndices: new Map([
@@ -358,7 +326,7 @@ describe('reducer tests', () => {
         })
         test('remove selected but missing column', () => {
             const initialState = new TableState({
-                selectedColumnHeaderByIdPersistent: columnIdTest1,
+                selectedTagDefinition: tagDefTest1,
                 selectedColumnHeaderBounds: rectangleTest,
                 columnStates: [columnsTest[1]],
                 columnIndices: new Map([[columnIdTest, 0]])
@@ -377,7 +345,7 @@ describe('reducer tests', () => {
     describe('column width', () => {
         test('change', () => {
             const initialState = new TableState({ columnStates: columnsTest })
-            const expextedState = new TableState({
+            const expectedState = new TableState({
                 columnStates: [
                     columnsTest[0],
                     new ColumnState({ ...columnsTest[1], width: 400 })
@@ -387,7 +355,7 @@ describe('reducer tests', () => {
                 initialState,
                 new SetColumnWidthAction(1, 400)
             )
-            expect(endState).toEqual(expextedState)
+            expect(endState).toEqual(expectedState)
         })
     })
     describe('column moves', () => {
@@ -473,19 +441,19 @@ describe('reducer tests', () => {
         const columnsTestWithData = [
             new ColumnState({
                 ...columnsTest[0],
-                cellContents: [
+                cellContents: new Remote([
                     [{ value: 2, idPersistent: 'id-value-test-5', version: 5 }],
                     [{ value: 4, idPersistent: 'id-value-test-6', version: 6 }],
                     [{ value: 6, idPersistent: 'id-value-test-7', version: 7 }]
-                ]
+                ])
             }),
             new ColumnState({
                 ...columnsTest[1],
-                cellContents: [
+                cellContents: new Remote([
                     [{ value: 3, idPersistent: 'id-value-test-8', version: 8 }],
                     [{ value: 6, idPersistent: 'id-value-test-9', version: 9 }],
                     [{ value: 9, idPersistent: 'id-value-test-10', version: 10 }]
-                ]
+                ])
             })
         ]
         const versionedValueTest = {
@@ -495,7 +463,7 @@ describe('reducer tests', () => {
         }
         test('start submit value', () => {
             const initialState = new TableState({
-                submitValuesErrorState: new ErrorState('error test')
+                submitValuesErrorState: newErrorState('error test')
             })
             const expectedState = new TableState({ isSubmittingValues: true })
             const endState = tableReducer(initialState, new SubmitValuesStartAction())
@@ -507,7 +475,7 @@ describe('reducer tests', () => {
                 entities: entities,
                 entityIndices: entityIndices
             })
-            const testError = new ErrorState('error test', undefined, 'id-error-test')
+            const testError = newErrorState('error test', 'id-error-test')
             const expectedState = new TableState({
                 submitValuesErrorState: testError,
                 entities: entities,
@@ -516,11 +484,7 @@ describe('reducer tests', () => {
             const endState = tableReducer(
                 initialState,
                 new SubmitValuesErrorAction(
-                    new ErrorState(
-                        testError.msg,
-                        testError.retryCallback,
-                        'id-error-test'
-                    )
+                    newErrorState(testError.msg, 'id-error-test')
                 )
             )
             expect(endState).toEqual(expectedState)
@@ -528,7 +492,7 @@ describe('reducer tests', () => {
         test('change Value', () => {
             const columnIndices = new Map(
                 columnsTestWithData.map((columnState, idx) => [
-                    columnState.idPersistent,
+                    columnState.tagDefinition.idPersistent,
                     idx
                 ])
             )
@@ -544,7 +508,7 @@ describe('reducer tests', () => {
                 columnStates: [
                     new ColumnState({
                         ...columnsTest[0],
-                        cellContents: [
+                        cellContents: new Remote([
                             [
                                 {
                                     value: 2,
@@ -566,11 +530,11 @@ describe('reducer tests', () => {
                                     version: 8
                                 }
                             ]
-                        ]
+                        ])
                     }),
                     new ColumnState({
                         ...columnsTest[1],
-                        cellContents: [
+                        cellContents: new Remote([
                             [
                                 {
                                     value: 3,
@@ -592,7 +556,7 @@ describe('reducer tests', () => {
                                     version: 10
                                 }
                             ]
-                        ]
+                        ])
                     })
                 ],
                 columnIndices: columnIndices
@@ -608,7 +572,7 @@ describe('reducer tests', () => {
         test('identity for unknown column id', () => {
             const columnIndices = new Map(
                 columnsTestWithData.map((columnState, idx) => [
-                    columnState.idPersistent,
+                    columnState.tagDefinition.idPersistent,
                     idx
                 ])
             )
@@ -629,7 +593,7 @@ describe('reducer tests', () => {
         test('identity for unknown entity id', () => {
             const columnIndices = new Map(
                 columnsTestWithData.map((columnState, idx) => [
-                    columnState.idPersistent,
+                    columnState.tagDefinition.idPersistent,
                     idx
                 ])
             )
@@ -669,9 +633,8 @@ describe('reducer tests', () => {
             const expectedState = new TableState({
                 entities: entities,
                 entityIndices: entityIndices,
-                submitValuesErrorState: new ErrorState(
+                submitValuesErrorState: newErrorState(
                     'Batch edits not implemented. Values are not changed.',
-                    undefined,
                     'id-error-batch'
                 )
             })
@@ -696,7 +659,7 @@ describe('reducer tests', () => {
             const initialState = new TableState({
                 entities: entities,
                 entityIndices: entityIndices,
-                submitValuesErrorState: new ErrorState('test error')
+                submitValuesErrorState: newErrorState('test error')
             })
             const expectedState = new TableState({
                 entities: entities,

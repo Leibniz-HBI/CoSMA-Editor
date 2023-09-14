@@ -1,5 +1,5 @@
 import { Dispatch } from 'react'
-import { ErrorState } from '../util/error/slice'
+import { newErrorState } from '../util/error/slice'
 import { exceptionMessage } from '../util/exception'
 import { AsyncAction } from '../util/async_action'
 import {
@@ -58,11 +58,10 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
             if (rsp.status != 200) {
                 dispatch(
                     new LoadColumnHierarchyErrorAction(
-                        new ErrorState(
+                        newErrorState(
                             `Could not load column definitions. Reason: "${
                                 (await rsp.json())['msg']
-                            }"`,
-                            () => this.run(dispatch)
+                            }"`
                         )
                     )
                 )
@@ -107,9 +106,7 @@ export class GetHierarchyAction extends AsyncAction<ColumnSelectionAction, void>
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
             dispatch(
-                new LoadColumnHierarchyErrorAction(
-                    new ErrorState(exceptionMessage(e), () => this.run(dispatch))
-                )
+                new LoadColumnHierarchyErrorAction(newErrorState(exceptionMessage(e)))
             )
         }
     }
@@ -161,25 +158,16 @@ export class SubmitColumnDefinitionAction extends AsyncAction<
                 return true
             }
             const msg = (await rsp.json())['msg']
-            let retryCallback = undefined
-            if (rsp.status >= 500) {
-                retryCallback = () => this.run(dispatch)
-            }
 
-            dispatch(
-                new SubmitColumnDefinitionErrorAction(
-                    new ErrorState(msg, retryCallback)
-                )
-            )
+            dispatch(new SubmitColumnDefinitionErrorAction(newErrorState(msg)))
 
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
             dispatch(
                 new SubmitColumnDefinitionErrorAction(
-                    new ErrorState(
+                    newErrorState(
                         'Submitting the column definition failed: ' +
-                            exceptionMessage(e),
-                        () => this.run(dispatch)
+                            exceptionMessage(e)
                     )
                 )
             )
@@ -216,6 +204,7 @@ export function parseColumnDefinitionsFromApi(
         namePath,
         version: tagDefinitionApi['version'],
         curated: tagDefinitionApi['curated'],
-        columnType: columnType
+        columnType: columnType,
+        owner: tagDefinitionApi['owner']
     })
 }

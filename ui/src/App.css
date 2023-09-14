@@ -51,6 +51,11 @@ html {
     width: 200px !important;
 }
 
+.h-50 {
+    height: 50% !important;
+}
+
+
 .flex-basis-0 {
     flex-basis: 0;
 }
@@ -206,5 +211,5 @@ div#layers > div > .container {
 }
 
 .bg-primary-subtle {
-    background-color: #72a39e77;
+    background-color: #d1e3e3;
 }

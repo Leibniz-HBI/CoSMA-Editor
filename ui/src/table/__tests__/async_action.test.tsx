@@ -1,5 +1,9 @@
 import { describe, expect, test } from '@jest/globals'
-import { ColumnType, newColumnDefinition } from '../../column_menu/state'
+import {
+    ColumnDefinition,
+    ColumnType,
+    newColumnDefinition
+} from '../../column_menu/state'
 import {
     SetEntityLoadingAction,
     SetColumnLoadingAction,
@@ -16,7 +20,7 @@ import {
     parseValue,
     SubmitValuesAsyncAction
 } from '../async_actions'
-import { ErrorState } from '../../util/error/slice'
+import { newErrorState } from '../../util/error/slice'
 
 jest.mock('uuid', () => {
     return {
@@ -63,6 +67,14 @@ const display_txt_column_as_normal_column = {
     'test-id-1': [{ value: displayTxt1, idPersistent: 'test-value-id-1', version: 1 }]
 }
 
+const displayTextTagDef: ColumnDefinition = {
+    namePath: ['Display Text'],
+    idPersistent: 'display_txt_id',
+    columnType: ColumnType.String,
+    curated: true,
+    version: 0
+}
+
 describe('get table async action', () => {
     test('loads table with one chunk', async () => {
         responseSequence([
@@ -79,13 +91,7 @@ describe('get table async action', () => {
         await new GetTableAsyncAction().run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new SetEntityLoadingAction()],
-            [
-                new SetColumnLoadingAction(
-                    'Display Text',
-                    'display_txt_id',
-                    ColumnType.String
-                )
-            ],
+            [new SetColumnLoadingAction(displayTextTagDef)],
             [new SetEntitiesAction(entity_ids)],
             [new AppendColumnAction('display_txt_id', display_txt_column)]
         ])
@@ -128,11 +134,7 @@ describe('get table async action', () => {
         expect(dispatch.mock.calls.length).toBe(4)
         expect(dispatch.mock.calls[0][0]).toEqual(new SetEntityLoadingAction())
         expect(dispatch.mock.calls[1][0]).toEqual(
-            new SetColumnLoadingAction(
-                'Display Text',
-                'display_txt_id',
-                ColumnType.String
-            )
+            new SetColumnLoadingAction(displayTextTagDef)
         )
         expect(dispatch.mock.calls[2][0].entities.length).toEqual(1001)
         expect(dispatch.mock.calls[3][0]).toBeInstanceOf(AppendColumnAction)
@@ -153,16 +155,10 @@ describe('get table async action', () => {
         await new GetTableAsyncAction().run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new SetEntityLoadingAction()],
-            [
-                new SetColumnLoadingAction(
-                    'Display Text',
-                    'display_txt_id',
-                    ColumnType.String
-                )
-            ],
+            [new SetColumnLoadingAction(displayTextTagDef)],
             [
                 new SetLoadDataErrorAction(
-                    new ErrorState(
+                    newErrorState(
                         'Could not load entities chunk 0. Reason: "test error"'
                     )
                 )
@@ -183,32 +179,30 @@ describe('get table async action', () => {
         await new GetTableAsyncAction().run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new SetEntityLoadingAction()],
-            [
-                new SetColumnLoadingAction(
-                    'Display Text',
-                    'display_txt_id',
-                    ColumnType.String
-                )
-            ],
-            [new SetLoadDataErrorAction(new ErrorState('test error'))]
+            [new SetColumnLoadingAction(displayTextTagDef)],
+            [new SetLoadDataErrorAction(newErrorState('test error'))]
         ])
     })
 })
 describe('get column async action', () => {
     const columnNameTest = 'column name test'
     const columnIdTest = 'column_id_test'
+    const nameUserTest = 'user_test'
+    const nameUserTest1 = 'user_test1'
     const columnDefTest = newColumnDefinition({
         idPersistent: columnIdTest,
         namePath: [columnNameTest],
         version: 2,
         curated: false,
-        columnType: ColumnType.String
+        columnType: ColumnType.String,
+        owner: nameUserTest
     })
     const tagResponse = {
         id_entity_persistent: 'test-id-0',
         id_tag_definition_persistent: columnIdTest,
         value: displayTxt0,
         id_persistent: 'test-value-id-0',
+        owner: nameUserTest,
         version: 12
     }
     const tagResponse1 = {
@@ -216,7 +210,17 @@ describe('get column async action', () => {
         id_tag_definition_persistent: columnIdTest,
         value: displayTxt1,
         id_persistent: 'test-value-id-1',
+        owner: nameUserTest1,
         version: 1
+    }
+    const tagDefTest: ColumnDefinition = {
+        namePath: [columnNameTest],
+        idPersistent: columnIdTest,
+        idParentPersistent: undefined,
+        columnType: ColumnType.String,
+        curated: false,
+        owner: nameUserTest,
+        version: 2
     }
 
     test('loads column with one chunk', async () => {
@@ -234,7 +238,7 @@ describe('get column async action', () => {
         await new GetColumnAsyncAction(columnDefTest).run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(
-            new SetColumnLoadingAction(columnNameTest, columnIdTest, ColumnType.String)
+            new SetColumnLoadingAction(tagDefTest)
         )
         expect(dispatch.mock.calls[1][0]).toEqual(
             new AppendColumnAction(columnIdTest, display_txt_column_as_normal_column)
@@ -266,7 +270,7 @@ describe('get column async action', () => {
         await new GetColumnAsyncAction(columnDefTest).run(dispatch)
         expect(dispatch.mock.calls.length).toBe(2)
         expect(dispatch.mock.calls[0][0]).toEqual(
-            new SetColumnLoadingAction(columnNameTest, columnIdTest, ColumnType.String)
+            new SetColumnLoadingAction(tagDefTest)
         )
         expect(dispatch.mock.calls[1][0]).toBeInstanceOf(AppendColumnAction)
         expect(Object.values(dispatch.mock.calls[1][0].columnData).length).toBe(5001)
@@ -371,46 +375,16 @@ describe('get column async action', () => {
                 ],
                 [
                     new SubmitValuesErrorAction(
-                        new ErrorState(
+                        newErrorState(
                             'The data you entered changed in the remote location. ' +
                                 'The new values are updated in the table. Please review them.',
-                            undefined,
                             'id-error-test'
                         )
                     )
                 ]
             ])
         })
-        test('sets error with retry', async () => {
-            responseSequence([
-                [
-                    500,
-                    () => {
-                        return {
-                            msg: 'test error'
-                        }
-                    }
-                ]
-            ])
-            const dispatch = jest.fn()
-            await new SubmitValuesAsyncAction(ColumnType.Float, [
-                idEntityTest,
-                idColumnDefTest,
-                {
-                    idPersistent: idValuePersistentTest,
-                    version: versionTestBefore,
-                    value: valueTest
-                }
-            ]).run(dispatch)
-            expect(dispatch.mock.calls.length).toEqual(2)
-            expect(dispatch.mock.calls[0]).toEqual([new SubmitValuesStartAction()])
-            const call2args = dispatch.mock.calls[1]
-            expect(call2args.length).toEqual(1)
-            expect(call2args[0]).toBeInstanceOf(SubmitValuesErrorAction)
-            expect(call2args[0].error.msg).toEqual('test error')
-            expect(call2args[0].error.retryCallback).toBeDefined()
-        })
-        test('sets error without retry', async () => {
+        test('sets error', async () => {
             responseSequence([
                 [
                     400,
@@ -437,7 +411,6 @@ describe('get column async action', () => {
             expect(call2args.length).toEqual(1)
             expect(call2args[0]).toBeInstanceOf(SubmitValuesErrorAction)
             expect(call2args[0].error.msg).toEqual('test error')
-            expect(call2args[0].error.retryCallback).toBeUndefined()
         })
     })
 

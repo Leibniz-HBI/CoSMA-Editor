@@ -8,8 +8,8 @@ import {
     Rectangle
 } from '@glideapps/glide-data-grid'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
-import { ErrorState } from '../util/error/slice'
-import { useThunkReducer } from '../util/state'
+import { newErrorState, ErrorState } from '../util/error/slice'
+import { ThunkMiddlewareDispatch, useThunkReducer } from '../util/state'
 import {
     ChangeColumnIndexAction,
     HideColumnAddMenuAction,
@@ -19,9 +19,14 @@ import {
     SetLoadDataErrorAction,
     ShowColumnAddMenuAction,
     ShowHeaderMenuAction,
-    SubmitValuesClearErrorAction
+    SubmitValuesClearErrorAction,
+    TableAction,
+    TagChangeOwnershipHideAction,
+    TagChangeOwnershipShowAction,
+    TagDefinitionChangeAction
 } from './actions'
 import {
+    CurateAction,
     GetColumnAsyncAction,
     GetTableAsyncAction,
     SubmitValuesAsyncAction
@@ -29,8 +34,10 @@ import {
 import { tableReducer } from './reducer'
 import { CellValue, ColumnState, TableState } from './state'
 import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
-import { UserInfo } from '../user/state'
+import { UserInfo, UserPermissionGroup } from '../user/state'
 import { LoadingType } from './draw'
+import { useSelector } from 'react-redux'
+import { selectPermissionGroup } from '../user/selectors'
 
 const emptyCell = {
     kind: 'text' as GridCellKind,
@@ -93,14 +100,14 @@ export function mkCell(columnType: ColumnType, cellValues: CellValue[]): GridCel
 
 const loadingInstance = new LoadingType()
 
-export function useCellContentCalback(state: TableState): (cell: Item) => GridCell {
+export function useCellContentCallback(state: TableState): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
         const col = state.columnStates[col_idx]
         if (col === undefined) {
             return emptyCell
         }
-        if (col.isLoading) {
+        if (col.cellContents.isLoading) {
             return {
                 kind: 'custom' as GridCellKind,
                 allowOverlay: true,
@@ -108,7 +115,7 @@ export function useCellContentCalback(state: TableState): (cell: Item) => GridCe
                 data: loadingInstance
             } as CustomCell<LoadingType>
         }
-        return mkCell(col.columnType, col.cellContents[row_idx])
+        return mkCell(col.tagDefinition.columnType, col.cellContents.value[row_idx])
     }
 }
 
@@ -141,6 +148,8 @@ export type LocalTableCallbacks = {
     }
     clearSubmitValueErrorCallback: VoidFunction
     csvLines: () => string[]
+    hideTagDefinitionOwnershipCallback: VoidFunction
+    updateTagDefinitionCallback: (tagDefinition: ColumnDefinition) => void
 }
 export type TableDataProps = {
     entities?: string[]
@@ -152,6 +161,52 @@ export type TableDataProps = {
     isLoading: boolean
     loadDataErrorState?: ErrorState
     submitValuesErrorState?: ErrorState
+    columnHeaderMenuEntries: ColumnHeaderMenuItem[]
+    tagDefinitionChangeOwnership?: ColumnDefinition
+}
+
+export interface ColumnHeaderMenuItem {
+    label: string
+    onClick: VoidFunction
+    labelClassName?: string
+}
+
+function mkColumnHeaderMenuEntries(
+    permissionGroup: UserPermissionGroup | undefined,
+    dispatch: ThunkMiddlewareDispatch<TableAction>,
+    tagDefinitionSelected?: ColumnDefinition
+): ColumnHeaderMenuItem[] {
+    if (tagDefinitionSelected === undefined) {
+        return []
+    }
+    const ret = [
+        {
+            label: 'Hide Column',
+            className: 'danger text-danger',
+            onClick: () => {
+                dispatch(new RemoveSelectedColumnAction())
+            }
+        },
+        {
+            label: 'Change Owner',
+            className: '',
+            onClick: () =>
+                dispatch(new TagChangeOwnershipShowAction(tagDefinitionSelected))
+        }
+    ]
+    if (
+        permissionGroup == UserPermissionGroup.EDITOR ||
+        permissionGroup == UserPermissionGroup.COMMISSIONER
+    ) {
+        ret.push({
+            label: 'Curate Tag Definition',
+            className: '',
+            onClick: () => {
+                dispatch(new CurateAction(tagDefinitionSelected.idPersistent))
+            }
+        })
+    }
+    return ret
 }
 
 export function useRemoteTableData(
@@ -161,6 +216,12 @@ export function useRemoteTableData(
     const [state, dispatch] = useThunkReducer(
         tableReducer,
         new TableState({ frozenColumns: 1 })
+    )
+    const permissionGroup = useSelector(selectPermissionGroup)
+    const columnMenuEntries = mkColumnHeaderMenuEntries(
+        permissionGroup,
+        dispatch,
+        state.selectedTagDefinition
     )
     const isLoading = state.isLoading || false
     return [
@@ -173,20 +234,19 @@ export function useRemoteTableData(
                     if (userInfo === undefined) {
                         dispatch(
                             new SetLoadDataErrorAction(
-                                new ErrorState('Please refresh the page and log in')
+                                newErrorState('Please refresh the page and log in')
                             )
                         )
                     }
                     await dispatch(new GetTableAsyncAction())
                     userInfo?.columns.forEach(async (col: ColumnDefinition) => {
                         const idPersistent = col.idPersistent
+                        const colStateIdx = state.columnIndices.get(idPersistent)
+                        const colState = state.columnStates[colStateIdx ?? -1]
                         if (
                             state.isLoading ||
-                            (state.columnIndices.has(idPersistent) &&
-                                state.columnStates[
-                                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                                    state.columnIndices.get(idPersistent)!
-                                ].isLoading)
+                            colState?.cellContents.isLoading ||
+                            colState?.cellContents.value.length > 0
                         ) {
                             return
                         }
@@ -200,19 +260,24 @@ export function useRemoteTableData(
                 }
                 const [colIdx, rowIdx] = cell
                 dispatch(
-                    new SubmitValuesAsyncAction(state.columnStates[colIdx].columnType, [
-                        state.entities[rowIdx],
-                        state.columnStates[colIdx].idPersistent,
-                        {
-                            ...state.columnStates[colIdx].cellContents[rowIdx][0],
-                            value: newValue.data?.toString()
-                        }
-                    ])
+                    new SubmitValuesAsyncAction(
+                        state.columnStates[colIdx].tagDefinition.columnType,
+                        [
+                            state.entities[rowIdx],
+                            state.columnStates[colIdx].tagDefinition.idPersistent,
+                            {
+                                ...state.columnStates[colIdx].cellContents.value[
+                                    rowIdx
+                                ][0],
+                                value: newValue.data?.toString()
+                            }
+                        ]
+                    )
                 )
             }
         },
         {
-            cellContentCallback: useCellContentCalback(state),
+            cellContentCallback: useCellContentCallback(state),
             addColumnCallback: (columnDefinition: ColumnDefinition) =>
                 dispatch(new GetColumnAsyncAction(columnDefinition)).then(() =>
                     defaultColumnCallbacks.appendToDefaultTagDefinitionsCallback(
@@ -227,9 +292,9 @@ export function useRemoteTableData(
             hideHeaderMenuCallback: () => dispatch(new HideHeaderMenuAction()),
             removeColumnCallback: () => {
                 dispatch(new RemoveSelectedColumnAction())
-                if (state.selectedColumnHeaderByIdPersistent) {
+                if (state.selectedTagDefinition) {
                     defaultColumnCallbacks.removeFromDefaultTagDefinitionListCallback(
-                        state.selectedColumnHeaderByIdPersistent
+                        state.selectedTagDefinition.idPersistent
                     )
                 }
             },
@@ -263,7 +328,11 @@ export function useRemoteTableData(
                 dispatch(new SubmitValuesClearErrorAction()),
             csvLines: () => {
                 return state.csvLines()
-            }
+            },
+            hideTagDefinitionOwnershipCallback: () =>
+                dispatch(new TagChangeOwnershipHideAction()),
+            updateTagDefinitionCallback: (tagDefinition) =>
+                dispatch(new TagDefinitionChangeAction(tagDefinition))
         },
         {
             entities: state.entities,
@@ -274,7 +343,9 @@ export function useRemoteTableData(
             selectedColumnHeaderBounds: state.selectedColumnHeaderBounds,
             loadDataErrorState: state.loadDataErrorState,
             submitValuesErrorState: state.submitValuesErrorState,
-            isLoading: isLoading
+            isLoading: isLoading,
+            columnHeaderMenuEntries: columnMenuEntries,
+            tagDefinitionChangeOwnership: state.ownershipChangeTagDefinition
         }
     ]
 }

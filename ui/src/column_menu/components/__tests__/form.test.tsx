@@ -4,7 +4,7 @@
 import { describe } from '@jest/globals'
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ErrorState } from '../../../util/error/slice'
+import { newErrorState } from '../../../util/error/slice'
 import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from '../form'
 
 describe('form tests', () => {
@@ -114,7 +114,7 @@ describe('form tests', () => {
         const { container } = render(
             <ColumnTypeCreateForm
                 submitColumnDefinitionCallback={submitCallback}
-                submitError={new ErrorState('test error')}
+                submitError={newErrorState('test error')}
                 clearError={closeCallback}
             >
                 {childTest}
@@ -128,23 +128,5 @@ describe('form tests', () => {
         const user = userEvent.setup()
         await user.click(closeButtons[0])
         expect(closeCallback.mock.calls.length).toEqual(1)
-    })
-    test('popover has retry button when callback', async () => {
-        const submitCallback = jest.fn()
-        const closeCallback = jest.fn()
-        const retryCallback = jest.fn()
-        render(
-            <ColumnTypeCreateForm
-                submitColumnDefinitionCallback={submitCallback}
-                submitError={new ErrorState('test error', retryCallback)}
-                clearError={closeCallback}
-            >
-                {childTest}
-            </ColumnTypeCreateForm>
-        )
-        const retryButton = screen.getByText('Retry')
-        const user = userEvent.setup()
-        await user.click(retryButton)
-        expect(retryCallback.mock.calls.length).toEqual(1)
     })
 })

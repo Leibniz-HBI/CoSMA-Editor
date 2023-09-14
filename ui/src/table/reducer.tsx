@@ -16,9 +16,16 @@ import {
     SubmitValuesStartAction,
     SubmitValuesEndAction,
     SubmitValuesErrorAction,
-    SubmitValuesClearErrorAction
+    SubmitValuesClearErrorAction,
+    CurateTagDefinitionStartAction,
+    CurateTagDefinitionErrorAction,
+    TagChangeOwnershipShowAction,
+    TagChangeOwnershipHideAction,
+    TagDefinitionChangeAction
 } from './actions'
-import { ErrorState } from '../util/error/slice'
+import { newErrorState } from '../util/error/slice'
+import { Remote } from '../util/state'
+import { ColumnDefinition } from '../column_menu/state'
 
 export function tableReducer(state: TableState, action: TableAction) {
     if (action instanceof SetEntityLoadingAction) {
@@ -45,35 +52,34 @@ export function tableReducer(state: TableState, action: TableAction) {
                 columnStates: [
                     ...state.columnStates.slice(0, col_idx),
                     new ColumnState({
-                        name: state.columnStates[col_idx].name,
-                        isLoading: false,
-                        cellContents: state.entities?.map((idEntity) =>
-                            idEntity in action.columnData
-                                ? action.columnData[idEntity]
-                                : []
-                        ),
-                        idPersistent: state.columnStates[col_idx].idPersistent,
-                        columnType: state.columnStates[col_idx].columnType
+                        ...state.columnStates[col_idx],
+                        cellContents: state.columnStates[col_idx].cellContents.success(
+                            state.entities?.map((idEntity) =>
+                                idEntity in action.columnData
+                                    ? action.columnData[idEntity]
+                                    : []
+                            ) ?? []
+                        )
                     }),
                     ...state.columnStates.slice(col_idx + 1)
                 ]
             })
         }
     } else if (action instanceof SetColumnLoadingAction) {
+        const idTagDefinitionPersistent = action.tagDefinition.idPersistent
         const column_idx =
-            state.columnIndices.get(action.idPersistent) ?? state.columnStates.length
+            state.columnIndices.get(idTagDefinitionPersistent) ??
+            state.columnStates.length
         const newColumnIndices = new Map(state.columnIndices)
-        newColumnIndices.set(action.idPersistent, column_idx)
+        newColumnIndices.set(idTagDefinitionPersistent, column_idx)
         return new TableState({
             ...state,
             columnIndices: newColumnIndices,
             columnStates: [
                 ...state.columnStates.slice(0, column_idx),
                 new ColumnState({
-                    name: action.name,
-                    idPersistent: action.idPersistent,
-                    isLoading: true,
-                    columnType: action.columnType
+                    tagDefinition: action.tagDefinition,
+                    cellContents: new Remote([], true)
                 }),
                 ...state.columnStates.slice(column_idx + 1)
             ]
@@ -91,32 +97,31 @@ export function tableReducer(state: TableState, action: TableAction) {
     } else if (action instanceof ShowHeaderMenuAction) {
         return new TableState({
             ...state,
-            selectedColumnHeaderByIdPersistent:
-                state.columnStates[action.columnIndex].idPersistent,
+            selectedTagDefinition: state.columnStates[action.columnIndex].tagDefinition,
             selectedColumnHeaderBounds: action.bounds
         })
     } else if (action instanceof HideHeaderMenuAction) {
         return new TableState({
             ...state,
-            selectedColumnHeaderByIdPersistent: undefined,
+            selectedTagDefinition: undefined,
             selectedColumnHeaderBounds: undefined
         })
     } else if (action instanceof RemoveSelectedColumnAction) {
-        if (state.selectedColumnHeaderByIdPersistent === undefined) {
+        if (state.selectedTagDefinition === undefined) {
             return new TableState({
                 ...state,
                 selectedColumnHeaderBounds: undefined,
-                selectedColumnHeaderByIdPersistent: undefined
+                selectedTagDefinition: undefined
             })
         }
         const columnIdx = state.columnIndices.get(
-            state.selectedColumnHeaderByIdPersistent
+            state.selectedTagDefinition.idPersistent
         )
         if (columnIdx === undefined) {
             return new TableState({
                 ...state,
                 selectedColumnHeaderBounds: undefined,
-                selectedColumnHeaderByIdPersistent: undefined
+                selectedTagDefinition: undefined
             })
         }
 
@@ -126,14 +131,14 @@ export function tableReducer(state: TableState, action: TableAction) {
         ]
         const columnIndices = new Map<string, number>()
         for (let idx = 0; idx < columnStates.length; ++idx) {
-            columnIndices.set(columnStates[idx].idPersistent, idx)
+            columnIndices.set(columnStates[idx].tagDefinition.idPersistent, idx)
         }
         return new TableState({
             ...state,
             columnStates: columnStates,
             columnIndices: columnIndices,
             selectedColumnHeaderBounds: undefined,
-            selectedColumnHeaderByIdPersistent: undefined
+            selectedTagDefinition: undefined
         })
     } else if (action instanceof SetColumnWidthAction) {
         return new TableState({
@@ -175,7 +180,7 @@ export function tableReducer(state: TableState, action: TableAction) {
         }
         const newColumnIndices = new Map<string, number>()
         for (let idx = 0; idx < newColumnStates.length; ++idx) {
-            newColumnIndices.set(newColumnStates[idx].idPersistent, idx)
+            newColumnIndices.set(newColumnStates[idx].tagDefinition.idPersistent, idx)
         }
         return new TableState({
             ...state,
@@ -210,11 +215,7 @@ export function tableReducer(state: TableState, action: TableAction) {
             return new TableState({
                 ...state,
                 isSubmittingValues: false,
-                submitValuesErrorState: new ErrorState(
-                    batchErrorMsg,
-                    undefined,
-                    'id-error-batch'
-                )
+                submitValuesErrorState: newErrorState(batchErrorMsg, 'id-error-batch')
             })
         }
         const [idEntity, idPersistentColumn, value] = action.edits[0]
@@ -233,16 +234,16 @@ export function tableReducer(state: TableState, action: TableAction) {
                 ...state.columnStates.slice(0, idxColumn),
                 new ColumnState({
                     ...state.columnStates[idxColumn],
-                    cellContents: [
-                        ...state.columnStates[idxColumn].cellContents.slice(
+                    cellContents: new Remote([
+                        ...state.columnStates[idxColumn].cellContents.value.slice(
                             0,
                             idxEntity
                         ),
                         [value],
-                        ...state.columnStates[idxColumn].cellContents.slice(
+                        ...state.columnStates[idxColumn].cellContents.value.slice(
                             idxEntity + 1
                         )
-                    ]
+                    ])
                 }),
                 ...state.columnStates.slice(idxColumn + 1)
             ]
@@ -250,5 +251,56 @@ export function tableReducer(state: TableState, action: TableAction) {
     } else if (action instanceof SubmitValuesClearErrorAction) {
         return new TableState({ ...state, submitValuesErrorState: undefined })
     }
+    if (action instanceof CurateTagDefinitionStartAction) {
+        return state
+    }
+    if (action instanceof TagDefinitionChangeAction) {
+        const newColumnStates = updateTagDefinition(
+            state.columnStates,
+            state.columnIndices,
+            action.tagDefinition
+        )
+        if (newColumnStates == undefined) {
+            return state
+        }
+        return new TableState({
+            ...state,
+            columnStates: newColumnStates
+        })
+    }
+    if (action instanceof CurateTagDefinitionErrorAction) {
+        return state
+    }
+    if (action instanceof TagChangeOwnershipShowAction) {
+        return new TableState({
+            ...state,
+            ownershipChangeTagDefinition: action.columnDefinition
+        })
+    }
+    if (action instanceof TagChangeOwnershipHideAction) {
+        return new TableState({ ...state, ownershipChangeTagDefinition: undefined })
+    }
     return state
+}
+
+function updateTagDefinition(
+    columnStates: ColumnState[],
+    columnIndices: Map<string, number>,
+    tagDefinition: ColumnDefinition
+) {
+    const idxColumnState = columnIndices.get(tagDefinition.idPersistent)
+    if (idxColumnState === undefined) {
+        return undefined
+    }
+    return [
+        ...columnStates.slice(0, idxColumnState),
+        new ColumnState({
+            ...columnStates[idxColumnState],
+            tagDefinition: {
+                ...columnStates[idxColumnState].tagDefinition,
+                curated: tagDefinition.curated
+            }
+        }),
+        ...columnStates.slice(idxColumnState + 1)
+    ]
 }

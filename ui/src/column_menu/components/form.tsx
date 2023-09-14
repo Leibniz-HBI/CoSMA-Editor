@@ -187,17 +187,6 @@ function ColumnTypeCreateFormBody(props: {
                             </Popover.Header>
                             <Popover.Body>
                                 <Row>{props.submitError?.msg}</Row>
-                                {!!props.submitError.retryCallback && (
-                                    <div className="d-flex justify-content-end">
-                                        <Button
-                                            size="sm"
-                                            variant="secondary"
-                                            onClick={props.submitError.retryCallback}
-                                        >
-                                            Retry
-                                        </Button>
-                                    </div>
-                                )}
                             </Popover.Body>
                         </Popover>
                     </Overlay>

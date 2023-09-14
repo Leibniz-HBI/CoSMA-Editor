@@ -1,5 +1,6 @@
 import { ColumnDefinition } from '../column_menu/state'
 import { ErrorState } from '../util/error/slice'
+import { Remote, RemoteInterface } from '../util/state'
 
 export enum UserPermissionGroup {
     APPLICANT = 'Applicant',
@@ -66,6 +67,7 @@ export interface UserState {
     isRefreshing: boolean
     loginErrorState?: ErrorState
     registrationErrorState?: ErrorState
+    userSearchResults: RemoteInterface<(PublicUserInfo | UserInfo)[]>
 }
 
 export function mkUserState({
@@ -75,7 +77,8 @@ export function mkUserState({
     isRegistering = false,
     isRefreshing = false,
     loginErrorState = undefined,
-    registrationErrorState = undefined
+    registrationErrorState = undefined,
+    userSearchResults = new Remote([])
 }: {
     userInfo?: UserInfo
     showRegistration?: boolean
@@ -84,14 +87,16 @@ export function mkUserState({
     isRefreshing?: boolean
     loginErrorState?: ErrorState
     registrationErrorState?: ErrorState
+    userSearchResults?: Remote<(PublicUserInfo | UserInfo)[]>
 }): UserState {
     return {
-        userInfo: userInfo,
-        showRegistration: showRegistration,
-        isLoggingIn: isLoggingIn,
-        isRegistering: isRegistering,
-        isRefreshing: isRefreshing,
-        loginErrorState: loginErrorState,
-        registrationErrorState: registrationErrorState
+        userInfo,
+        showRegistration,
+        isLoggingIn,
+        isRegistering,
+        isRefreshing,
+        loginErrorState,
+        registrationErrorState,
+        userSearchResults
     }
 }

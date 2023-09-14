@@ -1,16 +1,14 @@
-import {
-    PreloadedState,
-    applyMiddleware,
-    combineReducers,
-    configureStore
-} from '@reduxjs/toolkit'
+import { PreloadedState, combineReducers, configureStore } from '@reduxjs/toolkit'
 import { errorSlice } from './util/error/slice'
 import { userSlice } from './user/slice'
+import { tagManagementSlice } from './tag_management/slice'
 
 const rootReducer = combineReducers({
     error: errorSlice.reducer,
-    user: userSlice.reducer
+    user: userSlice.reducer,
+    tagManagement: tagManagementSlice.reducer
 })
+
 export function setupStore(preloadedState?: PreloadedState<RootState>) {
     return configureStore({
         reducer: rootReducer,

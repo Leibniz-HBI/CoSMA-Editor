@@ -1,10 +1,12 @@
+import { ColumnHeaderMenuItem } from './table/hooks'
+
 type HeaderMenuProps = {
-    removeColumnCallback: () => void
+    menuEntries: ColumnHeaderMenuItem[]
     closeHeaderMenuCallback: () => void
 }
 export function HeaderMenu(props: HeaderMenuProps) {
     return (
-        <div className="container bg-light rounded" style={{ width: 160 }}>
+        <div className="container bg-light rounded" style={{ width: 220 }}>
             <div className="col">
                 <div className="row mb-2">
                     <div className="col-9" />
@@ -15,16 +17,19 @@ export function HeaderMenu(props: HeaderMenuProps) {
                     />
                 </div>
                 <ul className="list-group">
-                    <li
-                        className="list-group-item cursor-pointer"
-                        role="button"
-                        onClick={() => {
-                            props.removeColumnCallback()
-                            props.closeHeaderMenuCallback()
-                        }}
-                    >
-                        <div className="danger text-danger">Hide Column</div>
-                    </li>
+                    {props.menuEntries.map((entry, idx) => (
+                        <li
+                            className="list-group-item cursor-pointer"
+                            role="button"
+                            key={`header-menu-item-${idx}`}
+                            onClick={() => {
+                                entry.onClick()
+                                props.closeHeaderMenuCallback()
+                            }}
+                        >
+                            <div className={entry.labelClassName}>{entry.label}</div>
+                        </li>
+                    ))}
                 </ul>
             </div>
         </div>

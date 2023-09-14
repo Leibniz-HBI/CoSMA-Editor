@@ -18,7 +18,7 @@ import { FormField } from '../util/form'
 import { useNavigate } from 'react-router-dom'
 import { StepHeader } from '../util/components/stepper'
 import { ErrorPopover } from '../util/error/components'
-import { ErrorState } from '../util/error/slice'
+import { newErrorState } from '../util/error/slice'
 
 export function ContributionList() {
     const {
@@ -315,7 +315,7 @@ export function UploadFormBody({
                     </Button>
                     {!!uploadErrorMsg && (
                         <ErrorPopover
-                            errorState={new ErrorState(uploadErrorMsg)}
+                            errorState={newErrorState(uploadErrorMsg)}
                             placement="top"
                             clearError={clearUploadErrorCallback}
                             targetRef={buttonRef}

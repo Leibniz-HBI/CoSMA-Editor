@@ -7,10 +7,14 @@ import {
     refreshStart,
     refreshSuccess,
     registrationError,
-    registrationStart
+    registrationStart,
+    userSearchClear,
+    userSearchError,
+    userSearchStart,
+    userSearchSuccess
 } from './slice'
-import { ErrorState } from '../util/error/slice'
-import { exceptionMessage, unprocessableEntityMessage } from '../util/exception'
+import { newErrorState } from '../util/error/slice'
+import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { config } from '../config'
@@ -43,10 +47,10 @@ export function login(userName: string, password: string): ThunkWithFetch<void> 
                 if (msg === undefined) {
                     msg = 'Unknown error'
                 }
-                dispatch(loginError(new ErrorState(msg)))
+                dispatch(loginError(newErrorState(msg)))
             }
         } catch (e: unknown) {
-            dispatch(loginError(new ErrorState(exceptionMessage(e))))
+            dispatch(loginError(newErrorState(exceptionMessage(e))))
         }
     }
 }
@@ -124,17 +128,53 @@ export function registration({
                 const json = await rsp.json()
                 let msg = ''
                 if (rsp.status == 422) {
-                    unprocessableEntityMessage(json)
+                    errorMessageFromApi(json)
                 } else {
                     msg = json['msg']
                     if (msg === undefined) {
                         msg = 'Unknown error'
                     }
                 }
-                dispatch(registrationError(new ErrorState(msg)))
+                dispatch(registrationError(newErrorState(msg)))
             }
         } catch (error: unknown) {
-            dispatch(registrationError(new ErrorState(exceptionMessage(error))))
+            dispatch(registrationError(newErrorState(exceptionMessage(error))))
+        }
+    }
+}
+
+export function userSearch(searchTerm: string): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(userSearchStart())
+        if (searchTerm == '') {
+            dispatch(userSearchClear())
+            return
+        }
+        try {
+            const rsp = await fetch(
+                config.api_path + '/user/search/' + encodeURI(searchTerm),
+                { method: 'GET', credentials: 'include' }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                let userInfos
+                if (json['contains_complete_info']) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    userInfos = json['results'].map((info: any) =>
+                        parseUserInfoFromJson(info)
+                    )
+                } else {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    userInfos = json['results'].map((info: any) =>
+                        parsePublicUserInfoFromJson(info)
+                    )
+                }
+                dispatch(userSearchSuccess(userInfos))
+            } else {
+                dispatch(userSearchError(newErrorState(json['msg'])))
+            }
+        } catch (e: unknown) {
+            dispatch(userSearchError(newErrorState(exceptionMessage(e))))
         }
     }
 }

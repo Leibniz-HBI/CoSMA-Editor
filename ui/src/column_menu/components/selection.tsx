@@ -1,7 +1,7 @@
 import { ReactElement, ReactNode } from 'react'
 import { Col, Form, Row } from 'react-bootstrap'
 
-import { DashLg, PlusLg, RecordFill } from 'react-bootstrap-icons'
+import { DashLg, PatchCheckFill, PlusLg, RecordFill } from 'react-bootstrap-icons'
 import {
     ColumnDefinition,
     ColumnSelectionEntry,
@@ -106,6 +106,14 @@ export function mkColumnExplorerItem(props: {
         expandCallback = () =>
             props.toggleExpansionCallback(props.path, props.expansionGroup)
     }
+    let curatedIcon = undefined
+    if (columnDefinition.curated) {
+        curatedIcon = (
+            <span className="icon test-primary">
+                <PatchCheckFill />
+            </span>
+        )
+    }
     return (
         <li
             className="list-group-item d-flex flex-row justify-content-between"
@@ -128,7 +136,10 @@ export function mkColumnExplorerItem(props: {
                             expandCallback={expandCallback}
                         />
                     </div>
-                    <Col>{constructColumnTitleSpans(columnDefinition.namePath)}</Col>
+                    <Col>
+                        {constructColumnTitleSpans(columnDefinition.namePath)}
+                        {curatedIcon}
+                    </Col>
                 </div>
             </Col>
             {tailElement}
@@ -162,7 +173,7 @@ export function mkListItems(args: {
                         namePath: [entry.name],
                         idPersistent: entry.idPersistent,
                         columnType: ColumnType.Inner,
-                        curated: false,
+                        curated: true,
                         version: 0
                     })
                 }),

@@ -1,9 +1,5 @@
 import { GridCellKind } from '@glideapps/glide-data-grid'
-import {
-    ColumnDefinition,
-    ColumnType,
-    newColumnDefinition
-} from '../../../column_menu/state'
+import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
 import { Remote, useThunkReducer } from '../../../util/state'
 import { LoadContributionDetailsAsyncAction } from '../../details/async_action'
 import {

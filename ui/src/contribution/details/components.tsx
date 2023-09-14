@@ -9,7 +9,7 @@ import { ContributionStepper } from '../components'
 import { useLoaderData } from 'react-router-dom'
 import { Contribution } from '../state'
 import { ErrorPopover } from '../../util/error/components'
-import { ErrorState } from '../../util/error/slice'
+import { newErrorState } from '../../util/error/slice'
 
 export function ContributionDetailsStep() {
     const idPersistent = useLoaderData() as string
@@ -175,7 +175,7 @@ export function EditFormBody({
                     </Button>
                     {!!editErrorMsg && (
                         <ErrorPopover
-                            errorState={new ErrorState(editErrorMsg)}
+                            errorState={newErrorState(editErrorMsg)}
                             placement="top"
                             clearError={clearEditErrorCallback}
                             targetRef={buttonRef}

@@ -17,3 +17,13 @@ export const selectUserInfo = createSelector(
     selectUser,
     (userState) => userState.userInfo
 )
+
+export const selectPermissionGroup = createSelector(
+    selectUserInfo,
+    (userInfo) => userInfo?.permissionGroup
+)
+
+export const selectSearchResults = createSelector(
+    selectUser,
+    (userState) => userState.userSearchResults
+)

@@ -14,6 +14,7 @@ import { useRemoteTableData, LocalTableCallbacks, TableDataProps } from './hooks
 import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
 import { UserInfo } from '../user/state'
 import { drawCell } from './draw'
+import { ChangeOwnershipModal } from '../tag_management/components'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -122,25 +123,28 @@ export function DataTable(props: {
         selectedColumnHeaderBounds,
         isLoading,
         loadDataErrorState,
-        submitValuesErrorState
+        submitValuesErrorState,
+        columnHeaderMenuEntries,
+        tagDefinitionChangeOwnership
     } = props.tableProps
     const {
         cellContentCallback,
-        removeColumnCallback,
         showColumnAddMenuCallback,
         showHeaderMenuCallback,
         hideHeaderMenuCallback,
         setColumnWidthCallback,
         switchColumnsCallback,
         columnHeaderBoundsCallback,
-        clearSubmitValueErrorCallback
+        clearSubmitValueErrorCallback,
+        hideTagDefinitionOwnershipCallback,
+        updateTagDefinitionCallback
     } = props.tableCallbacks
     const headerMenuOpen = selectedColumnHeaderBounds !== undefined
     const { layerProps, renderLayer } = useLayer({
         isOpen: headerMenuOpen,
         auto: true,
         placement: 'bottom-end',
-        onOutsideClick: undefined,
+        onOutsideClick: hideHeaderMenuCallback,
         trigger: {
             getBounds: columnHeaderBoundsCallback
         }
@@ -158,9 +162,13 @@ export function DataTable(props: {
         const columnDefs: GridColumn[] = []
         for (let i = 0; i < columnStates.length; ++i) {
             const columnState = columnStates[i]
+            let title = columnState.name()
+            if (columnState.tagDefinition.curated) {
+                title = '☑ ' + title
+            }
             columnDefs.push({
-                id: columnState.idPersistent,
-                title: columnState.name,
+                id: columnState.tagDefinition.idPersistent,
+                title,
                 width: columnState.width,
                 hasMenu: i >= frozenColumns
             })
@@ -195,7 +203,7 @@ export function DataTable(props: {
                         <div {...layerProps}>
                             <HeaderMenu
                                 closeHeaderMenuCallback={hideHeaderMenuCallback}
-                                removeColumnCallback={removeColumnCallback}
+                                menuEntries={columnHeaderMenuEntries}
                             />
                         </div>
                     )}
@@ -207,23 +215,15 @@ export function DataTable(props: {
                             </Toast.Header>
                             <Toast.Body>
                                 <Row>{submitValuesErrorState.msg}</Row>
-                                {!!submitValuesErrorState.retryCallback && (
-                                    <div className="d-flex justify-content-end">
-                                        <Button
-                                            size="sm"
-                                            variant="secondary"
-                                            onClick={
-                                                submitValuesErrorState.retryCallback
-                                            }
-                                        >
-                                            Retry
-                                        </Button>
-                                    </div>
-                                )}
                             </Toast.Body>
                         </Toast>
                     </ToastContainer>
                 )}
+                <ChangeOwnershipModal
+                    tagDefinition={tagDefinitionChangeOwnership}
+                    onClose={hideTagDefinitionOwnershipCallback}
+                    updateTagDefinitionChangeCallback={updateTagDefinitionCallback}
+                />
             </>
         )
     }

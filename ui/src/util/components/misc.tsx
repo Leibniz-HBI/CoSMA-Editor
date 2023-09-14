@@ -1,5 +1,6 @@
-import { Button, Placeholder } from 'react-bootstrap'
+import { Button, Card, Placeholder } from 'react-bootstrap'
 import { Remote } from '../state'
+import { FunctionComponent, ReactComponentElement, ReactNode } from 'react'
 
 export function CosmaeLoading() {
     return (
@@ -71,5 +72,29 @@ export function ChoiceButton({
         <Button variant="outline-primary" onClick={onClick} className={className}>
             <span>{label}</span>
         </Button>
+    )
+}
+
+export function CosmaeCard({
+    title,
+    text,
+    children,
+    className = ''
+}: {
+    title?: string
+    text?: string
+    children: ReactNode
+    className?: string
+}) {
+    return (
+        <Card className={className}>
+            <Card.Body className="bg-light d-flex flex-column pt-0 ps-0 pe-0">
+                <div className="bg-primary-subtle ps-2 pe-2 pt-2 pb-3 mb-2">
+                    {title !== undefined && <Card.Title>{title}</Card.Title>}
+                    {text !== undefined && <Card.Text>{text}</Card.Text>}
+                </div>
+                {children}
+            </Card.Body>
+        </Card>
     )
 }

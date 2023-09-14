@@ -1,6 +1,8 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
-import { UserInfo, UserState } from './state'
+import { PublicUserInfo, UserInfo, UserState } from './state'
 import { ErrorState } from '../util/error/slice'
+import { newRemote } from '../util/state'
+import { ColumnDefinition } from '../column_menu/state'
 
 const initialState: UserState = {
     userInfo: undefined,
@@ -9,7 +11,8 @@ const initialState: UserState = {
     isRegistering: false,
     isRefreshing: false,
     loginErrorState: undefined,
-    registrationErrorState: undefined
+    registrationErrorState: undefined,
+    userSearchResults: newRemote([])
 }
 
 export const userSlice = createSlice({
@@ -58,6 +61,39 @@ export const userSlice = createSlice({
         },
         logout: (state: UserState) => {
             state.userInfo = undefined
+        },
+        userSearchStart(state: UserState) {
+            state.userSearchResults = newRemote([], true)
+        },
+        userSearchSuccess(
+            state: UserState,
+            action: PayloadAction<(PublicUserInfo | UserInfo)[]>
+        ) {
+            state.userSearchResults = newRemote(action.payload)
+        },
+        userSearchError(state: UserState, action: PayloadAction<ErrorState>) {
+            state.userSearchResults = newRemote([], false, action.payload.msg)
+        },
+        userSearchErrorClear(state: UserState) {
+            state.userSearchResults.errorMsg = undefined
+        },
+        userSearchClear(state: UserState) {
+            state.userSearchResults = newRemote([])
+        },
+        updateUserTagDefinition(
+            state: UserState,
+            action: PayloadAction<ColumnDefinition>
+        ) {
+            if (state.userInfo === undefined) {
+                return
+            }
+            const idx = state.userInfo.columns.findIndex(
+                (tagDefinition) =>
+                    action.payload.idPersistent == tagDefinition.idPersistent
+            )
+            if (idx > 0) {
+                state.userInfo.columns[idx] = action.payload
+            }
         }
     }
 })
@@ -74,7 +110,13 @@ export const {
     registrationError,
     registrationErrorClear,
     toggleRegistration,
-    logout
+    logout,
+    userSearchStart,
+    userSearchSuccess,
+    userSearchError,
+    userSearchErrorClear,
+    userSearchClear,
+    updateUserTagDefinition
 } = userSlice.actions
 
 export default userSlice.reducer

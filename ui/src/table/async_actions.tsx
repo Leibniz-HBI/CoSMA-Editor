@@ -10,14 +10,18 @@ import {
     Edit,
     SubmitValuesStartAction,
     SubmitValuesEndAction,
-    SubmitValuesErrorAction
+    SubmitValuesErrorAction,
+    CurateTagDefinitionStartAction,
+    CurateTagDefinitionErrorAction,
+    CurateTagDefinitionSuccessAction
 } from './actions'
 import { AsyncAction } from '../util/async_action'
 import { fetch_chunk } from '../util/fetch'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import { CellValue } from './state'
 import { config } from '../config'
-import { ErrorState } from '../util/error/slice'
+import { newErrorState } from '../util/error/slice'
+import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 
 const displayTxtColumnId = 'display_txt_id'
 /**
@@ -27,11 +31,13 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
     async run(dispatch: Dispatch<TableAction>) {
         dispatch(new SetEntityLoadingAction())
         dispatch(
-            new SetColumnLoadingAction(
-                'Display Text',
-                displayTxtColumnId,
-                ColumnType.String
-            )
+            new SetColumnLoadingAction({
+                namePath: ['Display Text'],
+                idPersistent: displayTxtColumnId,
+                columnType: ColumnType.String,
+                curated: true,
+                version: 0
+            })
         )
         try {
             const entities: string[] = []
@@ -48,7 +54,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                 } else if (rsp.status !== 200) {
                     dispatch(
                         new SetLoadDataErrorAction(
-                            new ErrorState(
+                            newErrorState(
                                 `Could not load entities chunk ${i}. Reason: "${
                                     (await rsp.json())['msg']
                                 }"`
@@ -79,7 +85,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
             dispatch(new SetEntitiesAction(entities))
             dispatch(new AppendColumnAction(displayTxtColumnId, displayTxts))
         } catch (e: unknown) {
-            dispatch(new SetLoadDataErrorAction(new ErrorState(exceptionMessage(e))))
+            dispatch(new SetLoadDataErrorAction(newErrorState(exceptionMessage(e))))
         }
     }
 }
@@ -95,10 +101,8 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async run(dispatch: Dispatch<TableAction>): Promise<void> {
         const id_persistent = this.columnDefinition.idPersistent
-        const columnType = this.columnDefinition.columnType
         try {
-            const name = this.columnDefinition.namePath.join('->')
-            dispatch(new SetColumnLoadingAction(name, id_persistent, columnType))
+            dispatch(new SetColumnLoadingAction(this.columnDefinition))
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const column_data: { [key: string]: CellValue[] } = {}
             for (let i = 0; ; i += 5000) {
@@ -113,7 +117,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                 if (rsp.status !== 200) {
                     dispatch(
                         new SetLoadDataErrorAction(
-                            new ErrorState(
+                            newErrorState(
                                 `Could not load entities chunk ${i}. Reason: "${
                                     (await rsp.json())['msg']
                                 }"`
@@ -151,7 +155,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
             }
             dispatch(new AppendColumnAction(id_persistent, column_data))
         } catch (e: unknown) {
-            dispatch(new SetLoadDataErrorAction(new ErrorState(exceptionMessage(e))))
+            dispatch(new SetLoadDataErrorAction(newErrorState(exceptionMessage(e))))
         }
     }
 }
@@ -195,7 +199,7 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                 dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
                 dispatch(
                     new SubmitValuesErrorAction(
-                        new ErrorState(
+                        newErrorState(
                             'The data you entered changed in the remote location. ' +
                                 'The new values are updated in the table. Please review them.'
                         )
@@ -204,15 +208,11 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                 return
             }
             const msg = (await rsp.json())['msg']
-            let retryCallback = undefined
-            if (rsp.status >= 500) {
-                retryCallback = () => this.run(dispatch)
-            }
-            dispatch(new SubmitValuesErrorAction(new ErrorState(msg, retryCallback)))
+            dispatch(new SubmitValuesErrorAction(newErrorState(msg)))
         } catch (e: unknown) {
             dispatch(
                 new SubmitValuesErrorAction(
-                    new ErrorState('Unknown error: ' + exceptionMessage(e))
+                    newErrorState('Unknown error: ' + exceptionMessage(e))
                 )
             )
         }
@@ -228,6 +228,42 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                 idPersistent: tagInstance['id_persistent']
             }
         ]
+    }
+}
+
+export class CurateAction extends AsyncAction<TableAction, void> {
+    idTagDefinitionPersistent: string
+
+    constructor(idTagDefinitionPersistent: string) {
+        super()
+        this.idTagDefinitionPersistent = idTagDefinitionPersistent
+    }
+    async run(dispatch: Dispatch<TableAction>): Promise<void> {
+        dispatch(new CurateTagDefinitionStartAction())
+        try {
+            const rsp = await fetch(
+                config.api_path +
+                    `/tags/definitions/permissions/${this.idTagDefinitionPersistent}/curate`,
+                {
+                    credentials: 'include',
+                    method: 'POST'
+                }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                dispatch(
+                    new CurateTagDefinitionSuccessAction(
+                        parseColumnDefinitionsFromApi(json)
+                    )
+                )
+            } else {
+                dispatch(new CurateTagDefinitionErrorAction(newErrorState(json['msg'])))
+            }
+        } catch (e: unknown) {
+            dispatch(
+                new CurateTagDefinitionErrorAction(newErrorState(exceptionMessage(e)))
+            )
+        }
     }
 }
 
