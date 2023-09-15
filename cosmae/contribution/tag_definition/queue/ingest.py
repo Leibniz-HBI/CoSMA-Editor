@@ -87,6 +87,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                         id_persistent=id_tag_instance_persistent,
                         id_entity_persistent=id_entity_persistent,
                         id_tag_definition_persistent=tag_definition.id_persistent,
+                        user=contribution.created_by,
                         time_edit=time_add,
                         value=value,
                     )

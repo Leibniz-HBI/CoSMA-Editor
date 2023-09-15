@@ -28,7 +28,7 @@ def test_no_id_version(auth_server, float_tag):
     assert (
         req.json()["msg"]
         == f"Tag instance with id_entity_persistent {ce.id_persistent_test_0}, "
-        f"id_tag_definition_persistent {c.id_tag_def_persistent_test} and "
+        f"id_tag_definition_persistent {c.id_tag_def_persistent_test_user} and "
         f"value {float_tag['value']} has version but no id_persistent."
     )
 
@@ -78,7 +78,7 @@ def test_exists(auth_server, float_tag):
         assert req.json()["msg"] == (
             "Could not generate id_persistent for tag instance with "
             f"id_entity_persistent {ce.id_persistent_test_0}, "
-            f"id_tag_definition_persistent {c.id_tag_def_persistent_test} and "
+            f"id_tag_definition_persistent {c.id_tag_def_persistent_test_user} and "
             f'value {float_tag["value"]}.'
         )
 

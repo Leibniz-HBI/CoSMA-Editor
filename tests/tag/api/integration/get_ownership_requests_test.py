@@ -72,11 +72,11 @@ def test_get_request(auth_server, ownership_request_curated, ownership_request_u
                     },
                     "tag_definition": {
                         "id_persistent": c.id_tag_def_persistent_test_user,
-                        "name": c.name_tag_def_test,
+                        "name": c.name_tag_def_test_user,
                         "type": "FLOAT",
                         "curated": False,
                         "id_parent_persistent": None,
-                        "name_path": [c.name_tag_def_test],
+                        "name_path": [c.name_tag_def_test_user],
                         "owner": cu.test_username,
                     },
                     "id_persistent": c.id_ownership_request_test,

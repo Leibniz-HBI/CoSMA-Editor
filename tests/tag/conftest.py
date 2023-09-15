@@ -26,7 +26,7 @@ def tag_def_user(user):
         id_persistent=c.id_tag_def_persistent_test_user,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
-        name=c.name_tag_def_test,
+        name=c.name_tag_def_test_user,
         time_edit=c.time_edit_test,
         owner=user,
     )

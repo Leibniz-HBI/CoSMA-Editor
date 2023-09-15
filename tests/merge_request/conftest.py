@@ -179,13 +179,16 @@ def instances_merge_request_origin_user(merge_request_user, entity0, entity1):
 
 
 @pytest.fixture
-def instance_merge_request_origin_user_changed(instances_merge_request_origin_user):
+def instance_merge_request_origin_user_changed(
+    user1, instances_merge_request_origin_user
+):
     old_tag_instance = instances_merge_request_origin_user[1]
     tag_instance, _ = TagInstance.change_or_create(
         id_entity_persistent=old_tag_instance.id_entity_persistent,
         id_tag_definition_persistent=old_tag_instance.id_tag_definition_persistent,
         id_persistent=old_tag_instance.id_persistent,
         version=old_tag_instance.id,
+        user=user1,
         value=9001,
         time_edit=c.time_instance_origin1_changed,
     )
@@ -219,6 +222,7 @@ def instance_merge_request_destination_user_conflict(merge_request_user, entity1
 
 @pytest.fixture
 def instance_merge_request_destination_user_conflict_changed(
+    user,
     instance_merge_request_destination_user_conflict,
 ):
     tag_instance, _ = TagInstance.change_or_create(
@@ -228,6 +232,7 @@ def instance_merge_request_destination_user_conflict_changed(
         ),
         id_persistent=instance_merge_request_destination_user_conflict.id_persistent,
         version=instance_merge_request_destination_user_conflict.id,
+        user=user,
         value=9001,
         time_edit=c.time_instance_destination_changed,
     )
@@ -348,6 +353,7 @@ def instance_destination_same_value(merge_request_user):
 
 @pytest.fixture
 def instance_destination_updated_same_value1(
+    user,
     instance_merge_request_destination_user_conflict,
 ):
     old_instance = instance_merge_request_destination_user_conflict
@@ -356,6 +362,7 @@ def instance_destination_updated_same_value1(
         id_entity_persistent=old_instance.id_entity_persistent,
         id_tag_definition_persistent=old_instance.id_tag_definition_persistent,
         value=c.value_origin1,
+        user=user,
         time_edit=c.time_instance_destination_same_value,
         version=old_instance.id,
     )

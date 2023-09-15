@@ -8,14 +8,13 @@ export enum ContributionStep {
     EntitiesMatched = 'Entities matched',
     EntitiesAssigned = 'Entities assigned',
     ValuesAssigned = 'Values assigned',
-    Merged = 'Merged'
+    Merged = 'Complete'
 }
 
 const activeSteps = new Set([
     ContributionStep.ColumnsExtracted,
     ContributionStep.EntitiesMatched,
-    ContributionStep.EntitiesMatched,
-    ContributionStep.ValuesAssigned
+    ContributionStep.ValuesExtracted
 ])
 
 export class Contribution {
@@ -57,7 +56,7 @@ export class Contribution {
     }
 
     isReady(): boolean {
-        return this.step in activeSteps
+        return activeSteps.has(this.step)
     }
 }
 

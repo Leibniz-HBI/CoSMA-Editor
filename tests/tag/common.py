@@ -2,6 +2,7 @@
 from datetime import datetime
 
 name_tag_def_test = "name tag test"
+name_tag_def_test_user = "name tag test_user"
 name_tag_def_test1 = "name tag test1"
 name_tag_def_curated_test = "name curated tag test"
 time_edit_test = datetime(2022, 12, 20)

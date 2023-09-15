@@ -22,6 +22,7 @@ import { CellValue } from './state'
 import { config } from '../config'
 import { newErrorState } from '../util/error/slice'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
+import { constructColumnTitle } from '../contribution/entity/hooks'
 
 const displayTxtColumnId = 'display_txt_id'
 /**
@@ -188,14 +189,15 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                     ]
                 })
             })
+            const json = await rsp.json()
             if (rsp.status == 200) {
-                const tagInstance = (await rsp.json())['tag_instances'][0]
+                const tagInstance = json['tag_instances'][0]
 
                 dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
                 return
             }
             if (rsp.status == 409) {
-                const tagInstance = (await rsp.json())['tag_instances'][0]
+                const tagInstance = json['tag_instances'][0]
                 dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
                 dispatch(
                     new SubmitValuesErrorAction(
@@ -207,7 +209,20 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                 )
                 return
             }
-            const msg = (await rsp.json())['msg']
+            if (rsp.status == 403) {
+                const namePath = constructColumnTitle(
+                    json['name_path'] ?? json['name'] ?? ['UNKNOWN']
+                )
+                dispatch(
+                    new SubmitValuesErrorAction(
+                        newErrorState(
+                            `You do not have sufficient permissions to change values for tag ${namePath}`
+                        )
+                    )
+                )
+                return
+            }
+            const msg = json['msg']
             dispatch(new SubmitValuesErrorAction(newErrorState(msg)))
         } catch (e: unknown) {
             dispatch(

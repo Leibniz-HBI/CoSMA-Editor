@@ -131,10 +131,13 @@ export function ContributionListItem({
     eventKey: string
 }) {
     const navigate = useNavigate()
-    let badgeBackground = 'secondary'
+    let badgeBackground = 'secondary',
+        badgeForeground = 'text-black'
     if (contribution.isReady()) {
         badgeBackground = 'primary'
+        badgeForeground = 'text-white'
     }
+
     return (
         <ListGroup.Item
             className="nav-link"
@@ -147,7 +150,9 @@ export function ContributionListItem({
                 <Col>
                     <Row className="justify-content-start">
                         <Col xs="auto">
-                            <Badge bg={badgeBackground}>{contribution.step}</Badge>
+                            <Badge bg={badgeBackground} className={badgeForeground}>
+                                {contribution.step}
+                            </Badge>
                         </Col>
                         <Col>
                             <span className="link-primary">

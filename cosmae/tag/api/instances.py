@@ -15,11 +15,15 @@ from cosmae.exception import (
     InvalidTagValueException,
     NotAuthenticatedException,
     TagDefinitionMissingException,
+    TagDefinitionPermissionException,
     TagInstanceExistsException,
     ValidationException,
 )
 from cosmae.merge_request.models_django import MergeRequest
+from cosmae.tag.api.definitions import tag_definition_db_to_api
+from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.tag.models_django import TagInstance as TagInstanceDb
+from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
 from cosmae.util.django import save_many_atomic
 
@@ -121,17 +125,23 @@ class TagInstanceUpdatedResponse(Schema):
     response={
         200: TagInstancePostList,
         400: ApiError,
+        401: ApiError,
+        403: TagDefinitionResponse,
         409: TagInstanceUpdatedResponse,
         500: ApiError,
     },
 )
-def post_tag_instance(_, tag_list: TagInstancePostList):
+def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
     "Create or change a tag instance."
     # pylint: disable=too-many-return-statements
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
     tag_apis = tag_list.tag_instances
     now = datetime.utcnow()
     try:
-        tag_dbs = [tag_instance_api_to_db(tag, now) for tag in tag_apis]
+        tag_dbs = [tag_instance_api_to_db(tag, user, now) for tag in tag_apis]
     except ValidationException as exc:
         return 400, ApiError(msg=str(exc))
     except TagInstanceExistsException as exc:
@@ -154,6 +164,8 @@ def post_tag_instance(_, tag_list: TagInstancePostList):
             msg=f"Value {exc.value} should be of type {exc.type_name} "
             f"for tag with id_persistent {exc.tag_id_persistent}."
         )
+    except TagDefinitionPermissionException as exc:
+        return 403, tag_definition_db_to_api(exc.tag_definition)
     except EntityUpdatedException as exc:
         return 409, TagInstanceUpdatedResponse(
             msg="There has been a concurrent modification "
@@ -285,7 +297,7 @@ def post_tag_instances_for_entities(
         )
 
 
-def tag_instance_api_to_db(tag_api: TagInstancePost, time: datetime):
+def tag_instance_api_to_db(tag_api: TagInstancePost, user: CosmaeUser, time: datetime):
     "Convert a tag instance from API to database representation."
     if tag_api.id_persistent:
         persistent_id = tag_api.id_persistent
@@ -306,6 +318,7 @@ def tag_instance_api_to_db(tag_api: TagInstancePost, time: datetime):
         id_persistent=persistent_id,
         id_entity_persistent=tag_api.id_entity_persistent,
         id_tag_definition_persistent=tag_api.id_tag_definition_persistent,
+        user=user,
         value=tag_api.value,
         time_edit=time,
         version=tag_api.version,

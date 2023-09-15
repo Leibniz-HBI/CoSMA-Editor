@@ -12,5 +12,14 @@ def read_csv_of_candidate(contribution, nrows=None):
         header_param = 0
     else:
         header_param = None
-    data_frame = read_csv(pth, header=header_param, nrows=nrows, dtype="str")
-    return data_frame
+    for encoding in ["utf-8", "iso-8859-1"]:
+        try:
+            data_frame = read_csv(
+                pth, header=header_param, nrows=nrows, dtype="str", encoding=encoding
+            )
+            return data_frame
+        except ValueError:
+            pass
+    raise Exception(  # pylint: disable=broad-exception-raised
+        "Could not decode the csv."
+    )

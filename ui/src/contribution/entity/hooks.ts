@@ -39,7 +39,7 @@ export function constructColumnTitle(namePath: string[]): string {
             ' -> ' +
             namePath[namePath.length - 1]
     }
-    return namePath[0] + ' ' + namePath.slice(1).join(' -> ')
+    return namePath[0] + ' -> ' + namePath.slice(1).join(' -> ')
 }
 
 export type PutDuplicateCallback = (

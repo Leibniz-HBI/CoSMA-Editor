@@ -62,23 +62,25 @@ def test_removes_contribution_candidate_from_others(entity_duplicate):
 
 
 @pytest.fixture
-def tag_def():
-    TagDefinition.objects.create(  # pylint: disable = no-member
+def tag_def(user):
+    return TagDefinition.objects.create(  # pylint: disable = no-member
         id_persistent=c.id_tag_def_test,
         name=c.name_tag_def_test,
         type=TagDefinition.STRING,
         time_edit=c.time_edit_tag_def_test,
+        owner=user,
     )
 
 
 @pytest.fixture
-def tag_def1():
-    TagDefinition.objects.create(  # pylint: disable = no-member
+def tag_def1(user):
+    return TagDefinition.objects.create(  # pylint: disable = no-member
         id_persistent=c.id_tag_def_test1,
         id_parent_persistent=c.id_tag_def_test,
         name=c.name_tag_def_test1,
         type=TagDefinition.STRING,
         time_edit=c.time_edit_tag_def_test1,
+        owner=user,
     )
 
 
@@ -135,7 +137,7 @@ def tag_instance_existing(tag_def, tag_def1, entities):
 
 
 @pytest.mark.django_db
-def test_replaces_entity_of_tag_def(tag_instances_for_replace, entity_match):
+def test_replaces_entity_of_tag_def(tag_instances_for_replace, user, entity_match):
     q.update_tag_instances(
         q.annotate_with_replacement_info(
             TagInstance.most_recent_queryset(
@@ -144,6 +146,7 @@ def test_replaces_entity_of_tag_def(tag_instances_for_replace, entity_match):
             EntityDuplicate.objects.all(),  # pylint: disable=no-member
             "id_entity_persistent",
         ),
+        user,
         c.time_edit_deduplication,
     )
     instances = TagInstance.most_recent_queryset(
@@ -156,7 +159,7 @@ def test_replaces_entity_of_tag_def(tag_instances_for_replace, entity_match):
 
 
 @pytest.mark.django_db
-def test_keeps_entity_of_tag_def(tag_instances_for_replace):
+def test_keeps_entity_of_tag_def(user, tag_instances_for_replace):
     q.update_tag_instances(
         q.annotate_with_replacement_info(
             TagInstance.most_recent_queryset(
@@ -165,6 +168,7 @@ def test_keeps_entity_of_tag_def(tag_instances_for_replace):
             EntityDuplicate.objects.all(),  # pylint: disable=no-member
             "id_entity_persistent",
         ),
+        user,
         c.time_edit_deduplication,
     )
     instances = TagInstance.most_recent_queryset(
@@ -183,6 +187,7 @@ def tag_instances(tag_def, tag_def1, entities):
         time_edit=ce.time_edit_test_0,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
+        user=tag_def.owner,
         value="2.4",
     )
     tag_inst0.save()
@@ -191,6 +196,7 @@ def tag_instances(tag_def, tag_def1, entities):
         id_tag_definition_persistent=c.id_tag_def_test,
         id_entity_persistent=ce.id_persistent_test_0,
         time_edit=ce.time_edit_test_0,
+        user=tag_def.owner,
         value="1.7",
     )
     tag_inst1.save()
@@ -199,6 +205,7 @@ def tag_instances(tag_def, tag_def1, entities):
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         time_edit=ce.time_edit_test_0,
+        user=tag_def1.owner,
         value="foo",
     )
     tag_inst2.save()
@@ -207,6 +214,7 @@ def tag_instances(tag_def, tag_def1, entities):
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         time_edit=ce.time_edit_test_0,
+        user=tag_def1.owner,
         value="bar",
         version=tag_inst2.id,
     )
@@ -216,6 +224,7 @@ def tag_instances(tag_def, tag_def1, entities):
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=ce.id_persistent_test_1,
         time_edit=ce.time_edit_test_0,
+        user=tag_def1.owner,
         value="baz",
     )
     tag_inst3.save()

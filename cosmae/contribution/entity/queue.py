@@ -34,7 +34,9 @@ def eliminate_duplicates(id_contribution_persistent):
         tag_instances_with_duplicates = annotate_with_replacement_info(
             TagInstance.most_recent_queryset(), duplicates, "id_entity_persistent"
         )
-        update_tag_instances(tag_instances_with_duplicates, time_edit)
+        update_tag_instances(
+            tag_instances_with_duplicates, contribution.created_by, time_edit
+        )
 
         replaced_entities_with_duplicates = annotate_with_replacement_info(
             Entity.objects.filter(  # pylint: disable=no-member
@@ -46,6 +48,8 @@ def eliminate_duplicates(id_contribution_persistent):
         update_entities(replaced_entities_with_duplicates)
         for merge_request in contribution.mergerequest_set.all():
             django_rq.enqueue(merge_request_fast_forward, merge_request.id_persistent)
+        contribution.state = ContributionCandidate.MERGED
+        contribution.save()
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
@@ -54,7 +58,7 @@ def eliminate_duplicates(id_contribution_persistent):
             contribution_candidate.save()
 
 
-def update_tag_instances(tag_instances_with_duplicates, time_edit):
+def update_tag_instances(tag_instances_with_duplicates, user, time_edit):
     "Update tag instances according to replacement info."
     # no good way to keep track of updates in bulk operation for now
     tag_instances_with_duplicates = tag_instances_with_duplicates.filter(
@@ -66,6 +70,7 @@ def update_tag_instances(tag_instances_with_duplicates, time_edit):
             id_entity_persistent=tag_instance.replacement_id_entity_persistent,
             value=tag_instance.value,
             id_tag_definition_persistent=tag_instance.id_tag_definition_persistent,
+            user=user,
             version=tag_instance.id,
             time_edit=time_edit,
         )[0]

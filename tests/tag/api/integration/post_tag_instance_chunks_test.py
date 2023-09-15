@@ -34,22 +34,21 @@ def test_missing_tag_def(auth_server):
     )
 
 
-def test_can_slice(auth_server, tag_def, entity0):
+def test_can_slice(auth_server, tag_def_user, entity0):
     live_server, cookies = auth_server
-    tag_def.save()
     entity0.save()
     instances = [
         {
             "value": str(float(i) + 0.3),
             "id_entity_persistent": entity0.id_persistent,
-            "id_tag_definition_persistent": tag_def.id_persistent,
+            "id_tag_definition_persistent": tag_def_user.id_persistent,
         }
         for i in range(20)
     ]
     rsp = post_tag_instances(live_server.url, instances, cookies=cookies)
     assert rsp.status_code == 200
     rsp = post_tag_instance_chunks(
-        live_server.url, tag_def.id_persistent, 3, 4, cookies=cookies
+        live_server.url, tag_def_user.id_persistent, 3, 4, cookies=cookies
     )
     assert rsp.status_code == 200
     persons = rsp.json()["tag_instances"]

@@ -15,6 +15,7 @@ from cosmae.exception import (
     NoParentTagException,
     TagDefinitionExistsException,
     TagDefinitionMissingException,
+    TagDefinitionPermissionException,
     TagInstanceExistsException,
 )
 from cosmae.util import CosmaeUser
@@ -117,9 +118,19 @@ class TagDefinition(models.Model):
             except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
                 raise NoParentTagException(id_parent_persistent) from exc
         if version is None:
-            exists = TagDefinition.objects.filter(  # pylint: disable=no-member
-                name=name, id_parent_persistent=id_parent_persistent
-            ).exclude(id_persistent=id_persistent)
+            exists = (
+                TagDefinition.objects.filter(  # pylint: disable=no-member
+                    name=name, id_parent_persistent=id_parent_persistent
+                )
+                .annotate(
+                    next_version=models.Subquery(
+                        TagDefinition.objects.filter(  # pylint: disable=no-member
+                            previous_version=models.OuterRef("id")
+                        ).values("id")
+                    )
+                )
+                .exclude(id_persistent=id_persistent, next_version__isnull=True)
+            )
             if exists:
                 raise TagDefinitionExistsException(
                     name,
@@ -253,6 +264,7 @@ class TagInstance(models.Model):
         time_edit: datetime,
         id_entity_persistent: str,
         id_tag_definition_persistent: str,
+        user: CosmaeUser,
         value: Optional[Union[int, float, List[str]]] = None,
         version: Optional[int] = None,
         **kwargs,
@@ -270,6 +282,8 @@ class TagInstance(models.Model):
             raise EntityMissingException(id_entity_persistent) from exc
         try:
             tag_def = TagDefinition.most_recent_by_id(id_tag_definition_persistent)
+            if not tag_def.has_write_access(user):
+                raise TagDefinitionPermissionException(tag_def)
             value = tag_def.check_value(value)
         except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
             raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
