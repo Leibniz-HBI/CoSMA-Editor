@@ -12,6 +12,7 @@ import { Remote, useThunkReducer } from '../../util/state'
 import { LoadContributionDetailsAsyncAction } from '../details/async_action'
 import {
     CompleteEntityAssignmentClearErrorAction,
+    SetPageNumberAction,
     ToggleTagDefinitionMenuAction
 } from './action'
 import {
@@ -205,6 +206,41 @@ export function useContributionEntities(idContributionPersistent: string) {
         })
     )
     const isLoading = state.contributionCandidate.isLoading || state.entities.isLoading
+    async function loadPage(
+        entities: EntityWithDuplicates[] | undefined,
+        pageNumber: number
+    ) {
+        if (entities === undefined) {
+            return undefined
+        }
+        const chunkEndIdx = 50 * pageNumber
+        const chunkStartIdx = chunkEndIdx - 50
+        const entityGroupMap = await dispatch(
+            new GetContributionEntityDuplicateCandidatesAction({
+                idContributionPersistent,
+                entityIdPersistentList: entities
+                    ?.slice(chunkStartIdx, chunkEndIdx)
+                    .map((entity) => entity.idPersistent)
+            })
+        )
+        if (entityGroupMap !== undefined && state.tagDefinitions.length > 0) {
+            dispatch(
+                new GetContributionTagInstancesAsyncAction({
+                    entitiesGroupMap: entityGroupMap,
+                    tagDefinitionList: state.tagDefinitions,
+                    idContributionPersistent: idContributionPersistent
+                })
+            )
+        }
+    }
+    function setPage(pageNumber: number) {
+        const validPageNumber = Math.min(
+            Math.max(1, pageNumber),
+            Math.ceil(state.entities.value.length / 50)
+        )
+        dispatch(new SetPageNumberAction(validPageNumber))
+        loadPage(state.entities.value, validPageNumber)
+    }
     return {
         getEntityDuplicatesCallback: () => {
             if (isLoading) {
@@ -213,40 +249,7 @@ export function useContributionEntities(idContributionPersistent: string) {
             dispatch(new LoadContributionDetailsAsyncAction(idContributionPersistent))
             dispatch(new GetContributionEntitiesAction(idContributionPersistent)).then(
                 async (entities) => {
-                    if (entities === undefined) {
-                        return undefined
-                    }
-                    const chunkSize = 80
-                    for (
-                        let chunkStartIdx = 0;
-                        chunkStartIdx < entities?.length;
-                        chunkStartIdx += chunkSize
-                    ) {
-                        const chunkEndIdx = Math.min(
-                            entities?.length,
-                            chunkStartIdx + chunkSize
-                        )
-                        const entityGroupMap = await dispatch(
-                            new GetContributionEntityDuplicateCandidatesAction({
-                                idContributionPersistent,
-                                entityIdPersistentList: entities
-                                    ?.slice(chunkStartIdx, chunkEndIdx)
-                                    .map((entity) => entity.idPersistent)
-                            })
-                        )
-                        if (
-                            entityGroupMap !== undefined &&
-                            state.tagDefinitions.length > 0
-                        ) {
-                            dispatch(
-                                new GetContributionTagInstancesAsyncAction({
-                                    entitiesGroupMap: entityGroupMap,
-                                    tagDefinitionList: state.tagDefinitions,
-                                    idContributionPersistent: idContributionPersistent
-                                })
-                            )
-                        }
-                    }
+                    await loadPage(entities, state.pageNumber)
                 }
             )
         },
@@ -279,10 +282,15 @@ export function useContributionEntities(idContributionPersistent: string) {
                 } as GridColumWithType
             })
         ],
+        pageNumber: state.pageNumber,
+        pageNumberMax: Math.ceil((state.entities.value?.length ?? 0) / 50),
+        setPage: setPage,
         showTagDefinitionsMenu: state.showTagDefinitionMenu,
         tagDefinitionMap: state.tagDefinitionMap,
         contributionCandidate: state.contributionCandidate,
-        entities: state.entities,
+        entities: state.entities.map((value) =>
+            value?.slice((state.pageNumber - 1) * 50, state.pageNumber * 50)
+        ),
         minLoadingIdx: state.minEntityLoadingIndex(),
         completeEntityAssignment: state.completeEntityAssignment,
         completeEntityAssignmentCallback: () => {

@@ -109,6 +109,7 @@ export class ContributionEntityState {
     tagDefinitions: ColumnDefinition[]
     tagDefinitionMap: Map<string, number>
     showTagDefinitionMenu
+    pageNumber: number
 
     constructor({
         contributionCandidate = new Remote(undefined),
@@ -117,7 +118,8 @@ export class ContributionEntityState {
         completeEntityAssignment = new Remote(false),
         tagDefinitions = [],
         tagDefinitionMap: columnDefinitionMap,
-        showTagDefinitionMenu = false
+        showTagDefinitionMenu = false,
+        pageNumber = 1
     }: {
         contributionCandidate?: Remote<Contribution | undefined>
         entities?: Remote<EntityWithDuplicates[]>
@@ -126,10 +128,12 @@ export class ContributionEntityState {
         tagDefinitions?: ColumnDefinition[]
         tagDefinitionMap?: Map<string, number>
         showTagDefinitionMenu?: boolean
+        pageNumber?: number
     }) {
         this.contributionCandidate = contributionCandidate
         this.entities = entities
         this.completeEntityAssignment = completeEntityAssignment
+        this.pageNumber = pageNumber
         if (entityMap === undefined || entityMap.size != entities.value.length) {
             this.entityMap = new Map(
                 this.entities.value.map((entity, idx) => [entity.idPersistent, idx])

@@ -177,6 +177,17 @@ export class GetContributionTagInstancesErrorAction extends GetContributionTagIn
 
 export class ToggleTagDefinitionMenuAction {}
 
+/**
+ * Indicate that a page number has been set.
+ */
+export class SetPageNumberAction {
+    pageNumber: number
+
+    constructor(pageNumber: number) {
+        this.pageNumber = pageNumber
+    }
+}
+
 export type ContributionEntityAction =
     | GetContributionEntitiesStartAction
     | GetContributionEntitiesSuccessAction
@@ -189,3 +200,4 @@ export type ContributionEntityAction =
     | CompleteEntityAssignmentClearErrorAction
     | GetContributionTagInstancesAction
     | ToggleTagDefinitionMenuAction
+    | SetPageNumberAction

@@ -44,7 +44,7 @@ export function drawCell(args: {
                 requestAnimationFrame
             })
         } else if (customCell.data instanceof AssignType) {
-            drawReplaceButtonCell(ctx, rect, customCell.data)
+            replaceButtonDrawer.drawReplaceButtonCell(ctx, rect, customCell.data)
         }
         return true
     }
@@ -74,29 +74,74 @@ export function drawLoadingCell({
     requestAnimationFrame()
 }
 
-export function drawReplaceButtonCell(
-    ctx: CanvasRenderingContext2D,
-    rect: Rectangle,
-    data: AssignType
-) {
-    const label = data.isNew ? 'Assign Duplicate' : 'Create New Entity'
-    let fillColor = '#eceff4'
-    let borderColor = '#197374'
-
-    if (data.active) {
-        fillColor = '#197374'
-        borderColor = '#eceff4'
+export class ReplaceButtonDrawer {
+    drawReplaceButtonCell(
+        ctx: CanvasRenderingContext2D,
+        rect: Rectangle,
+        data: AssignType
+    ) {
+        if (data.isNew) {
+            if (data.active) {
+                this.drawReplaceButtonIsNewActive(rect, ctx)
+            } else {
+                this.drawReplaceButtonIsNewInactive(rect, ctx)
+            }
+        } else {
+            if (data.active) {
+                this.drawReplaceButtonIsExistingActive(rect, ctx)
+            } else {
+                this.drawReplaceButtonIsExistingInactive(rect, ctx)
+            }
+        }
     }
-    const { x, y, width, height } = rect
-    ctx.fillStyle = fillColor
-    ctx.lineWidth = 3
-    ctx.strokeStyle = borderColor
-    ctx.beginPath()
-    ctx.roundRect(x + 3, y + 3, width - 6, height - 6, 8)
-    ctx.closePath()
-    ctx.stroke()
-    ctx.fill()
-    ctx.textAlign = 'center'
-    ctx.fillStyle = borderColor
-    ctx.fillText(label, x + width / 2, y + height / 2, width - 40)
+
+    private drawButtonToCanvas(
+        rect: Rectangle,
+        ctx: CanvasRenderingContext2D,
+        fillColor: string,
+        borderColor: string,
+        label: string
+    ) {
+        const { x, y, width, height } = rect
+        ctx.fillStyle = fillColor
+        ctx.lineWidth = 3
+        ctx.strokeStyle = borderColor
+        ctx.beginPath()
+        ctx.roundRect(x + 3, y + 3, width - 6, height - 6, 8)
+        ctx.closePath()
+        ctx.stroke()
+        ctx.fill()
+        ctx.textAlign = 'center'
+        ctx.fillStyle = borderColor
+        ctx.fillText(label, x + width / 2, y + height / 2, width - 40)
+    }
+
+    drawReplaceButtonIsNewActive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
+        this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Assign Duplicate')
+        this.drawReplaceButtonIsNewActive = mkCanvasCopyFunction(rect, ctx)
+    }
+    drawReplaceButtonIsNewInactive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
+        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Assign Duplicate')
+        this.drawReplaceButtonIsNewInactive = mkCanvasCopyFunction(rect, ctx)
+    }
+    drawReplaceButtonIsExistingActive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
+        this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Create New Entity')
+        this.drawReplaceButtonIsExistingActive = mkCanvasCopyFunction(rect, ctx)
+    }
+    drawReplaceButtonIsExistingInactive(
+        rect: Rectangle,
+        ctx: CanvasRenderingContext2D
+    ) {
+        console.log('inactive')
+        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Create New Entity')
+        this.drawReplaceButtonIsExistingInactive = mkCanvasCopyFunction(rect, ctx)
+    }
+}
+const replaceButtonDrawer = new ReplaceButtonDrawer()
+
+export function mkCanvasCopyFunction(rect: Rectangle, ctx: CanvasRenderingContext2D) {
+    const imageData = ctx.getImageData(rect.x, rect.y, rect.width, rect.height)
+    return (rect: Rectangle, ctx: CanvasRenderingContext2D) => {
+        ctx.putImageData(imageData, rect.x, rect.y)
+    }
 }

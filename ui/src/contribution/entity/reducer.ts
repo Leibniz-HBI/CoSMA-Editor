@@ -27,6 +27,7 @@ import {
     PutDuplicateErrorAction,
     PutDuplicateStartAction,
     PutDuplicateSuccessAction,
+    SetPageNumberAction,
     ToggleTagDefinitionMenuAction
 } from './action'
 import {
@@ -40,6 +41,9 @@ export function contributionEntityReducer(
     state: ContributionEntityState,
     action: ContributionEntityAction | LoadContributionDetailsAction
 ) {
+    if (action instanceof SetPageNumberAction) {
+        return new ContributionEntityState({ ...state, pageNumber: action.pageNumber })
+    }
     if (action instanceof GetContributionEntityDuplicatesAction) {
         const idx = state.entityMap.get(action.idPersistent)
         if (

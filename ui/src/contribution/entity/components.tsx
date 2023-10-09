@@ -11,6 +11,7 @@ import {
     Button,
     CloseButton,
     Col,
+    Form,
     ListGroup,
     Modal,
     Overlay,
@@ -18,12 +19,13 @@ import {
     ProgressBar,
     Row
 } from 'react-bootstrap'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { EntityWithDuplicates } from './state'
 import { ColumnMenuProvider } from '../../column_menu/components/provider'
 import { ColumnMenuBody } from '../../column_menu/components/menu'
 import { DataEditor, GridSelection } from '@glideapps/glide-data-grid'
 import { drawCell } from '../../table/draw'
+import { CaretLeftFill, CaretRightFill } from 'react-bootstrap-icons'
 
 export function EntitiesStep() {
     const idContributionPersistent = useLoaderData() as string
@@ -42,7 +44,10 @@ export function EntitiesStep() {
         putDuplicateCallback,
         columnDefs,
         toggleTagDefinitionsMenuCallback,
-        addTagDefinitionCallback
+        addTagDefinitionCallback,
+        pageNumber,
+        pageNumberMax,
+        setPage
     } = useContributionEntities(idContributionPersistent)
     useLayoutEffect(() => {
         getEntityDuplicatesCallback()
@@ -50,6 +55,7 @@ export function EntitiesStep() {
     }, [idContributionPersistent])
     const buttonRef = useRef(null)
     const containerRef = useRef(null)
+    const [pageNumberForm, setPageNumberForm] = useState(pageNumber.toString())
     if (contributionCandidate.value === undefined || isLoading) {
         return <CosmaeLoading />
     }
@@ -65,6 +71,10 @@ export function EntitiesStep() {
                         ref={containerRef}
                         className="h-100 overflow-hidden d-flex flex-column"
                     >
+                        <Row key="entities-step-hint" className="ms-0">
+                            Please check for duplicate entities. Select the first Row to
+                            indicate that there is no duplicate.
+                        </Row>
                         <Row>
                             <Col
                                 sm="auto"
@@ -108,9 +118,66 @@ export function EntitiesStep() {
                                     </Overlay>
                                 }
                             </Col>
-                            <Col key="entities-step-hint">
-                                Please check for duplicate entities. Select the first
-                                Row to indicate that there is no duplicate.
+                            <Col>
+                                <Row className="justify-content-center align-items-center">
+                                    <Col
+                                        xs="auto"
+                                        onClick={() => {
+                                            const newPage = pageNumber - 1
+                                            if (newPage > 0) {
+                                                setPageNumberForm(newPage.toString())
+                                                setPage(newPage)
+                                            }
+                                        }}
+                                    >
+                                        <CaretLeftFill />
+                                    </Col>
+                                    <Col xs="auto">
+                                        <Row xs="auto" className="align-items-center">
+                                            <Col xs="auto" className="ps-0">
+                                                Page
+                                            </Col>
+                                            <Col xs="auto" className="ps-0 pe-0">
+                                                <Form.Control
+                                                    htmlSize={1}
+                                                    value={pageNumberForm}
+                                                    onChange={(event) => {
+                                                        setPageNumberForm(
+                                                            event.target.value
+                                                        )
+                                                        const parsed = Number.parseInt(
+                                                            event.target.value
+                                                        )
+                                                        if (
+                                                            parsed === undefined ||
+                                                            isNaN(parsed)
+                                                        ) {
+                                                            return
+                                                        }
+                                                        setPage(parsed)
+                                                    }}
+                                                />
+                                            </Col>
+                                            <Col xs="auto" className="ps-1 pe-0">
+                                                {'/ ' + pageNumberMax}
+                                            </Col>
+                                        </Row>
+                                    </Col>
+                                    <Col
+                                        xs="auto"
+                                        onClick={() => {
+                                            const newPageNumber = pageNumber + 1
+                                            if (newPageNumber <= pageNumberMax) {
+                                                setPageNumberForm(
+                                                    newPageNumber.toString()
+                                                )
+                                                setPage(newPageNumber)
+                                            }
+                                        }}
+                                    >
+                                        <CaretRightFill />
+                                    </Col>
+                                </Row>
                             </Col>
                             <Col sm="auto" key="entities-step-add-tag-button">
                                 <Button onClick={toggleTagDefinitionsMenuCallback}>
@@ -161,6 +228,7 @@ export function EntitiesStep() {
                     show={showTagDefinitionsMenu}
                     onHide={toggleTagDefinitionsMenuCallback}
                     data-testid="create-column-modal"
+                    key="entities-step-modal"
                 >
                     <Modal.Header closeButton>
                         <Modal.Title>Create a new tag</Modal.Title>
@@ -189,9 +257,9 @@ export function EntitySimilarityItem({
     const { similarEntities, displayTxt, idPersistent } = entity
     if (similarEntities.errorMsg !== undefined) {
         return (
-            <ListGroup.Item className="bg-danger">
-                <span>{`Could not get duplicates for ${displayTxt}.\n`}</span>
-                <span>{`Reason: ${similarEntities.errorMsg}`}</span>
+            <ListGroup.Item className="bg-danger" key={idPersistent}>
+                <span key="span-0">{`Could not get duplicates for ${displayTxt}.\n`}</span>
+                <span key="span-1">{`Reason: ${similarEntities.errorMsg}`}</span>
             </ListGroup.Item>
         )
     }
