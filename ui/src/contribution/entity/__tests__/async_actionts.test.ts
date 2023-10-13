@@ -24,7 +24,8 @@ import {
     GetContributionTagInstancesAsyncAction,
     PutDuplicateAction
 } from '../async_actions'
-import { Entity, EntityWithDuplicates, ScoredEntity, TagInstance } from '../state'
+import { EntityWithDuplicates, ScoredEntity, TagInstance } from '../state'
+import { Entity } from '../../../table/state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {

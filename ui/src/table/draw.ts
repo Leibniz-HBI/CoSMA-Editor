@@ -132,7 +132,6 @@ export class ReplaceButtonDrawer {
         rect: Rectangle,
         ctx: CanvasRenderingContext2D
     ) {
-        console.log('inactive')
         this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Create New Entity')
         this.drawReplaceButtonIsExistingInactive = mkCanvasCopyFunction(rect, ctx)
     }

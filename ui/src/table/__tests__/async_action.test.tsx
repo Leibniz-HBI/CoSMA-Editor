@@ -12,15 +12,20 @@ import {
     AppendColumnAction,
     SubmitValuesStartAction,
     SubmitValuesEndAction,
-    SubmitValuesErrorAction
+    SubmitValuesErrorAction,
+    EntityChangeOrCreateStartAction,
+    EntityChangeOrCreateSuccessAction,
+    EntityChangeOrCreateErrorAction
 } from '../actions'
 import {
     GetTableAsyncAction,
     GetColumnAsyncAction,
     parseValue,
-    SubmitValuesAsyncAction
+    SubmitValuesAsyncAction,
+    EntityChangeOrCreateAction
 } from '../async_actions'
 import { newErrorState } from '../../util/error/slice'
+import { Entity } from '../state'
 
 jest.mock('uuid', () => {
     return {
@@ -31,6 +36,7 @@ jest.mock('uuid', () => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {
     const fetchMock = jest.spyOn(global, 'fetch')
+    fetchMock.mockClear()
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
@@ -44,10 +50,14 @@ function responseSequence(responses: [number, () => any][]) {
     }
 }
 
+const idPersistent0 = 'test-id-0'
+const version0 = 0
+const displayTxt0 = 'test display txt 0'
+const displayTxt1 = 'test display txt 1'
 const test_person_rsp_0 = {
-    display_txt: 'test display txt 0',
-    id_persistent: 'test-id-0',
-    version: 0
+    display_txt: displayTxt0,
+    id_persistent: idPersistent0,
+    version: version0
 }
 const test_person_rsp_1 = {
     display_txt: 'test display txt 1',
@@ -55,9 +65,18 @@ const test_person_rsp_1 = {
     version: 1
 }
 
-const entity_ids = ['test-id-0', 'test-id-1']
-const displayTxt0 = 'test display txt 0'
-const displayTxt1 = 'test display txt 1'
+const entities_test = [
+    new Entity({
+        idPersistent: 'test-id-0',
+        displayTxt: 'test display txt 0',
+        version: 0
+    }),
+    new Entity({
+        idPersistent: 'test-id-1',
+        displayTxt: 'test display txt 1',
+        version: 1
+    })
+]
 const display_txt_column = {
     'test-id-0': [{ value: displayTxt0, idPersistent: 'test-id-0', version: 0 }],
     'test-id-1': [{ value: displayTxt1, idPersistent: 'test-id-1', version: 1 }]
@@ -92,7 +111,7 @@ describe('get table async action', () => {
         expect(dispatch.mock.calls).toEqual([
             [new SetEntityLoadingAction()],
             [new SetColumnLoadingAction(displayTextTagDef)],
-            [new SetEntitiesAction(entity_ids)],
+            [new SetEntitiesAction(entities_test)],
             [new AppendColumnAction('display_txt_id', display_txt_column)]
         ])
     })
@@ -440,5 +459,65 @@ describe('get column async action', () => {
             const parsedValue = parseValue(ColumnType.String, stringValue)
             expect(parsedValue).toEqual(stringValue)
         })
+    })
+})
+describe('change or create entity', () => {
+    test('success new entity', async () => {
+        responseSequence([
+            [
+                200,
+                () => {
+                    return {
+                        persons: [
+                            {
+                                id_persistent: idPersistent0,
+                                display_txt: displayTxt0,
+                                version: version0
+                            }
+                        ]
+                    }
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        await new EntityChangeOrCreateAction({ displayTxt: displayTxt0 }).run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [new EntityChangeOrCreateStartAction()],
+            [
+                new EntityChangeOrCreateSuccessAction(
+                    new Entity({
+                        idPersistent: idPersistent0,
+                        displayTxt: displayTxt0,
+                        version: version0
+                    })
+                )
+            ]
+        ])
+        expect((fetch as jest.Mock).mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/persons',
+                {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: JSON.stringify({ persons: [{ display_txt: displayTxt0 }] })
+                }
+            ]
+        ])
+    })
+    test('error', async () => {
+        responseSequence([
+            [
+                400,
+                () => {
+                    return { msg: 'error' }
+                }
+            ]
+        ])
+        const dispatch = jest.fn()
+        await new EntityChangeOrCreateAction({ displayTxt: displayTxt0 }).run(dispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [new EntityChangeOrCreateStartAction()],
+            [new EntityChangeOrCreateErrorAction('error')]
+        ])
     })
 })

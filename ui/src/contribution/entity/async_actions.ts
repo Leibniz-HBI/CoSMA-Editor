@@ -21,10 +21,11 @@ import {
 } from './action'
 import { config } from '../../config'
 import { exceptionMessage } from '../../util/exception'
-import { Entity, EntityWithDuplicates, ScoredEntity, TagInstance } from './state'
+import { EntityWithDuplicates, ScoredEntity, TagInstance } from './state'
 import { Remote } from '../../util/state'
 import { fetch_chunk_get } from '../../util/fetch'
 import { ColumnDefinition } from '../../column_menu/state'
+import { parseEntityObjectFromJson } from '../../table/async_actions'
 
 export class GetContributionEntitiesAction extends AsyncAction<
     ContributionEntityAction,
@@ -361,15 +362,6 @@ export class GetContributionTagInstancesAsyncAction extends AsyncAction<
             )
         }
     }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseEntityObjectFromJson(json: any) {
-    return new Entity({
-        idPersistent: json['id_persistent'],
-        displayTxt: json['display_txt'],
-        version: Number.parseInt(json['version'])
-    })
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

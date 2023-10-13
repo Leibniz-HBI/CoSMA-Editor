@@ -9,15 +9,17 @@ import {
 } from '@glideapps/glide-data-grid'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
 import { newErrorState, ErrorState } from '../util/error/slice'
-import { ThunkMiddlewareDispatch, useThunkReducer } from '../util/state'
+import { Remote, ThunkMiddlewareDispatch, useThunkReducer } from '../util/state'
 import {
     ChangeColumnIndexAction,
+    EntityChangeOrCreateClearErrorAction,
     HideColumnAddMenuAction,
     HideHeaderMenuAction,
     RemoveSelectedColumnAction,
     SetColumnWidthAction,
     SetLoadDataErrorAction,
     ShowColumnAddMenuAction,
+    ShowEntityAddDialogAction,
     ShowHeaderMenuAction,
     SubmitValuesClearErrorAction,
     TableAction,
@@ -27,12 +29,13 @@ import {
 } from './actions'
 import {
     CurateAction,
+    EntityChangeOrCreateAction,
     GetColumnAsyncAction,
     GetTableAsyncAction,
     SubmitValuesAsyncAction
 } from './async_actions'
 import { tableReducer } from './reducer'
-import { CellValue, ColumnState, TableState } from './state'
+import { CellValue, ColumnState, Entity, TableState } from './state'
 import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
 import { UserInfo, UserPermissionGroup } from '../user/state'
 import { LoadingType } from './draw'
@@ -46,12 +49,20 @@ const emptyCell = {
     data: ''
 } as GridCell
 
-export function mkCell(columnType: ColumnType, cellValues: CellValue[]): GridCell {
+export function mkCell(columnType: ColumnType, cellValues?: CellValue[]): GridCell {
     // workaround for typescript jest compatibility
     let cellKind = 'text' as GridCellKind
     let allowOverlay = true
     let cellContent
     let displayData: string | undefined = undefined
+    if (cellValues === undefined) {
+        return {
+            kind: cellKind as GridCellKind,
+            allowOverlay: allowOverlay,
+            displayData: '',
+            data: ''
+        } as GridCell
+    }
     if (columnType == ColumnType.Inner) {
         // workaround for typescript jest compatibility
         allowOverlay = false
@@ -122,6 +133,7 @@ export function useCellContentCallback(state: TableState): (cell: Item) => GridC
 export type RemoteTableCallbacks = {
     loadTableDataCallback: VoidFunction
     submitValueCallback: (cell: Item, newValue: EditableGridCell) => void
+    addEntityCallback: (displayTxt: string) => void
 }
 export type LocalTableCallbacks = {
     cellContentCallback: (cell: Item) => GridCell
@@ -150,9 +162,12 @@ export type LocalTableCallbacks = {
     csvLines: () => string[]
     hideTagDefinitionOwnershipCallback: VoidFunction
     updateTagDefinitionCallback: (tagDefinition: ColumnDefinition) => void
+    showEntityAddMenuCallback: VoidFunction
+    hideEntityAddMenuCallback: VoidFunction
+    clearEntityChangeErrorCallback: VoidFunction
 }
 export type TableDataProps = {
-    entities?: string[]
+    entities?: Entity[]
     columnStates: ColumnState[]
     columnIndices: Map<string, number>
     frozenColumns: number
@@ -163,6 +178,8 @@ export type TableDataProps = {
     submitValuesErrorState?: ErrorState
     columnHeaderMenuEntries: ColumnHeaderMenuItem[]
     tagDefinitionChangeOwnership?: ColumnDefinition
+    showEntityAddMenu: boolean
+    entityAddState: Remote<boolean>
 }
 
 export interface ColumnHeaderMenuItem {
@@ -263,7 +280,7 @@ export function useRemoteTableData(
                     new SubmitValuesAsyncAction(
                         state.columnStates[colIdx].tagDefinition.columnType,
                         [
-                            state.entities[rowIdx],
+                            state.entities[rowIdx].idPersistent,
                             state.columnStates[colIdx].tagDefinition.idPersistent,
                             {
                                 ...state.columnStates[colIdx].cellContents.value[
@@ -274,7 +291,9 @@ export function useRemoteTableData(
                         ]
                     )
                 )
-            }
+            },
+            addEntityCallback: (displayTxt) =>
+                dispatch(new EntityChangeOrCreateAction({ displayTxt: displayTxt }))
         },
         {
             cellContentCallback: useCellContentCallback(state),
@@ -332,7 +351,13 @@ export function useRemoteTableData(
             hideTagDefinitionOwnershipCallback: () =>
                 dispatch(new TagChangeOwnershipHideAction()),
             updateTagDefinitionCallback: (tagDefinition) =>
-                dispatch(new TagDefinitionChangeAction(tagDefinition))
+                dispatch(new TagDefinitionChangeAction(tagDefinition)),
+            showEntityAddMenuCallback: () =>
+                dispatch(new ShowEntityAddDialogAction(true)),
+            hideEntityAddMenuCallback: () =>
+                dispatch(new ShowEntityAddDialogAction(false)),
+            clearEntityChangeErrorCallback: () =>
+                dispatch(new EntityChangeOrCreateClearErrorAction())
         },
         {
             entities: state.entities,
@@ -345,7 +370,9 @@ export function useRemoteTableData(
             submitValuesErrorState: state.submitValuesErrorState,
             isLoading: isLoading,
             columnHeaderMenuEntries: columnMenuEntries,
-            tagDefinitionChangeOwnership: state.ownershipChangeTagDefinition
+            tagDefinitionChangeOwnership: state.ownershipChangeTagDefinition,
+            showEntityAddMenu: state.showEntityAddDialog,
+            entityAddState: state.entityAddState
         }
     ]
 }

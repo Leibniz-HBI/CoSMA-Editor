@@ -1,5 +1,5 @@
 import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
-import { Entity } from '../../../contribution/entity/state'
+import { Entity } from '../../../table/state'
 import { PublicUserInfo, UserPermissionGroup } from '../../../user/state'
 import { Remote } from '../../../util/state'
 import { MergeRequest, MergeRequestStep } from '../../state'

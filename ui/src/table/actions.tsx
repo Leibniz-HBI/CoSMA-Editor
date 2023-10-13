@@ -1,6 +1,6 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { ColumnDefinition } from '../column_menu/state'
-import { CellValue } from './state'
+import { CellValue, Entity } from './state'
 import { ErrorState } from '../util/error/slice'
 
 export type Edit = [string, string, CellValue]
@@ -9,8 +9,8 @@ export type Edit = [string, string, CellValue]
  * Indicates successful entity fetch.
  */
 export class SetEntitiesAction {
-    entities: string[]
-    constructor(entities: string[]) {
+    entities: Entity[]
+    constructor(entities: Entity[]) {
         this.entities = entities
     }
 }
@@ -184,6 +184,46 @@ export class TagChangeOwnershipShowAction {
  */
 export class TagChangeOwnershipHideAction {}
 
+/**
+ * Indicate the start of adding or changing an entity
+ */
+export class EntityChangeOrCreateStartAction {}
+
+/**
+ * Indicate success of changing or creating an entity
+ */
+export class EntityChangeOrCreateSuccessAction {
+    entity: Entity
+    constructor(entity: Entity) {
+        this.entity = entity
+    }
+}
+
+/**
+ * Indicate an error during changing or creating an entity
+ */
+export class EntityChangeOrCreateErrorAction {
+    msg: string
+    constructor(msg: string) {
+        this.msg = msg
+    }
+}
+
+/**
+ * Indicate that the entity add dialog should be shown or hidden.
+ */
+export class ShowEntityAddDialogAction {
+    show: boolean
+    constructor(show: boolean) {
+        this.show = show
+    }
+}
+
+/**
+ * Indicate that the error for adding an entity should be cleared
+ */
+export class EntityChangeOrCreateClearErrorAction {}
+
 export type TableAction =
     | SetEntitiesAction
     | AppendColumnAction
@@ -207,3 +247,8 @@ export type TableAction =
     | TagChangeOwnershipShowAction
     | TagChangeOwnershipHideAction
     | TagDefinitionChangeAction
+    | EntityChangeOrCreateStartAction
+    | EntityChangeOrCreateSuccessAction
+    | EntityChangeOrCreateErrorAction
+    | ShowEntityAddDialogAction
+    | EntityChangeOrCreateClearErrorAction

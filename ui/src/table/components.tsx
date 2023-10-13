@@ -15,6 +15,7 @@ import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
 import { UserInfo } from '../user/state'
 import { drawCell } from './draw'
 import { ChangeOwnershipModal } from '../tag_management/components'
+import { AddEntityForm } from '../entity/components'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -56,7 +57,12 @@ export function RemoteDataTable(props: {
         <Row className="h-100">
             <Col className="h-100 overflow-hidden d-flex flex-column">
                 <Row className="ms-3 me-3 mb-3">
-                    <Col xs="auto" className="ps-0 pe-0">
+                    <Col className="ps-0">
+                        <Button onClick={localCallbacks.showEntityAddMenuCallback}>
+                            Add Entity
+                        </Button>
+                    </Col>
+                    <Col xs="auto" className="pe-0">
                         <Button
                             onClick={() =>
                                 downloadWorkAround(localCallbacks.csvLines())
@@ -90,6 +96,7 @@ export function RemoteDataTable(props: {
                             show={syncInfo.isShowColumnAddMenu}
                             onHide={localCallbacks.hideColumnAddMenuCallback}
                             size="xl"
+                            key="column-menu-modal"
                         >
                             <Modal.Header closeButton>
                                 <Modal.Title>Show Additional Tag Values</Modal.Title>
@@ -99,6 +106,27 @@ export function RemoteDataTable(props: {
                                     columnIndices={syncInfo.columnIndices}
                                     loadColumnDataCallback={
                                         localCallbacks.addColumnCallback
+                                    }
+                                />
+                            </Modal.Body>
+                        </Modal>
+                        <Modal
+                            show={syncInfo.showEntityAddMenu}
+                            onHide={localCallbacks.hideEntityAddMenuCallback}
+                            size="xl"
+                            key="entity-add-modal"
+                        >
+                            <Modal.Header>
+                                <Modal.Title>Add new Entity</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <AddEntityForm
+                                    state={syncInfo.entityAddState}
+                                    addEntityCallback={
+                                        remoteCallbacks.addEntityCallback
+                                    }
+                                    clearErrorCallback={
+                                        localCallbacks.clearEntityChangeErrorCallback
                                     }
                                 />
                             </Modal.Body>

@@ -1,4 +1,4 @@
-import { ColumnState, TableState } from './state'
+import { ColumnState, Entity, TableState } from './state'
 import {
     SetEntitiesAction,
     AppendColumnAction,
@@ -21,7 +21,12 @@ import {
     CurateTagDefinitionErrorAction,
     TagChangeOwnershipShowAction,
     TagChangeOwnershipHideAction,
-    TagDefinitionChangeAction
+    TagDefinitionChangeAction,
+    ShowEntityAddDialogAction,
+    EntityChangeOrCreateStartAction,
+    EntityChangeOrCreateSuccessAction,
+    EntityChangeOrCreateErrorAction,
+    EntityChangeOrCreateClearErrorAction
 } from './actions'
 import { newErrorState } from '../util/error/slice'
 import { Remote } from '../util/state'
@@ -36,7 +41,10 @@ export function tableReducer(state: TableState, action: TableAction) {
         })
     } else if (action instanceof SetEntitiesAction) {
         const entityIndices = new Map(
-            action.entities.map((entityId: string, idx: number) => [entityId, idx])
+            action.entities.map((entity: Entity, idx: number) => [
+                entity.idPersistent,
+                idx
+            ])
         )
         return new TableState({
             ...state,
@@ -54,9 +62,9 @@ export function tableReducer(state: TableState, action: TableAction) {
                     new ColumnState({
                         ...state.columnStates[col_idx],
                         cellContents: state.columnStates[col_idx].cellContents.success(
-                            state.entities?.map((idEntity) =>
-                                idEntity in action.columnData
-                                    ? action.columnData[idEntity]
+                            state.entities?.map((entity) =>
+                                entity.idPersistent in action.columnData
+                                    ? action.columnData[entity.idPersistent]
                                     : []
                             ) ?? []
                         )
@@ -280,7 +288,112 @@ export function tableReducer(state: TableState, action: TableAction) {
     if (action instanceof TagChangeOwnershipHideAction) {
         return new TableState({ ...state, ownershipChangeTagDefinition: undefined })
     }
+    if (action instanceof ShowEntityAddDialogAction) {
+        return new TableState({
+            ...state,
+            showEntityAddDialog: action.show,
+            entityAddState: new Remote(false)
+        })
+    }
+    if (action instanceof EntityChangeOrCreateStartAction) {
+        return new TableState({
+            ...state,
+            entityAddState: state.entityAddState.startLoading()
+        })
+    }
+    if (action instanceof EntityChangeOrCreateSuccessAction) {
+        const entity = action.entity
+        const idx = state.entityIndices.get(entity.idPersistent)
+        let newEntities
+        let newColumnStates
+        if (state.entities === undefined) {
+            newEntities = [action.entity]
+            newColumnStates = appendDisplayTextToColumnState(state.columnStates, entity)
+        } else {
+            if (idx === undefined) {
+                newEntities = [...state.entities, action.entity]
+                newColumnStates = appendDisplayTextToColumnState(
+                    state.columnStates,
+                    entity
+                )
+            } else {
+                newEntities = [
+                    ...state.entities.slice(0, idx),
+                    action.entity,
+                    ...state.entities.slice(idx + 1)
+                ]
+                newColumnStates = [
+                    new ColumnState({
+                        ...state.columnStates[0],
+                        cellContents: state.columnStates[0].cellContents.map(
+                            (cellContents) => [
+                                ...cellContents.slice(0, idx),
+                                [
+                                    {
+                                        value: entity.displayTxt,
+                                        idPersistent: entity.idPersistent,
+                                        version: entity.version
+                                    }
+                                ],
+                                ...cellContents.slice(idx + 1)
+                            ]
+                        )
+                    }),
+                    ...state.columnStates.slice(1)
+                ]
+            }
+        }
+        return new TableState({
+            ...state,
+            entities: newEntities,
+            columnStates: newColumnStates,
+            entityAddState: state.entityAddState.success(true)
+        })
+    }
+    if (action instanceof EntityChangeOrCreateErrorAction) {
+        return new TableState({
+            ...state,
+            entityAddState: state.entityAddState.withError(action.msg)
+        })
+    }
+    if (action instanceof EntityChangeOrCreateClearErrorAction) {
+        return new TableState({
+            ...state,
+            entityAddState: state.entityAddState.withoutError()
+        })
+    }
     return state
+}
+
+function appendDisplayTextToColumnState(
+    columnStates: ColumnState[],
+    entity: Entity
+): ColumnState[] {
+    return [
+        new ColumnState({
+            ...columnStates[0],
+            cellContents: columnStates[0].cellContents.map((cellContents) => [
+                ...cellContents,
+                [
+                    {
+                        value: entity.displayTxt,
+                        idPersistent: entity.idPersistent,
+                        version: entity.version
+                    }
+                ]
+            ])
+        }),
+        ...columnStates.slice(1).map(
+            (columnState) =>
+                new ColumnState({
+                    ...columnState,
+                    cellContents: columnState.cellContents.map((cellContents) => [
+                        ...cellContents,
+                        []
+                    ])
+                })
+        )
+    ]
 }
 
 function updateTagDefinition(

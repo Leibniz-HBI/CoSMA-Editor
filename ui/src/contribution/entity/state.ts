@@ -1,27 +1,8 @@
 import { ColumnDefinition } from '../../column_menu/state'
+import { Entity } from '../../table/state'
 import { CellValue } from '../../table/state'
 import { Remote } from '../../util/state'
 import { Contribution } from '../state'
-
-export class Entity {
-    idPersistent: string
-    displayTxt: string
-    version: number
-
-    constructor({
-        idPersistent,
-        displayTxt,
-        version
-    }: {
-        idPersistent: string
-        displayTxt: string
-        version: number
-    }) {
-        this.idPersistent = idPersistent
-        this.displayTxt = displayTxt
-        this.version = version
-    }
-}
 
 export class ScoredEntity extends Entity {
     similarity: number

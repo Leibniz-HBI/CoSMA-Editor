@@ -1,5 +1,5 @@
 import { Dispatch } from 'react'
-import { exceptionMessage } from '../util/exception'
+import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import {
     TableAction,
     SetEntityLoadingAction,
@@ -13,12 +13,15 @@ import {
     SubmitValuesErrorAction,
     CurateTagDefinitionStartAction,
     CurateTagDefinitionErrorAction,
-    CurateTagDefinitionSuccessAction
+    CurateTagDefinitionSuccessAction,
+    EntityChangeOrCreateStartAction,
+    EntityChangeOrCreateSuccessAction,
+    EntityChangeOrCreateErrorAction
 } from './actions'
 import { AsyncAction } from '../util/async_action'
 import { fetch_chunk } from '../util/fetch'
 import { ColumnDefinition, ColumnType } from '../column_menu/state'
-import { CellValue } from './state'
+import { CellValue, Entity } from './state'
 import { config } from '../config'
 import { newErrorState } from '../util/error/slice'
 import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
@@ -41,7 +44,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
             })
         )
         try {
-            const entities: string[] = []
+            const entities: Entity[] = []
             const displayTxts: { [key: string]: CellValue[] } = {}
             for (let i = 0; ; i += 500) {
                 const rsp = await fetch_chunk({
@@ -68,13 +71,13 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                 const rowsApi = json['persons']
                 if (rowsApi !== null) {
                     for (const entry_json of rowsApi) {
-                        const idPersistent = entry_json['id_persistent']
-                        entities.push(idPersistent)
-                        displayTxts[idPersistent] = [
+                        const entity = parseEntityObjectFromJson(entry_json)
+                        entities.push(entity)
+                        displayTxts[entity.idPersistent] = [
                             {
-                                value: entry_json['display_txt'],
-                                idPersistent: idPersistent,
-                                version: Number.parseInt(entry_json['version'])
+                                value: entity.displayTxt,
+                                idPersistent: entity.idPersistent,
+                                version: entity.version
                             }
                         ]
                     }
@@ -246,6 +249,65 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
     }
 }
 
+export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
+    idPersistent?: string
+    version?: number
+    displayTxt: string
+
+    constructor({
+        displayTxt,
+        idPersistent = undefined,
+        version = undefined
+    }: {
+        displayTxt: string
+        idPersistent?: string
+        version?: number
+    }) {
+        super()
+        this.displayTxt = displayTxt
+        this.idPersistent = idPersistent
+        this.version = version
+    }
+
+    async run(dispatch: Dispatch<TableAction>): Promise<void> {
+        dispatch(new EntityChangeOrCreateStartAction())
+        try {
+            const rsp = await fetch(config.api_path + '/persons', {
+                credentials: 'include',
+                method: 'POST',
+                body: JSON.stringify({
+                    persons: [
+                        {
+                            display_txt: this.displayTxt,
+                            id_persistent: this.idPersistent,
+                            version: this.version
+                        }
+                    ]
+                })
+            })
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const entity = json['persons'][0]
+                const idPersistent = entity['id_persistent']
+                const displayTxt = entity['display_txt']
+                const version = entity['version']
+                dispatch(
+                    new EntityChangeOrCreateSuccessAction({
+                        idPersistent,
+                        displayTxt,
+                        version
+                    })
+                )
+            } else {
+                dispatch(new EntityChangeOrCreateErrorAction(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            console.log(e)
+            dispatch(new EntityChangeOrCreateErrorAction(exceptionMessage(e)))
+        }
+    }
+}
+
 export class CurateAction extends AsyncAction<TableAction, void> {
     idTagDefinitionPersistent: string
 
@@ -297,4 +359,13 @@ export function parseValue(
     } catch (e: unknown) {
         return undefined
     }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parseEntityObjectFromJson(json: any) {
+    return new Entity({
+        idPersistent: json['id_persistent'],
+        displayTxt: json['display_txt'],
+        version: Number.parseInt(json['version'])
+    })
 }

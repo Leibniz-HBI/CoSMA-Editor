@@ -18,7 +18,7 @@ import {
 import { MergeRequestConflict, TagInstance } from './state'
 import { Remote } from '../../util/state'
 import { useLayoutEffect, useRef } from 'react'
-import { Entity } from '../../contribution/entity/state'
+import { Entity } from '../../table/state'
 import { ColumnDefinition } from '../../column_menu/state'
 import { MergeRequest } from '../state'
 import { MergeRequestListItemBody } from '../components'

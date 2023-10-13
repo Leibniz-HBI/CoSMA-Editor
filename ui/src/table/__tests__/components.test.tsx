@@ -10,7 +10,7 @@ jest.mock('@glideapps/glide-data-grid', () => ({
 import { describe } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { DataTable } from '../components'
-import { ColumnState } from '../state'
+import { ColumnState, Entity } from '../state'
 import {
     DataEditor,
     GridCell,
@@ -68,7 +68,9 @@ describe('table from state', () => {
         isShowColumnAddMenu: false,
         loadDataErrorState: undefined,
         selectedColumnHeaderBounds: undefined,
-        columnHeaderMenuEntries: []
+        columnHeaderMenuEntries: [],
+        showEntityAddMenu: false,
+        entityAddState: new Remote(false)
     }
     const baseTableCallbacks: LocalTableCallbacks = {
         addColumnCallback: (columnDefinition: ColumnDefinition) => {},
@@ -82,6 +84,7 @@ describe('table from state', () => {
         },
         showColumnAddMenuCallback: () => {},
         hideColumnAddMenuCallback: () => {},
+        updateTagDefinitionCallback: () => {},
         showHeaderMenuCallback(columnIdx, bounds) {},
         hideHeaderMenuCallback: () => {},
         columnHeaderBoundsCallback: () => {
@@ -97,6 +100,8 @@ describe('table from state', () => {
         switchColumnsCallback: (startIndex, endIndex) => {},
         clearSubmitValueErrorCallback: () => {},
         hideTagDefinitionOwnershipCallback: () => {},
+        showEntityAddMenuCallback: () => {},
+        hideEntityAddMenuCallback: () => {},
         csvLines: () => []
     }
     test('should show error', () => {
@@ -129,7 +134,23 @@ describe('table from state', () => {
         const props = {
             ...baseTableProps,
             columnStates: testColumns,
-            entities: ['', '', ''],
+            entities: [
+                new Entity({
+                    idPersistent: 'id-entity-test-0',
+                    displayTxt: 'display text test 0',
+                    version: 300
+                }),
+                new Entity({
+                    idPersistent: 'id-entity-test-1',
+                    displayTxt: 'display text test 1',
+                    version: 301
+                }),
+                new Entity({
+                    idPersistent: 'id-entity-test-3',
+                    displayTxt: 'display text test 3',
+                    version: 303
+                })
+            ],
             isLoading: false
         }
         const { container } = render(

@@ -17,10 +17,14 @@ import {
     SubmitValuesStartAction,
     SubmitValuesErrorAction,
     SubmitValuesEndAction,
-    SubmitValuesClearErrorAction
+    SubmitValuesClearErrorAction,
+    EntityChangeOrCreateSuccessAction,
+    EntityChangeOrCreateErrorAction,
+    EntityChangeOrCreateClearErrorAction,
+    ShowEntityAddDialogAction
 } from '../actions'
 import { tableReducer } from '../reducer'
-import { ColumnState, TableState } from '../state'
+import { ColumnState, Entity, TableState } from '../state'
 import { Remote } from '../../util/state'
 describe('reducer tests', () => {
     const columnNameTest = 'column test name'
@@ -47,6 +51,26 @@ describe('reducer tests', () => {
         }),
         new ColumnState({ tagDefinition: tagDefTest })
     ]
+    const cellContentsTest = [
+        [{ value: '0 0', idPersistent: 'id-data-0-0', version: 6000 }],
+        [{ value: '1 0', idPersistent: 'id-data-1-0', version: 6010 }],
+        [{ value: '3 0', idPersistent: 'id-data-3-0', version: 6030 }]
+    ]
+    const cellContentsTest1 = [
+        [{ value: '0 1', idPersistent: 'id-data-0-1', version: 6001 }],
+        [{ value: '1 1', idPersistent: 'id-data-1-1', version: 6011 }],
+        [{ value: '3 1', idPersistent: 'id-data-3-1', version: 6031 }]
+    ]
+    const columnsWithDataTest = [
+        new ColumnState({
+            tagDefinition: tagDefTest,
+            cellContents: new Remote(cellContentsTest)
+        }),
+        new ColumnState({
+            tagDefinition: tagDefTest1,
+            cellContents: new Remote(cellContentsTest1)
+        })
+    ]
     test('init to loading', () => {
         const state = new TableState({})
         const end_state = tableReducer(state, new SetEntityLoadingAction())
@@ -67,7 +91,23 @@ describe('reducer tests', () => {
     })
     test('loading to success', () => {
         const state = new TableState({ isLoading: true })
-        const entities = ['entity0', 'entity1', 'entity3']
+        const entities = [
+            new Entity({
+                idPersistent: 'entity0',
+                displayTxt: 'entity test 0',
+                version: 100
+            }),
+            new Entity({
+                idPersistent: 'entity1',
+                displayTxt: 'entity test 1',
+                version: 101
+            }),
+            new Entity({
+                idPersistent: 'entity3',
+                displayTxt: 'entity test 3',
+                version: 103
+            })
+        ]
         const end_state = tableReducer(state, new SetEntitiesAction(entities))
         const expected_state = new TableState({
             isLoading: false,
@@ -182,10 +222,15 @@ describe('reducer tests', () => {
             const endState = tableReducer(state, action)
             expect(endState).toEqual(expectedState)
         })
+        const entityTest = new Entity({
+            idPersistent: 'id_entity_test',
+            displayTxt: 'display text entity test',
+            version: 300
+        })
         test('when loading', () => {
             const state = new TableState({
                 columnIndices: new Map(Object.entries({ column_id_test: 0 })),
-                entities: ['id_entity_test'],
+                entities: [entityTest],
                 entityIndices: new Map([['id_entity_test', 0]]),
                 columnStates: [
                     new ColumnState({
@@ -197,7 +242,7 @@ describe('reducer tests', () => {
             const action = new AppendColumnAction(columnIdTest, columnDataTest)
             const expectedState = new TableState({
                 columnIndices: new Map(Object.entries({ column_id_test: 0 })),
-                entities: ['id_entity_test'],
+                entities: [entityTest],
                 entityIndices: new Map([['id_entity_test', 0]]),
                 columnStates: [
                     new ColumnState({
@@ -222,7 +267,7 @@ describe('reducer tests', () => {
                 tagDefinition: tagDefTest1
             })
             const state = new TableState({
-                entities: ['id_entity_test'],
+                entities: [entityTest],
                 entityIndices: new Map([['id_entity_test', 0]]),
                 columnIndices: new Map(
                     Object.entries({ column_id_test: 0, column_id_test_1: 1 })
@@ -236,7 +281,7 @@ describe('reducer tests', () => {
             })
             const action = new AppendColumnAction(columnIdTest, columnDataTest)
             const expectedState = new TableState({
-                entities: ['id_entity_test'],
+                entities: [entityTest],
                 entityIndices: new Map([['id_entity_test', 0]]),
                 columnIndices: new Map(
                     Object.entries({ column_id_test: 0, column_id_test_1: 1 })
@@ -433,11 +478,28 @@ describe('reducer tests', () => {
         })
     })
     describe('submit values', () => {
-        const entityTest0 = 'entity0'
-        const entityTest1 = 'entity1'
-        const entityTest3 = 'entity3'
+        const entityIdTest0 = 'entity0'
+        const entityIdTest1 = 'entity1'
+        const entityIdTest3 = 'entity3'
+        const entityTest0 = new Entity({
+            idPersistent: entityIdTest0,
+            displayTxt: 'display text test 0',
+            version: 300
+        })
+        const entityTest1 = new Entity({
+            idPersistent: entityIdTest1,
+            displayTxt: 'display text test 1',
+            version: 301
+        })
+        const entityTest3 = new Entity({
+            idPersistent: entityIdTest3,
+            displayTxt: 'display text test 3',
+            version: 303
+        })
         const entities = [entityTest0, entityTest1, entityTest3]
-        const entityIndices = new Map(entities.map((entity, idx) => [entity, idx]))
+        const entityIndices = new Map(
+            entities.map((entity, idx) => [entity.idPersistent, idx])
+        )
         const columnsTestWithData = [
             new ColumnState({
                 ...columnsTest[0],
@@ -564,7 +626,7 @@ describe('reducer tests', () => {
             const endState = tableReducer(
                 initialState,
                 new SubmitValuesEndAction([
-                    [entityTest3, columnIdTest1, versionedValueTest]
+                    [entityIdTest3, columnIdTest1, versionedValueTest]
                 ])
             )
             expect(endState).toEqual(expectedState)
@@ -585,7 +647,7 @@ describe('reducer tests', () => {
             const endState = tableReducer(
                 initialState,
                 new SubmitValuesEndAction([
-                    [entityTest3, 'unknown_coloumn_id', versionedValueTest]
+                    [entityIdTest3, 'unknown_coloumn_id', versionedValueTest]
                 ])
             )
             expect(endState).toBe(initialState)
@@ -642,12 +704,12 @@ describe('reducer tests', () => {
                 initialState,
                 new SubmitValuesEndAction([
                     [
-                        entityTest0,
+                        entityIdTest0,
                         columnIdTest,
                         { value: 0.2, version: 5, idPersistent: 'id-value-0' }
                     ],
                     [
-                        entityTest1,
+                        entityIdTest1,
                         columnIdTest,
                         { value: 3.2, version: 5, idPersistent: 'id-value-1' }
                     ]
@@ -671,5 +733,132 @@ describe('reducer tests', () => {
             )
             expect(endState).toEqual(expectedState)
         })
+        test('add entity success', () => {
+            const initialState = new TableState({
+                entities: entities,
+                entityIndices: entityIndices,
+                entityAddState: new Remote(false, true),
+                columnStates: columnsWithDataTest
+            })
+            const newEntityId = 'id-new-entity-test'
+            const newEntityDisplayTxt = 'Another Entity Test'
+            const newEntityVersion = 2003
+            const newEntity = new Entity({
+                idPersistent: newEntityId,
+                displayTxt: newEntityDisplayTxt,
+                version: newEntityVersion
+            })
+            const expectedState = new TableState({
+                entities: [entityTest0, entityTest1, entityTest3, newEntity],
+                entityAddState: new Remote(true, false),
+                columnStates: [
+                    new ColumnState({
+                        tagDefinition: tagDefTest,
+                        cellContents: new Remote([
+                            ...cellContentsTest,
+                            [
+                                {
+                                    value: newEntityDisplayTxt,
+                                    idPersistent: newEntityId,
+                                    version: newEntityVersion
+                                }
+                            ]
+                        ])
+                    }),
+                    new ColumnState({
+                        tagDefinition: tagDefTest1,
+                        cellContents: new Remote([...cellContentsTest1, []])
+                    })
+                ]
+            })
+            const endState = tableReducer(
+                initialState,
+                new EntityChangeOrCreateSuccessAction(newEntity)
+            )
+            expect(endState).toEqual(expectedState)
+        })
+        test('change entity success', () => {
+            const initialState = new TableState({
+                entities: entities,
+                entityIndices: entityIndices,
+                entityAddState: new Remote(false, true),
+                columnStates: columnsWithDataTest
+            })
+            const newEntityDisplayTxt = 'Another Entity Test'
+            const newEntityVersion = 2003
+            const newEntity = new Entity({
+                idPersistent: entityIdTest1,
+                displayTxt: newEntityDisplayTxt,
+                version: newEntityVersion
+            })
+            const expectedState = new TableState({
+                entities: [entityTest0, newEntity, entityTest3],
+                entityAddState: new Remote(true, false),
+                columnStates: [
+                    new ColumnState({
+                        tagDefinition: tagDefTest,
+                        cellContents: new Remote([
+                            cellContentsTest[0],
+                            [
+                                {
+                                    value: newEntityDisplayTxt,
+                                    idPersistent: entityIdTest1,
+                                    version: newEntityVersion
+                                }
+                            ],
+                            cellContentsTest[2]
+                        ])
+                    }),
+                    new ColumnState({
+                        tagDefinition: tagDefTest1,
+                        cellContents: new Remote(cellContentsTest1)
+                    })
+                ]
+            })
+            const endState = tableReducer(
+                initialState,
+                new EntityChangeOrCreateSuccessAction(newEntity)
+            )
+            expect(endState).toEqual(expectedState)
+        })
+    })
+    test('entity change error', () => {
+        const initialState = new TableState({ entityAddState: new Remote(false, true) })
+        const expectedState = new TableState({
+            entityAddState: new Remote(false, false, 'error')
+        })
+        const endState = tableReducer(
+            initialState,
+            new EntityChangeOrCreateErrorAction('error')
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test('entity change clear error', () => {
+        const initialState = new TableState({
+            entityAddState: new Remote(false, false, 'error')
+        })
+        const expectedState = new TableState({
+            entityAddState: new Remote(false, false)
+        })
+        const endState = tableReducer(
+            initialState,
+            new EntityChangeOrCreateClearErrorAction()
+        )
+        expect(endState).toEqual(expectedState)
+    })
+    test('show entity add menu', () => {
+        const initialState = new TableState({ showEntityAddDialog: false })
+        const expectedState = new TableState({ showEntityAddDialog: true })
+        const endState = tableReducer(initialState, new ShowEntityAddDialogAction(true))
+        expect(endState).toEqual(expectedState)
+    })
+    test('hide entity add menu', () => {
+        const initialState = new TableState({ showEntityAddDialog: true })
+        const expectedState = new TableState({ showEntityAddDialog: false })
+        const endState = tableReducer(
+            initialState,
+            new ShowEntityAddDialogAction(false)
+        )
+        expect(endState).toEqual(expectedState)
     })
 })

@@ -1,6 +1,7 @@
 import { ColumnDefinition } from '../../column_menu/state'
 import { LoadContributionDetailsAction } from '../details/action'
-import { Entity, EntityWithDuplicates, ScoredEntity, TagInstance } from './state'
+import { EntityWithDuplicates, ScoredEntity, TagInstance } from './state'
+import { Entity } from '../../table/state'
 
 /**
  * Indicate start of loading entities for a contribution

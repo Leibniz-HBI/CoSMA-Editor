@@ -7,7 +7,7 @@ export class TableState {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     columnStates: ColumnState[]
     columnIndices: Map<string, number>
-    entities?: string[]
+    entities?: Entity[]
     entityIndices: Map<string, number>
     isLoading?: boolean
     showColumnAddMenu: boolean
@@ -18,12 +18,14 @@ export class TableState {
     isSubmittingValues: boolean
     submitValuesErrorState?: ErrorState
     ownershipChangeTagDefinition?: ColumnDefinition
+    showEntityAddDialog: boolean
+    entityAddState: Remote<boolean>
 
     constructor({
         columnStates: columnStates = [],
         columnIndices: columnIndices = new Map<string, number>(),
         entities = undefined,
-        entityIndices = new Map<string, number>(),
+        entityIndices = undefined,
         isLoading = undefined,
         showColumnAddMenu = false,
         selectedTagDefinition = undefined,
@@ -32,11 +34,13 @@ export class TableState {
         loadDataErrorState = undefined,
         isSubmittingValues = false,
         submitValuesErrorState = undefined,
-        ownershipChangeTagDefinition = undefined
+        ownershipChangeTagDefinition = undefined,
+        showEntityAddDialog = false,
+        entityAddState = new Remote(false)
     }: {
         columnStates?: ColumnState[]
         columnIndices?: Map<string, number>
-        entities?: string[]
+        entities?: Entity[]
         entityIndices?: Map<string, number>
         isLoading?: boolean
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,11 +53,23 @@ export class TableState {
         isSubmittingValues?: boolean
         submitValuesErrorState?: ErrorState
         ownershipChangeTagDefinition?: ColumnDefinition
+        showEntityAddDialog?: boolean
+        entityAddState?: Remote<boolean>
     }) {
         this.columnIndices = columnIndices
         this.columnStates = columnStates
         this.entities = entities
-        this.entityIndices = entityIndices
+        if (entities === undefined) {
+            this.entityIndices = new Map([])
+        } else {
+            if (entityIndices === undefined || entityIndices.size != entities.length) {
+                this.entityIndices = new Map(
+                    entities.map((entity, idx) => [entity.idPersistent, idx])
+                )
+            } else {
+                this.entityIndices = entityIndices
+            }
+        }
         this.isLoading = isLoading
         this.showColumnAddMenu = showColumnAddMenu
         this.selectedTagDefinition = selectedTagDefinition
@@ -63,6 +79,8 @@ export class TableState {
         this.isSubmittingValues = isSubmittingValues
         this.submitValuesErrorState = submitValuesErrorState
         this.ownershipChangeTagDefinition = ownershipChangeTagDefinition
+        this.showEntityAddDialog = showEntityAddDialog
+        this.entityAddState = entityAddState
     }
 
     isLoadingColumn(): boolean {
@@ -75,7 +93,6 @@ export class TableState {
     }
     csvLines(): string[] {
         const entities = this.entities
-        console.log(entities)
         if (entities === undefined || entities.length == 0) {
             return []
         }
@@ -198,5 +215,24 @@ export class TableStateCsvIterator implements Iterator<string | undefined> {
                 value
             }
         }
+    }
+}
+export class Entity {
+    idPersistent: string
+    displayTxt: string
+    version: number
+
+    constructor({
+        idPersistent,
+        displayTxt,
+        version
+    }: {
+        idPersistent: string
+        displayTxt: string
+        version: number
+    }) {
+        this.idPersistent = idPersistent
+        this.displayTxt = displayTxt
+        this.version = version
     }
 }

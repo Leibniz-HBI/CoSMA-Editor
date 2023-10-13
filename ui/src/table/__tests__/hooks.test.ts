@@ -7,7 +7,7 @@ import {
     TextCell
 } from '@glideapps/glide-data-grid'
 import { mkCell, useCellContentCallback, useRemoteTableData } from '../hooks'
-import { CellValue, ColumnState, TableState } from '../state'
+import { CellValue, ColumnState, Entity, TableState } from '../state'
 import { Remote, useThunkReducer } from '../../util/state'
 import { ColumnType, newColumnDefinition } from '../../column_menu/state'
 import { GetColumnAsyncAction } from '../async_actions'
@@ -105,9 +105,20 @@ describe('create cell', () => {
 describe('column types', () => {
     const entityId0 = 'id_entity_test_0'
     const entityId1 = 'id_entity_test_1'
-    const entityIdList = [entityId0, entityId1]
+    const entityList = [
+        new Entity({
+            idPersistent: entityId0,
+            displayTxt: 'display txt entity test 0',
+            version: 9000
+        }),
+        new Entity({
+            idPersistent: entityId1,
+            displayTxt: ' display text entity test 1',
+            version: 9001
+        })
+    ]
     const entityIndices = new Map(
-        entityIdList.map((idEnitity, idx) => [idEnitity, idx])
+        entityList.map((entity, idx) => [entity.idPersistent, idx])
     )
     const columnId = 'id_column_test'
     const columnIndices = new Map(Object.entries({ id_column_test: 0 }))
@@ -141,7 +152,7 @@ describe('column types', () => {
                 })
             ],
             columnIndices: columnIndices,
-            entities: entityIdList,
+            entities: entityList,
             entityIndices: entityIndices,
             isLoading: false
         })
@@ -183,7 +194,7 @@ describe('column types', () => {
                 })
             ],
             columnIndices: columnIndices,
-            entities: entityIdList,
+            entities: entityList,
             isLoading: false
         })
         const cellContentFunction = useCellContentCallback(state)
@@ -214,7 +225,7 @@ describe('column types', () => {
                 })
             ],
             columnIndices: columnIndices,
-            entities: entityIdList,
+            entities: entityList,
             isLoading: false
         })
         const cellContentFunction = useCellContentCallback(state)
