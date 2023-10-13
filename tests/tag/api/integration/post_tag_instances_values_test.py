@@ -32,8 +32,8 @@ def test_empty_db(auth_server):
     }
 
 
-def test_gets_most_recent(auth_server, person, child_tag_def):
-    live_server, cookies = auth_server
+def test_gets_most_recent(auth_server_commissioner, person, child_tag_def):
+    live_server, cookies = auth_server_commissioner
     rsp = post_person(live_server.url, person, cookies=cookies)
     assert rsp.status_code == 200
     id_entity = rsp.json()["persons"][0]["id_persistent"]
@@ -90,8 +90,8 @@ def test_gets_most_recent(auth_server, person, child_tag_def):
     }
 
 
-def test_gets_most_recent_multi_value(auth_server, person, child_tag_def):
-    live_server, cookies = auth_server
+def test_gets_most_recent_multi_value(auth_server_commissioner, person, child_tag_def):
+    live_server, cookies = auth_server_commissioner
     rsp = post_person(live_server.url, person, cookies=cookies)
     assert rsp.status_code == 200
     id_entity = rsp.json()["persons"][0]["id_persistent"]

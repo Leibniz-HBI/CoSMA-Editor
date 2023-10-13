@@ -18,8 +18,25 @@ def display_txt_only():
     }
 
 
-def test_id_no_version(auth_server, display_txt_only):
+def test_no_cookies(auth_server, display_txt_only):
+    live_server, _ = auth_server
+    person = display_txt_only.copy()
+    person["id_persistent"] = test_id_persistent_0
+    req = post_person(live_server.url, person)
+    assert req.status_code == 401
+
+
+def test_insufficient_permissions(auth_server, display_txt_only):
     live_server, cookies = auth_server
+    person = display_txt_only.copy()
+    person["id_persistent"] = test_id_persistent_0
+    req = post_person(live_server.url, person, cookies=cookies)
+    assert req.status_code == 403
+    assert req.json()["msg"] == "Insufficient Permissions"
+
+
+def test_id_no_version(auth_server_commissioner, display_txt_only):
+    live_server, cookies = auth_server_commissioner
     person = display_txt_only.copy()
     person["id_persistent"] = test_id_persistent_0
     req = post_person(live_server.url, person, cookies=cookies)
@@ -30,8 +47,8 @@ def test_id_no_version(auth_server, display_txt_only):
     )
 
 
-def test_no_id_version(auth_server, display_txt_only):
-    live_server, cookies = auth_server
+def test_no_id_version(auth_server_commissioner, display_txt_only):
+    live_server, cookies = auth_server_commissioner
     person = display_txt_only.copy()
     person["version"] = 5
     req = post_person(live_server.url, person, cookies=cookies)
@@ -42,8 +59,8 @@ def test_no_id_version(auth_server, display_txt_only):
     )
 
 
-def test_concurrent_modification(auth_server, display_txt_only):
-    live_server, cookies = auth_server
+def test_concurrent_modification(auth_server_commissioner, display_txt_only):
+    live_server, cookies = auth_server_commissioner
     person = display_txt_only.copy()
     req = post_person(live_server.url, person, cookies=cookies)
     assert req.status_code == 200
@@ -60,8 +77,8 @@ def test_concurrent_modification(auth_server, display_txt_only):
     )
 
 
-def test_no_modification_is_returned(auth_server, display_txt_only):
-    live_server, cookies = auth_server
+def test_no_modification_is_returned(auth_server_commissioner, display_txt_only):
+    live_server, cookies = auth_server_commissioner
     req = post_person(live_server.url, display_txt_only, cookies=cookies)
     assert req.status_code == 200
     created = req.json()["persons"][0]
@@ -72,8 +89,8 @@ def test_no_modification_is_returned(auth_server, display_txt_only):
     assert persons[0] == created
 
 
-def test_exists(auth_server, display_txt_only):
-    live_server, cookies = auth_server
+def test_exists(auth_server_commissioner, display_txt_only):
+    live_server, cookies = auth_server_commissioner
     mock = MagicMock()
     mock.return_value = "same_id"
     with patch("cosmae.person.api.uuid4", mock):
@@ -88,8 +105,8 @@ def test_exists(auth_server, display_txt_only):
         )
 
 
-def test_bad_db(auth_server, display_txt_only):
-    live_server, cookies = auth_server
+def test_bad_db(auth_server_commissioner, display_txt_only):
+    live_server, cookies = auth_server_commissioner
     mock = MagicMock()
     mock.side_effect = IntegrityError()
     with patch("cosmae.entity.models_django.Entity.save", mock):
@@ -103,8 +120,8 @@ def test_not_signed_in(live_server, display_txt_only):
     assert req.status_code == 401
 
 
-def test_multiple(auth_server, display_txt_only):
-    live_server, cookies = auth_server
+def test_multiple(auth_server_commissioner, display_txt_only):
+    live_server, cookies = auth_server_commissioner
     count_before = len(Entity.most_recent(Entity.objects))  # pylint: disable=no-member
     req = post_person(live_server.url, display_txt_only, cookies=cookies)
     created = req.json()["persons"][0]

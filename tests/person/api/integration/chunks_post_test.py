@@ -14,8 +14,8 @@ def test_empty_chunk(auth_server):
     assert len(json["persons"]) == 0
 
 
-def test_can_slice(auth_server):
-    live_server, cookies = auth_server
+def test_can_slice(auth_server_commissioner):
+    live_server, cookies = auth_server_commissioner
     persons = [
         {
             "names_personal": "test personal",

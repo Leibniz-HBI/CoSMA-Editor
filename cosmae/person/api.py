@@ -4,6 +4,7 @@ from typing import List, Optional
 from uuid import uuid4
 
 from django.db import IntegrityError
+from django.http import HttpRequest
 from ninja import Router, Schema
 
 from cosmae.entity.models_django import Entity as EntityDb
@@ -11,8 +12,11 @@ from cosmae.exception import (
     ApiError,
     DbObjectExistsException,
     EntityUpdatedException,
+    NotAuthenticatedException,
     ValidationException,
 )
+from cosmae.util import CosmaeUser
+from cosmae.util.auth import check_user
 from cosmae.util.django import save_many_atomic
 
 router = Router()
@@ -58,12 +62,29 @@ class ChunkRequest(Schema):
     limit: int
 
 
-@router.post("", response={200: PersonNaturalList, 400: ApiError, 500: ApiError})
-def persons_post(_, persons: PersonNaturalList):
+@router.post(
+    "",
+    response={
+        200: PersonNaturalList,
+        400: ApiError,
+        401: ApiError,
+        500: ApiError,
+        403: ApiError,
+    },
+)
+def persons_post(
+    request: HttpRequest, persons: PersonNaturalList
+):  # pylint: disable=too-many-return-statements
     """Add a person to the DB.
     Returns:
         PersonNaturalList: The updated persons.
     """
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group in {CosmaeUser.APPLICANT, CosmaeUser.READER}:
+        return 403, ApiError(msg="Insufficient Permissions")
     now = datetime.utcnow()
     try:
         person_dbs = [person_api_to_db(person, now) for person in persons.persons]
