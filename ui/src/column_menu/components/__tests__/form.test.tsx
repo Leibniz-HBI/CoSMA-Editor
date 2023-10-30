@@ -6,21 +6,27 @@ import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { newErrorState } from '../../../util/error/slice'
 import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from '../form'
+import { useDispatch, useSelector } from 'react-redux'
+jest.mock('react-redux', () => {
+    const dispatchMock = jest.fn()
+    return {
+        // eslint-disable-next-line
+        useSelector: jest.fn(),
+        useDispatch: jest.fn().mockImplementation(() => dispatchMock)
+    }
+})
 
 describe('form tests', () => {
+    beforeEach(() => {
+        ;(useDispatch() as jest.Mock).mockClear()
+    })
     function childTest(formProps?: ColumnTypeCreateFormProps) {
         const testClassName = 'testClassName'
         return <li className={testClassName}>{formProps?.selectedParent}</li>
     }
     test('empty submit will result in red text labels', async () => {
-        const submitCallback = jest.fn()
         const { container } = render(
-            <ColumnTypeCreateForm
-                submitColumnDefinitionCallback={submitCallback}
-                clearError={jest.fn()}
-            >
-                {childTest}
-            </ColumnTypeCreateForm>
+            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
         )
         const errorClasses = container.getElementsByClassName('text-danger fs-6')
         expect(errorClasses.length).toEqual(0)
@@ -34,14 +40,8 @@ describe('form tests', () => {
         )
     })
     test('type only submit will result in red name label', async () => {
-        const submitCallback = jest.fn()
         const { container } = render(
-            <ColumnTypeCreateForm
-                submitColumnDefinitionCallback={submitCallback}
-                clearError={jest.fn()}
-            >
-                {childTest}
-            </ColumnTypeCreateForm>
+            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
         )
         const errorClasses = container.getElementsByClassName('text-danger fs-6')
         expect(errorClasses.length).toEqual(0)
@@ -57,14 +57,8 @@ describe('form tests', () => {
         )
     })
     test('text only submit will result in red type label', async () => {
-        const submitCallback = jest.fn()
         const { container } = render(
-            <ColumnTypeCreateForm
-                submitColumnDefinitionCallback={submitCallback}
-                clearError={jest.fn()}
-            >
-                {childTest}
-            </ColumnTypeCreateForm>
+            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
         )
         const errorClasses = container.getElementsByClassName('text-danger fs-6')
         expect(errorClasses.length).toEqual(0)
@@ -80,14 +74,8 @@ describe('form tests', () => {
         )
     })
     test('submit handled for complete form', async () => {
-        const submitCallback = jest.fn()
         const { container } = render(
-            <ColumnTypeCreateForm
-                submitColumnDefinitionCallback={submitCallback}
-                clearError={jest.fn()}
-            >
-                {childTest}
-            </ColumnTypeCreateForm>
+            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
         )
         const errorClasses = container.getElementsByClassName('text-danger fs-6')
         expect(errorClasses.length).toEqual(0)
@@ -104,21 +92,12 @@ describe('form tests', () => {
                 0
             )
         )
-        expect(submitCallback.mock.calls).toEqual([
-            [{ columnTypeIdx: 0, name: inputTest, idParentPersistent: undefined }]
-        ])
+        expect((useDispatch() as jest.Mock).mock.calls.length).toEqual(1)
     })
     test('popover when error', async () => {
-        const submitCallback = jest.fn()
-        const closeCallback = jest.fn()
+        ;(useSelector as jest.Mock).mockReturnValue(newErrorState('test error'))
         const { container } = render(
-            <ColumnTypeCreateForm
-                submitColumnDefinitionCallback={submitCallback}
-                submitError={newErrorState('test error')}
-                clearError={closeCallback}
-            >
-                {childTest}
-            </ColumnTypeCreateForm>
+            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
         )
         const overlay = screen.getByRole('tooltip')
         expect(overlay.textContent).toEqual('Error' + 'test error')
@@ -127,6 +106,6 @@ describe('form tests', () => {
         )
         const user = userEvent.setup()
         await user.click(closeButtons[0])
-        expect(closeCallback.mock.calls.length).toEqual(1)
+        expect((useDispatch() as jest.Mock).mock.calls.length).toEqual(1)
     })
 })

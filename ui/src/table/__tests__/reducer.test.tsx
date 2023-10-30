@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
-import { ColumnType } from '../../column_menu/state'
+import { TagType } from '../../column_menu/state'
 import { newErrorState } from '../../util/error/slice'
 import {
     SetEntityLoadingAction,
@@ -24,7 +24,7 @@ import {
     ShowEntityAddDialogAction
 } from '../actions'
 import { tableReducer } from '../reducer'
-import { ColumnState, Entity, TableState } from '../state'
+import { ColumnState, Entity, TableState, newEntity } from '../state'
 import { Remote } from '../../util/state'
 describe('reducer tests', () => {
     const columnNameTest = 'column test name'
@@ -34,14 +34,14 @@ describe('reducer tests', () => {
     const tagDefTest = {
         namePath: [columnNameTest],
         idPersistent: columnIdTest,
-        columnType: ColumnType.String,
+        columnType: TagType.String,
         curated: true,
         version: 0
     }
     const tagDefTest1 = {
         namePath: [columnNameTest1],
         idPersistent: columnIdTest1,
-        columnType: ColumnType.Inner,
+        columnType: TagType.Inner,
         curated: false,
         version: 0
     }
@@ -92,17 +92,17 @@ describe('reducer tests', () => {
     test('loading to success', () => {
         const state = new TableState({ isLoading: true })
         const entities = [
-            new Entity({
+            newEntity({
                 idPersistent: 'entity0',
                 displayTxt: 'entity test 0',
                 version: 100
             }),
-            new Entity({
+            newEntity({
                 idPersistent: 'entity1',
                 displayTxt: 'entity test 1',
                 version: 101
             }),
-            new Entity({
+            newEntity({
                 idPersistent: 'entity3',
                 displayTxt: 'entity test 3',
                 version: 103
@@ -222,7 +222,7 @@ describe('reducer tests', () => {
             const endState = tableReducer(state, action)
             expect(endState).toEqual(expectedState)
         })
-        const entityTest = new Entity({
+        const entityTest = newEntity({
             idPersistent: 'id_entity_test',
             displayTxt: 'display text entity test',
             version: 300
@@ -481,17 +481,17 @@ describe('reducer tests', () => {
         const entityIdTest0 = 'entity0'
         const entityIdTest1 = 'entity1'
         const entityIdTest3 = 'entity3'
-        const entityTest0 = new Entity({
+        const entityTest0 = newEntity({
             idPersistent: entityIdTest0,
             displayTxt: 'display text test 0',
             version: 300
         })
-        const entityTest1 = new Entity({
+        const entityTest1 = newEntity({
             idPersistent: entityIdTest1,
             displayTxt: 'display text test 1',
             version: 301
         })
-        const entityTest3 = new Entity({
+        const entityTest3 = newEntity({
             idPersistent: entityIdTest3,
             displayTxt: 'display text test 3',
             version: 303
@@ -743,13 +743,13 @@ describe('reducer tests', () => {
             const newEntityId = 'id-new-entity-test'
             const newEntityDisplayTxt = 'Another Entity Test'
             const newEntityVersion = 2003
-            const newEntity = new Entity({
+            const newEntityObject = newEntity({
                 idPersistent: newEntityId,
                 displayTxt: newEntityDisplayTxt,
                 version: newEntityVersion
             })
             const expectedState = new TableState({
-                entities: [entityTest0, entityTest1, entityTest3, newEntity],
+                entities: [entityTest0, entityTest1, entityTest3, newEntityObject],
                 entityAddState: new Remote(true, false),
                 columnStates: [
                     new ColumnState({
@@ -773,7 +773,7 @@ describe('reducer tests', () => {
             })
             const endState = tableReducer(
                 initialState,
-                new EntityChangeOrCreateSuccessAction(newEntity)
+                new EntityChangeOrCreateSuccessAction(newEntityObject)
             )
             expect(endState).toEqual(expectedState)
         })
@@ -786,13 +786,13 @@ describe('reducer tests', () => {
             })
             const newEntityDisplayTxt = 'Another Entity Test'
             const newEntityVersion = 2003
-            const newEntity = new Entity({
+            const newEntityObject = newEntity({
                 idPersistent: entityIdTest1,
                 displayTxt: newEntityDisplayTxt,
                 version: newEntityVersion
             })
             const expectedState = new TableState({
-                entities: [entityTest0, newEntity, entityTest3],
+                entities: [entityTest0, newEntityObject, entityTest3],
                 entityAddState: new Remote(true, false),
                 columnStates: [
                     new ColumnState({
@@ -817,7 +817,7 @@ describe('reducer tests', () => {
             })
             const endState = tableReducer(
                 initialState,
-                new EntityChangeOrCreateSuccessAction(newEntity)
+                new EntityChangeOrCreateSuccessAction(newEntityObject)
             )
             expect(endState).toEqual(expectedState)
         })

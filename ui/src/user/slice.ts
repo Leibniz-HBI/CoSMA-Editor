@@ -2,7 +2,7 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { PublicUserInfo, UserInfo, UserState } from './state'
 import { ErrorState } from '../util/error/slice'
 import { newRemote } from '../util/state'
-import { ColumnDefinition } from '../column_menu/state'
+import { TagDefinition } from '../column_menu/state'
 
 const initialState: UserState = {
     userInfo: undefined,
@@ -82,7 +82,7 @@ export const userSlice = createSlice({
         },
         updateUserTagDefinition(
             state: UserState,
-            action: PayloadAction<ColumnDefinition>
+            action: PayloadAction<TagDefinition>
         ) {
             if (state.userInfo === undefined) {
                 return

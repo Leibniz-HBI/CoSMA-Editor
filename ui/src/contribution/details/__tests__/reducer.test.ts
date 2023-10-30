@@ -1,5 +1,5 @@
 import { Remote } from '../../../util/state'
-import { Contribution, ContributionStep } from '../../state'
+import { ContributionStep, newContribution } from '../../state'
 import {
     LoadContributionDetailsErrorAction,
     LoadContributionDetailsStartAction,
@@ -12,7 +12,7 @@ import {
 import { contributionDetailsReducer } from '../reducer'
 import { ContributionDetailState } from '../state'
 
-const contributionTest = new Contribution({
+const contributionTest = newContribution({
     name: 'test contribution',
     idPersistent: 'id-contribution-test',
     description: 'contribution description for test',

@@ -10,12 +10,12 @@ import {
     UploadContributionSuccessAction
 } from '../actions'
 import { contributionReducer } from '../reducer'
-import { Contribution, ContributionState, ContributionStep } from '../state'
+import { ContributionStep, newContribution, newContributionState } from '../state'
 
 describe('load contributions', () => {
     test('start loading', () => {
-        const initialState = new ContributionState({})
-        const expectedState = new ContributionState({
+        const initialState = newContributionState({})
+        const expectedState = newContributionState({
             contributions: new Remote([], true)
         })
         const endState = contributionReducer(
@@ -24,7 +24,7 @@ describe('load contributions', () => {
         )
         expect(endState).toEqual(expectedState)
     })
-    const contributionTest = new Contribution({
+    const contributionTest = newContribution({
         name: 'test contribution',
         idPersistent: 'id-contribution-test',
         description: 'contribution description for test',
@@ -33,10 +33,10 @@ describe('load contributions', () => {
         hasHeader: false
     })
     test(' loading success', () => {
-        const initialState = new ContributionState({
+        const initialState = newContributionState({
             contributions: new Remote([], true)
         })
-        const expectedState = new ContributionState({
+        const expectedState = newContributionState({
             contributions: new Remote([contributionTest])
         })
         const endState = contributionReducer(
@@ -46,10 +46,10 @@ describe('load contributions', () => {
         expect(endState).toEqual(expectedState)
     })
     test('set error', () => {
-        const initialState = new ContributionState({
+        const initialState = newContributionState({
             contributions: new Remote([], true)
         })
-        const expectedState = new ContributionState({
+        const expectedState = newContributionState({
             contributions: new Remote([], false, 'test error')
         })
         const endState = contributionReducer(
@@ -62,10 +62,10 @@ describe('load contributions', () => {
 
 describe('upload contribution', () => {
     test('start upload', () => {
-        const initialState = new ContributionState({
+        const initialState = newContributionState({
             showAddContribution: new Remote(true)
         })
-        const expectedState = new ContributionState({
+        const expectedState = newContributionState({
             showAddContribution: new Remote(true, true)
         })
         const endState = contributionReducer(
@@ -75,10 +75,10 @@ describe('upload contribution', () => {
         expect(endState).toEqual(expectedState)
     })
     test('finish upload', () => {
-        const initialState = new ContributionState({
+        const initialState = newContributionState({
             showAddContribution: new Remote(true, true)
         })
-        const expectedState = new ContributionState({
+        const expectedState = newContributionState({
             showAddContribution: new Remote(false, false)
         })
         const endState = contributionReducer(
@@ -88,10 +88,10 @@ describe('upload contribution', () => {
         expect(endState).toEqual(expectedState)
     })
     test('upload error', () => {
-        const initialState = new ContributionState({
+        const initialState = newContributionState({
             showAddContribution: new Remote(true, true)
         })
-        const expectedState = new ContributionState({
+        const expectedState = newContributionState({
             showAddContribution: new Remote(true, false, 'test error')
         })
         const endState = contributionReducer(
@@ -101,11 +101,11 @@ describe('upload contribution', () => {
         expect(endState).toEqual(expectedState)
     })
     test('clear upload error', () => {
-        const initialState = new ContributionState({
+        const initialState = newContributionState({
             showAddContribution: new Remote(true, false, 'test error')
         })
 
-        const expectedState = new ContributionState({
+        const expectedState = newContributionState({
             showAddContribution: new Remote(true, false)
         })
         const endState = contributionReducer(
@@ -117,8 +117,8 @@ describe('upload contribution', () => {
 })
 describe('toggle show contribution', () => {
     test('show', () => {
-        const initialState = new ContributionState({})
-        const expectedState = new ContributionState({
+        const initialState = newContributionState({})
+        const expectedState = newContributionState({
             showAddContribution: new Remote(true)
         })
         const endState = contributionReducer(
@@ -128,10 +128,10 @@ describe('toggle show contribution', () => {
         expect(endState).toEqual(expectedState)
     })
     test('hide', () => {
-        const initialState = new ContributionState({
+        const initialState = newContributionState({
             showAddContribution: new Remote(true)
         })
-        const expectedState = new ContributionState({})
+        const expectedState = newContributionState({})
         const endState = contributionReducer(
             initialState,
             new ToggleShowAddContributionAction()

@@ -1,5 +1,5 @@
 import { Col, ListGroup, Modal, Row, Spinner } from 'react-bootstrap'
-import { ColumnDefinition } from '../column_menu/state'
+import { TagDefinition } from '../column_menu/state'
 import { constructColumnTitleSpans } from '../column_menu/components/selection'
 import { FormField } from '../util/form'
 import { useDispatch, useSelector } from 'react-redux'
@@ -166,9 +166,9 @@ export function ChangeOwnershipModal({
     onClose,
     updateTagDefinitionChangeCallback
 }: {
-    tagDefinition?: ColumnDefinition
+    tagDefinition?: TagDefinition
     onClose: VoidFunction
-    updateTagDefinitionChangeCallback: (tagDefinition: ColumnDefinition) => void
+    updateTagDefinitionChangeCallback: (tagDefinition: TagDefinition) => void
 }) {
     const [searchTerm, setSearchTerm] = useState('')
     const dispatch: AppDispatch = useDispatch()
@@ -244,7 +244,7 @@ export function OwnershipSearchResultsItem({
     userInfo: PublicUserInfo
     idTagDefinitionPersistent: string
     containerRef: MutableRefObject<null>
-    updateTagDefinitionChangeCallback: (tagDefinition: ColumnDefinition) => void
+    updateTagDefinitionChangeCallback: (tagDefinition: TagDefinition) => void
 }) {
     const dispatch: AppDispatch = useDispatch()
     const putOwnershipRequestState = useSelector(selectPutTagOwnership)

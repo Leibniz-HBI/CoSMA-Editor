@@ -5,7 +5,7 @@ import {
 } from './actions'
 import { LoadContributionsAction, UploadContributionAction } from './async_actions'
 import { contributionReducer } from './reducer'
-import { Contribution, ContributionState } from './state'
+import { Contribution, newContributionState } from './state'
 
 export type SubmitUploadCallback = ({
     name,
@@ -33,7 +33,7 @@ export type ContributionListProps = {
 export function useContribution(): ContributionListProps {
     const [state, dispatch] = useThunkReducer(
         contributionReducer,
-        new ContributionState({})
+        newContributionState({})
     )
     return {
         contributions: state.contributions,

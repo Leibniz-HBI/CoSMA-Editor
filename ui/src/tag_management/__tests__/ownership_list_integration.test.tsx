@@ -8,8 +8,7 @@ import {
     screen,
     waitFor
 } from '@testing-library/react'
-import { ColumnDefinition, ColumnType } from '../../column_menu/state'
-import { PublicUserInfo, UserPermissionGroup } from '../../user/state'
+import { TagType } from '../../column_menu/state'
 import tagManagementReducer from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
@@ -76,11 +75,11 @@ describe('Ownership Request List', () => {
         permission_group: 'EDITOR'
     }
     const idTagDefinitionTest = 'id-tag-def-test'
-    const tagTypeTest = ColumnType.Inner
+    const tagTypeTest = TagType.Inner
     const namePathTest = ['tag', 'path', 'test']
     const ownerTest = 'owner test'
     const idTagDefinitionTest1 = 'id-tag-def-test1'
-    const tagTypeTest1 = ColumnType.Inner
+    const tagTypeTest1 = TagType.Inner
     const namePathTest1 = ['tag', 'path', 'test1']
     const ownerTest1 = 'owner test 1'
     const tagDefinitionApiTest = {

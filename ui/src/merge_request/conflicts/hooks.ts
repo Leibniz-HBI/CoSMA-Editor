@@ -1,4 +1,4 @@
-import { ColumnDefinition } from '../../column_menu/state'
+import { TagDefinition } from '../../column_menu/state'
 import { Entity } from '../../table/state'
 import { Remote, useThunkReducer } from '../../util/state'
 import { StartMergeClearErrorAction } from './actions'
@@ -37,9 +37,9 @@ export function useMergeRequestConflictResolutions(idMergeRequestPersistent: str
         }: {
             entity: Entity
             tagInstanceOrigin: TagInstance
-            tagDefinitionOrigin: ColumnDefinition
+            tagDefinitionOrigin: TagDefinition
             tagInstanceDestination?: TagInstance
-            tagDefinitionDestination: ColumnDefinition
+            tagDefinitionDestination: TagDefinition
             replace: boolean
         }) =>
             dispatch(

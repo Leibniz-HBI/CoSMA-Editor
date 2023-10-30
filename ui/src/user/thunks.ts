@@ -16,9 +16,9 @@ import {
 import { newErrorState } from '../util/error/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
-import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
+import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 
 export function login(userName: string, password: string): ThunkWithFetch<void> {
     return async (dispatch: AppDispatch, _getState, fetch) => {

@@ -10,7 +10,12 @@ import {
     Row
 } from 'react-bootstrap'
 import { useContribution, SubmitUploadCallback } from './hooks'
-import { Contribution, ContributionStep } from './state'
+import {
+    Contribution,
+    ContributionStep,
+    contributionGetAuthor,
+    contributionIsReady
+} from './state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange, SetFieldValue } from '../util/type'
 import { ChangeEvent, FormEvent, ReactElement, useEffect, useRef } from 'react'
@@ -133,7 +138,7 @@ export function ContributionListItem({
     const navigate = useNavigate()
     let badgeBackground = 'secondary',
         badgeForeground = 'text-black'
-    if (contribution.isReady()) {
+    if (contributionIsReady(contribution)) {
         badgeBackground = 'primary'
         badgeForeground = 'text-white'
     }
@@ -161,7 +166,7 @@ export function ContributionListItem({
                         </Col>
                     </Row>
                 </Col>
-                <Col xs={2}>Author: {contribution.getAuthor()}</Col>
+                <Col xs={2}>Author: {contributionGetAuthor(contribution)}</Col>
             </Row>
         </ListGroup.Item>
     )

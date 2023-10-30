@@ -17,7 +17,7 @@ const activeSteps = new Set([
     ContributionStep.ValuesExtracted
 ])
 
-export class Contribution {
+export interface Contribution {
     name: string
     idPersistent: string
     description: string
@@ -25,53 +25,58 @@ export class Contribution {
     anonymous: boolean
     hasHeader: boolean
     author?: string
-
-    constructor({
-        name,
-        idPersistent,
-        description,
-        step,
-        anonymous,
-        hasHeader,
-        author = undefined
-    }: {
-        name: string
-        idPersistent: string
-        description: string
-        step: ContributionStep
-        anonymous: boolean
-        hasHeader: boolean
-        author?: string
-    }) {
-        this.name = name
-        this.idPersistent = idPersistent
-        this.description = description
-        this.step = step
-        this.anonymous = anonymous
-        this.hasHeader = hasHeader
-        this.author = author
-    }
-    getAuthor(): string {
-        return this.anonymous ? 'Anonymous' : this.author ?? 'Anonymous'
-    }
-
-    isReady(): boolean {
-        return activeSteps.has(this.step)
+}
+export function newContribution({
+    name,
+    idPersistent,
+    description,
+    step,
+    anonymous,
+    hasHeader,
+    author = undefined
+}: {
+    name: string
+    idPersistent: string
+    description: string
+    step: ContributionStep
+    anonymous: boolean
+    hasHeader: boolean
+    author?: string
+}) {
+    return {
+        name: name,
+        idPersistent: idPersistent,
+        description: description,
+        step: step,
+        anonymous: anonymous,
+        hasHeader: hasHeader,
+        author: author
     }
 }
 
-export class ContributionState {
+export function contributionGetAuthor(contribution: Contribution): string {
+    // Could be selector
+    return contribution.anonymous ? 'Anonymous' : contribution.author ?? 'Anonymous'
+}
+
+export function contributionIsReady(contribution: Contribution): boolean {
+    // Could be selector
+    return activeSteps.has(contribution.step)
+}
+
+export interface ContributionState {
     contributions: Remote<Contribution[]>
     showAddContribution: Remote<boolean>
-
-    constructor({
-        contributions = new Remote([]),
-        showAddContribution = new Remote(false)
-    }: {
-        contributions?: Remote<Contribution[]>
-        showAddContribution?: Remote<boolean>
-    }) {
-        this.contributions = contributions
-        this.showAddContribution = showAddContribution
+}
+export function newContributionState({
+    contributions = new Remote([]),
+    showAddContribution = new Remote(false)
+}: {
+    contributions?: Remote<Contribution[]>
+    showAddContribution?: Remote<boolean>
+}) {
+    return {
+        contributions: contributions,
+        showAddContribution: showAddContribution
     }
 }

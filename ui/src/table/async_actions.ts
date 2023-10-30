@@ -20,12 +20,12 @@ import {
 } from './actions'
 import { AsyncAction } from '../util/async_action'
 import { fetch_chunk } from '../util/fetch'
-import { ColumnDefinition, ColumnType } from '../column_menu/state'
-import { CellValue, Entity } from './state'
+import { TagDefinition, TagType } from '../column_menu/state'
+import { CellValue, Entity, newEntity } from './state'
 import { config } from '../config'
 import { newErrorState } from '../util/error/slice'
-import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { constructColumnTitle } from '../contribution/entity/hooks'
+import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 
 const displayTxtColumnId = 'display_txt_id'
 /**
@@ -38,7 +38,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
             new SetColumnLoadingAction({
                 namePath: ['Display Text'],
                 idPersistent: displayTxtColumnId,
-                columnType: ColumnType.String,
+                columnType: TagType.String,
                 curated: true,
                 version: 0
             })
@@ -95,10 +95,10 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
 }
 
 export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
-    columnDefinition: ColumnDefinition
+    columnDefinition: TagDefinition
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(column_definition: ColumnDefinition) {
+    constructor(column_definition: TagDefinition) {
         super()
         this.columnDefinition = column_definition
     }
@@ -166,9 +166,9 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
 
 export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
     edit: Edit
-    columnType: ColumnType
+    columnType: TagType
 
-    constructor(columnType: ColumnType, edit: Edit) {
+    constructor(columnType: TagType, edit: Edit) {
         super()
         this.columnType = columnType
         this.edit = edit
@@ -302,7 +302,6 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
                 dispatch(new EntityChangeOrCreateErrorAction(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            console.log(e)
             dispatch(new EntityChangeOrCreateErrorAction(exceptionMessage(e)))
         }
     }
@@ -345,14 +344,14 @@ export class CurateAction extends AsyncAction<TableAction, void> {
 }
 
 export function parseValue(
-    columnType: ColumnType,
+    columnType: TagType,
     valueString: string
 ): number | boolean | string | undefined {
     try {
-        if (columnType === ColumnType.Float) {
+        if (columnType === TagType.Float) {
             return Number.parseFloat(valueString)
         }
-        if (columnType === ColumnType.Inner) {
+        if (columnType === TagType.Inner) {
             return valueString.toLowerCase() == 'true'
         }
         return valueString
@@ -363,7 +362,7 @@ export function parseValue(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseEntityObjectFromJson(json: any) {
-    return new Entity({
+    return newEntity({
         idPersistent: json['id_persistent'],
         displayTxt: json['display_txt'],
         version: Number.parseInt(json['version'])

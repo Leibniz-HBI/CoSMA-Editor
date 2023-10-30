@@ -1,9 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
-import {
-    ColumnDefinition,
-    ColumnType,
-    newColumnDefinition
-} from '../../column_menu/state'
+import { TagDefinition, TagType, newTagDefinition } from '../../column_menu/state'
 import {
     SetEntityLoadingAction,
     SetColumnLoadingAction,
@@ -25,7 +21,7 @@ import {
     EntityChangeOrCreateAction
 } from '../async_actions'
 import { newErrorState } from '../../util/error/slice'
-import { Entity } from '../state'
+import { newEntity } from '../state'
 
 jest.mock('uuid', () => {
     return {
@@ -66,12 +62,12 @@ const test_person_rsp_1 = {
 }
 
 const entities_test = [
-    new Entity({
+    newEntity({
         idPersistent: 'test-id-0',
         displayTxt: 'test display txt 0',
         version: 0
     }),
-    new Entity({
+    newEntity({
         idPersistent: 'test-id-1',
         displayTxt: 'test display txt 1',
         version: 1
@@ -86,10 +82,10 @@ const display_txt_column_as_normal_column = {
     'test-id-1': [{ value: displayTxt1, idPersistent: 'test-value-id-1', version: 1 }]
 }
 
-const displayTextTagDef: ColumnDefinition = {
+const displayTextTagDef: TagDefinition = {
     namePath: ['Display Text'],
     idPersistent: 'display_txt_id',
-    columnType: ColumnType.String,
+    columnType: TagType.String,
     curated: true,
     version: 0
 }
@@ -208,12 +204,12 @@ describe('get column async action', () => {
     const columnIdTest = 'column_id_test'
     const nameUserTest = 'user_test'
     const nameUserTest1 = 'user_test1'
-    const columnDefTest = newColumnDefinition({
+    const columnDefTest = newTagDefinition({
         idPersistent: columnIdTest,
         namePath: [columnNameTest],
         version: 2,
         curated: false,
-        columnType: ColumnType.String,
+        columnType: TagType.String,
         owner: nameUserTest
     })
     const tagResponse = {
@@ -232,11 +228,11 @@ describe('get column async action', () => {
         owner: nameUserTest1,
         version: 1
     }
-    const tagDefTest: ColumnDefinition = {
+    const tagDefTest: TagDefinition = {
         namePath: [columnNameTest],
         idPersistent: columnIdTest,
         idParentPersistent: undefined,
-        columnType: ColumnType.String,
+        columnType: TagType.String,
         curated: false,
         owner: nameUserTest,
         version: 2
@@ -322,7 +318,7 @@ describe('get column async action', () => {
                 ]
             ])
             const dispatch = jest.fn()
-            await new SubmitValuesAsyncAction(ColumnType.Float, [
+            await new SubmitValuesAsyncAction(TagType.Float, [
                 idEntityTest,
                 idColumnDefTest,
                 {
@@ -368,7 +364,7 @@ describe('get column async action', () => {
                 ]
             ])
             const dispatch = jest.fn()
-            await new SubmitValuesAsyncAction(ColumnType.Float, [
+            await new SubmitValuesAsyncAction(TagType.Float, [
                 idEntityTest,
                 idColumnDefTest,
                 {
@@ -415,7 +411,7 @@ describe('get column async action', () => {
                 ]
             ])
             const dispatch = jest.fn()
-            await new SubmitValuesAsyncAction(ColumnType.Float, [
+            await new SubmitValuesAsyncAction(TagType.Float, [
                 idEntityTest,
                 idColumnDefTest,
                 {
@@ -435,28 +431,28 @@ describe('get column async action', () => {
 
     describe('parse Values', () => {
         test('parses valid float', () => {
-            const parsedValue = parseValue(ColumnType.Float, '2.3')
+            const parsedValue = parseValue(TagType.Float, '2.3')
             expect(parsedValue).toEqual(2.3)
         })
         test('NaN for invalid float', () => {
-            const parsedValue = parseValue(ColumnType.Float, 'aa')
+            const parsedValue = parseValue(TagType.Float, 'aa')
             expect(parsedValue).toBeNaN()
         })
         test('parses "True"', () => {
-            const parsedValue = parseValue(ColumnType.Inner, 'True')
+            const parsedValue = parseValue(TagType.Inner, 'True')
             expect(parsedValue).toBe(true)
         })
         test('parses "False"', () => {
-            const parsedValue = parseValue(ColumnType.Inner, 'False')
+            const parsedValue = parseValue(TagType.Inner, 'False')
             expect(parsedValue).toBe(false)
         })
         test('invalid boolean is false', () => {
-            const parsedValue = parseValue(ColumnType.Inner, 'djdf')
+            const parsedValue = parseValue(TagType.Inner, 'djdf')
             expect(parsedValue).toBe(false)
         })
         test('handles string', () => {
             const stringValue = 'test string'
-            const parsedValue = parseValue(ColumnType.String, stringValue)
+            const parsedValue = parseValue(TagType.String, stringValue)
             expect(parsedValue).toEqual(stringValue)
         })
     })
@@ -485,7 +481,7 @@ describe('change or create entity', () => {
             [new EntityChangeOrCreateStartAction()],
             [
                 new EntityChangeOrCreateSuccessAction(
-                    new Entity({
+                    newEntity({
                         idPersistent: idPersistent0,
                         displayTxt: displayTxt0,
                         version: version0

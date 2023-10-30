@@ -1,4 +1,4 @@
-import { ColumnDefinition } from '../column_menu/state'
+import { TagDefinition } from '../column_menu/state'
 import { ErrorState } from '../util/error/slice'
 import { Remote, RemoteInterface } from '../util/state'
 
@@ -33,7 +33,7 @@ export class UserInfo extends PublicUserInfo {
     email: string
     namesPersonal: string
     namesFamily?: string
-    columns: ColumnDefinition[]
+    columns: TagDefinition[]
     constructor({
         userName,
         idPersistent,
@@ -49,7 +49,7 @@ export class UserInfo extends PublicUserInfo {
         namesPersonal: string
         namesFamily?: string
         permissionGroup: UserPermissionGroup
-        columns?: ColumnDefinition[]
+        columns?: TagDefinition[]
     }) {
         super({ userName, idPersistent, permissionGroup })
         this.email = email

@@ -2,11 +2,19 @@ import { PreloadedState, combineReducers, configureStore } from '@reduxjs/toolki
 import { errorSlice } from './util/error/slice'
 import { userSlice } from './user/slice'
 import { tagManagementSlice } from './tag_management/slice'
+import { contributionColumnDefinitionSlice } from './contribution/columns/slice'
+import { contributionEntitySlice } from './contribution/entity/slice'
+import { contributionSlice } from './contribution/slice'
+import { tagSelectionSlice } from './column_menu/slice'
 
 const rootReducer = combineReducers({
     error: errorSlice.reducer,
     user: userSlice.reducer,
-    tagManagement: tagManagementSlice.reducer
+    tagManagement: tagManagementSlice.reducer,
+    tagSelection: tagSelectionSlice.reducer,
+    contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
+    contributionEntity: contributionEntitySlice.reducer,
+    contribution: contributionSlice.reducer
 })
 
 export function setupStore(preloadedState?: PreloadedState<RootState>) {

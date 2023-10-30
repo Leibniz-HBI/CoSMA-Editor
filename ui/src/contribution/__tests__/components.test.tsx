@@ -6,7 +6,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { Remote } from '../../util/state'
 import { useContribution } from '../hooks'
 import { ContributionList } from '../components'
-import { Contribution, ContributionStep } from '../state'
+import { Contribution, ContributionStep, newContribution } from '../state'
 import { useNavigate } from 'react-router-dom'
 import { act } from 'react-dom/test-utils'
 import { UploadForm } from '../components'
@@ -26,7 +26,7 @@ jest.mock('react-router-dom', () => {
 })
 const testContributions = new Remote(
     [
-        new Contribution({
+        newContribution({
             name: 'contribution test 0',
             description: 'a contribution for tests',
             step: ContributionStep.Uploaded,
@@ -34,7 +34,7 @@ const testContributions = new Remote(
             anonymous: true,
             hasHeader: false
         }),
-        new Contribution({
+        newContribution({
             name: 'contribution test 1',
             description: 'another contribution for tests',
             step: ContributionStep.ColumnsExtracted,

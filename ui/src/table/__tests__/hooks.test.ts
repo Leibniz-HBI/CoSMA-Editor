@@ -7,9 +7,9 @@ import {
     TextCell
 } from '@glideapps/glide-data-grid'
 import { mkCell, useCellContentCallback, useRemoteTableData } from '../hooks'
-import { CellValue, ColumnState, Entity, TableState } from '../state'
+import { CellValue, ColumnState, TableState, newEntity } from '../state'
 import { Remote, useThunkReducer } from '../../util/state'
-import { ColumnType, newColumnDefinition } from '../../column_menu/state'
+import { TagType, newTagDefinition } from '../../column_menu/state'
 import { GetColumnAsyncAction } from '../async_actions'
 import {
     ChangeColumnIndexAction,
@@ -41,7 +41,7 @@ describe('create cell', () => {
     const cellTest = { version: 5, idPersistent: 'id-value-persitent-1234' }
     test('text no values', () => {
         const cellContent: CellValue[] = []
-        const columnType = ColumnType.String
+        const columnType = TagType.String
         const cell = mkCell(columnType, cellContent) as TextCell
         expect(cell.kind).toEqual('text' as GridCellKind)
         expect(cell.data).toEqual('')
@@ -50,7 +50,7 @@ describe('create cell', () => {
     })
     test('text  undefined value', () => {
         const cellContent = [{ ...cellTest, value: undefined }]
-        const columnType = ColumnType.String
+        const columnType = TagType.String
         const cell = mkCell(columnType, cellContent) as TextCell
         expect(cell.kind).toEqual('text' as GridCellKind)
         expect(cell.data).toEqual('')
@@ -59,7 +59,7 @@ describe('create cell', () => {
     })
     test('text type', () => {
         const cellContent = [{ ...cellTest, value: 'value' }]
-        const columnType = ColumnType.String
+        const columnType = TagType.String
         const cell = mkCell(columnType, cellContent) as TextCell
         expect(cell.kind).toEqual('text' as GridCellKind)
         expect(cell.data).toEqual('value')
@@ -68,7 +68,7 @@ describe('create cell', () => {
     })
     test('boolean type true', () => {
         const cellContent = [{ ...cellTest, value: true }]
-        const columnType = ColumnType.Inner
+        const columnType = TagType.Inner
         const cell = mkCell(columnType, cellContent) as BooleanCell
         expect(cell.kind).toEqual('boolean' as GridCellKind)
         expect(cell.data).toEqual(true)
@@ -76,7 +76,7 @@ describe('create cell', () => {
     })
     test('boolean type undefined', () => {
         const cellContent: CellValue[] = []
-        const columnType = ColumnType.Inner
+        const columnType = TagType.Inner
         const cell = mkCell(columnType, cellContent) as BooleanCell
         expect(cell.kind).toEqual('boolean' as GridCellKind)
         expect(cell.data).toEqual(undefined)
@@ -87,7 +87,7 @@ describe('create cell', () => {
             { ...cellTest, value: 'value0' },
             { ...cellTest, value: 'value1' }
         ]
-        const columnType = ColumnType.String
+        const columnType = TagType.String
         const cell = mkCell(columnType, cellContent) as BubbleCell
         expect(cell.kind).toEqual('bubble' as GridCellKind)
         expect(cell.data).toEqual(['value0', 'value1'])
@@ -95,7 +95,7 @@ describe('create cell', () => {
     })
     test('number', () => {
         const cellContent = [{ ...cellTest, value: 2.3 }]
-        const columnType = ColumnType.Float
+        const columnType = TagType.Float
         const cell = mkCell(columnType, cellContent) as NumberCell
         expect(cell.kind).toEqual('number' as GridCellKind)
         expect(cell.data).toEqual(2.3)
@@ -106,12 +106,12 @@ describe('column types', () => {
     const entityId0 = 'id_entity_test_0'
     const entityId1 = 'id_entity_test_1'
     const entityList = [
-        new Entity({
+        newEntity({
             idPersistent: entityId0,
             displayTxt: 'display txt entity test 0',
             version: 9000
         }),
-        new Entity({
+        newEntity({
             idPersistent: entityId1,
             displayTxt: ' display text entity test 1',
             version: 9001
@@ -130,7 +130,7 @@ describe('column types', () => {
                         curated: false,
                         namePath: ['text column'],
                         idPersistent: columnId,
-                        columnType: ColumnType.String,
+                        columnType: TagType.String,
                         version: 0
                     },
                     cellContents: new Remote([
@@ -177,7 +177,7 @@ describe('column types', () => {
                     tagDefinition: {
                         namePath: ['text column'],
                         idPersistent: columnId,
-                        columnType: ColumnType.Inner,
+                        columnType: TagType.Inner,
                         curated: false,
                         version: 0
                     },
@@ -217,7 +217,7 @@ describe('column types', () => {
                     tagDefinition: {
                         namePath: ['text column'],
                         idPersistent: columnId,
-                        columnType: ColumnType.Inner,
+                        columnType: TagType.Inner,
                         curated: false,
                         version: 0
                     },
@@ -277,7 +277,7 @@ describe('table hooks', () => {
                         tagDefinition: {
                             namePath: [columnNameTest1],
                             idPersistent: columnIdTest1,
-                            columnType: ColumnType.Inner,
+                            columnType: TagType.Inner,
                             curated: false,
                             version: 0
                         }
@@ -286,7 +286,7 @@ describe('table hooks', () => {
                         tagDefinition: {
                             namePath: [columnNameTest],
                             idPersistent: columnIdTest,
-                            columnType: ColumnType.String,
+                            columnType: TagType.String,
                             curated: false,
                             version: 0
                         },
@@ -319,7 +319,7 @@ describe('table hooks', () => {
                         tagDefinition: {
                             namePath: [columnNameTest1],
                             idPersistent: columnIdTest1,
-                            columnType: ColumnType.Inner,
+                            columnType: TagType.Inner,
                             curated: false,
                             version: 0
                         }
@@ -328,7 +328,7 @@ describe('table hooks', () => {
                         tagDefinition: {
                             namePath: [columnNameTest],
                             idPersistent: columnIdTest,
-                            columnType: ColumnType.String,
+                            columnType: TagType.String,
                             curated: false,
                             version: 0
                         },
@@ -370,11 +370,11 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const columnDefinitionTest = newColumnDefinition({
+        const columnDefinitionTest = newTagDefinition({
             namePath: ['column_test'],
             idPersistent: 'id_column_test',
             idParentPersistent: undefined,
-            columnType: ColumnType.String,
+            columnType: TagType.String,
             curated: false,
             version: 0
         })
@@ -463,7 +463,7 @@ describe('table hooks', () => {
                 selectedTagDefinition: {
                     namePath: ['id-column-test'],
                     idPersistent: columnIdTest,
-                    columnType: ColumnType.String,
+                    columnType: TagType.String,
                     curated: false,
                     version: 0
                 }

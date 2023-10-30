@@ -10,10 +10,13 @@ import {
     Popover,
     CloseButton
 } from 'react-bootstrap'
-import { ColumnType } from '../state'
+import { TagType } from '../state'
 import * as yup from 'yup'
-import { SubmitColumnDefinitionArgs } from '../hooks'
-import { ErrorState } from '../../util/error/slice'
+import { useDispatch, useSelector } from 'react-redux'
+import { submitTagDefinition, loadTagDefinitionHierarchy } from '../thunks'
+import { AppDispatch } from '../../store'
+import { selectTagSubmitError } from '../selectors'
+import { submitTagDefinitionClearError } from '../slice'
 
 const schema = yup.object({
     columnType: yup.number().required(),
@@ -29,33 +32,33 @@ export type ColumnTypeCreateFormProps = {
 }
 
 export function ColumnTypeCreateForm({
-    submitColumnDefinitionCallback,
-    submitError,
-    clearError,
     children
 }: {
-    submitColumnDefinitionCallback: (args: SubmitColumnDefinitionArgs) => void
-    submitError?: ErrorState
-    clearError: () => void
     children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }) {
+    const dispatch: AppDispatch = useDispatch()
     return (
         <Formik
             initialValues={{ columnType: '', name: '', parent: '' }}
             validationSchema={schema}
             onSubmit={(values) => {
-                submitColumnDefinitionCallback({
-                    name: values.name,
-                    idParentPersistent: values.parent == '' ? undefined : values.parent,
-                    columnTypeIdx: parseInt(values.columnType)
+                dispatch(
+                    submitTagDefinition({
+                        name: values.name,
+                        idParentPersistent:
+                            values.parent == '' ? undefined : values.parent,
+                        columnTypeIdx: parseInt(values.columnType)
+                    })
+                ).then((success) => {
+                    if (success) {
+                        dispatch(loadTagDefinitionHierarchy({ expand: true }))
+                    }
                 })
             }}
         >
             {({ handleSubmit, handleChange, values, errors, touched }) => (
                 <ColumnTypeCreateFormBody
                     handleSubmit={handleSubmit}
-                    submitError={submitError}
-                    clearError={clearError}
                     touchedValues={touched}
                     formErrors={errors}
                     handleChange={handleChange}
@@ -68,8 +71,6 @@ export function ColumnTypeCreateForm({
 }
 function ColumnTypeCreateFormBody(props: {
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
-    submitError?: ErrorState
-    clearError: () => void
     touchedValues: FormikTouched<ColumnTypeCreateArgs>
     formErrors: FormikErrors<{ columnType: string; name: string; parent: string }>
     handleChange: {
@@ -83,6 +84,8 @@ function ColumnTypeCreateFormBody(props: {
 }): JSX.Element {
     const containerRef = useRef(null)
     const targetRef = useRef(null)
+    const dispatch = useDispatch()
+    const submitError = useSelector(selectTagSubmitError)
     return (
         <Form noValidate onSubmit={props.handleSubmit} ref={containerRef}>
             <Row>
@@ -115,7 +118,7 @@ function ColumnTypeCreateFormBody(props: {
                         type="radio"
                         name="columnType"
                         label="boolean"
-                        value={ColumnType.Inner}
+                        value={TagType.Inner}
                         onChange={props.handleChange}
                         isInvalid={
                             props.touchedValues.columnType &&
@@ -129,7 +132,7 @@ function ColumnTypeCreateFormBody(props: {
                         type="radio"
                         label="string"
                         name="columnType"
-                        value={ColumnType.String}
+                        value={TagType.String}
                         onChange={props.handleChange}
                         isInvalid={
                             props.touchedValues.columnType &&
@@ -143,7 +146,7 @@ function ColumnTypeCreateFormBody(props: {
                         type="radio"
                         name="columnType"
                         label="number"
-                        value={ColumnType.Float}
+                        value={TagType.Float}
                         onChange={props.handleChange}
                         isInvalid={
                             props.touchedValues.columnType &&
@@ -168,7 +171,7 @@ function ColumnTypeCreateFormBody(props: {
                 <Button type="submit" ref={targetRef}>
                     Create
                 </Button>
-                {!!props.submitError && (
+                {!!submitError && (
                     <Overlay
                         show={true}
                         target={targetRef}
@@ -181,12 +184,14 @@ function ColumnTypeCreateFormBody(props: {
                                     <Col>Error</Col>
                                     <CloseButton
                                         variant="white"
-                                        onClick={props.clearError}
+                                        onClick={() =>
+                                            dispatch(submitTagDefinitionClearError())
+                                        }
                                     ></CloseButton>
                                 </Row>
                             </Popover.Header>
                             <Popover.Body>
-                                <Row>{props.submitError?.msg}</Row>
+                                <Row>{submitError?.msg}</Row>
                             </Popover.Body>
                         </Popover>
                     </Overlay>

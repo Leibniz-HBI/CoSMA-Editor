@@ -1,217 +1,15 @@
 import { GridCellKind } from '@glideapps/glide-data-grid'
-import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
-import { Remote, useThunkReducer } from '../../../util/state'
-import { LoadContributionDetailsAsyncAction } from '../../details/async_action'
-import {
-    CompleteEntityAssignmentAction,
-    GetContributionEntitiesAction,
-    GetContributionEntityDuplicateCandidatesAction,
-    GetContributionTagInstancesAsyncAction,
-    PutDuplicateAction
-} from '../async_actions'
-import { mkCellContentCallback, useContributionEntities } from '../hooks'
-import { ContributionEntityState, EntityWithDuplicates, ScoredEntity } from '../state'
+import { TagType } from '../../../column_menu/state'
+import { Remote } from '../../../util/state'
+import { mkCellContentCallback } from '../hooks'
+import { newEntityWithDuplicates, newScoredEntity } from '../state'
 import { AssignType } from '../../../table/draw'
 
 jest.mock('../../../util/state', () => {
     return { ...jest.requireActual('../../../util/state'), useThunkReducer: jest.fn() }
 })
-const idContributionTest = 'id-contribution-test'
-const entityTest = new EntityWithDuplicates({
-    idPersistent: 'test-id-0',
-    displayTxt: 'test display txt 0',
-    version: 0,
-    similarEntities: new Remote([])
-})
-const tagDefTest = newColumnDefinition({
-    namePath: ['tag-def-test'],
-    idPersistent: 'id-tag-def-test',
-    columnType: ColumnType.String,
-    curated: false,
-    version: 0
-})
-describe('contribution entity hooks', () => {
-    test('loads entities', async () => {
-        const dispatch = jest.fn()
-        dispatch.mockReturnValueOnce(Promise.resolve(null))
-        dispatch.mockReturnValueOnce(Promise.resolve([entityTest]))
-        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
-            new ContributionEntityState({}),
-            dispatch
-        ])
-        const { getEntityDuplicatesCallback } =
-            useContributionEntities(idContributionTest)
-        getEntityDuplicatesCallback()
-        await new Promise((f) => setTimeout(f, 100))
-        expect(dispatch.mock.calls).toEqual([
-            [new LoadContributionDetailsAsyncAction(idContributionTest)],
-            [new GetContributionEntitiesAction(idContributionTest)],
-            [
-                new GetContributionEntityDuplicateCandidatesAction({
-                    idContributionPersistent: idContributionTest,
-                    entityIdPersistentList: ['test-id-0']
-                })
-            ]
-        ])
-    })
-    test('loads entities and tag instances', async () => {
-        const dispatch = jest.fn()
-        dispatch.mockReturnValueOnce(Promise.resolve(null))
-        dispatch.mockReturnValueOnce(Promise.resolve([entityTest]))
-        dispatch.mockReturnValueOnce(
-            Promise.resolve(
-                new Map([[entityTest.idPersistent, [entityTest.idPersistent]]])
-            )
-        )
-        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
-            new ContributionEntityState({ tagDefinitions: [tagDefTest] }),
-            dispatch
-        ])
-        const { getEntityDuplicatesCallback } =
-            useContributionEntities(idContributionTest)
-        getEntityDuplicatesCallback()
-        await new Promise((f) => setTimeout(f, 100))
-        expect(dispatch.mock.calls).toEqual([
-            [new LoadContributionDetailsAsyncAction(idContributionTest)],
-            [new GetContributionEntitiesAction(idContributionTest)],
-            [
-                new GetContributionEntityDuplicateCandidatesAction({
-                    idContributionPersistent: idContributionTest,
-                    entityIdPersistentList: ['test-id-0']
-                })
-            ],
-            [
-                new GetContributionTagInstancesAsyncAction({
-                    entitiesGroupMap: new Map([
-                        [entityTest.idPersistent, [entityTest.idPersistent]]
-                    ]),
-                    tagDefinitionList: [tagDefTest],
-                    idContributionPersistent: idContributionTest
-                })
-            ]
-        ])
-    })
-    test('does not load entities when already loading', async () => {
-        const dispatch = jest.fn()
-        dispatch.mockReturnValueOnce(Promise.resolve(null))
-        dispatch.mockReturnValueOnce(Promise.resolve([entityTest]))
-        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
-            new ContributionEntityState({ entities: new Remote([], true) }),
-            dispatch
-        ])
-        const { getEntityDuplicatesCallback } =
-            useContributionEntities(idContributionTest)
-        getEntityDuplicatesCallback()
-        await new Promise((f) => setTimeout(f, 100))
-        expect(dispatch.mock.calls).toEqual([])
-    })
-    test('completes assignment', () => {
-        const dispatch = jest.fn()
-        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
-            new ContributionEntityState({}),
-            dispatch
-        ])
-        const { completeEntityAssignmentCallback } =
-            useContributionEntities(idContributionTest)
-        completeEntityAssignmentCallback()
-        expect(dispatch.mock.calls).toEqual([
-            [new CompleteEntityAssignmentAction(idContributionTest)]
-        ])
-    })
-    test('does not redundantly complete assignment', () => {
-        const dispatch = jest.fn()
-        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
-            new ContributionEntityState({
-                completeEntityAssignment: new Remote(false, true)
-            }),
-            dispatch
-        ])
-        const { completeEntityAssignmentCallback } =
-            useContributionEntities(idContributionTest)
-        completeEntityAssignmentCallback()
-        expect(dispatch.mock.calls).toEqual([])
-    })
-    test('put duplicate', () => {
-        const dispatch = jest.fn()
-        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
-            new ContributionEntityState({}),
-            dispatch
-        ])
-        const { putDuplicateCallback } = useContributionEntities(idContributionTest)
-        putDuplicateCallback('id-test-origin', 'id-test-destination')
-        expect(dispatch.mock.calls).toEqual([
-            [
-                new PutDuplicateAction({
-                    idContributionPersistent: idContributionTest,
-                    idEntityOriginPersistent: 'id-test-origin',
-                    idEntityDestinationPersistent: 'id-test-destination'
-                })
-            ]
-        ])
-    })
-    test('add tag definitions', async () => {
-        const dispatch = jest.fn()
-        ;(useThunkReducer as jest.Mock).mockReturnValueOnce([
-            new ContributionEntityState({
-                entities: new Remote([
-                    new EntityWithDuplicates({
-                        idPersistent: 'id-entity-group',
-                        displayTxt: 'entity group 0',
-                        version: 1,
-                        similarEntities: new Remote([
-                            new ScoredEntity({
-                                idPersistent: 'id-similar-test',
-                                displayTxt: 'similar entity test 0',
-                                version: 10,
-                                similarity: 0.9
-                            }),
-                            new ScoredEntity({
-                                idPersistent: 'id-similar-test-1',
-                                displayTxt: 'similar entity test 1',
-                                version: 11,
-                                similarity: 0.8
-                            })
-                        ])
-                    }),
-                    new EntityWithDuplicates({
-                        idPersistent: 'id-entity-group1',
-                        displayTxt: 'entity group 1',
-                        version: 2,
-                        similarEntities: new Remote([
-                            new ScoredEntity({
-                                idPersistent: 'id-similar-test-2',
-                                displayTxt: 'similar entity test 2',
-                                version: 20,
-                                similarity: 0.7
-                            })
-                        ])
-                    })
-                ])
-            }),
-            dispatch
-        ])
-        const { addTagDefinitionCallback } = useContributionEntities(idContributionTest)
-        addTagDefinitionCallback(tagDefTest)
-        expect(dispatch.mock.calls).toEqual([
-            [
-                new GetContributionTagInstancesAsyncAction({
-                    entitiesGroupMap: new Map([
-                        [
-                            'id-entity-group',
-                            ['id-entity-group', 'id-similar-test', 'id-similar-test-1']
-                        ],
-                        ['id-entity-group1', ['id-entity-group1', 'id-similar-test-2']]
-                    ]),
-                    tagDefinitionList: [tagDefTest],
-                    idContributionPersistent: idContributionTest
-                })
-            ]
-        ])
-    })
-})
-
 describe('cell contents callback', () => {
-    const entityTest = new EntityWithDuplicates({
+    const entityTest = newEntityWithDuplicates({
         idPersistent: 'id-test',
         displayTxt: 'group entity test',
         version: 0,
@@ -221,7 +19,7 @@ describe('cell contents callback', () => {
             ])
         ],
         similarEntities: new Remote([
-            new ScoredEntity({
+            newScoredEntity({
                 idPersistent: 'id-similar-test',
                 displayTxt: 'similar entity test',
                 version: 10,
@@ -236,7 +34,7 @@ describe('cell contents callback', () => {
                     ])
                 ]
             }),
-            new ScoredEntity({
+            newScoredEntity({
                 idPersistent: 'id-similar-test-1',
                 displayTxt: 'similar entity test 1',
                 version: 11,
@@ -258,22 +56,22 @@ describe('cell contents callback', () => {
             id: 'Assignment',
             title: 'Assignment',
             width: 200,
-            columnType: ColumnType.Inner
+            columnType: TagType.Inner
         },
         {
-            columnType: ColumnType.String,
+            columnType: TagType.String,
             width: 200,
             id: 'display-text-test',
             title: 'display text'
         },
         {
-            columnType: ColumnType.String,
+            columnType: TagType.String,
             width: 200,
             id: 'similarity-test',
             title: 'Similarity'
         },
         {
-            columnType: ColumnType.String,
+            columnType: TagType.String,
             width: 200,
             id: 'column-test',
             title: 'column test'

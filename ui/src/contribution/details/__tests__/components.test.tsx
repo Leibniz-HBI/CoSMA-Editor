@@ -3,7 +3,7 @@
  */
 import { render, screen, waitFor } from '@testing-library/react'
 import { Remote } from '../../../util/state'
-import { Contribution, ContributionStep } from '../../state'
+import { ContributionStep, newContribution } from '../../state'
 import { useContributionDetails } from '../hooks'
 import { ContributionDetailsStep } from '../components'
 import userEvent from '@testing-library/user-event'
@@ -22,7 +22,7 @@ jest.mock('react-router-dom', () => {
     }
 })
 
-const contributionTest = new Contribution({
+const contributionTest = newContribution({
     name: 'contribution test 0',
     description: 'this is a contribution for tests with sufficient length.',
     step: ContributionStep.Uploaded,

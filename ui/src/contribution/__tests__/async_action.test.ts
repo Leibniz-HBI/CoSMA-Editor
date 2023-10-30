@@ -10,7 +10,7 @@ import {
     UploadContributionSuccessAction
 } from '../actions'
 import { LoadContributionsAction, UploadContributionAction } from '../async_actions'
-import { Contribution, ContributionStep } from '../state'
+import { ContributionStep, newContribution } from '../state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {
@@ -76,7 +76,7 @@ describe('load contributions', () => {
             [new LoadContributionsStartAction()],
             [
                 new LoadContributionsSuccessAction([
-                    new Contribution({
+                    newContribution({
                         name: nameTest0,
                         description: descriptionTest0,
                         idPersistent: idTest0,
@@ -84,7 +84,7 @@ describe('load contributions', () => {
                         hasHeader: false,
                         step: ContributionStep.Uploaded
                     }),
-                    new Contribution({
+                    newContribution({
                         name: nameTest1,
                         description: descriptionTest1,
                         idPersistent: idTest1,

@@ -10,7 +10,7 @@ jest.mock('@glideapps/glide-data-grid', () => ({
 import { describe } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { DataTable } from '../components'
-import { ColumnState, Entity } from '../state'
+import { ColumnState, Entity, newEntity } from '../state'
 import {
     DataEditor,
     GridCell,
@@ -18,7 +18,7 @@ import {
     GridColumn,
     Item
 } from '@glideapps/glide-data-grid'
-import { ColumnDefinition, ColumnType } from '../../column_menu/state'
+import { TagDefinition, TagType } from '../../column_menu/state'
 import { LocalTableCallbacks, TableDataProps } from '../hooks'
 import { ColumnAddButton } from '../../column_menu/components/misc'
 import { newErrorState } from '../../util/error/slice'
@@ -40,7 +40,7 @@ const testColumns = [
         tagDefinition: {
             idPersistent: 'test_column_0',
             namePath: ['test title 0'],
-            columnType: ColumnType.String,
+            columnType: TagType.String,
             curated: false,
             version: 0
         },
@@ -50,7 +50,7 @@ const testColumns = [
         tagDefinition: {
             idPersistent: 'test_column_1',
             namePath: ['test title 1'],
-            columnType: ColumnType.String,
+            columnType: TagType.String,
             curated: false,
             version: 0
         },
@@ -73,7 +73,7 @@ describe('table from state', () => {
         entityAddState: new Remote(false)
     }
     const baseTableCallbacks: LocalTableCallbacks = {
-        addColumnCallback: (columnDefinition: ColumnDefinition) => {},
+        addColumnCallback: (columnDefinition: TagDefinition) => {},
         cellContentCallback: (cell: Item) => {
             return {
                 kind: 'text' as GridCellKind,
@@ -82,6 +82,7 @@ describe('table from state', () => {
                 data: ''
             } as GridCell
         },
+        clearEntityChangeErrorCallback: () => {},
         showColumnAddMenuCallback: () => {},
         hideColumnAddMenuCallback: () => {},
         updateTagDefinitionCallback: () => {},
@@ -135,17 +136,17 @@ describe('table from state', () => {
             ...baseTableProps,
             columnStates: testColumns,
             entities: [
-                new Entity({
+                newEntity({
                     idPersistent: 'id-entity-test-0',
                     displayTxt: 'display text test 0',
                     version: 300
                 }),
-                new Entity({
+                newEntity({
                     idPersistent: 'id-entity-test-1',
                     displayTxt: 'display text test 1',
                     version: 301
                 }),
-                new Entity({
+                newEntity({
                     idPersistent: 'id-entity-test-3',
                     displayTxt: 'display text test 3',
                     version: 303

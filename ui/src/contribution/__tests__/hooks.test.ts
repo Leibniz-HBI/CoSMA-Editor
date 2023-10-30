@@ -8,7 +8,7 @@ import {
 } from '../actions'
 import { LoadContributionsAction, UploadContributionAction } from '../async_actions'
 import { useContribution } from '../hooks'
-import { ContributionState } from '../state'
+import { newContributionState } from '../state'
 
 jest.mock('../../util/state', () => {
     const original = jest.requireActual('../../util/state')
@@ -21,7 +21,7 @@ describe('loading callback', () => {
     test('starts', () => {
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
-            new ContributionState({}),
+            newContributionState({}),
             dispatch
         ])
         const { loadContributionsCallback: loadControbutionsCallback } =
@@ -32,7 +32,7 @@ describe('loading callback', () => {
     test('exits early', () => {
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
-            new ContributionState({ contributions: new Remote([], true) }),
+            newContributionState({ contributions: new Remote([], true) }),
             dispatch
         ])
         const { loadContributionsCallback: loadControbutionsCallback } =
@@ -45,7 +45,7 @@ describe('toggle Upload visibility', () => {
     test('submits action', () => {
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
-            new ContributionState({}),
+            newContributionState({}),
             dispatch
         ])
         const { toggleShowAddContributionCallback } = useContribution()
@@ -64,7 +64,7 @@ describe('upload contribution', () => {
     test('upload contribution', () => {
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
-            new ContributionState({}),
+            newContributionState({}),
             dispatch
         ])
         const { submitUploadCallback } = useContribution()
@@ -76,7 +76,7 @@ describe('upload contribution', () => {
     test('clear error callback', () => {
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
-            new ContributionState({}),
+            newContributionState({}),
             dispatch
         ])
         const { clearUploadErrorCallback } = useContribution()

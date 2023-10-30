@@ -1,5 +1,5 @@
-import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
-import { Entity } from '../../../table/state'
+import { TagType, newTagDefinition } from '../../../column_menu/state'
+import { newEntity } from '../../../table/state'
 import { PublicUserInfo, UserPermissionGroup } from '../../../user/state'
 import { Remote } from '../../../util/state'
 import { MergeRequest, MergeRequestStep } from '../../state'
@@ -49,7 +49,7 @@ const tagInstanceDestination = new TagInstance({
 })
 const sharedConflict1 = new Remote(
     new MergeRequestConflict({
-        entity: new Entity({
+        entity: newEntity({
             idPersistent: 'id-entity-test1',
             displayTxt: 'test entity1',
             version: 81
@@ -60,7 +60,7 @@ const sharedConflict1 = new Remote(
 )
 const sharedConflict = new Remote(
     new MergeRequestConflict({
-        entity: new Entity({
+        entity: newEntity({
             idPersistent: 'id-entity-test',
             displayTxt: 'test entity',
             version: 8
@@ -78,7 +78,7 @@ const sharedConflict = new Remote(
     })
 )
 const updatedConflicts = [sharedConflict, sharedConflict1]
-const entity = new Entity({
+const entity = newEntity({
     idPersistent: 'id-entity-test3',
     displayTxt: 'test entity3',
     version: 83
@@ -86,7 +86,7 @@ const entity = new Entity({
 const conflicts = [
     new Remote(
         new MergeRequestConflict({
-            entity: new Entity({
+            entity: newEntity({
                 idPersistent: 'id-entity-test2',
                 displayTxt: 'test entity2',
                 version: 82
@@ -121,19 +121,19 @@ const conflicts = [
     ),
     sharedConflict
 ]
-const tagDefOrigin = newColumnDefinition({
+const tagDefOrigin = newTagDefinition({
     namePath: ['tag def origin test'],
     idPersistent: 'id-tag-def-origin-test',
     curated: false,
     version: 84,
-    columnType: ColumnType.String
+    columnType: TagType.String
 })
-const tagDefDestination = newColumnDefinition({
+const tagDefDestination = newTagDefinition({
     namePath: ['tag def destination test'],
     idPersistent: 'id-tag-def-destination-test',
     curated: false,
     version: 841,
-    columnType: ColumnType.String
+    columnType: TagType.String
 })
 const sharedConflictJson = {
     tag_instance_origin: {

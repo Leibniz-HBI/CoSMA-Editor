@@ -19,7 +19,7 @@ import { MergeRequestConflict, TagInstance } from './state'
 import { Remote } from '../../util/state'
 import { useLayoutEffect, useRef } from 'react'
 import { Entity } from '../../table/state'
-import { ColumnDefinition } from '../../column_menu/state'
+import { TagDefinition } from '../../column_menu/state'
 import { MergeRequest } from '../state'
 import { MergeRequestListItemBody } from '../components'
 
@@ -170,9 +170,9 @@ export function MergeRequestConflictItem({
     }: {
         entity: Entity
         tagInstanceOrigin: TagInstance
-        tagDefinitionOrigin: ColumnDefinition
+        tagDefinitionOrigin: TagDefinition
         tagInstanceDestination?: TagInstance
-        tagDefinitionDestination: ColumnDefinition
+        tagDefinitionDestination: TagDefinition
         replace: boolean
     }) => void
 }) {

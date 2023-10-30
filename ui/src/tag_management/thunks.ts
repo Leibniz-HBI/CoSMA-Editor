@@ -1,5 +1,5 @@
-import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
-import { ColumnDefinition } from '../column_menu/state'
+import { TagDefinition } from '../column_menu/state'
+import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { config } from '../config'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
@@ -49,7 +49,7 @@ export function getOwnershipRequests(): ThunkWithFetch<void> {
 
 export function putOwnershipRequest(
     args: PutOwnershipRequest
-): ThunkWithFetch<ColumnDefinition | undefined> {
+): ThunkWithFetch<TagDefinition | undefined> {
     return async (dispatch, _getState, fetch) => {
         dispatch(putOwnershipRequestStart(args))
         try {
@@ -79,7 +79,7 @@ export function putOwnershipRequest(
 }
 export function acceptOwnershipRequest(
     idPersistent: string
-): ThunkWithFetch<ColumnDefinition | undefined> {
+): ThunkWithFetch<TagDefinition | undefined> {
     return async (dispatch, _getState, fetch) => {
         dispatch(acceptOwnershipRequestStart(idPersistent))
         try {

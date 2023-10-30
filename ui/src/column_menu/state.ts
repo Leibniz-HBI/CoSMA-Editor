@@ -1,22 +1,22 @@
 import { ErrorState } from '../util/error/slice'
 
-export enum ColumnType {
+export enum TagType {
     String,
     Float,
     Inner
 }
 
-export interface ColumnDefinition {
+export interface TagDefinition {
     namePath: string[]
     idPersistent: string
     idParentPersistent?: string
-    columnType: ColumnType
+    columnType: TagType
     curated: boolean
     version: number
     owner?: string
 }
 
-export function newColumnDefinition({
+export function newTagDefinition({
     namePath,
     idPersistent,
     idParentPersistent,
@@ -28,7 +28,7 @@ export function newColumnDefinition({
     namePath: string[]
     idPersistent: string
     idParentPersistent?: string
-    columnType: ColumnType
+    columnType: TagType
     curated: boolean
     owner?: string
     version: number
@@ -44,65 +44,64 @@ export function newColumnDefinition({
     }
 }
 
-export class ColumnSelectionEntry {
-    columnDefinition: ColumnDefinition
+export interface TagSelectionEntry {
+    columnDefinition: TagDefinition
     isExpanded: boolean
     isLoading: boolean
-    children: ColumnSelectionEntry[]
-
-    constructor({
-        columnDefinition,
-        isExpanded = false,
-        isLoading = false,
-        children = []
-    }: {
-        columnDefinition: ColumnDefinition
-        isExpanded?: boolean
-        isLoading?: boolean
-        children?: ColumnSelectionEntry[]
-    }) {
-        this.columnDefinition = columnDefinition
-        this.isExpanded = isExpanded
-        this.isLoading = isLoading
-        this.children = children
-    }
-    public isExpandable(): boolean {
-        return this.children.length > 0
+    children: TagSelectionEntry[]
+}
+export function newTagSelectionEntry({
+    columnDefinition,
+    isExpanded = false,
+    isLoading = false,
+    children = []
+}: {
+    columnDefinition: TagDefinition
+    isExpanded?: boolean
+    isLoading?: boolean
+    children?: TagSelectionEntry[]
+}) {
+    return {
+        columnDefinition: columnDefinition,
+        isExpanded: isExpanded,
+        isLoading: isLoading,
+        children: children
     }
 }
 
-export class ColumnSelectionState {
-    navigationEntries: ColumnSelectionEntry[]
-    searchEntries: ColumnSelectionEntry[]
+export interface TagSelectionState {
+    navigationEntries: TagSelectionEntry[]
+    searchEntries: TagSelectionEntry[]
     isLoading: boolean
     isSearching: boolean
     errorState?: ErrorState
     isSubmittingDefinition: boolean
     submissionErrorState?: ErrorState
-
-    constructor({
-        navigationEntries: columnSelectionEntries = [],
-        searchEntries: searchSelectionEntries = [],
-        isLoading = false,
-        isSearching = false,
-        errorState = undefined,
-        isSubmittingDefinition = false,
-        submissionErrorState = undefined
-    }: {
-        navigationEntries?: ColumnSelectionEntry[]
-        searchEntries?: ColumnSelectionEntry[]
-        isLoading?: boolean
-        isSearching?: boolean
-        errorState?: ErrorState
-        isSubmittingDefinition?: boolean
-        submissionErrorState?: ErrorState
-    }) {
-        this.navigationEntries = columnSelectionEntries
-        this.searchEntries = searchSelectionEntries
-        this.isLoading = isLoading
-        this.isSearching = isSearching
-        this.errorState = errorState
-        this.isSubmittingDefinition = isSubmittingDefinition
-        this.submissionErrorState = submissionErrorState
+}
+export function newTagSelectionState({
+    navigationEntries: columnSelectionEntries = [],
+    searchEntries: searchSelectionEntries = [],
+    isLoading = false,
+    isSearching = false,
+    errorState = undefined,
+    isSubmittingDefinition = false,
+    submissionErrorState = undefined
+}: {
+    navigationEntries?: TagSelectionEntry[]
+    searchEntries?: TagSelectionEntry[]
+    isLoading?: boolean
+    isSearching?: boolean
+    errorState?: ErrorState
+    isSubmittingDefinition?: boolean
+    submissionErrorState?: ErrorState
+}): TagSelectionState {
+    return {
+        navigationEntries: columnSelectionEntries,
+        searchEntries: searchSelectionEntries,
+        isLoading: isLoading,
+        isSearching: isSearching,
+        errorState: errorState,
+        isSubmittingDefinition: isSubmittingDefinition,
+        submissionErrorState: submissionErrorState
     }
 }

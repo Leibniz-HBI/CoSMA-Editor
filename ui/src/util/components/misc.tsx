@@ -1,6 +1,6 @@
 import { Button, Card, Placeholder } from 'react-bootstrap'
-import { Remote } from '../state'
-import { FunctionComponent, ReactComponentElement, ReactNode } from 'react'
+import { Remote, RemoteInterface } from '../state'
+import { ReactNode } from 'react'
 
 export function CosmaeLoading() {
     return (
@@ -20,7 +20,7 @@ export function RemoteTriggerButton({
 }: {
     normalLabel: string
     successLabel: string
-    remoteState: Remote<boolean>
+    remoteState: Remote<boolean> | RemoteInterface<boolean>
     onClick: VoidFunction
 }) {
     const loading = remoteState.isLoading

@@ -1,5 +1,5 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
-import { ColumnDefinition } from '../column_menu/state'
+import { TagDefinition } from '../column_menu/state'
 import { CellValue, Entity } from './state'
 import { ErrorState } from '../util/error/slice'
 
@@ -34,8 +34,8 @@ export class SetEntityLoadingAction {}
  * Indicates fetching of column data.
  */
 export class SetColumnLoadingAction {
-    tagDefinition: ColumnDefinition
-    constructor(tagDefinition: ColumnDefinition) {
+    tagDefinition: TagDefinition
+    constructor(tagDefinition: TagDefinition) {
         this.tagDefinition = tagDefinition
     }
 }
@@ -139,9 +139,9 @@ export class SubmitValuesClearErrorAction {}
  * Indicate that a tag definition has changed
  */
 export class TagDefinitionChangeAction {
-    tagDefinition: ColumnDefinition
+    tagDefinition: TagDefinition
 
-    constructor(tagDefinition: ColumnDefinition) {
+    constructor(tagDefinition: TagDefinition) {
         this.tagDefinition = tagDefinition
     }
 }
@@ -153,7 +153,7 @@ export class CurateTagDefinitionStartAction {}
  * Indicate a successful curation request
  */
 export class CurateTagDefinitionSuccessAction extends TagDefinitionChangeAction {
-    constructor(tagDefinition: ColumnDefinition) {
+    constructor(tagDefinition: TagDefinition) {
         super(tagDefinition)
     }
 }
@@ -173,8 +173,8 @@ export class CurateTagDefinitionErrorAction {
  * Indicate that a tag ownership change UI element should be shown
  */
 export class TagChangeOwnershipShowAction {
-    columnDefinition: ColumnDefinition
-    constructor(columnDefinition: ColumnDefinition) {
+    columnDefinition: TagDefinition
+    constructor(columnDefinition: TagDefinition) {
         this.columnDefinition = columnDefinition
     }
 }

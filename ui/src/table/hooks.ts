@@ -7,7 +7,7 @@ import {
     Item,
     Rectangle
 } from '@glideapps/glide-data-grid'
-import { ColumnDefinition, ColumnType } from '../column_menu/state'
+import { TagDefinition, TagType } from '../column_menu/state'
 import { newErrorState, ErrorState } from '../util/error/slice'
 import { Remote, ThunkMiddlewareDispatch, useThunkReducer } from '../util/state'
 import {
@@ -49,7 +49,7 @@ const emptyCell = {
     data: ''
 } as GridCell
 
-export function mkCell(columnType: ColumnType, cellValues?: CellValue[]): GridCell {
+export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell {
     // workaround for typescript jest compatibility
     let cellKind = 'text' as GridCellKind
     let allowOverlay = true
@@ -63,7 +63,7 @@ export function mkCell(columnType: ColumnType, cellValues?: CellValue[]): GridCe
             data: ''
         } as GridCell
     }
-    if (columnType == ColumnType.Inner) {
+    if (columnType == TagType.Inner) {
         // workaround for typescript jest compatibility
         allowOverlay = false
         cellKind = 'boolean' as GridCellKind
@@ -72,7 +72,7 @@ export function mkCell(columnType: ColumnType, cellValues?: CellValue[]): GridCe
         } else {
             cellContent = cellValues[0].value
         }
-    } else if (columnType == ColumnType.Float) {
+    } else if (columnType == TagType.Float) {
         // workaround for typescript jest compatibility
         cellKind = 'number' as GridCellKind
         if (cellValues.length == 0) {
@@ -82,7 +82,7 @@ export function mkCell(columnType: ColumnType, cellValues?: CellValue[]): GridCe
             cellContent = cellValues[0].value
             displayData = cellContent?.toString()
         }
-    } else if (columnType == ColumnType.String) {
+    } else if (columnType == TagType.String) {
         if (cellValues.length == 0) {
             cellContent = ''
             displayData = ''
@@ -137,7 +137,7 @@ export type RemoteTableCallbacks = {
 }
 export type LocalTableCallbacks = {
     cellContentCallback: (cell: Item) => GridCell
-    addColumnCallback: (columnDefinition: ColumnDefinition) => void
+    addColumnCallback: (columnDefinition: TagDefinition) => void
     showColumnAddMenuCallback: VoidFunction
     hideColumnAddMenuCallback: VoidFunction
     showHeaderMenuCallback: (columnIdx: number, bounds: Rectangle) => void
@@ -161,7 +161,7 @@ export type LocalTableCallbacks = {
     clearSubmitValueErrorCallback: VoidFunction
     csvLines: () => string[]
     hideTagDefinitionOwnershipCallback: VoidFunction
-    updateTagDefinitionCallback: (tagDefinition: ColumnDefinition) => void
+    updateTagDefinitionCallback: (tagDefinition: TagDefinition) => void
     showEntityAddMenuCallback: VoidFunction
     hideEntityAddMenuCallback: VoidFunction
     clearEntityChangeErrorCallback: VoidFunction
@@ -177,7 +177,7 @@ export type TableDataProps = {
     loadDataErrorState?: ErrorState
     submitValuesErrorState?: ErrorState
     columnHeaderMenuEntries: ColumnHeaderMenuItem[]
-    tagDefinitionChangeOwnership?: ColumnDefinition
+    tagDefinitionChangeOwnership?: TagDefinition
     showEntityAddMenu: boolean
     entityAddState: Remote<boolean>
 }
@@ -191,7 +191,7 @@ export interface ColumnHeaderMenuItem {
 function mkColumnHeaderMenuEntries(
     permissionGroup: UserPermissionGroup | undefined,
     dispatch: ThunkMiddlewareDispatch<TableAction>,
-    tagDefinitionSelected?: ColumnDefinition
+    tagDefinitionSelected?: TagDefinition
 ): ColumnHeaderMenuItem[] {
     if (tagDefinitionSelected === undefined) {
         return []
@@ -256,7 +256,7 @@ export function useRemoteTableData(
                         )
                     }
                     await dispatch(new GetTableAsyncAction())
-                    userInfo?.columns.forEach(async (col: ColumnDefinition) => {
+                    userInfo?.columns.forEach(async (col: TagDefinition) => {
                         const idPersistent = col.idPersistent
                         const colStateIdx = state.columnIndices.get(idPersistent)
                         const colState = state.columnStates[colStateIdx ?? -1]
@@ -297,7 +297,7 @@ export function useRemoteTableData(
         },
         {
             cellContentCallback: useCellContentCallback(state),
-            addColumnCallback: (columnDefinition: ColumnDefinition) =>
+            addColumnCallback: (columnDefinition: TagDefinition) =>
                 dispatch(new GetColumnAsyncAction(columnDefinition)).then(() =>
                     defaultColumnCallbacks.appendToDefaultTagDefinitionsCallback(
                         columnDefinition.idPersistent

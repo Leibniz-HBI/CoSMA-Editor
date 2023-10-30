@@ -3,10 +3,11 @@ import { Col, Form, Row } from 'react-bootstrap'
 
 import { DashLg, PatchCheckFill, PlusLg, RecordFill } from 'react-bootstrap-icons'
 import {
-    ColumnDefinition,
-    ColumnSelectionEntry,
-    ColumnType,
-    newColumnDefinition
+    TagDefinition,
+    TagSelectionEntry,
+    TagType,
+    newTagDefinition,
+    newTagSelectionEntry
 } from '../state'
 
 export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
@@ -91,18 +92,18 @@ export function ColumnExplorerExpandIcon(props: {
     )
 }
 export function mkColumnExplorerItem(props: {
-    columnSelectionEntry: ColumnSelectionEntry
+    columnSelectionEntry: TagSelectionEntry
     path: number[]
     toggleExpansionCallback: (path: number[], group?: string) => void
     expansionGroup?: string
     level: number
-    mkTailElement: (def: ColumnDefinition) => ReactElement
+    mkTailElement: (def: TagDefinition) => ReactElement
 }) {
     const { columnDefinition, isLoading, children, isExpanded } =
         props.columnSelectionEntry
     const tailElement = props.mkTailElement(columnDefinition)
     let expandCallback = undefined
-    if (props.columnSelectionEntry.isExpandable()) {
+    if (props.columnSelectionEntry.children.length > 0) {
         expandCallback = () =>
             props.toggleExpansionCallback(props.path, props.expansionGroup)
     }
@@ -148,11 +149,11 @@ export function mkColumnExplorerItem(props: {
 }
 
 export function mkListItems(args: {
-    columnSelectionEntries: ColumnSelectionEntry[]
+    columnSelectionEntries: TagSelectionEntry[]
     path: number[]
     toggleExpansionCallback: (path: number[], group?: string) => void
     level: number
-    mkTailElement: (def: ColumnDefinition) => ReactElement
+    mkTailElement: (def: TagDefinition) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
     expansionGroup?: string
 }): ReactNode[] {
@@ -168,11 +169,11 @@ export function mkListItems(args: {
     if (additionalEntries !== undefined) {
         const additionalItems = additionalEntries.map((entry, idx) =>
             mkColumnExplorerItem({
-                columnSelectionEntry: new ColumnSelectionEntry({
-                    columnDefinition: newColumnDefinition({
+                columnSelectionEntry: newTagSelectionEntry({
+                    columnDefinition: newTagDefinition({
                         namePath: [entry.name],
                         idPersistent: entry.idPersistent,
-                        columnType: ColumnType.Inner,
+                        columnType: TagType.Inner,
                         curated: true,
                         version: 0
                     })
@@ -189,29 +190,27 @@ export function mkListItems(args: {
             ...mkListItems({ ...args, level: 1, additionalEntries: undefined })
         ]
     }
-    return columnSelectionEntries.flatMap(
-        (entry: ColumnSelectionEntry, idx: number) => {
-            const newPath = [...path, idx]
-            const item = mkColumnExplorerItem({
-                columnSelectionEntry: entry,
-                path: newPath,
-                toggleExpansionCallback: toggleExpansionCallback,
-                expansionGroup: expansionGroup,
-                level: level,
-                mkTailElement: mkTailElement
-            })
-            if (entry.isExpanded) {
-                return [
-                    item,
-                    ...mkListItems({
-                        ...args,
-                        columnSelectionEntries: entry.children,
-                        level: level + 1,
-                        path: newPath
-                    })
-                ]
-            }
-            return [item]
+    return columnSelectionEntries.flatMap((entry: TagSelectionEntry, idx: number) => {
+        const newPath = [...path, idx]
+        const item = mkColumnExplorerItem({
+            columnSelectionEntry: entry,
+            path: newPath,
+            toggleExpansionCallback: toggleExpansionCallback,
+            expansionGroup: expansionGroup,
+            level: level,
+            mkTailElement: mkTailElement
+        })
+        if (entry.isExpanded) {
+            return [
+                item,
+                ...mkListItems({
+                    ...args,
+                    columnSelectionEntries: entry.children,
+                    level: level + 1,
+                    path: newPath
+                })
+            ]
         }
-    )
+        return [item]
+    })
 }

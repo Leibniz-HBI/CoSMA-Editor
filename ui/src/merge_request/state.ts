@@ -1,4 +1,4 @@
-import { ColumnDefinition } from '../column_menu/state'
+import { TagDefinition } from '../column_menu/state'
 import { PublicUserInfo } from '../user/state'
 import { Remote } from '../util/state'
 
@@ -15,8 +15,8 @@ export class MergeRequest {
     idPersistent: string
     createdBy: PublicUserInfo
     assignedTo: PublicUserInfo
-    originTagDefinition: ColumnDefinition
-    destinationTagDefinition: ColumnDefinition
+    originTagDefinition: TagDefinition
+    destinationTagDefinition: TagDefinition
     step: MergeRequestStep
 
     constructor({
@@ -30,8 +30,8 @@ export class MergeRequest {
         idPersistent: string
         createdBy: PublicUserInfo
         assignedTo: PublicUserInfo
-        originTagDefinition: ColumnDefinition
-        destinationTagDefinition: ColumnDefinition
+        originTagDefinition: TagDefinition
+        destinationTagDefinition: TagDefinition
         step: MergeRequestStep
     }) {
         this.idPersistent = idPersistent

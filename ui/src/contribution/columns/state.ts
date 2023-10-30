@@ -1,39 +1,41 @@
-import { ColumnSelectionEntry, ColumnType } from '../../column_menu/state'
-import { Remote } from '../../util/state'
+import { TagSelectionEntry, TagType } from '../../column_menu/state'
+import { RemoteInterface, newRemote } from '../../util/state'
 import { Contribution } from '../state'
 
-export class ColumnDefinitionContribution {
+export interface ColumnDefinitionContribution {
     name: string
     idPersistent: string
     idExistingPersistent?: string
     idParentPersistent?: string
-    type?: ColumnType
+    type?: TagType
     indexInFile: number
     discard: boolean
-    constructor({
-        name,
-        idPersistent,
-        idExistingPersistent = undefined,
-        idParentPersistent = undefined,
-        type = undefined,
-        indexInFile,
-        discard
-    }: {
-        name: string
-        idPersistent: string
-        idExistingPersistent?: string
-        idParentPersistent?: string
-        type?: ColumnType
-        indexInFile: number
-        discard: boolean
-    }) {
-        this.name = name
-        this.idPersistent = idPersistent
-        this.idExistingPersistent = idExistingPersistent
-        this.idParentPersistent = idParentPersistent
-        this.type = type
-        this.indexInFile = indexInFile
-        this.discard = discard
+}
+export function newColumnDefinitionContribution({
+    name,
+    idPersistent,
+    idExistingPersistent = undefined,
+    idParentPersistent = undefined,
+    type = undefined,
+    indexInFile,
+    discard
+}: {
+    name: string
+    idPersistent: string
+    idExistingPersistent?: string
+    idParentPersistent?: string
+    type?: TagType
+    indexInFile: number
+    discard: boolean
+}): ColumnDefinitionContribution {
+    return {
+        name: name,
+        idPersistent: idPersistent,
+        idExistingPersistent: idExistingPersistent,
+        idParentPersistent: idParentPersistent,
+        type: type,
+        indexInFile: indexInFile,
+        discard: discard
     }
 }
 
@@ -43,27 +45,28 @@ export type ColumnsTriple = {
     contributionCandidate: Contribution
 }
 
-export class ColumnDefinitionsContributionState {
-    columns: Remote<ColumnsTriple | undefined>
-    selectedColumnDefinition: Remote<ColumnDefinitionContribution | undefined>
+export interface ColumnDefinitionsContributionState {
+    columns: RemoteInterface<ColumnsTriple | undefined>
+    selectedColumnDefinition: RemoteInterface<ColumnDefinitionContribution | undefined>
     createTabSelected: boolean
-    finalizeColumnAssignment: Remote<boolean>
-
-    constructor({
-        columns = new Remote(undefined),
-        selectedColumnDefinition = new Remote(undefined),
-        createTabSelected = false,
-        finalizeColumnAssignment = new Remote(false)
-    }: {
-        columns?: Remote<ColumnsTriple | undefined>
-        selectedColumnDefinition?: Remote<ColumnDefinitionContribution | undefined>
-        createTabSelected?: boolean
-        existingColumnSelectionEntries?: Remote<ColumnSelectionEntry[]>
-        finalizeColumnAssignment?: Remote<boolean>
-    }) {
-        this.columns = columns
-        this.selectedColumnDefinition = selectedColumnDefinition
-        this.createTabSelected = createTabSelected
-        this.finalizeColumnAssignment = finalizeColumnAssignment
+    finalizeColumnAssignment: RemoteInterface<boolean>
+}
+export function newColumnDefinitionsContributionState({
+    columns = newRemote(undefined),
+    selectedColumnDefinition = newRemote(undefined),
+    createTabSelected = false,
+    finalizeColumnAssignment = newRemote(false)
+}: {
+    columns?: RemoteInterface<ColumnsTriple | undefined>
+    selectedColumnDefinition?: RemoteInterface<ColumnDefinitionContribution | undefined>
+    createTabSelected?: boolean
+    existingColumnSelectionEntries?: RemoteInterface<TagSelectionEntry[]>
+    finalizeColumnAssignment?: RemoteInterface<boolean>
+}): ColumnDefinitionsContributionState {
+    return {
+        columns: columns,
+        selectedColumnDefinition: selectedColumnDefinition,
+        createTabSelected: createTabSelected,
+        finalizeColumnAssignment: finalizeColumnAssignment
     }
 }

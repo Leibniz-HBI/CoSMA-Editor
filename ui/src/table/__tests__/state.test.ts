@@ -1,4 +1,4 @@
-import { ColumnType } from '../../column_menu/state'
+import { TagType } from '../../column_menu/state'
 import { Remote } from '../../util/state'
 import { ColumnState, TableState } from '../state'
 
@@ -20,7 +20,7 @@ describe('csv iterator', () => {
     const tagDefTest = {
         namePath: ['Display Text'],
         idPersistent: 'id-column-display-text-test',
-        columnType: ColumnType.String,
+        columnType: TagType.String,
         curated: false,
         version: 3
     }

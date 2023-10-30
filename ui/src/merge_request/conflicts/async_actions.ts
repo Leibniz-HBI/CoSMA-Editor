@@ -17,7 +17,7 @@ import { config } from '../../config'
 import { MergeRequestConflict, TagInstance } from './state'
 import { parseEntityObjectFromJson } from '../../table/async_actions'
 import { Entity } from '../../table/state'
-import { ColumnDefinition } from '../../column_menu/state'
+import { TagDefinition } from '../../column_menu/state'
 import { Remote } from '../../util/state'
 import { parseMergeRequestFromJson } from '../async_actions'
 
@@ -79,9 +79,9 @@ export class ResolveConflictAction extends AsyncAction<
     idMergeRequestPersistent: string
     entity: Entity
     tagInstanceOrigin: TagInstance
-    tagDefinitionOrigin: ColumnDefinition
+    tagDefinitionOrigin: TagDefinition
     tagInstanceDestination?: TagInstance
-    tagDefinitionDestination: ColumnDefinition
+    tagDefinitionDestination: TagDefinition
     replace: boolean
     constructor({
         idMergeRequestPersistent,
@@ -95,9 +95,9 @@ export class ResolveConflictAction extends AsyncAction<
         idMergeRequestPersistent: string
         entity: Entity
         tagInstanceOrigin: TagInstance
-        tagDefinitionOrigin: ColumnDefinition
+        tagDefinitionOrigin: TagDefinition
         tagInstanceDestination?: TagInstance
-        tagDefinitionDestination: ColumnDefinition
+        tagDefinitionDestination: TagDefinition
         replace: boolean
     }) {
         super()

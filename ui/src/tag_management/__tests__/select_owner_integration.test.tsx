@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import { ColumnDefinition, ColumnType } from '../../column_menu/state'
+import { TagDefinition, TagType } from '../../column_menu/state'
 import {
     PublicUserInfo,
     UserPermissionGroup,
@@ -80,10 +80,10 @@ describe('Ownership search', () => {
         permissionGroup: permissionGroupTest1
     })
     const idTagDefinitionTest = 'id-tag-def-test'
-    const tagTypeTest = ColumnType.Inner
+    const tagTypeTest = TagType.Inner
     const namePathTest = ['tag', 'path', 'test']
     const ownerTest = 'owner test'
-    const tagDefinitionTest: ColumnDefinition = {
+    const tagDefinitionTest: TagDefinition = {
         columnType: tagTypeTest,
         idPersistent: idTagDefinitionTest,
         idParentPersistent: undefined,

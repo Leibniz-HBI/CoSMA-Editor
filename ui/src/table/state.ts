@@ -1,5 +1,5 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
-import { ColumnDefinition, ColumnType } from '../column_menu/state'
+import { TagDefinition, TagType } from '../column_menu/state'
 import { ErrorState } from '../util/error/slice'
 import { Remote } from '../util/state'
 
@@ -11,13 +11,13 @@ export class TableState {
     entityIndices: Map<string, number>
     isLoading?: boolean
     showColumnAddMenu: boolean
-    selectedTagDefinition?: ColumnDefinition
+    selectedTagDefinition?: TagDefinition
     selectedColumnHeaderBounds?: Rectangle
     frozenColumns: number
     loadDataErrorState?: ErrorState
     isSubmittingValues: boolean
     submitValuesErrorState?: ErrorState
-    ownershipChangeTagDefinition?: ColumnDefinition
+    ownershipChangeTagDefinition?: TagDefinition
     showEntityAddDialog: boolean
     entityAddState: Remote<boolean>
 
@@ -46,13 +46,13 @@ export class TableState {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         rowObjects?: { [key: string]: any }[]
         showColumnAddMenu?: boolean
-        selectedTagDefinition?: ColumnDefinition
+        selectedTagDefinition?: TagDefinition
         selectedColumnHeaderBounds?: Rectangle
         frozenColumns?: number
         loadDataErrorState?: ErrorState
         isSubmittingValues?: boolean
         submitValuesErrorState?: ErrorState
-        ownershipChangeTagDefinition?: ColumnDefinition
+        ownershipChangeTagDefinition?: TagDefinition
         showEntityAddDialog?: boolean
         entityAddState?: Remote<boolean>
     }) {
@@ -140,7 +140,7 @@ export type CellValue = {
 }
 
 export class ColumnState {
-    tagDefinition: ColumnDefinition
+    tagDefinition: TagDefinition
     cellContents: Remote<CellValue[][]>
     width: number
 
@@ -148,14 +148,14 @@ export class ColumnState {
         tagDefinition = {
             idPersistent: '',
             namePath: [],
-            columnType: ColumnType.String,
+            columnType: TagType.String,
             curated: false,
             version: 0
         },
         cellContents = new Remote([]),
         width = 200
     }: {
-        tagDefinition: ColumnDefinition
+        tagDefinition: TagDefinition
         cellContents?: Remote<CellValue[][]>
         width?: number
     }) {
@@ -217,22 +217,24 @@ export class TableStateCsvIterator implements Iterator<string | undefined> {
         }
     }
 }
-export class Entity {
+export interface Entity {
     idPersistent: string
     displayTxt: string
     version: number
+}
 
-    constructor({
-        idPersistent,
-        displayTxt,
-        version
-    }: {
-        idPersistent: string
-        displayTxt: string
-        version: number
-    }) {
-        this.idPersistent = idPersistent
-        this.displayTxt = displayTxt
-        this.version = version
+export function newEntity({
+    idPersistent,
+    displayTxt,
+    version
+}: {
+    idPersistent: string
+    displayTxt: string
+    version: number
+}) {
+    return {
+        idPersistent: idPersistent,
+        displayTxt: displayTxt,
+        version: version
     }
 }

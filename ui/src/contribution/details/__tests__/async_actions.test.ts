@@ -1,4 +1,4 @@
-import { Contribution, ContributionStep } from '../../state'
+import { ContributionStep, newContribution } from '../../state'
 import {
     LoadContributionDetailsErrorAction,
     LoadContributionDetailsStartAction,
@@ -54,7 +54,7 @@ describe('get details', () => {
             [new LoadContributionDetailsStartAction()],
             [
                 new LoadContributionDetailsSuccessAction(
-                    new Contribution({
+                    newContribution({
                         name: nameTest0,
                         description: descriptionTest0,
                         idPersistent: idTest0,
@@ -120,7 +120,7 @@ describe('patch contribution', () => {
             [new PatchContributionDetailsStartAction()],
             [
                 new PatchContributionDetailsSuccessAction(
-                    new Contribution({
+                    newContribution({
                         name: nameTest0,
                         idPersistent: idTest0,
                         description: descriptionTest0,

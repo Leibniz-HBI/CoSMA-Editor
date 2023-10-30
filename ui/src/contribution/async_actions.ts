@@ -11,7 +11,7 @@ import {
 } from './actions'
 import { exceptionMessage } from '../util/exception'
 import { config } from '../config'
-import { Contribution, ContributionStep } from './state'
+import { Contribution, ContributionStep, newContribution } from './state'
 import { fetch_chunk_get } from '../util/fetch'
 
 export class UploadContributionAction extends AsyncAction<ContributionAction, void> {
@@ -124,7 +124,7 @@ export const contributionStepApiToUiMap: { [key: string]: ContributionStep } = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseContributionFromApi(contribution_json: any): Contribution {
-    return new Contribution({
+    return newContribution({
         name: contribution_json['name'],
         idPersistent: contribution_json['id_persistent'],
         description: contribution_json['description'],

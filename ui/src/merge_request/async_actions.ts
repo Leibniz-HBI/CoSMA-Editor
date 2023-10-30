@@ -9,8 +9,8 @@ import {
 import { config } from '../config'
 import { MergeRequest, MergeRequestStep } from './state'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
-import { parseColumnDefinitionsFromApi } from '../column_menu/async_actions'
 import { exceptionMessage } from '../util/exception'
+import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 
 export class GetMergeRequestsAction extends AsyncAction<MergeRequestAction, void> {
     async run(dispatch: Dispatch<MergeRequestAction>) {

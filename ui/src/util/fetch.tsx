@@ -25,18 +25,25 @@ export async function fetch_chunk({
 export async function fetch_chunk_get({
     api_path,
     offset,
-    limit
+    limit,
+    fetchMethod = fetch
 }: {
     api_path: string
     offset: number
     limit: number
-    payload?: { [key: string]: JsonValue }
+    fetchMethod?: (
+        input: RequestInfo | URL,
+        init?: RequestInit | undefined
+    ) => Promise<Response>
 }) {
-    return await fetch(api_path + '/' + offset.toString() + '/' + limit.toString(), {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-            'Access-Control-Allow-Credentials': 'true'
+    return await fetchMethod(
+        api_path + '/' + offset.toString() + '/' + limit.toString(),
+        {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Access-Control-Allow-Credentials': 'true'
+            }
         }
-    })
+    )
 }

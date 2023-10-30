@@ -1,5 +1,5 @@
-import { ColumnType, newColumnDefinition } from '../../../column_menu/state'
-import { Entity } from '../../../table/state'
+import { TagType, newTagDefinition } from '../../../column_menu/state'
+import { newEntity } from '../../../table/state'
 import { Remote, useThunkReducer } from '../../../util/state'
 import {
     GetMergeRequestConflictAction,
@@ -61,15 +61,15 @@ test('resolve conflict callback', () => {
     const { resolveConflictCallback } = useMergeRequestConflictResolutions(
         'id-merge-request-test'
     )
-    const entity = new Entity({
+    const entity = newEntity({
         displayTxt: 'test entity',
         idPersistent: 'id-entity-test',
         version: 92
     })
-    const tagDefinitionOrigin = newColumnDefinition({
+    const tagDefinitionOrigin = newTagDefinition({
         namePath: ['tag definition origin test'],
         idPersistent: 'id-origin-test',
-        columnType: ColumnType.String,
+        columnType: TagType.String,
         curated: false,
         version: 3
     })
@@ -78,10 +78,10 @@ test('resolve conflict callback', () => {
         version: 12,
         value: 'test value origin'
     })
-    const tagDefinitionDestination = newColumnDefinition({
+    const tagDefinitionDestination = newTagDefinition({
         namePath: ['tag definition destination test'],
         idPersistent: 'id-destination-test',
-        columnType: ColumnType.String,
+        columnType: TagType.String,
         curated: false,
         version: 3
     })

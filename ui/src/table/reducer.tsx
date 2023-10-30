@@ -30,7 +30,7 @@ import {
 } from './actions'
 import { newErrorState } from '../util/error/slice'
 import { Remote } from '../util/state'
-import { ColumnDefinition } from '../column_menu/state'
+import { TagDefinition } from '../column_menu/state'
 
 export function tableReducer(state: TableState, action: TableAction) {
     if (action instanceof SetEntityLoadingAction) {
@@ -399,7 +399,7 @@ function appendDisplayTextToColumnState(
 function updateTagDefinition(
     columnStates: ColumnState[],
     columnIndices: Map<string, number>,
-    tagDefinition: ColumnDefinition
+    tagDefinition: TagDefinition
 ) {
     const idxColumnState = columnIndices.get(tagDefinition.idPersistent)
     if (idxColumnState === undefined) {

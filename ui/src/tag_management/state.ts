@@ -1,4 +1,4 @@
-import { ColumnDefinition } from '../column_menu/state'
+import { TagDefinition } from '../column_menu/state'
 import { PublicUserInfo } from '../user/state'
 import { RemoteInterface } from '../util/state'
 
@@ -6,7 +6,7 @@ export interface OwnershipRequest {
     idPersistent: string
     petitioner: PublicUserInfo
     receiver: PublicUserInfo
-    tagDefinition: ColumnDefinition
+    tagDefinition: TagDefinition
 }
 
 export interface OwnershipRequests {
