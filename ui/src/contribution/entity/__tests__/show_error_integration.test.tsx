@@ -18,11 +18,17 @@ import { Provider } from 'react-redux'
 import { EntitiesStep } from '../components'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
+import { ErrorManager, errorSlice } from '../../../util/error/slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
     loaderMock.mockReturnValue('id-contribution-test')
     return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+})
+jest.mock('uuid', () => {
+    return {
+        v4: () => 'id-error-test'
+    }
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -36,6 +42,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
             selectedContribution: RemoteInterface<Contribution | undefined>
         }
         tagSelection: TagSelectionState
+        error: ErrorManager
     }
 }
 
@@ -46,7 +53,8 @@ export function renderWithProviders(
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
             contribution: { selectedContribution: newRemote(undefined) },
-            tagSelection: newTagSelectionState({})
+            tagSelection: newTagSelectionState({}),
+            error: { errorList: [], errorMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -55,7 +63,8 @@ export function renderWithProviders(
         reducer: {
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer
+            tagSelection: tagSelectionSlice.reducer,
+            error: errorSlice.reducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -82,6 +91,7 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
     }
 }
 const idContribution = 'id-contribution-test'
+const errorMsg = 'Test Error'
 const contributionTest = {
     id_persistent: idContribution,
     name: 'contribution test',
@@ -89,7 +99,8 @@ const contributionTest = {
     anonymous: false,
     has_header: true,
     state: 'VALUES_EXTRACTED',
-    author: 'author-test'
+    author: 'author-test',
+    error_msg: errorMsg
 }
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
@@ -167,48 +178,15 @@ function initialResponses(fetchMock: jest.Mock) {
         [200, { matches: mkMatches(personList.slice(50)) }]
     ])
 }
-test('get duplicates', async () => {
+test('sets error', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
-    const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(50)
-        for (let idx = 0; idx < 60; ++idx) {
-            expect(
-                store.getState().contributionEntity.entities.value[idx].similarEntities
-                    .value.length
-            ).toEqual(2)
-        }
-        expect(
-            store
-                .getState()
-                .contributionEntity.entities.value.filter(
-                    (entity) => entity.similarEntities.isLoading == true
-                ).length
-        ).toEqual(0)
-    })
-})
-test('changePage', async () => {
-    const fetchMock = jest.fn()
-    initialResponses(fetchMock)
-    addResponseSequence(fetchMock, [])
-    const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
-    await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(50)
-    })
-    const nextButton = screen.getByTestId('page-next')
-    nextButton.click()
-    await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(10)
-    })
-    expect(store.getState().contributionEntity.pageNumber).toEqual(2)
-    const prevButton = screen.getByTestId('page-prev')
-    prevButton.click()
-    await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(50)
+        const state = store.getState()
+        expect(state.error).toEqual({
+            errorList: [{ id: 'id-error-test', msg: errorMsg }],
+            errorMap: { 'id-error-test': 0 }
+        })
     })
 })

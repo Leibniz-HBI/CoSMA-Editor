@@ -29,6 +29,7 @@ import {
     putDuplicateSuccess
 } from './slice'
 import { newRemote } from '../../util/state'
+import { addError, newErrorState } from '../../util/error/slice'
 
 export function getContributionEntitiesAction(
     idContributionPersistent: string
@@ -47,8 +48,8 @@ export function getContributionEntitiesAction(
                         limit: 500,
                         fetchMethod: fetch
                     })
+                    const json = await rsp.json()
                     if (rsp.status == 200) {
-                        const json = await rsp.json()
                         const entitiesChunk = json['persons'].map(
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             (entityJson: any) =>
@@ -63,12 +64,14 @@ export function getContributionEntitiesAction(
                             return entities
                         }
                     } else {
-                        dispatch(getContributionEntitiesError((await rsp.json()).msg))
+                        dispatch(getContributionEntitiesError())
+                        dispatch(addError(newErrorState(json.msg)))
                         return []
                     }
                 }
             } catch (exc: unknown) {
-                dispatch(getContributionEntitiesError(exceptionMessage(exc)))
+                dispatch(getContributionEntitiesError())
+                dispatch(addError(newErrorState(exceptionMessage(exc))))
             }
             return []
         }
@@ -119,17 +122,19 @@ export function putDuplicateAction({
                 dispatch(
                     putDuplicateError({
                         idPersistent: idEntityOriginPersistent,
-                        details: json['msg']
+                        details: undefined
                     })
                 )
+                dispatch(addError(newErrorState(json['msg'])))
             }
         } catch (e: unknown) {
             dispatch(
                 putDuplicateError({
                     idPersistent: idEntityOriginPersistent,
-                    details: exceptionMessage(e)
+                    details: undefined
                 })
             )
+            dispatch(addError(newErrorState(exceptionMessage(e))))
         }
     }
 }
@@ -162,8 +167,8 @@ export function getContributionEntityDuplicateCandidatesAction({
                         })
                     }
                 )
+                const json = await rsp.json()
                 if (rsp.status == 200) {
-                    const json = await rsp.json()
                     const matchesMap = json['matches']
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     for (const idEntityPersistent in matchesMap) {
@@ -204,10 +209,11 @@ export function getContributionEntityDuplicateCandidatesAction({
                         dispatch(
                             getDuplicatesError({
                                 idPersistent: idEntityPersistent,
-                                details: (await rsp.json())['msg']
+                                details: undefined
                             })
                         )
                     }
+                    dispatch(addError(newErrorState(json['msg'])))
                     break
                 }
             }
@@ -217,10 +223,11 @@ export function getContributionEntityDuplicateCandidatesAction({
                 dispatch(
                     getDuplicatesError({
                         idPersistent: idEntityPersistent,
-                        details: exceptionMessage(exc)
+                        details: undefined
                     })
                 )
             }
+            dispatch(addError(newErrorState(exceptionMessage(exc))))
         }
         return {}
     }
@@ -309,18 +316,20 @@ export function getContributionTagInstances({
                     getContributionTagInstancesError({
                         idEntityPersistentGroupMap: entitiesGroupMap,
                         tagDefinitionList,
-                        details: json['msg']
+                        details: undefined
                     })
                 )
+                dispatch(addError(newErrorState(json['msg'])))
             }
         } catch (e: unknown) {
             dispatch(
                 getContributionTagInstancesError({
                     idEntityPersistentGroupMap: entitiesGroupMap,
                     tagDefinitionList,
-                    details: exceptionMessage(e)
+                    details: undefined
                 })
             )
+            dispatch(addError(newErrorState(exceptionMessage(e))))
         }
     }
 }

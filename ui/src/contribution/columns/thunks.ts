@@ -15,6 +15,7 @@ import {
     patchColumnDefinitionContributionSuccess
 } from './slice'
 import { columnTypeMapApiToApp } from '../../column_menu/thunks'
+import { addError, newErrorState } from '../../util/error/slice'
 
 export function loadColumnDefinitionsContribution(
     idPersistent: string
@@ -40,9 +41,19 @@ export function loadColumnDefinitionsContribution(
                         activeDefinitionsList.push(columnDefinition)
                     }
                 })
-                const contributionCandidate = parseContributionFromApi(
-                    json['contribution_candidate']
-                )
+                const contributionJson = json['contribution_candidate']
+                const errorMsg = contributionJson['error_msg']
+                if (errorMsg) {
+                    const errorDetails = contributionJson['error_details']
+                    if (errorDetails) {
+                        dispatch(
+                            addError(newErrorState(errorMsg + '\n' + errorDetails))
+                        )
+                    } else {
+                        dispatch(addError(newErrorState(errorMsg)))
+                    }
+                }
+                const contributionCandidate = parseContributionFromApi(contributionJson)
                 dispatch(
                     loadColumnDefinitionsContributionSuccess({
                         activeDefinitionsList,
@@ -53,9 +64,11 @@ export function loadColumnDefinitionsContribution(
                 return
             }
             const json = await rsp.json()
-            dispatch(loadColumnDefinitionsContributionError(json['msg']))
+            dispatch(loadColumnDefinitionsContributionError())
+            dispatch(addError(newErrorState(json['msg'])))
         } catch (e: unknown) {
-            dispatch(loadColumnDefinitionsContributionError(exceptionMessage(e)))
+            dispatch(loadColumnDefinitionsContributionError())
+            dispatch(addError(newErrorState(exceptionMessage(e))))
         }
     }
 }
@@ -75,36 +88,44 @@ export function patchColumnDefinitionContribution({
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(patchColumnDefinitionContributionStart())
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let body: any
-        // discard is handled from a different component.
-        if (discard !== undefined) {
-            body = { discard: discard }
-        } else if (idExistingPersistent !== undefined) {
-            body = {
-                id_existing_persistent: idExistingPersistent
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let body: any
+            // discard is handled from a different component.
+            if (discard !== undefined) {
+                body = { discard: discard }
+            } else if (idExistingPersistent !== undefined) {
+                body = {
+                    id_existing_persistent: idExistingPersistent
+                }
             }
-        }
-        if (name !== undefined) {
-            body.name = name
-        }
-        const rsp = await fetch(
-            config.api_path +
-                `/contributions/${idContributionPersistent}/tags/${idPersistent}`,
-            {
-                method: 'PATCH',
-                credentials: 'include',
-                body: JSON.stringify(body)
+            if (name !== undefined) {
+                body.name = name
             }
-        )
-        if (rsp.status == 200) {
-            const json = await rsp.json()
-            const changedColumnDefinition = parseTagDefinitionContribution(json)
+            const rsp = await fetch(
+                config.api_path +
+                    `/contributions/${idContributionPersistent}/tags/${idPersistent}`,
+                {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    body: JSON.stringify(body)
+                }
+            )
+            if (rsp.status == 200) {
+                const json = await rsp.json()
+                const changedColumnDefinition = parseTagDefinitionContribution(json)
 
-            dispatch(patchColumnDefinitionContributionSuccess(changedColumnDefinition))
-        } else {
-            const json = await rsp.json()
-            dispatch(patchColumnDefinitionContributionError(json['msg']))
+                dispatch(
+                    patchColumnDefinitionContributionSuccess(changedColumnDefinition)
+                )
+            } else {
+                const json = await rsp.json()
+                dispatch(patchColumnDefinitionContributionError())
+                dispatch(addError(newErrorState(json['msg'])))
+            }
+        } catch (e: unknown) {
+            dispatch(patchColumnDefinitionContributionError())
+            dispatch(addError(newErrorState(exceptionMessage(e))))
         }
     }
 }

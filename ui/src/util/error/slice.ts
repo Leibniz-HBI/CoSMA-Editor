@@ -42,6 +42,11 @@ export const errorSlice = createSlice({
             delete state.errorMap[action.payload]
             if (idx !== undefined) {
                 state.errorList.splice(idx, 1)
+                for (const [key, value] of Object.entries(state.errorMap)) {
+                    if (value > idx) {
+                        state.errorMap[key] = value - 1
+                    }
+                }
             }
         }
     }

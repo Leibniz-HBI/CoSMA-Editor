@@ -17,19 +17,27 @@ export function loadContributionDetails(
                     credentials: 'include'
                 }
             )
+            const json = await rsp.json()
             if (rsp.status != 200) {
                 dispatch(
                     addError(
                         newErrorState(
-                            `Could not load contribution details. Reason: "${
-                                (await rsp.json())['msg']
-                            }".`
+                            `Could not load contribution details. Reason: "${json['msg']}".`
                         )
                     )
                 )
                 return
             }
-            const contribution = parseContributionFromApi(await rsp.json())
+            const contribution = parseContributionFromApi(json)
+            const errorMsg = json['error_msg']
+            if (errorMsg) {
+                const errorDetails = json['error_details']
+                if (errorDetails) {
+                    dispatch(addError(newErrorState(errorMsg + '\n' + errorDetails)))
+                } else {
+                    dispatch(addError(newErrorState(errorMsg)))
+                }
+            }
             dispatch(getContributionSuccess(contribution))
         } catch (e: unknown) {
             dispatch(addError(newErrorState(exceptionMessage(e))))

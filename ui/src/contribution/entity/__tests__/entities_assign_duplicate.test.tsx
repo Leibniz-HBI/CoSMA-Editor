@@ -5,19 +5,14 @@ jest.mock('@glideapps/glide-data-grid', () => {
     const actual = jest.requireActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
         DataEditor: jest
             .fn()
-            .mockImplementation((props: any) => <MockTable {...props} />),
+            .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection
     }
 })
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import {
-    ContributionEntityState,
-    newContributionEntityState,
-    newScoredEntity
-} from '../state'
+import { ContributionEntityState, newContributionEntityState } from '../state'
 import { RemoteInterface, newRemote } from '../../../util/state'
 import { Contribution } from '../../state'
 import { configureStore } from '@reduxjs/toolkit'

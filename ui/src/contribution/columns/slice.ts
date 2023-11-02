@@ -123,18 +123,14 @@ export const contributionColumnDefinitionSlice = createSlice({
             state.finalizeColumnAssignment.errorMsg = undefined
         },
         loadColumnDefinitionsContributionError(
-            state: ColumnDefinitionsContributionState,
-            action: PayloadAction<string>
+            state: ColumnDefinitionsContributionState
         ) {
-            state.columns.errorMsg = action.payload
             state.columns.isLoading = false
         },
         patchColumnDefinitionContributionError(
-            state: ColumnDefinitionsContributionState,
-            action: PayloadAction<string>
+            state: ColumnDefinitionsContributionState
         ) {
             state.selectedColumnDefinition.isLoading = false
-            state.finalizeColumnAssignment.errorMsg = action.payload
         }
     }
 })

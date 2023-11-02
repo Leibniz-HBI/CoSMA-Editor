@@ -69,21 +69,11 @@ export const contributionEntitySlice = createSlice({
         },
         putDuplicateError(
             state: ContributionEntityState,
-            action: PayloadAction<ContributionEntityDuplicatesPayload<string>>
+            action: PayloadAction<ContributionEntityDuplicatesPayload<void>>
         ) {
             const entity = getEntity(state, action.payload.idPersistent)
             if (entity !== undefined) {
                 entity.assignedDuplicate.isLoading = false
-                entity.assignedDuplicate.errorMsg = action.payload.details
-            }
-        },
-        putDuplicateClearError(
-            state: ContributionEntityState,
-            action: PayloadAction<string>
-        ) {
-            const entity = getEntity(state, action.payload)
-            if (entity !== undefined) {
-                entity.assignedDuplicate.errorMsg = undefined
             }
         },
         getDuplicatesStart(
@@ -121,12 +111,11 @@ export const contributionEntitySlice = createSlice({
         },
         getDuplicatesError(
             state: ContributionEntityState,
-            action: PayloadAction<ContributionEntityDuplicatesPayload<string>>
+            action: PayloadAction<ContributionEntityDuplicatesPayload<void>>
         ) {
             const entity = getEntity(state, action.payload.idPersistent)
             if (entity !== undefined) {
                 entity.similarEntities.isLoading = false
-                entity.similarEntities.errorMsg = action.payload.details
             }
         },
 
@@ -198,7 +187,7 @@ export const contributionEntitySlice = createSlice({
         },
         getContributionTagInstancesError(
             state: ContributionEntityState,
-            action: PayloadAction<ContributionTagInstancesPayload<string>>
+            action: PayloadAction<ContributionTagInstancesPayload<void>>
         ) {
             const strategy = (
                 cellContents: RemoteInterface<CellValue[]>,
@@ -207,7 +196,6 @@ export const contributionEntitySlice = createSlice({
                 _idTagDef: string
             ) => {
                 cellContents.isLoading = false
-                cellContents.errorMsg = action.payload.details
             }
             contributionTagInstanceReducer(
                 state.entities.value,
@@ -235,12 +223,8 @@ export const contributionEntitySlice = createSlice({
             }
             state.entityMap = newMap
         },
-        getContributionEntitiesError(
-            state: ContributionEntityState,
-            action: PayloadAction<string>
-        ) {
+        getContributionEntitiesError(state: ContributionEntityState) {
             state.entities.isLoading = false
-            state.entities.errorMsg = action.payload
         },
         completeEntityAssignmentStart(state: ContributionEntityState) {
             state.completeEntityAssignment.isLoading = true
@@ -429,7 +413,6 @@ export const {
     getDuplicatesError,
     getDuplicatesStart,
     getDuplicatesSuccess,
-    putDuplicateClearError,
     putDuplicateError,
     putDuplicateStart,
     putDuplicateSuccess,
