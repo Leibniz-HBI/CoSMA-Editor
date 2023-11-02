@@ -1,4 +1,6 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 import tests.contribution.entity.common as c
@@ -6,6 +8,7 @@ import tests.entity.common as ce
 import tests.tag.common as ct
 import cosmae.contribution.entity.queue as q
 from cosmae.contribution.entity.models_django import EntityDuplicate
+from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
 from cosmae.tag.models_django import TagDefinition, TagInstance
 
@@ -302,3 +305,18 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "value": "bar",
         },
     ]
+
+
+def test_sets_error(contribution_candidate):
+    mock = MagicMock()
+    mock.side_effect = Exception("error")
+    with patch("cosmae.contribution.entity.queue.timestamp", mock):
+        q.eliminate_duplicates(contribution_candidate.id_persistent)
+    contribution_candidate = ContributionCandidate.by_id_persistent(
+        contribution_candidate.id_persistent, contribution_candidate.created_by
+    ).get()
+    assert contribution_candidate.state == ContributionCandidate.VALUES_EXTRACTED
+    assert (
+        contribution_candidate.error_msg == "Error during Entity Duplicate Elimination."
+    )
+    assert contribution_candidate.error_trace == "Exception: error"

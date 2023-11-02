@@ -48,13 +48,17 @@ def eliminate_duplicates(id_contribution_persistent):
         update_entities(replaced_entities_with_duplicates)
         for merge_request in contribution.mergerequest_set.all():
             django_rq.enqueue(merge_request_fast_forward, merge_request.id_persistent)
-        contribution.state = ContributionCandidate.MERGED
+        contribution.set_state(ContributionCandidate.MERGED)
         contribution.save()
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
             contribution_candidate = contribution_query.get()
-            contribution_candidate.state = ContributionCandidate.VALUES_EXTRACTED
+            contribution_candidate.set_state(
+                ContributionCandidate.VALUES_EXTRACTED,
+                error_msg="Error during Entity Duplicate Elimination.",
+                exception=exc,
+            )
             contribution_candidate.save()
 
 

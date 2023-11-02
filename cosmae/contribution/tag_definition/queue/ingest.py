@@ -102,7 +102,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                     created_at=time_add,
                     contribution_candidate=contribution,
                 ).save()
-            contribution.state = ContributionCandidate.VALUES_EXTRACTED
+            contribution.set_state(ContributionCandidate.VALUES_EXTRACTED)
             contribution.save()
     except (  # pylint: disable=broad-except
         ContributionCandidate.MissingRequiredAssignmentsException,
@@ -111,5 +111,9 @@ def ingest_values_from_csv(id_contribution_persistent):
         logging.error(None, exc_info=exc)
         with transaction.atomic():
             contribution_candidate = contribution_query.get()
-            contribution_candidate.state = ContributionCandidate.COLUMNS_EXTRACTED
+            contribution_candidate.set_state(
+                ContributionCandidate.COLUMNS_EXTRACTED,
+                "Error during ingestion of assigned tags.",
+                exc,
+            )
             contribution_candidate.save()

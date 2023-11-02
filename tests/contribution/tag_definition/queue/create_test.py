@@ -79,3 +79,19 @@ def test_extracts_with_header(contribution_other):
         )
     )
     assert contribution_candidate.state == ContributionCandidate.COLUMNS_EXTRACTED
+
+
+def test_sets_error(contribution_other):
+    conf_mock = MagicMock
+    conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/does_not_exist"
+    with patch("cosmae.contribution.tag_definition.queue.util.settings", conf_mock):
+        read_csv_head(contribution_other.id_persistent)
+    contribution = ContributionCandidate.by_id_persistent(
+        contribution_other.id_persistent, contribution_other.created_by
+    ).get()
+    assert contribution.state == ContributionCandidate.UPLOADED
+    assert contribution.error_msg == "Error while extracting columns."
+    assert contribution.error_trace == (
+        "FileNotFoundError: [Errno 2] No such file or directory: "
+        "'tests/files/does_not_exist/DBOeS_Parlamentarier50.csv'"
+    )

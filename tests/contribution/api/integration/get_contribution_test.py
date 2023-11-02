@@ -43,3 +43,23 @@ def test_get(auth_server):
     assert contribution["id_persistent"] == id_persistent
     contribution.pop("id_persistent")
     assert contribution == c.contribution_test_upload0
+
+
+def test_get_with_error(auth_server, contribution_error):
+    live_server, cookies = auth_server
+    rsp = req_contrib.get_contribution(
+        live_server.url, id_persistent=contribution_error.id_persistent, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == {
+        "id_persistent": contribution_error.id_persistent,
+        "name": contribution_error.name,
+        "description": contribution_error.description,
+        "anonymous": True,
+        "has_header": False,
+        "author": None,
+        "state": "ENTITIES_MATCHED",
+        "error_msg": contribution_error.error_msg,
+        "error_details": contribution_error.error_trace,
+    }

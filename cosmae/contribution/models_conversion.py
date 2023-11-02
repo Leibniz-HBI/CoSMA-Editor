@@ -32,4 +32,6 @@ def contribution_db_to_api(
         has_header=contribution_db.has_header,
         state=_contribution_state_mapping_db_to_api[contribution_db.state],
         author=author,
+        error_msg=contribution_db.error_msg,
+        error_details=contribution_db.error_trace,
     )

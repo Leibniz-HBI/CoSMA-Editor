@@ -191,3 +191,17 @@ def test_ingest_string(
         .state
         == ContributionCandidate.VALUES_EXTRACTED
     )
+
+
+def test_sets_error(party_contribution, party_tag_def):
+    mock = MagicMock()
+    mock.side_effect = Exception("error")
+    contribution = party_contribution.contribution_candidate
+    with patch("cosmae.contribution.tag_definition.queue.util.read_csv", mock):
+        ingest_values_from_csv(contribution.id_persistent)
+    contribution = ContributionCandidate.by_id_persistent(
+        contribution.id_persistent, contribution.created_by
+    ).get()
+    assert contribution.state == ContributionCandidate.COLUMNS_EXTRACTED
+    assert contribution.error_msg == "Error during ingestion of assigned tags."
+    assert contribution.error_trace == "Exception: error"

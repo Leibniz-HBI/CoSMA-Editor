@@ -42,6 +42,22 @@ def contribution_other(user1):
 
 
 @pytest.fixture
+def contribution_error(user):
+    return ContributionCandidate.objects.create(  # pylint: disable=no-member
+        name=c.name_error_test,
+        description=c.description_error_test,
+        id_persistent=c.id_persistent_error_test,
+        anonymous=True,
+        has_header=False,
+        file_name=c.file_name_test0,
+        state=ContributionCandidate.ENTITIES_MATCHED,
+        created_by=user,
+        error_msg=c.msg_error_test,
+        error_trace=c.trace_error_test,
+    )
+
+
+@pytest.fixture
 def contribution_tag_def(contribution_user):
     return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,

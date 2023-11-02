@@ -36,6 +36,8 @@ class ContributionCandidate(Schema):
     has_header: bool
     state: str
     author: Optional[str]
+    error_msg: Optional[str]
+    error_details: Optional[str]
 
 
 class ContributionCandidatePatchRequest(Schema):

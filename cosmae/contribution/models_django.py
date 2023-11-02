@@ -1,4 +1,6 @@
 "Models for contribution proposals."
+from traceback import TracebackException
+
 from django.db import models, transaction
 from django.db.models import Count, Subquery
 from django.db.utils import OperationalError
@@ -40,6 +42,19 @@ class ContributionCandidate(models.Model):
     created_by = models.ForeignKey("CosmaeUser", on_delete=models.CASCADE)
     file_name = models.TextField()
     state = models.CharField(max_length=4, choices=TYPE_CHOICES)
+    error_msg = models.TextField(blank=True, null=True)
+    error_trace = models.TextField(blank=True, null=True)
+
+    def set_state(self, state, error_msg=None, exception=None):
+        "Set state of the contribution and set or reset a possible error message."
+        self.state = state
+        self.error_msg = error_msg
+        if exception is not None:
+            self.error_trace = list(
+                TracebackException.from_exception(exception).format()
+            )[-1].strip()
+        else:
+            self.error_trace = None
 
     @classmethod
     def chunk_for_user(cls, user, start, offset):
@@ -95,12 +110,12 @@ class ContributionCandidate(models.Model):
     def complete_tag_assignment(self):
         "Lock a tag assignment for the contribution candidate."
         self.check_assignment_validity()
-        self.state = ContributionCandidate.COLUMNS_ASSIGNED
+        self.set_state(ContributionCandidate.COLUMNS_ASSIGNED)
         self.save(update_fields=["state"])
 
     def complete_entity_assignment(self):
         "Complete entity assignment for the candidate."
-        self.state = ContributionCandidate.ENTITIES_ASSIGNED
+        self.set_state(ContributionCandidate.ENTITIES_ASSIGNED)
         self.save(update_fields=["state"])
 
     def check_assignment_validity(self):
