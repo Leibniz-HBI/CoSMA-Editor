@@ -19,11 +19,13 @@ export function constructColumnTitle(namePath: string[]): string {
         return 'UNKNOWN'
     }
     if (namePath.length > 3) {
-        namePath[0] +
+        return (
+            namePath[0] +
             ' -> ... -> ' +
             namePath[namePath.length - 2] +
             ' -> ' +
             namePath[namePath.length - 1]
+        )
     }
     return namePath[0] + ' -> ' + namePath.slice(1).join(' -> ')
 }
