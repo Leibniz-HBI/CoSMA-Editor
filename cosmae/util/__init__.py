@@ -17,7 +17,7 @@ class CosmaeUser(AbstractUser):
     "User Model for CoSMA-Editor"
     email = models.EmailField(unique=True)
     id_persistent = models.UUIDField(unique=True)
-    tag_definitions = models.JSONField(default=[])
+    tag_definitions = models.JSONField(default=list)
     APPLICANT = "APLC"
     READER = "READ"
     CONTRIBUTOR = "CNTR"

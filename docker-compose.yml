@@ -1,16 +1,16 @@
 secrets:
-  db_password:
-    file: .secrets/cosmae_db_password
-  db_user:
-    file: .secrets/cosmae_db_user
-  db_name:
-    file: .secrets/cosmae_db_name
-  django_key:
-    file: .secrets/cosmae_django_key
-  redis_password:
-    file: .secrets/cosmae_redis_password
-  redis_conf:
-    file: .secrets/cosmae_redis_conf
+  cosmae_db_password:
+    external: true
+  cosmae_db_user:
+    external: true
+  cosmae_db_name:
+    external: true
+  cosmae_django_key:
+    external: true
+  cosmae_redis_password:
+    external: true
+  cosmae_redis_conf:
+    external: true
 volumes:
   cosmae_db_volume:
   cosmae_redis_volume:
@@ -27,6 +27,30 @@ services:
     volumes:
       - /srv/cosmae/ssl:/etc/ssl:ro
       - /srv/cosmae/acme-challenge:/srv/acme-challenge
+      - /etc/localtime:/etc/localtime:ro
+    image: 127.0.0.1:5000/cosmae_ui
+    # command: [nginx-debug, '-g', 'daemon off;']
+
+  cosmae_queue_worker:
+    build:
+      context: ./
+      dockerfile: container/django_dockerfile
+    restart: unless-stopped
+    secrets:
+      - cosmae_django_key
+      - cosmae_db_name
+      - cosmae_db_user
+      - cosmae_db_password
+      - cosmae_redis_password
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    image: 127.0.0.1:5000/cosmae_django
+    command: [
+      "python",
+      "manage.py",
+      "rqworker",
+      "--with-scheduler"
+    ]
 
   cosmae_django:
     build:
@@ -38,29 +62,48 @@ services:
     expose:
       - 8000
     secrets:
-      - django_key
-      - db_name
-      - db_user
-      - db_password
-      - redis_password
+      - cosmae_django_key
+      - cosmae_db_name
+      - cosmae_db_user
+      - cosmae_db_password
+      - cosmae_redis_password
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    image: 127.0.0.1:5000/cosmae_django
+    # command: [
+    #   'gunicorn',
+    #   'django_project.asgi:application',
+    #   '-k',
+    #   'uvicorn.workers.UvicornWorker',
+    #   '-b 0.0.0.0:8000',
+    #   '--log-level',
+    #   'debug'
+    # ]
 
   cosmae_db:
     container_name: cosmae_db
     image: postgres:15.2
     shm_size: 265m
     restart: unless-stopped
+    ports:
+      - 127.0.0.1:5432:5432
     expose:
       - 5432
     environment:
-    - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
-    - POSTGRES_USER_FILE=/run/secrets/db_user
-    - POSTGRES_DB_FILE=/run/secrets/db_name
+    - POSTGRES_PASSWORD_FILE=/run/secrets/cosmae_db_password
+    - POSTGRES_USER_FILE=/run/secrets/cosmae_db_user
+    - POSTGRES_DB_FILE=/run/secrets/cosmae_db_name
     secrets:
-    - db_password
-    - db_user
-    - db_name
+    - cosmae_db_password
+    - cosmae_db_user
+    - cosmae_db_name
     volumes:
+<<<<<<< HEAD
     - cosmae_db_volume:/var/lib/postgresql/data
+=======
+    - cosmae_db_volume:/var/lib/postgresql/data
+    - /etc/localtime:/etc/localtime:ro
+>>>>>>> 066cac83 (Update container and configurations for inital deployment)
 
   cosmae_redis:
     container_name: cosmae_redis
@@ -68,10 +111,12 @@ services:
     expose:
       - 6379
     volumes:
-      cosmae_redis_volume:/data
+      - cosmae_redis_volume:/data
+      - /etc/localtime:/etc/localtime:ro
     secrets:
-      - redis_conf
-    cmd: [
+      - cosmae_redis_conf
+    command: [
       "redis-server",
-      "run/secrets/redis_conf"
+      "/var/run/secrets/cosmae_redis_conf"
     ]
+    restart: unless-stopped

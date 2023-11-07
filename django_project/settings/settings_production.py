@@ -33,7 +33,7 @@ CONTRIBUTION_DIRECTORY = "/srv/cosmae/contributions"
 @property
 def SECRET_KEY():  # pylint: disable=invalid-name
     "Get the secret key from environment."
-    return get_docker_compose_secret("django_key")
+    return get_docker_compose_secret("cosmae_django_key")
 
 
 def get_docker_compose_secret(secret_name):
@@ -48,7 +48,7 @@ def get_docker_compose_secret(secret_name):
 
 
 ###################################################################
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "cosmae-poc.duckdns.org"]
 
 
 CORS_ALLOWED_ORIGINS = []
@@ -108,9 +108,9 @@ WSGI_APPLICATION = "django_project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": get_docker_compose_secret("db_name"),
-        "USER": get_docker_compose_secret("db_user"),
-        "PASSWORD": get_docker_compose_secret("db_password"),
+        "NAME": get_docker_compose_secret("cosmae_db_name"),
+        "USER": get_docker_compose_secret("cosmae_db_user"),
+        "PASSWORD": get_docker_compose_secret("cosmae_db_password"),
         "HOST": "cosmae_db",
         "PORT": "5432",
         # "OPTIONS": {
@@ -156,6 +156,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = "/var/www/cosmae-poc.duckdns.org/static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -170,20 +171,48 @@ RQ_QUEUES = {
         "PORT": 6379,
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
-        "PASSWORD": get_docker_compose_secret("redis_password"),
+        "PASSWORD": get_docker_compose_secret("cosmae_redis_password"),
     }
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://default:{get_docker_compose_secret}@cosmae_redis:6379",
+        "LOCATION": (
+            f"redis://default:{get_docker_compose_secret('cosmae_redis_password')}"
+            "@cosmae_redis:6379"
+        ),
     },
     "tag_definition_name_paths": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://default:{get_docker_compose_secret}@cosmae_redis:6379",
+        "LOCATION": (
+            f"redis://default:{get_docker_compose_secret('cosmae_redis_password')}"
+            "@cosmae_redis:6379"
+        ),
         "KEY_PREFIX": "tag_definition_name_path",
     },
 }
 
 IS_UNITTEST = False
+
+LOGGING = {
+    "version": 1,
+    "formatters": {
+        "verbose": {
+            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
+        },
+        "simple": {"format": "%(levelname)s %(message)s"},
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "loggers": {},
+    # "root" : {
+    #     "level": "DEBUG",
+    #     "handlers": ["console"],
+    # }
+}

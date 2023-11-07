@@ -2,6 +2,7 @@
 
 import logging
 from typing import List
+from uuid import uuid4
 
 from django.apps import AppConfig, apps
 from django.conf import settings
@@ -64,7 +65,10 @@ def add_superuser(
             password = "changeme"
             print(f"Creating account for {username} ({email})")
             admin = user_model.objects.create_superuser(
-                email=email, username=username, password=password
+                email=email,
+                username=username,
+                password=password,
+                id_persistent=str(uuid4()),
             )
             admin.is_active = True
             admin.is_admin = True
