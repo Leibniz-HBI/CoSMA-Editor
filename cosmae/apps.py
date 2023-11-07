@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import AppRegistryNotReady
 from django.db.backends.signals import connection_created
 from django.db.models.signals import post_migrate, post_save
-from django.db.utils import OperationalError
+from django.db.utils import DatabaseError, OperationalError, ProgrammingError
 
 logger = logging.getLogger("cosmae.app_config")
 
@@ -119,7 +119,7 @@ class CosmaeConfig(AppConfig):
                     roots = TagDefinition.most_recent_children(None)
                     for root in roots:
                         enqueue(update_tag_definition_name_path, root.id_persistent, [])
-                except OperationalError:
+                except (OperationalError, DatabaseError, ProgrammingError):
                     pass  #
                 post_save.connect(
                     dispatch_tag_definition_queue_process,
