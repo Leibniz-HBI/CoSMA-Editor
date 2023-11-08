@@ -29,7 +29,7 @@ class MergeRequest(Schema):
     destination: TagDefinitionResponse
     origin: TagDefinitionResponse
     created_at: datetime
-    assigned_to: PublicUserInfo
+    assigned_to: Optional[PublicUserInfo]
     state: str
 
 

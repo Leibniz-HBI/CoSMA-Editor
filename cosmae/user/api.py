@@ -320,6 +320,8 @@ def user_db_to_login_response(user: CosmaeUser):
 
 def user_db_to_public_user_info(user):
     "Convert a django user to a public user info"
+    if user is None:
+        return None
     return PublicUserInfo(
         user_name=user.get_username(),
         id_persistent=str(user.id_persistent),
