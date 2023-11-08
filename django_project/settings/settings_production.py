@@ -175,20 +175,17 @@ RQ_QUEUES = {
     }
 }
 
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": (
-            f"redis://default:{get_docker_compose_secret('cosmae_redis_password')}"
-            "@cosmae_redis:6379"
-        ),
+        "LOCATION": "redis://cosmae_redis:6379",
+        "OPTIONS": {"password": get_docker_compose_secret("cosmae_redis_password")},
     },
     "tag_definition_name_paths": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": (
-            f"redis://default:{get_docker_compose_secret('cosmae_redis_password')}"
-            "@cosmae_redis:6379"
-        ),
+        "LOCATION": "redis://cosmae_redis:6379",
+        "OPTIONS": {"password": get_docker_compose_secret("cosmae_redis_password")},
         "KEY_PREFIX": "tag_definition_name_path",
     },
 }
@@ -211,8 +208,8 @@ LOGGING = {
         },
     },
     "loggers": {},
-    # "root" : {
+    # "root": {
     #     "level": "DEBUG",
     #     "handlers": ["console"],
-    # }
+    # },
 }
