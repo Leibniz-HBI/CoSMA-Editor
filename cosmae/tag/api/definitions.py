@@ -149,6 +149,8 @@ def post_get_tag_definition_children(_, post_children_request: PostGetChildrenRe
         )
     except DatabaseError:
         return 500, ApiError(msg="Database Error.")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get children tag definitions.")
 
 
 def tag_definition_api_to_db(
