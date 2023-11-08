@@ -98,12 +98,8 @@ services:
     - cosmae_db_user
     - cosmae_db_name
     volumes:
-<<<<<<< HEAD
-    - cosmae_db_volume:/var/lib/postgresql/data
-=======
     - cosmae_db_volume:/var/lib/postgresql/data
     - /etc/localtime:/etc/localtime:ro
->>>>>>> 066cac83 (Update container and configurations for inital deployment)
 
   cosmae_redis:
     container_name: cosmae_redis
