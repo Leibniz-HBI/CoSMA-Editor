@@ -15,7 +15,7 @@ def read_csv_of_candidate(contribution, nrows=None):
     for encoding in ["utf-8", "iso-8859-1"]:
         try:
             data_frame = read_csv(
-                pth, header=header_param, nrows=nrows, dtype="str", encoding=encoding
+                pth, header=header_param, nrows=nrows, dtype=str, encoding=encoding
             )
             return data_frame
         except ValueError:
