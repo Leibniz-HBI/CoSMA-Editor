@@ -44,6 +44,7 @@ services:
       - cosmae_redis_password
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - /srv/cosmae/contributions:/srv/cosmae/contributions
     image: 127.0.0.1:5000/cosmae_django
     command: [
       "python",
@@ -68,6 +69,7 @@ services:
       - cosmae_db_password
       - cosmae_redis_password
     volumes:
+      - /srv/cosmae/contributions:/srv/cosmae/contributions
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_django
     # command: [
