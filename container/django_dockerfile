@@ -12,4 +12,4 @@ ADD cosmae /cosmae/cosmae
 ADD django_project /cosmae/django_project
 COPY manage.py /cosmae/
 # RUN apk --purge del .build-deps
-CMD sh -c 'python3 manage.py migrate cosmae 0001_initial && python3 manage.py migrate && python manage.py collectstatic --no-input && gunicorn django_project.asgi:application -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000'
+CMD sh -c ' python3 manage.py migrate && python manage.py collectstatic --no-input && gunicorn django_project.asgi:application -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000'
