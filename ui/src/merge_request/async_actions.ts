@@ -43,7 +43,10 @@ export class GetMergeRequestsAction extends AsyncAction<MergeRequestAction, void
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseMergeRequestFromJson(mrJson: any) {
     const idPersistent = mrJson['id_persistent']
-    const assignedTo = parsePublicUserInfoFromJson(mrJson['assigned_to'])
+    let assignedTo = mrJson['assigned_to']
+    if (assignedTo !== null && assignedTo !== undefined) {
+        assignedTo = parsePublicUserInfoFromJson(assignedTo)
+    }
     const createdBy = parsePublicUserInfoFromJson(mrJson['created_by'])
     const originTagDefinition = parseColumnDefinitionsFromApi(
         mrJson['origin'],
