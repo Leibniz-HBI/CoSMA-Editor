@@ -240,8 +240,16 @@ def get_ownership_requests(request: HttpRequest):
         petitioned_db = OwnershipRequestDb.petitioned_by_user_query_set(user)
 
         return 200, OwnerShipRequestList(
-            received=[ownership_request_db_to_api(req) for req in received_db],
-            petitioned=[ownership_request_db_to_api(req) for req in petitioned_db],
+            received=[
+                ownership_request_db_to_api(req)
+                for req in received_db
+                if req.tag_definition is not None
+            ],
+            petitioned=[
+                ownership_request_db_to_api(req)
+                for req in petitioned_db
+                if req.tag_definition is not None
+            ],
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not create ownership request")
