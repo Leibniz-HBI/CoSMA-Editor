@@ -1,7 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { findIndexInSorted } from '../../util/sorted'
 import { AppDispatch } from '../../store'
-import { GridSelection } from '@glideapps/glide-data-grid'
+import { GridSelection, Item, Rectangle } from '@glideapps/glide-data-grid'
+
+export interface CurrentSelection {
+    cell: Item
+    range: Rectangle
+    rangeStack: Rectangle[]
+}
 
 export interface TableSelectionState {
     rows: number[]
@@ -9,14 +15,14 @@ export interface TableSelectionState {
     /**
      * List of selected cells, rows first in each entry
      */
-    cells: [number, number][]
+    current?: CurrentSelection
     rowSelectionOrder: number[]
 }
 
 const initialState: TableSelectionState = {
     rows: [],
     cols: [],
-    cells: [],
+    current: undefined,
     rowSelectionOrder: []
 }
 
@@ -24,6 +30,12 @@ export const tableSelectionSlice = createSlice({
     name: 'tableSelection',
     initialState,
     reducers: {
+        toggleSingleCellSelection(
+            state: TableSelectionState,
+            action: PayloadAction<CurrentSelection>
+        ) {
+            state.current = action.payload
+        },
         toggleRowSelection(
             state: TableSelectionState,
             action: PayloadAction<number[]>
@@ -49,18 +61,25 @@ export const tableSelectionSlice = createSlice({
                     state.rows.splice(idx, 0, val)
                     state.rowSelectionOrder.push(val)
                 }
-                state.cells = []
                 state.cols = []
             }
         }
     }
 })
 
-export const { toggleRowSelection } = tableSelectionSlice.actions
+export const { toggleRowSelection, toggleSingleCellSelection } =
+    tableSelectionSlice.actions
 
 export function mkGridSelectionCallback(dispatch: AppDispatch) {
     return (selection: GridSelection) => {
         if (selection.current !== undefined) {
+            dispatch(
+                toggleSingleCellSelection({
+                    cell: [selection.current.cell[0], selection.current.cell[1]],
+                    range: { ...selection.current.range },
+                    rangeStack: [...selection.current.rangeStack]
+                })
+            )
             return
         }
         if (selection.columns.length > 0) {

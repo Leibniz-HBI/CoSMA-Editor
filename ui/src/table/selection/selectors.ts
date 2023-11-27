@@ -13,15 +13,24 @@ export const selectedRows = createSelector(
     (state) => state.rows
 )
 
-export const selectTableSelection = createSelector(selectedRows, (rows) => {
-    let selectedRows = CompactSelection.empty()
-    const selectedCols = CompactSelection.empty()
-    for (const idx of rows) {
-        selectedRows = selectedRows.add(idx)
+export const selectSelectedCurrent = createSelector(
+    selectTableSelectionState,
+    (state) => state.current
+)
+
+export const selectTableSelection = createSelector(
+    selectedRows,
+    selectSelectedCurrent,
+    (rows, current) => {
+        let selectedRows = CompactSelection.empty()
+        const selectedCols = CompactSelection.empty()
+        for (const idx of rows) {
+            selectedRows = selectedRows.add(idx)
+        }
+        return {
+            columns: selectedCols,
+            current: current,
+            rows: selectedRows
+        }
     }
-    return {
-        columns: selectedCols,
-        current: undefined,
-        rows: selectedRows
-    }
-})
+)
