@@ -2,23 +2,24 @@ import { Entity } from '../../table/state'
 import { Remote } from '../../util/state'
 import { MergeRequest } from '../state'
 
-export class TagInstance {
+export interface TagInstance {
     idPersistent: string
     version: number
     value: string
-
-    constructor({
-        idPersistent,
-        version,
-        value
-    }: {
-        idPersistent: string
-        version: number
-        value: string
-    }) {
-        this.idPersistent = idPersistent
-        this.version = version
-        this.value = value
+}
+export function newTagInstance({
+    idPersistent,
+    version,
+    value
+}: {
+    idPersistent: string
+    version: number
+    value: string
+}) {
+    return {
+        idPersistent: idPersistent,
+        version: version,
+        value: value
     }
 }
 

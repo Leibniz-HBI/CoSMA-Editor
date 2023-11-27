@@ -4,7 +4,7 @@ import {
     GridColumn,
     Item
 } from '@glideapps/glide-data-grid'
-import { useCallback, useLayoutEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Button, Col, Modal, Row, Toast, ToastContainer } from 'react-bootstrap'
 import { useLayer } from 'react-laag'
 import { ColumnMenu } from '../column_menu/components/menu'
@@ -16,6 +16,12 @@ import { UserInfo } from '../user/state'
 import { drawCell } from './draw'
 import { ChangeOwnershipModal } from '../tag_management/components'
 import { AddEntityForm } from '../entity/components'
+import { MergeEntitiesButton } from './selection/components'
+import { mkGridSelectionCallback } from './selection/slice'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch } from '../store'
+import { selectTableSelection } from './selection/selectors'
+import { EntityMergeRequestConflictComponent } from '../merge_request/entity/conflicts/components'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -45,7 +51,7 @@ export function RemoteDataTable(props: {
         props.userInfoPromise,
         props.defaultColumnCallbacks
     )
-    useLayoutEffect(
+    useEffect(
         () => {
             remoteCallbacks.loadTableDataCallback()
         },
@@ -58,9 +64,23 @@ export function RemoteDataTable(props: {
             <Col className="h-100 overflow-hidden d-flex flex-column">
                 <Row className="ms-3 me-3 mb-3">
                     <Col className="ps-0">
-                        <Button onClick={localCallbacks.showEntityAddMenuCallback}>
-                            Add Entity
-                        </Button>
+                        <Row className="justify-content-start">
+                            <Col xs="auto">
+                                <Button
+                                    onClick={localCallbacks.showEntityAddMenuCallback}
+                                >
+                                    Add Entity
+                                </Button>
+                            </Col>
+                            <Col className="ps-0">
+                                <MergeEntitiesButton
+                                    entityIdArray={syncInfo.entities}
+                                    mergeRequestCreatedCallback={
+                                        localCallbacks.showEntityMergingModalCallback
+                                    }
+                                />
+                            </Col>
+                        </Row>
                     </Col>
                     <Col xs="auto" className="pe-0">
                         <Button
@@ -131,6 +151,17 @@ export function RemoteDataTable(props: {
                                 />
                             </Modal.Body>
                         </Modal>
+                        <Modal
+                            show={syncInfo.showEntityMergingModal}
+                            onHide={localCallbacks.hideEntityMergingModalCallback}
+                            size="xl"
+                            // fullscreen={true}
+                            key="entity-merging-modal"
+                        >
+                            <Modal.Body className="display-block vh-95">
+                                <EntityMergeRequestConflictComponent />
+                            </Modal.Body>
+                        </Modal>
                     </div>
                 </Row>
                 <div id="portal" />
@@ -144,6 +175,8 @@ export function DataTable(props: {
     tableCallbacks: LocalTableCallbacks
     submitValueCallback: (cell: Item, newValues: EditableGridCell) => void
 }) {
+    const dispatch: AppDispatch = useDispatch()
+    const tableSelection = useSelector(selectTableSelection)
     const {
         entities,
         columnStates,
@@ -225,6 +258,9 @@ export function DataTable(props: {
                     onColumnResize={setColumnWidthCallback}
                     onColumnMoved={switchColumnsCallback}
                     onCellEdited={props.submitValueCallback}
+                    rowMarkers="checkbox-visible"
+                    gridSelection={tableSelection}
+                    onGridSelectionChange={mkGridSelectionCallback(dispatch)}
                 />
                 {headerMenuOpen &&
                     renderLayer(

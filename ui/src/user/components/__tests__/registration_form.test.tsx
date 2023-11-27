@@ -63,7 +63,7 @@ test('can register', async () => {
     const registrationCallback = jest.fn()
     const closeRegistrationCallback = jest.fn()
     const clearRegistrationErrorCallback = jest.fn()
-    const { container } = render(
+    render(
         <RegistrationForm
             registrationCallback={registrationCallback}
             closeRegistrationCallback={closeRegistrationCallback}
@@ -77,14 +77,25 @@ test('can register', async () => {
     await user.type(textInputs[1], 'mail@test.url')
     await user.type(textInputs[2], 'names personal')
     const passwordInput = screen.getByLabelText('Password')
-    await user.type(passwordInput, 'password')
+    const password = 'PassWord1234!'
+    await user.type(passwordInput, password)
     const repeatPasswordInput = screen.getByLabelText('Repeat password')
-    await user.type(repeatPasswordInput, 'password')
-    const buttons = container.getElementsByTagName('button')
-    await waitFor(async () => await user.click(buttons[2]))
-    waitFor(() => {
+    await user.type(repeatPasswordInput, password)
+    await waitFor(() => {
+        const button = screen.getByRole('button', { name: /register/i })
+        user.click(button)
+    })
+    await waitFor(() => {
         expect(registrationCallback.mock.calls).toEqual([
-            ['username', 'mail@test.url', 'names personal', 'password']
+            [
+                {
+                    userName: 'username',
+                    email: 'mail@test.url',
+                    namesPersonal: 'names personal',
+                    namesFamily: '',
+                    password
+                }
+            ]
         ])
         expect(closeRegistrationCallback.mock.calls).toEqual([])
         expect(clearRegistrationErrorCallback.mock.calls).toEqual([])
@@ -95,7 +106,7 @@ test('can cancel registration', async () => {
     const registrationCallback = jest.fn()
     const closeRegistrationCallback = jest.fn()
     const clearRegistrationErrorCallback = jest.fn()
-    const { container } = render(
+    render(
         <RegistrationForm
             registrationCallback={registrationCallback}
             closeRegistrationCallback={closeRegistrationCallback}
@@ -112,9 +123,11 @@ test('can cancel registration', async () => {
     await user.type(passwordInput, 'password')
     const repeatPasswordInput = screen.getByLabelText('Repeat password')
     await user.type(repeatPasswordInput, 'password')
-    const buttons = container.getElementsByTagName('button')
-    await waitFor(async () => await user.click(buttons[1]))
-    waitFor(() => {
+    await waitFor(() => {
+        const button = screen.getByRole('button', { name: /login/i })
+        user.click(button)
+    })
+    await waitFor(() => {
         expect(registrationCallback.mock.calls).toEqual([])
         expect(closeRegistrationCallback.mock.calls.length).toEqual(1)
         expect(clearRegistrationErrorCallback.mock.calls).toEqual([])
@@ -137,7 +150,7 @@ test('can close error', async () => {
     const closeButton = buttons[0]
     expect(closeButton.textContent).toEqual('')
     ;(closeButton as HTMLElement).click()
-    waitFor(() => {
+    await waitFor(() => {
         expect(registrationCallback.mock.calls).toEqual([])
         expect(closeRegistrationCallback.mock.calls.length).toEqual(0)
         expect(clearRegistrationErrorCallback.mock.calls.length).toEqual(1)

@@ -10,7 +10,7 @@ jest.mock('@glideapps/glide-data-grid', () => ({
 import { describe } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { DataTable } from '../components'
-import { ColumnState, Entity, newEntity } from '../state'
+import { ColumnState, newEntity } from '../state'
 import {
     DataEditor,
     GridCell,
@@ -70,6 +70,9 @@ describe('table from state', () => {
         selectedColumnHeaderBounds: undefined,
         columnHeaderMenuEntries: [],
         showEntityAddMenu: false,
+        showEntityMergingModal: false,
+        submitValuesErrorState: undefined,
+        tagDefinitionChangeOwnership: undefined,
         entityAddState: new Remote(false)
     }
     const baseTableCallbacks: LocalTableCallbacks = {
@@ -82,6 +85,8 @@ describe('table from state', () => {
                 data: ''
             } as GridCell
         },
+        hideEntityMergingModalCallback: () => {},
+        showEntityMergingModalCallback: () => {},
         clearEntityChangeErrorCallback: () => {},
         showColumnAddMenuCallback: () => {},
         hideColumnAddMenuCallback: () => {},

@@ -37,8 +37,19 @@ html {
     padding: 0px 12px 12px 12px;
 }
 
+.h-95 {
+    height: 95 !important;
+}
+
+.h-90 {
+    height: 90 !important;
+}
+
 .min-h-0 {
     min-height: 0px;
+}
+.vh-95 {
+    height: 95vh;
 }
 .vh-85{
     height: 85vh;

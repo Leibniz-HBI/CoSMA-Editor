@@ -19,7 +19,7 @@ import {
     ResolveConflictAction,
     StartMergeAction
 } from '../async_actions'
-import { MergeRequestConflict, TagInstance } from '../state'
+import { MergeRequestConflict, newTagInstance } from '../state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, any][]) {
@@ -37,12 +37,12 @@ function responseSequence(responses: [number, any][]) {
     }
 }
 
-const tagInstanceOrigin = new TagInstance({
+const tagInstanceOrigin = newTagInstance({
     idPersistent: 'id-instance-origin-test1',
     version: 12,
     value: 'value test origin'
 })
-const tagInstanceDestination = new TagInstance({
+const tagInstanceDestination = newTagInstance({
     idPersistent: 'id-instance-destination-test1',
     version: 121,
     value: 'value test destination1'
@@ -65,12 +65,12 @@ const sharedConflict = new Remote(
             displayTxt: 'test entity',
             version: 8
         }),
-        tagInstanceOrigin: new TagInstance({
+        tagInstanceOrigin: newTagInstance({
             idPersistent: 'id-instance-origin-test',
             version: 12,
             value: 'value test origin'
         }),
-        tagInstanceDestination: new TagInstance({
+        tagInstanceDestination: newTagInstance({
             idPersistent: 'id-instance-destination-test',
             version: 12,
             value: 'value test destination'
@@ -91,12 +91,12 @@ const conflicts = [
                 displayTxt: 'test entity2',
                 version: 82
             }),
-            tagInstanceOrigin: new TagInstance({
+            tagInstanceOrigin: newTagInstance({
                 idPersistent: 'id-instance-origin-test2',
                 version: 122,
                 value: 'value test origin2'
             }),
-            tagInstanceDestination: new TagInstance({
+            tagInstanceDestination: newTagInstance({
                 idPersistent: 'id-instance-destination-test2',
                 version: 122,
                 value: 'value test destination2'
@@ -107,12 +107,12 @@ const conflicts = [
     new Remote(
         new MergeRequestConflict({
             entity: entity,
-            tagInstanceOrigin: new TagInstance({
+            tagInstanceOrigin: newTagInstance({
                 idPersistent: 'id-instance-origin-test3',
                 version: 123,
                 value: 'value test origin3'
             }),
-            tagInstanceDestination: new TagInstance({
+            tagInstanceDestination: newTagInstance({
                 idPersistent: 'id-instance-destination-test3',
                 version: 123,
                 value: 'value test destination3'

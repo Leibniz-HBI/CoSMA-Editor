@@ -14,7 +14,7 @@ import {
 } from './actions'
 import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
-import { MergeRequestConflict, TagInstance } from './state'
+import { MergeRequestConflict, TagInstance, newTagInstance } from './state'
 import { parseEntityObjectFromJson } from '../../table/async_actions'
 import { Entity } from '../../table/state'
 import { TagDefinition } from '../../column_menu/state'
@@ -185,7 +185,7 @@ export function parseMergeRequestConflictFromApi(json: any) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseTagInstanceFromJson(json: any) {
-    return new TagInstance({
+    return newTagInstance({
         idPersistent: json['id_persistent'],
         version: json['version'],
         value: json['value']

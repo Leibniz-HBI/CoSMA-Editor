@@ -224,6 +224,16 @@ export class ShowEntityAddDialogAction {
  */
 export class EntityChangeOrCreateClearErrorAction {}
 
+/**
+ * Indicate wether the entity duplicate overlay should be shown.
+ */
+export class ToggleEntityModalAction {
+    show: boolean
+    constructor(show: boolean) {
+        this.show = show
+    }
+}
+
 export type TableAction =
     | SetEntitiesAction
     | AppendColumnAction
@@ -252,3 +262,4 @@ export type TableAction =
     | EntityChangeOrCreateErrorAction
     | ShowEntityAddDialogAction
     | EntityChangeOrCreateClearErrorAction
+    | ToggleEntityModalAction

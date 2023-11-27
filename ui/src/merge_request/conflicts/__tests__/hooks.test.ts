@@ -7,7 +7,7 @@ import {
     StartMergeAction
 } from '../async_actions'
 import { useMergeRequestConflictResolutions } from '../hooks'
-import { MergeRequestConflictResolutionState, TagInstance } from '../state'
+import { MergeRequestConflictResolutionState, newTagInstance } from '../state'
 
 jest.mock('../../../util/state', () => {
     const original = jest.requireActual('../../../util/state')
@@ -73,7 +73,7 @@ test('resolve conflict callback', () => {
         curated: false,
         version: 3
     })
-    const tagInstanceOrigin = new TagInstance({
+    const tagInstanceOrigin = newTagInstance({
         idPersistent: 'id-instance-origin-test',
         version: 12,
         value: 'test value origin'
@@ -85,7 +85,7 @@ test('resolve conflict callback', () => {
         curated: false,
         version: 3
     })
-    const tagInstanceDestination = new TagInstance({
+    const tagInstanceDestination = newTagInstance({
         idPersistent: 'id-instance-destination-test',
         version: 12,
         value: 'test value destination'

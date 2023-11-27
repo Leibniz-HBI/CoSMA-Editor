@@ -14,33 +14,25 @@ export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
     if (namePath === undefined || namePath.length == 0) {
         return [<span>UNKNOWN</span>]
     }
-    if (namePath.length > 3) {
-        return [
-            <span className="pre-wrap" key="path-part-0">
-                {namePath[0] + ' '}
-            </span>,
-            <span className="pre-wrap" key="path-part-1">
-                {'-> ... '}
-            </span>,
-            <span className="pre-wrap" key="path-part-2">
-                {'-> ' + namePath[namePath.length - 2] + ' '}
-            </span>,
-            <span className="pre-wrap" key="path-part-3">
-                {'-> ' + namePath[namePath.length - 1]}
-            </span>
-        ]
-    }
-
-    return [
+    const pathSpans = [
         <span className="pre-wrap" key="path-part-0">
             {namePath[0] + ' '}
         </span>,
-        ...namePath.slice(1).map((namePart: string, idx: number) => (
-            <span className="pre-wrap" key={`path-part-${idx + 1}`}>
-                {'-> ' + namePart + ' '}
-            </span>
-        ))
+        <span className="pre-wrap" key="path-part-1">
+            {'-> ... '}
+        </span>,
+        <span className="pre-wrap" key="path-part-2">
+            {'-> ' + namePath[namePath.length - 2] + ' '}
+        </span>,
+        <span className="pre-wrap" key="path-part-3">
+            {'-> ' + namePath[namePath.length - 1]}
+        </span>
     ]
+    if (namePath.length < 4) {
+        pathSpans.splice(1, 4 - namePath.length)
+    }
+
+    return pathSpans
 }
 
 export function ColumnSelector(props: { listEntries: ReactNode[] }) {

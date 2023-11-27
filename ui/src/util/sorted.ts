@@ -13,13 +13,13 @@ export function findIndexInSorted<T>(sorted: T[], value: T, sortKey: (t: T) => n
 
 export function addSorted<T>(sorted: T[], value: T, sortKey: (t: T) => number) {
     const idx = findIndexInSorted(sorted, value, sortKey)
-    return [...sorted.splice(0, idx), value, ...sorted.splice(idx)]
+    return [...sorted.slice(0, idx), value, ...sorted.slice(idx)]
 }
 
 export function removeSorted<T>(sorted: T[], value: T, sortKey: (t: T) => number) {
     const idx = findIndexInSorted(sorted, value, sortKey)
     if (sorted[idx] == value) {
-        return [...sorted.splice(0, idx), ...sorted.splice(idx + 1)]
+        return [...sorted.slice(0, idx), ...sorted.slice(idx + 1)]
     }
     return sorted
 }

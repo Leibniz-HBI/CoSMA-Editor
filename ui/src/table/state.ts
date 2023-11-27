@@ -20,6 +20,7 @@ export class TableState {
     ownershipChangeTagDefinition?: TagDefinition
     showEntityAddDialog: boolean
     entityAddState: Remote<boolean>
+    showEntityMergingModal: boolean
 
     constructor({
         columnStates: columnStates = [],
@@ -36,7 +37,8 @@ export class TableState {
         submitValuesErrorState = undefined,
         ownershipChangeTagDefinition = undefined,
         showEntityAddDialog = false,
-        entityAddState = new Remote(false)
+        entityAddState = new Remote(false),
+        showEntityMergingModal = false
     }: {
         columnStates?: ColumnState[]
         columnIndices?: Map<string, number>
@@ -55,6 +57,7 @@ export class TableState {
         ownershipChangeTagDefinition?: TagDefinition
         showEntityAddDialog?: boolean
         entityAddState?: Remote<boolean>
+        showEntityMergingModal?: boolean
     }) {
         this.columnIndices = columnIndices
         this.columnStates = columnStates
@@ -81,6 +84,7 @@ export class TableState {
         this.ownershipChangeTagDefinition = ownershipChangeTagDefinition
         this.showEntityAddDialog = showEntityAddDialog
         this.entityAddState = entityAddState
+        this.showEntityMergingModal = showEntityMergingModal
     }
 
     isLoadingColumn(): boolean {

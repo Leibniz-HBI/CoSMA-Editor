@@ -26,7 +26,8 @@ import {
     EntityChangeOrCreateStartAction,
     EntityChangeOrCreateSuccessAction,
     EntityChangeOrCreateErrorAction,
-    EntityChangeOrCreateClearErrorAction
+    EntityChangeOrCreateClearErrorAction,
+    ToggleEntityModalAction
 } from './actions'
 import { newErrorState } from '../util/error/slice'
 import { Remote } from '../util/state'
@@ -361,6 +362,9 @@ export function tableReducer(state: TableState, action: TableAction) {
             ...state,
             entityAddState: state.entityAddState.withoutError()
         })
+    }
+    if (action instanceof ToggleEntityModalAction) {
+        return new TableState({ ...state, showEntityMergingModal: action.show })
     }
     return state
 }

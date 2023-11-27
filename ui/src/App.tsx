@@ -36,6 +36,7 @@ import {
     remoteUserProfileColumnDelete
 } from './user/thunks'
 import { TagManagementPage } from './tag_management/components'
+import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
 
 export function CosmaeRoot() {
     const userInfo = useSelector(selectUserInfo)
@@ -129,8 +130,13 @@ const router = createBrowserRouter([
                 element: <ReviewList />
             },
             {
-                path: 'review/:idPersistent',
+                path: 'review/tags/:idPersistent',
                 element: <MergeRequestConflictResolutionView />,
+                loader: ({ params }) => params.idPersistent
+            },
+            {
+                path: 'review/entities/:idPersistent',
+                element: <EntityMergeRequestConflictView />,
                 loader: ({ params }) => params.idPersistent
             },
             {

@@ -17,8 +17,8 @@ describe('create column name', () => {
             <span className="pre-wrap" key="path-part-0">
                 {'first '}
             </span>,
-            <span className="pre-wrap" key="path-part-1">
-                {'-> second '}
+            <span className="pre-wrap" key="path-part-3">
+                {'-> second'}
             </span>
         ])
     })
@@ -27,11 +27,11 @@ describe('create column name', () => {
             <span className="pre-wrap" key="path-part-0">
                 {'first '}
             </span>,
-            <span className="pre-wrap" key="path-part-1">
+            <span className="pre-wrap" key="path-part-2">
                 {'-> second '}
             </span>,
-            <span className="pre-wrap" key="path-part-2">
-                {'-> third '}
+            <span className="pre-wrap" key="path-part-3">
+                {'-> third'}
             </span>
         ])
     })

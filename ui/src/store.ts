@@ -6,6 +6,9 @@ import { contributionColumnDefinitionSlice } from './contribution/columns/slice'
 import { contributionEntitySlice } from './contribution/entity/slice'
 import { contributionSlice } from './contribution/slice'
 import { tagSelectionSlice } from './column_menu/slice'
+import { tableSelectionSlice } from './table/selection/slice'
+import { entityMergeRequestConflictSlice } from './merge_request/entity/conflicts/slice'
+import { entityMergeRequestsReducer } from './merge_request/entity/slice'
 
 const rootReducer = combineReducers({
     error: errorSlice.reducer,
@@ -14,7 +17,10 @@ const rootReducer = combineReducers({
     tagSelection: tagSelectionSlice.reducer,
     contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
     contributionEntity: contributionEntitySlice.reducer,
-    contribution: contributionSlice.reducer
+    contribution: contributionSlice.reducer,
+    tableSelection: tableSelectionSlice.reducer,
+    entityMergeRequests: entityMergeRequestsReducer,
+    entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer
 })
 
 export function setupStore(preloadedState?: PreloadedState<RootState>) {

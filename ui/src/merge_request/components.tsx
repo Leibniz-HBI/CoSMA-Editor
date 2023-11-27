@@ -1,16 +1,30 @@
 import { useLayoutEffect } from 'react'
 import { useMergeRequests } from './hooks'
-import { CosmaeLoading } from '../util/components/misc'
+import { CosmaeLoading, CosmaeCard } from '../util/components/misc'
 import { Badge, Col, ListGroup, Row } from 'react-bootstrap'
 import { MergeRequest } from './state'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
 import { constructColumnTitleSpans } from '../column_menu/components/selection'
+import { AppDispatch } from '../store'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectPermissionGroup } from '../user/selectors'
+import { UserPermissionGroup } from '../user/state'
+import { getEntityMergeRequests } from './entity/thunks'
+import { EntityMergeRequests } from './entity/components'
 
 export function ReviewList() {
+    const dispatch: AppDispatch = useDispatch()
+    const permissionGroup = useSelector(selectPermissionGroup)
     const { getMergeRequestsCallback, isLoading, assigned } = useMergeRequests()
     useLayoutEffect(() => {
         getMergeRequestsCallback()
+        if (
+            permissionGroup === UserPermissionGroup.EDITOR ||
+            permissionGroup === UserPermissionGroup.COMMISSIONER
+        ) {
+            dispatch(getEntityMergeRequests())
+        }
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     const navigateCallback = useNavigate()
@@ -18,36 +32,63 @@ export function ReviewList() {
         return <CosmaeLoading />
     }
     return (
-        <Col>
-            <Row className="mt-4 ms-2" key="merge-request-assigned-heading">
-                Assigned to you
-            </Row>
-            <Row className="ms-2" key="merge-request-assigned-list">
-                <ListGroup>
-                    {assigned.map((mergeRequest) => (
-                        <MergeRequestListItem
-                            mergeRequest={mergeRequest}
-                            navigateCallback={navigateCallback}
-                            key={`${mergeRequest.idPersistent}`}
-                        />
-                    ))}
-                </ListGroup>
-            </Row>
-            <Row className="mt-4 ms-2" key="merge-request-created-heading">
-                Opened by you
-            </Row>
-            <Row className="ms-2" key="merge-request-created-list">
-                <ListGroup as="ol">
-                    {assigned.map((mergeRequest) => (
-                        <MergeRequestListItem
-                            mergeRequest={mergeRequest}
-                            navigateCallback={navigateCallback}
-                            key={`${mergeRequest.idPersistent}`}
-                        />
-                    ))}
-                </ListGroup>
-            </Row>
-        </Col>
+        <Row className="justify-content-center h-100">
+            <Col className="h-100 overflow-hidden d-flex flex-column pb-3" xs={6}>
+                <Row className="mb-4 h-50" key="merge-request-assigned-list">
+                    <Col>
+                        <CosmaeCard
+                            title="Tag Definition Merge Requests Assigned to You"
+                            className="h-100 d-flex flex-column overflow-hidden"
+                        >
+                            <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
+                                <ListGroup>
+                                    {assigned.map((mergeRequest) => (
+                                        <MergeRequestListItem
+                                            mergeRequest={mergeRequest}
+                                            navigateCallback={navigateCallback}
+                                            key={`${mergeRequest.idPersistent}`}
+                                        />
+                                    ))}
+                                </ListGroup>
+                            </Row>
+                        </CosmaeCard>
+                    </Col>
+                </Row>
+                <Row className="h-50" key="merge-request-created-list">
+                    <Col>
+                        <CosmaeCard
+                            title="Tag Definition Merge Requests Opened by You"
+                            className="h-100 d-flex flex-column overflow-hidden"
+                        >
+                            <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
+                                <ListGroup as="ol">
+                                    {assigned.map((mergeRequest) => (
+                                        <MergeRequestListItem
+                                            mergeRequest={mergeRequest}
+                                            navigateCallback={navigateCallback}
+                                            key={`${mergeRequest.idPersistent}`}
+                                        />
+                                    ))}
+                                </ListGroup>
+                            </Row>
+                        </CosmaeCard>
+                    </Col>
+                </Row>
+            </Col>
+            {(permissionGroup === UserPermissionGroup.EDITOR ||
+                UserPermissionGroup.COMMISSIONER) && (
+                <Col className="h-100 overflow-hidden d-flex flex-column  pb-3" xs={5}>
+                    <CosmaeCard
+                        title="Entity Merge Requests"
+                        className="h-100 d-flex flex-column overflow-hidden"
+                    >
+                        <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
+                            <EntityMergeRequests />
+                        </Row>
+                    </CosmaeCard>
+                </Col>
+            )}
+        </Row>
     )
 }
 
@@ -61,7 +102,9 @@ export function MergeRequestListItem({
     return (
         <ListGroup.Item
             as="li"
-            onClick={() => navigateCallback('/review/' + mergeRequest.idPersistent)}
+            onClick={() =>
+                navigateCallback('/review/tags/' + mergeRequest.idPersistent)
+            }
         >
             <Row>
                 <Col xs={1} className="align-self-center">
