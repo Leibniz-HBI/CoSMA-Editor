@@ -6,9 +6,11 @@ def format_datetime(datetime):
     return datetime.isoformat() + "Z"
 
 
-def assert_versioned(actual, expected):
+def assert_versioned(actual, expected, path=None):
     """Helper function for checking nested dictionaries with version information.
     The actual value of the version is ignored, as it may change depending on test order."""
+    if path is None:
+        path = []
     if isinstance(actual, dict):
         assert isinstance(expected, dict)
         if len(actual) == len(expected) + 1:
@@ -18,11 +20,15 @@ def assert_versioned(actual, expected):
             assert len(actual) == len(expected)
         for key in actual:
             if key != "version":
-                assert_versioned(actual[key], expected[key])
+                assert_versioned(actual[key], expected[key], path + [key])
     elif isinstance(actual, list):
         assert isinstance(expected, list)
         assert len(actual) == len(expected)
-        for actual_element, expected_element in zip(actual, expected):
-            assert_versioned(actual_element, expected_element)
+        for idx, tpl in enumerate(zip(actual, expected)):
+            actual_element, expected_element = tpl
+            assert_versioned(actual_element, expected_element, path + [idx])
     else:
-        assert actual == expected
+        try:
+            assert actual == expected
+        except AssertionError:
+            raise AssertionError(path)  # pylint: disable=raise-missing-from

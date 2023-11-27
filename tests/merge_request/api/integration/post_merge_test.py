@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import tests.merge_request.api.integration.requests as req
 import tests.merge_request.common as c
 from cosmae.exception import NotAuthenticatedException
-from cosmae.merge_request.models_django import MergeRequest
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagInstance
 from cosmae.util import timestamp
 
@@ -57,11 +57,11 @@ def test_resolved_conflict(
     )
     assert rsp.status_code == 200
     merge_request = (
-        MergeRequest.by_id_persistent_query_set(  # pylint: disable=no-member
+        TagMergeRequest.by_id_persistent_query_set(  # pylint: disable=no-member
             merge_request_user.id_persistent
         )
     ).get()
-    assert merge_request.state == MergeRequest.RESOLVED
+    assert merge_request.state == TagMergeRequest.RESOLVED
 
 
 def test_open_conflicts(

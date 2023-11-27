@@ -1,4 +1,5 @@
 "Database Models for Tags"
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -11,6 +12,7 @@ from cosmae.entity.models_django import Entity
 from cosmae.exception import (
     DbObjectExistsException,
     EntityMissingException,
+    ForbiddenException,
     InvalidTagValueException,
     NoParentTagException,
     TagDefinitionExistsException,
@@ -24,6 +26,7 @@ from cosmae.util.django import change_or_create_versioned
 
 class TagDefinition(models.Model):
     "Django ORM model for tag definitions."
+
     INNER = "INR"
     FLOAT = "FLT"
     STRING = "STR"
@@ -78,21 +81,26 @@ class TagDefinition(models.Model):
         ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
 
     @classmethod
+    def most_recent_query_set(cls, manager=None):
+        "Get a query set containing all most recent tag definitions."
+        if manager is None:
+            manager = cls.objects  # pylint: disable=no-member
+        most_recent = manager.annotate(
+            id_most_recent=models.Subquery(
+                cls.objects.filter(  # pylint: disable=no-member
+                    id_persistent=models.OuterRef("id_persistent")
+                )
+                .order_by(models.F("previous_version").desc(nulls_last=True))
+                .values("id")[:1]
+            )
+        ).filter(id=models.F("id_most_recent"))
+        return most_recent
+
+    @classmethod
     def most_recent_children(cls, id_persistent: Optional[str]):
         "Ge the most recent versions of child tags."
-        objects = TagDefinition.objects.filter(  # pylint: disable=no-member
-            id_parent_persistent=id_persistent
-        )
-        return list(
-            objects.filter(
-                id=models.Subquery(
-                    objects.filter(id_persistent=models.OuterRef("id_persistent"))
-                    .values("id_persistent")
-                    .annotate(max_id=Max("id"))
-                    .values("max_id")
-                )
-            )
-        )
+        most_recent = cls.most_recent_query_set()
+        return list(most_recent.filter(id_parent_persistent=id_persistent))
 
     @classmethod
     def change_or_create(  # pylint: disable=too-many-arguments
@@ -189,17 +197,17 @@ class TagDefinition(models.Model):
         return val
 
     @classmethod
-    def for_user(cls, user: CosmaeUser):
+    def for_user(cls, user: CosmaeUser, include_curated=False):
         "Get all tag definitions for a user."
-        objects = cls.objects.filter(owner=user)  # pylint: disable=no-member
-        return objects.filter(
-            id=models.Subquery(
-                objects.filter(id_persistent=models.OuterRef("id_persistent"))
-                .values("id_persistent")
-                .annotate(max_id=Max("id"))
-                .values("max_id")
-            )
-        )
+        most_recent = cls.most_recent_query_set()
+        if include_curated:
+            if not user.permission_group in [
+                CosmaeUser.EDITOR,
+                CosmaeUser.COMMISSIONER,
+            ]:
+                raise ForbiddenException("Tag Definition", "")
+            return most_recent.filter(models.Q(curated=True) | models.Q(owner=user))
+        return most_recent.filter(owner=user)
 
     def has_write_access(self, user: CosmaeUser):
         "Check wether a user can write to the tag definition."
@@ -215,6 +223,7 @@ class TagDefinition(models.Model):
 
 class TagInstance(models.Model):
     "Django ORM model for tag instances."
+
     id_persistent = models.TextField()
     id_entity_persistent = models.TextField()
     id_tag_definition_persistent = models.TextField()
@@ -371,6 +380,31 @@ class TagInstance(models.Model):
             ),
         )
 
+    @classmethod
+    def annotate_tag_definition(
+        cls, manager: Optional[models.BaseManager[TagInstance]]
+    ):
+        "Annotate tag instances with the most recent tag definition and tag instance"
+        if manager is None:
+            manager = TagInstance.objects  # pylint: disable=no-member
+        tag_def_sub_query = TagDefinition.objects.filter(  # pylint: disable=no-member
+            id_persistent=models.OuterRef("id_tag_definition_persistent")
+        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+        return manager.annotate(
+            tag_definition=models.Subquery(
+                tag_def_sub_query.values(
+                    json=models.functions.JSONObject(
+                        id="id",
+                        id_persistent="id_persistent",
+                        id_parent_persistent="id_parent_persistent",
+                        name="name",
+                        type="type",
+                        curated="curated",
+                    )
+                )
+            ),
+        )
+
     def check_different_before_save(self, other):
         """Checks structural equality for two tag definitions.
         Note:
@@ -388,6 +422,7 @@ class TagInstance(models.Model):
 
 class OwnershipRequest(models.Model):
     "Django ORM Model for ownership change requests."
+
     id_persistent = models.UUIDField(unique=True)
     id_tag_definition_persistent = models.TextField()
     receiver = models.ForeignKey(

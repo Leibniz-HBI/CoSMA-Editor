@@ -1,7 +1,7 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 
 import cosmae.merge_request.queue as q
-from cosmae.merge_request.models_django import MergeRequest
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagInstance
 
 
@@ -9,22 +9,22 @@ def test_fast_forward_destination_empty(
     merge_request_user_fast_forward, instances_merge_request_origin_user
 ):
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = MergeRequest.by_id_persistent(
+    merge_request_after = TagMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == MergeRequest.MERGED
+    assert merge_request_after.state == TagMergeRequest.MERGED
 
 
 def test_fast_forward_origin_empty(
     merge_request_user_fast_forward, instance_merge_request_destination_user_no_conflict
 ):
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = MergeRequest.by_id_persistent(
+    merge_request_after = TagMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == MergeRequest.MERGED
+    assert merge_request_after.state == TagMergeRequest.MERGED
 
 
 def test_fast_forward_no_value(
@@ -33,11 +33,11 @@ def test_fast_forward_no_value(
     instance_merge_request_destination_user_no_conflict_fast_forward,
 ):
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = MergeRequest.by_id_persistent(
+    merge_request_after = TagMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == MergeRequest.CONFLICTS
+    assert merge_request_after.state == TagMergeRequest.CONFLICTS
 
 
 def test_fast_forward_conflict(
@@ -46,11 +46,11 @@ def test_fast_forward_conflict(
     instance_merge_request_destination_user_conflict_fast_forward,
 ):
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = MergeRequest.by_id_persistent(
+    merge_request_after = TagMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == MergeRequest.CONFLICTS
+    assert merge_request_after.state == TagMergeRequest.CONFLICTS
 
 
 def test_fast_forward_no_conflict_same_value(
@@ -59,21 +59,21 @@ def test_fast_forward_no_conflict_same_value(
     instance_merge_request_destination_user_same_value1,
 ):
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = MergeRequest.by_id_persistent(
+    merge_request_after = TagMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == MergeRequest.MERGED
+    assert merge_request_after.state == TagMergeRequest.MERGED
 
 
 def test_applies_resolutions(
     merge_request_user, conflict_resolution_keep, conflict_resolution_replace
 ):
     q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
-    merge_request = MergeRequest.by_id_persistent(
+    merge_request = TagMergeRequest.by_id_persistent(
         merge_request_user.id_persistent, merge_request_user.assigned_to
     )
-    assert merge_request.state == MergeRequest.MERGED
+    assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.most_recent_queryset(
             TagInstance.objects.filter(  # pylint: disable=no-member
@@ -90,10 +90,10 @@ def test_incomplete_resolution_stays_open_keep(
     merge_request_user, conflict_resolution_keep
 ):
     q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
-    merge_request = MergeRequest.by_id_persistent(
+    merge_request = TagMergeRequest.by_id_persistent(
         merge_request_user.id_persistent, merge_request_user.assigned_to
     )
-    assert merge_request.state == MergeRequest.OPEN
+    assert merge_request.state == TagMergeRequest.OPEN
     instances = list(
         TagInstance.most_recent_queryset(
             TagInstance.objects.filter(  # pylint: disable=no-member
@@ -110,10 +110,10 @@ def test_incomplete_resolution_stays_open_replace(
     merge_request_user, conflict_resolution_replace
 ):
     q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
-    merge_request = MergeRequest.by_id_persistent(
+    merge_request = TagMergeRequest.by_id_persistent(
         merge_request_user.id_persistent, merge_request_user.assigned_to
     )
-    assert merge_request.state == MergeRequest.OPEN
+    assert merge_request.state == TagMergeRequest.OPEN
     instances = list(
         TagInstance.most_recent_queryset(
             TagInstance.objects.filter(  # pylint: disable=no-member
@@ -131,10 +131,10 @@ def test_merges_for_equal_value_replace(
 ):
 
     q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
-    merge_request = MergeRequest.by_id_persistent(
+    merge_request = TagMergeRequest.by_id_persistent(
         merge_request_user.id_persistent, merge_request_user.assigned_to
     )
-    assert merge_request.state == MergeRequest.MERGED
+    assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.most_recent_queryset(
             TagInstance.objects.filter(  # pylint: disable=no-member
@@ -156,10 +156,10 @@ def test_merges_for_equal_value_keep(
 ):
 
     q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
-    merge_request = MergeRequest.by_id_persistent(
+    merge_request = TagMergeRequest.by_id_persistent(
         merge_request_user.id_persistent, merge_request_user.assigned_to
     )
-    assert merge_request.state == MergeRequest.MERGED
+    assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.most_recent_queryset(
             TagInstance.objects.filter(  # pylint: disable=no-member
@@ -177,10 +177,10 @@ def test_merges_for_equal_value_updated(
 ):
 
     q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
-    merge_request = MergeRequest.by_id_persistent(
+    merge_request = TagMergeRequest.by_id_persistent(
         merge_request_user.id_persistent, merge_request_user.assigned_to
     )
-    assert merge_request.state == MergeRequest.MERGED
+    assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.most_recent_queryset(
             TagInstance.objects.filter(  # pylint: disable=no-member
@@ -199,7 +199,7 @@ def test_instance_changed(
     instance_merge_request_origin_user_changed,
 ):
     q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
-    merge_request = MergeRequest.by_id_persistent(
+    merge_request = TagMergeRequest.by_id_persistent(
         merge_request_user.id_persistent, merge_request_user.assigned_to
     )
-    assert merge_request.state == MergeRequest.OPEN
+    assert merge_request.state == TagMergeRequest.OPEN

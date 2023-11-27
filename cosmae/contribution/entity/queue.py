@@ -46,7 +46,7 @@ def eliminate_duplicates(id_contribution_persistent):
             "id_persistent",
         )
         update_entities(replaced_entities_with_duplicates)
-        for merge_request in contribution.mergerequest_set.all():
+        for merge_request in contribution.tagmergerequest_set.all():
             django_rq.enqueue(merge_request_fast_forward, merge_request.id_persistent)
         contribution.set_state(ContributionCandidate.MERGED)
         contribution.save()

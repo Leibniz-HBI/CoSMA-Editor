@@ -4,7 +4,9 @@ from unittest.mock import MagicMock, patch
 import tests.merge_request.api.integration.requests as req
 import tests.merge_request.common as c
 from cosmae.exception import NotAuthenticatedException
-from cosmae.merge_request.models_django import ConflictResolution as ConflictResolutionDb
+from cosmae.merge_request.models_django import (
+    TagConflictResolution as ConflictResolutionDb,
+)
 
 
 def test_unknown_user(auth_server):

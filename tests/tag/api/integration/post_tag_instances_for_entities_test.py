@@ -8,7 +8,7 @@ from tests.entity import common as ce
 from tests.tag import common as c
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.exception import NotAuthenticatedException
-from cosmae.merge_request.models_django import MergeRequest
+from cosmae.merge_request.models_django import TagMergeRequest
 
 
 def test_no_cookies(auth_server):
@@ -120,10 +120,10 @@ def test_get_multiple(
 
 @pytest.fixture
 def merge_request(user, user1):
-    mr = MergeRequest(
+    mr = TagMergeRequest(
         id_origin_persistent=c.id_tag_def_persistent_test_user1,
         id_destination_persistent=c.id_tag_def_persistent_test_user,
-        state=MergeRequest.OPEN,
+        state=TagMergeRequest.OPEN,
         id_persistent=c.id_merge_request,
         created_at=c.time_created_merge_request,
         created_by=user,

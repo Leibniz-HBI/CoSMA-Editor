@@ -101,14 +101,14 @@ class CosmaeConfig(AppConfig):
                     sender=ContributionCandidate,
                     dispatch_uid="cosmae.start_tag_extraction",
                 )
-                from cosmae.merge_request.models_django import MergeRequest
+                from cosmae.merge_request.models_django import TagMergeRequest
                 from cosmae.merge_request.queue import (
                     dispatch_merge_request_queue_process,
                 )
 
                 post_save.connect(
                     dispatch_merge_request_queue_process,
-                    sender=MergeRequest,
+                    sender=TagMergeRequest,
                     dispatch_uid="cosmae_merge_request_queue",
                 )
                 from django_rq import enqueue

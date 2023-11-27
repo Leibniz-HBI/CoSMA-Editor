@@ -10,7 +10,7 @@ from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue.util import read_csv_of_candidate
 from cosmae.entity.models_django import Entity
-from cosmae.merge_request.models_django import MergeRequest
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagDefinition, TagInstance
 
 
@@ -93,7 +93,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                     )
                     tag_instance.save()
             for origin, destination in tag_definition_pairs:
-                MergeRequest(
+                TagMergeRequest(
                     id_persistent=uuid4(),
                     id_origin_persistent=origin.id_persistent,
                     id_destination_persistent=destination.id_persistent,

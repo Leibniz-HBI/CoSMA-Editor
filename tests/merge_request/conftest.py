@@ -4,7 +4,7 @@ import pytest
 import tests.entity.common as ce
 import tests.merge_request.common as c
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.merge_request.models_django import ConflictResolution, MergeRequest
+from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
 from cosmae.tag.models_django import TagDefinition, TagInstance
 
 
@@ -82,7 +82,7 @@ def contribution_for_mr(db, user1):
 def merge_request_user_fast_forward(
     db, origin_tag_def_for_mr, destination_tag_def_for_mr_user1, contribution_for_mr
 ):
-    return MergeRequest.objects.create(  # pylint: disable=no-member
+    return TagMergeRequest.objects.create(  # pylint: disable=no-member
         id_origin_persistent=origin_tag_def_for_mr.id_persistent,
         id_destination_persistent=destination_tag_def_for_mr_user1.id_persistent,
         created_by=origin_tag_def_for_mr.owner,
@@ -97,7 +97,7 @@ def merge_request_user_fast_forward(
 def merge_request_user(
     db, origin_tag_def_for_mr, destination_tag_def_for_mr, contribution_for_mr
 ):
-    return MergeRequest.objects.create(  # pylint: disable=no-member
+    return TagMergeRequest.objects.create(  # pylint: disable=no-member
         id_origin_persistent=origin_tag_def_for_mr.id_persistent,
         id_destination_persistent=destination_tag_def_for_mr.id_persistent,
         created_by=origin_tag_def_for_mr.owner,
@@ -147,7 +147,7 @@ def contribution_for_mr1(db, user):
 def merge_request_user1(
     db, destination_tag_def_for_mr1, origin_tag_def_for_mr1, contribution_for_mr1
 ):
-    return MergeRequest.objects.create(  # pylint: disable=no-member
+    return TagMergeRequest.objects.create(  # pylint: disable=no-member
         id_destination_persistent=destination_tag_def_for_mr1.id_persistent,
         id_origin_persistent=origin_tag_def_for_mr1.id_persistent,
         created_by=origin_tag_def_for_mr1.owner,
@@ -289,7 +289,7 @@ def conflict_resolution_replace(
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
 ):
-    return ConflictResolution.objects.create(  # pylint: disable=no-member
+    return TagConflictResolution.objects.create(  # pylint: disable=no-member
         entity=entity1,
         tag_definition_origin=origin_tag_def_for_mr,
         tag_definition_destination=destination_tag_def_for_mr,
@@ -309,7 +309,7 @@ def conflict_resolution_keep(
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
 ):
-    return ConflictResolution.objects.create(  # pylint: disable=no-member
+    return TagConflictResolution.objects.create(  # pylint: disable=no-member
         entity=entity0,
         tag_definition_origin=origin_tag_def_for_mr,
         tag_definition_destination=destination_tag_def_for_mr,
@@ -329,7 +329,7 @@ def conflict_resolution_keep_fast_forward(
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict_fast_forward,
 ):
-    return ConflictResolution.objects.create(  # pylint: disable=no-member
+    return TagConflictResolution.objects.create(  # pylint: disable=no-member
         entity=entity1,
         tag_definition_origin=origin_tag_def_for_mr,
         tag_definition_destination=destination_tag_def_for_mr,

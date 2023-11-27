@@ -7,8 +7,9 @@ from django.http import HttpRequest
 from ninja import Router, Schema
 
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
-from cosmae.merge_request.models_django import ConflictResolution
-from cosmae.merge_request.models_django import MergeRequest as MergeRequestDb
+from cosmae.merge_request.entity.api import TagInstance, merge_request_step_db_to_api_map
+from cosmae.merge_request.models_django import TagConflictResolution
+from cosmae.merge_request.models_django import TagMergeRequest as MergeRequestDb
 from cosmae.person.api import PersonNatural
 from cosmae.tag.api.definitions import tag_definition_db_to_api
 from cosmae.tag.api.models_api import TagDefinitionResponse
@@ -31,14 +32,6 @@ class MergeRequest(Schema):
     created_at: datetime
     assigned_to: Optional[PublicUserInfo]
     state: str
-
-
-class TagInstance(Schema):
-    "Stripped down view on tag instances."
-    # pylint: disable=too-few-public-methods
-    id_persistent: str
-    value: str
-    version: int
 
 
 class MergeRequestConflict(Schema):
@@ -130,9 +123,9 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
         merge_request = MergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
         )
-        resolutions = ConflictResolution.for_merge_request_query_set(merge_request)
-        recent = ConflictResolution.only_recent(resolutions)
-        updated_query_set = ConflictResolution.non_recent(resolutions)
+        resolutions = TagConflictResolution.for_merge_request_query_set(merge_request)
+        recent = TagConflictResolution.only_recent(resolutions)
+        updated_query_set = TagConflictResolution.non_recent(resolutions)
         conflict_query_set = TagInstanceDb.annotate_entity(
             merge_request.instance_conflicts_all(True, recent)
         )
@@ -183,7 +176,7 @@ def post_resolve_conflict(
         merge_request = MergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
         )
-        ConflictResolution.objects.filter(  # pylint: disable=no-member
+        TagConflictResolution.objects.filter(  # pylint: disable=no-member
             entity__id_persistent=resolution_info.id_entity_persistent,
             tag_definition_origin__id_persistent=(
                 resolution_info.id_tag_definition_origin_persistent
@@ -194,7 +187,7 @@ def post_resolve_conflict(
             ),
             merge_request=merge_request,
         ).delete()
-        resolution = ConflictResolution(
+        resolution = TagConflictResolution(
             entity_id=resolution_info.id_entity_version,
             tag_definition_origin_id=resolution_info.id_tag_definition_origin_version,
             tag_instance_origin_id=resolution_info.id_tag_instance_origin_version,
@@ -251,8 +244,10 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 return 403, ApiError(
                     msg="You do not have write permissions for the destination tag."
                 )
-            resolutions = ConflictResolution.for_merge_request_query_set(merge_request)
-            updated = ConflictResolution.non_recent(resolutions)
+            resolutions = TagConflictResolution.for_merge_request_query_set(
+                merge_request
+            )
+            updated = TagConflictResolution.non_recent(resolutions)
             if len(updated) > 0:
                 return 400, ApiError(
                     msg="There are conflicts for the merge request, "
@@ -280,16 +275,6 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not mark the merge request for merging.")
-
-
-merge_request_step_db_to_api_map = {
-    MergeRequestDb.OPEN: "OPEN",
-    MergeRequestDb.CONFLICTS: "CONFLICTS",
-    MergeRequestDb.CLOSED: "CLOSED",
-    MergeRequestDb.RESOLVED: "RESOLVED",
-    MergeRequestDb.MERGED: "MERGED",
-    MergeRequestDb.ERROR: "ERROR",
-}
 
 
 def merge_request_db_to_api(mr_db: MergeRequestDb) -> MergeRequest:

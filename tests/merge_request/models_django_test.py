@@ -2,26 +2,26 @@
 from datetime import datetime
 
 from cosmae.entity.models_django import Entity
-from cosmae.merge_request.models_django import ConflictResolution, MergeRequest
+from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
 
 
 def test_created_by_user(user, merge_request_user, merge_request_user1):
-    mr = MergeRequest.created_by_user(user).get()
+    mr = TagMergeRequest.created_by_user(user).get()
     assert str(mr.id_persistent) == str(merge_request_user1.id_persistent)
 
 
 def test_assigned_to_user(user, merge_request_user, merge_request_user1):
-    mr = MergeRequest.assigned_to_user(user).get()
+    mr = TagMergeRequest.assigned_to_user(user).get()
     assert str(mr.id_persistent) == str(merge_request_user.id_persistent)
 
 
 def test_non_recent_no_change(merge_request_user, conflict_resolution_replace):
-    non_recent = ConflictResolution.non_recent()
+    non_recent = TagConflictResolution.non_recent()
     assert len(non_recent) == 0
 
 
 def test_recent_no_change(merge_request_user, conflict_resolution_replace):
-    recent = ConflictResolution.only_recent()
+    recent = TagConflictResolution.only_recent()
     assert len(recent) == 1
 
 
@@ -35,42 +35,42 @@ def test_includes_no_value_at_destination(
 def test_non_recent_change_entity(
     merge_request_user, entity1_changed, conflict_resolution_replace
 ):
-    non_recent = ConflictResolution.non_recent()
+    non_recent = TagConflictResolution.non_recent()
     assert len(non_recent) == 1
 
 
 def test_recent_change_entity(
     merge_request_user, entity1_changed, conflict_resolution_replace
 ):
-    recent = ConflictResolution.only_recent()
+    recent = TagConflictResolution.only_recent()
     assert len(recent) == 0
 
 
 def test_recent_change_definition_origin(
     merge_request_user, origin_tag_def_for_mr_changed, conflict_resolution_replace
 ):
-    recent = ConflictResolution.only_recent()
+    recent = TagConflictResolution.only_recent()
     assert len(recent) == 0
 
 
 def test_non_recent_change_definition_origin(
     merge_request_user, origin_tag_def_for_mr_changed, conflict_resolution_replace
 ):
-    recent = ConflictResolution.non_recent()
+    recent = TagConflictResolution.non_recent()
     assert len(recent) == 1
 
 
 def test_recent_change_definition_destination(
     merge_request_user, destination_tag_def_for_mr_changed, conflict_resolution_replace
 ):
-    recent = ConflictResolution.only_recent()
+    recent = TagConflictResolution.only_recent()
     assert len(recent) == 0
 
 
 def test_non_recent_change_definition_destination(
     merge_request_user, destination_tag_def_for_mr_changed, conflict_resolution_replace
 ):
-    recent = ConflictResolution.non_recent()
+    recent = TagConflictResolution.non_recent()
     assert len(recent) == 1
 
 
@@ -79,7 +79,7 @@ def test_recent_change_instance_destination(
     instance_merge_request_destination_user_conflict_changed,
     conflict_resolution_replace,
 ):
-    recent = ConflictResolution.only_recent()
+    recent = TagConflictResolution.only_recent()
     assert len(recent) == 0
 
 
@@ -88,7 +88,7 @@ def test_non_recent_change_instance_destination(
     instance_merge_request_destination_user_conflict_changed,
     conflict_resolution_replace,
 ):
-    recent = ConflictResolution.non_recent()
+    recent = TagConflictResolution.non_recent()
     assert len(recent) == 1
 
 
@@ -97,7 +97,7 @@ def test_recent_change_instance_origin(
     instance_merge_request_origin_user_changed,
     conflict_resolution_replace,
 ):
-    recent = ConflictResolution.only_recent()
+    recent = TagConflictResolution.only_recent()
     assert len(recent) == 0
 
 
@@ -106,7 +106,7 @@ def test_non_recent_change_instance_origin(
     instance_merge_request_origin_user_changed,
     conflict_resolution_replace,
 ):
-    recent = ConflictResolution.non_recent()
+    recent = TagConflictResolution.non_recent()
     assert len(recent) == 1
 
 
@@ -124,7 +124,7 @@ def test_recent_change_all(
         version=old_entity.id,
     )[0].save()
 
-    recent = ConflictResolution.only_recent()
+    recent = TagConflictResolution.only_recent()
     assert len(recent) == 0
 
 
@@ -135,5 +135,5 @@ def test_non_recent_change_all(
     entity1_changed,
     conflict_resolution_replace,
 ):
-    recent = ConflictResolution.non_recent()
+    recent = TagConflictResolution.non_recent()
     assert len(recent) == 1

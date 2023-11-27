@@ -1,0 +1,35 @@
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+from datetime import datetime
+
+id_entity_origin_persistent = "4ef24ff3-f42b-4269-ba04-a6e78521ef24"
+id_entity_destination_persistent = "dc61ff14-2309-40a7-9161-48f220220eeb"
+display_txt_entity_origin = "entity origin test"
+display_txt_entity_destination = "entity destination test"
+time_entity_origin = datetime(1971, 1, 1)
+time_entity_origin_changed = datetime(1971, 1, 2)
+time_entity_destination = datetime(1971, 1, 3)
+time_entity_destination_changed = datetime(1971, 1, 4)
+id_merge_request_persistent = "9e222611-b58f-4da7-b684-305dd0317b3e"
+time_merge_request = datetime(1974, 6, 5)
+value_origin = "value origin test"
+value_origin1 = "value origin test 1"
+value_origin_curated = "value origin test curated"
+time_instance_origin = datetime(1972, 2, 3)
+time_instance_origin1 = datetime(1972, 2, 4)
+time_instance_origin_curated = datetime(1972, 2, 5)
+time_instance_origin1_changed = datetime(1972, 3, 4)
+id_instance_origin = "a217658a-5def-4160-9f07-6e1b119de3c6"
+id_instance_origin1 = "9dcf1cd6-1311-4dc9-b063-098fb593ae16"
+id_instance_origin_curated = "c2758a9a-f108-479a-a24e-851bd03a2884"
+value_destination = "value destination test"
+value_destination1 = "value destination test 1"
+value_destination_curated = "value destination test curated"
+time_instance_destination = datetime(1972, 3, 3)
+time_instance_destination1 = datetime(1972, 3, 4)
+time_instance_destination_curated = datetime(1972, 3, 5)
+time_instance_destination_changed = datetime(1972, 3, 6)
+time_instance_destination_same_value = datetime(1972, 3, 7)
+id_instance_destination = "6ec94c9a-e6c9-4919-ae38-6838be6c1498"
+id_instance_destination1 = "0fcd508d-08be-4497-8165-bbfc30b2c4e7"
+id_instance_destination_curated = "8fac3631-9efb-4abc-9abd-1f09fdb7150c"
+time_tag_def_changed = datetime(1973, 4, 2)

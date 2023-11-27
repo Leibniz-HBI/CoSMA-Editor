@@ -7,14 +7,14 @@ from django.db import models, transaction
 from django.db.utils import OperationalError
 
 from cosmae.exception import EntityUpdatedException
-from cosmae.merge_request.models_django import ConflictResolution, MergeRequest
+from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
 from cosmae.tag.models_django import TagDefinition, TagInstance
 from cosmae.util import timestamp
 
 
 def merge_request_fast_forward(id_merge_request_persistent):
     "Tries to fast forward a merge request."
-    merge_request_query = MergeRequest.objects.filter(  # pylint: disable=no-member
+    merge_request_query = TagMergeRequest.objects.filter(  # pylint: disable=no-member
         id_persistent=id_merge_request_persistent
     )
     try:
@@ -51,7 +51,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                         time_edit=time_merge,
                     )
                     tag_instance.save()
-                merge_request.state = MergeRequest.MERGED
+                merge_request.state = TagMergeRequest.MERGED
                 merge_request.save()
                 return
             merge_request.state = merge_request.CONFLICTS
@@ -60,13 +60,13 @@ def merge_request_fast_forward(id_merge_request_persistent):
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
-            merge_request.state = MergeRequest.ERROR
+            merge_request.state = TagMergeRequest.ERROR
             merge_request.save()
 
 
 def merge_request_resolve_conflicts(id_merge_request_persistent):
     "Merges a merge request while incorporating conflict resolutions."
-    merge_request_query = MergeRequest.objects.filter(  # pylint: disable=no-member
+    merge_request_query = TagMergeRequest.objects.filter(  # pylint: disable=no-member
         id_persistent=id_merge_request_persistent
     )
     try:
@@ -77,14 +77,14 @@ def merge_request_resolve_conflicts(id_merge_request_persistent):
                 return
             time_merge = timestamp()
             conflicts_resolution_set = (
-                merge_request.conflictresolution_set.select_related()
+                merge_request.tagconflictresolution_set.select_related()
             )
-            non_recent = ConflictResolution.non_recent(conflicts_resolution_set)
+            non_recent = TagConflictResolution.non_recent(conflicts_resolution_set)
             if len(non_recent) > 0:
                 merge_request.state = merge_request.OPEN
                 merge_request.save()
                 return
-            recent = ConflictResolution.only_recent(conflicts_resolution_set)
+            recent = TagConflictResolution.only_recent(conflicts_resolution_set)
             conflicts = merge_request.instance_conflicts_all(False, recent)
             if len(conflicts) > 0:
                 merge_request.state = merge_request.OPEN
@@ -129,7 +129,7 @@ def merge_request_resolve_conflicts(id_merge_request_persistent):
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
-            merge_request.state = MergeRequest.ERROR
+            merge_request.state = TagMergeRequest.ERROR
             merge_request.save()
 
 
@@ -143,5 +143,5 @@ def dispatch_merge_request_queue_process(
     "Dispatches queue methods for merge requests."
     if not (update_fields and "state" in update_fields):
         return
-    if instance.state == MergeRequest.RESOLVED:
+    if instance.state == TagMergeRequest.RESOLVED:
         django_rq.enqueue(merge_request_resolve_conflicts, str(instance.id_persistent))

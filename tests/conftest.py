@@ -8,9 +8,11 @@ from django.db import IntegrityError
 from pytest_redis import factories
 
 from tests.entity import common as ce
+from tests.tag import common as ct
 from tests.user import common as cu
 from tests.user.api.integration.requests import post_login, post_register
 from cosmae.entity.models_django import Entity
+from cosmae.tag.models_django import TagDefinition
 from cosmae.util import CosmaeUser
 
 
@@ -55,6 +57,42 @@ def entity2():
     )
     entity.save()
     return entity
+
+
+@pytest.fixture()
+def tag_def(user):
+    return TagDefinition.objects.create(  # pylint: disable=no-member
+        id_persistent=ct.id_tag_persistent_test,
+        name=ct.name_tag_def_test,
+        time_edit=ct.time_edit_test,
+        type=TagDefinition.STRING,
+        owner=user,
+        curated=False,
+    )
+
+
+@pytest.fixture()
+def tag_def1(user1):
+    return TagDefinition.objects.create(  # pylint: disable=no-member
+        id_persistent=ct.id_tag_def_persistent_test_user1,
+        name=ct.name_tag_def_test1,
+        time_edit=ct.time_edit_test1,
+        type=TagDefinition.STRING,
+        owner=user1,
+        curated=False,
+    )
+
+
+@pytest.fixture()
+def tag_def_curated():
+    return TagDefinition.objects.create(  # pylint: disable=no-member
+        id_persistent=ct.id_tag_def_curated_test,
+        name=ct.name_tag_def_curated_test,
+        time_edit=ct.time_edit_curated_test,
+        type=TagDefinition.STRING,
+        owner=None,
+        curated=True,
+    )
 
 
 @pytest.fixture

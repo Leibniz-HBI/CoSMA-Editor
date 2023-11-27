@@ -131,6 +131,31 @@ def persons_chunks_post(_, req_data: ChunkRequest):
         return 500, ApiError(msg="Could not get requested chunk.")
 
 
+@router.post(
+    "{id_entity_source_persistent}/merge/{id_entity_destination_persistent}",
+    response={400: ApiError, 401: ApiError, 403: ApiError, 500: ApiError},
+)
+def merge_entities(
+    request: HttpRequest,
+    id_entity_source_persistent: str,
+    id_entity_destination_persistent: str,
+):
+    "Initializes merging of two entities."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group not in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
+        return 403, ApiError(msg="Insufficient permissions.")
+    entity_source = EntityDb.most_recent_by_id(id_entity_source_persistent)
+    if entity_source.disabled:
+        return 400, ApiError(msg="Source entity is disabled.")
+    entity_destination = EntityDb.most_recent_by_id(id_entity_destination_persistent)
+    if entity_destination.disabled:
+        return 400, ApiError(msg="Destination entity is disabled.")
+    return 400, ApiError
+
+
 def person_api_to_db(person: PersonNatural, time_edit: datetime) -> EntityDb:
     """Transform an natural person from API to DB model."""
     if person.id_persistent:

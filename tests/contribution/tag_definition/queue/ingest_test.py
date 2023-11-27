@@ -11,7 +11,7 @@ from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue.ingest import ingest_values_from_csv
 from cosmae.entity.models_django import Entity
-from cosmae.merge_request.models_django import MergeRequest
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagDefinition, TagInstance
 
 
@@ -114,7 +114,7 @@ def get_tag_value_by_mr(entity_name, id_tag_persistent):
 
     origin_tag = TagDefinition.objects.filter(  # pylint: disable=no-member
         id_persistent=Subquery(
-            MergeRequest.objects.filter(  # pylint: disable=no-member
+            TagMergeRequest.objects.filter(  # pylint: disable=no-member
                 id_destination_persistent=id_tag_persistent
             ).values_list("id_origin_persistent", flat=True)
         )
