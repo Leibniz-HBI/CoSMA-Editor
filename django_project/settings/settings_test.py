@@ -11,6 +11,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+from os import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,10 +41,14 @@ def SECRET_KEY():  # pylint: disable=invalid-name
 
 def get_file_secret(secret_name):
     "Get secret as provided by docker_compose"
-    with open(
-        f"{BASE_DIR.absolute()}/.secrets_local/{secret_name}", encoding="utf-8"
-    ) as key_file:
-        key = key_file.readline().rstrip("\n")
+    try:
+        with open(
+            f"{BASE_DIR.absolute()}/.secrets_local/{secret_name}", encoding="utf-8"
+        ) as key_file:
+            key = key_file.readline().rstrip("\n")
+    except FileNotFoundError:
+        env_var_name = secret_name.upper()
+        key = environ.get(env_var_name)
     if not key:
         raise Exception(  # pylint: disable=broad-exception-raised
             f"Please set the {secret_name} secret."
@@ -179,7 +184,7 @@ AUTH_USER_MODEL = "cosmae.CosmaeUser"
 RQ_QUEUES = {
     "default": {
         "HOST": "localhost",
-        "PORT": 6379,
+        "PORT": get_file_secret("cosmae_redis_port"),
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
     }

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+from os import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -131,7 +132,7 @@ CONTRIBUTION_DIRECTORY = "/tmp"
 RQ_QUEUES = {
     "default": {
         "HOST": "localhost",
-        "PORT": 6379,
+        "PORT": environ.get("COSMAE_REDIS_PORT", 6379),
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
     }

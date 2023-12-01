@@ -39,13 +39,9 @@ def SECRET_KEY():  # pylint: disable=invalid-name
 
 def get_docker_compose_secret(secret_name):
     "Get secret as provided by docker_compose"
-    try:
-        with open(f"/run/secrets/{secret_name}", encoding="utf-8") as key_file:
-            key = key_file.readline().rstrip("\n")
-    except FileNotFoundError:
-        env_var_name = secret_name.upper()
-        key = environ.get(env_var_name)
-    if not key:
+    env_var_name = secret_name.upper()
+    key = environ.get(env_var_name)
+    if key is None:
         raise Exception(  # pylint: disable=broad-exception-raised
             f"Please set the {secret_name} secret."
         )
@@ -172,8 +168,8 @@ AUTH_USER_MODEL = "cosmae.CosmaeUser"
 
 RQ_QUEUES = {
     "default": {
-        "HOST": "cosmae_redis",
-        "PORT": 6379,
+        "HOST": "localhost",
+        "PORT": get_docker_compose_secret("cosmae_redis_port"),
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
         "PASSWORD": get_docker_compose_secret("cosmae_redis_password"),

@@ -3,7 +3,9 @@ from unittest.mock import MagicMock, patch
 from uuid import UUID
 
 import pytest
+from django.conf import settings
 from django.db import IntegrityError
+from pytest_redis import factories
 
 from tests.entity import common as ce
 from tests.user import common as cu
@@ -36,7 +38,6 @@ def entity1():
 
 @pytest.fixture
 def entity1_changed(entity1):
-
     Entity.change_or_create(
         id_persistent=entity1.id_persistent,
         time_edit=ce.time_edit_test_1_changed,
@@ -196,3 +197,12 @@ def super_user(db):  # pylint: disable=unused-argument
         id_persistent=cu.test_uuid_super,
     )
     return super_user
+
+
+redis_port = settings.RQ_QUEUES["default"]["PORT"]
+redis_fixture = factories.redis_proc(port=redis_port)
+
+
+@pytest.fixture(autouse=True, scope="session")
+def redis(redis_fixture):
+    return redis_fixture
