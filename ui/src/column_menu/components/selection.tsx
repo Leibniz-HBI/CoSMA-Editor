@@ -167,7 +167,8 @@ export function mkListItems(args: {
                         idPersistent: entry.idPersistent,
                         columnType: TagType.Inner,
                         curated: true,
-                        version: 0
+                        version: 0,
+                        hidden: false
                     })
                 }),
                 path: [idx],

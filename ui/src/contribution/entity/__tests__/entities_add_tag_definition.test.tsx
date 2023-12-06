@@ -280,7 +280,8 @@ test('add tag', async () => {
                         idPersistent: 'id-val-' + idx,
                         version: idx
                     }
-                ])
+                ]),
+                newRemote([])
             ])
             expect(entity.similarEntities).toEqual(
                 newRemote([
@@ -298,7 +299,8 @@ test('add tag', async () => {
                                     value: `val-0-${idx}`,
                                     version: idx
                                 }
-                            ])
+                            ]),
+                            newRemote([])
                         ]
                     }),
                     newScoredEntity({
@@ -315,7 +317,8 @@ test('add tag', async () => {
                                     value: `val-1-${idx}`,
                                     version: idx
                                 }
-                            ])
+                            ]),
+                            newRemote([])
                         ]
                     })
                 ])
@@ -331,14 +334,14 @@ test('add tag', async () => {
                         idPersistent: entity.idPersistent + '-0',
                         version: 0,
                         similarity: (idx - 50) / 100.0,
-                        cellContents: [newRemote([])]
+                        cellContents: [newRemote([]), newRemote([])]
                     }),
                     newScoredEntity({
                         displayTxt: entity.displayTxt + ` match 1`,
                         idPersistent: entity.idPersistent + '-1',
                         version: 0,
                         similarity: (idx - 50) / 100.0 + 0.001,
-                        cellContents: [newRemote([])]
+                        cellContents: [newRemote([]), newRemote([])]
                     })
                 ])
             )

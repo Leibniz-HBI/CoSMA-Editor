@@ -135,9 +135,9 @@ describe('login', () => {
             fetchMock
         )
         performLogin(container)
-        await waitFor(async () => {
-            expect(await screen.queryByText('You are logged in')).toBeNull()
-            await screen.getByText(testError)
+        await waitFor(() => {
+            expect(screen.queryByText('You are logged in')).toBeNull()
+            screen.getByText(testError)
         })
         expect(store.getState()).toEqual({
             user: mkUserState({
@@ -163,9 +163,9 @@ describe('login', () => {
                 })
             })
         })
-        await waitFor(async () => {
-            expect(await screen.queryByText('You are logged in')).toBeNull()
-            await screen.getByText('Unknown error')
+        await waitFor(() => {
+            expect(screen.queryByText('You are logged in')).toBeNull()
+            screen.getByText('Unknown error')
         })
     })
 })

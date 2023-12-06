@@ -109,12 +109,14 @@ describe('column types', () => {
         newEntity({
             idPersistent: entityId0,
             displayTxt: 'display txt entity test 0',
-            version: 9000
+            version: 9000,
+            disabled: false
         }),
         newEntity({
             idPersistent: entityId1,
             displayTxt: ' display text entity test 1',
-            version: 9001
+            version: 9001,
+            disabled: false
         })
     ]
     const entityIndices = new Map(
@@ -131,7 +133,8 @@ describe('column types', () => {
                         namePath: ['text column'],
                         idPersistent: columnId,
                         columnType: TagType.String,
-                        version: 0
+                        version: 0,
+                        hidden: false
                     },
                     cellContents: new Remote([
                         [
@@ -179,7 +182,8 @@ describe('column types', () => {
                         idPersistent: columnId,
                         columnType: TagType.Inner,
                         curated: false,
-                        version: 0
+                        version: 0,
+                        hidden: false
                     },
                     cellContents: new Remote([
                         [
@@ -219,7 +223,8 @@ describe('column types', () => {
                         idPersistent: columnId,
                         columnType: TagType.Inner,
                         curated: false,
-                        version: 0
+                        version: 0,
+                        hidden: false
                     },
                     cellContents: new Remote([], true)
                 })
@@ -279,7 +284,8 @@ describe('table hooks', () => {
                             idPersistent: columnIdTest1,
                             columnType: TagType.Inner,
                             curated: false,
-                            version: 0
+                            version: 0,
+                            hidden: false
                         }
                     }),
                     new ColumnState({
@@ -288,7 +294,8 @@ describe('table hooks', () => {
                             idPersistent: columnIdTest,
                             columnType: TagType.String,
                             curated: false,
-                            version: 0
+                            version: 0,
+                            hidden: false
                         },
                         cellContents: new Remote([], true)
                     })
@@ -321,7 +328,8 @@ describe('table hooks', () => {
                             idPersistent: columnIdTest1,
                             columnType: TagType.Inner,
                             curated: false,
-                            version: 0
+                            version: 0,
+                            hidden: false
                         }
                     }),
                     new ColumnState({
@@ -330,7 +338,8 @@ describe('table hooks', () => {
                             idPersistent: columnIdTest,
                             columnType: TagType.String,
                             curated: false,
-                            version: 0
+                            version: 0,
+                            hidden: false
                         },
                         cellContents: new Remote([[cellValueTest]])
                     })
@@ -376,7 +385,8 @@ describe('table hooks', () => {
             idParentPersistent: undefined,
             columnType: TagType.String,
             curated: false,
-            version: 0
+            version: 0,
+            hidden: false
         })
         const profileCallbacks = mkDefaultTagDefinitionCallbacks()
         const [_a, localCallbacks] = useRemoteTableData(
@@ -465,7 +475,8 @@ describe('table hooks', () => {
                     idPersistent: columnIdTest,
                     columnType: TagType.String,
                     curated: false,
-                    version: 0
+                    version: 0,
+                    hidden: false
                 }
             }),
             dispatch

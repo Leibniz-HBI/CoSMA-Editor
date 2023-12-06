@@ -12,14 +12,11 @@ jest.mock('@glideapps/glide-data-grid', () => {
         CompactSelection: actual.CompactSelection
     }
 })
-import { describe } from '@jest/globals'
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import { DataTable, RemoteDataTable } from '../components'
-import { ColumnState, TableState, newEntity } from '../state'
-import { TagDefinition, TagType } from '../../column_menu/state'
-import { LocalTableCallbacks, TableDataProps, useRemoteTableData } from '../hooks'
-import { ColumnAddButton } from '../../column_menu/components/misc'
-import { ErrorManager, errorSlice, newErrorState } from '../../util/error/slice'
+import { RemoteDataTable } from '../components'
+import { ColumnState, TableState } from '../state'
+import { TagType } from '../../column_menu/state'
+import { ErrorManager, errorSlice } from '../../util/error/slice'
 import { Remote, RemoteInterface, newRemote, useThunkReducer } from '../../util/state'
 import {
     EntityMergeRequest,
@@ -32,7 +29,6 @@ import { entityMergeRequestsReducer } from '../../merge_request/entity/slice'
 import { PropsWithChildren, Reducer } from 'react'
 import { Provider } from 'react-redux'
 import { UserInfo, UserPermissionGroup, UserState, mkUserState } from '../../user/state'
-import { DefaultTagDefinitionsCallbacks } from '../../user/hooks'
 import { TableAction, ToggleEntityModalAction } from '../actions'
 import { userSlice } from '../../user/slice'
 import {
@@ -79,11 +75,13 @@ export function renderWithProviders(
             entityMergeRequestConflicts: {
                 conflicts: newRemote(undefined),
                 mergeRequest: newRemote(undefined),
-                newlyCreated: false
+                newlyCreated: false,
+                reverseOriginDestination: newRemote(undefined),
+                merge: newRemote(undefined)
             },
             error: { errorList: [], errorMap: {} },
             tableSelection: {
-                cells: [],
+                current: undefined,
                 cols: [],
                 rows: [0, 1],
                 rowSelectionOrder: [0, 1]
@@ -133,7 +131,8 @@ const testColumns = [
             namePath: ['test title 0'],
             columnType: TagType.String,
             curated: false,
-            version: 0
+            version: 0,
+            hidden: false
         },
         cellContents: new Remote([])
     }),
@@ -143,7 +142,8 @@ const testColumns = [
             namePath: ['test title 1'],
             columnType: TagType.String,
             curated: false,
-            version: 0
+            version: 0,
+            hidden: false
         },
         cellContents: new Remote([])
     })
@@ -155,11 +155,17 @@ const idEntity1 = 'id-entity-1, '
 const displayTxt1 = ' Entity 1'
 const versionEntity1 = 1231
 const entities = [
-    { idPersistent: idEntity0, displayTxt: displayTxt0, version: versionEntity0 },
+    {
+        idPersistent: idEntity0,
+        displayTxt: displayTxt0,
+        version: versionEntity0,
+        disabled: false
+    },
     {
         idPersistent: idEntity1,
         displayTxt: displayTxt1,
-        version: versionEntity1
+        version: versionEntity1,
+        disabled: false
     }
 ]
 jest.mock('../../util/state', () => {
@@ -216,12 +222,14 @@ test('start entity duplicate merging', async () => {
         origin: {
             display_txt: displayTxt0,
             version: versionEntity0,
-            id_persistent: idEntity0
+            id_persistent: idEntity0,
+            disabled: false
         },
         destination: {
             display_txt: displayTxt1,
             version: versionEntity1,
-            id_persistent: idEntity1
+            id_persistent: idEntity1,
+            disabled: false
         },
         state: 'OPEN'
     }
@@ -244,6 +252,7 @@ test('start entity duplicate merging', async () => {
     await waitFor(() => {
         expect(store.getState().entityMergeRequestConflicts).toEqual({
             newlyCreated: true,
+            reverseOriginDestination: newRemote(undefined),
             mergeRequest: newRemote(
                 newEntityMergeRequest({
                     idPersistent: idMrPersistent,
@@ -255,17 +264,20 @@ test('start entity duplicate merging', async () => {
                     entityOrigin: {
                         idPersistent: idEntity0,
                         displayTxt: displayTxt0,
-                        version: versionEntity0
+                        version: versionEntity0,
+                        disabled: false
                     },
                     entityDestination: {
                         idPersistent: idEntity1,
                         displayTxt: displayTxt1,
-                        version: versionEntity1
+                        version: versionEntity1,
+                        disabled: false
                     },
                     state: EntityMergeRequestStep.OPEN
                 })
             ),
-            conflicts: newRemote(undefined)
+            conflicts: newRemote(undefined),
+            merge: newRemote(undefined)
         })
     })
     expect(fetchMock.mock.calls).toEqual([

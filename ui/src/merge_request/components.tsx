@@ -76,7 +76,7 @@ export function ReviewList() {
                 </Row>
             </Col>
             {(permissionGroup === UserPermissionGroup.EDITOR ||
-                UserPermissionGroup.COMMISSIONER) && (
+                permissionGroup === UserPermissionGroup.COMMISSIONER) && (
                 <Col className="h-100 overflow-hidden d-flex flex-column  pb-3" xs={5}>
                     <CosmaeCard
                         title="Entity Merge Requests"

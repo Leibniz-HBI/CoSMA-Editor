@@ -14,3 +14,8 @@ export const selectEntityMergeRequestConflicts = createSelector(
     selectEntityMergeRequestConflictsState,
     (state) => state.conflicts
 )
+
+export const selectEntityMerge = createSelector(
+    selectEntityMergeRequestConflictsState,
+    (state) => state.merge
+)

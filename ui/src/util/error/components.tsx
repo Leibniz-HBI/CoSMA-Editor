@@ -67,7 +67,7 @@ export function ErrorToasts() {
     const errors = useSelector(errorListSelector)
     const dispatch = useDispatch()
     return (
-        <ToastContainer position="bottom-end" className="p-3" style={{ zIndex: 1 }}>
+        <ToastContainer position="bottom-end" className="p-3 z-3">
             {errors.map((error) => (
                 <Toast onClose={() => dispatch(removeError(error.id))} key={error.id}>
                     <Toast.Header

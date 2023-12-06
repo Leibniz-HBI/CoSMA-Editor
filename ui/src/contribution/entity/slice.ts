@@ -128,6 +128,12 @@ export const contributionEntitySlice = createSlice({
                     state.tagDefinitions.push(tagDef)
                     state.tagDefinitionMap[tagDef.idPersistent] =
                         state.tagDefinitions.length - 1
+                    for (const entity of state.entities.value) {
+                        entity.cellContents.push(newRemote([]))
+                        for (const candidate of entity.similarEntities.value) {
+                            candidate.cellContents.push(newRemote([]))
+                        }
+                    }
                 }
             }
             const strategy = (

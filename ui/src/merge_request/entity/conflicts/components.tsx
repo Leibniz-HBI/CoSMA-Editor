@@ -1,37 +1,36 @@
 import { useDispatch, useSelector } from 'react-redux'
 import {
+    selectEntityMerge,
     selectEntityMergeRequest,
     selectEntityMergeRequestConflicts
 } from './selectors'
 import {
     Accordion,
-    CloseButton,
+    Button,
     Col,
     ListGroup,
-    Overlay,
-    Popover,
-    Row
+    OverlayTrigger,
+    Row,
+    Tooltip
 } from 'react-bootstrap'
 import { EntityMergeRequestConflict } from './state'
 import { EntityMergeRequest } from '../state'
 import { RemoteInterface, newRemote } from '../../../util/state'
 import { constructColumnTitleSpans } from '../../../column_menu/components/selection'
-import {
-    ChoiceButton,
-    RemoteTriggerButton,
-    CosmaeLoading
-} from '../../../util/components/misc'
+import { ChoiceButton, RemoteTriggerButton } from '../../../util/components/misc'
 import { useEffect, useRef } from 'react'
 import { AppDispatch } from '../../../store'
-import { addError, newErrorState } from '../../../util/error/slice'
 import { MergeRequestConflictProgressBar } from '../../conflicts/components'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
 import {
     resolveEntityConflict,
     getEntityMergeRequestConflicts,
-    getEntityMergeRequest
+    getEntityMergeRequest,
+    reverseOriginDestination,
+    mergeEntityMergeRequest
 } from './thunks'
 import { useLoaderData } from 'react-router-dom'
+import { clearEntityMergeState } from './slice'
 
 export function EntityMergeRequestConflictView() {
     const idMergeRequestPersistent = useLoaderData() as string
@@ -42,16 +41,30 @@ export function EntityMergeRequestConflictView() {
         }, // eslint-disable-next-line react-hooks/exhaustive-deps
         [idMergeRequestPersistent]
     )
-    return <EntityMergeRequestConflictComponent />
+    return (
+        <EntityMergeRequestConflictComponent
+            loadDataCallback={() => {
+                //do nothing
+            }}
+        />
+    )
 }
 
-export function EntityMergeRequestConflictComponent() {
+export function EntityMergeRequestConflictComponent({
+    loadDataCallback
+}: {
+    loadDataCallback: VoidFunction
+}) {
     const dispatch: AppDispatch = useDispatch()
     const mergeRequest = useSelector(selectEntityMergeRequest)
+    const mergeState = useSelector(selectEntityMerge)
     const conflicts = useSelector(selectEntityMergeRequestConflicts)
     useEffect(() => {
         if (mergeRequest.value !== undefined) {
             dispatch(getEntityMergeRequestConflicts(mergeRequest.value?.idPersistent))
+        }
+        return () => {
+            dispatch(clearEntityMergeState())
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mergeRequest.value?.idPersistent])
@@ -59,13 +72,14 @@ export function EntityMergeRequestConflictComponent() {
     const buttonRef = useRef(null)
     const conflictsValue = conflicts.value
     const mergeRequestValue = mergeRequest.value
+
     if (
         conflicts.isLoading ||
         conflictsValue === undefined ||
         mergeRequest.isLoading ||
         mergeRequestValue === undefined
     ) {
-        return CosmaeLoading()
+        return <div className=" shimmer" />
     }
     return (
         <Row className="h-100">
@@ -80,45 +94,16 @@ export function EntityMergeRequestConflictComponent() {
                             successLabel="Application of Resolutions started."
                             onClick={() =>
                                 dispatch(
-                                    addError(
-                                        newErrorState(
-                                            'Entity merging not yet implemented'
-                                        )
+                                    mergeEntityMergeRequest(
+                                        mergeRequestValue.idPersistent
                                     )
-                                )
+                                ).then(loadDataCallback)
                             }
-                            remoteState={newRemote(false)}
+                            remoteState={newRemote(
+                                mergeState.value == mergeRequestValue.idPersistent,
+                                mergeState.isLoading
+                            )}
                         />
-                        <Overlay
-                            show={false}
-                            target={buttonRef}
-                            container={containerRef}
-                            placement="bottom"
-                            key="merge-button-overlay"
-                        >
-                            <Popover id="start-merge-error-popover">
-                                <Popover.Header className="bg-danger text-light">
-                                    <Row className="justify-content-between">
-                                        <Col>Error</Col>
-                                        <CloseButton
-                                            variant="white"
-                                            onClick={() =>
-                                                dispatch(
-                                                    addError(
-                                                        newErrorState(
-                                                            'You should never see this'
-                                                        )
-                                                    )
-                                                )
-                                            }
-                                        ></CloseButton>
-                                    </Row>
-                                </Popover.Header>
-                                <Popover.Body>
-                                    <span>'You should never see this'</span>
-                                </Popover.Body>
-                            </Popover>
-                        </Overlay>
                     </Col>
                     <Col>
                         <EntityMergeRequestConflictHeader
@@ -204,19 +189,35 @@ export function EntityMergeRequestConflictHeader({
 }: {
     mergeRequest: EntityMergeRequest
 }) {
+    const dispatch: AppDispatch = useDispatch()
     return (
         <Row>
-            <Col>
-                <Row>
-                    <Col xs="auto">
-                        <ArrowRightCircleFill />
-                    </Col>
-                    <Col className="ps-0">
-                        <span className="fw-bold">
-                            {mergeRequest.entityDestination.displayTxt}
-                        </span>
-                    </Col>
-                </Row>
+            <Col xs="auto">
+                <OverlayTrigger
+                    placement="right"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={
+                        <Tooltip id="button-tooltip">
+                            <span>This is the destination of the Entity Merge. </span>
+                            <span>It determines the resulting display text. </span>
+                            <span>I.e., </span>
+                            <span className="fw-bold">
+                                {mergeRequest.entityDestination.displayTxt}
+                            </span>
+                        </Tooltip>
+                    }
+                >
+                    <Row>
+                        <Col xs="auto">
+                            <ArrowRightCircleFill />
+                        </Col>
+                        <Col className="ps-0">
+                            <span className="fw-bold">
+                                {mergeRequest.entityDestination.displayTxt}
+                            </span>
+                        </Col>
+                    </Row>
+                </OverlayTrigger>
                 <Row>
                     <Col xs="auto">
                         <ArrowLeftCircle />
@@ -225,6 +226,42 @@ export function EntityMergeRequestConflictHeader({
                         <span>{mergeRequest.entityOrigin.displayTxt}</span>
                     </Col>
                 </Row>
+            </Col>
+            <Col />
+            <Col xs="auto">
+                <OverlayTrigger
+                    placement="left"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={
+                        <Tooltip id="button-tooltip">
+                            Reverse origin and destination of the entity merge request.
+                        </Tooltip>
+                    }
+                >
+                    {/* Empty div to allow tooltip showing   */}
+                    <span>
+                        <Button
+                            onClick={() => {
+                                dispatch(
+                                    reverseOriginDestination(mergeRequest.idPersistent)
+                                ).then((mergeRequest) => {
+                                    if (
+                                        mergeRequest !== undefined &&
+                                        mergeRequest !== null
+                                    ) {
+                                        dispatch(
+                                            getEntityMergeRequestConflicts(
+                                                mergeRequest.idPersistent
+                                            )
+                                        )
+                                    }
+                                })
+                            }}
+                        >
+                            Reverse Direction
+                        </Button>
+                    </span>
+                </OverlayTrigger>
             </Col>
         </Row>
     )

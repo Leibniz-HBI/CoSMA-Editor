@@ -48,4 +48,6 @@ export interface EntityMergeRequestConflictsState {
     conflicts: RemoteInterface<EntityMergeRequestConflicts | undefined>
     mergeRequest: RemoteInterface<EntityMergeRequest | undefined>
     newlyCreated: boolean
+    reverseOriginDestination: RemoteInterface<string | undefined>
+    merge: RemoteInterface<string | undefined>
 }

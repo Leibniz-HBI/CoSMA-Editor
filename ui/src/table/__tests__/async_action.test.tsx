@@ -53,24 +53,28 @@ const displayTxt1 = 'test display txt 1'
 const test_person_rsp_0 = {
     display_txt: displayTxt0,
     id_persistent: idPersistent0,
-    version: version0
+    version: version0,
+    disabled: false
 }
 const test_person_rsp_1 = {
     display_txt: 'test display txt 1',
     id_persistent: 'test-id-1',
-    version: 1
+    version: 1,
+    disabled: false
 }
 
 const entities_test = [
     newEntity({
         idPersistent: 'test-id-0',
         displayTxt: 'test display txt 0',
-        version: 0
+        version: 0,
+        disabled: false
     }),
     newEntity({
         idPersistent: 'test-id-1',
         displayTxt: 'test display txt 1',
-        version: 1
+        version: 1,
+        disabled: false
     })
 ]
 const display_txt_column = {
@@ -87,7 +91,8 @@ const displayTextTagDef: TagDefinition = {
     idPersistent: 'display_txt_id',
     columnType: TagType.String,
     curated: true,
-    version: 0
+    version: 0,
+    hidden: false
 }
 
 describe('get table async action', () => {
@@ -210,7 +215,8 @@ describe('get column async action', () => {
         version: 2,
         curated: false,
         columnType: TagType.String,
-        owner: nameUserTest
+        owner: nameUserTest,
+        hidden: false
     })
     const tagResponse = {
         id_entity_persistent: 'test-id-0',
@@ -235,7 +241,8 @@ describe('get column async action', () => {
         columnType: TagType.String,
         curated: false,
         owner: nameUserTest,
-        version: 2
+        version: 2,
+        hidden: false
     }
 
     test('loads column with one chunk', async () => {
@@ -468,7 +475,8 @@ describe('change or create entity', () => {
                             {
                                 id_persistent: idPersistent0,
                                 display_txt: displayTxt0,
-                                version: version0
+                                version: version0,
+                                disabled: false
                             }
                         ]
                     }
@@ -476,7 +484,10 @@ describe('change or create entity', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new EntityChangeOrCreateAction({ displayTxt: displayTxt0 }).run(dispatch)
+        await new EntityChangeOrCreateAction({
+            displayTxt: displayTxt0,
+            disabled: false
+        }).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new EntityChangeOrCreateStartAction()],
             [
@@ -484,7 +495,8 @@ describe('change or create entity', () => {
                     newEntity({
                         idPersistent: idPersistent0,
                         displayTxt: displayTxt0,
-                        version: version0
+                        version: version0,
+                        disabled: false
                     })
                 )
             ]
@@ -510,7 +522,10 @@ describe('change or create entity', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new EntityChangeOrCreateAction({ displayTxt: displayTxt0 }).run(dispatch)
+        await new EntityChangeOrCreateAction({
+            displayTxt: displayTxt0,
+            disabled: false
+        }).run(dispatch)
         expect(dispatch.mock.calls).toEqual([
             [new EntityChangeOrCreateStartAction()],
             [new EntityChangeOrCreateErrorAction('error')]

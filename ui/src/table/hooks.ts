@@ -297,7 +297,12 @@ export function useRemoteTableData(
                 )
             },
             addEntityCallback: (displayTxt) =>
-                dispatch(new EntityChangeOrCreateAction({ displayTxt: displayTxt }))
+                dispatch(
+                    new EntityChangeOrCreateAction({
+                        displayTxt: displayTxt,
+                        disabled: false
+                    })
+                )
         },
         {
             cellContentCallback: useCellContentCallback(state),

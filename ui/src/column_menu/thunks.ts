@@ -173,6 +173,7 @@ export function parseColumnDefinitionsFromApi(
         version: tagDefinitionApi['version'],
         curated: tagDefinitionApi['curated'],
         columnType: columnType,
-        owner: tagDefinitionApi['owner']
+        owner: tagDefinitionApi['owner'],
+        hidden: tagDefinitionApi['hidden']
     })
 }

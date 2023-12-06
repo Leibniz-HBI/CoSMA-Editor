@@ -10,7 +10,9 @@ import { newRemote, RemoteInterface } from '../../../util/state'
 const initialState: EntityMergeRequestConflictsState = {
     conflicts: newRemote(undefined),
     mergeRequest: newRemote(undefined),
-    newlyCreated: false
+    newlyCreated: false,
+    reverseOriginDestination: newRemote(undefined),
+    merge: newRemote(undefined)
 }
 export const entityMergeRequestConflictSlice = createSlice({
     name: 'entityMergeRequestConflicts',
@@ -105,6 +107,59 @@ export const entityMergeRequestConflictSlice = createSlice({
         },
         getEntityMergeRequestError(state: EntityMergeRequestConflictsState) {
             state.mergeRequest.isLoading = false
+        },
+        reverseOriginDestinationStart(
+            state: EntityMergeRequestConflictsState,
+            action: PayloadAction<string>
+        ) {
+            state.reverseOriginDestination = newRemote(action.payload, true)
+        },
+        reverseOriginDestinationSuccess(
+            state: EntityMergeRequestConflictsState,
+            action: PayloadAction<EntityMergeRequest>
+        ) {
+            if (state.reverseOriginDestination.value === action.payload.idPersistent) {
+                state.reverseOriginDestination.isLoading = false
+            }
+            if (
+                state.mergeRequest.value?.idPersistent === action.payload.idPersistent
+            ) {
+                state.mergeRequest = newRemote(action.payload)
+            }
+        },
+        reverseOriginDestinationError(
+            state: EntityMergeRequestConflictsState,
+            action: PayloadAction<string>
+        ) {
+            if (state.reverseOriginDestination.value === action.payload) {
+                state.reverseOriginDestination.isLoading = false
+            }
+        },
+        mergeEntityMergeRequestStart(
+            state: EntityMergeRequestConflictsState,
+            action: PayloadAction<string>
+        ) {
+            state.merge = newRemote(action.payload, true)
+        },
+        mergeEntityMergeRequestSuccess(
+            state: EntityMergeRequestConflictsState,
+            action: PayloadAction<string>
+        ) {
+            if (state.merge.value == action.payload) {
+                state.merge.isLoading = false
+                state.merge.errorMsg == undefined
+            }
+        },
+        mergeEntityMergeRequestError(
+            state: EntityMergeRequestConflictsState,
+            action: PayloadAction<string>
+        ) {
+            if (state.merge.value == action.payload) {
+                state.merge.isLoading = false
+            }
+        },
+        clearEntityMergeState(state: EntityMergeRequestConflictsState) {
+            state.merge = newRemote(undefined)
         }
     }
 })
@@ -138,5 +193,12 @@ export const {
     resolveEntityConflictError,
     getEntityMergeRequestStart,
     getEntityMergeRequestSuccess,
-    getEntityMergeRequestError
+    getEntityMergeRequestError,
+    reverseOriginDestinationStart,
+    reverseOriginDestinationSuccess,
+    reverseOriginDestinationError,
+    mergeEntityMergeRequestStart,
+    mergeEntityMergeRequestSuccess,
+    mergeEntityMergeRequestError,
+    clearEntityMergeState
 } = entityMergeRequestConflictSlice.actions

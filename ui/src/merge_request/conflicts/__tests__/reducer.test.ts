@@ -41,7 +41,8 @@ const sharedConflict1 = new Remote(
         entity: newEntity({
             idPersistent: 'id-entity-test1',
             displayTxt: 'test entity1',
-            version: 81
+            version: 81,
+            disabled: false
         }),
         tagInstanceOrigin: newTagInstance({
             idPersistent: 'id-instance-origin-test1',
@@ -60,7 +61,8 @@ const sharedConflict = new Remote(
         entity: newEntity({
             idPersistent: 'id-entity-test',
             displayTxt: 'test entity',
-            version: 8
+            version: 8,
+            disabled: false
         }),
         tagInstanceOrigin: newTagInstance({
             idPersistent: 'id-instance-origin-test',
@@ -81,7 +83,8 @@ const conflicts = [
             entity: newEntity({
                 idPersistent: 'id-entity-test2',
                 displayTxt: 'test entity2',
-                version: 82
+                version: 82,
+                disabled: false
             }),
             tagInstanceOrigin: newTagInstance({
                 idPersistent: 'id-instance-origin-test2',
@@ -101,7 +104,8 @@ const conflicts = [
             entity: newEntity({
                 idPersistent: 'id-entity-test3',
                 displayTxt: 'test entity3',
-                version: 83
+                version: 83,
+                disabled: false
             }),
             tagInstanceOrigin: newTagInstance({
                 idPersistent: 'id-instance-origin-test3',
@@ -122,14 +126,16 @@ const tagDefOrigin = newTagDefinition({
     idPersistent: 'id-tag-def-origin-test',
     curated: false,
     version: 84,
-    columnType: TagType.String
+    columnType: TagType.String,
+    hidden: false
 })
 const tagDefDestination = newTagDefinition({
     namePath: ['tag def destination test'],
     idPersistent: 'id-tag-def-destination-test',
     curated: false,
     version: 841,
-    columnType: TagType.String
+    columnType: TagType.String,
+    hidden: false
 })
 describe('get conflicts', () => {
     test('start loading', () => {

@@ -52,7 +52,8 @@ const sharedConflict1 = new Remote(
         entity: newEntity({
             idPersistent: 'id-entity-test1',
             displayTxt: 'test entity1',
-            version: 81
+            version: 81,
+            disabled: false
         }),
         tagInstanceOrigin: tagInstanceOrigin,
         tagInstanceDestination: tagInstanceDestination
@@ -63,7 +64,8 @@ const sharedConflict = new Remote(
         entity: newEntity({
             idPersistent: 'id-entity-test',
             displayTxt: 'test entity',
-            version: 8
+            version: 8,
+            disabled: false
         }),
         tagInstanceOrigin: newTagInstance({
             idPersistent: 'id-instance-origin-test',
@@ -81,7 +83,8 @@ const updatedConflicts = [sharedConflict, sharedConflict1]
 const entity = newEntity({
     idPersistent: 'id-entity-test3',
     displayTxt: 'test entity3',
-    version: 83
+    version: 83,
+    disabled: false
 })
 const conflicts = [
     new Remote(
@@ -89,7 +92,8 @@ const conflicts = [
             entity: newEntity({
                 idPersistent: 'id-entity-test2',
                 displayTxt: 'test entity2',
-                version: 82
+                version: 82,
+                disabled: false
             }),
             tagInstanceOrigin: newTagInstance({
                 idPersistent: 'id-instance-origin-test2',
@@ -126,14 +130,16 @@ const tagDefOrigin = newTagDefinition({
     idPersistent: 'id-tag-def-origin-test',
     curated: false,
     version: 84,
-    columnType: TagType.String
+    columnType: TagType.String,
+    hidden: false
 })
 const tagDefDestination = newTagDefinition({
     namePath: ['tag def destination test'],
     idPersistent: 'id-tag-def-destination-test',
     curated: false,
     version: 841,
-    columnType: TagType.String
+    columnType: TagType.String,
+    hidden: false
 })
 const sharedConflictJson = {
     tag_instance_origin: {
@@ -149,7 +155,8 @@ const sharedConflictJson = {
     entity: {
         id_persistent: sharedConflict.value.entity.idPersistent,
         display_txt: sharedConflict.value.entity.displayTxt,
-        version: sharedConflict.value.entity.version
+        version: sharedConflict.value.entity.version,
+        disabled: false
     },
     replace: sharedConflict.value.replace
 }
@@ -167,7 +174,8 @@ const sharedConflictJson1 = {
     entity: {
         id_persistent: sharedConflict1.value.entity.idPersistent,
         display_txt: sharedConflict1.value.entity.displayTxt,
-        version: sharedConflict1.value.entity.version
+        version: sharedConflict1.value.entity.version,
+        disabled: false
     },
     replace: sharedConflict1.value.replace
 }
@@ -197,7 +205,8 @@ describe('get conflicts', () => {
                             id_persistent: tagDefOrigin.idPersistent,
                             type: 'STRING',
                             curated: false,
-                            version: tagDefOrigin.version
+                            version: tagDefOrigin.version,
+                            hidden: false
                         },
                         destination: {
                             name: tagDefDestination.namePath[0],
@@ -205,7 +214,8 @@ describe('get conflicts', () => {
                             id_persistent: tagDefDestination.idPersistent,
                             type: 'STRING',
                             curated: false,
-                            version: tagDefDestination.version
+                            version: tagDefDestination.version,
+                            hidden: false
                         }
                     },
                     updated: [sharedConflictJson, sharedConflictJson1],
@@ -214,7 +224,8 @@ describe('get conflicts', () => {
                             entity: {
                                 id_persistent: 'id-entity-test2',
                                 display_txt: 'test entity2',
-                                version: 82
+                                version: 82,
+                                disabled: false
                             },
                             tag_instance_origin: {
                                 id_persistent: 'id-instance-origin-test2',
@@ -233,7 +244,8 @@ describe('get conflicts', () => {
                             entity: {
                                 id_persistent: 'id-entity-test3',
                                 display_txt: 'test entity3',
-                                version: 83
+                                version: 83,
+                                disabled: false
                             },
                             tag_instance_origin: {
                                 id_persistent: 'id-instance-origin-test3',

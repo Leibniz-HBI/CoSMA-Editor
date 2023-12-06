@@ -24,7 +24,7 @@ import {
     ShowEntityAddDialogAction
 } from '../actions'
 import { tableReducer } from '../reducer'
-import { ColumnState, Entity, TableState, newEntity } from '../state'
+import { ColumnState, TableState, newEntity } from '../state'
 import { Remote } from '../../util/state'
 describe('reducer tests', () => {
     const columnNameTest = 'column test name'
@@ -95,17 +95,20 @@ describe('reducer tests', () => {
             newEntity({
                 idPersistent: 'entity0',
                 displayTxt: 'entity test 0',
-                version: 100
+                version: 100,
+                disabled: false
             }),
             newEntity({
                 idPersistent: 'entity1',
                 displayTxt: 'entity test 1',
-                version: 101
+                version: 101,
+                disabled: false
             }),
             newEntity({
                 idPersistent: 'entity3',
                 displayTxt: 'entity test 3',
-                version: 103
+                version: 103,
+                disabled: false
             })
         ]
         const end_state = tableReducer(state, new SetEntitiesAction(entities))
@@ -225,7 +228,8 @@ describe('reducer tests', () => {
         const entityTest = newEntity({
             idPersistent: 'id_entity_test',
             displayTxt: 'display text entity test',
-            version: 300
+            version: 300,
+            disabled: false
         })
         test('when loading', () => {
             const state = new TableState({
@@ -484,17 +488,20 @@ describe('reducer tests', () => {
         const entityTest0 = newEntity({
             idPersistent: entityIdTest0,
             displayTxt: 'display text test 0',
-            version: 300
+            version: 300,
+            disabled: false
         })
         const entityTest1 = newEntity({
             idPersistent: entityIdTest1,
             displayTxt: 'display text test 1',
-            version: 301
+            version: 301,
+            disabled: false
         })
         const entityTest3 = newEntity({
             idPersistent: entityIdTest3,
             displayTxt: 'display text test 3',
-            version: 303
+            version: 303,
+            disabled: false
         })
         const entities = [entityTest0, entityTest1, entityTest3]
         const entityIndices = new Map(
@@ -746,7 +753,8 @@ describe('reducer tests', () => {
             const newEntityObject = newEntity({
                 idPersistent: newEntityId,
                 displayTxt: newEntityDisplayTxt,
-                version: newEntityVersion
+                version: newEntityVersion,
+                disabled: false
             })
             const expectedState = new TableState({
                 entities: [entityTest0, entityTest1, entityTest3, newEntityObject],
@@ -789,7 +797,8 @@ describe('reducer tests', () => {
             const newEntityObject = newEntity({
                 idPersistent: entityIdTest1,
                 displayTxt: newEntityDisplayTxt,
-                version: newEntityVersion
+                version: newEntityVersion,
+                disabled: false
             })
             const expectedState = new TableState({
                 entities: [entityTest0, newEntityObject, entityTest3],

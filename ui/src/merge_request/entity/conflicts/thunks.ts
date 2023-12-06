@@ -7,6 +7,7 @@ import { RemoteInterface, newRemote } from '../../../util/state'
 import { ThunkWithFetch } from '../../../util/type'
 import { parseTagInstanceFromJson } from '../../conflicts/async_actions'
 import { TagInstance } from '../../conflicts/state'
+import { EntityMergeRequest } from '../state'
 import { parseEntityMergeRequestFromJson } from '../thunks'
 import {
     getEntityMergeRequestConflictsError,
@@ -20,7 +21,13 @@ import {
     getEntityMergeRequestError,
     resolveEntityConflictError,
     resolveEntityConflictStart,
-    resolveEntityConflictSuccess
+    resolveEntityConflictSuccess,
+    reverseOriginDestinationStart,
+    reverseOriginDestinationError,
+    reverseOriginDestinationSuccess,
+    mergeEntityMergeRequestStart,
+    mergeEntityMergeRequestSuccess,
+    mergeEntityMergeRequestError
 } from './slice'
 import {
     EntityMergeRequestConflict,
@@ -215,6 +222,57 @@ export function resolveEntityConflict({
     }
 }
 
+export function reverseOriginDestination(
+    idEntityMergeRequest: string
+): ThunkWithFetch<EntityMergeRequest | undefined> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(reverseOriginDestinationStart(idEntityMergeRequest))
+        try {
+            const rsp = await fetch(
+                config.api_path +
+                    `/merge_requests/entities/${idEntityMergeRequest}/reverse_origin_destination`,
+                { credentials: 'include', method: 'POST' }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const mergeRequest = parseEntityMergeRequestFromJson(json)
+                dispatch(reverseOriginDestinationSuccess(mergeRequest))
+                return mergeRequest
+            } else {
+                dispatch(reverseOriginDestinationError(idEntityMergeRequest))
+                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+            }
+        } catch (e: unknown) {
+            dispatch(reverseOriginDestinationError(idEntityMergeRequest))
+            dispatch(addError(newErrorState(exceptionMessage(e))))
+        }
+        return undefined
+    }
+}
+export function mergeEntityMergeRequest(
+    idEntityMergeRequest: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(mergeEntityMergeRequestStart(idEntityMergeRequest))
+        try {
+            const rsp = await fetch(
+                config.api_path +
+                    `/merge_requests/entities/${idEntityMergeRequest}/merge`,
+                { method: 'POST', credentials: 'include' }
+            )
+            if (rsp.status == 200) {
+                dispatch(mergeEntityMergeRequestSuccess(idEntityMergeRequest))
+                return
+            }
+            const json = await rsp.json()
+            dispatch(addError(newErrorState(errorMessageFromApi(json))))
+            dispatch(mergeEntityMergeRequestError(idEntityMergeRequest))
+        } catch (e: unknown) {
+            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(mergeEntityMergeRequestError(idEntityMergeRequest))
+        }
+    }
+}
 function parseEntityMergeRequestConflictFromJson(conflictJson: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any

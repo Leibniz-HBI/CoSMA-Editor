@@ -40,7 +40,8 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                 idPersistent: displayTxtColumnId,
                 columnType: TagType.String,
                 curated: true,
-                version: 0
+                version: 0,
+                hidden: false
             })
         )
         try {
@@ -253,20 +254,24 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
     idPersistent?: string
     version?: number
     displayTxt: string
+    disabled: boolean
 
     constructor({
         displayTxt,
         idPersistent = undefined,
-        version = undefined
+        version = undefined,
+        disabled
     }: {
         displayTxt: string
         idPersistent?: string
         version?: number
+        disabled: boolean
     }) {
         super()
         this.displayTxt = displayTxt
         this.idPersistent = idPersistent
         this.version = version
+        this.disabled = disabled
     }
 
     async run(dispatch: Dispatch<TableAction>): Promise<void> {
@@ -291,11 +296,13 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
                 const idPersistent = entity['id_persistent']
                 const displayTxt = entity['display_txt']
                 const version = entity['version']
+                const disabled = entity['disabled']
                 dispatch(
                     new EntityChangeOrCreateSuccessAction({
                         idPersistent,
                         displayTxt,
-                        version
+                        version,
+                        disabled
                     })
                 )
             } else {
@@ -365,6 +372,7 @@ export function parseEntityObjectFromJson(json: any) {
     return newEntity({
         idPersistent: json['id_persistent'],
         displayTxt: json['display_txt'],
-        version: Number.parseInt(json['version'])
+        version: Number.parseInt(json['version']),
+        disabled: json['disabled']
     })
 }

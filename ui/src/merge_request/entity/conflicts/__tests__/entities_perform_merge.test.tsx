@@ -1,13 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import {
-    RenderOptions,
-    render,
-    waitFor,
-    screen,
-    getByText
-} from '@testing-library/react'
+import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { newRemote } from '../../../../util/state'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
@@ -19,8 +13,12 @@ import {
     newEntityMergeRequestConflict
 } from '../state'
 import { entityMergeRequestConflictSlice } from '../slice'
-import { EntityMergeRequestConflictView } from '../components'
+import {
+    EntityMergeRequestConflictComponent,
+    EntityMergeRequestConflictHeader
+} from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
+import { assert } from 'console'
 
 jest.mock('react-router-dom', () => {
     const navigateCallbackMock = jest.fn()
@@ -196,7 +194,6 @@ function addSuccessResponse(fetchMock: jest.Mock) {
         }
     }
     addResponseSequence(fetchMock, [
-        [200, entityMergeRequestApi],
         [
             200,
             {
@@ -291,27 +288,53 @@ function addSuccessResponse(fetchMock: jest.Mock) {
     ])
 }
 
-test('update conflicts', async () => {
+test('apply conflicts', async () => {
     const fetchMock = jest.fn()
     addSuccessResponse(fetchMock)
-    const { store } = renderWithProviders(<EntityMergeRequestConflictView />, fetchMock)
+    const mergeRequest = newEntityMergeRequest({
+        idPersistent: idEntityMr0,
+        // reverse order as we test swapping origin and destination.
+        entityOrigin: {
+            idPersistent: idPersistentDestination0,
+            displayTxt: displayTextDestination0,
+            version: versionDestination0,
+            disabled: false
+        },
+        entityDestination: {
+            idPersistent: idPersistentOrigin0,
+            displayTxt: displayTextOrigin0,
+            version: versionOrigin0,
+            disabled: false
+        },
+        createdBy: {
+            idPersistent: idUser0,
+            permissionGroup: 'Commissioner' as UserPermissionGroup,
+            userName: userName0
+        },
+        state: 'open' as EntityMergeRequestStep
+    })
+    const loaDataMock = jest.fn()
+    const { store } = renderWithProviders(
+        <EntityMergeRequestConflictComponent loadDataCallback={loaDataMock} />,
+        fetchMock,
+        {
+            preloadedState: {
+                error: { errorList: [], errorMap: {} },
+                entityMergeRequestConflicts: {
+                    conflicts: newRemote(undefined),
+                    mergeRequest: newRemote(mergeRequest),
+                    newlyCreated: false,
+                    reverseOriginDestination: newRemote(undefined),
+                    merge: newRemote(undefined)
+                }
+            }
+        }
+    )
     await waitFor(() => {
-        screen.getByText(valueTagInstanceOriginResolvable0)
-        screen.getByText(valueTagInstanceDestinationResolvable0)
-        const textValueOriginList = screen.getAllByText(
-            valueTagInstanceOriginResolvable1
-        )
-        expect(textValueOriginList.length).toEqual(2)
-        const textValueDestinationList = screen.getAllByText(
-            valueTagInstanceDestinationResolvable1
-        )
-        expect(textValueDestinationList.length).toEqual(2)
-        screen.getByText(valueTagInstanceOriginResolvable2)
-        screen.getByText(valueTagInstanceDestinationResolvable2)
-        screen.getByText(valueTagInstanceOriginUnresolvable0)
-        screen.getByText(valueTagInstanceDestinationUnresolvable0)
-        screen.getByText(valueTagInstanceOriginUnresolvable1)
-        screen.getByText(valueTagInstanceDestinationUnresolvable1)
+        const button = screen.getByRole('button', {
+            name: /apply resolutions to destination/i
+        })
+        button.click()
     })
     const conflictResolvable1 = newEntityMergeRequestConflict({
         tagDefinition: {
@@ -333,7 +356,7 @@ test('update conflicts', async () => {
         },
         replace: undefined
     })
-    const expectedState = {
+    const expectedConflictState = {
         conflicts: newRemote({
             resolvableConflicts: [
                 newRemote(
@@ -438,15 +461,15 @@ test('update conflicts', async () => {
             newEntityMergeRequest({
                 idPersistent: idEntityMr0,
                 entityOrigin: {
-                    displayTxt: displayTextOrigin0,
-                    idPersistent: idPersistentOrigin0,
-                    version: versionOrigin0,
-                    disabled: false
-                },
-                entityDestination: {
                     displayTxt: displayTextDestination0,
                     idPersistent: idPersistentDestination0,
                     version: versionDestination0,
+                    disabled: false
+                },
+                entityDestination: {
+                    displayTxt: displayTextOrigin0,
+                    idPersistent: idPersistentOrigin0,
+                    version: versionOrigin0,
                     disabled: false
                 },
                 createdBy: {
@@ -459,33 +482,23 @@ test('update conflicts', async () => {
         ),
         newlyCreated: false,
         reverseOriginDestination: newRemote(undefined),
-        merge: newRemote(undefined)
+        merge: newRemote(idEntityMr0)
     }
-    expect(store.getState()).toEqual({
-        entityMergeRequestConflicts: expectedState,
-        error: { errorList: [], errorMap: {} }
-    })
-    const updatedConflictsLabel = screen.getByText(
-        'For the following conflicts the underlying data has changed'
-    )
-    const updatedAccordion = updatedConflictsLabel.parentElement?.parentElement
-    expect(updatedAccordion?.className).toEqual('accordion-item')
-    if (updatedAccordion === null || updatedAccordion === undefined) {
-        throw new Error('Could not find updated accordion')
-    }
-    const keepButton = getByText(updatedAccordion, 'Keep Existing Value')
-    keepButton.click()
     await waitFor(() => {
-        screen.getByText(valueTagInstanceOriginResolvable1)
-        screen.getByText(valueTagInstanceDestinationResolvable1)
+        expect(store.getState()).toEqual({
+            entityMergeRequestConflicts: expectedConflictState,
+            error: { errorList: [], errorMap: {} }
+        })
     })
-    expect(
-        store.getState().entityMergeRequestConflicts.conflicts.value?.updated.length
-    ).toEqual(0)
-    expect(
-        Object.keys(
-            store.getState().entityMergeRequestConflicts.conflicts.value
-                ?.updatedTagDefinitionIdMap ?? { a: 1 } // just make sure it is not null
-        ).length
-    ).toEqual(0)
+    expect(fetchMock.mock.calls).toEqual([
+        [
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts`,
+            { credentials: 'include' }
+        ],
+        [
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/merge`,
+            { credentials: 'include', method: 'POST' }
+        ]
+    ])
+    expect(loaDataMock.mock.calls.length).toEqual(1)
 })

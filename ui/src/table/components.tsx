@@ -159,7 +159,11 @@ export function RemoteDataTable(props: {
                             key="entity-merging-modal"
                         >
                             <Modal.Body className="display-block vh-95">
-                                <EntityMergeRequestConflictComponent />
+                                <EntityMergeRequestConflictComponent
+                                    loadDataCallback={
+                                        remoteCallbacks.loadTableDataCallback
+                                    }
+                                />
                             </Modal.Body>
                         </Modal>
                     </div>

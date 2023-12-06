@@ -144,17 +144,20 @@ describe('table from state', () => {
                 newEntity({
                     idPersistent: 'id-entity-test-0',
                     displayTxt: 'display text test 0',
-                    version: 300
+                    version: 300,
+                    disabled: false
                 }),
                 newEntity({
                     idPersistent: 'id-entity-test-1',
                     displayTxt: 'display text test 1',
-                    version: 301
+                    version: 301,
+                    disabled: false
                 }),
                 newEntity({
                     idPersistent: 'id-entity-test-3',
                     displayTxt: 'display text test 3',
-                    version: 303
+                    version: 303,
+                    disabled: false
                 })
             ],
             isLoading: false

@@ -14,6 +14,7 @@ export interface TagDefinition {
     curated: boolean
     version: number
     owner?: string
+    hidden: boolean
 }
 
 export function newTagDefinition({
@@ -23,7 +24,8 @@ export function newTagDefinition({
     columnType,
     curated,
     owner = 'Unknown User',
-    version
+    version,
+    hidden
 }: {
     namePath: string[]
     idPersistent: string
@@ -32,6 +34,7 @@ export function newTagDefinition({
     curated: boolean
     owner?: string
     version: number
+    hidden: boolean
 }) {
     return {
         namePath,
@@ -40,7 +43,8 @@ export function newTagDefinition({
         columnType,
         curated,
         owner,
-        version
+        version,
+        hidden
     }
 }
 

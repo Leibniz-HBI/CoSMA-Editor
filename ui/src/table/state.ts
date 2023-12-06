@@ -154,7 +154,8 @@ export class ColumnState {
             namePath: [],
             columnType: TagType.String,
             curated: false,
-            version: 0
+            version: 0,
+            hidden: false
         },
         cellContents = new Remote([]),
         width = 200
@@ -225,20 +226,24 @@ export interface Entity {
     idPersistent: string
     displayTxt: string
     version: number
+    disabled: boolean
 }
 
 export function newEntity({
     idPersistent,
     displayTxt,
-    version
+    version,
+    disabled
 }: {
     idPersistent: string
     displayTxt: string
     version: number
+    disabled: boolean
 }) {
     return {
         idPersistent: idPersistent,
         displayTxt: displayTxt,
-        version: version
+        version: version,
+        disabled: disabled
     }
 }
