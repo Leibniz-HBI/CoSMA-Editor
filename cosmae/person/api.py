@@ -31,6 +31,7 @@ class PersonNatural(Schema):
     """The version of the person that the change is made on.
     If null on POST, a new person is created."""
     id_persistent: Optional[str]
+    disabled: Optional[bool]
 
 
 class PersonNaturalList(Schema):
@@ -177,6 +178,7 @@ def person_api_to_db(person: PersonNatural, time_edit: datetime) -> EntityDb:
         time_edit=time_edit,
         id_persistent=persistent_id,
         version=person.version,
+        disabled=person.disabled or False,
     )
 
 
@@ -186,4 +188,5 @@ def person_db_to_api(person: EntityDb) -> PersonNatural:
         display_txt=person.display_txt,
         version=person.id,
         id_persistent=person.id_persistent,
+        disabled=person.disabled,
     )

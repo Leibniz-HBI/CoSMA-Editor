@@ -202,11 +202,12 @@ class TagConflictResolution(AbstractConflictResolution):
                     id_persistent=models.OuterRef("entity__id_persistent")
                 )
                 .order_by(models.F("previous_version").desc(nulls_last=True))
-                .values(
+                .values(  # pylint: disable=duplicate-code
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",
                         display_txt="display_txt",
+                        disabled="disabled",
                     )
                 )[:1]
             ),
@@ -217,7 +218,7 @@ class TagConflictResolution(AbstractConflictResolution):
                     )
                 )
                 .order_by(models.F("previous_version").desc(nulls_last=True))
-                .values(
+                .values(  # pylint: disable=duplicate-code
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",

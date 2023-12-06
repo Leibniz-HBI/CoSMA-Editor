@@ -37,7 +37,8 @@ def test_get_chunk(auth_server, contribution_candidate, entities):
     persons = json["persons"]
     assert len(persons) == 1
     person = persons[0]
-    assert len(person) == 3
+    assert len(person) == 4
     assert person["id_persistent"] == c.id_persistent_entity_duplicate_test
     assert person["display_txt"] == c.display_txt_test_entity_duplicate
+    assert not person["disabled"]
     assert "version" in person

@@ -54,6 +54,7 @@ def test_get_request(auth_server, ownership_request_curated, ownership_request_u
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_curated_test],
                         "owner": None,
+                        "hidden": False,
                     },
                     "id_persistent": c.id_ownership_request_curated_test,
                 }
@@ -78,6 +79,7 @@ def test_get_request(auth_server, ownership_request_curated, ownership_request_u
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_test_user],
                         "owner": cu.test_username,
+                        "hidden": False,
                     },
                     "id_persistent": c.id_ownership_request_test,
                 }
@@ -119,6 +121,7 @@ def test_get_request_commissioner(
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_curated_test],
                         "owner": None,
+                        "hidden": False,
                     },
                     "id_persistent": c.id_ownership_request_curated_test,
                 }

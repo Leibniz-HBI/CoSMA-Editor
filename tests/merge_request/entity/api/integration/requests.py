@@ -22,6 +22,16 @@ def get_merge_request(url, id_merge_request_persistent, cookies=None):
     )
 
 
+def post_reverse_origin_destination(url, id_merge_request_persistent, cookies=None):
+    return requests.post(
+        url
+        + "/cosmae/api/merge_requests/entities/"
+        + f"{id_merge_request_persistent}/reverse_origin_destination",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
 def get_merge_requests(url, cookies=None):
     return requests.get(
         url + "/cosmae/api/merge_requests/entities", cookies=cookies, timeout=900
@@ -69,6 +79,14 @@ def post_resolution(  # pylint: disable=too-many-arguments
             "id_tag_instance_destination_persistent": id_tag_instance_destination_persistent,
             "replace": replace,
         },
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def post_start_merge(url, id_merge_request_persistent, cookies=None):
+    return requests.post(
+        url + f"/cosmae/api/merge_requests/entities/{id_merge_request_persistent}/merge",
         cookies=cookies,
         timeout=900,
     )

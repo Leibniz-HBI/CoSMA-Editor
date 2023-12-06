@@ -77,9 +77,7 @@ class AbstractConflictResolution(models.Model):
         TagInstance, on_delete=models.CASCADE, related_name="+", null=True, blank=True
     )
     tag_instance_origin = models.ForeignKey(
-        TagInstance,
-        on_delete=models.CASCADE,
-        related_name="+",
+        TagInstance, on_delete=models.CASCADE, related_name="+", null=True, blank=True
     )
     replace = models.BooleanField()
 
@@ -107,6 +105,20 @@ class EntityMergeRequest(AbstractMergeRequest):
         "Check if a user can read entity merge requests."
         return user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]
 
+    def swap_origin_destination(self):
+        "Swap origin and destination of the entity merge request."
+        id_tmp = self.id_origin_persistent
+        self.id_origin_persistent = self.id_destination_persistent
+        self.id_destination_persistent = id_tmp
+        self.entityconflictresolution_set.update(  # pylint: disable=no-member
+            replace=~models.F("replace"),
+            entity_origin=models.F("entity_destination"),
+            entity_destination=models.F("entity_origin"),
+            tag_instance_origin=models.F("tag_instance_destination"),
+            tag_instance_destination=models.F("tag_instance_origin"),
+        )
+        self.save()
+
     @classmethod
     def get_by_id_persistent(cls, id_persistent):
         "Get an entity merge request by its id_persistent."
@@ -121,8 +133,8 @@ class EntityMergeRequest(AbstractMergeRequest):
             models.BaseManager[EntityConflictResolution]
         ] = None,
     ):
-        """Get conflicts to merging the origin tag referenced by the merge request
-        into the destination tag"""
+        """Get conflicts to merging the origin entity referenced by the merge request
+        into the destination entity"""
         instance_origin_history_query = (
             TagInstance.objects.filter(  # pylint: disable=no-member
                 id_entity_persistent=self.id_origin_persistent
@@ -244,7 +256,7 @@ class EntityConflictResolution(AbstractConflictResolution):
         "Get resolutions for a merge request."
         return cls.objects.filter(  # pylint: disable=no-member
             merge_request=merge_request
-        )
+        ).filter(tag_instance_origin__isnull=False)
 
     @classmethod
     def non_recent(cls, manager=None):
@@ -265,6 +277,8 @@ class EntityConflictResolution(AbstractConflictResolution):
                         id_parent_persistent="id_parent_persistent",
                         name="name",
                         type="type",
+                        curated="curated",
+                        hidden="hidden",
                     )
                 )[:1]
             ),

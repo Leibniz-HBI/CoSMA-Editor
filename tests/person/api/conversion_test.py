@@ -72,6 +72,7 @@ def test_conversion_db_to_api():
         display_txt=c.display_txt_test,
         version=5,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
+        disabled=False,
     )
     person_api = api.person_db_to_api(person_db)
     assert person_api_expected == person_api

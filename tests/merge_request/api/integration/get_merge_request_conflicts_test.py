@@ -78,6 +78,7 @@ def test_conflicts_no_resolution(
                 "type": "STRING",
                 "owner": "test-user1",
                 "curated": False,
+                "hidden": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -87,47 +88,46 @@ def test_conflicts_no_resolution(
                 "type": "STRING",
                 "owner": "test-user",
                 "curated": False,
+                "hidden": False,
             },
         },
     )
 
-    conflicts = json["conflicts"]
-    assert len(conflicts) == 2
-    conflict = conflicts[0]
-    assert len(conflict) == 4
-    assert conflict["replace"] is None
-    entity = conflict["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test0
-    assert entity["id_persistent"] == ce.id_persistent_test_0
-    instance_origin = conflict["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin
-    assert instance_origin["value"] == c.value_origin
-    instance_destination = conflict["tag_instance_destination"]
-    assert instance_destination is None
-    conflict = conflicts[1]
-    assert len(conflict) == 4
-    assert conflict["replace"] is None
-    entity = conflict["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test1
-    assert entity["id_persistent"] == ce.id_persistent_test_1
-    instance_origin = conflict["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin1
-    assert instance_origin["value"] == c.value_origin1
-    instance_destination = conflict["tag_instance_destination"]
-    assert len(instance_destination) == 3
-    assert "version" in instance_destination
-    assert instance_destination["id_persistent"] == c.id_instance_destination
-    assert instance_destination["value"] == c.value_destination
-    updated = json["updated"]
-    assert len(updated) == 0
+    assert_versioned(
+        json["conflicts"],
+        [
+            {
+                "replace": None,
+                "entity": {
+                    "display_txt": ce.display_txt_test0,
+                    "id_persistent": ce.id_persistent_test_0,
+                    "disabled": False,
+                },
+                "tag_instance_origin": {
+                    "id_persistent": c.id_instance_origin,
+                    "value": c.value_origin,
+                },
+                "tag_instance_destination": None,
+            },
+            {
+                "replace": None,
+                "entity": {
+                    "display_txt": ce.display_txt_test1,
+                    "id_persistent": ce.id_persistent_test_1,
+                    "disabled": False,
+                },
+                "tag_instance_origin": {
+                    "id_persistent": c.id_instance_origin1,
+                    "value": c.value_origin1,
+                },
+                "tag_instance_destination": {
+                    "id_persistent": c.id_instance_destination,
+                    "value": c.value_destination,
+                },
+            },
+        ],
+    )
+    assert json["updated"] == []
 
 
 def test_conflicts_same_value(
@@ -178,6 +178,7 @@ def test_conflicts_same_value(
                 "type": "STRING",
                 "owner": "test-user1",
                 "curated": False,
+                "hidden": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -187,6 +188,7 @@ def test_conflicts_same_value(
                 "type": "STRING",
                 "owner": "test-user",
                 "curated": False,
+                "hidden": False,
             },
         },
     )
@@ -231,6 +233,7 @@ def test_conflict_resolved(
                 "type": "STRING",
                 "owner": "test-user1",
                 "curated": False,
+                "hidden": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -240,46 +243,45 @@ def test_conflict_resolved(
                 "type": "STRING",
                 "owner": "test-user",
                 "curated": False,
+                "hidden": False,
             },
         },
     )
-    conflicts = json["conflicts"]
-    assert len(conflicts) == 2
-    conflict = conflicts[0]
-    assert len(conflict) == 4
-    assert conflict["replace"] is None
-    entity = conflict["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test0
-    assert entity["id_persistent"] == ce.id_persistent_test_0
-    instance_origin = conflict["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin
-    assert instance_origin["value"] == c.value_origin
-    instance_destination = conflict["tag_instance_destination"]
-    assert instance_destination is None
-    conflict = conflicts[1]
-    assert len(conflict) == 4
-    assert conflict["replace"]
-    entity = conflict["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test1
-    assert entity["id_persistent"] == ce.id_persistent_test_1
-    instance_origin = conflict["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin1
-    assert instance_origin["value"] == c.value_origin1
-    instance_destination = conflict["tag_instance_destination"]
-    assert len(instance_destination) == 3
-    assert "version" in instance_destination
-    assert instance_destination["id_persistent"] == c.id_instance_destination
-    assert instance_destination["value"] == c.value_destination
-    updated = json["updated"]
-    assert len(updated) == 0
+    assert_versioned(
+        json["conflicts"],
+        [
+            {
+                "replace": None,
+                "entity": {
+                    "display_txt": ce.display_txt_test0,
+                    "id_persistent": ce.id_persistent_test_0,
+                    "disabled": False,
+                },
+                "tag_instance_origin": {
+                    "id_persistent": c.id_instance_origin,
+                    "value": c.value_origin,
+                },
+                "tag_instance_destination": None,
+            },
+            {
+                "replace": True,
+                "entity": {
+                    "display_txt": ce.display_txt_test1,
+                    "id_persistent": ce.id_persistent_test_1,
+                    "disabled": False,
+                },
+                "tag_instance_origin": {
+                    "id_persistent": c.id_instance_origin1,
+                    "value": c.value_origin1,
+                },
+                "tag_instance_destination": {
+                    "id_persistent": c.id_instance_destination,
+                    "value": c.value_destination,
+                },
+            },
+        ],
+    )
+    assert json["updated"] == []
 
 
 def test_conflict_resolved_tag_def_origin_changed(
@@ -323,6 +325,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "type": "STRING",
                 "owner": "test-user1",
                 "curated": False,
+                "hidden": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -332,65 +335,66 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "type": "STRING",
                 "owner": "test-user",
                 "curated": False,
+                "hidden": False,
             },
         },
     )
 
-    conflicts = json["conflicts"]
-    assert len(conflicts) == 2
-    conflict = conflicts[0]
-    assert len(conflict) == 4
-    assert conflict["replace"] is None
-    entity = conflict["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test0
-    assert entity["id_persistent"] == ce.id_persistent_test_0
-    instance_origin = conflict["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin
-    assert instance_origin["value"] == c.value_origin
-    instance_destination = conflict["tag_instance_destination"]
-    assert instance_destination is None
-    conflict = conflicts[1]
-    assert len(conflict) == 4
-    assert conflict["replace"] is None
-    entity = conflict["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test1
-    assert entity["id_persistent"] == ce.id_persistent_test_1
-    instance_origin = conflict["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin1
-    assert instance_origin["value"] == c.value_origin1
-    instance_destination = conflict["tag_instance_destination"]
-    assert len(instance_destination) == 3
-    assert "version" in instance_destination
-    assert instance_destination["id_persistent"] == c.id_instance_destination
-    assert instance_destination["value"] == c.value_destination
-    updated_list = json["updated"]
-    assert len(updated_list) == 1
-    updated = updated_list[0]
-    assert len(updated) == 4
-    assert updated["replace"] is None
-    entity = updated["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test1
-    assert entity["id_persistent"] == ce.id_persistent_test_1
-    instance_origin = updated["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin1
-    assert instance_origin["value"] == c.value_origin1
-    instance_destination = updated["tag_instance_destination"]
-    assert len(instance_destination) == 3
-    assert "version" in instance_destination
-    assert instance_destination["id_persistent"] == c.id_instance_destination
-    assert instance_destination["value"] == c.value_destination
+    assert_versioned(
+        json["conflicts"],
+        [
+            {
+                "replace": None,
+                "entity": {
+                    "display_txt": ce.display_txt_test0,
+                    "id_persistent": ce.id_persistent_test_0,
+                    "disabled": False,
+                },
+                "tag_instance_origin": {
+                    "id_persistent": c.id_instance_origin,
+                    "value": c.value_origin,
+                },
+                "tag_instance_destination": None,
+            },
+            {
+                "replace": None,
+                "entity": {
+                    "display_txt": ce.display_txt_test1,
+                    "id_persistent": ce.id_persistent_test_1,
+                    "disabled": False,
+                },
+                "tag_instance_origin": {
+                    "id_persistent": c.id_instance_origin1,
+                    "value": c.value_origin1,
+                },
+                "tag_instance_destination": {
+                    "id_persistent": c.id_instance_destination,
+                    "value": c.value_destination,
+                },
+            },
+        ],
+    )
+    assert_versioned(
+        json["updated"],
+        [
+            {
+                "replace": None,
+                "entity": {
+                    "display_txt": ce.display_txt_test1,
+                    "id_persistent": ce.id_persistent_test_1,
+                    "disabled": False,
+                },
+                "tag_instance_origin": {
+                    "id_persistent": c.id_instance_origin1,
+                    "value": c.value_origin1,
+                },
+                "tag_instance_destination": {
+                    "id_persistent": c.id_instance_destination,
+                    "value": c.value_destination,
+                },
+            }
+        ],
+    )
 
 
 def test_tag_instance_destination_value_added(
@@ -450,6 +454,7 @@ def test_tag_instance_destination_value_added(
                 "type": "STRING",
                 "owner": "test-user1",
                 "curated": False,
+                "hidden": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -459,46 +464,45 @@ def test_tag_instance_destination_value_added(
                 "type": "STRING",
                 "owner": "test-user",
                 "curated": False,
+                "hidden": False,
             },
         },
     )
 
-    conflicts = json["conflicts"]
-    assert len(conflicts) == 2
-    conflict = conflicts[0]
-    assert len(conflict) == 4
-    assert conflict["replace"] is None
-    entity = conflict["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test0
-    assert entity["id_persistent"] == ce.id_persistent_test_0
-    instance_origin = conflict["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin
-    assert instance_origin["value"] == c.value_origin
-    instance_destination = conflict["tag_instance_destination"]
-    assert instance_destination is None
-    conflict = conflicts[1]
-    assert len(conflict) == 4
-    assert conflict["replace"] is None
-    entity = conflict["entity"]
-    assert len(entity) == 3
-    assert "version" in entity
-    assert entity["display_txt"] == ce.display_txt_test1
-    assert entity["id_persistent"] == ce.id_persistent_test_1
-    instance_origin = conflict["tag_instance_origin"]
-    assert len(instance_origin) == 3
-    assert "version" in instance_origin
-    assert instance_origin["id_persistent"] == c.id_instance_origin1
-    assert instance_origin["value"] == c.value_origin1
-    instance_destination = conflict["tag_instance_destination"]
-    assert len(instance_destination) == 3
-    assert "version" in instance_destination
-    assert instance_destination["id_persistent"] == id_tag_instance_destination
-    assert instance_destination["value"] == "new value destination test"
-    updated_list = json["updated"]
-    assert len(updated_list) == 1
-    updated = updated_list[0]
-    assert updated == conflict
+    conflict1 = {
+        "replace": None,
+        "entity": {
+            "display_txt": ce.display_txt_test1,
+            "id_persistent": ce.id_persistent_test_1,
+            "disabled": False,
+        },
+        "tag_instance_origin": {
+            "id_persistent": c.id_instance_origin1,
+            "value": c.value_origin1,
+        },
+        "tag_instance_destination": {
+            "id_persistent": id_tag_instance_destination,
+            "value": "new value destination test",
+        },
+    }
+
+    assert_versioned(
+        json["conflicts"],
+        [
+            {
+                "replace": None,
+                "entity": {
+                    "display_txt": ce.display_txt_test0,
+                    "id_persistent": ce.id_persistent_test_0,
+                    "disabled": False,
+                },
+                "tag_instance_origin": {
+                    "id_persistent": c.id_instance_origin,
+                    "value": c.value_origin,
+                },
+                "tag_instance_destination": None,
+            },
+            conflict1,
+        ],
+    )
+    assert_versioned(json["updated"], [conflict1])

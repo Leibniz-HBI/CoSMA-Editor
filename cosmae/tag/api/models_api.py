@@ -15,3 +15,4 @@ class TagDefinitionResponse(Schema):
     type: str
     owner: Optional[str]
     curated: bool
+    hidden: bool

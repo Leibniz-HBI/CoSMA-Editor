@@ -184,7 +184,7 @@ AUTH_USER_MODEL = "cosmae.CosmaeUser"
 RQ_QUEUES = {
     "default": {
         "HOST": "localhost",
-        "PORT": get_file_secret("cosmae_redis_port"),
+        "PORT": 6379,
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
     }

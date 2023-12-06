@@ -46,6 +46,11 @@ class CosmaeUser(AbstractUser):
         )
 
     @classmethod
+    def by_id_persistent_query_set(cls, id_persistent):
+        "Get a user by its persistent id."
+        return cls.objects.filter(id_persistent=id_persistent)
+
+    @classmethod
     def chunk_query_set(cls, offset, count, include_superuser=False):
         """Get a chunk of users. They need to have an id large than offset.
         The maximum number of elements return is count."""

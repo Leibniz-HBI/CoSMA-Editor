@@ -132,7 +132,7 @@ CONTRIBUTION_DIRECTORY = "/tmp"
 RQ_QUEUES = {
     "default": {
         "HOST": "localhost",
-        "PORT": environ.get("COSMAE_REDIS_PORT", 6379),
+        "PORT": environ.get("COSMAE_REDIS_PORT", 6333),
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
     }

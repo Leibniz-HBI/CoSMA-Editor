@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements,duplicate-code
 from unittest.mock import MagicMock, patch
 
 from tests.merge_request.entity import common as c
@@ -143,10 +143,12 @@ def test_resolve_conflicts(
             "origin": {
                 "id_persistent": c.id_entity_origin_persistent,
                 "display_txt": c.display_txt_entity_origin,
+                "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_entity_destination_persistent,
                 "display_txt": c.display_txt_entity_destination,
+                "disabled": False,
             },
         },
     )
@@ -161,6 +163,7 @@ def test_resolve_conflicts(
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_tag_def_curated_test,
                     "curated": True,
+                    "hidden": False,
                 },
                 "tag_instance_origin": {
                     "id_persistent": c.id_instance_origin_curated,
@@ -180,6 +183,7 @@ def test_resolve_conflicts(
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_tag_def_persistent_test_user,
                     "curated": False,
+                    "hidden": False,
                 },
                 "tag_instance_origin": {
                     "id_persistent": c.id_instance_origin,
@@ -194,6 +198,7 @@ def test_resolve_conflicts(
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_tag_def_persistent_test_user1,
                     "curated": False,
+                    "hidden": False,
                 },
                 "tag_instance_origin": {
                     "id_persistent": c.id_instance_origin1,

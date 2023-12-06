@@ -134,6 +134,36 @@ def instance_merge_request_destination_user_conflict(merge_request_user, tag_def
 
 
 @pytest.fixture
+def conflict_curated(merge_request_user, tag_def_curated):
+    return TagInstance.objects.create(  # pylint: disable=no-member
+        id_entity_persistent=c.id_entity_destination_persistent,
+        id_tag_definition_persistent=tag_def_curated.id_persistent,
+        value=c.value_destination_curated,
+        id_persistent=c.id_instance_destination_curated,
+        time_edit=c.time_instance_destination_curated,
+    )
+
+
+@pytest.fixture
+def resolution_curated_destination_none(
+    merge_request_user,
+    origin_entity_for_mr,
+    destination_entity_for_mr,
+    tag_def_curated,
+    instances_merge_request_origin_user,
+):
+    return EntityConflictResolution.objects.create(  # pylint: disable=no-member
+        tag_definition=tag_def_curated,
+        entity_origin=origin_entity_for_mr,
+        entity_destination=destination_entity_for_mr,
+        tag_instance_origin=instances_merge_request_origin_user[2],
+        tag_instance_destination=None,
+        merge_request=merge_request_user,
+        replace=True,
+    )
+
+
+@pytest.fixture
 def instance_merge_request_destination_user_conflict_changed(
     user1,
     instance_merge_request_destination_user_conflict,
@@ -252,3 +282,18 @@ def instance_destination_updated_same_value1(
     )
     tag_instance.save()
     return tag_instance
+
+
+@pytest.fixture
+def instance_curated_updated(instances_merge_request_origin_user, user_commissioner):
+    instance_curated = instances_merge_request_origin_user[2]
+    updated, _ = TagInstance.change_or_create(
+        id_persistent=instance_curated.id_persistent,
+        version=instance_curated.id,
+        id_entity_persistent=instance_curated.id_entity_persistent,
+        id_tag_definition_persistent=instance_curated.id_tag_definition_persistent,
+        user=user_commissioner,
+        value=c.value_origin_curated_changed,
+        time_edit=c.time_instance_destination_changed,
+    )
+    updated.save()

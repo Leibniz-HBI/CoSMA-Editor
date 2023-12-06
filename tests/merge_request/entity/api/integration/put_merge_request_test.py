@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements,duplicate-code
 from unittest.mock import MagicMock, patch
 
 from tests.merge_request.entity import common as c
@@ -65,10 +65,12 @@ def test_put_entity_merge_request(
             "origin": {
                 "display_txt": c.display_txt_entity_origin,
                 "id_persistent": c.id_entity_origin_persistent,
+                "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_entity_destination_persistent,
                 "display_txt": c.display_txt_entity_destination,
+                "disabled": False,
             },
             "created_by": {
                 "id_persistent": cu.test_uuid_commissioner,

@@ -50,6 +50,7 @@ class TagDefinitionRequest(Schema):
     version: Optional[int]
     type: str
     owner: Optional[str]
+    hidden: Optional[bool]
 
 
 class TagDefinitionRequestList(Schema):
@@ -123,7 +124,7 @@ def post_tag_definitions(
             for tag_def, do_write in tag_def_dbs:
                 if do_write:
                     tag_def.save()
-    except IntegrityError:
+    except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
 
     return 200, TagDefinitionResponseList(
@@ -179,6 +180,7 @@ def tag_definition_api_to_db(
         name=tag_definition.name,
         type=_tag_type_mapping_api_to_db[tag_definition.type],
         owner=owner,
+        hidden=tag_definition.hidden or False,
     )
 
 
@@ -198,6 +200,7 @@ def tag_definition_db_to_api(tag_definition: TagDefinitionDb) -> TagDefinitionRe
         type=_tag_type_mapping_db_to_api[tag_definition.type],
         owner=username,
         curated=tag_definition.curated,
+        hidden=tag_definition.hidden,
     )
 
 
@@ -217,4 +220,5 @@ def tag_definition_db_dict_to_api(
         type=_tag_type_mapping_db_to_api[tag_definition["type"]],
         owner=owner,
         curated=tag_definition["curated"],
+        hidden=tag_definition["hidden"],
     )

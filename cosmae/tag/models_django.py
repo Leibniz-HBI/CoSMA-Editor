@@ -43,6 +43,7 @@ class TagDefinition(models.Model):
         "CosmaeUser", null=True, blank=True, on_delete=models.SET_NULL
     )
     curated = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False)
 
     def set_curated(self, time_edit):
         "Set curated state for a tag definition."
@@ -81,7 +82,7 @@ class TagDefinition(models.Model):
         ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
 
     @classmethod
-    def most_recent_query_set(cls, manager=None):
+    def most_recent_query_set(cls, manager=None, include_hidden=False):
         "Get a query set containing all most recent tag definitions."
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
@@ -94,11 +95,13 @@ class TagDefinition(models.Model):
                 .values("id")[:1]
             )
         ).filter(id=models.F("id_most_recent"))
-        return most_recent
+        if include_hidden:
+            return most_recent
+        return most_recent.filter(hidden=False)
 
     @classmethod
     def most_recent_children(cls, id_persistent: Optional[str]):
-        "Ge the most recent versions of child tags."
+        "Get the most recent versions of child tags."
         most_recent = cls.most_recent_query_set()
         return list(most_recent.filter(id_parent_persistent=id_persistent))
 
@@ -164,20 +167,17 @@ class TagDefinition(models.Model):
     def check_different_before_save(self, other):
         """Checks structural equality for two tag definitions.
         Note:
-            * The version fields are not comapred as this check is intended to
+            * The version fields are not compared as this check is intended to
                prevent unnecessary writes.
             * The time_edit fields are not compared as the operation is invalid."""
-        if other.name != self.name:
-            return True
-        if other.id_parent_persistent != self.id_parent_persistent:
-            return True
-        if other.type != self.type:
-            return True
-        if other.owner != self.owner:
-            return True
-        if other.curated != self.curated:
-            return True
-        return False
+        return (
+            other.name != self.name
+            or other.id_parent_persistent != self.id_parent_persistent
+            or other.type != self.type
+            or other.owner != self.owner
+            or other.curated != self.curated
+            or other.hidden != self.hidden
+        )
 
     def check_value(self, val: str):
         "Check if a value is of the type for this tag."
@@ -370,11 +370,13 @@ class TagInstance(models.Model):
         ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
         return manager.annotate(
             entity=models.Subquery(
+                # pylint: disable=duplicate-code
                 entity_sub_query.values(
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",
                         display_txt="display_txt",
+                        disabled="disabled",
                     )
                 )
             ),
@@ -392,6 +394,7 @@ class TagInstance(models.Model):
         ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
         return manager.annotate(
             tag_definition=models.Subquery(
+                # pylint: disable=duplicate-code
                 tag_def_sub_query.values(
                     json=models.functions.JSONObject(
                         id="id",
@@ -475,6 +478,7 @@ class OwnershipRequest(models.Model):
                         permission_group="owner__permission_group",
                     ),
                     curated="curated",
+                    hidden="hidden",
                 )
             )
         )

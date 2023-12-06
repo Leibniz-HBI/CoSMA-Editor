@@ -309,6 +309,7 @@ def annotated_tag_instance_db_to_api(annotated_instance):
             display_txt=entity["display_txt"],
             id_persistent=entity["id_persistent"],
             version=entity["id"],
+            disabled=entity["disabled"],
         ),
         tag_instance_origin=TagInstance(
             id_persistent=annotated_instance.id_persistent,
@@ -341,6 +342,7 @@ def conflict_with_updated_data_db_to_api(annotated_conflict):
             display_txt=entity["display_txt"],
             version=entity["id"],
             id_persistent=entity["id_persistent"],
+            disabled=entity["disabled"],
         ),
         tag_instance_origin=TagInstance(
             id_persistent=tag_instance_origin["id_persistent"],

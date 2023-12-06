@@ -14,6 +14,7 @@ time_merge_request = datetime(1974, 6, 5)
 value_origin = "value origin test"
 value_origin1 = "value origin test 1"
 value_origin_curated = "value origin test curated"
+value_origin_curated_changed = "value origin test curated changed"
 time_instance_origin = datetime(1972, 2, 3)
 time_instance_origin1 = datetime(1972, 2, 4)
 time_instance_origin_curated = datetime(1972, 2, 5)

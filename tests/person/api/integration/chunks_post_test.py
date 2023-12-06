@@ -33,6 +33,28 @@ def test_can_slice(auth_server_commissioner):
         assert persons[i]["display_txt"] == f"{i+3}"
 
 
+def test_can_slice_with_hidden(auth_server_commissioner):
+    live_server, cookies = auth_server_commissioner
+    persons = [
+        {
+            "names_personal": "test personal",
+            "names_family": "test family",
+            "display_txt": f"{i}",
+        }
+        for i in range(20)
+    ]
+    rsp = post_persons(live_server.url, persons, cookies=cookies)
+    assert rsp.status_code == 200
+    person4 = rsp.json()["persons"][4]
+    person4["disabled"] = True
+    rsp = post_persons(live_server.url, [person4], cookies=cookies)
+    assert rsp.status_code == 200
+    rsp = post_chunk(live_server.url, 3, 4, cookies=cookies)
+    assert rsp.status_code == 200
+    persons = rsp.json()["persons"]
+    assert [person["display_txt"] for person in persons] == ["3", "5", "6", "7"]
+
+
 def test_non_existent_slice(auth_server):
     live_server, cookies = auth_server
     persons = [

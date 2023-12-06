@@ -1,5 +1,5 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 
@@ -10,6 +10,7 @@ from cosmae.exception import (
     TagDefinitionExistsException,
 )
 from cosmae.tag.models_django import TagDefinition
+from cosmae.util import timestamp
 
 
 @pytest.mark.django_db
@@ -268,7 +269,7 @@ def test_most_recent_for_user(tag_def_user):
     tag_def_edited, _ = TagDefinition.change_or_create(
         id_persistent=tag_def_user.id_persistent,
         id_parent_persistent=None,
-        time_edit=datetime.utcnow(),
+        time_edit=timestamp(),
         name="new_name",
         owner=tag_def_user.owner,
         version=tag_def_user.id,
@@ -276,3 +277,18 @@ def test_most_recent_for_user(tag_def_user):
     tag_def_edited.save()
     ret = TagDefinition.for_user(tag_def_user.owner).get()
     assert ret == tag_def_edited
+
+
+@pytest.mark.django_db
+def test_can_create_hidden():
+    tag_def, _ = TagDefinition.change_or_create(
+        id_persistent=c.id_tag_persistent_test,
+        id_parent_persistent=None,
+        time_edit=timestamp(),
+        name="new_name",
+        owner=None,
+        hidden=True,
+    )
+    tag_def.save()
+    retrieved = TagDefinition.most_recent_by_id(c.id_tag_persistent_test)
+    assert retrieved.hidden

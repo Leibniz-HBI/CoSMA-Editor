@@ -7,6 +7,7 @@ import pytest
 import tests.contribution.entity.api.requests as r
 import tests.contribution.entity.common as c
 import tests.entity.common as ce
+from tests.utils import assert_versioned
 from cosmae.contribution.entity.models_django import EntityDuplicate
 
 
@@ -52,12 +53,14 @@ def similar_mock():
             "id_persistent": ce.id_persistent_test_0,
             "display_txt": ce.display_txt_test0,
             "id": 0,
+            "disabled": False,
         },
         {
             "levenshtein_similarity": 0.90,
             "id_persistent": ce.id_persistent_test_1,
             "display_txt": ce.display_txt_test1,
             "id": 1,
+            "disabled": False,
         },
     ]
     return mock
@@ -75,31 +78,36 @@ def test_similar_entities_no_duplicate(
             cookies,
         )
     assert rsp.status_code == 200
-    assert rsp.json() == {
-        "matches": {
-            c.id_persistent_entity_duplicate_test: {
-                "matches": [
-                    {
-                        "similarity": 0.95,
-                        "entity": {
-                            "id_persistent": ce.id_persistent_test_0,
-                            "display_txt": ce.display_txt_test0,
-                            "version": 0,
+    assert_versioned(
+        rsp.json(),
+        {
+            "matches": {
+                c.id_persistent_entity_duplicate_test: {
+                    "matches": [
+                        {
+                            "similarity": 0.95,
+                            "entity": {
+                                "id_persistent": ce.id_persistent_test_0,
+                                "display_txt": ce.display_txt_test0,
+                                "version": 0,
+                                "disabled": False,
+                            },
                         },
-                    },
-                    {
-                        "similarity": 0.90,
-                        "entity": {
-                            "id_persistent": ce.id_persistent_test_1,
-                            "display_txt": ce.display_txt_test1,
-                            "version": 1,
+                        {
+                            "similarity": 0.90,
+                            "entity": {
+                                "id_persistent": ce.id_persistent_test_1,
+                                "display_txt": ce.display_txt_test1,
+                                "version": 1,
+                                "disabled": False,
+                            },
                         },
-                    },
-                ],
-                "assigned_duplicate": None,
+                    ],
+                    "assigned_duplicate": None,
+                }
             }
-        }
-    }
+        },
+    )
 
 
 def test_similar_entities_with_duplicate(
@@ -119,32 +127,38 @@ def test_similar_entities_with_duplicate(
             cookies,
         )
     assert rsp.status_code == 200
-    assert rsp.json() == {
-        "matches": {
-            c.id_persistent_entity_duplicate_test: {
-                "matches": [
-                    {
-                        "similarity": 0.95,
-                        "entity": {
-                            "id_persistent": ce.id_persistent_test_0,
-                            "display_txt": ce.display_txt_test0,
-                            "version": 0,
+    assert_versioned(
+        rsp.json(),
+        {
+            "matches": {
+                c.id_persistent_entity_duplicate_test: {
+                    "matches": [
+                        {
+                            "similarity": 0.95,
+                            "entity": {
+                                "id_persistent": ce.id_persistent_test_0,
+                                "display_txt": ce.display_txt_test0,
+                                "version": 0,
+                                "disabled": False,
+                            },
                         },
-                    },
-                    {
-                        "similarity": 0.90,
-                        "entity": {
-                            "id_persistent": ce.id_persistent_test_1,
-                            "display_txt": ce.display_txt_test1,
-                            "version": 1,
+                        {
+                            "similarity": 0.90,
+                            "entity": {
+                                "id_persistent": ce.id_persistent_test_1,
+                                "display_txt": ce.display_txt_test1,
+                                "version": 1,
+                                "disabled": False,
+                            },
                         },
+                    ],
+                    "assigned_duplicate": {
+                        "id_persistent": ce.id_persistent_test_1,
+                        "display_txt": ce.display_txt_test1,
+                        "version": entities[1].id,
+                        "disabled": False,
                     },
-                ],
-                "assigned_duplicate": {
-                    "id_persistent": ce.id_persistent_test_1,
-                    "display_txt": ce.display_txt_test1,
-                    "version": entities[1].id,
-                },
+                }
             }
-        }
-    }
+        },
+    )

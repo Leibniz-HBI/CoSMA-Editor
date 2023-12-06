@@ -2,8 +2,9 @@
 from typing import List, Optional
 from uuid import uuid4
 
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.http import HttpRequest
+from django_rq import enqueue
 from ninja import Router, Schema
 
 from cosmae.entity.models_django import Entity as EntityDb
@@ -14,6 +15,7 @@ from cosmae.merge_request.entity.models_django import (
 from cosmae.merge_request.entity.models_django import (
     EntityMergeRequest as EntityMergeRequestDb,
 )
+from cosmae.merge_request.entity.queue import apply_entity_merge_request
 from cosmae.person.api import PersonNatural, person_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.tag.queue import get_tag_definition_name_path_from_parts
@@ -172,6 +174,10 @@ def post_resolve_conflict(
         merge_request = EntityMergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
         )
+        if merge_request.state != EntityMergeRequestDb.OPEN:
+            return 400, ApiError(
+                msg="Can only resolve conflicts for open merge requests."
+            )
         tag_definition = TagDefinitionDb.most_recent_by_id(
             resolution_info.id_tag_definition_persistent
         )
@@ -209,6 +215,129 @@ def post_resolve_conflict(
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get the requested merge request conflicts.")
+
+
+@router.post(
+    "/{id_merge_request_persistent}/merge",
+    response={
+        200: None,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def post_merge_request_merge(  # pylint: disable=too-many-return-statements
+    request: HttpRequest, id_merge_request_persistent: str
+):
+    "API method for marking a merge request for merging."
+    try:
+        user = check_user(request)
+        if not user.permission_group in [CosmaeUserDb.EDITOR, CosmaeUserDb.COMMISSIONER]:
+            return 403, ApiError(msg="Insufficient permissions")
+        with transaction.atomic():
+            merge_request = (
+                EntityMergeRequestDb.by_id_persistent_query_set(
+                    id_merge_request_persistent
+                )
+                .select_for_update()
+                .get()
+            )
+            if not (
+                merge_request.state == EntityMergeRequestDb.OPEN
+                or EntityMergeRequestDb.ERROR
+            ):
+                return 400, ApiError(msg="Merge request not available for merging.")
+            writable_tag_defs = TagDefinitionDb.for_user(user, True)
+            resolvable, _, updated = merge_request.resolvable_unresolvable_updated(
+                writable_tag_defs
+            )
+            if len(updated) > 0:
+                return 400, ApiError(
+                    msg="There are conflicts for the merge request, "
+                    "where the underlying data has changed."
+                )
+            if (
+                len(
+                    [
+                        conflict
+                        for conflict in resolvable
+                        if conflict.conflict_resolution_replace is None
+                    ]
+                )
+                > 0
+            ):
+                return 400, ApiError(
+                    msg="There are unresolved conflicts, that are resolvable by you."
+                )
+            merge_request.state = EntityMergeRequestDb.RESOLVED
+            merge_request.save(update_fields=["state"])
+            enqueue(
+                apply_entity_merge_request,
+                str(merge_request.id_persistent),
+                str(user.id_persistent),
+            )
+            return 200, None
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    except EntityMergeRequestDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Merge Request does not exist.")
+    except DatabaseError:
+        return 500, ApiError(
+            msg="Could not mark the merge request for merging in the database."
+        )
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not mark the merge request for merging.")
+
+
+@router.post(
+    "/{id_merge_request_persistent}/reverse_origin_destination",
+    response={
+        200: EntityMergeRequest,
+        400: ApiError,
+        401: ApiError,
+        404: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
+)
+def reverse_origin_destination(request: HttpRequest, id_merge_request_persistent: str):
+    "Reverse origin and destination of an entity merge request."
+    # pylint: disable=too-many-return-statements
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group not in [CosmaeUserDb.EDITOR, CosmaeUserDb.COMMISSIONER]:
+        return 403, ApiError(msg="Insufficient permissions.")
+    try:
+        merge_request_existing_query_set = (
+            EntityMergeRequestDb.by_id_persistent_query_set(id_merge_request_persistent)
+        )
+        merge_request_existing_query_set.select_for_update()
+        merge_request_existing = merge_request_existing_query_set.get()
+        if merge_request_existing.state != EntityMergeRequestDb.OPEN:
+            return 400, ApiError(
+                msg="Can only reverse origin and destination for open merge requests."
+            )
+        merge_request_existing.swap_origin_destination()
+        merge_request_updated = EntityMergeRequestDb.by_id_persistent(
+            id_merge_request_persistent, user
+        )
+        return 200, entity_merge_request_db_to_api(merge_request_updated)
+    except EntityConflictResolutionDb.DoesNotExist:  # pylint: disable= no-member
+        return 404, ApiError(msg="Entity merge request does not exist.")
+    except ForbiddenException:
+        return 403, ApiError(msg="Insufficient permissions")
+    except DatabaseError:
+        return 500, ApiError(
+            msg="Could not swap the merge request origin and destination in the database."
+        )
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(
+            msg="Could not swap origin and destination of entity merge request."
+        )
 
 
 @router.put(

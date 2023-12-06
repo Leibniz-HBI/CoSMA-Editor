@@ -207,5 +207,6 @@ def scored_match_db_to_api(match):
             id_persistent=match["id_persistent"],
             display_txt=match["display_txt"],
             version=match["id"],
+            disabled=match["disabled"],
         ),
     )

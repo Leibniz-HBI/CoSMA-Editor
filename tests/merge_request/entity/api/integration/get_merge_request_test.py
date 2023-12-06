@@ -58,10 +58,12 @@ def test_get_entity_merge_request(auth_server_commissioner, merge_request_user):
             "origin": {
                 "display_txt": c.display_txt_entity_origin,
                 "id_persistent": c.id_entity_origin_persistent,
+                "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_entity_destination_persistent,
                 "display_txt": c.display_txt_entity_destination,
+                "disabled": False,
             },
             "created_by": {
                 "id_persistent": cu.test_uuid_commissioner,
