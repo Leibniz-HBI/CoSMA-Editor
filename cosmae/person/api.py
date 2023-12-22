@@ -190,3 +190,15 @@ def person_db_to_api(person: EntityDb) -> PersonNatural:
         id_persistent=person.id_persistent,
         disabled=person.disabled,
     )
+
+
+def person_db_dict_to_api(person: Optional[dict]) -> Optional[PersonNatural]:
+    "Transform a person natural db dict to an API representation"
+    if person is None:
+        return None
+    return PersonNatural(
+        display_txt=person["display_txt"],
+        version=person["id"],
+        id_persistent=person["id_persistent"],
+        disabled=person["disabled"],
+    )

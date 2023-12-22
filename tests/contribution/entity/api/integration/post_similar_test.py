@@ -1,14 +1,10 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
-from unittest.mock import MagicMock, patch
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments
 from uuid import uuid4
-
-import pytest
 
 import tests.contribution.entity.api.requests as r
 import tests.contribution.entity.common as c
 import tests.entity.common as ce
 from tests.utils import assert_versioned
-from cosmae.contribution.entity.models_django import EntityDuplicate
 
 
 def test_no_cookies(auth_server):
@@ -41,42 +37,19 @@ def test_unknown_entities(auth_server, contribution_candidate):
         cookies,
     )
     assert rsp.status_code == 404
-    assert rsp.json() == {"msg": "Entity does not exist."}
+    assert rsp.json() == {
+        "msg": "Some entities are not part of the contribution candidate."
+    }
 
 
-@pytest.fixture
-def similar_mock():
-    mock = MagicMock()
-    mock.return_value = [
-        {
-            "levenshtein_similarity": 0.95,
-            "id_persistent": ce.id_persistent_test_0,
-            "display_txt": ce.display_txt_test0,
-            "id": 0,
-            "disabled": False,
-        },
-        {
-            "levenshtein_similarity": 0.90,
-            "id_persistent": ce.id_persistent_test_1,
-            "display_txt": ce.display_txt_test1,
-            "id": 1,
-            "disabled": False,
-        },
-    ]
-    return mock
-
-
-def test_similar_entities_no_duplicate(
-    auth_server, contribution_candidate, entities, similar_mock
-):
+def test_similar_entities_no_duplicate(auth_server, contribution_candidate, entities):
     live_server, cookies = auth_server
-    with patch("cosmae.contribution.entity.api.find_matches", similar_mock):
-        rsp = r.post_similar(
-            live_server.url,
-            contribution_candidate.id_persistent,
-            [c.id_persistent_entity_duplicate_test],
-            cookies,
-        )
+    rsp = r.post_similar(
+        live_server.url,
+        contribution_candidate.id_persistent,
+        [c.id_persistent_entity_duplicate_test],
+        cookies,
+    )
     assert rsp.status_code == 200
     assert_versioned(
         rsp.json(),
@@ -85,20 +58,22 @@ def test_similar_entities_no_duplicate(
                 c.id_persistent_entity_duplicate_test: {
                     "matches": [
                         {
-                            "similarity": 0.95,
                             "entity": {
-                                "id_persistent": ce.id_persistent_test_0,
-                                "display_txt": ce.display_txt_test0,
-                                "version": 0,
                                 "disabled": False,
+                                "display_txt": "test entity 1",
+                                "id_persistent": "id_persistent_test_1",
+                                "version": 2,
                             },
+                            "id_match_tag_definition_persistent_list": [],
+                            "similarity": 0.9230769230769231,
                         },
                         {
-                            "similarity": 0.90,
+                            "similarity": 0.9230769230769231,
+                            "id_match_tag_definition_persistent_list": [],
                             "entity": {
-                                "id_persistent": ce.id_persistent_test_1,
-                                "display_txt": ce.display_txt_test1,
+                                "display_txt": "test entity 0",
                                 "version": 1,
+                                "id_persistent": "id_persistent_test_0",
                                 "disabled": False,
                             },
                         },
@@ -111,21 +86,15 @@ def test_similar_entities_no_duplicate(
 
 
 def test_similar_entities_with_duplicate(
-    auth_server, contribution_candidate, entities, similar_mock
+    auth_server, contribution_candidate, entities, duplicate_assignment
 ):
     live_server, cookies = auth_server
-    EntityDuplicate.objects.create(  # pylint: disable=no-member
-        id_origin_persistent=entities[2].id_persistent,
-        id_destination_persistent=entities[1].id_persistent,
-        contribution_candidate=contribution_candidate,
+    rsp = r.post_similar(
+        live_server.url,
+        contribution_candidate.id_persistent,
+        [c.id_persistent_entity_duplicate_test],
+        cookies,
     )
-    with patch("cosmae.contribution.entity.api.find_matches", similar_mock):
-        rsp = r.post_similar(
-            live_server.url,
-            contribution_candidate.id_persistent,
-            [c.id_persistent_entity_duplicate_test],
-            cookies,
-        )
     assert rsp.status_code == 200
     assert_versioned(
         rsp.json(),
@@ -134,20 +103,79 @@ def test_similar_entities_with_duplicate(
                 c.id_persistent_entity_duplicate_test: {
                     "matches": [
                         {
-                            "similarity": 0.95,
                             "entity": {
-                                "id_persistent": ce.id_persistent_test_0,
-                                "display_txt": ce.display_txt_test0,
-                                "version": 0,
+                                "disabled": False,
+                                "display_txt": "test entity 1",
+                                "id_persistent": "id_persistent_test_1",
+                                "version": 2,
+                            },
+                            "id_match_tag_definition_persistent_list": [],
+                            "similarity": 0.9230769230769231,
+                        },
+                        {
+                            "similarity": 0.9230769230769231,
+                            "id_match_tag_definition_persistent_list": [],
+                            "entity": {
+                                "display_txt": "test entity 0",
+                                "version": 1,
+                                "id_persistent": "id_persistent_test_0",
                                 "disabled": False,
                             },
                         },
+                    ],
+                    "assigned_duplicate": {
+                        "id_persistent": ce.id_persistent_test_1,
+                        "display_txt": ce.display_txt_test1,
+                        "version": entities[1].id,
+                        "disabled": False,
+                    },
+                }
+            }
+        },
+    )
+
+
+def test_similar_entities_with_tag_match(
+    auth_server,
+    contribution_candidate,
+    entities,
+    duplicate_assignment,
+    tag_instances_match,
+    tag_merge_request,
+):
+    live_server, cookies = auth_server
+    rsp = r.post_similar(
+        live_server.url,
+        contribution_candidate.id_persistent,
+        [c.id_persistent_entity_duplicate_test],
+        cookies,
+    )
+    assert rsp.status_code == 200
+    assert_versioned(
+        rsp.json(),
+        {
+            "matches": {
+                c.id_persistent_entity_duplicate_test: {
+                    "matches": [
                         {
-                            "similarity": 0.90,
                             "entity": {
-                                "id_persistent": ce.id_persistent_test_1,
-                                "display_txt": ce.display_txt_test1,
+                                "disabled": False,
+                                "display_txt": "test entity 1",
+                                "id_persistent": "id_persistent_test_1",
+                                "version": 2,
+                            },
+                            "id_match_tag_definition_persistent_list": [
+                                "52d5de0a-2fdb-457f-80d0-6e10131ad1b9"
+                            ],
+                            "similarity": 0.9230769230769231,
+                        },
+                        {
+                            "similarity": 0.9230769230769231,
+                            "id_match_tag_definition_persistent_list": [],
+                            "entity": {
+                                "display_txt": "test entity 0",
                                 "version": 1,
+                                "id_persistent": "id_persistent_test_0",
                                 "disabled": False,
                             },
                         },

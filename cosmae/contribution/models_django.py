@@ -8,7 +8,7 @@ from django.db.utils import OperationalError
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.entity.models_django import Entity
 from cosmae.exception import ResourceLockedException
-from cosmae.tag.models_django import TagDefinition
+from cosmae.tag.models_django import TagDefinition, TagInstance
 from cosmae.util import CosmaeUser
 from cosmae.util.django import patch_from_dict
 
@@ -64,7 +64,11 @@ class ContributionCandidate(models.Model):
         ).all()[start : start + offset]
 
     @classmethod
-    def by_id_persistent(cls, id_persistent: str, user: CosmaeUser):
+    def by_id_persistent(
+        cls,
+        id_persistent: str,
+        user: CosmaeUser,
+    ):
         "Get a single contribution candidate"
         return ContributionCandidate.objects.filter(  # pylint: disable=no-member
             created_by=user, id_persistent=id_persistent
@@ -159,3 +163,43 @@ class ContributionCandidate(models.Model):
                 contribution_candidate=self
             ),
         )
+
+    def curated_tags_match_count(self, entities_manager: models.Manager[Entity]):
+        """Get numbers of matching tag instances for curated tag definitions.
+        Also includes the number of considered tag definitions."""
+        tag_definitions_curated = TagDefinition.curated_query_set()
+        tag_definition_contribution_query_set = (
+            TagDefinitionContribution.get_by_candidate(self)
+        )
+        tag_definitions_relevant = tag_definitions_curated.annotate(
+            id_tag_definition_contribution=models.Subquery(
+                tag_definition_contribution_query_set.filter(  # pylint: disable=no-member
+                    id_existing_persistent=models.OuterRef("id_persistent")
+                )
+            )
+        ).filter(id_tag_definition_origin__isnull=False)
+        tag_instance_most_recent_query_set = TagInstance.most_recent_queryset().filter(
+            id_entity_persistent__in=entities_manager.values("id_persistent")
+        )
+        with_values = tag_definitions_relevant.annotate(
+            value_contribution=models.Subquery(
+                tag_instance_most_recent_query_set.filter(
+                    id_tag_definition_persistent=models.OuterRef(
+                        "id_tag_definition_contribution"
+                    )
+                )
+            ),
+            value_curated=models.Subquery(
+                tag_instance_most_recent_query_set.filter(
+                    id_tag_definition_persistent=models.OuterRef("id_persistent")
+                )
+            ),
+        )
+        only_matching = with_values.filter(value_contribution=models.F("value_curated"))
+        counted_matches = entities_manager.annotate(
+            match_count=only_matching.values("id_entity_persistent")
+            .annotate(match_count=models.Count("id"))
+            .filter(id_entity_persistent=models.OuterRef("id_persistent"))
+            .values("match_count")
+        )
+        return counted_matches, tag_definitions_relevant

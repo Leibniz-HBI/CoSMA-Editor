@@ -21,6 +21,7 @@ from cosmae.contribution.models_django import (
 )
 from cosmae.contribution.tag_definition.api import router as tag_router
 from cosmae.exception import ApiError, NotAuthenticatedException, ResourceLockedException
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user, cosmae_auth
 
@@ -104,8 +105,9 @@ def contribution_get(request, id_persistent: str):
     "Get  details on a single contribution candidate"
     try:
         try:
-            contribution_db = ContributionCandidateDb.by_id_persistent(
-                id_persistent, check_user(request)
+            check_user(request)
+            contribution_db = TagMergeRequest.contribution_with_match_tag_definitions(
+                id_persistent
             ).get()
         except NotAuthenticatedException:
             return 401, ApiError(msg="Not authenticated.")
@@ -182,7 +184,7 @@ def post_complete_assignment(request: HttpRequest, id_persistent: str):
                 msg="The following tags are neither discarded nor assigned to existing: "
                 f"{', '.join(exc.invalid_column_names_list)}."
             )
-        except (ContributionCandidateDb.DuplicateAssignmentException) as exc:
+        except ContributionCandidateDb.DuplicateAssignmentException as exc:
             return 400, ApiError(
                 msg="Assignment to existing tags has to be unique. "
                 "Please check the following tags: "

@@ -122,6 +122,7 @@ def test_patch_display_txt(auth_server):
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
+    expected_contribution["match_tag_definition_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
         "tag_definitions": [
@@ -133,8 +134,13 @@ def test_patch_display_txt(auth_server):
                 "index_in_file": 9000,
             }
         ],
-        "contribution_candidate": expected_contribution,
     }
+    rsp = req_contrib.get_contribution(
+        server.url, id_candidate_persistent, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == expected_contribution
 
 
 def test_patch_id_persistent(auth_server):
@@ -154,6 +160,7 @@ def test_patch_id_persistent(auth_server):
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
+    expected_contribution["match_tag_definition_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
         "tag_definitions": [
@@ -165,8 +172,13 @@ def test_patch_id_persistent(auth_server):
                 "index_in_file": 9000,
             }
         ],
-        "contribution_candidate": expected_contribution,
     }
+    rsp = req_contrib.get_contribution(
+        server.url, id_candidate_persistent, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == expected_contribution
 
 
 def test_patch_id_unknown_special_tag(auth_server):
@@ -209,6 +221,7 @@ def test_patch_id_existing(auth_server):
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
+    expected_contribution["match_tag_definition_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
         "tag_definitions": [
@@ -220,8 +233,13 @@ def test_patch_id_existing(auth_server):
                 "index_in_file": 9000,
             }
         ],
-        "contribution_candidate": expected_contribution,
     }
+    rsp = req_contrib.get_contribution(
+        server.url, id_candidate_persistent, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == expected_contribution
 
 
 def test_patch_discard(auth_server):
@@ -241,6 +259,7 @@ def test_patch_discard(auth_server):
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
+    expected_contribution["match_tag_definition_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
         "tag_definitions": [
@@ -252,5 +271,10 @@ def test_patch_discard(auth_server):
                 "index_in_file": 9000,
             }
         ],
-        "contribution_candidate": expected_contribution,
     }
+    rsp = req_contrib.get_contribution(
+        server.url, id_candidate_persistent, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == expected_contribution

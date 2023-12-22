@@ -96,10 +96,10 @@ def test_get_most_recent_by_ids(tag):
         previous_version=tag,
     )
     new.save()
-    results = TagInstance.most_recents_by_entity_and_definition_ids(
+    results = TagInstance.most_recent_by_entity_and_definition_id_query_set(
         cp.id_persistent_test, c.id_tag_def_persistent_test
     )
-    assert results == [new]
+    assert list(results) == [new]
 
 
 @pytest.mark.django_db

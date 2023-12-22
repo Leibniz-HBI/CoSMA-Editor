@@ -220,6 +220,11 @@ class TagDefinition(models.Model):
             and user.permission_group in {CosmaeUser.COMMISSIONER, CosmaeUser.EDITOR}
         )
 
+    @classmethod
+    def curated_query_set(cls):
+        "Get most recent curated tag definition"
+        return cls.most_recent_query_set().filter(curated=True)
+
 
 class TagInstance(models.Model):
     "Django ORM model for tag instances."
@@ -340,24 +345,14 @@ class TagInstance(models.Model):
         )[offset : offset + limit]
 
     @classmethod
-    def most_recents_by_entity_and_definition_ids(
+    def most_recent_by_entity_and_definition_id_query_set(
         cls, id_entity_persistent: str, id_tag_definition_persistent: str
     ):
         """Get all most recent values that match a given id_entity_persistent
         and id_entity_persistent."""
-        matching = cls.objects.filter(  # pylint: disable=no-member
+        return cls.most_recent_queryset().filter(  # pylint: disable=no-member
             id_entity_persistent=id_entity_persistent,
             id_tag_definition_persistent=id_tag_definition_persistent,
-        )
-        return list(
-            matching.filter(
-                id=models.Subquery(
-                    matching.filter(id_persistent=models.OuterRef("id_persistent"))
-                    .values("id_persistent")
-                    .annotate(max_id=Max("id"))
-                    .values("max_id")
-                )
-            )
         )
 
     @classmethod
@@ -505,7 +500,7 @@ class OwnershipRequest(models.Model):
             ).filter(
                 tag_definition__isnull=False,
                 # JSONObject will make this an int.
-                tag_definition__curated=1,
+                tag_definition__curated=True,
             )
             return petitioned_self.union(petitioned_curated)
         return petitioned_self

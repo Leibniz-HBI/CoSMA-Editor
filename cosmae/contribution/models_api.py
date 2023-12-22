@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from ninja import Schema
 
+from cosmae.tag.api.definitions import TagDefinitionResponse
+
 
 class ContributionPostRequest(Schema):
     # pylint: disable=too-few-public-methods
@@ -38,6 +40,7 @@ class ContributionCandidate(Schema):
     author: Optional[str]
     error_msg: Optional[str]
     error_details: Optional[str]
+    match_tag_definition_list: Optional[List[TagDefinitionResponse]]
 
 
 class ContributionCandidatePatchRequest(Schema):

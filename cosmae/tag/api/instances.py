@@ -222,7 +222,7 @@ def post_tag_instance_values(_, values_req: TagInstanceValueRequestList):
         for req in values_req.value_requests:
             id_entity_persistent = req.id_entity_persistent
             id_tag_definition_persistent = req.id_tag_definition_persistent
-            vals = TagInstanceDb.most_recents_by_entity_and_definition_ids(
+            vals = TagInstanceDb.most_recent_by_entity_and_definition_id_query_set(
                 id_entity_persistent, id_tag_definition_persistent
             )
             ret.append(

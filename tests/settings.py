@@ -15,7 +15,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent / "django_test_base"
-
+SECRET_DIR = Path(__file__).resolve().parent / ".secrets_local"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -73,13 +73,34 @@ TEMPLATES = [
 WSGI_APPLICATION = "django_project.wsgi.application"
 
 
+def get_file_secret(secret_name):
+    "Get secret as provided by docker_compose"
+    try:
+        with open(
+            f"{SECRET_DIR.absolute()}/{secret_name}", encoding="utf-8"
+        ) as key_file:
+            key = key_file.readline().rstrip("\n")
+    except FileNotFoundError:
+        env_var_name = secret_name.upper()
+        key = environ.get(env_var_name)
+    if not key:
+        raise Exception(  # pylint: disable=broad-exception-raised
+            f"Please set the {secret_name} secret."
+        )
+    return key
+
+
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": get_file_secret("cosmae_db_name"),
+        "USER": get_file_secret("cosmae_db_user"),
+        "PASSWORD": get_file_secret("cosmae_db_password"),
+        "HOST": "127.0.0.1",
+        "PORT": "5444",
     }
 }
 

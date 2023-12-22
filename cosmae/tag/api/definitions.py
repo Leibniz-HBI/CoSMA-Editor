@@ -210,7 +210,10 @@ def tag_definition_db_dict_to_api(
     "Convert a tag definition from database to API model."
     id_persistent = tag_definition["id_persistent"]
     name = tag_definition["name"]
-    owner = tag_definition["owner"]["username"]
+    if tag_definition["owner"] is not None:
+        username = tag_definition["owner"]["username"]
+    else:
+        username = None
     return TagDefinitionResponse(
         id_persistent=id_persistent,
         id_parent_persistent=tag_definition["id_parent_persistent"],
@@ -218,7 +221,7 @@ def tag_definition_db_dict_to_api(
         name_path=get_tag_definition_name_path_from_parts(id_persistent, name),
         version=tag_definition["id"],
         type=_tag_type_mapping_db_to_api[tag_definition["type"]],
-        owner=owner,
+        owner=username,
         curated=tag_definition["curated"],
         hidden=tag_definition["hidden"],
     )

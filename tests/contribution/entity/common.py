@@ -17,3 +17,10 @@ id_instance_existing_test1 = "tag-existing-test1"
 time_edit_tag_instance_test = datetime(1990, 5, 7, tzinfo=timezone.utc)
 
 time_edit_deduplication = datetime(2021, 1, 1, tzinfo=timezone.utc)
+
+id_tag_instance_match_destination = "2ce8231e-5a58-4f43-8ef4-89efca0a6b97"
+id_tag_instance_match_origin = "db0079c1-4cbf-43e8-ad19-e5dee0ae7405"
+id_tag_merge_request_persistent = "af01c5cb-33b9-4b05-ade5-6d821a2d3075"
+time_edit_tag_instance_match_origin = datetime(2022, 1, 1)
+time_edit_tag_instance_match_destination = datetime(2021, 12, 3)
+time_edit_tag_merge_request = datetime(2022, 1, 2)

@@ -65,7 +65,6 @@ def test_get_tag_defs(auth_server, contribution_tag_def):
     id_persistent = contribution_candidate.id_persistent
     rsp = req.get_tag_definition(server.url, id_persistent, cookies)
     assert rsp.status_code == 200
-    assert rsp.json() == dict(
-        tag_definitions=[c.tag_def_test0],
-        contribution_candidate=c.contribution_test_columns_assigned0,
-    )
+    assert rsp.json() == {
+        "tag_definitions": [c.tag_def_test0],
+    }

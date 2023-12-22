@@ -13,9 +13,4 @@ class Migration(migrations.Migration):
             old_name="MergeRequest",
             new_name="TagMergeRequest",
         ),
-        migrations.AddField(
-            model_name="entity",
-            name="disabled",
-            field=models.BooleanField(default=False),
-        ),
     ]

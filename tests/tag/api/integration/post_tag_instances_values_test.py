@@ -168,7 +168,7 @@ def test_bad_db(auth_server):
     mock = MagicMock()
     mock.side_effect = Exception()
     with patch(
-        "cosmae.tag.models_django.TagInstance.most_recents_by_entity_and_definition_ids",
+        "cosmae.tag.models_django.TagInstance.most_recent_by_entity_and_definition_id_query_set",
         mock,
     ):
         req = post_tag_instance_values(

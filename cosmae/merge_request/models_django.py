@@ -13,6 +13,7 @@ from cosmae.merge_request.entity.models_django import (
 )
 from cosmae.tag.models_django import TagDefinition, TagInstance
 from cosmae.util import CosmaeUser
+from cosmae.util.django import get_json_array_agg
 
 
 class TagMergeRequest(AbstractMergeRequest):
@@ -167,6 +168,46 @@ class TagMergeRequest(AbstractMergeRequest):
             return with_conflict_info
 
         return with_conflict_info.exclude(conflict_resolution_replace__isnull=False)
+
+    @classmethod
+    def contribution_with_match_tag_definitions(cls, id_contribution_persistent):
+        "Gets the tag definitions that were used for matching in a specific contribution."
+        return ContributionCandidate.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_contribution_persistent
+        ).annotate(
+            matched_tag_definitions=models.Subquery(
+                TagMergeRequest.objects.filter(  # pylint: disable=no-member
+                    contribution_candidate_id=models.OuterRef("id_persistent")
+                )
+                .annotate(
+                    tag_def_json=models.Subquery(
+                        TagDefinition.most_recent_query_set()
+                        .filter(
+                            curated=True,
+                            id_persistent=models.OuterRef("id_destination_persistent"),
+                        )
+                        .values(
+                            tag_def_json=models.functions.JSONObject(
+                                id="id",
+                                id_persistent="id_persistent",
+                                id_parent_persistent="id_parent_persistent",
+                                name="name",
+                                type="type",
+                                curated="curated",
+                                owner="owner",
+                                hidden="hidden",
+                            )
+                        )
+                        .filter(tag_def_json__isnull=False)
+                    )
+                )
+                .values("contribution_candidate_id")
+                .annotate(
+                    json_tag_def_list=get_json_array_agg()("tag_def_json", default=[])
+                )
+                .values("json_tag_def_list")
+            )
+        )
 
 
 class TagConflictResolution(AbstractConflictResolution):

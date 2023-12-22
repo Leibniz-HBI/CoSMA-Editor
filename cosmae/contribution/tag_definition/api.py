@@ -5,8 +5,6 @@ from django.db import DatabaseError
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.contribution.models_api import ContributionCandidate
-from cosmae.contribution.models_conversion import contribution_db_to_api
 from cosmae.contribution.models_django import (
     ContributionCandidate as ContributionCandidateDb,
 )
@@ -35,7 +33,6 @@ class TagDefinitionContributionResponseList(Schema):
     "Response schema for multiple contribution tag definitions"
     # pylint: disable=too-few-public-methods
     tag_definitions: List[TagDefinitionContribution]
-    contribution_candidate: ContributionCandidate
 
 
 class TagDefinitionPatchRequest(Schema):
@@ -79,7 +76,6 @@ def get_tag_definitions(request: HttpRequest):
                 tag_definitions_contribution_db_to_api(tag_def)
                 for tag_def in tag_definitions_db
             ],
-            contribution_candidate=contribution_db_to_api(candidate),
         )
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")

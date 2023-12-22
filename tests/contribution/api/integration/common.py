@@ -1,4 +1,6 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,disable=unused-argument
+from datetime import datetime
+
 import tests.contribution.common as c
 import tests.user.common as cu
 
@@ -38,18 +40,6 @@ contribution_test_upload_0 = {
     "error_details": None,
 }
 
-contribution_test_columns_assigned0 = {
-    "name": c.name_test0,
-    "id_persistent": c.id_test0,
-    "description": c.description_test0,
-    "anonymous": True,
-    "has_header": False,
-    "author": None,
-    "state": "COLUMNS_ASSIGNED",
-    "error_msg": None,
-    "error_details": None,
-}
-
 tag_def_test0 = {
     "name": c.name_definition_test0,
     "id_persistent": c.id_persistent_tag_def_test0,
@@ -57,3 +47,6 @@ tag_def_test0 = {
     "index_in_file": 9000,
     "discard": False,
 }
+
+id_tag_merge_request_persistent = "ab6a456e-4560-458b-9f8d-864bdcccc904"
+time_edit_tag_merge_request = datetime(2020, 2, 3)

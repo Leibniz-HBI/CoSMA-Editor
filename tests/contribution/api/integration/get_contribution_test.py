@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import tests.contribution.api.integration.common as c
 import tests.contribution.api.integration.requests as req_contrib
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.util.auth import NotAuthenticatedException
 
 
@@ -42,6 +43,48 @@ def test_get(auth_server):
     contribution = rsp.json()
     assert contribution["id_persistent"] == id_persistent
     contribution.pop("id_persistent")
+    assert contribution["match_tag_definition_list"] == []
+    contribution.pop("match_tag_definition_list")
+    assert contribution == c.contribution_test_upload0
+
+
+def test_get_with_match_tag_definition_list(auth_server, tag_def1, tag_def_curated):
+    live_server, cookies = auth_server
+    rsp = req_contrib.post_contribution(
+        live_server.url, c.contribution_post0, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    id_persistent = rsp.json()["id_persistent"]
+    TagMergeRequest.objects.create(  # pylint: disable=no-member
+        id_persistent=c.id_tag_merge_request_persistent,
+        id_origin_persistent=tag_def1.id_persistent,
+        id_destination_persistent=tag_def_curated.id_persistent,
+        contribution_candidate_id=id_persistent,
+        state=TagMergeRequest.OPEN,
+        created_by=tag_def1.owner,
+        created_at=c.time_edit_tag_merge_request,
+    )
+    rsp = req_contrib.get_contribution(
+        live_server.url, id_persistent=id_persistent, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    contribution = rsp.json()
+    assert contribution["id_persistent"] == id_persistent
+    contribution.pop("id_persistent")
+    assert contribution["match_tag_definition_list"] == [
+        {
+            "id_persistent": tag_def_curated.id_persistent,
+            "name": tag_def_curated.name,
+            "curated": tag_def_curated.curated,
+            "id_parent_persistent": tag_def_curated.id_parent_persistent,
+            "version": tag_def_curated.id,
+            "name_path": [tag_def_curated.name],
+            "type": "STRING",
+            "hidden": tag_def_curated.hidden,
+            "owner": None,
+        }
+    ]
+    contribution.pop("match_tag_definition_list")
     assert contribution == c.contribution_test_upload0
 
 
@@ -62,4 +105,5 @@ def test_get_with_error(auth_server, contribution_error):
         "state": "ENTITIES_MATCHED",
         "error_msg": contribution_error.error_msg,
         "error_details": contribution_error.error_trace,
+        "match_tag_definition_list": [],
     }

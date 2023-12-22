@@ -83,7 +83,7 @@ def register_post(_, registration_info: RegisterRequest):
         user.save()
         return 200, user_db_to_login_response(user)
     except IntegrityError as exc:
-        if str(exc.args[0]).startswith("UNIQUE"):
+        if str(exc.args[0]).startswith("duplicate"):
             return 400, ApiError(msg="Username or mail address already in use.")
         return 500, ApiError(msg="Could not create user.")
     except Exception:  # pylint: disable=broad-except
