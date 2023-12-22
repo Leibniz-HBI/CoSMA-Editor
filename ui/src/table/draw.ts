@@ -118,22 +118,26 @@ export class ReplaceButtonDrawer {
 
     drawReplaceButtonIsNewActive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
         this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Assign Duplicate')
-        this.drawReplaceButtonIsNewActive = mkCanvasCopyFunction(rect, ctx)
+        // when drawing fails, using a cache will not recover.
+        // this.drawReplaceButtonIsNewActive = mkCanvasCopyFunction(rect, ctx)
     }
     drawReplaceButtonIsNewInactive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
         this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Assign Duplicate')
-        this.drawReplaceButtonIsNewInactive = mkCanvasCopyFunction(rect, ctx)
+        // when drawing fails, using a cache will not recover.
+        // this.drawReplaceButtonIsNewInactive = mkCanvasCopyFunction(rect, ctx)
     }
     drawReplaceButtonIsExistingActive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
         this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Create New Entity')
-        this.drawReplaceButtonIsExistingActive = mkCanvasCopyFunction(rect, ctx)
+        // when drawing fails, using a cache will not recover.
+        // this.drawReplaceButtonIsExistingActive = mkCanvasCopyFunction(rect, ctx)
     }
     drawReplaceButtonIsExistingInactive(
         rect: Rectangle,
         ctx: CanvasRenderingContext2D
     ) {
         this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Create New Entity')
-        this.drawReplaceButtonIsExistingInactive = mkCanvasCopyFunction(rect, ctx)
+        // when drawing fails, using a cache will not recover.
+        // this.drawReplaceButtonIsExistingInactive = mkCanvasCopyFunction(rect, ctx)
     }
 }
 const replaceButtonDrawer = new ReplaceButtonDrawer()

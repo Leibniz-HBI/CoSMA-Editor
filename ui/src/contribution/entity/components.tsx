@@ -1,38 +1,34 @@
 import { useLoaderData } from 'react-router-dom'
-import { mkCellContentCallback, GridColumWithType } from './hooks'
+import { mkCellContentCallback } from './hooks'
 import { ContributionStepper } from '../components'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
 import {
     Button,
     CloseButton,
     Col,
-    Form,
     ListGroup,
     Modal,
     Overlay,
     Popover,
-    ProgressBar,
     Row
 } from 'react-bootstrap'
-import { ForwardedRef, forwardRef, useLayoutEffect, useRef, useState } from 'react'
+import { ForwardedRef, forwardRef, useEffect, useRef } from 'react'
 import { EntityWithDuplicates } from './state'
 import { ColumnMenuBody } from '../../column_menu/components/menu'
 import { DataEditor, GridSelection } from '@glideapps/glide-data-grid'
 import { drawCell } from '../../table/draw'
-import { CaretLeftFill, CaretRightFill } from 'react-bootstrap-icons'
 import { useDispatch, useSelector } from 'react-redux'
 import {
-    selectColumnDefs,
+    selectEntityColumnDefs,
     selectCompleteEntityAssignment,
     selectEntities,
     selectEntitiesWithMatches,
-    selectIsDuplicates,
     selectIsLoading,
-    selectLoadingProgress,
-    selectMaxPageNumber,
-    selectPageNumber,
+    selectSelectedEntity,
     selectShowTagDefinitionsMenu,
-    selectTagDefinitions
+    selectTagDefinitions,
+    selectMatchTagDefinitionList,
+    selectTagRowDefs
 } from './selectors'
 import {
     completeEntityAssignment,
@@ -44,27 +40,68 @@ import {
 import { AppDispatch } from '../../store'
 import {
     completeEntityAssignmentClearError,
-    setPageNumber,
+    incrementSelectedEntityIdx,
+    setSelectedEntityIdx,
     toggleTagDefinitionMenu
 } from './slice'
 import { loadContributionDetails } from '../thunks'
 import { selectContribution } from '../selectors'
 import { clearSelectedContribution } from '../slice'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
-import { selectTagSelectionLoading } from '../../column_menu/selectors'
+import { ContributionStep } from '../state'
 
 export function EntitiesStep() {
     const idContributionPersistent = useLoaderData() as string
     const dispatch: AppDispatch = useDispatch()
-    const isLoading = useSelector(selectIsLoading)
-    const [_tagDefinitions, tagDefinitionMap] = useSelector(selectTagDefinitions)
-    const entities = useSelector(selectEntitiesWithMatches)
     const contributionCandidate = useSelector(selectContribution)
-    const loadingProgress = useSelector(selectLoadingProgress)
-    const columnDefs = useSelector(selectColumnDefs)
-    const isDuplicates = useSelector(selectIsDuplicates)
-    const pageNumber = useSelector(selectPageNumber)
-    const isLoadingTag = useSelector(selectTagSelectionLoading)
+    useEffect(() => {
+        dispatch(loadContributionDetails(idContributionPersistent))
+        return function cleanup() {
+            dispatch(clearSelectedContribution())
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [idContributionPersistent])
+    let body = <EntitiesStepBody idContributionPersistent={idContributionPersistent} />
+    if (contributionCandidate.value === undefined) {
+        body = <CosmaeLoading />
+    }
+    return (
+        <ContributionStepper
+            selectedIdx={2}
+            id_persistent={idContributionPersistent}
+            step={contributionCandidate.value?.step ?? ContributionStep.ValuesExtracted}
+        >
+            {body}
+        </ContributionStepper>
+    )
+}
+
+export function EntitiesStepBody({
+    idContributionPersistent
+}: {
+    idContributionPersistent: string
+}) {
+    const dispatch: AppDispatch = useDispatch()
+    // const isLoadingTag = useSelector(selectTagSelectionLoading)
+    useEffect(() => {
+        dispatch(getContributionEntitiesAction(idContributionPersistent))
+            .then(async (entities) => {
+                dispatch(loadTagDefinitionHierarchy({}))
+                return entities
+            })
+            .then(async (entities) => {
+                await dispatch(
+                    getContributionEntityDuplicateCandidatesAction({
+                        idContributionPersistent,
+                        entityIdPersistentList: entities.map(
+                            (entity) => entity.idPersistent
+                        )
+                    })
+                )
+            })
+    }, [dispatch, idContributionPersistent])
+    const entities = useSelector(selectEntitiesWithMatches)
+    const isLoading = useSelector(selectIsLoading)
     const putDuplicateCallback = (
         idEntityOriginPersistent: string,
         idEntityDestinationPersistent?: string
@@ -75,107 +112,110 @@ export function EntitiesStep() {
                 idEntityOriginPersistent,
                 idEntityDestinationPersistent
             })
-        )
+        ).then(() => dispatch(incrementSelectedEntityIdx()))
     }
-    useLayoutEffect(() => {
-        if (!isLoading) {
-            dispatch(loadContributionDetails(idContributionPersistent))
-                .then(
-                    async () =>
-                        await dispatch(
-                            getContributionEntitiesAction(idContributionPersistent)
-                        )
-                )
-                .then(async (entities) => {
-                    if (!isLoadingTag) {
-                        await dispatch(loadTagDefinitionHierarchy({}))
-                    }
-                    return entities
-                })
-                .then(async (entities) => {
-                    await dispatch(
-                        getContributionEntityDuplicateCandidatesAction({
-                            idContributionPersistent,
-                            entityIdPersistentList: entities.map(
-                                (entity) => entity.idPersistent
-                            )
-                        })
-                    )
-                })
-        }
-        return function cleanup() {
-            dispatch(clearSelectedContribution())
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [idContributionPersistent])
     const containerRef = useRef(null)
-    if (contributionCandidate.value === undefined || isLoading) {
+    if (isLoading) {
         return <CosmaeLoading />
     }
     return (
-        <>
-            <ContributionStepper
-                selectedIdx={2}
-                id_persistent={idContributionPersistent}
-                step={contributionCandidate.value.step}
-            >
-                <Col
-                    ref={containerRef}
-                    className="h-100 overflow-hidden d-flex flex-column"
-                >
-                    <Row key="entities-step-hint" className="ms-0">
+        <Row className="h-100 overflow-hidden" ref={containerRef}>
+            <Col xs={3} className="h-100 overflow-hidden d-flex flex-column">
+                <Row className="mb-2 justify-content-center">
+                    <CompleteAssignmentButton
+                        idContributionPersistent={idContributionPersistent}
+                        ref={containerRef}
+                    />
+                </Row>
+                <Row className="h-100 overflow-y-scroll">
+                    <EntityConflictList entityConflicts={entities.value} />
+                </Row>
+            </Col>
+            <Col className="h-100 overflow-hidden d-flex flex-column">
+                <Row>
+                    <Col key="entities-step-hint" className="ms-0">
                         Please check for duplicate entities. Select the first Row to
                         indicate that there is no duplicate.
-                    </Row>
-                    <Row>
-                        <CompleteAssignmentButton
+                    </Col>
+                    <Col sm="auto" key="entities-step-add-tag-button">
+                        <Button onClick={() => dispatch(toggleTagDefinitionMenu())}>
+                            Show Additional Tag Values
+                        </Button>
+                    </Col>
+                </Row>
+                <Row className="h-100 w-100 ms-2 mt-3">
+                    <div id="portal">
+                        <EntityConflictBody
+                            putDuplicateCallback={putDuplicateCallback}
                             idContributionPersistent={idContributionPersistent}
-                            ref={containerRef}
                         />
-                        <PageSelect
-                            setPage={(pageNumber) =>
-                                setPage(dispatch, entities.value, pageNumber)
-                            }
-                        />
-                        <Col sm="auto" key="entities-step-add-tag-button">
-                            <Button onClick={() => dispatch(toggleTagDefinitionMenu())}>
-                                Show Additional Tag Values
-                            </Button>
-                        </Col>
-                    </Row>
-                    <Row className="mt-4">
-                        <ProgressBar
-                            striped
-                            animated
-                            hidden={loadingProgress === undefined}
-                            variant="primary"
-                            now={loadingProgress}
-                            label="Loading Duplicate Candidates"
-                        />
-                    </Row>
-                    <Row className="h-100 ms-2 mt-3 overflow-y-scroll">
-                        {isDuplicates ? (
-                            <ListGroup>
-                                {entities.value
-                                    .slice(50 * (pageNumber - 1), 50 * pageNumber)
-                                    .map((entity) => (
-                                        <EntitySimilarityItem
-                                            entity={entity}
-                                            putDuplicateCallback={putDuplicateCallback}
-                                            columnDefs={columnDefs}
-                                            key={entity.idPersistent}
-                                        />
-                                    ))}
-                            </ListGroup>
-                        ) : (
-                            <span>There are no duplicates</span>
-                        )}
-                    </Row>
-                </Col>
-            </ContributionStepper>
+                    </div>
+                </Row>
+            </Col>
+        </Row>
+    )
+}
+
+export function EntityConflictBody({
+    idContributionPersistent,
+    putDuplicateCallback
+}: {
+    idContributionPersistent: string
+    putDuplicateCallback: (
+        idEntityOriginPersistent: string,
+        idEntityDestinationPersistent?: string
+    ) => void
+}) {
+    const selectedEntity = useSelector(selectSelectedEntity)
+    const [tagDefinitionList, tagDefinitionMap] = useSelector(selectTagDefinitions)
+    const matchTags = useSelector(selectMatchTagDefinitionList)
+    const dispatch: AppDispatch = useDispatch()
+    useEffect(
+        () => {
+            if (selectedEntity === undefined) {
+                return
+            }
+            const entityMap: { [key: string]: string[] } = {}
+            entityMap[selectedEntity.idPersistent] = [
+                selectedEntity.idPersistent,
+                ...new Set(
+                    selectedEntity.similarEntities.value.map(
+                        (entity) => entity.idPersistent
+                    )
+                )
+            ]
+            dispatch(
+                getContributionTagInstances({
+                    idContributionPersistent: idContributionPersistent,
+                    entitiesGroupMap: entityMap,
+                    tagDefinitionList: [...matchTags, ...tagDefinitionList]
+                })
+            )
+        },
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+        [idContributionPersistent, selectedEntity?.idPersistent, matchTags]
+    )
+    let body = <span>Please select an entity</span>
+    if (selectedEntity !== undefined) {
+        if (selectedEntity.similarEntities.isLoading) {
+            return <CosmaeLoading />
+        } else {
+            body = (
+                <EntitySimilarityItem
+                    entity={selectedEntity}
+                    putDuplicateCallback={putDuplicateCallback}
+                    numMatchTags={matchTags.length}
+                    numTags={tagDefinitionList.length}
+                />
+            )
+        }
+    }
+    return (
+        <>
+            {body}
             <AddTagDefinitionsModal
-                tagDefinitionMap={tagDefinitionMap}
                 idContributionPersistent={idContributionPersistent}
+                tagDefinitionMap={tagDefinitionMap}
             />
         </>
     )
@@ -248,80 +288,22 @@ function AddTagDefinitionsModal({
     )
 }
 
-function PageSelect({ setPage }: { setPage: (pageNumber: number) => void }) {
-    const pageNumber = useSelector(selectPageNumber)
-    const pageNumberMax = useSelector(selectMaxPageNumber)
-    const [pageNumberForm, setPageNumberForm] = useState(pageNumber.toString())
-    return (
-        <Col>
-            <Row className="justify-content-center align-items-center">
-                <Col
-                    xs="auto"
-                    onClick={() => {
-                        const newPage = pageNumber - 1
-                        if (newPage > 0) {
-                            setPageNumberForm(newPage.toString())
-                            setPage(newPage)
-                        }
-                    }}
-                    data-testid="page-prev"
-                >
-                    <CaretLeftFill />
-                </Col>
-                <Col xs="auto">
-                    <Row xs="auto" className="align-items-center">
-                        <Col xs="auto" className="ps-0">
-                            Page
-                        </Col>
-                        <Col xs="auto" className="ps-0 pe-0">
-                            <Form.Control
-                                htmlSize={1}
-                                value={pageNumberForm}
-                                onChange={(event) => {
-                                    setPageNumberForm(event.target.value)
-                                    const parsed = Number.parseInt(event.target.value)
-                                    if (parsed === undefined || isNaN(parsed)) {
-                                        return
-                                    }
-                                    setPage(parsed)
-                                }}
-                            />
-                        </Col>
-                        <Col xs="auto" className="ps-1 pe-0">
-                            {'/ ' + pageNumberMax}
-                        </Col>
-                    </Row>
-                </Col>
-                <Col
-                    xs="auto"
-                    onClick={() => {
-                        const newPageNumber = pageNumber + 1
-                        if (newPageNumber <= pageNumberMax) {
-                            setPageNumberForm(newPageNumber.toString())
-                            setPage(newPageNumber)
-                        }
-                    }}
-                    data-testid="page-next"
-                >
-                    <CaretRightFill />
-                </Col>
-            </Row>
-        </Col>
-    )
-}
-
 export function EntitySimilarityItem({
     entity,
     putDuplicateCallback,
-    columnDefs
+    numMatchTags,
+    numTags
 }: {
     entity: EntityWithDuplicates
     putDuplicateCallback: (
         idEntityOriginPersistent: string,
         idEntityDestinationPersistent?: string
     ) => void
-    columnDefs: GridColumWithType[]
+    numMatchTags: number
+    numTags: number
 }) {
+    const entityColumnDefs = useSelector(selectEntityColumnDefs)
+    const tagRowDefs = useSelector(selectTagRowDefs)
     const { similarEntities, displayTxt, idPersistent } = entity
     if (similarEntities.errorMsg !== undefined) {
         return (
@@ -335,36 +317,48 @@ export function EntitySimilarityItem({
         return <></>
     }
     return (
-        <ListGroup.Item key={idPersistent} className="mb-1">
-            <DataEditor
-                drawCell={drawCell}
-                rows={entity.similarEntities.value.length + 1}
-                getCellContent={mkCellContentCallback(entity, columnDefs)}
-                freezeColumns={3}
-                columns={columnDefs}
-                rowSelect="none"
-                columnSelect="none"
-                rangeSelect="cell"
-                onGridSelectionChange={(selection: GridSelection) => {
-                    const current = selection.current
-                    if (current !== undefined) {
-                        //Select range
-                        const [colIdx, rowIdx] = current.cell
-                        if (colIdx != 0) {
-                            return
+        <div className="h-100 w-100 mb-2 ms-3 me-3" data-testid="table-container-outer">
+            <div
+                className="br-12 ps-0 pe-0 h-100 w-100 overflow-hidden"
+                data-testid="table-container-inner"
+            >
+                <DataEditor
+                    drawCell={drawCell}
+                    rows={4 + numTags}
+                    getCellContent={mkCellContentCallback(
+                        entity,
+                        tagRowDefs,
+                        numMatchTags
+                    )}
+                    freezeColumns={2}
+                    columns={entityColumnDefs}
+                    rowSelect="none"
+                    height="100%"
+                    width="100%"
+                    columnSelect="none"
+                    rangeSelect="cell"
+                    onGridSelectionChange={(selection: GridSelection) => {
+                        const current = selection.current
+                        if (current !== undefined) {
+                            //Select range
+                            const [colIdx, rowIdx] = current.cell
+                            if (rowIdx != 0) {
+                                return
+                            }
+                            if (colIdx === undefined || colIdx < 2) {
+                                putDuplicateCallback(entity.idPersistent, undefined)
+                            } else {
+                                putDuplicateCallback(
+                                    entity.idPersistent,
+                                    entity.similarEntities.value[colIdx - 2]
+                                        .idPersistent
+                                )
+                            }
                         }
-                        if (rowIdx === undefined || rowIdx == 0) {
-                            putDuplicateCallback(entity.idPersistent, undefined)
-                        } else {
-                            putDuplicateCallback(
-                                entity.idPersistent,
-                                entity.similarEntities.value[rowIdx - 1].idPersistent
-                            )
-                        }
-                    }
-                }}
-            />
-        </ListGroup.Item>
+                    }}
+                />
+            </div>
+        </div>
     )
 }
 
@@ -418,14 +412,42 @@ export const CompleteAssignmentButton = forwardRef(
     }
 )
 
-function setPage(
-    dispatch: AppDispatch,
-    entities: EntityWithDuplicates[],
-    pageNumber: number
-) {
-    const validPageNumber = Math.min(
-        Math.max(1, pageNumber),
-        Math.ceil(entities.length / 50)
+export function EntityConflictList({
+    entityConflicts
+}: {
+    entityConflicts: EntityWithDuplicates[]
+}) {
+    const dispatch = useDispatch()
+    const selectEntityCallback = (idx: number) => dispatch(setSelectedEntityIdx(idx))
+    const selectedEntity = useSelector(selectSelectedEntity)
+    return (
+        <ListGroup>
+            {entityConflicts.map((entity, idx) => (
+                <EntityConflictListItem
+                    entity={entity}
+                    active={entity == selectedEntity}
+                    key={entity.idPersistent}
+                    onClick={() => {
+                        selectEntityCallback(idx)
+                    }}
+                />
+            ))}
+        </ListGroup>
     )
-    dispatch(setPageNumber(validPageNumber))
+}
+
+export function EntityConflictListItem({
+    entity,
+    active,
+    onClick
+}: {
+    entity: EntityWithDuplicates
+    active: boolean
+    onClick: VoidFunction
+}) {
+    return (
+        <ListGroup.Item active={active} onClick={onClick}>
+            {entity.displayTxt}
+        </ListGroup.Item>
+    )
 }

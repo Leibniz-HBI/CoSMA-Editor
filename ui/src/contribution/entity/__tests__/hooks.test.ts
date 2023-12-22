@@ -38,6 +38,7 @@ describe('cell contents callback', () => {
                 idPersistent: 'id-similar-test-1',
                 displayTxt: 'similar entity test 1',
                 version: 11,
+                idMatchTagDefinitionPersistentList: ['some-id'],
                 similarity: 0.8,
                 cellContents: [
                     new Remote([
@@ -53,74 +54,103 @@ describe('cell contents callback', () => {
     })
     const columnTypes = [
         {
-            id: 'Assignment',
-            title: 'Assignment',
-            width: 200,
-            columnType: TagType.Inner
-        },
-        {
-            columnType: TagType.String,
-            width: 200,
-            id: 'display-text-test',
-            title: 'display text'
-        },
-        {
-            columnType: TagType.String,
-            width: 200,
-            id: 'similarity-test',
-            title: 'Similarity'
-        },
-        {
             columnType: TagType.String,
             width: 200,
             id: 'column-test',
             title: 'column test'
         }
     ]
-    test('handles original entity', () => {
-        const cellCallback = mkCellContentCallback(entityTest, columnTypes)
+    test('handles tag names', () => {
+        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1)
         expect(cellCallback([0, 0])).toEqual({
+            kind: 'text' as GridCellKind,
+            data: '',
+            displayData: ''
+        })
+        expect(cellCallback([0, 1])).toEqual({
+            kind: 'text' as GridCellKind,
+            data: 'Display Text Similarity',
+            displayData: 'Display Text Similarity',
+            contentAlign: 'left',
+            allowOverlay: false,
+            style: 'normal',
+            themeOverride: {}
+        })
+        expect(cellCallback([0, 2])).toEqual({
+            kind: 'text' as GridCellKind,
+            data: 'Match Count',
+            displayData: 'Match Count',
+            contentAlign: 'left',
+            allowOverlay: false,
+            style: 'normal',
+            themeOverride: {}
+        })
+        expect(cellCallback([0, 3])).toEqual({
+            kind: 'text' as GridCellKind,
+            data: 'Display Text',
+            displayData: 'Display Text',
+            contentAlign: 'left',
+            allowOverlay: false,
+            style: 'normal',
+            themeOverride: {}
+        })
+        expect(cellCallback([0, 4])).toEqual({
+            kind: 'text' as GridCellKind,
+            data: '4',
+            displayData: 'column test',
+            contentAlign: 'left',
+            allowOverlay: false
+        })
+    })
+    test('handles original entity', () => {
+        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1)
+        expect(cellCallback([1, 0])).toEqual({
             kind: 'custom' as GridCellKind,
             data: new AssignType(false, true)
         })
-        expect(cellCallback([1, 0])).toEqual({
+
+        expect(cellCallback([1, 1])).toEqual({
+            kind: 'text' as GridCellKind,
+            data: '',
+            displayData: '',
+            contentAlign: 'center',
+            allowOverlay: false,
+            style: 'faded',
+            themeOverride: {}
+        })
+        expect(cellCallback([1, 2])).toEqual({
+            kind: 'text' as GridCellKind,
+            data: '',
+            displayData: '',
+            contentAlign: 'center',
+            allowOverlay: false,
+            style: 'faded',
+            themeOverride: {}
+        })
+
+        expect(cellCallback([1, 3])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'group entity test',
             data: 'group entity test',
-            contentAlign: 'left',
-            themeOverride: { baseFontStyle: 'bold 13px' }
-        })
-        expect(cellCallback([2, 0])).toEqual({
-            kind: 'text' as GridCellKind,
-            allowOverlay: false,
-            displayData: '',
-            data: '',
             contentAlign: 'right',
-            themeOverride: { baseFontStyle: 'bold 13px' }
+            style: 'normal',
+            themeOverride: {}
         })
-        expect(cellCallback([3, 0])).toEqual({
+        expect(cellCallback([1, 4])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'value group',
             data: 'value group',
             contentAlign: 'right',
-            themeOverride: { baseFontStyle: 'bold 13px' }
+            themeOverride: undefined
         })
     })
     test('handles similar entities', () => {
-        const cellCallback = mkCellContentCallback(entityTest, columnTypes)
-        expect(cellCallback([0, 1])).toEqual({
+        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1)
+        expect(cellCallback([2, 0])).toEqual({
             kind: 'custom' as GridCellKind,
             data: new AssignType(true, false)
-        })
-        expect(cellCallback([1, 1])).toEqual({
-            kind: 'text' as GridCellKind,
-            allowOverlay: false,
-            displayData: 'similar entity test',
-            data: 'similar entity test',
-            contentAlign: 'left',
-            themeOverride: undefined
         })
         expect(cellCallback([2, 1])).toEqual({
             kind: 'text' as GridCellKind,
@@ -128,9 +158,28 @@ describe('cell contents callback', () => {
             displayData: '90 %',
             data: '90 %',
             contentAlign: 'right',
-            themeOverride: undefined
+            style: 'normal',
+            themeOverride: {}
         })
-        expect(cellCallback([3, 1])).toEqual({
+        expect(cellCallback([2, 2])).toEqual({
+            kind: 'text' as GridCellKind,
+            allowOverlay: false,
+            displayData: '0/1',
+            data: '0/1',
+            contentAlign: 'right',
+            style: 'normal',
+            themeOverride: {}
+        })
+        expect(cellCallback([2, 3])).toEqual({
+            kind: 'text' as GridCellKind,
+            allowOverlay: false,
+            displayData: 'similar entity test',
+            data: 'similar entity test',
+            contentAlign: 'right',
+            style: 'normal',
+            themeOverride: {}
+        })
+        expect(cellCallback([2, 4])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'value similar',
@@ -138,27 +187,38 @@ describe('cell contents callback', () => {
             contentAlign: 'right',
             themeOverride: undefined
         })
-        expect(cellCallback([0, 2])).toEqual({
+        expect(cellCallback([3, 0])).toEqual({
             kind: 'custom' as GridCellKind,
             data: new AssignType(true, false)
         })
-        expect(cellCallback([1, 2])).toEqual({
-            kind: 'text' as GridCellKind,
-            allowOverlay: false,
-            displayData: 'similar entity test 1',
-            data: 'similar entity test 1',
-            contentAlign: 'left',
-            themeOverride: undefined
-        })
-        expect(cellCallback([2, 2])).toEqual({
+        expect(cellCallback([3, 1])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: '80 %',
             data: '80 %',
             contentAlign: 'right',
-            themeOverride: undefined
+            style: 'normal',
+            themeOverride: {}
         })
         expect(cellCallback([3, 2])).toEqual({
+            kind: 'text' as GridCellKind,
+            allowOverlay: false,
+            displayData: '1/1',
+            data: '1/1',
+            contentAlign: 'right',
+            style: 'normal',
+            themeOverride: {}
+        })
+        expect(cellCallback([3, 3])).toEqual({
+            kind: 'text' as GridCellKind,
+            allowOverlay: false,
+            displayData: 'similar entity test 1',
+            data: 'similar entity test 1',
+            contentAlign: 'right',
+            style: 'normal',
+            themeOverride: {}
+        })
+        expect(cellCallback([3, 4])).toEqual({
             kind: 'text' as GridCellKind,
             allowOverlay: false,
             displayData: 'value similar 1',

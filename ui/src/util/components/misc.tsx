@@ -3,13 +3,7 @@ import { Remote, RemoteInterface } from '../state'
 import { ReactNode } from 'react'
 
 export function CosmaeLoading() {
-    return (
-        <div className="cosmae-table-container-outer">
-            <div className="cosmae-table-container-inner">
-                <div className="shimmer"></div>
-            </div>
-        </div>
-    )
+    return <div className="shimmer h-100 v-100"></div>
 }
 
 export function RemoteTriggerButton({

@@ -11,12 +11,16 @@ import { TagType } from '../../column_menu/state'
 import { EntityWithDuplicates } from './state'
 import { CellValue } from '../../table/state'
 import { AssignType } from '../../table/draw'
+import { RemoteInterface } from '../../util/state'
 
 export type GridColumWithType = GridColumn & { columnType: TagType }
 
 export function constructColumnTitle(namePath: string[]): string {
     if (namePath === undefined || namePath.length == 0) {
         return 'UNKNOWN'
+    }
+    if (namePath.length == 1) {
+        return namePath[0]
     }
     if (namePath.length > 3) {
         return (
@@ -58,6 +62,7 @@ export function mkComparisonCell(
             cellContent = undefined
         } else {
             cellContent = cellValues[0].value
+            displayData = cellContent?.toString()
         }
     } else if (columnType == TagType.Float) {
         // workaround for typescript jest compatibility
@@ -97,21 +102,29 @@ export function mkComparisonCell(
         themeOverride
     } as GridCell
 }
+
 export function mkCellContentCallback(
     entityGroup: EntityWithDuplicates,
-    columnTypes: GridColumWithType[]
+    tagTypes: GridColumWithType[],
+    numMatchTags: number
 ): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
-        let themeOverride = undefined
         let contentAlign = 'right'
-        if (row_idx == 0) {
-            themeOverride = { baseFontStyle: 'bold 13px' }
-        }
-        if (col_idx < 3) {
-            if (col_idx == 0) {
+        let displayTxt = ''
+        const themeOverride = {}
+        let style = 'normal'
+        if (row_idx < 4) {
+            if (row_idx == 0) {
+                // row with assignment buttons
                 let replaceInfo = undefined
-                if (row_idx == 0) {
+                if (col_idx == 0) {
+                    return {
+                        kind: 'text' as GridCellKind,
+                        data: '',
+                        displayData: ''
+                    } as GridCell
+                } else if (col_idx == 1) {
                     replaceInfo = new AssignType(
                         false,
                         entityGroup.assignedDuplicate.value?.idPersistent == undefined
@@ -119,7 +132,7 @@ export function mkCellContentCallback(
                 } else {
                     replaceInfo = new AssignType(
                         true,
-                        entityGroup.similarEntities.value[row_idx - 1].idPersistent ==
+                        entityGroup.similarEntities.value[col_idx - 2].idPersistent ==
                             entityGroup.assignedDuplicate.value?.idPersistent
                     )
                 }
@@ -127,43 +140,75 @@ export function mkCellContentCallback(
                     kind: 'custom' as GridCellKind,
                     data: replaceInfo
                 } as CustomCell<AssignType>
-            }
-            let displayTxt = entityGroup.displayTxt
-            if (col_idx == 2) {
-                if (row_idx == 0) {
-                    displayTxt = ''
-                } else {
+            } else if (row_idx == 1) {
+                // row with similarities
+                if (col_idx > 1) {
                     displayTxt =
                         Math.round(
-                            entityGroup.similarEntities.value[row_idx - 1].similarity *
+                            entityGroup.similarEntities.value[col_idx - 2]?.similarity *
                                 100
                         ) + ' %'
+                } else if (col_idx == 1) {
+                    displayTxt = ''
+                    contentAlign = 'center'
+                    style = 'faded'
+                } else {
+                    displayTxt = 'Display Text Similarity'
+                    contentAlign = 'left'
+                }
+            } else if (row_idx == 2) {
+                if (col_idx > 1) {
+                    displayTxt = `${
+                        entityGroup.similarEntities.value[col_idx - 2]
+                            .idMatchTagDefinitionPersistentList.length
+                    }/${numMatchTags}`
+                } else if (col_idx == 0) {
+                    displayTxt = 'Match Count'
+                    contentAlign = 'left'
+                } else {
+                    displayTxt = ''
+                    contentAlign = 'center'
+                    style = 'faded'
                 }
             } else {
-                contentAlign = 'left'
-                if (row_idx != 0) {
+                // display_txt
+                if (col_idx > 1) {
                     displayTxt =
-                        entityGroup.similarEntities.value[row_idx - 1].displayTxt
+                        entityGroup.similarEntities.value[col_idx - 2].displayTxt
+                } else if (col_idx == 1) {
+                    displayTxt = entityGroup.displayTxt
+                } else {
+                    contentAlign = 'left'
+                    displayTxt = 'Display Text'
                 }
             }
-
             return {
                 kind: 'text' as GridCellKind,
                 allowOverlay: false,
                 displayData: displayTxt,
                 data: displayTxt,
+                contentAlign,
                 themeOverride,
-                contentAlign
+                style
             } as GridCell
         }
-        let cellContents
-        if (row_idx == 0) {
-            cellContents = entityGroup.cellContents[col_idx - 3]
-        } else if (entityGroup.similarEntities.isLoading) {
-            return loadingCell
+        let cellContents: RemoteInterface<CellValue[]> | undefined = undefined
+        if (col_idx == 0) {
+            return {
+                kind: 'text' as GridCellKind,
+                allowOverlay: false,
+                displayData: tagTypes[row_idx - 4].title,
+                data: row_idx.toString(),
+                contentAlign: 'left'
+            } as GridCell
+        } else if (col_idx == 1) {
+            cellContents = entityGroup.cellContents[row_idx - 4]
         } else {
+            if (entityGroup.similarEntities.isLoading) {
+                return loadingCell
+            }
             cellContents =
-                entityGroup.similarEntities.value[row_idx - 1].cellContents[col_idx - 3]
+                entityGroup.similarEntities.value[col_idx - 2].cellContents[row_idx - 4]
         }
         if (cellContents === undefined) {
             return emptyCell
@@ -172,9 +217,8 @@ export function mkCellContentCallback(
             return loadingCell
         }
         return mkComparisonCell(
-            columnTypes[col_idx].columnType,
-            cellContents.value,
-            themeOverride
+            tagTypes[row_idx - 4].columnType,
+            cellContents?.value ?? []
         )
     }
 }

@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
 import { TagDefinition, TagType } from '../../column_menu/state'
-import { GridColumWithType } from './hooks'
+import { GridColumWithType, constructColumnTitle } from './hooks'
 import { selectContribution } from '../selectors'
 import { newRemote } from '../../util/state'
 
@@ -35,6 +35,10 @@ export const selectShowTagDefinitionsMenu = createSelector(
     selectContributionEntity,
     (state) => state.showTagDefinitionMenu
 )
+export const selectMatchTagDefinitionList = createSelector(
+    selectContribution,
+    (contribution) => contribution.value?.matchTagDefinitionList ?? []
+)
 
 export const selectTagDefinitions = createSelector(
     selectContributionEntity,
@@ -67,65 +71,60 @@ export const selectLoadingProgress = createSelector(selectEntities, (entities) =
     return undefined
 })
 
-export const selectColumnDefs = createSelector(
+export const selectSelectedEntityIdx = createSelector(
+    selectContributionEntity,
+    (contributionEntityState) => contributionEntityState.selectedEntityIdx
+)
+
+export const selectSelectedEntity = createSelector(
+    selectEntities,
+    selectSelectedEntityIdx,
+    (entities, idx) => {
+        if (entities.isLoading || idx === undefined) {
+            return undefined
+        }
+        return entities.value[idx]
+    }
+)
+
+export const selectTagRowDefs = createSelector(
     selectTagDefinitions,
-    ([tagDefs, _tagDefMap]) => [
-        {
-            id: 'Assignment',
-            title: 'Assignment',
-            width: 200,
-            columnType: TagType.Inner
-        } as GridColumWithType,
-        {
-            id: 'display_txt',
-            title: 'Display Text',
-            width: 200,
-            columnType: TagType.String
-        } as GridColumWithType,
-        {
-            id: 'similarity',
-            title: 'Similarity',
-            width: 100,
-            columnType: TagType.String
-        } as GridColumWithType,
-        ...tagDefs.map((colDef) => {
+    ([tagDefList, _tagDefMap]) =>
+        tagDefList.map((tagDef) => {
             return {
-                id: colDef.idPersistent,
-                title: constructColumnTitle(colDef.namePath),
+                id: tagDef.idPersistent,
+                title: constructColumnTitle(tagDef.namePath),
                 width: 200,
-                columnType: colDef.columnType
+                columnType: TagType.String
             } as GridColumWithType
         })
-    ]
 )
+
+export const selectEntityColumnDefs = createSelector(selectSelectedEntity, (entity) => [
+    {
+        id: 'Description',
+        title: 'Tag Name',
+        width: 200,
+        columnType: TagType.String
+    },
+    {
+        id: entity?.idPersistent,
+        title: 'Uploaded Entity',
+        width: 200,
+        columnType: TagType.String,
+        themeOverride: { textDark: '#197374' }
+    },
+    ...(entity?.similarEntities.value ?? []).map((similar, idx) => {
+        return {
+            id: similar.idPersistent,
+            title: `Match ${idx + 1}`,
+            width: 200,
+            columnType: TagType.String
+        } as GridColumWithType
+    })
+])
 
 export const selectCompleteEntityAssignment = createSelector(
     selectContributionEntity,
     (state) => state.completeEntityAssignment
 )
-
-export const selectPageNumber = createSelector(selectContributionEntity, (state) => {
-    return state.pageNumber
-})
-export const selectMaxPageNumber = createSelector(
-    selectEntitiesWithMatches,
-    (entities) => {
-        return Math.ceil((entities.value?.length ?? 0) / 50)
-    }
-)
-
-export function constructColumnTitle(namePath: string[]): string {
-    if (namePath === undefined || namePath.length == 0) {
-        return 'UNKNOWN'
-    }
-    if (namePath.length > 3) {
-        return (
-            namePath[0] +
-            ' -> ... -> ' +
-            namePath[namePath.length - 2] +
-            ' -> ' +
-            namePath[namePath.length - 1]
-        )
-    }
-    return namePath[0] + ' -> ' + namePath.slice(1).join(' -> ')
-}

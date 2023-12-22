@@ -338,7 +338,9 @@ export function getContributionTagInstances({
 export function parseScoredEntityFromJson(json: any) {
     return newScoredEntity({
         ...parseEntityObjectFromJson(json['entity']),
-        similarity: json['similarity']
+        similarity: json['similarity'],
+        idMatchTagDefinitionPersistentList:
+            json['id_match_tag_definition_persistent_list']
     })
 }
 

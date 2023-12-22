@@ -9,26 +9,30 @@ export interface ScoredEntity {
     version: number
     similarity: number
     cellContents: RemoteInterface<CellValue[]>[]
+    idMatchTagDefinitionPersistentList: string[]
 }
 export function newScoredEntity({
     idPersistent,
     displayTxt,
     version,
     similarity,
-    cellContents = [newRemote([])]
+    cellContents = [newRemote([])],
+    idMatchTagDefinitionPersistentList = []
 }: {
     idPersistent: string
     displayTxt: string
     version: number
     similarity: number
     cellContents?: RemoteInterface<CellValue[]>[]
+    idMatchTagDefinitionPersistentList?: string[]
 }): ScoredEntity {
     return {
         idPersistent: idPersistent,
         displayTxt: displayTxt,
         version,
         similarity: similarity,
-        cellContents: cellContents
+        cellContents: cellContents,
+        idMatchTagDefinitionPersistentList: idMatchTagDefinitionPersistentList
     }
 }
 
@@ -102,7 +106,7 @@ export interface ContributionEntityState {
     tagDefinitions: TagDefinition[]
     tagDefinitionMap: { [key: string]: number }
     showTagDefinitionMenu: boolean
-    pageNumber: number
+    selectedEntityIdx?: number
 }
 export function newContributionEntityState({
     entities = newRemote([]),
@@ -111,7 +115,7 @@ export function newContributionEntityState({
     tagDefinitions = [],
     tagDefinitionMap: columnDefinitionMap,
     showTagDefinitionMenu = false,
-    pageNumber = 1
+    selectedEntityIdx = undefined
 }: {
     entities?: RemoteInterface<EntityWithDuplicates[]>
     entityMap?: { [key: string]: number }
@@ -119,7 +123,7 @@ export function newContributionEntityState({
     tagDefinitions?: TagDefinition[]
     tagDefinitionMap?: { [key: string]: number }
     showTagDefinitionMenu?: boolean
-    pageNumber?: number
+    selectedEntityIdx?: number
 }): ContributionEntityState {
     let newEntityMap: { [key: string]: number },
         newTagDefinitionMap: { [key: string]: number }
@@ -145,10 +149,10 @@ export function newContributionEntityState({
     return {
         entities: entities,
         completeEntityAssignment: completeEntityAssignment,
-        pageNumber: pageNumber,
         tagDefinitions: tagDefinitions,
         showTagDefinitionMenu: showTagDefinitionMenu,
         entityMap: newEntityMap,
-        tagDefinitionMap: newTagDefinitionMap
+        tagDefinitionMap: newTagDefinitionMap,
+        selectedEntityIdx: selectedEntityIdx
     }
 }

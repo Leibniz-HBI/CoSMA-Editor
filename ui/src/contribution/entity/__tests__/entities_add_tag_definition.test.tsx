@@ -116,6 +116,7 @@ function mkMatches(
                 matches: [
                     {
                         similarity: idx / 100.0,
+                        id_match_tag_definition_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 0`,
                             id_persistent: entity.id_persistent + '-0',
@@ -124,6 +125,7 @@ function mkMatches(
                     },
                     {
                         similarity: idx / 100.0 + 0.001,
+                        id_match_tag_definition_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 1`,
                             id_persistent: entity.id_persistent + '-1',
@@ -280,8 +282,7 @@ test('add tag', async () => {
                         idPersistent: 'id-val-' + idx,
                         version: idx
                     }
-                ]),
-                newRemote([])
+                ])
             ])
             expect(entity.similarEntities).toEqual(
                 newRemote([
@@ -299,8 +300,7 @@ test('add tag', async () => {
                                     value: `val-0-${idx}`,
                                     version: idx
                                 }
-                            ]),
-                            newRemote([])
+                            ])
                         ]
                     }),
                     newScoredEntity({
@@ -317,8 +317,7 @@ test('add tag', async () => {
                                     value: `val-1-${idx}`,
                                     version: idx
                                 }
-                            ]),
-                            newRemote([])
+                            ])
                         ]
                     })
                 ])
@@ -334,14 +333,16 @@ test('add tag', async () => {
                         idPersistent: entity.idPersistent + '-0',
                         version: 0,
                         similarity: (idx - 50) / 100.0,
-                        cellContents: [newRemote([]), newRemote([])]
+                        idMatchTagDefinitionPersistentList: [],
+                        cellContents: [newRemote([])]
                     }),
                     newScoredEntity({
                         displayTxt: entity.displayTxt + ` match 1`,
                         idPersistent: entity.idPersistent + '-1',
                         version: 0,
                         similarity: (idx - 50) / 100.0 + 0.001,
-                        cellContents: [newRemote([]), newRemote([])]
+                        idMatchTagDefinitionPersistentList: [],
+                        cellContents: [newRemote([])]
                     })
                 ])
             )

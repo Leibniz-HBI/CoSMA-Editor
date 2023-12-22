@@ -1,3 +1,4 @@
+import { TagDefinition } from '../column_menu/state'
 import { Remote } from '../util/state'
 
 export enum ContributionStep {
@@ -25,6 +26,7 @@ export interface Contribution {
     anonymous: boolean
     hasHeader: boolean
     author?: string
+    matchTagDefinitionList: TagDefinition[]
 }
 export function newContribution({
     name,
@@ -33,7 +35,8 @@ export function newContribution({
     step,
     anonymous,
     hasHeader,
-    author = undefined
+    author = undefined,
+    matchTagDefinitionList = []
 }: {
     name: string
     idPersistent: string
@@ -42,6 +45,7 @@ export function newContribution({
     anonymous: boolean
     hasHeader: boolean
     author?: string
+    matchTagDefinitionList?: TagDefinition[]
 }) {
     return {
         name: name,
@@ -50,7 +54,8 @@ export function newContribution({
         step: step,
         anonymous: anonymous,
         hasHeader: hasHeader,
-        author: author
+        author: author,
+        matchTagDefinitionList: matchTagDefinitionList
     }
 }
 

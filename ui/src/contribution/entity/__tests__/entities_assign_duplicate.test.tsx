@@ -177,6 +177,7 @@ function mkMatches(
                 matches: [
                     {
                         similarity: idx / 100.0,
+                        id_match_tag_definition_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 0`,
                             id_persistent: entity.id_persistent + '-0',
@@ -185,6 +186,7 @@ function mkMatches(
                     },
                     {
                         similarity: idx / 100.0 + 0.001,
+                        id_match_tag_definition_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 1`,
                             id_persistent: entity.id_persistent + '-1',
@@ -218,65 +220,76 @@ test('assign duplicate', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock), addResponseSequence(fetchMock, [[200, {}]])
     addResponseSequence(fetchMock, [
-        [
-            200,
-            {
-                assigned_duplicate: {
-                    id_persistent: 'id-entity-0-1',
-                    display_txt: 'entity-0 match 1',
-                    version: 0
-                }
-            }
-        ],
+        [200, { value_responses: [] }],
         [
             200,
             {
                 assigned_duplicate: {
                     id_persistent: 'id-entity-1-0',
                     display_txt: 'entity-1 match 0',
-                    version: 0
+                    version: 0,
+                    disabled: false
                 }
             }
         ],
+        [200, { value_responses: [] }],
+        [
+            200,
+            {
+                assigned_duplicate: {
+                    id_persistent: 'id-entity-2-1',
+                    display_txt: 'entity-2 match 1',
+                    version: 0,
+                    disabled: false
+                }
+            }
+        ],
+        [200, { value_responses: [] }],
         [200, { assigned_duplicate: undefined }],
-        [200, { assigned_duplicate: null }]
+        [200, { value_responses: [] }]
     ])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(6)
     })
+    screen.getByText(/Please select an entity/i)
+    screen.queryByText('entity-1')?.click()
     await waitFor(() => {
         const buttons = screen.getAllByRole('button', { name: /Assign Duplicate/i })
-        expect(buttons.length).toEqual(100)
-        buttons[1].click()
-        buttons[2].click()
+        expect(buttons.length).toEqual(2)
+        buttons[0].click()
     })
+    setTimeout(
+        async () =>
+            await waitFor(() => {
+                const buttons2 = screen.getAllByRole('button', {
+                    name: /Assign Duplicate/i
+                })
+                expect(buttons2.length).toEqual(2)
+                buttons2[1].click()
+            }),
+        500
+    )
     await waitFor(() => {
         const state = store.getState().contributionEntity
-        expect(state.entities.value[0].assignedDuplicate).toEqual(
-            newRemote({
-                idPersistent: 'id-entity-0-1',
-                displayTxt: 'entity-0 match 1',
-                version: 0
-            })
-        )
         expect(state.entities.value[1].assignedDuplicate).toEqual(
             newRemote({
                 idPersistent: 'id-entity-1-0',
                 displayTxt: 'entity-1 match 0',
-                version: 0
+                version: 0,
+                disabled: false
+            })
+        )
+        expect(state.entities.value[2].assignedDuplicate).toEqual(
+            newRemote({
+                idPersistent: 'id-entity-2-1',
+                displayTxt: 'entity-2 match 1',
+                version: 0,
+                disabled: false
             })
         )
     })
-    expect(fetchMock.mock.calls.at(-2)).toEqual([
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-0/duplicate`,
-        {
-            body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-0-1' }),
-            credentials: 'include',
-            method: 'PUT'
-        }
-    ])
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    expect(fetchMock.mock.calls.at(-4)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-1/duplicate`,
         {
             body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-1-0' }),
@@ -284,27 +297,24 @@ test('assign duplicate', async () => {
             method: 'PUT'
         }
     ])
-    await waitFor(() => {
-        const buttons = screen.getAllByRole('button', { name: /Create New Entity/i })
-        expect(buttons.length).toEqual(50)
-        buttons[0].click()
-        buttons[1].click()
-    })
-    await waitFor(() => {
-        const state = store.getState().contributionEntity
-        expect(state.entities.value[0].assignedDuplicate).toEqual(newRemote(undefined))
-        expect(state.entities.value[1].assignedDuplicate).toEqual(newRemote(undefined))
-    })
     expect(fetchMock.mock.calls.at(-2)).toEqual([
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-0/duplicate`,
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-2/duplicate`,
         {
-            body: JSON.stringify({}),
+            body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-2-1' }),
             credentials: 'include',
             method: 'PUT'
         }
     ])
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-1/duplicate`,
+    await waitFor(() => {
+        const button = screen.getByRole('button', { name: /Create New Entity/i })
+        button.click()
+    })
+    await waitFor(() => {
+        const state = store.getState().contributionEntity
+        expect(state.entities.value[3].assignedDuplicate).toEqual(newRemote(undefined))
+    })
+    expect(fetchMock.mock.calls.at(-2)).toEqual([
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-3/duplicate`,
         {
             body: JSON.stringify({}),
             credentials: 'include',

@@ -164,7 +164,8 @@ function initialResponses(fetchMock: jest.Mock) {
         ],
         [200, { tag_definitions: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
-        [200, { matches: mkMatches(personList.slice(50)) }]
+        [200, { matches: mkMatches(personList.slice(50)) }],
+        [200, { value_responses: [] }]
     ])
 }
 test('get duplicates', async () => {
@@ -172,8 +173,12 @@ test('get duplicates', async () => {
     initialResponses(fetchMock)
     const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
+        const entitySelectionElement = screen.getByText('entity-1')
+        entitySelectionElement.click()
+    })
+    await waitFor(() => {
         const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(50)
+        expect(mockElements.length).toEqual(1)
         for (let idx = 0; idx < 60; ++idx) {
             expect(
                 store.getState().contributionEntity.entities.value[idx].similarEntities
@@ -189,26 +194,21 @@ test('get duplicates', async () => {
         ).toEqual(0)
     })
 })
-test('changePage', async () => {
+test('select entity', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
     addResponseSequence(fetchMock, [])
     const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(50)
+        screen.getByText('Please select an entity')
     })
-    const nextButton = screen.getByTestId('page-next')
-    nextButton.click()
+    await waitFor(() => {
+        const entitySelectionElement = screen.getByText('entity-1')
+        entitySelectionElement.click()
+    })
     await waitFor(() => {
         const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(10)
+        expect(mockElements.length).toEqual(1)
     })
-    expect(store.getState().contributionEntity.pageNumber).toEqual(2)
-    const prevButton = screen.getByTestId('page-prev')
-    prevButton.click()
-    await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(50)
-    })
+    expect(store.getState().contributionEntity.selectedEntityIdx).toEqual(1)
 })

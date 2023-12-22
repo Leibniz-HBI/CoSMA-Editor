@@ -44,9 +44,6 @@ export const contributionEntitySlice = createSlice({
     name: 'contributionEntity',
     initialState,
     reducers: {
-        setPageNumber(state: ContributionEntityState, action: PayloadAction<number>) {
-            state.pageNumber = action.payload
-        },
         putDuplicateStart(
             state: ContributionEntityState,
             action: PayloadAction<string>
@@ -128,11 +125,13 @@ export const contributionEntitySlice = createSlice({
                     state.tagDefinitions.push(tagDef)
                     state.tagDefinitionMap[tagDef.idPersistent] =
                         state.tagDefinitions.length - 1
-                    for (const entity of state.entities.value) {
-                        entity.cellContents.push(newRemote([]))
-                        for (const candidate of entity.similarEntities.value) {
-                            candidate.cellContents.push(newRemote([]))
-                        }
+                }
+            }
+            for (const idx in state.tagDefinitions) {
+                for (const entity of state.entities.value) {
+                    entity.cellContents[idx] = newRemote([])
+                    for (const candidate of entity.similarEntities.value) {
+                        candidate.cellContents[idx] = newRemote([])
                     }
                 }
             }
@@ -246,6 +245,18 @@ export const contributionEntitySlice = createSlice({
         },
         completeEntityAssignmentClearError(state: ContributionEntityState) {
             state.completeEntityAssignment.errorMsg = undefined
+        },
+        setSelectedEntityIdx(
+            state: ContributionEntityState,
+            action: PayloadAction<number>
+        ) {
+            state.selectedEntityIdx = action.payload
+        },
+        incrementSelectedEntityIdx(state: ContributionEntityState) {
+            state.selectedEntityIdx = Math.min(
+                state.entities.value.length,
+                (state.selectedEntityIdx ?? -1) + 1
+            )
         }
     }
 })
@@ -422,6 +433,7 @@ export const {
     putDuplicateError,
     putDuplicateStart,
     putDuplicateSuccess,
-    setPageNumber,
-    toggleTagDefinitionMenu
+    toggleTagDefinitionMenu,
+    setSelectedEntityIdx,
+    incrementSelectedEntityIdx
 } = contributionEntitySlice.actions
