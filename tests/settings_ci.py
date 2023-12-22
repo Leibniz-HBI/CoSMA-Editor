@@ -73,16 +73,10 @@ TEMPLATES = [
 WSGI_APPLICATION = "django_project.wsgi.application"
 
 
-def get_file_secret(secret_name):
-    "Get secret as provided by docker_compose"
-    try:
-        with open(
-            f"{SECRET_DIR.absolute()}/{secret_name}", encoding="utf-8"
-        ) as key_file:
-            key = key_file.readline().rstrip("\n")
-    except FileNotFoundError:
-        env_var_name = secret_name.upper()
-        key = environ.get(env_var_name)
+def get_env(secret_name):
+    "Get secret as provided by github actions"
+    env_var_name = secret_name.upper()
+    key = environ.get(env_var_name)
     if not key:
         raise Exception(  # pylint: disable=broad-exception-raised
             f"Please set the {secret_name} secret."
@@ -96,11 +90,11 @@ def get_file_secret(secret_name):
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "cosmae_db_ci",  # get_file_secret("cosmae_db_name"),
-        "USER": "cosmae_db_user_ci",  # get_file_secret("cosmae_db_user"),
-        "PASSWORD": "cosmae_db_password_ci",  # get_file_secret("cosmae_db_password"),
-        "HOST": "postgres",
-        "PORT": "5555",
+        "NAME": get_env("cosmae_db_name"),
+        "USER": get_env("cosmae_db_user"),
+        "PASSWORD": get_env("cosmae_db_password"),
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
     }
 }
 
