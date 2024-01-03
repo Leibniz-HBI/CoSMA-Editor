@@ -10,7 +10,7 @@ from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
 from cosmae.merge_request.queue import merge_request_fast_forward
-from cosmae.tag.models_django import TagInstance
+from cosmae.tag.models_django import TagInstance, TagInstanceHistory
 from cosmae.util import timestamp
 
 
@@ -32,7 +32,9 @@ def eliminate_duplicates(id_contribution_persistent):
             contribution_candidate=contribution
         )
         tag_instances_with_duplicates = annotate_with_replacement_info(
-            TagInstance.most_recent_queryset(), duplicates, "id_entity_persistent"
+            TagInstance.objects.all(),  # pylint: disable=no-member
+            duplicates,
+            "id_entity_persistent",
         )
         update_tag_instances(
             tag_instances_with_duplicates, contribution.created_by, time_edit
@@ -69,7 +71,7 @@ def update_tag_instances(tag_instances_with_duplicates, user, time_edit):
         replacement_id_entity_persistent__isnull=False
     )
     updated_tag_instances = [
-        TagInstance.change_or_create(
+        TagInstanceHistory.change_or_create(
             id_persistent=tag_instance.id_persistent,
             id_entity_persistent=tag_instance.replacement_id_entity_persistent,
             value=tag_instance.value,
@@ -80,7 +82,9 @@ def update_tag_instances(tag_instances_with_duplicates, user, time_edit):
         )[0]
         for tag_instance in tag_instances_with_duplicates
     ]
-    TagInstance.objects.bulk_create(updated_tag_instances)  # pylint: disable=no-member
+    TagInstanceHistory.objects.bulk_create(  # pylint: disable=no-member
+        updated_tag_instances
+    )
 
 
 def annotate_with_replacement_info(manager, replacements, id_entity_field_name):

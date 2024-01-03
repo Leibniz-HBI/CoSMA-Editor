@@ -131,7 +131,7 @@ def test_bad_db(auth_server, float_tag):
     live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
-    with patch("cosmae.tag.models_django.TagInstance.save", mock):
+    with patch("cosmae.tag.models_django.TagInstanceHistory.save", mock):
         req = r.post_tag_instance(live_server.url, float_tag, cookies=cookies)
     assert req.status_code == 500
     assert req.json()["msg"] == "Provided data not consistent with database."

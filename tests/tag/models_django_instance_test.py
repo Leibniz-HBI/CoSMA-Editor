@@ -10,12 +10,12 @@ from cosmae.exception import (
     TagDefinitionMissingException,
     TagDefinitionPermissionException,
 )
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import TagDefinition, TagInstance, TagInstanceHistory
 
 
 @pytest.fixture
 def tag():
-    return TagInstance(
+    return TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
         id_entity_persistent=cp.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
@@ -25,7 +25,7 @@ def tag():
 
 
 def test_different_entity(tag):
-    other = TagInstance(
+    other = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
         id_entity_persistent="id_entity_test_1",
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
@@ -36,7 +36,7 @@ def test_different_entity(tag):
 
 
 def test_different_value(tag):
-    other = TagInstance(
+    other = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
         id_entity_persistent=cp.id_persistent_test,
         id_tag_definition_persistent="id_tag_def_persistent1",
@@ -47,7 +47,7 @@ def test_different_value(tag):
 
 
 def test_different_tag_def(tag):
-    other = TagInstance(
+    other = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
         id_entity_persistent=cp.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
@@ -58,7 +58,7 @@ def test_different_tag_def(tag):
 
 
 def test_same(tag):
-    other = TagInstance(
+    other = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
         id_entity_persistent=cp.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
@@ -71,7 +71,7 @@ def test_same(tag):
 @pytest.mark.django_db
 def test_get_most_recent(tag):
     tag.save()
-    new = TagInstance(
+    new = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
         id_entity_persistent=cp.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
@@ -80,14 +80,14 @@ def test_get_most_recent(tag):
         previous_version=tag,
     )
     new.save()
-    by_id = TagInstance.most_recent_by_id(c.id_tag_persistent_test)
+    by_id = TagInstance.get_by_id(c.id_tag_persistent_test)
     assert by_id.value == "1.0"
 
 
 @pytest.mark.django_db
 def test_get_most_recent_by_ids(tag):
     tag.save()
-    new = TagInstance(
+    new = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
         id_entity_persistent=cp.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
@@ -105,7 +105,7 @@ def test_get_most_recent_by_ids(tag):
 @pytest.mark.django_db
 def test_entity_missing(user):
     with pytest.raises(EntityMissingException) as exc:
-        TagInstance.change_or_create(
+        TagInstanceHistory.change_or_create(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
             user=user,
@@ -119,7 +119,7 @@ def test_entity_missing(user):
 def test_tag_def_missing(entity0, user):
     entity0.save()
     with pytest.raises(TagDefinitionMissingException) as exc:
-        TagInstance.change_or_create(
+        TagInstanceHistory.change_or_create(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
             user=user,
@@ -134,7 +134,7 @@ def test_tag_def_no_permission(entity0, tag_def_user, user1):
     entity0.save()
     tag_def_user.save()
     with pytest.raises(TagDefinitionPermissionException) as exc:
-        TagInstance.change_or_create(
+        TagInstanceHistory.change_or_create(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
             user=user1,
@@ -149,7 +149,7 @@ def test_tag_def_no_permission(entity0, tag_def_user, user1):
 def test_add_tag_root(entity0, tag_def_user):
     entity0.save()
     tag_def_user.save()
-    ret, _ = TagInstance.change_or_create(
+    ret, _ = TagInstanceHistory.change_or_create(
         id_persistent=c.id_tag_persistent_test,
         time_edit=c.time_edit_test,
         user=tag_def_user.owner,
@@ -178,7 +178,7 @@ def test_add_tag_child(entity0, tag_def_user):
     entity0.save()
     tag_def_user.id_parent_persistent = c.id_tag_def_parent_persistent_test
     tag_def_user.save()
-    ret, _ = TagInstance.change_or_create(
+    ret, _ = TagInstanceHistory.change_or_create(
         id_persistent=c.id_tag_persistent_test,
         time_edit=c.time_edit_test,
         user=tag_def_user.owner,
@@ -205,11 +205,12 @@ def test_empty_chunk(tag_def):
 def test_chunk_versions(tag_def):
     tag_def.save()
     last_values = []
+    last_ids = []
     for i in range(10):
         tag = None
         previous_version = None
         for j in range(i % 3 + 1):
-            tag = TagInstance(
+            tag = TagInstanceHistory(
                 id_persistent=f"id_tag_test{i}",
                 id_entity_persistent=cp.id_persistent_test,
                 id_tag_definition_persistent=tag_def.id_persistent,
@@ -219,8 +220,9 @@ def test_chunk_versions(tag_def):
             )
             tag.save()
             previous_version = tag  # pylint: disable=no-member
+        last_ids.append(tag.id)  # pylint: disable=no-member
         last_values.append(tag.value)
-    ret = TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, 2, 3)
+    ret = TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, last_ids[2], 3)
     ret_values = [tag.value for tag in ret]
     assert ret_values == last_values[2 : 2 + 3]
 
@@ -229,7 +231,7 @@ def test_chunk_versions(tag_def):
 def test_chunk_filter_tag_instance(tag_def):
     tag_def.save()
     for i in range(10):
-        tag = TagInstance(
+        tag = TagInstanceHistory(
             id_persistent=f"id_tag_test{i}",
             id_entity_persistent=cp.id_persistent_test,
             id_tag_definition_persistent=tag_def.id_persistent + i * "0",

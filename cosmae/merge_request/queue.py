@@ -8,7 +8,7 @@ from django.db.utils import OperationalError
 
 from cosmae.exception import EntityUpdatedException
 from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import TagDefinition, TagInstance, TagInstanceHistory
 from cosmae.util import timestamp
 
 
@@ -35,13 +35,13 @@ def merge_request_fast_forward(id_merge_request_persistent):
             )
             time_merge = timestamp()
             if len(tag_instances_destination) == 0:
-                tag_instance_query = TagInstance.most_recent_queryset(
+                tag_instance_query = (
                     TagInstance.objects.filter(  # pylint: disable=no-member
                         id_tag_definition_persistent=merge_request.id_origin_persistent
                     )
                 )
                 for tag_instance in tag_instance_query:
-                    tag_instance, _do_write = TagInstance.change_or_create(
+                    tag_instance, _do_write = TagInstanceHistory.change_or_create(
                         id_persistent=str(uuid4()),
                         id_entity_persistent=tag_instance.id_entity_persistent,
                         id_tag_definition_persistent=merge_request.id_destination_persistent,
@@ -108,7 +108,7 @@ def merge_request_resolve_conflicts(id_merge_request_persistent):
                         tag_instance_reference = resolution.tag_instance_destination
                         id_persistent = tag_instance_reference.id_persistent
                         version = tag_instance_reference.id
-                    TagInstance.change_or_create(
+                    TagInstanceHistory.change_or_create(
                         id_persistent=id_persistent,
                         time_edit=time_merge,
                         id_entity_persistent=resolution.tag_instance_origin.id_entity_persistent,

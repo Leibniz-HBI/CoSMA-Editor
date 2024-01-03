@@ -9,7 +9,7 @@ from tests.tag import common as ct
 from tests.user import common as cu
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
-from cosmae.tag.models_django import TagInstance
+from cosmae.tag.models_django import TagInstanceHistory
 
 
 def test_unknown_user(auth_server):
@@ -146,7 +146,7 @@ def test_conflicts_same_value(
     instances_merge_request_origin_user,
 ):
     for instance_origin in instances_merge_request_origin_user:
-        instance_destination = TagInstance(
+        instance_destination = TagInstanceHistory(
             id_entity_persistent=merge_request_user.id_destination_persistent,
             id_tag_definition_persistent=instance_origin.id_tag_definition_persistent,
             id_persistent=str(uuid4()),

@@ -5,7 +5,7 @@ import tests.entity.common as ce
 import tests.merge_request.common as c
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import TagDefinition, TagInstanceHistory
 
 
 @pytest.fixture
@@ -161,14 +161,14 @@ def merge_request_user1(
 @pytest.fixture
 def instances_merge_request_origin_user(merge_request_user, entity0, entity1):
     id_tag_definition = merge_request_user.id_origin_persistent
-    tag_instance = TagInstance.objects.create(  # pylint: disable=no-member
+    tag_instance = TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_0,
         id_tag_definition_persistent=id_tag_definition,
         value=c.value_origin,
         id_persistent=c.id_instance_origin,
         time_edit=c.time_instance_origin,
     )
-    tag_instance1 = TagInstance.objects.create(  # pylint: disable=no-member
+    tag_instance1 = TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
         id_tag_definition_persistent=id_tag_definition,
         value=c.value_origin1,
@@ -183,7 +183,7 @@ def instance_merge_request_origin_user_changed(
     user1, instances_merge_request_origin_user
 ):
     old_tag_instance = instances_merge_request_origin_user[1]
-    tag_instance, _ = TagInstance.change_or_create(
+    tag_instance, _ = TagInstanceHistory.change_or_create(
         id_entity_persistent=old_tag_instance.id_entity_persistent,
         id_tag_definition_persistent=old_tag_instance.id_tag_definition_persistent,
         id_persistent=old_tag_instance.id_persistent,
@@ -199,7 +199,7 @@ def instance_merge_request_origin_user_changed(
 @pytest.fixture
 def instance_merge_request_destination_user_no_conflict(merge_request_user, entity2):
     id_tag_definition = merge_request_user.id_destination_persistent
-    return TagInstance.objects.create(  # pylint: disable=no-member
+    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_2,
         id_tag_definition_persistent=id_tag_definition,
         id_persistent=c.id_instance_destination,
@@ -211,7 +211,7 @@ def instance_merge_request_destination_user_no_conflict(merge_request_user, enti
 @pytest.fixture
 def instance_merge_request_destination_user_conflict(merge_request_user, entity1):
     id_tag_definition = merge_request_user.id_destination_persistent
-    return TagInstance.objects.create(  # pylint: disable=no-member
+    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
         id_tag_definition_persistent=id_tag_definition,
         id_persistent=c.id_instance_destination,
@@ -225,7 +225,7 @@ def instance_merge_request_destination_user_conflict_changed(
     user,
     instance_merge_request_destination_user_conflict,
 ):
-    tag_instance, _ = TagInstance.change_or_create(
+    tag_instance, _ = TagInstanceHistory.change_or_create(
         id_entity_persistent=instance_merge_request_destination_user_conflict.id_entity_persistent,
         id_tag_definition_persistent=(
             instance_merge_request_destination_user_conflict.id_tag_definition_persistent
@@ -245,7 +245,7 @@ def instance_merge_request_destination_user_conflict_fast_forward(
     merge_request_user_fast_forward, entity1
 ):
     id_tag_definition = merge_request_user_fast_forward.id_destination_persistent
-    return TagInstance.objects.create(  # pylint: disable=no-member
+    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
         id_tag_definition_persistent=id_tag_definition,
         id_persistent=c.id_instance_destination,
@@ -259,7 +259,7 @@ def instance_merge_request_destination_user_no_conflict_fast_forward(
     merge_request_user_fast_forward, entity2
 ):
     id_tag_definition = merge_request_user_fast_forward.id_destination_persistent
-    return TagInstance.objects.create(  # pylint: disable=no-member
+    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_2,
         id_tag_definition_persistent=id_tag_definition,
         id_persistent=c.id_instance_destination,
@@ -271,7 +271,7 @@ def instance_merge_request_destination_user_no_conflict_fast_forward(
 @pytest.fixture
 def instance_merge_request_destination_user_same_value1(merge_request_user, entity1):
     id_tag_definition = merge_request_user.id_destination_persistent
-    return TagInstance.objects.create(  # pylint: disable=no-member
+    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
         id_tag_definition_persistent=id_tag_definition,
         id_persistent=c.id_instance_destination,
@@ -342,7 +342,7 @@ def conflict_resolution_keep_fast_forward(
 
 @pytest.fixture
 def instance_destination_same_value(merge_request_user):
-    return TagInstance.objects.create(  # pylint: disable=no-member
+    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_instance_destination_same_value,
         id_entity_persistent=ce.id_persistent_test_0,
         id_tag_definition_persistent=merge_request_user.id_destination_persistent,
@@ -357,7 +357,7 @@ def instance_destination_updated_same_value1(
     instance_merge_request_destination_user_conflict,
 ):
     old_instance = instance_merge_request_destination_user_conflict
-    tag_instance, _ = TagInstance.change_or_create(  # pylint: disable=no-member
+    tag_instance, _ = TagInstanceHistory.change_or_create(  # pylint: disable=no-member
         id_persistent=old_instance.id_persistent,
         id_entity_persistent=old_instance.id_entity_persistent,
         id_tag_definition_persistent=old_instance.id_tag_definition_persistent,

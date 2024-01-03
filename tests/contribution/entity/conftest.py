@@ -7,7 +7,7 @@ from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagInstance
+from cosmae.tag.models_django import TagInstanceHistory
 
 
 @pytest.fixture
@@ -53,19 +53,23 @@ def duplicate_assignment(contribution_candidate):
 @pytest.fixture()
 def tag_instances_match(tag_def_curated, tag_def1):
     value = "Same Value"
-    tag_instance_destination = TagInstance.objects.create(  # pylint: disable=no-member
-        id_persistent=c.id_tag_instance_match_destination,
-        id_entity_persistent=ce.id_persistent_test_1,
-        id_tag_definition_persistent=tag_def_curated.id_persistent,
-        time_edit=c.time_edit_tag_instance_match_destination,
-        value=value,
+    tag_instance_destination = (
+        TagInstanceHistory.objects.create(  # pylint: disable=no-member
+            id_persistent=c.id_tag_instance_match_destination,
+            id_entity_persistent=ce.id_persistent_test_1,
+            id_tag_definition_persistent=tag_def_curated.id_persistent,
+            time_edit=c.time_edit_tag_instance_match_destination,
+            value=value,
+        )
     )
-    tag_instance_origin = TagInstance.objects.create(  # pylint: disable=no-member
-        id_persistent=c.id_tag_instance_match_origin,
-        id_entity_persistent=c.id_persistent_entity_duplicate_test,
-        id_tag_definition_persistent=tag_def1.id_persistent,
-        time_edit=c.time_edit_tag_instance_match_origin,
-        value=value,
+    tag_instance_origin = (
+        TagInstanceHistory.objects.create(  # pylint: disable=no-member
+            id_persistent=c.id_tag_instance_match_origin,
+            id_entity_persistent=c.id_persistent_entity_duplicate_test,
+            id_tag_definition_persistent=tag_def1.id_persistent,
+            time_edit=c.time_edit_tag_instance_match_origin,
+            value=value,
+        )
     )
     return [tag_instance_origin, tag_instance_destination]
 

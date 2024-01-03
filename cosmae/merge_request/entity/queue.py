@@ -17,7 +17,11 @@ from cosmae.merge_request.entity.models_django import (
     EntityMergeRequest,
 )
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import (
+    TagDefinition,
+    TagInstanceAbstract,
+    TagInstanceHistory,
+)
 from cosmae.util import CosmaeUser, timestamp
 
 
@@ -93,7 +97,7 @@ def apply_entity_merge_request(
 
 def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disable=too-many-arguments
     entity_merge_request: EntityMergeRequest,
-    tag_instance_origin: TagInstance,
+    tag_instance_origin: TagInstanceAbstract,
     id_entity_destination_persistent: str,
     tag_definition_existing_dict: Dict[str, object],
     user: CosmaeUser,
@@ -119,7 +123,7 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
         except TagDefinitionExistsException:
             count += 1
         # Create Tag Instance for that tag definition
-    tag_instance, _ = TagInstance.change_or_create(
+    tag_instance, _ = TagInstanceHistory.change_or_create(
         id_persistent=uuid4(),
         id_tag_definition_persistent=tag_definition_new.id_persistent,
         id_entity_persistent=id_entity_destination_persistent,
@@ -149,7 +153,7 @@ def apply_resolution(
     if not resolution.replace:
         return
     try:
-        instance, _do_write = TagInstance.change_or_create(
+        instance, _do_write = TagInstanceHistory.change_or_create(
             id_persistent=resolution.tag_instance_destination.id_persistent,
             version=resolution.tag_instance_destination_id,
             id_entity_persistent=resolution.entity_destination.id_persistent,

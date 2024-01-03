@@ -11,7 +11,7 @@ from cosmae.contribution.tag_definition.models_django import TagDefinitionContri
 from cosmae.contribution.tag_definition.queue.util import read_csv_of_candidate
 from cosmae.entity.models_django import Entity
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import TagDefinition, TagInstanceHistory
 
 
 def ingest_values_from_csv(id_contribution_persistent):
@@ -83,7 +83,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                     value = str(row_tpl[int(idx_in_file)])
                     if value == "nan":
                         continue
-                    tag_instance, _ = TagInstance.change_or_create(
+                    tag_instance, _ = TagInstanceHistory.change_or_create(
                         id_persistent=id_tag_instance_persistent,
                         id_entity_persistent=id_entity_persistent,
                         id_tag_definition_persistent=tag_definition.id_persistent,

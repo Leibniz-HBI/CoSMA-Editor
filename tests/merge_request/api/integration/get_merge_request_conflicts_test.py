@@ -10,7 +10,7 @@ from tests.user import common as cu
 from tests.utils import assert_versioned, format_datetime
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import TagConflictResolution
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import TagDefinition, TagInstanceHistory
 
 
 def test_unknown_user(auth_server):
@@ -139,7 +139,7 @@ def test_conflicts_same_value(
     instances_merge_request_origin_user,
 ):
     for instance_origin in instances_merge_request_origin_user:
-        instance_destination = TagInstance(
+        instance_destination = TagInstanceHistory(
             id_entity_persistent=instance_origin.id_entity_persistent,
             id_tag_definition_persistent=destination_tag_def_for_mr.id_persistent,
             id_persistent=str(uuid4()),
@@ -415,7 +415,7 @@ def test_tag_instance_destination_value_added(
     )
     id_tag_instance_destination = str(uuid4())
     time_edit = datetime(1873, 2, 4)
-    TagInstance.objects.create(  # pylint: disable=no-member
+    TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_tag_definition_persistent=destination_tag_def_for_mr.id_persistent,
         id_entity_persistent=entity1.id_persistent,
         id_persistent=id_tag_instance_destination,

@@ -25,7 +25,7 @@ def test_creates_tag_merge_requests(conflict_resolution_replace):
     assert len(tag_defs_including_hidden) == 6
     assert len(TagDefinition.most_recent_query_set()) == 3
     hidden_tag_def_instances = (
-        TagInstance.most_recent_queryset()
+        TagInstance.objects.all()  # pylint: disable=no-member
         .annotate(
             hidden=models.Subquery(
                 tag_defs_including_hidden.filter(
@@ -70,7 +70,7 @@ def test_creates_tag_merge_request_for_updated(
     assert len(tag_defs_including_hidden) == 6
     assert len(TagDefinition.most_recent_query_set()) == 3
     hidden_tag_def_instances = (
-        TagInstance.most_recent_queryset()
+        TagInstance.objects.all()  # pylint: disable=no-member
         .annotate(
             hidden=models.Subquery(
                 tag_defs_including_hidden.filter(

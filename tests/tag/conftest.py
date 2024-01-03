@@ -5,7 +5,7 @@ import pytest
 
 import tests.entity.common as ce
 import tests.tag.common as c
-from cosmae.tag.models_django import OwnershipRequest, TagDefinition, TagInstance
+from cosmae.tag.models_django import OwnershipRequest, TagDefinition, TagInstanceHistory
 
 
 @pytest.fixture
@@ -98,28 +98,28 @@ def tag_def_curated():
 
 @pytest.fixture
 def tag_instances_user():
-    tag_inst = TagInstance(
+    tag_inst = TagInstanceHistory(
         id_persistent=c.id_instance_test0,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_0,
         value="value",
         time_edit=c.time_edit_instance_test,
     )
-    tag_inst1 = TagInstance(
+    tag_inst1 = TagInstanceHistory(
         id_persistent=c.id_instance_test1,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_1,
         value="value 1",
         time_edit=c.time_edit_instance_test,
     )
-    tag_inst2 = TagInstance(
+    tag_inst2 = TagInstanceHistory(
         id_persistent=c.id_instance_test2,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_0,
         value="value 2",
         time_edit=c.time_edit_instance_test,
     )
-    tag_inst3 = TagInstance(
+    tag_inst3 = TagInstanceHistory(
         id_persistent=c.id_instance_test3,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_1,

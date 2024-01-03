@@ -10,7 +10,7 @@ import cosmae.contribution.entity.queue as q
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import TagDefinition, TagInstance, TagInstanceHistory
 
 
 @pytest.fixture()
@@ -89,14 +89,14 @@ def tag_def1(user):
 
 @pytest.fixture
 def tag_instances_for_replace(tag_def, tag_def1, entities):
-    inst0 = TagInstance.objects.create(  # pylint: disable = no-member
+    inst0 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_replace_test,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
     )
-    inst0 = TagInstance.objects.create(  # pylint: disable = no-member
+    inst0 = TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_replace_test,
@@ -104,7 +104,7 @@ def tag_instances_for_replace(tag_def, tag_def1, entities):
         previous_version=inst0,
         time_edit=c.time_edit_tag_instance_test,
     )
-    _inst1 = TagInstance.objects.create(  # pylint: disable = no-member
+    _inst1 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_replace_test1,
@@ -115,14 +115,14 @@ def tag_instances_for_replace(tag_def, tag_def1, entities):
 
 @pytest.fixture
 def tag_instance_existing(tag_def, tag_def1, entities):
-    inst0 = TagInstance.objects.create(  # pylint: disable = no-member
+    inst0 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=ce.id_persistent_test_0,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_existing_test,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
     )
-    inst0 = TagInstance.objects.create(  # pylint: disable = no-member
+    inst0 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=ce.id_persistent_test_0,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_existing_test,
@@ -130,7 +130,7 @@ def tag_instance_existing(tag_def, tag_def1, entities):
         previous_version=inst0,
         time_edit=c.time_edit_tag_instance_test,
     )
-    _inst1 = TagInstance.objects.create(  # pylint: disable = no-member
+    _inst1 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=ce.id_persistent_test_1,
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_persistent=c.id_instance_existing_test1,
@@ -143,18 +143,14 @@ def tag_instance_existing(tag_def, tag_def1, entities):
 def test_replaces_entity_of_tag_def(tag_instances_for_replace, user, entity_match):
     q.update_tag_instances(
         q.annotate_with_replacement_info(
-            TagInstance.most_recent_queryset(
-                TagInstance.objects  # pylint: disable=no-member
-            ),
+            TagInstance.objects,  # pylint: disable=no-member
             EntityDuplicate.objects.all(),  # pylint: disable=no-member
             "id_entity_persistent",
         ),
         user,
         c.time_edit_deduplication,
     )
-    instances = TagInstance.most_recent_queryset(
-        TagInstance.objects.all()  # pylint: disable=no-member
-    )
+    instances = TagInstance.objects.all()  # pylint: disable=no-member
 
     assert len(instances) == 2
     for inst in instances:
@@ -165,18 +161,14 @@ def test_replaces_entity_of_tag_def(tag_instances_for_replace, user, entity_matc
 def test_keeps_entity_of_tag_def(user, tag_instances_for_replace):
     q.update_tag_instances(
         q.annotate_with_replacement_info(
-            TagInstance.most_recent_queryset(
-                TagInstance.objects  # pylint: disable=no-member
-            ),
+            TagInstance.objects,  # pylint: disable=no-member
             EntityDuplicate.objects.all(),  # pylint: disable=no-member
             "id_entity_persistent",
         ),
         user,
         c.time_edit_deduplication,
     )
-    instances = TagInstance.most_recent_queryset(
-        TagInstance.objects.all()  # pylint: disable=no-member
-    )
+    instances = TagInstance.objects.all()  # pylint: disable=no-member
 
     assert len(instances) == 2
     for inst in instances:
@@ -185,7 +177,7 @@ def test_keeps_entity_of_tag_def(user, tag_instances_for_replace):
 
 @pytest.fixture
 def tag_instances(tag_def, tag_def1, entities):
-    tag_inst0, _ = TagInstance.change_or_create(
+    tag_inst0, _ = TagInstanceHistory.change_or_create(
         id_persistent=ct.id_instance_test0,
         time_edit=ce.time_edit_test_0,
         id_tag_definition_persistent=c.id_tag_def_test,
@@ -194,7 +186,7 @@ def tag_instances(tag_def, tag_def1, entities):
         value="2.4",
     )
     tag_inst0.save()
-    tag_inst1, _ = TagInstance.change_or_create(
+    tag_inst1, _ = TagInstanceHistory.change_or_create(
         id_persistent=ct.id_instance_test1,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_entity_persistent=ce.id_persistent_test_0,
@@ -203,7 +195,7 @@ def tag_instances(tag_def, tag_def1, entities):
         value="1.7",
     )
     tag_inst1.save()
-    tag_inst2, _ = TagInstance.change_or_create(
+    tag_inst2, _ = TagInstanceHistory.change_or_create(
         id_persistent=ct.id_instance_test2,
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
@@ -212,7 +204,7 @@ def tag_instances(tag_def, tag_def1, entities):
         value="foo",
     )
     tag_inst2.save()
-    tag_inst2, _ = TagInstance.change_or_create(
+    tag_inst2, _ = TagInstanceHistory.change_or_create(
         id_persistent=ct.id_instance_test2,
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
@@ -222,7 +214,7 @@ def tag_instances(tag_def, tag_def1, entities):
         version=tag_inst2.id,
     )
     tag_inst2.save()
-    tag_inst3, _ = TagInstance.change_or_create(
+    tag_inst3, _ = TagInstanceHistory.change_or_create(
         id_persistent=ct.id_instance_test3,
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=ce.id_persistent_test_1,
@@ -235,7 +227,7 @@ def tag_instances(tag_def, tag_def1, entities):
 
 
 def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_match):
-    assert 5 == len(TagInstance.objects.all())  # pylint: disable=no-member
+    assert 5 == len(TagInstanceHistory.objects.all())  # pylint: disable=no-member
     q.eliminate_duplicates(contribution_candidate.id_persistent)
     assert 2 == len(
         Entity.get_most_recent_chunked(
@@ -256,7 +248,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
         )
     )
     # There have been two edits
-    assert 7 == len(TagInstance.objects.all())  # pylint: disable=no-member
+    assert 7 == len(TagInstanceHistory.objects.all())  # pylint: disable=no-member
     for_tag = [
         tag.__dict__ for tag in TagInstance.by_tag_chunked(c.id_tag_def_test, 0, 20)
     ]

@@ -7,7 +7,7 @@ from django.db import models
 
 from cosmae.entity.models_django import Entity
 from cosmae.exception import ForbiddenException
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import TagDefinition, TagInstance, TagInstanceHistory
 from cosmae.util import CosmaeUser
 
 
@@ -74,10 +74,18 @@ class AbstractConflictResolution(models.Model):
 
     # do not use persistent ids in order to allow change detection.
     tag_instance_destination = models.ForeignKey(
-        TagInstance, on_delete=models.CASCADE, related_name="+", null=True, blank=True
+        TagInstanceHistory,
+        on_delete=models.CASCADE,
+        related_name="+",
+        null=True,
+        blank=True,
     )
     tag_instance_origin = models.ForeignKey(
-        TagInstance, on_delete=models.CASCADE, related_name="+", null=True, blank=True
+        TagInstanceHistory,
+        on_delete=models.CASCADE,
+        related_name="+",
+        null=True,
+        blank=True,
     )
     replace = models.BooleanField()
 
@@ -135,24 +143,16 @@ class EntityMergeRequest(AbstractMergeRequest):
     ):
         """Get conflicts to merging the origin entity referenced by the merge request
         into the destination entity"""
-        instance_origin_history_query = (
-            TagInstance.objects.filter(  # pylint: disable=no-member
-                id_entity_persistent=self.id_origin_persistent
-            )
+        instance_origin_recent_query = TagInstanceHistory.most_recent_queryset().filter(
+            id_entity_persistent=self.id_origin_persistent
         )
-        if len(instance_origin_history_query) == 0:
-            return instance_origin_history_query
+        if len(instance_origin_recent_query) == 0:
+            return instance_origin_recent_query
 
-        instance_destination_history_query = (
-            TagInstance.objects.filter(  # pylint: disable=no-member
+        instance_destination_recent_query = (
+            TagInstanceHistory.most_recent_queryset().filter(
                 id_entity_persistent=self.id_destination_persistent
             )
-        )
-        instance_destination_recent_query = TagInstance.most_recent_queryset(
-            instance_destination_history_query
-        )
-        instance_origin_recent_query = TagInstance.most_recent_queryset(
-            instance_origin_history_query
         )
         conflicts_sub_query = instance_destination_recent_query.filter(
             id_tag_definition_persistent=models.OuterRef("id_tag_definition_persistent")
@@ -309,7 +309,7 @@ class EntityConflictResolution(AbstractConflictResolution):
                 )[:1]
             ),
             tag_instance_origin_most_recent=models.Subquery(
-                TagInstance.objects.filter(  # pylint: disable=no-member
+                TagInstanceHistory.objects.filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("tag_instance_origin__id_persistent")
                 )
                 .order_by(models.F("previous_version").desc(nulls_last=True))
@@ -322,7 +322,7 @@ class EntityConflictResolution(AbstractConflictResolution):
                 )[:1]
             ),
             tag_instance_destination_most_recent=models.Subquery(
-                TagInstance.objects.filter(  # pylint: disable=no-member
+                TagInstanceHistory.objects.filter(  # pylint: disable=no-member
                     models.Q(
                         id_persistent=models.OuterRef(
                             "tag_instance_destination__id_persistent"
@@ -433,7 +433,7 @@ class EntityConflictResolution(AbstractConflictResolution):
             )
         )
         with_instance_origin_version_info = only_with_recent_entity_destinations.annotate(
-            id_tag_instance_origin_most_recent=TagInstance.objects.filter(  # pylint: disable=no-member
+            id_tag_instance_origin_most_recent=TagInstanceHistory.objects.filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("tag_instance_origin__id_persistent")
             )
             .order_by(models.F("previous_version").desc(nulls_last=True))
@@ -444,7 +444,7 @@ class EntityConflictResolution(AbstractConflictResolution):
         )
         with_instance_destination_version_info = only_with_recent_instance_origin.annotate(
             id_tag_instance_destination_most_recent=models.Subquery(
-                TagInstance.objects.filter(  # pylint: disable=no-member
+                TagInstanceHistory.objects.filter(  # pylint: disable=no-member
                     models.Q(
                         id_persistent=models.OuterRef(
                             "tag_instance_destination__id_persistent"

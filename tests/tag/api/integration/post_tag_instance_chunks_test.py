@@ -47,14 +47,19 @@ def test_can_slice(auth_server, tag_def_user, entity0):
     ]
     rsp = post_tag_instances(live_server.url, instances, cookies=cookies)
     assert rsp.status_code == 200
+    instances_rsp = rsp.json()["tag_instances"]
     rsp = post_tag_instance_chunks(
-        live_server.url, tag_def_user.id_persistent, 3, 4, cookies=cookies
+        live_server.url,
+        tag_def_user.id_persistent,
+        instances_rsp[3]["version"],
+        4,
+        cookies=cookies,
     )
     assert rsp.status_code == 200
-    persons = rsp.json()["tag_instances"]
-    assert len(persons) == 4
+    instances = rsp.json()["tag_instances"]
+    assert len(instances) == 4
     for i in range(4):
-        assert persons[i]["value"] == str(float(i) + 3.3)
+        assert instances[i]["value"] == str(float(i) + 3.3)
 
 
 def test_non_existent_slice(auth_server, tag_def, entity0):

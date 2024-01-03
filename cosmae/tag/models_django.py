@@ -226,17 +226,40 @@ class TagDefinition(models.Model):
         return cls.most_recent_query_set().filter(curated=True)
 
 
-class TagInstance(models.Model):
+class TagInstanceAbstract(models.Model):
     "Django ORM model for tag instances."
 
     id_persistent = models.TextField()
-    id_entity_persistent = models.TextField()
+    id_entity_persistent = models.CharField(max_length=36)
     id_tag_definition_persistent = models.TextField()
     value = models.TextField(null=True, blank=True)
     time_edit = models.DateTimeField()
     previous_version = models.ForeignKey(
         "self", blank=True, null=True, on_delete=models.CASCADE, unique=True
     )
+
+    class Meta:
+        "Meta class for abstract TagInstance django model"
+        # pylint: disable=too-few-public-methods
+        abstract = True
+
+    def __eq__(self, other: object) -> bool:
+        comparison = (
+            isinstance(other, TagInstanceAbstract)
+            and self.id == other.id  # pylint: disable=no-member
+            and self.id_persistent == other.id_persistent
+            and self.id_entity_persistent == other.id_entity_persistent
+            and self.id_tag_definition_persistent == other.id_tag_definition_persistent
+            and self.value == other.value
+            and self.time_edit == other.time_edit
+            and self.previous_version_id  # pylint: disable=no-member
+            == other.previous_version_id
+        )
+        return comparison
+
+
+class TagInstanceHistory(TagInstanceAbstract):
+    "Provides access to tag instance history"
 
     @classmethod
     def most_recent_by_id(cls, id_persistent):
@@ -259,17 +282,6 @@ class TagInstance(models.Model):
                 .values("max_id")
             )
         )
-
-    @classmethod
-    def for_entities(
-        cls, id_tag_definition_persistent: str, id_entity_persistent_list: List[str]
-    ):
-        "Get most recent values for a tag definition, limited by a list of entities."
-        query_set = cls.objects.filter(  # pylint: disable=no-member
-            id_entity_persistent__in=id_entity_persistent_list,
-            id_tag_definition_persistent=id_tag_definition_persistent,
-        )
-        return cls.most_recent_queryset(query_set)
 
     @classmethod
     def change_or_create(  # pylint: disable=too-many-arguments
@@ -318,31 +330,60 @@ class TagInstance(models.Model):
                 id_entity_persistent, id_tag_definition_persistent, value
             ) from exc
 
+    def check_different_before_save(self, other):
+        """Checks structural equality for two tag definitions.
+        Note:
+            * The version fields are not compared as this check is intended to
+               prevent unnecessary writes.
+            * The time_edit fields are not compared as the operation is invalid."""
+        if other.id_entity_persistent != self.id_entity_persistent:
+            return True
+        if other.id_tag_definition_persistent != self.id_tag_definition_persistent:
+            return True
+        if other.value != self.value:
+            return True
+        return False
+
+
+class TagInstance(TagInstanceAbstract):
+    "Django ORM class for view representing the most recent tag instances."
+
+    class Meta:
+        "Meta class for TagInstance view to ensure django does not create a table."
+        # pylint: disable=too-few-public-methods
+        managed = False
+
+    @classmethod
+    def for_entities(
+        cls, id_tag_definition_persistent: str, id_entity_persistent_list: List[str]
+    ):
+        "Get most recent values for a tag definition, limited by a list of entities."
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_entity_persistent__in=id_entity_persistent_list,
+            id_tag_definition_persistent=id_tag_definition_persistent,
+        )
+
+    @classmethod
+    def get_by_id(cls, id_persistent):
+        "Get a tag instance by its persistent id"
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_persistent
+        ).get()
+
     @classmethod
     def by_tag_chunked(cls, id_tag_definition_persistent, offset, limit, manager=None):
         "Get tag instances for a tag_id in chunks."
-        # TODO(@mo-fu) There is no proper chunking yet.
-        # The results are not grouped by entity!
-        # Fine for now as we always get the whole column/tag.
         try:
             tag = TagDefinition.most_recent_by_id(id_tag_definition_persistent)
         except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
             raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
-        objects = manager.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=tag.id_persistent
-        )
         return list(
-            objects.filter(
-                id=models.Subquery(
-                    objects.filter(id_persistent=models.OuterRef("id_persistent"))
-                    .values("id_persistent")
-                    .annotate(max_id=Max("id"))
-                    .values("max_id")
-                )
-            )
-        )[offset : offset + limit]
+            manager.filter(
+                id_tag_definition_persistent=tag.id_persistent, id__gte=offset
+            ).order_by("id")
+        )[:limit]
 
     @classmethod
     def most_recent_by_entity_and_definition_id_query_set(
@@ -350,10 +391,10 @@ class TagInstance(models.Model):
     ):
         """Get all most recent values that match a given id_entity_persistent
         and id_entity_persistent."""
-        return cls.most_recent_queryset().filter(  # pylint: disable=no-member
+        return cls.objects.filter(  # pylint: disable=no-member
             id_entity_persistent=id_entity_persistent,
             id_tag_definition_persistent=id_tag_definition_persistent,
-        )
+        ).order_by("id")
 
     @classmethod
     def annotate_entity(cls, manager: Optional[models.BaseManager[TagInstance]]):
@@ -402,20 +443,6 @@ class TagInstance(models.Model):
                 )
             ),
         )
-
-    def check_different_before_save(self, other):
-        """Checks structural equality for two tag definitions.
-        Note:
-            * The version fields are not compared as this check is intended to
-               prevent unnecessary writes.
-            * The time_edit fields are not compared as the operation is invalid."""
-        if other.id_entity_persistent != self.id_entity_persistent:
-            return True
-        if other.id_tag_definition_persistent != self.id_tag_definition_persistent:
-            return True
-        if other.value != self.value:
-            return True
-        return False
 
 
 class OwnershipRequest(models.Model):
