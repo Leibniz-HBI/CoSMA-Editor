@@ -19,7 +19,7 @@ def test_write_file_error(auth_server):
             live_server.url, c.contribution_post0, cookies=cookies
         )
         assert rsp.status_code == 500
-        assert rsp.json() == dict(msg="Could not save the uploaded file.")
+        assert rsp.json() == {"msg": "Could not save the uploaded file."}
 
 
 def test_write_db_error(auth_server):
@@ -34,9 +34,9 @@ def test_write_db_error(auth_server):
             live_server.url, c.contribution_post0, cookies=cookies
         )
         assert rsp.status_code == 500
-        assert rsp.json() == dict(
-            msg="Could not store the contribution in the database."
-        )
+        assert rsp.json() == {
+            "msg": "Could not store the contribution in the database."
+        }
 
 
 def test_wrong_content_type(auth_server):
@@ -45,7 +45,9 @@ def test_wrong_content_type(auth_server):
         live_server.url,
         c.contribution_post0,
         cookies=cookies,
-        content_type="text/plain",
+        content_type="text/unknown",
     )
     assert rsp.status_code == 400
-    assert rsp.json() == dict(msg="Invalid content type. Only text/csv allowed.")
+    assert rsp.json() == {
+        "msg": "Invalid content type. Only text/csv, text/plain, text/x-csv, application/vnd.ms-excel, application/csv, application/x-csv, text/csv, text/comma-separated-values, text/x-comma-separated-values, text/tab-separated-values allowed."  # pylint: disable=line-too-long
+    }

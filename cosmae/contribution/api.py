@@ -31,7 +31,18 @@ router.add_router(
     "/{id_contribution_persistent}/entities", entity_router, auth=cosmae_auth
 )
 
-ALLOWED_CONTENT_TYPES = ["text/csv"]
+ALLOWED_CONTENT_TYPES = [
+    "text/csv",
+    "text/plain",
+    "text/x-csv",
+    "application/vnd.ms-excel",
+    "application/csv",
+    "application/x-csv",
+    "text/csv",
+    "text/comma-separated-values",
+    "text/x-comma-separated-values",
+    "text/tab-separated-values",
+]
 
 
 @router.post(
@@ -46,11 +57,11 @@ def contribution_post(
     "Create a new contribution"
     try:
         content_type = file.content_type
-        if content_type == "text/csv":
+        if content_type in ALLOWED_CONTENT_TYPES:
             extension = ".csv"
         else:
             return 400, ApiError(
-                msg=f"Invalid content type. Only {','.join(ALLOWED_CONTENT_TYPES)} allowed."
+                msg=f"Invalid content type. Only {', '.join(ALLOWED_CONTENT_TYPES)} allowed."
             )
         contribution_db = mk_initial_contribution_candidate(contribution, request.user)
         out_file_name = contribution_db.id_persistent + extension
