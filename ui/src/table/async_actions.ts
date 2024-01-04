@@ -110,10 +110,11 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
             dispatch(new SetColumnLoadingAction(this.columnDefinition))
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const column_data: { [key: string]: CellValue[] } = {}
+            let offset = 0
             for (let i = 0; ; i += 5000) {
                 const rsp = await fetch_chunk({
                     api_path: config.api_path + '/tags/chunk',
-                    offset: i,
+                    offset,
                     limit: 5000,
                     payload: {
                         id_tag_definition_persistent: id_persistent
@@ -147,15 +148,18 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                         idPersistent: valueIdPersistent,
                         version: valueVersion
                     }
-                    if (id_entity_persistent in column_data) {
-                        const cell = column_data[id_entity_persistent]
-                        cell.push(versionedValue)
-                    } else {
-                        column_data[id_entity_persistent] = [versionedValue]
-                    }
+                    column_data[id_entity_persistent] = [versionedValue]
                 }
                 if (tags.length < 5000) {
                     break
+                } else {
+                    offset =
+                        Math.max(
+                            ...tags.map(
+                                (tagJson: { [key: string]: unknown }) =>
+                                    tagJson['version']
+                            )
+                        ) + 1
                 }
             }
             dispatch(new AppendColumnAction(id_persistent, column_data))

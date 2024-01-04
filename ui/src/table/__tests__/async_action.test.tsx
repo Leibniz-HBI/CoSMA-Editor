@@ -270,7 +270,11 @@ describe('get column async action', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const tags: any[] = []
         for (let i = 0; i < 5000; ++i) {
-            tags.push({ ...tagResponse, id_entity_persistent: `id_${i}` })
+            tags.push({
+                ...tagResponse,
+                id_entity_persistent: `id_${i}`,
+                version: i * 2 + 2
+            })
         }
         responseSequence([
             [
@@ -296,6 +300,34 @@ describe('get column async action', () => {
         )
         expect(dispatch.mock.calls[1][0]).toBeInstanceOf(AppendColumnAction)
         expect(Object.values(dispatch.mock.calls[1][0].columnData).length).toBe(5001)
+        expect((fetch as jest.Mock).mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+                {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_tag_definition_persistent: columnDefTest.idPersistent,
+                        offset: 0,
+                        limit: 5000
+                    })
+                }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+                {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_tag_definition_persistent: columnDefTest.idPersistent,
+                        offset: 10001,
+                        limit: 5000
+                    })
+                }
+            ]
+        ])
     })
 
     describe('submit values', () => {

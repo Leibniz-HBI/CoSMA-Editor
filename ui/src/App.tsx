@@ -108,22 +108,22 @@ const router = createBrowserRouter([
             {
                 path: 'contribute/:idPersistent/metadata',
                 element: <ContributionDetailsStep />,
-                loader: ({ params }) => params.idPersistent
+                loader: ({ params }) => params.idPersistent ?? ''
             },
             {
                 path: 'contribute/:idPersistent/columns',
                 element: <ColumnDefinitionStep />,
-                loader: ({ params }) => params.idPersistent
+                loader: ({ params }) => params.idPersistent ?? ''
             },
             {
                 path: 'contribute/:idPersistent/entities',
                 element: <EntitiesStep />,
-                loader: ({ params }) => params.idPersistent
+                loader: ({ params }) => params.idPersistent ?? ''
             },
             {
                 path: 'contribute/:idPersistent/complete',
                 element: <CompleteStep />,
-                loader: ({ params }) => params.idPersistent
+                loader: ({ params }) => params.idPersistent ?? ''
             },
             {
                 path: 'review',
@@ -132,12 +132,12 @@ const router = createBrowserRouter([
             {
                 path: 'review/tags/:idPersistent',
                 element: <MergeRequestConflictResolutionView />,
-                loader: ({ params }) => params.idPersistent
+                loader: ({ params }) => params.idPersistent ?? ''
             },
             {
                 path: 'review/entities/:idPersistent',
                 element: <EntityMergeRequestConflictView />,
-                loader: ({ params }) => params.idPersistent
+                loader: ({ params }) => params.idPersistent ?? ''
             },
             {
                 path: 'tags',
