@@ -178,8 +178,10 @@ class ContributionCandidate(models.Model):
                 )
             )
         ).filter(id_tag_definition_origin__isnull=False)
-        tag_instance_most_recent_query_set = TagInstance.most_recent_queryset().filter(
-            id_entity_persistent__in=entities_manager.values("id_persistent")
+        tag_instance_most_recent_query_set = (
+            TagInstance.objects.filter(  # pylint: disable=no-member
+                id_entity_persistent__in=entities_manager.values("id_persistent")
+            )
         )
         with_values = tag_definitions_relevant.annotate(
             value_contribution=models.Subquery(

@@ -122,7 +122,9 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
             return 404, ApiError(
                 msg="Some entities are not part of the contribution candidate."
             )
-        matches = find_matches(similar_request.id_entity_persistent_list)
+        matches = find_matches(
+            candidate.id_persistent, similar_request.id_entity_persistent_list
+        )
         scored_matches = {
             entity.id_persistent: ScoredMatchesWithDuplicateAssignment(
                 assigned_duplicate=person_db_dict_to_api(entity.assigned_duplicate),

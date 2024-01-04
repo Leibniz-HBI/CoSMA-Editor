@@ -3,12 +3,13 @@
 from cosmae.entity.models_django import Entity
 
 
-def find_matches(id_entity_persistent_list):
+def find_matches(id_contribution_persistent, id_entity_persistent_list):
     """Find matches for the entities selected in the argument query set."""
     return Entity.objects.raw(  # pylint: disable=no-member
         MATCHES_QUERY_STRING,
         {
             "id_entity_persistent_list": id_entity_persistent_list,
+            "id_contribution_persistent": str(id_contribution_persistent),
             "display_txt_similarity_weight": 0.6,
             "match_count_weight": 0.4,
             "display_txt_similarity_threshold": 0.7,
@@ -79,9 +80,11 @@ MATCHES_QUERY_STRING = """
 			from (
 				select "id_entity_origin", "value_origin", "id_entity_destination" ,"value_destination", "id_origin_persistent"
 				from (
-					select "id_origin_persistent",  "id_destination_persistent"
-					from cosmae_tagmergerequest
-					 -- where contribution_candidate_id=
+					(
+                        select "id_origin_persistent",  "id_destination_persistent"
+						from cosmae_tagmergerequest
+						where contribution_candidate_id=%(id_contribution_persistent)s
+					) tagmergerequest
 					inner join (
 						select "id_persistent"
 						from (
@@ -99,30 +102,21 @@ MATCHES_QUERY_STRING = """
 					on "id_destination_persistent" = "tag_definition_curated"."id_persistent"
 				) merge_requests
 				left join (
-					select "id_entity_persistent" "id_entity_destination", "value" "value_destination", "id_tag_definition_persistent" from (
-						select max(id) "max_id"
-						from cosmae_taginstance
-						group by "id_persistent"
-					) "with_max"
-					left join (
-						select *
-						from cosmae_taginstance
-					) tag_instances
-					on "with_max"."max_id"="tag_instances"."id"
+					select "id_entity_persistent" "id_entity_destination", "value" "value_destination", "id_tag_definition_persistent"
+                    from cosmae_taginstance
+					where id_entity_persistent in (
+						select existing_id_persistent
+						from entity_pairs
+					)
 				) instances_destination
 				on "merge_requests"."id_destination_persistent" = "instances_destination"."id_tag_definition_persistent"
 				left join (
-						select "id_entity_persistent" "id_entity_origin", "value" "value_origin", "id_tag_definition_persistent" from (
-						select max(id) "max_id"
-						from cosmae_taginstance
-						group by "id_persistent"
-					) "with_max"
-					left join (
-						select *
-						from cosmae_taginstance
-					) tag_instances
-					on "with_max"."max_id"="tag_instances"."id"
-					-- where id_entity_persistent in
+						select "id_entity_persistent" "id_entity_origin", "value" "value_origin", "id_tag_definition_persistent"
+                        from cosmae_taginstance
+						where id_entity_persistent in (
+							select contribution_id_persistent
+							from entity_pairs
+                        )
 				) instances_origin
 				on "merge_requests"."id_origin_persistent" = "instances_origin"."id_tag_definition_persistent"
 				where "value_origin"="value_destination"
