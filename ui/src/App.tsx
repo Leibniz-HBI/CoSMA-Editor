@@ -9,7 +9,8 @@ import {
     Outlet,
     RouterProvider,
     createBrowserRouter,
-    redirect
+    redirect,
+    useParams
 } from 'react-router-dom'
 import { ContributionList } from './contribution/components'
 import { ContributionDetailsStep } from './contribution/details/components'
@@ -37,6 +38,7 @@ import {
 } from './user/thunks'
 import { TagManagementPage } from './tag_management/components'
 import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
+import { ManagementPage } from './management/components'
 
 export function CosmaeRoot() {
     const userInfo = useSelector(selectUserInfo)
@@ -67,8 +69,8 @@ export function CosmaeRoot() {
                                 <Nav>
                                     {userInfo?.permissionGroup ==
                                         UserPermissionGroup.COMMISSIONER && (
-                                        <Nav.Link as={NavLink} to="/user-management">
-                                            Users
+                                        <Nav.Link as={NavLink} to="/management">
+                                            Manage
                                         </Nav.Link>
                                     )}
                                 </Nav>
@@ -143,7 +145,16 @@ const router = createBrowserRouter([
                 path: 'tags',
                 element: <TagManagementPage />
             },
-            { path: 'user-management', element: <UserPermissionGroupComponent /> }
+            {
+                path: 'management/',
+                element: <ManagementPage />,
+                loader: ({ params }) => params.category ?? ''
+            },
+            {
+                path: 'management/:category',
+                element: <ManagementPage />,
+                loader: ({ params }) => params.category ?? ''
+            }
         ]
     }
 ])

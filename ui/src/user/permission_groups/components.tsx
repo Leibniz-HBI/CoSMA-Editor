@@ -35,15 +35,18 @@ export function UserPermissionGroupComponent() {
                                 selectedUser.value?.idPersistent
                             }
                             selectUserCallback={selectUserCallback}
+                            key={userInfo.idPersistent}
                         />
                     ))}
                 </ListGroup>
             </Col>
-            <UserPermissionGroupForm
-                userInfo={selectedUser}
-                setUserPermissionCallback={setUserPermissionCallback}
-                clearErrorCallback={setUserPermissionClearErrorCallback}
-            />
+            <Col>
+                <UserPermissionGroupForm
+                    userInfo={selectedUser}
+                    setUserPermissionCallback={setUserPermissionCallback}
+                    clearErrorCallback={setUserPermissionClearErrorCallback}
+                />
+            </Col>
         </Row>
     )
 }
@@ -79,11 +82,13 @@ export function UserPermissionGroupForm({
         return <span>Please select a user.</span>
     }
     return (
-        <Col>
+        <>
             <Row className="mb-3">
                 <Col>
-                    <span>Change permissions for user: </span>
-                    <span className="fw-bold">{userInfo.value.userName}</span>
+                    <span key="description">Change permissions for user: </span>
+                    <span className="fw-bold" key="user-name">
+                        {userInfo.value.userName}
+                    </span>
                 </Col>
             </Row>
             <Row className="ms-3">
@@ -110,7 +115,8 @@ export function UserPermissionGroupForm({
                         type="radio"
                         name="user-permission"
                         disabled={userInfo.isLoading}
-                    ></FormCheck>
+                        key={permission}
+                    />
                 ))}
             </Row>
             {userInfo.errorMsg !== undefined && (
@@ -124,6 +130,6 @@ export function UserPermissionGroupForm({
                     {userInfo.errorMsg}
                 </Alert>
             )}
-        </Col>
+        </>
     )
 }

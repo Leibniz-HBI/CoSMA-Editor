@@ -9,6 +9,7 @@ import { tagSelectionSlice } from './column_menu/slice'
 import { tableSelectionSlice } from './table/selection/slice'
 import { entityMergeRequestConflictSlice } from './merge_request/entity/conflicts/slice'
 import { entityMergeRequestsReducer } from './merge_request/entity/slice'
+import { displayTxtManagementReducer } from './management/display_txt/slice'
 
 const rootReducer = combineReducers({
     error: errorSlice.reducer,
@@ -20,7 +21,8 @@ const rootReducer = combineReducers({
     contribution: contributionSlice.reducer,
     tableSelection: tableSelectionSlice.reducer,
     entityMergeRequests: entityMergeRequestsReducer,
-    entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer
+    entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
+    displayTxtManagement: displayTxtManagementReducer
 })
 
 export function setupStore(preloadedState?: PreloadedState<RootState>) {
