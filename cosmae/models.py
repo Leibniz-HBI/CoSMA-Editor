@@ -7,6 +7,7 @@ from cosmae.contribution.tag_definition.models_django import (
     TagInstanceContribution,
 )
 from cosmae.entity.models_django import Entity
+from cosmae.management.models_django import ConfigValue
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,
