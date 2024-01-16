@@ -140,3 +140,19 @@ def test_multiple(auth_server_commissioner, display_txt_only):
         - count_before
         == 2
     )
+
+
+def test_no_display_txt(auth_server_commissioner):
+    server, cookies = auth_server_commissioner
+    rsp = post_person(server.url, {}, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    persons = json["persons"]
+    assert len(persons) == 1
+    person = persons[0]
+    id_persistent = person["id_persistent"]
+    assert person["display_txt"] == id_persistent
+    assert person["display_txt_details"] == "id_persistent"
+    entity = Entity.most_recent_by_id(id_persistent)
+    assert entity.id_persistent == id_persistent
+    assert entity.display_txt is None

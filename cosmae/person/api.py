@@ -31,7 +31,7 @@ class PersonNatural(Schema):
     # pylint: disable=too-few-public-methods
     """API model for a natural person."""
 
-    display_txt: str
+    display_txt: Optional[str]
     version: Optional[int]
     """The version of the person that the change is made on.
     If null on POST, a new person is created."""

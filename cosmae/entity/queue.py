@@ -15,10 +15,12 @@ entity_display_txt_information_cache = caches["entity_display_txt_information"]
 def get_display_txt_info(id_entity_persistent, display_txt):
     "Retrieve display_txt info from the cache."
     display_txt_info = entity_display_txt_information_cache.get(id_entity_persistent)
-    if (
-        display_txt_info is None
-        or display_txt_info[1] == "display_txt"
-        or (display_txt_info[1] == "id_persistent" and display_txt is not None)
+    if display_txt_info is None:
+        enqueue(update_display_txt_cache, id_entity_persistent)
+        if display_txt is None:
+            return id_entity_persistent, "id_persistent"
+    if display_txt_info[1] == "display_txt" or (
+        display_txt_info[1] == "id_persistent" and display_txt is not None
     ):
         return display_txt, "display_txt"
     return display_txt_info
