@@ -98,6 +98,7 @@ const contributionTest = {
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
+        display_txt_details: 'display_txt_detail',
         version: 0,
         id_persistent: `id-entity-${idx}`
     }
@@ -119,6 +120,7 @@ function mkMatches(
                         id_match_tag_definition_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 0`,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: entity.id_persistent + '-0',
                             version: 0
                         }
@@ -128,6 +130,7 @@ function mkMatches(
                         id_match_tag_definition_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 1`,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: entity.id_persistent + '-1',
                             version: 0
                         }
@@ -137,6 +140,7 @@ function mkMatches(
                     idx % 10 == 0
                         ? {
                               display_txt: entity.display_txt + ' match 1',
+                              display_txt_details: 'display_txt_detail',
                               id_persistent: entity.id_persistent + '-1',
                               version: 0
                           }
@@ -288,6 +292,7 @@ test('add tag', async () => {
                 newRemote([
                     newScoredEntity({
                         displayTxt: entity.displayTxt + ` match 0`,
+                        displayTxtDetails: 'display_txt_detail',
                         idPersistent: entity.idPersistent + '-0',
                         version: 0,
                         similarity: idx / 100,
@@ -306,6 +311,7 @@ test('add tag', async () => {
                     newScoredEntity({
                         displayTxt: entity.displayTxt + ` match 1`,
                         idPersistent: entity.idPersistent + '-1',
+                        displayTxtDetails: 'display_txt_detail',
                         version: 0,
                         similarity: idx / 100 + 0.001,
                         cellContents: [
@@ -330,6 +336,7 @@ test('add tag', async () => {
                 newRemote([
                     newScoredEntity({
                         displayTxt: entity.displayTxt + ` match 0`,
+                        displayTxtDetails: 'display_txt_detail',
                         idPersistent: entity.idPersistent + '-0',
                         version: 0,
                         similarity: (idx - 50) / 100.0,
@@ -338,6 +345,7 @@ test('add tag', async () => {
                     }),
                     newScoredEntity({
                         displayTxt: entity.displayTxt + ` match 1`,
+                        displayTxtDetails: 'display_txt_detail',
                         idPersistent: entity.idPersistent + '-1',
                         version: 0,
                         similarity: (idx - 50) / 100.0 + 0.001,

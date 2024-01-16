@@ -297,17 +297,10 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
             const json = await rsp.json()
             if (rsp.status == 200) {
                 const entity = json['persons'][0]
-                const idPersistent = entity['id_persistent']
-                const displayTxt = entity['display_txt']
-                const version = entity['version']
-                const disabled = entity['disabled']
                 dispatch(
-                    new EntityChangeOrCreateSuccessAction({
-                        idPersistent,
-                        displayTxt,
-                        version,
-                        disabled
-                    })
+                    new EntityChangeOrCreateSuccessAction(
+                        parseEntityObjectFromJson(entity)
+                    )
                 )
             } else {
                 dispatch(new EntityChangeOrCreateErrorAction(errorMessageFromApi(json)))
@@ -372,11 +365,21 @@ export function parseValue(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseEntityObjectFromJson(json: any) {
+export function parseEntityObjectFromJson(json: any): Entity {
     return newEntity({
         idPersistent: json['id_persistent'],
         displayTxt: json['display_txt'],
+        displayTxtDetails: parseDisplayTxtDetails(json['display_txt_details']),
         version: Number.parseInt(json['version']),
         disabled: json['disabled']
     })
+}
+
+function parseDisplayTxtDetails(
+    arg: { [key: string]: unknown } | string
+): string | TagDefinition {
+    if (typeof arg == 'string') {
+        return arg
+    }
+    return parseColumnDefinitionsFromApi(arg)
 }

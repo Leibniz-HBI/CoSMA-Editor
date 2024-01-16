@@ -94,6 +94,7 @@ const contributionTest = {
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
+        display_txt_details: 'display_txt_detail',
         version: 0,
         id_persistent: `id-entity-${idx}`
     }
@@ -117,6 +118,7 @@ function mkMatches(
                         similarity: idx / 100,
                         entity: {
                             display_txt: entity.display_txt + ` match 0`,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: entity.id_persistent + '-0',
                             version: 0
                         }
@@ -125,6 +127,7 @@ function mkMatches(
                         similarity: idx / 100 + 0.01,
                         entity: {
                             display_txt: entity.display_txt + ` match  1`,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: entity.id_persistent + '-1',
                             version: 0
                         }
@@ -134,6 +137,7 @@ function mkMatches(
                     idx % 10 == 0
                         ? {
                               display_txt: entity.display_txt + ' match 1',
+                              display_txt_details: 'display_txt_detail',
                               id_persistent: entity.id_persistent + '-1',
                               version: 0
                           }

@@ -1,5 +1,5 @@
 import { useLoaderData } from 'react-router-dom'
-import { mkCellContentCallback } from './hooks'
+import { constructColumnTitle, mkCellContentCallback } from './hooks'
 import { ContributionStepper } from '../components'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
 import {
@@ -12,10 +12,21 @@ import {
     Popover,
     Row
 } from 'react-bootstrap'
-import { ForwardedRef, forwardRef, useEffect, useRef } from 'react'
+import {
+    ForwardedRef,
+    forwardRef,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from 'react'
 import { EntityWithDuplicates } from './state'
 import { ColumnMenuBody } from '../../column_menu/components/menu'
-import { DataEditor, GridSelection } from '@glideapps/glide-data-grid'
+import {
+    DataEditor,
+    GridMouseEventArgs,
+    GridSelection
+} from '@glideapps/glide-data-grid'
 import { drawCell } from '../../table/draw'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -49,6 +60,8 @@ import { selectContribution } from '../selectors'
 import { clearSelectedContribution } from '../slice'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
 import { ContributionStep } from '../state'
+import { IBounds, useLayer } from 'react-laag'
+import { TagDefinition } from '../../column_menu/state'
 
 export function EntitiesStep() {
     const idContributionPersistent = useLoaderData() as string
@@ -288,6 +301,15 @@ function AddTagDefinitionsModal({
     )
 }
 
+const zeroBounds = {
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    bottom: 0,
+    right: 0
+}
+
 export function EntitySimilarityItem({
     entity,
     putDuplicateCallback,
@@ -304,7 +326,70 @@ export function EntitySimilarityItem({
 }) {
     const entityColumnDefs = useSelector(selectEntityColumnDefs)
     const tagRowDefs = useSelector(selectTagRowDefs)
-    const { similarEntities, displayTxt, idPersistent } = entity
+    const {
+        similarEntities,
+        displayTxt,
+        displayTxtDetails: entityDisplayTxtDetails,
+        idPersistent
+    } = entity
+    const [tooltip, setTooltip] = useState<
+        { val: string; bounds: IBounds } | undefined
+    >()
+    const { layerProps: tooltipLayerProps, renderLayer: tooltipRenderLayer } = useLayer(
+        {
+            isOpen: tooltip !== undefined,
+            triggerOffset: 4,
+            auto: true,
+            container: 'portal',
+            trigger: {
+                getBounds: () => tooltip?.bounds ?? zeroBounds
+            }
+        }
+    )
+
+    const timeoutRef = useRef(0)
+
+    const onItemHovered = useCallback(
+        (args: GridMouseEventArgs) => {
+            const colIdx = args.location[0]
+            if (args.kind === 'cell' && colIdx > 0 && args.location[1] == 3) {
+                let displayTxtDetails = entityDisplayTxtDetails
+                if (colIdx > 1) {
+                    displayTxtDetails =
+                        similarEntities.value[colIdx - 2].displayTxtDetails
+                }
+                window.clearTimeout(timeoutRef.current)
+                setTooltip(undefined)
+                let tooltipValue = ''
+                if (typeof entityDisplayTxtDetails == 'string') {
+                    tooltipValue = displayTxtDetails as string
+                } else {
+                    tooltipValue = constructColumnTitle(
+                        (displayTxtDetails as TagDefinition).namePath
+                    )
+                }
+                timeoutRef.current = window.setTimeout(() => {
+                    setTooltip({
+                        val: `Display text source: ${tooltipValue}`,
+                        bounds: {
+                            // translate to react-laag types
+                            left: args.bounds.x,
+                            top: args.bounds.y,
+                            width: args.bounds.width,
+                            height: args.bounds.height,
+                            right: args.bounds.x + args.bounds.width,
+                            bottom: args.bounds.y + args.bounds.height
+                        }
+                    })
+                }, 1000)
+            } else {
+                window.clearTimeout(timeoutRef.current)
+                timeoutRef.current = 0
+                setTooltip(undefined)
+            }
+        },
+        [similarEntities.value, entityDisplayTxtDetails]
+    )
     if (similarEntities.errorMsg !== undefined) {
         return (
             <ListGroup.Item className="bg-danger" key={idPersistent}>
@@ -356,7 +441,24 @@ export function EntitySimilarityItem({
                             }
                         }
                     }}
+                    onItemHovered={onItemHovered}
                 />
+                {tooltip != undefined &&
+                    tooltipRenderLayer(
+                        <div
+                            {...tooltipLayerProps}
+                            style={{
+                                ...tooltipLayerProps.style,
+                                padding: '8px 12px',
+                                color: 'white',
+                                font: '500 13px Inter',
+                                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                                borderRadius: 9
+                            }}
+                        >
+                            {tooltip.val}
+                        </div>
+                    )}
             </div>
         </div>
     )

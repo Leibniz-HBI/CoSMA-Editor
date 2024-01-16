@@ -159,12 +159,14 @@ function addSuccessResponse(fetchMock: jest.Mock) {
         id_persistent: idEntityMr0,
         origin: {
             display_txt: displayTextOrigin0,
+            display_txt_details: 'display_txt_detail',
             id_persistent: idPersistentOrigin0,
             version: versionOrigin0,
             disabled: false
         },
         destination: {
             display_txt: displayTextDestination0,
+            display_txt_details: 'display_txt_detail',
             id_persistent: idPersistentDestination0,
             version: versionDestination0,
             disabled: false
@@ -439,12 +441,14 @@ test('update conflicts', async () => {
                 idPersistent: idEntityMr0,
                 entityOrigin: {
                     displayTxt: displayTextOrigin0,
+                    displayTxtDetails: 'display_txt_detail',
                     idPersistent: idPersistentOrigin0,
                     version: versionOrigin0,
                     disabled: false
                 },
                 entityDestination: {
                     displayTxt: displayTextDestination0,
+                    displayTxtDetails: 'display_txt_detail',
                     idPersistent: idPersistentDestination0,
                     version: versionDestination0,
                     disabled: false

@@ -52,6 +52,7 @@ const sharedConflict1 = new Remote(
         entity: newEntity({
             idPersistent: 'id-entity-test1',
             displayTxt: 'test entity1',
+            displayTxtDetails: 'display_txt_detail',
             version: 81,
             disabled: false
         }),
@@ -64,6 +65,7 @@ const sharedConflict = new Remote(
         entity: newEntity({
             idPersistent: 'id-entity-test',
             displayTxt: 'test entity',
+            displayTxtDetails: 'display_txt_detail',
             version: 8,
             disabled: false
         }),
@@ -83,6 +85,7 @@ const updatedConflicts = [sharedConflict, sharedConflict1]
 const entity = newEntity({
     idPersistent: 'id-entity-test3',
     displayTxt: 'test entity3',
+    displayTxtDetails: 'display_txt_detail',
     version: 83,
     disabled: false
 })
@@ -92,6 +95,7 @@ const conflicts = [
             entity: newEntity({
                 idPersistent: 'id-entity-test2',
                 displayTxt: 'test entity2',
+                displayTxtDetails: 'display_txt_detail',
                 version: 82,
                 disabled: false
             }),
@@ -155,6 +159,7 @@ const sharedConflictJson = {
     entity: {
         id_persistent: sharedConflict.value.entity.idPersistent,
         display_txt: sharedConflict.value.entity.displayTxt,
+        display_txt_details: 'display_txt_detail',
         version: sharedConflict.value.entity.version,
         disabled: false
     },
@@ -174,6 +179,7 @@ const sharedConflictJson1 = {
     entity: {
         id_persistent: sharedConflict1.value.entity.idPersistent,
         display_txt: sharedConflict1.value.entity.displayTxt,
+        display_txt_details: 'display_txt_detail',
         version: sharedConflict1.value.entity.version,
         disabled: false
     },
@@ -223,6 +229,7 @@ describe('get conflicts', () => {
                         {
                             entity: {
                                 id_persistent: 'id-entity-test2',
+                                display_txt_details: 'display_txt_detail',
                                 display_txt: 'test entity2',
                                 version: 82,
                                 disabled: false
@@ -244,6 +251,7 @@ describe('get conflicts', () => {
                             entity: {
                                 id_persistent: 'id-entity-test3',
                                 display_txt: 'test entity3',
+                                display_txt_details: 'display_txt_detail',
                                 version: 83,
                                 disabled: false
                             },

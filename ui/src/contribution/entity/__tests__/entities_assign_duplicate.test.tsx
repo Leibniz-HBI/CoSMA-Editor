@@ -159,6 +159,7 @@ const contributionTest = {
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
+        display_txt_details: 'display_txt_detail',
         version: 0,
         id_persistent: `id-entity-${idx}`
     }
@@ -180,6 +181,7 @@ function mkMatches(
                         id_match_tag_definition_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 0`,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: entity.id_persistent + '-0',
                             version: 0
                         }
@@ -189,6 +191,7 @@ function mkMatches(
                         id_match_tag_definition_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 1`,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: entity.id_persistent + '-1',
                             version: 0
                         }
@@ -198,6 +201,7 @@ function mkMatches(
                     idx % 10 == 0
                         ? {
                               display_txt: entity.display_txt + ' match 1',
+                              display_txt_details: 'display_txt_detail',
                               id_persistent: entity.id_persistent + '-1',
                               version: 0
                           }
@@ -227,6 +231,7 @@ test('assign duplicate', async () => {
                 assigned_duplicate: {
                     id_persistent: 'id-entity-1-0',
                     display_txt: 'entity-1 match 0',
+                    display_txt_details: 'display_txt_detail',
                     version: 0,
                     disabled: false
                 }
@@ -239,6 +244,7 @@ test('assign duplicate', async () => {
                 assigned_duplicate: {
                     id_persistent: 'id-entity-2-1',
                     display_txt: 'entity-2 match 1',
+                    display_txt_details: 'display_txt_detail',
                     version: 0,
                     disabled: false
                 }
@@ -276,6 +282,7 @@ test('assign duplicate', async () => {
             newRemote({
                 idPersistent: 'id-entity-1-0',
                 displayTxt: 'entity-1 match 0',
+                displayTxtDetails: 'display_txt_detail',
                 version: 0,
                 disabled: false
             })
@@ -284,6 +291,7 @@ test('assign duplicate', async () => {
             newRemote({
                 idPersistent: 'id-entity-2-1',
                 displayTxt: 'entity-2 match 1',
+                displayTxtDetails: 'display_txt_detail',
                 version: 0,
                 disabled: false
             })

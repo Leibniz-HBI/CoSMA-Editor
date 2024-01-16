@@ -18,7 +18,8 @@ import {
     GetColumnAsyncAction,
     parseValue,
     SubmitValuesAsyncAction,
-    EntityChangeOrCreateAction
+    EntityChangeOrCreateAction,
+    parseEntityObjectFromJson
 } from '../async_actions'
 import { newErrorState } from '../../util/error/slice'
 import { newEntity } from '../state'
@@ -52,12 +53,14 @@ const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
 const test_person_rsp_0 = {
     display_txt: displayTxt0,
+    display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent0,
     version: version0,
     disabled: false
 }
 const test_person_rsp_1 = {
     display_txt: 'test display txt 1',
+    display_txt_details: 'display_txt_detail',
     id_persistent: 'test-id-1',
     version: 1,
     disabled: false
@@ -67,12 +70,14 @@ const entities_test = [
     newEntity({
         idPersistent: 'test-id-0',
         displayTxt: 'test display txt 0',
+        displayTxtDetails: 'display_txt_detail',
         version: 0,
         disabled: false
     }),
     newEntity({
         idPersistent: 'test-id-1',
         displayTxt: 'test display txt 1',
+        displayTxtDetails: 'display_txt_detail',
         version: 1,
         disabled: false
     })
@@ -86,13 +91,29 @@ const display_txt_column_as_normal_column = {
     'test-id-1': [{ value: displayTxt1, idPersistent: 'test-value-id-1', version: 1 }]
 }
 
+const tagDefName = 'Display Text'
+const idTagDefPersistent = 'display_txt_id'
 const displayTextTagDef: TagDefinition = {
-    namePath: ['Display Text'],
-    idPersistent: 'display_txt_id',
+    namePath: [tagDefName],
+    idPersistent: idTagDefPersistent,
     columnType: TagType.String,
     curated: true,
     version: 0,
     hidden: false
+}
+const test_person_rsp_with_tag_def_details = {
+    display_txt: displayTxt0,
+    id_persistent: idPersistent0,
+    display_txt_details: {
+        id_persistent: idTagDefPersistent,
+        name_path: [tagDefName],
+        type: 'STRING',
+        curated: true,
+        version: 0,
+        hidden: false
+    },
+    version: version0,
+    disabled: false
 }
 
 describe('get table async action', () => {
@@ -124,11 +145,16 @@ describe('get table async action', () => {
             for (let i = 0; i < 500; ++i) {
                 persons[j].push({
                     id_persistent: 500 * j + i,
-                    display_txt: 'display_text test'
+                    display_txt: 'display_text test',
+                    display_txt_details: 'display_txt_detail'
                 })
             }
         }
-        persons[2].push({ id_persistent: 1001, display_txt: 'display text test' })
+        persons[2].push({
+            id_persistent: 1001,
+            display_txt: 'display text test',
+            display_txt_details: 'display_txt_detail'
+        })
         responseSequence([
             [
                 200,
@@ -507,6 +533,7 @@ describe('change or create entity', () => {
                             {
                                 id_persistent: idPersistent0,
                                 display_txt: displayTxt0,
+                                display_txt_details: 'display_txt_detail',
                                 version: version0,
                                 disabled: false
                             }
@@ -527,6 +554,7 @@ describe('change or create entity', () => {
                     newEntity({
                         idPersistent: idPersistent0,
                         displayTxt: displayTxt0,
+                        displayTxtDetails: 'display_txt_detail',
                         version: version0,
                         disabled: false
                     })
@@ -563,4 +591,22 @@ describe('change or create entity', () => {
             [new EntityChangeOrCreateErrorAction('error')]
         ])
     })
+})
+
+test('parses entity_with tag_definition details', () => {
+    const parsedValue = parseEntityObjectFromJson(test_person_rsp_with_tag_def_details)
+    expect(parsedValue).toEqual(
+        newEntity({
+            displayTxt: displayTxt0,
+            idPersistent: idPersistent0,
+            version: 0,
+            disabled: false,
+
+            displayTxtDetails: {
+                ...displayTextTagDef,
+                idParentPersistent: undefined,
+                owner: 'Unknown User'
+            }
+        })
+    )
 })

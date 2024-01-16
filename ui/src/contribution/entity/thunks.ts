@@ -335,7 +335,7 @@ export function getContributionTagInstances({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseScoredEntityFromJson(json: any) {
+export function parseScoredEntityFromJson(json: any): ScoredEntity {
     return newScoredEntity({
         ...parseEntityObjectFromJson(json['entity']),
         similarity: json['similarity'],

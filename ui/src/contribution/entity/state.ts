@@ -6,6 +6,7 @@ import { RemoteInterface, newRemote } from '../../util/state'
 export interface ScoredEntity {
     idPersistent: string
     displayTxt: string
+    displayTxtDetails: string | TagDefinition
     version: number
     similarity: number
     cellContents: RemoteInterface<CellValue[]>[]
@@ -14,6 +15,7 @@ export interface ScoredEntity {
 export function newScoredEntity({
     idPersistent,
     displayTxt,
+    displayTxtDetails,
     version,
     similarity,
     cellContents = [newRemote([])],
@@ -21,6 +23,7 @@ export function newScoredEntity({
 }: {
     idPersistent: string
     displayTxt: string
+    displayTxtDetails: string | TagDefinition
     version: number
     similarity: number
     cellContents?: RemoteInterface<CellValue[]>[]
@@ -29,6 +32,7 @@ export function newScoredEntity({
     return {
         idPersistent: idPersistent,
         displayTxt: displayTxt,
+        displayTxtDetails: displayTxtDetails,
         version,
         similarity: similarity,
         cellContents: cellContents,
@@ -39,6 +43,7 @@ export function newScoredEntity({
 export interface EntityWithDuplicates {
     idPersistent: string
     displayTxt: string
+    displayTxtDetails: TagDefinition | string
     version: number
     similarEntities: RemoteInterface<ScoredEntity[]>
     assignedDuplicate: RemoteInterface<Entity | undefined>
@@ -48,6 +53,7 @@ export interface EntityWithDuplicates {
 export function newEntityWithDuplicates({
     idPersistent,
     displayTxt,
+    displayTxtDetails = undefined,
     version,
     similarEntities,
     assignedDuplicate = newRemote(undefined),
@@ -56,6 +62,7 @@ export function newEntityWithDuplicates({
 }: {
     idPersistent: string
     displayTxt: string
+    displayTxtDetails?: string | TagDefinition
     version: number
     similarEntities: RemoteInterface<ScoredEntity[]>
     assignedDuplicate?: RemoteInterface<undefined | Entity>
@@ -74,6 +81,7 @@ export function newEntityWithDuplicates({
     return {
         idPersistent: idPersistent,
         displayTxt: displayTxt,
+        displayTxtDetails: displayTxtDetails ?? idPersistent,
         version,
         similarEntities: similarEntities,
         assignedDuplicate: assignedDuplicate,

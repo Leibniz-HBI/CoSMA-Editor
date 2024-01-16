@@ -4,6 +4,7 @@ import {
     GridCell,
     GridCellKind,
     GridColumn,
+    GridMouseEventArgs,
     Item,
     Rectangle
 } from '@glideapps/glide-data-grid'
@@ -42,6 +43,8 @@ import { UserInfo, UserPermissionGroup } from '../user/state'
 import { LoadingType } from './draw'
 import { useSelector } from 'react-redux'
 import { selectPermissionGroup } from '../user/selectors'
+import { useCallback, useRef, useState } from 'react'
+import { IBounds } from 'react-laag'
 
 const emptyCell = {
     kind: 'text' as GridCellKind,
@@ -244,6 +247,7 @@ export function useRemoteTableData(
         dispatch,
         state.selectedTagDefinition
     )
+
     const isLoading = state.isLoading || false
     return [
         {

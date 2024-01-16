@@ -2,11 +2,12 @@ import {
     DataEditor,
     EditableGridCell,
     GridColumn,
+    GridMouseEventArgs,
     Item
 } from '@glideapps/glide-data-grid'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Col, Modal, Row, Toast, ToastContainer } from 'react-bootstrap'
-import { useLayer } from 'react-laag'
+import { IBounds, useLayer } from 'react-laag'
 import { ColumnMenu } from '../column_menu/components/menu'
 import { ColumnAddButton } from '../column_menu/components/misc'
 import { HeaderMenu } from '../header_menu'
@@ -22,6 +23,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '../store'
 import { selectTableSelection } from './selection/selectors'
 import { EntityMergeRequestConflictComponent } from '../merge_request/entity/conflicts/components'
+import { constructColumnTitle } from '../contribution/entity/hooks'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -174,6 +176,15 @@ export function RemoteDataTable(props: {
     )
 }
 
+const zeroBounds = {
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    bottom: 0,
+    right: 0
+}
+
 export function DataTable(props: {
     tableProps: TableDataProps
     tableCallbacks: LocalTableCallbacks
@@ -205,15 +216,73 @@ export function DataTable(props: {
         updateTagDefinitionCallback
     } = props.tableCallbacks
     const headerMenuOpen = selectedColumnHeaderBounds !== undefined
-    const { layerProps, renderLayer } = useLayer({
-        isOpen: headerMenuOpen,
-        auto: true,
-        placement: 'bottom-end',
-        onOutsideClick: hideHeaderMenuCallback,
-        trigger: {
-            getBounds: columnHeaderBoundsCallback
+    const { layerProps: columnMenuLayerProps, renderLayer: columnMenuRenderLayer } =
+        useLayer({
+            isOpen: headerMenuOpen,
+            auto: true,
+            placement: 'bottom-end',
+            onOutsideClick: hideHeaderMenuCallback,
+            trigger: {
+                getBounds: columnHeaderBoundsCallback
+            }
+        })
+    const [tooltip, setTooltip] = useState<
+        { val: string; bounds: IBounds } | undefined
+    >()
+    const { layerProps: tooltipLayerProps, renderLayer: tooltipRenderLayer } = useLayer(
+        {
+            isOpen: tooltip !== undefined,
+            triggerOffset: 4,
+            auto: true,
+            container: 'portal',
+            trigger: {
+                getBounds: () => tooltip?.bounds ?? zeroBounds
+            }
         }
-    })
+    )
+
+    const timeoutRef = useRef(0)
+
+    const onItemHovered = useCallback(
+        (args: GridMouseEventArgs) => {
+            if (
+                args.kind === 'cell' &&
+                args.location[0] == 0 &&
+                entities !== undefined
+            ) {
+                window.clearTimeout(timeoutRef.current)
+                setTooltip(undefined)
+                let tooltipValue = ''
+                const displayTxtDetails = entities[args.location[1]].displayTxtDetails
+                if (displayTxtDetails === undefined) {
+                    tooltipValue = 'Unknown display txt source'
+                } else if (typeof displayTxtDetails == 'string') {
+                    tooltipValue = displayTxtDetails
+                } else {
+                    tooltipValue = constructColumnTitle(displayTxtDetails.namePath)
+                }
+                timeoutRef.current = window.setTimeout(() => {
+                    setTooltip({
+                        val: `Display text source: ${tooltipValue}`,
+                        bounds: {
+                            // translate to react-laag types
+                            left: args.bounds.x,
+                            top: args.bounds.y,
+                            width: args.bounds.width,
+                            height: args.bounds.height,
+                            right: args.bounds.x + args.bounds.width,
+                            bottom: args.bounds.y + args.bounds.height
+                        }
+                    })
+                }, 1000)
+            } else {
+                window.clearTimeout(timeoutRef.current)
+                timeoutRef.current = 0
+                setTooltip(undefined)
+            }
+        },
+        [entities]
+    )
 
     if (isLoading || entities === undefined) {
         return <div className="shimmer"></div>
@@ -265,14 +334,31 @@ export function DataTable(props: {
                     rowMarkers="checkbox-visible"
                     gridSelection={tableSelection}
                     onGridSelectionChange={mkGridSelectionCallback(dispatch)}
+                    onItemHovered={onItemHovered}
                 />
                 {headerMenuOpen &&
-                    renderLayer(
-                        <div {...layerProps}>
+                    columnMenuRenderLayer(
+                        <div {...columnMenuLayerProps}>
                             <HeaderMenu
                                 closeHeaderMenuCallback={hideHeaderMenuCallback}
                                 menuEntries={columnHeaderMenuEntries}
                             />
+                        </div>
+                    )}
+                {tooltip != undefined &&
+                    tooltipRenderLayer(
+                        <div
+                            {...tooltipLayerProps}
+                            style={{
+                                ...tooltipLayerProps.style,
+                                padding: '8px 12px',
+                                color: 'white',
+                                font: '500 13px Inter',
+                                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                                borderRadius: 9
+                            }}
+                        >
+                            {tooltip.val}
                         </div>
                     )}
                 {!!submitValuesErrorState && (

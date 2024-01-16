@@ -158,12 +158,14 @@ const entities = [
     {
         idPersistent: idEntity0,
         displayTxt: displayTxt0,
+        displayTxtDetails: 'display_txt_detail',
         version: versionEntity0,
         disabled: false
     },
     {
         idPersistent: idEntity1,
         displayTxt: displayTxt1,
+        displayTxtDetails: 'display_txt_detail',
         version: versionEntity1,
         disabled: false
     }
@@ -221,12 +223,14 @@ test('start entity duplicate merging', async () => {
         },
         origin: {
             display_txt: displayTxt0,
+            display_txt_details: 'display_txt_detail',
             version: versionEntity0,
             id_persistent: idEntity0,
             disabled: false
         },
         destination: {
             display_txt: displayTxt1,
+            display_txt_details: 'display_txt_detail',
             version: versionEntity1,
             id_persistent: idEntity1,
             disabled: false
@@ -264,12 +268,14 @@ test('start entity duplicate merging', async () => {
                     entityOrigin: {
                         idPersistent: idEntity0,
                         displayTxt: displayTxt0,
+                        displayTxtDetails: 'display_txt_detail',
                         version: versionEntity0,
                         disabled: false
                     },
                     entityDestination: {
                         idPersistent: idEntity1,
                         displayTxt: displayTxt1,
+                        displayTxtDetails: 'display_txt_detail',
                         version: versionEntity1,
                         disabled: false
                     },

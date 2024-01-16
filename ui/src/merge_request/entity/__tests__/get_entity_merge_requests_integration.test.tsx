@@ -119,12 +119,14 @@ test('success', async () => {
                     entityOrigin: newEntity({
                         idPersistent: idPersistentOrigin0,
                         displayTxt: displayTextOrigin0,
+                        displayTxtDetails: 'display_txt_detail',
                         version: versionOrigin0,
                         disabled: false
                     }),
                     entityDestination: newEntity({
                         idPersistent: idPersistentDestination0,
                         displayTxt: displayTextDestination0,
+                        displayTxtDetails: 'display_txt_detail',
                         version: versionDestination0,
                         disabled: false
                     }),
@@ -140,12 +142,14 @@ test('success', async () => {
                     entityOrigin: newEntity({
                         idPersistent: idPersistentOrigin1,
                         displayTxt: displayTextOrigin1,
+                        displayTxtDetails: 'display_txt_detail',
                         version: versionOrigin1,
                         disabled: false
                     }),
                     entityDestination: newEntity({
                         idPersistent: idPersistentDestination1,
                         displayTxt: displayTextDestination1,
+                        displayTxtDetails: 'display_txt_detail',
                         version: versionDestination1,
                         disabled: false
                     }),
@@ -208,12 +212,14 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                         id_persistent: idEntityMr0,
                         origin: {
                             display_txt: displayTextOrigin0,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: idPersistentOrigin0,
                             version: versionOrigin0,
                             disabled: false
                         },
                         destination: {
                             display_txt: displayTextDestination0,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: idPersistentDestination0,
                             version: versionDestination0,
                             disabled: false
@@ -229,12 +235,14 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                         id_persistent: idEntityMr1,
                         origin: {
                             display_txt: displayTextOrigin1,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: idPersistentOrigin1,
                             version: versionOrigin1,
                             disabled: false
                         },
                         destination: {
                             display_txt: displayTextDestination1,
+                            display_txt_details: 'display_txt_detail',
                             id_persistent: idPersistentDestination1,
                             version: versionDestination1,
                             disabled: false

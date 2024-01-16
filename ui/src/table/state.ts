@@ -227,22 +227,26 @@ export interface Entity {
     displayTxt: string
     version: number
     disabled: boolean
+    displayTxtDetails: string | TagDefinition
 }
 
 export function newEntity({
     idPersistent,
     displayTxt,
+    displayTxtDetails,
     version,
     disabled
 }: {
     idPersistent: string
     displayTxt: string
+    displayTxtDetails: string | TagDefinition
     version: number
     disabled: boolean
 }) {
     return {
         idPersistent: idPersistent,
         displayTxt: displayTxt,
+        displayTxtDetails: displayTxtDetails,
         version: version,
         disabled: disabled
     }
