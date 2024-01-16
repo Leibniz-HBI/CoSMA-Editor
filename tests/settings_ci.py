@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+# pylint: disable=duplicate-code
 
 from os import environ
 from pathlib import Path
@@ -160,6 +161,10 @@ CACHES = {
     "tag_definition_name_paths": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": "/tmp/django_cache_tag_definition_name_paths",
+    },
+    "entity_display_txt_information": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/tmp/django_cache_entity_display_txt_information",
     },
 }
 

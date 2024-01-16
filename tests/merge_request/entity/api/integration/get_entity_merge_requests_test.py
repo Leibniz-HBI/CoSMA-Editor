@@ -50,11 +50,13 @@ def test_success(auth_server_commissioner, merge_request_user):
                     "id_persistent": c.id_merge_request_persistent,
                     "origin": {
                         "display_txt": c.display_txt_entity_origin,
+                        "display_txt_details": "display_txt",
                         "id_persistent": c.id_entity_origin_persistent,
                         "disabled": False,
                     },
                     "destination": {
                         "id_persistent": c.id_entity_destination_persistent,
+                        "display_txt_details": "display_txt",
                         "display_txt": c.display_txt_entity_destination,
                         "disabled": False,
                     },

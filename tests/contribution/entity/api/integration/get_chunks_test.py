@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import tests.contribution.entity.api.requests as r
 import tests.contribution.entity.common as c
+from tests.utils import assert_versioned
 
 
 def test_no_cookies(auth_server):
@@ -33,12 +34,16 @@ def test_get_chunk(auth_server, contribution_candidate, entities):
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 1
-    persons = json["persons"]
-    assert len(persons) == 1
-    person = persons[0]
-    assert len(person) == 4
-    assert person["id_persistent"] == c.id_persistent_entity_duplicate_test
-    assert person["display_txt"] == c.display_txt_test_entity_duplicate
-    assert not person["disabled"]
-    assert "version" in person
+    assert_versioned(
+        json,
+        {
+            "persons": [
+                {
+                    "id_persistent": c.id_persistent_entity_duplicate_test,
+                    "display_txt": c.display_txt_test_entity_duplicate,
+                    "display_txt_details": "display_txt",
+                    "disabled": False,
+                }
+            ]
+        },
+    )

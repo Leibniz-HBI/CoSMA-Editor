@@ -1,6 +1,6 @@
 """API for handling natural persons."""
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import uuid4
 
 from django.db import IntegrityError
@@ -8,12 +8,17 @@ from django.http import HttpRequest
 from ninja import Router, Schema
 
 from cosmae.entity.models_django import Entity as EntityDb
+from cosmae.entity.queue import get_display_txt_info
 from cosmae.exception import (
     ApiError,
     DbObjectExistsException,
     EntityUpdatedException,
     NotAuthenticatedException,
     ValidationException,
+)
+from cosmae.tag.api.definitions import (
+    TagDefinitionResponse,
+    tag_definition_db_dict_to_api,
 )
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
@@ -32,6 +37,7 @@ class PersonNatural(Schema):
     If null on POST, a new person is created."""
     id_persistent: Optional[str]
     disabled: Optional[bool]
+    display_txt_details: Optional[Union[str, TagDefinitionResponse]]
 
 
 class PersonNaturalList(Schema):
@@ -184,11 +190,17 @@ def person_api_to_db(person: PersonNatural, time_edit: datetime) -> EntityDb:
 
 def person_db_to_api(person: EntityDb) -> PersonNatural:
     """Transform a natural person from DB to API representation."""
+    display_txt = person.display_txt
+    id_persistent = person.id_persistent
+    display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
+    if isinstance(display_txt_info, dict):
+        display_txt_info = tag_definition_db_dict_to_api(display_txt_info)
     return PersonNatural(
-        display_txt=person.display_txt,
+        display_txt=display_txt,
         version=person.id,
-        id_persistent=person.id_persistent,
+        id_persistent=id_persistent,
         disabled=person.disabled,
+        display_txt_details=display_txt_info,
     )
 
 
@@ -196,9 +208,15 @@ def person_db_dict_to_api(person: Optional[dict]) -> Optional[PersonNatural]:
     "Transform a person natural db dict to an API representation"
     if person is None:
         return None
+    id_persistent = person["id_persistent"]
+    display_txt = person["display_txt"]
+    display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
+    if isinstance(display_txt_info, dict):
+        display_txt_info = tag_definition_db_dict_to_api(display_txt_info)
     return PersonNatural(
-        display_txt=person["display_txt"],
+        display_txt=display_txt,
         version=person["id"],
-        id_persistent=person["id_persistent"],
+        id_persistent=id_persistent,
         disabled=person["disabled"],
+        display_txt_details=display_txt_info,
     )

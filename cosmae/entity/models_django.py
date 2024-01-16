@@ -14,7 +14,7 @@ class Entity(models.Model):
     """Model for a general entity"""
 
     proxy_name = models.TextField()
-    display_txt = models.TextField()
+    display_txt = models.TextField(blank=True, null=True)
     time_edit = models.DateTimeField()
     id_persistent = models.TextField(null=False, blank=False)
     previous_version = models.ForeignKey(
@@ -68,7 +68,7 @@ class Entity(models.Model):
         cls,
         id_persistent: str,
         time_edit: datetime,
-        display_txt: str,
+        display_txt: Optional[str] = None,
         version: Optional[int] = None,
         **kwargs,
     ):

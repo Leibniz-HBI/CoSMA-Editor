@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.utils import OperationalError
 from django_rq import enqueue
 
+from cosmae.entity.queue import update_display_txt_cache
 from cosmae.tag.models_django import TagDefinition
 
 tag_definition_name_path_cache = caches["tag_definition_name_paths"]
@@ -67,9 +68,21 @@ def dispatch_tag_definition_queue_process(
     instance,
     created,
     update_fields,
-    **kwargs  # pylint: disable=unused-argument
+    **kwargs,  # pylint: disable=unused-argument
 ):
     "Dispatches queue methods for tag definitions on save."
     if not (created or (update_fields and "id_persistent" in update_fields)):
         return
     enqueue(update_tag_definition_name_path, str(instance.id_persistent))
+
+
+def dispatch_display_txt_queue_process(
+    sender,
+    instance,
+    created,
+    update_fields,
+    **kwargs,  # pylint: disable=unused-argument
+):
+    "Dispatch method for updating entity display txt, when entity has changed."
+    if created or (update_fields and "value" in update_fields):
+        enqueue(update_display_txt_cache, str(instance.id_persistent))

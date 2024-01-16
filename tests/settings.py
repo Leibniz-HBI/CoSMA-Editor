@@ -167,6 +167,10 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": "/tmp/django_cache_tag_definition_name_paths",
     },
+    "entity_display_txt_information": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/tmp/django_cache_entity_display_txt_information",
+    },
 }
 
 IS_UNITTEST = False

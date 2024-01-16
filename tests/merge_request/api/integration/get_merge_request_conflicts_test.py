@@ -100,6 +100,7 @@ def test_conflicts_no_resolution(
                 "replace": None,
                 "entity": {
                     "display_txt": ce.display_txt_test0,
+                    "display_txt_details": "display_txt",
                     "id_persistent": ce.id_persistent_test_0,
                     "disabled": False,
                 },
@@ -113,6 +114,7 @@ def test_conflicts_no_resolution(
                 "replace": None,
                 "entity": {
                     "display_txt": ce.display_txt_test1,
+                    "display_txt_details": "display_txt",
                     "id_persistent": ce.id_persistent_test_1,
                     "disabled": False,
                 },
@@ -254,6 +256,7 @@ def test_conflict_resolved(
                 "replace": None,
                 "entity": {
                     "display_txt": ce.display_txt_test0,
+                    "display_txt_details": "display_txt",
                     "id_persistent": ce.id_persistent_test_0,
                     "disabled": False,
                 },
@@ -267,6 +270,7 @@ def test_conflict_resolved(
                 "replace": True,
                 "entity": {
                     "display_txt": ce.display_txt_test1,
+                    "display_txt_details": "display_txt",
                     "id_persistent": ce.id_persistent_test_1,
                     "disabled": False,
                 },
@@ -347,6 +351,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "replace": None,
                 "entity": {
                     "display_txt": ce.display_txt_test0,
+                    "display_txt_details": "display_txt",
                     "id_persistent": ce.id_persistent_test_0,
                     "disabled": False,
                 },
@@ -360,6 +365,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "replace": None,
                 "entity": {
                     "display_txt": ce.display_txt_test1,
+                    "display_txt_details": "display_txt",
                     "id_persistent": ce.id_persistent_test_1,
                     "disabled": False,
                 },
@@ -381,6 +387,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "replace": None,
                 "entity": {
                     "display_txt": ce.display_txt_test1,
+                    "display_txt_details": "display_txt",
                     "id_persistent": ce.id_persistent_test_1,
                     "disabled": False,
                 },
@@ -473,6 +480,7 @@ def test_tag_instance_destination_value_added(
         "replace": None,
         "entity": {
             "display_txt": ce.display_txt_test1,
+            "display_txt_details": "display_txt",
             "id_persistent": ce.id_persistent_test_1,
             "disabled": False,
         },
@@ -493,6 +501,7 @@ def test_tag_instance_destination_value_added(
                 "replace": None,
                 "entity": {
                     "display_txt": ce.display_txt_test0,
+                    "display_txt_details": "display_txt",
                     "id_persistent": ce.id_persistent_test_0,
                     "disabled": False,
                 },

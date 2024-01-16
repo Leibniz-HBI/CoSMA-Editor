@@ -1,9 +1,12 @@
 "API methods for managing display_txt order."
-from django.db.models import Case, IntegerField, When
 from django.http import HttpRequest
 from ninja import Router, Schema
 
 from cosmae.exception import ApiError, NotAuthenticatedException
+from cosmae.management.display_txt.util import (
+    DISPLAY_TXT_ORDER_CONFIG_KEY,
+    get_display_txt_order_tag_definitions,
+)
 from cosmae.management.models_django import AlreadyInListException, ConfigValue
 from cosmae.tag.api.definitions import (
     TagDefinitionResponse,
@@ -15,8 +18,6 @@ from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
 
 router = Router()
-
-DISPLAY_TXT_ORDER_CONFIG_KEY = "display_txt_order"
 
 
 class DisplayTxtOrderAppend(Schema):
@@ -43,17 +44,7 @@ def get(request: HttpRequest):
     if user.permission_group != CosmaeUser.COMMISSIONER:
         return 403, ApiError(msg="Insufficient permissions.")
     try:
-        id_tag_def_persistent_list = ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY, [])
-        order = [
-            When(id_persistent=val, then=idx)
-            for idx, val in enumerate(id_tag_def_persistent_list)
-        ]
-        tag_def_query = (
-            TagDefinition.most_recent_query_set()
-            .filter(id_persistent__in=id_tag_def_persistent_list)
-            .annotate(sort_key=Case(*order, output_field=IntegerField()))
-            .order_by("sort_key")
-        )
+        tag_def_query = get_display_txt_order_tag_definitions()
         return 200, TagDefinitionResponseList(
             tag_definitions=[
                 tag_definition_db_to_api(tag_def) for tag_def in tag_def_query

@@ -10,7 +10,7 @@ from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedExcep
 from cosmae.merge_request.entity.api import TagInstance, merge_request_step_db_to_api_map
 from cosmae.merge_request.models_django import TagConflictResolution
 from cosmae.merge_request.models_django import TagMergeRequest as MergeRequestDb
-from cosmae.person.api import PersonNatural
+from cosmae.person.api import PersonNatural, person_db_dict_to_api
 from cosmae.tag.api.definitions import tag_definition_db_to_api
 from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
@@ -305,12 +305,7 @@ def annotated_tag_instance_db_to_api(annotated_instance):
             value=tag_instance_destination_db["value"],
         )
     return MergeRequestConflict(
-        entity=PersonNatural(
-            display_txt=entity["display_txt"],
-            id_persistent=entity["id_persistent"],
-            version=entity["id"],
-            disabled=entity["disabled"],
-        ),
+        entity=person_db_dict_to_api(entity),
         tag_instance_origin=TagInstance(
             id_persistent=annotated_instance.id_persistent,
             version=annotated_instance.id,
@@ -338,12 +333,7 @@ def conflict_with_updated_data_db_to_api(annotated_conflict):
 
     tag_instance_origin = annotated_conflict.tag_instance_origin_most_recent
     return MergeRequestConflict(
-        entity=PersonNatural(
-            display_txt=entity["display_txt"],
-            version=entity["id"],
-            id_persistent=entity["id_persistent"],
-            disabled=entity["disabled"],
-        ),
+        entity=person_db_dict_to_api(entity),
         tag_instance_origin=TagInstance(
             id_persistent=tag_instance_origin["id_persistent"],
             version=tag_instance_origin["id"],

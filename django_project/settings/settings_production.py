@@ -193,6 +193,12 @@ CACHES = {
         "OPTIONS": {"password": get_docker_compose_secret("cosmae_redis_password")},
         "KEY_PREFIX": "tag_definition_name_path",
     },
+    "entity_display_txt_information": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://cosmae_redis:6379",
+        "OPTIONS": {"password": get_docker_compose_secret("cosmae_redis_password")},
+        "KEY_PREFIX": "entity_display_txt_information",
+    },
 }
 
 IS_UNITTEST = False
