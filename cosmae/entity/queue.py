@@ -13,13 +13,13 @@ entity_display_txt_information_cache = caches["entity_display_txt_information"]
 
 
 def get_display_txt_info(id_entity_persistent, display_txt):
-    "Retrieve display_txt info from the cache."
+    "Retrieve display_txt info from the cache, if not present"
+    if display_txt is not None:
+        return display_txt, "Display Text"
     display_txt_info = entity_display_txt_information_cache.get(id_entity_persistent)
     if display_txt_info is None:
         enqueue(update_display_txt_cache, id_entity_persistent)
-        if display_txt is None:
-            return id_entity_persistent, "id_persistent"
-        return display_txt, "Display Text"
+        return id_entity_persistent, "id_persistent"
     if display_txt_info[1] == "Display Text" or (
         display_txt_info[1] == "id_persistent" and display_txt is not None
     ):
@@ -90,5 +90,9 @@ def dispatch_display_txt_queue_process(
     **kwargs,  # pylint: disable=unused-argument
 ):
     "Dispatch method for updating entity display txt, when entity has changed."
-    if created or (update_fields and "display_txt" in update_fields):
+    if created or (
+        update_fields
+        and "display_txt" in update_fields
+        and instance.display_txt is None
+    ):
         enqueue(update_display_txt_cache, str(instance.id_persistent))
