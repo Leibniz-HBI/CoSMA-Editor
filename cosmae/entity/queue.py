@@ -36,7 +36,9 @@ def update_display_txt_cache(id_entity_persistent):
                 id_entity_persistent, (entity.display_txt, "Display Text")
             )
         else:
-            tag_definition_order_query = get_display_txt_order_tag_definitions()
+            tag_definition_order_query = get_display_txt_order_tag_definitions(
+                entity.contribution_candidate_id
+            )
             with_tag_instance_value_query = tag_definition_order_query.annotate(
                 tag_instance_value=Subquery(
                     TagInstance.objects.filter(  # pylint: disable=no-member

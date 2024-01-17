@@ -16,10 +16,13 @@ class TagDefinitionContribution(models.Model):
     @classmethod
     def get_by_candidate(cls, candidate):
         "Get the tag definitions for a specific contribution candidate"
-        return list(
-            TagDefinitionContribution.objects.filter(  # pylint: disable=no-member
-                contribution_candidate=candidate,
-            )
+        return list(cls.get_by_candidate_query_set(candidate))
+
+    @classmethod
+    def get_by_candidate_query_set(cls, candidate):
+        "Get all tag definitions for a contribution candidate."
+        return TagDefinitionContribution.objects.filter(  # pylint: disable=no-member
+            contribution_candidate=candidate,
         )
 
     @classmethod

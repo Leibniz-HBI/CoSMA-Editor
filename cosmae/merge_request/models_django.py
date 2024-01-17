@@ -54,6 +54,13 @@ class TagMergeRequest(AbstractMergeRequest):
         )
 
     @classmethod
+    def get_for_contribution_query_set(cls, id_contribution_persistent):
+        "Get all tag merge requests for a contribution candidate."
+        return cls.objects.filter(  # pylint: disable=no-member
+            contribution_candidate_id=id_contribution_persistent
+        )
+
+    @classmethod
     def get_tag_definitions_for_entities_request(
         cls,
         id_tag_definition_persistent: str,
