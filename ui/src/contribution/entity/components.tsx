@@ -522,6 +522,9 @@ export function EntityConflictList({
     const dispatch = useDispatch()
     const selectEntityCallback = (idx: number) => dispatch(setSelectedEntityIdx(idx))
     const selectedEntity = useSelector(selectSelectedEntity)
+    if (entityConflicts.length == 0 || entityConflicts[0].similarEntities.isLoading) {
+        return <CosmaeLoading />
+    }
     return (
         <ListGroup>
             {entityConflicts.map((entity, idx) => (
