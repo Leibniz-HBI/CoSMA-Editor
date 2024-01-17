@@ -52,7 +52,7 @@ def test_wrong_user(auth_server1):
     assert rsp.status_code == 404
 
 
-def test_missing_assignment(auth_server, user):
+def test_accept_missing_display_txt(auth_server, user):
     live_server, cookies = auth_server
     id_persistent = str(uuid4())
     ContributionCandidate.objects.create(  # pylint: disable=no-member
@@ -68,12 +68,44 @@ def test_missing_assignment(auth_server, user):
     rsp = req_contrib.post_column_assignment_complete(
         live_server.url, id_persistent, cookies=cookies
     )
-    assert rsp.status_code == 400
-    assert (
-        rsp.json()["msg"]
-        == "At least one tag has to be assigned to one of the following "
-        "values: display_txt."
+    assert rsp.status_code == 200
+
+
+def test_with_discarded_assignment(auth_server):
+    live_server, cookies = auth_server
+    id_contribution_persistent = uuid4()
+    contribution_candidate = (
+        ContributionCandidate.objects.create(  # pylint: disable=no-member
+            name="contribution_candidate_test",
+            id_persistent=id_contribution_persistent,
+            description="A contribution candidate for tests",
+            anonymous=True,
+            has_header=False,
+            file_name="test.csv",
+            state=ContributionCandidate.COLUMNS_EXTRACTED,
+            created_by=CosmaeUser.objects.get(username=cu.test_username),
+        )
     )
+    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+        id_persistent=uuid4(),
+        contribution_candidate=contribution_candidate,
+        name="name",
+        id_existing_persistent="display_txt",
+        index_in_file=0,
+    )
+    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+        id_persistent=uuid4(),
+        contribution_candidate=contribution_candidate,
+        name="column_test",
+        id_existing_persistent="None",
+        index_in_file=1,
+        discard=True,
+    )
+
+    rsp = req_contrib.post_column_assignment_complete(
+        live_server.url, id_contribution_persistent, cookies=cookies
+    )
+    assert rsp.status_code == 200
 
 
 def test_incomplete_assignment(auth_server):

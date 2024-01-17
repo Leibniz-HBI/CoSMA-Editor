@@ -128,7 +128,6 @@ def patch_tag_definition(
             ):
                 TagDefinition.most_recent_by_id(id_existing_persistent)
             patch_from_dict(candidate_definition, **patch_dict)
-            print(candidate_definition.__dict__)
             return 200, tag_definitions_contribution_db_to_api(candidate_definition)
         except TagDefinition.DoesNotExist:  # pylint: disable=no-member
             return 400, ApiError(msg="Existing tag definition does not exist.")

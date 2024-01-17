@@ -127,17 +127,13 @@ class ContributionCandidate(models.Model):
         active = TagDefinitionContribution.objects.filter(  # pylint: disable=no-member
             contribution_candidate=self, discard=False
         )
-        required_fields = ["display_txt"]  # , "id_persistent"]
-        with_required_fields = active.filter(id_existing_persistent__in=required_fields)
-        if len(with_required_fields) == 0:
-            raise self.MissingRequiredAssignmentsException(required_fields)
-        invalid = active.exclude(
+        invalid = active.exclude(id_existing_persistent="display_txt").exclude(
             id_existing_persistent__in=Subquery(
-                TagDefinition.objects.values(  # pylint: disable=no-member
+                TagDefinition.most_recent_query_set().values(  # pylint: disable=no-member
                     "id_persistent"
                 )
             )
-        ).exclude(id_existing_persistent__in=required_fields)
+        )
         if len(invalid) > 0:
             raise self.InvalidTagAssignmentException(
                 invalid.values_list("name", flat=True)

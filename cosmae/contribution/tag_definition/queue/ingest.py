@@ -14,6 +14,15 @@ from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagDefinition, TagInstanceHistory
 
 
+def mk_display_txt_extractor(idx):
+    """Create a function to read the display text from csv rows.
+    If the index is None a function always returning None is the result of this function.
+    """
+    if idx is None:
+        return lambda _: None
+    return lambda row_tpl: row_tpl[idx]
+
+
 def ingest_values_from_csv(id_contribution_persistent):
     # pylint: disable=too-many-locals
     "Reads values from a csv files according to column assignments of a contribution candidate"
@@ -62,13 +71,10 @@ def ingest_values_from_csv(id_contribution_persistent):
                     tag_definition_pairs.append(
                         (tag_definition_origin, tag_definition_destination)
                     )
-            if display_txt_idx is None:
-                raise ContributionCandidate.MissingRequiredAssignmentsException(
-                    ["display_txt"]
-                )
+            display_txt_extractor = mk_display_txt_extractor(display_txt_idx)
             data_frame = read_csv_of_candidate(contribution)
             for row_tpl in data_frame.itertuples(index=False):
-                display_txt = row_tpl[display_txt_idx]
+                display_txt = display_txt_extractor(row_tpl)
                 id_entity_persistent = str(uuid4())
                 entity, _ = Entity.change_or_create(
                     id_persistent=id_entity_persistent,

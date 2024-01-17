@@ -72,7 +72,7 @@ def test_conversion_db_to_api_no_cache():
     )
     person_api_expected = api.PersonNatural(
         display_txt=c.display_txt_test,
-        display_txt_details="display_txt",
+        display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
         disabled=False,
@@ -86,7 +86,7 @@ def test_conversion_db_to_api_display_txt_in_cache():
     cache_display_txt = "cache display txt"
     id_entity_persistent = "eeae8974-1269-4836-8154-6e0d4a7dbf24"
     entity_display_txt_information_cache.set(
-        id_entity_persistent, (cache_display_txt, "display_txt")
+        id_entity_persistent, (cache_display_txt, "Display Text")
     )
     person_db = EntityDb(
         display_txt=c.display_txt_test,
@@ -96,7 +96,7 @@ def test_conversion_db_to_api_display_txt_in_cache():
     )
     person_api_expected = api.PersonNatural(
         display_txt=c.display_txt_test,
-        display_txt_details="display_txt",
+        display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
         id_persistent=id_entity_persistent,
         disabled=False,
@@ -118,7 +118,7 @@ def test_conversion_db_to_api_id_persistent_in_cache_but_display_txt():
     )
     person_api_expected = api.PersonNatural(
         display_txt=c.display_txt_test,
-        display_txt_details="display_txt",
+        display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
         disabled=False,

@@ -19,10 +19,11 @@ def get_display_txt_info(id_entity_persistent, display_txt):
         enqueue(update_display_txt_cache, id_entity_persistent)
         if display_txt is None:
             return id_entity_persistent, "id_persistent"
-    if display_txt_info[1] == "display_txt" or (
+        return display_txt, "Display Text"
+    if display_txt_info[1] == "Display Text" or (
         display_txt_info[1] == "id_persistent" and display_txt is not None
     ):
-        return display_txt, "display_txt"
+        return display_txt, "Display Text"
     return display_txt_info
 
 
@@ -32,7 +33,7 @@ def update_display_txt_cache(id_entity_persistent):
         entity = Entity.most_recent_by_id(id_entity_persistent)
         if entity.display_txt is not None and entity.display_txt != "":
             entity_display_txt_information_cache.set(
-                id_entity_persistent, (entity.display_txt, "display_txt")
+                id_entity_persistent, (entity.display_txt, "Display Text")
             )
         else:
             tag_definition_order_query = get_display_txt_order_tag_definitions()

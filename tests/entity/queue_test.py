@@ -23,7 +23,7 @@ value_instance_tag_def_1 = "Some value used as display txt"
 def test_with_display_txt(entity0):
     update_display_txt_cache(entity0.id_persistent)
     result = entity_display_txt_information_cache.get(entity0.id_persistent)
-    assert result == (entity0.display_txt, "display_txt")
+    assert result == (entity0.display_txt, "Display Text")
 
 
 @pytest.fixture

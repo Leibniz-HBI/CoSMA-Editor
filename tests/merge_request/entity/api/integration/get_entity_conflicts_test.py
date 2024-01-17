@@ -66,13 +66,13 @@ def test_conflicts_no_resolution(
             "origin": {
                 "id_persistent": c.id_entity_origin_persistent,
                 "display_txt": c.display_txt_entity_origin,
-                "display_txt_details": "display_txt",
+                "display_txt_details": "Display Text",
                 "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_entity_destination_persistent,
                 "display_txt": c.display_txt_entity_destination,
-                "display_txt_details": "display_txt",
+                "display_txt_details": "Display Text",
                 "disabled": False,
             },
         },
@@ -176,13 +176,13 @@ def test_conflicts_same_value(
             "origin": {
                 "id_persistent": c.id_entity_origin_persistent,
                 "display_txt": c.display_txt_entity_origin,
-                "display_txt_details": "display_txt",
+                "display_txt_details": "Display Text",
                 "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_entity_destination_persistent,
                 "display_txt": c.display_txt_entity_destination,
-                "display_txt_details": "display_txt",
+                "display_txt_details": "Display Text",
                 "disabled": False,
             },
         },
@@ -217,13 +217,13 @@ def test_conflicts_resolved(
             "origin": {
                 "id_persistent": c.id_entity_origin_persistent,
                 "display_txt": c.display_txt_entity_origin,
-                "display_txt_details": "display_txt",
+                "display_txt_details": "Display Text",
                 "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_entity_destination_persistent,
                 "display_txt": c.display_txt_entity_destination,
-                "display_txt_details": "display_txt",
+                "display_txt_details": "Display Text",
                 "disabled": False,
             },
         },

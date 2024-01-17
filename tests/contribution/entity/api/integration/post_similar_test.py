@@ -61,7 +61,7 @@ def test_similar_entities_no_duplicate(auth_server, contribution_candidate, enti
                             "entity": {
                                 "disabled": False,
                                 "display_txt": "test entity 1",
-                                "display_txt_details": "display_txt",
+                                "display_txt_details": "Display Text",
                                 "id_persistent": "id_persistent_test_1",
                                 "version": 2,
                             },
@@ -73,7 +73,7 @@ def test_similar_entities_no_duplicate(auth_server, contribution_candidate, enti
                             "id_match_tag_definition_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
-                                "display_txt_details": "display_txt",
+                                "display_txt_details": "Display Text",
                                 "version": 1,
                                 "id_persistent": "id_persistent_test_0",
                                 "disabled": False,
@@ -108,7 +108,7 @@ def test_similar_entities_with_duplicate(
                             "entity": {
                                 "disabled": False,
                                 "display_txt": "test entity 1",
-                                "display_txt_details": "display_txt",
+                                "display_txt_details": "Display Text",
                                 "id_persistent": "id_persistent_test_1",
                                 "version": 2,
                             },
@@ -120,7 +120,7 @@ def test_similar_entities_with_duplicate(
                             "id_match_tag_definition_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
-                                "display_txt_details": "display_txt",
+                                "display_txt_details": "Display Text",
                                 "version": 1,
                                 "id_persistent": "id_persistent_test_0",
                                 "disabled": False,
@@ -130,7 +130,7 @@ def test_similar_entities_with_duplicate(
                     "assigned_duplicate": {
                         "id_persistent": ce.id_persistent_test_1,
                         "display_txt": ce.display_txt_test1,
-                        "display_txt_details": "display_txt",
+                        "display_txt_details": "Display Text",
                         "version": entities[1].id,
                         "disabled": False,
                     },
@@ -166,7 +166,7 @@ def test_similar_entities_with_tag_match(
                             "entity": {
                                 "disabled": False,
                                 "display_txt": "test entity 1",
-                                "display_txt_details": "display_txt",
+                                "display_txt_details": "Display Text",
                                 "id_persistent": "id_persistent_test_1",
                                 "version": 2,
                             },
@@ -180,7 +180,7 @@ def test_similar_entities_with_tag_match(
                             "id_match_tag_definition_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
-                                "display_txt_details": "display_txt",
+                                "display_txt_details": "Display Text",
                                 "version": 1,
                                 "id_persistent": "id_persistent_test_0",
                                 "disabled": False,
@@ -190,7 +190,7 @@ def test_similar_entities_with_tag_match(
                     "assigned_duplicate": {
                         "id_persistent": ce.id_persistent_test_1,
                         "display_txt": ce.display_txt_test1,
-                        "display_txt_details": "display_txt",
+                        "display_txt_details": "Display Text",
                         "version": entities[1].id,
                         "disabled": False,
                     },

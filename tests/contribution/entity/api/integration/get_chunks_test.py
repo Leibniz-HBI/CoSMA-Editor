@@ -41,7 +41,7 @@ def test_get_chunk(auth_server, contribution_candidate, entities):
                 {
                     "id_persistent": c.id_persistent_entity_duplicate_test,
                     "display_txt": c.display_txt_test_entity_duplicate,
-                    "display_txt_details": "display_txt",
+                    "display_txt_details": "Display Text",
                     "disabled": False,
                 }
             ]
