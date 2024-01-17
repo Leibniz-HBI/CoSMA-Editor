@@ -62,6 +62,9 @@ class PutDuplicateResponse(Schema):
     assigned_duplicate: Optional[PersonNatural]
 
 
+empty_match = ScoredMatchesWithDuplicateAssignment(assigned_duplicate=None, matches=[])
+
+
 @router.get(
     "chunk/{start}/{offset}",
     response={200: PersonNaturalList, 401: ApiError, 404: ApiError, 500: ApiError},
@@ -132,6 +135,9 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
             )
             for entity in matches
         }
+        for id_persistent in similar_request.id_entity_persistent_list:
+            if id_persistent not in scored_matches:
+                scored_matches[id_persistent] = empty_match
         return 200, ScoredMatchResponse(matches=scored_matches)
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
