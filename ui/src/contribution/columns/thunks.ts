@@ -1,7 +1,6 @@
 import { config } from '../../config'
 import { ColumnDefinitionContribution, newColumnDefinitionContribution } from './state'
 import { exceptionMessage } from '../../util/exception'
-import { parseContributionFromApi } from '../async_actions'
 import { ThunkWithFetch } from '../../util/type'
 import {
     finalizeColumnAssignmentError,
@@ -41,24 +40,10 @@ export function loadColumnDefinitionsContribution(
                         activeDefinitionsList.push(columnDefinition)
                     }
                 })
-                const contributionJson = json['contribution_candidate']
-                const errorMsg = contributionJson['error_msg']
-                if (errorMsg) {
-                    const errorDetails = contributionJson['error_details']
-                    if (errorDetails) {
-                        dispatch(
-                            addError(newErrorState(errorMsg + '\n' + errorDetails))
-                        )
-                    } else {
-                        dispatch(addError(newErrorState(errorMsg)))
-                    }
-                }
-                const contributionCandidate = parseContributionFromApi(contributionJson)
                 dispatch(
                     loadColumnDefinitionsContributionSuccess({
                         activeDefinitionsList,
-                        discardedDefinitionsList,
-                        contributionCandidate
+                        discardedDefinitionsList
                     })
                 )
                 return

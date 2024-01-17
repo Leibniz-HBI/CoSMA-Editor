@@ -23,6 +23,7 @@ import { ToolkitStore } from '@reduxjs/toolkit/dist/configureStore'
 import { ContributionStep } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
+import { ContributionState, contributionSlice } from '../../slice'
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
     loaderMock.mockReturnValue('id-contribution-test')
@@ -32,6 +33,7 @@ jest.mock('react-router-dom', () => {
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionColumnDefinition: ColumnDefinitionsContributionState
+        contribution: ContributionState
         tagSelection: TagSelectionState
     }
 }
@@ -43,6 +45,7 @@ export function renderWithProviders(
             contributionColumnDefinition: newColumnDefinitionsContributionState({
                 columns: newRemote(undefined)
             }),
+            contribution: { selectedContribution: newRemote(undefined) },
             tagSelection: newTagSelectionState({})
         },
         ...renderOptions
@@ -51,6 +54,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
+            contribution: contributionSlice.reducer,
             tagSelection: tagSelectionSlice.reducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -188,6 +192,10 @@ describe('beginning', () => {
             )
         })
         expect(fetchMock.mock.calls).toEqual([
+            [
+                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
+                { credentials: 'include' }
+            ],
             [
                 `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags`,
                 { credentials: 'include' }
@@ -371,6 +379,7 @@ describe('end', () => {
 })
 function initialResponseSequence(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
+        [200, contributionCandidateRsp],
         [
             200,
             {
@@ -380,8 +389,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
                     contributionColumnActiveRsp2,
                     contributionColumnDiscardRsp3,
                     contributionColumnActiveRsp4
-                ],
-                contribution_candidate: contributionCandidateRsp
+                ]
             }
         ],
         [
@@ -406,6 +414,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
 function expectActiveDiscardedIds(
     store: ToolkitStore<{
         contributionColumnDefinition: ColumnDefinitionsContributionState
+        contribution: ContributionState
         tagSelection: TagSelectionState
     }>,
     expectedActiveIdList: string[],

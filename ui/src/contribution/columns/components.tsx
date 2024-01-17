@@ -46,6 +46,8 @@ import {
 import { toggleExpansion } from '../../column_menu/slice'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
 import { RemoteInterface } from '../../util/state'
+import { selectContribution } from '../selectors'
+import { loadContributionDetails } from '../thunks'
 
 export function ColumnDefinitionStep() {
     const idContributionPersistent = useLoaderData() as string
@@ -55,24 +57,31 @@ export function ColumnDefinitionStep() {
     const selectedColumnDefinition = useSelector(selectSelectedColumnDefinition)
     const createTabSelected = useSelector(selectCreateTabSelected)
     const isLoadingTags = useSelector(selectTagSelectionLoading)
+    const contributionCandidate = useSelector(selectContribution)
     useLayoutEffect(() => {
-        dispatch(loadColumnDefinitionsContribution(idContributionPersistent)).then(
-            async () => {
+        dispatch(loadContributionDetails(idContributionPersistent))
+            .then(() => {
+                dispatch(loadColumnDefinitionsContribution(idContributionPersistent))
+            })
+            .then(async () => {
                 if (!isLoadingTags) {
                     await dispatch(loadTagDefinitionHierarchy({ expand: true }))
                 }
-            }
-        )
+            })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idContributionPersistent])
-    if (definitions.isLoading) {
+    if (
+        definitions.isLoading ||
+        contributionCandidate.isLoading ||
+        contributionCandidate.value === undefined
+    ) {
         return <CosmaeLoading />
     }
     return (
         <ContributionStepper
             selectedIdx={1}
             id_persistent={idContributionPersistent}
-            step={definitions.value?.contributionCandidate.step}
+            step={contributionCandidate.value.step}
         >
             <Row className="overflow-hidden h-100">
                 <Col

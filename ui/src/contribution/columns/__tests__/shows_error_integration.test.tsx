@@ -17,6 +17,7 @@ import { ContributionStep } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 import { ErrorManager, errorSlice } from '../../../util/error/slice'
+import { ContributionState, contributionSlice } from '../../slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -32,6 +33,7 @@ jest.mock('uuid', () => {
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionColumnDefinition: ColumnDefinitionsContributionState
+        contribution: ContributionState
         tagSelection: TagSelectionState
         error: ErrorManager
     }
@@ -45,6 +47,7 @@ export function renderWithProviders(
             contributionColumnDefinition: newColumnDefinitionsContributionState({
                 columns: newRemote(undefined)
             }),
+            contribution: { selectedContribution: newRemote(undefined) },
             tagSelection: newTagSelectionState({}),
             error: { errorList: [], errorMap: {} }
         },
@@ -54,6 +57,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
+            contribution: contributionSlice.reducer,
             tagSelection: tagSelectionSlice.reducer,
             error: errorSlice.reducer
         },
@@ -111,14 +115,14 @@ const nameTagDef0 = 'tag def 0'
 test('sets error', async () => {
     const fetchMock = jest.fn()
     addResponseSequence(fetchMock, [
+        [200, contributionCandidateRsp],
         [
             200,
             {
                 tag_definitions: [
                     contributionColumnActiveRsp0,
                     contributionColumnActiveRsp1
-                ],
-                contribution_candidate: contributionCandidateRsp
+                ]
             }
         ],
         [

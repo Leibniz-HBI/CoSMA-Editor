@@ -16,6 +16,7 @@ import { ColumnDefinitionStep } from '../components'
 import { ContributionStep } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
+import { ContributionState, contributionSlice } from '../../slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -26,6 +27,7 @@ jest.mock('react-router-dom', () => {
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionColumnDefinition: ColumnDefinitionsContributionState
+        contribution: ContributionState
         tagSelection: TagSelectionState
     }
 }
@@ -38,6 +40,7 @@ export function renderWithProviders(
             contributionColumnDefinition: newColumnDefinitionsContributionState({
                 columns: newRemote(undefined)
             }),
+            contribution: { selectedContribution: newRemote(undefined) },
             tagSelection: newTagSelectionState({})
         },
         ...renderOptions
@@ -46,6 +49,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
+            contribution: contributionSlice.reducer,
             tagSelection: tagSelectionSlice.reducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -98,14 +102,14 @@ const nameTagDef0 = 'tag def 0'
 
 function initialResponseSequence(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
+        [200, contributionCandidateRsp],
         [
             200,
             {
                 tag_definitions: [
                     contributionColumnActiveRsp0,
                     contributionColumnActiveRsp1
-                ],
-                contribution_candidate: contributionCandidateRsp
+                ]
             }
         ],
         [

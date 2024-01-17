@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
     ColumnDefinitionContribution,
     ColumnDefinitionsContributionState,
-    ColumnsTriple,
+    ColumnsTuple,
     newColumnDefinitionsContributionState
 } from './state'
 import { newRemote, Remote } from '../../util/state'
@@ -94,7 +94,7 @@ export const contributionColumnDefinitionSlice = createSlice({
         },
         loadColumnDefinitionsContributionSuccess(
             state: ColumnDefinitionsContributionState,
-            action: PayloadAction<ColumnsTriple>
+            action: PayloadAction<ColumnsTuple>
         ) {
             state.columns = newRemote(action.payload)
             state.selectedColumnDefinition = newRemote(

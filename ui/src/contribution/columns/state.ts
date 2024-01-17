@@ -1,6 +1,5 @@
 import { TagSelectionEntry, TagType } from '../../column_menu/state'
 import { RemoteInterface, newRemote } from '../../util/state'
-import { Contribution } from '../state'
 
 export interface ColumnDefinitionContribution {
     name: string
@@ -39,14 +38,13 @@ export function newColumnDefinitionContribution({
     }
 }
 
-export type ColumnsTriple = {
+export type ColumnsTuple = {
     activeDefinitionsList: ColumnDefinitionContribution[]
     discardedDefinitionsList: ColumnDefinitionContribution[]
-    contributionCandidate: Contribution
 }
 
 export interface ColumnDefinitionsContributionState {
-    columns: RemoteInterface<ColumnsTriple | undefined>
+    columns: RemoteInterface<ColumnsTuple | undefined>
     selectedColumnDefinition: RemoteInterface<ColumnDefinitionContribution | undefined>
     createTabSelected: boolean
     finalizeColumnAssignment: RemoteInterface<boolean>
@@ -57,7 +55,7 @@ export function newColumnDefinitionsContributionState({
     createTabSelected = false,
     finalizeColumnAssignment = newRemote(false)
 }: {
-    columns?: RemoteInterface<ColumnsTriple | undefined>
+    columns?: RemoteInterface<ColumnsTuple | undefined>
     selectedColumnDefinition?: RemoteInterface<ColumnDefinitionContribution | undefined>
     createTabSelected?: boolean
     existingColumnSelectionEntries?: RemoteInterface<TagSelectionEntry[]>
