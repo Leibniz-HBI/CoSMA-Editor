@@ -250,13 +250,39 @@ export const contributionEntitySlice = createSlice({
             state: ContributionEntityState,
             action: PayloadAction<number>
         ) {
-            state.selectedEntityIdx = action.payload
+            let idx = 0
+            for (
+                let count = action.payload;
+                count > 0 && idx < state.entities.value.length;
+                ++idx
+            ) {
+                if (state.entities.value[idx].similarEntities.value.length > 0) {
+                    count--
+                }
+            }
+            while (
+                idx < state.entities.value.length &&
+                state.entities.value[idx].similarEntities.value.length == 0
+            ) {
+                idx++
+            }
+            if (state.entities.value[0] !== undefined) {
+                state.selectedEntityIdx = idx
+            }
         },
         incrementSelectedEntityIdx(state: ContributionEntityState) {
-            state.selectedEntityIdx = Math.min(
-                state.entities.value.length,
-                (state.selectedEntityIdx ?? -1) + 1
-            )
+            if (state.selectedEntityIdx !== undefined) {
+                for (
+                    let idx = state.selectedEntityIdx + 1;
+                    idx < state.entities.value.length;
+                    ++idx
+                ) {
+                    if (state.entities.value[idx].similarEntities.value.length > 0) {
+                        state.selectedEntityIdx = idx
+                        break
+                    }
+                }
+            }
         }
     }
 })
