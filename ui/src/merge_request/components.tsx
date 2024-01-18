@@ -16,7 +16,8 @@ import { EntityMergeRequests } from './entity/components'
 export function ReviewList() {
     const dispatch: AppDispatch = useDispatch()
     const permissionGroup = useSelector(selectPermissionGroup)
-    const { getMergeRequestsCallback, isLoading, assigned } = useMergeRequests()
+    const { getMergeRequestsCallback, isLoading, assigned, created } =
+        useMergeRequests()
     useLayoutEffect(() => {
         getMergeRequestsCallback()
         if (
@@ -62,7 +63,7 @@ export function ReviewList() {
                         >
                             <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
                                 <ListGroup as="ol">
-                                    {assigned.map((mergeRequest) => (
+                                    {created.map((mergeRequest) => (
                                         <MergeRequestListItem
                                             mergeRequest={mergeRequest}
                                             navigateCallback={navigateCallback}
