@@ -109,9 +109,16 @@ class Entity(models.Model):
         return most_recent.filter(disabled=False)
 
     @classmethod
-    def get_most_recent_chunked(cls, offset, limit, manager=None):
+    def get_most_recent_chunked(
+        cls, offset, limit, manager=None, do_not_include_contributed=False
+    ):
         """Get all entities in chunks"""
-        return cls.most_recent(manager)[offset : offset + limit]
+        entities = cls.most_recent(manager)
+        if do_not_include_contributed:
+            entities = entities.filter(
+                contribution_candidates__isnull=do_not_include_contributed
+            )
+        return entities[offset : offset + limit]
 
     def save(self, *args, **kwargs):
         self.proxy_name = type(self).__name__.lower()
