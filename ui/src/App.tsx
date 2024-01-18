@@ -9,8 +9,7 @@ import {
     Outlet,
     RouterProvider,
     createBrowserRouter,
-    redirect,
-    useParams
+    redirect
 } from 'react-router-dom'
 import { ContributionList } from './contribution/components'
 import { ContributionDetailsStep } from './contribution/details/components'
@@ -24,7 +23,6 @@ import { ReviewList } from './merge_request/components'
 import { CompleteStep } from './contribution/complete/components'
 import { MergeRequestConflictResolutionView } from './merge_request/conflicts/components'
 import { UserPermissionGroup } from './user/state'
-import { UserPermissionGroupComponent } from './user/permission_groups/components'
 import { ErrorToasts } from './util/error/components'
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store from './store'

@@ -20,7 +20,6 @@ import { constructColumnTitleSpans } from '../../../column_menu/components/selec
 import { ChoiceButton, RemoteTriggerButton } from '../../../util/components/misc'
 import { useEffect, useRef } from 'react'
 import { AppDispatch } from '../../../store'
-import { MergeRequestConflictProgressBar } from '../../conflicts/components'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
 import {
     resolveEntityConflict,
@@ -110,12 +109,6 @@ export function EntityMergeRequestConflictComponent({
                             mergeRequest={mergeRequestValue}
                         />
                     </Col>
-                </Row>
-                <Row>
-                    <MergeRequestConflictProgressBar
-                        resolvedCount={2}
-                        conflictsCount={20}
-                    />
                 </Row>
                 <Row
                     className="mt-2 h-100 overflow-y-scroll flex-basis-0 flex-grow-1"
