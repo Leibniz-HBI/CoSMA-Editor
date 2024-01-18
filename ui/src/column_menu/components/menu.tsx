@@ -52,8 +52,8 @@ export function ColumnMenuBody(props: {
         showLinkClass += ' active bg-light'
     }
     return (
-        <div className="container text-left bg-light rounded ps-0 pe-0">
-            <Col>
+        <div className="container text-left bg-light rounded ps-0 pe-0 h-100 overflow-y-hidden">
+            <Col className="h-100">
                 <Row className="ms-0 me-0">
                     <ul className="nav nav-tabs justify-content-center ">
                         <li
@@ -70,7 +70,7 @@ export function ColumnMenuBody(props: {
                         </li>
                     </ul>
                 </Row>
-                <Row className="ps-2 pe-2">
+                <Row className="ps-2 pe-2 h-100">
                     {isLoading ? (
                         <CosmaeLoading />
                     ) : createTabSelected ? (

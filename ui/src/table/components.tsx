@@ -119,6 +119,7 @@ export function RemoteDataTable(props: {
                             onHide={localCallbacks.hideColumnAddMenuCallback}
                             size="xl"
                             key="column-menu-modal"
+                            className="h-100"
                         >
                             <Modal.Header closeButton>
                                 <Modal.Title>Show Additional Tag Values</Modal.Title>

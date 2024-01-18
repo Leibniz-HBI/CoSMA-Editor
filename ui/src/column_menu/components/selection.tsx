@@ -37,22 +37,17 @@ export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
 
 export function ColumnSelector(props: { listEntries: ReactNode[] }) {
     return (
-        <Col>
-            <Row className="row mt-2">
+        <Col className="h-100 overflow-y-hidden pb-5">
+            {/* <Row className="row mt-2">
                 <Col>
                     <Form.FloatingLabel label="Search">
                         <Form.Control type="text" name="name" placeholder="Search" />
                     </Form.FloatingLabel>
                 </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <ul
-                        className="list-group pe-0 mb-1 overflow-y-auto"
-                        style={{ maxHeight: '60vh' }}
-                    >
-                        {props.listEntries}
-                    </ul>
+            </Row> */}
+            <Row className="h-100 d-flex flex-row">
+                <Col className="h-100 overflow-y-scroll">
+                    <ul className="list-group pe-0 mb-1">{props.listEntries}</ul>
                 </Col>
             </Row>
         </Col>

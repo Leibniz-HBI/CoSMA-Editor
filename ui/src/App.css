@@ -37,14 +37,6 @@ html {
     padding: 0px 12px 12px 12px;
 }
 
-.h-95 {
-    height: 95 !important;
-}
-
-.h-90 {
-    height: 90 !important;
-}
-
 .min-h-0 {
     min-height: 0px;
 }
@@ -60,6 +52,10 @@ html {
 
 .w-200px {
     width: 200px !important;
+}
+
+.h-60 {
+    height: 60% !important;
 }
 
 .h-50 {

@@ -87,7 +87,12 @@ function ColumnTypeCreateFormBody(props: {
     const dispatch = useDispatch()
     const submitError = useSelector(selectTagSubmitError)
     return (
-        <Form noValidate onSubmit={props.handleSubmit} ref={containerRef}>
+        <Form
+            noValidate
+            onSubmit={props.handleSubmit}
+            ref={containerRef}
+            className="h-100 d-block"
+        >
             <Row>
                 {props.touchedValues.name && !!props.formErrors.name ? (
                     <span className="text-danger fs-6">Choose a column name:</span>
@@ -160,7 +165,7 @@ function ColumnTypeCreateFormBody(props: {
                     Select parent from below
                 </span>
             </Row>
-            <Row>
+            <Row className="h-60">
                 {props.children({
                     handleChange: props.handleChange,
                     selectedParent: props.formValues.parent,
