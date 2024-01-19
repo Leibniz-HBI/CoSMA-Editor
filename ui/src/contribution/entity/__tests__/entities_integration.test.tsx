@@ -18,6 +18,7 @@ import { Provider } from 'react-redux'
 import { EntitiesStep } from '../components'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
+import { ErrorManager, ErrorState, errorSlice } from '../../../util/error/slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -36,6 +37,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
             selectedContribution: RemoteInterface<Contribution | undefined>
         }
         tagSelection: TagSelectionState
+        error: ErrorManager
     }
 }
 
@@ -46,7 +48,8 @@ export function renderWithProviders(
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
             contribution: { selectedContribution: newRemote(undefined) },
-            tagSelection: newTagSelectionState({})
+            tagSelection: newTagSelectionState({}),
+            error: { errorList: [], errorMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -55,7 +58,8 @@ export function renderWithProviders(
         reducer: {
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer
+            tagSelection: tagSelectionSlice.reducer,
+            error: errorSlice.reducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -168,14 +172,21 @@ function initialResponses(fetchMock: jest.Mock) {
         ],
         [200, { tag_definitions: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
-        [200, { matches: mkMatches(personList.slice(50)) }],
-        [200, { value_responses: [] }]
+        [200, { value_responses: [] }],
+        [200, { matches: mkMatches(personList.slice(50)) }]
     ])
 }
 test('get duplicates', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
     const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    await waitFor(() => {
+        screen.getByText('entity-1')
+        expect(
+            store.getState().contributionEntity.entities.value[0].similarEntities
+                .isLoading
+        ).toEqual(false)
+    })
     await waitFor(() => {
         const entitySelectionElement = screen.getByText('entity-1')
         entitySelectionElement.click()

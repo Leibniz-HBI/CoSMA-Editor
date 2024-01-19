@@ -250,25 +250,7 @@ export const contributionEntitySlice = createSlice({
             state: ContributionEntityState,
             action: PayloadAction<number>
         ) {
-            let idx = 0
-            for (
-                let count = action.payload;
-                count > 0 && idx < state.entities.value.length;
-                ++idx
-            ) {
-                if (state.entities.value[idx].similarEntities.value.length > 0) {
-                    count--
-                }
-            }
-            while (
-                idx < state.entities.value.length &&
-                state.entities.value[idx].similarEntities.value.length == 0
-            ) {
-                idx++
-            }
-            if (state.entities.value[0] !== undefined) {
-                state.selectedEntityIdx = idx
-            }
+            state.selectedEntityIdx = action.payload
         },
         incrementSelectedEntityIdx(state: ContributionEntityState) {
             if (state.selectedEntityIdx !== undefined) {

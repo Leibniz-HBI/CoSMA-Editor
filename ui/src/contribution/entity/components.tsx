@@ -300,6 +300,19 @@ function AddTagDefinitionsModal({
         </Modal>
     )
 }
+function NoConflictBody() {
+    const dispatch = useDispatch()
+    return (
+        <Col className="h-100 w-100">
+            <Row className="justify-content-center">This entity has no conflicts.</Row>
+            <Row className="justify-content-center" xs="auto">
+                <Button onClick={() => dispatch(incrementSelectedEntityIdx())}>
+                    Next with conflicts
+                </Button>
+            </Row>
+        </Col>
+    )
+}
 
 const zeroBounds = {
     left: 0,
@@ -399,7 +412,7 @@ export function EntitySimilarityItem({
         )
     }
     if (similarEntities.value.length == 0) {
-        return <></>
+        return <NoConflictBody />
     }
     return (
         <div className="h-100 w-100 mb-2 ms-3 me-3" data-testid="table-container-outer">

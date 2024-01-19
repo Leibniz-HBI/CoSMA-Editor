@@ -232,7 +232,7 @@ def test_ingest_with_empty(
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
     with patch(
-        "vran.contribution.tag_definition.queue.util.read_csv",
+        "cosmae.contribution.tag_definition.queue.util.read_csv",
         csv_mock_with_empty_lines,
     ):
         ingest_values_from_csv(contribution_other.id_persistent)

@@ -52,15 +52,7 @@ export const selectEntities = createSelector(
     (state) => state.entities
 )
 export const selectEntitiesWithMatches = createSelector(selectEntities, (state) =>
-    newRemote(
-        state.value.filter(
-            (entity) =>
-                entity.similarEntities.isLoading ||
-                entity.similarEntities.value.length > 0
-        ),
-        state.isLoading,
-        state.errorMsg
-    )
+    newRemote(state.value, state.isLoading, state.errorMsg)
 )
 export const selectLoadingProgress = createSelector(selectEntities, (entities) => {
     for (let idx = 0; idx < entities.value.length; ++idx) {
