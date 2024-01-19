@@ -1,6 +1,7 @@
 "Queue job for ingesting data after columns have been assigned."
 import logging
 from datetime import datetime
+from typing import List, Tuple
 from uuid import uuid4
 
 from django.db import transaction
@@ -21,6 +22,26 @@ def mk_display_txt_extractor(idx):
     if idx is None:
         return lambda _: None
     return lambda row_tpl: row_tpl[idx]
+
+
+def is_row_empty(
+    display_txt, row_tpl, column_assignment: List[Tuple[int, TagDefinition]]
+):
+    "Check if the entries of a row are empty for a given column assignment."
+    display_txt_str = str(display_txt)
+    if not (
+        display_txt_str == "None" or display_txt_str == "" or display_txt_str.isspace()
+    ):
+        return False
+    for idx, _ in column_assignment:
+        val = row_tpl[idx]
+        if val is None:
+            continue
+        val_string = str(val)
+        if val_string == "" or val_string.isspace():
+            continue
+        return False
+    return True
 
 
 def ingest_values_from_csv(id_contribution_persistent):
@@ -75,6 +96,12 @@ def ingest_values_from_csv(id_contribution_persistent):
             data_frame = read_csv_of_candidate(contribution)
             for row_tpl in data_frame.itertuples(index=False):
                 display_txt = display_txt_extractor(row_tpl)
+                if is_row_empty(
+                    display_txt,
+                    row_tpl,
+                    column_assignments,  # pylint: disable = undefined-loop-variable
+                ):
+                    continue
                 id_entity_persistent = str(uuid4())
                 entity, _ = Entity.change_or_create(
                     id_persistent=id_entity_persistent,
@@ -87,7 +114,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                 for idx_in_file, tag_definition in column_assignments:
                     id_tag_instance_persistent = str(uuid4())
                     value = str(row_tpl[int(idx_in_file)])
-                    if value == "nan":
+                    if value == "nan" or value == "" or value.isspace():
                         continue
                     tag_instance, _ = TagInstanceHistory.change_or_create(
                         id_persistent=id_tag_instance_persistent,
