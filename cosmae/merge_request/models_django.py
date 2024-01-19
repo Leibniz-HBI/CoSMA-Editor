@@ -36,14 +36,34 @@ class TagMergeRequest(AbstractMergeRequest):
     @classmethod
     def assigned_to_user(cls, user: CosmaeUser):
         "Get all merge requests assigned to a user"
-        return TagMergeRequest.objects.filter(  # pylint: disable=no-member
+        states = [
+            TagMergeRequest.OPEN,
+            TagMergeRequest.CONFLICTS,
+            TagMergeRequest.ERROR,
+        ]
+
+        assigned = TagMergeRequest.objects.filter(  # pylint: disable=no-member
             assigned_to=user,
-            state__in=[
-                TagMergeRequest.OPEN,
-                TagMergeRequest.CONFLICTS,
-                TagMergeRequest.ERROR,
-            ],
+            state__in=states,
         )
+        if user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
+            curated = (
+                TagMergeRequest.objects.filter(  # pylint: disable=no-member
+                    state__in=states
+                )
+                .annotate(
+                    curated=models.Subquery(
+                        TagDefinition.most_recent_query_set()
+                        .filter(
+                            id_persistent=models.OuterRef("id_destination_persistent")
+                        )
+                        .values("curated")
+                    )
+                )
+                .filter(curated=True)
+            )
+            return assigned.annotate(curated=models.Value(False)).union(curated)
+        return assigned
 
     def has_read_access(self, user: CosmaeUser):
         "Check wether a user can read the merge request."

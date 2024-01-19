@@ -159,6 +159,19 @@ def merge_request_user1(
 
 
 @pytest.fixture
+def merge_request_curated(tag_def_curated, tag_def1, contribution_for_mr):
+    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+        id_destination_persistent=tag_def_curated.id_persistent,
+        id_origin_persistent=tag_def1.id_persistent,
+        created_by=tag_def1.owner,
+        assigned_to=None,
+        created_at=c.time_merge_request_curated,
+        id_persistent=c.id_persistent_merge_request_curated,
+        contribution_candidate=contribution_for_mr,
+    )
+
+
+@pytest.fixture
 def instances_merge_request_origin_user(merge_request_user, entity0, entity1):
     id_tag_definition = merge_request_user.id_origin_persistent
     tag_instance = TagInstanceHistory.objects.create(  # pylint: disable=no-member

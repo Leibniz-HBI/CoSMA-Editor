@@ -225,3 +225,63 @@ def test_get_merge_requests_with_hidden(
             "hidden": False,
         },
     )
+
+
+def test_includes_curated(
+    auth_server_commissioner,
+    merge_request_user,
+    merge_request_user1,
+    merge_request_curated,
+):
+    server, cookies = auth_server_commissioner
+    rsp = req.get_merge_requests(server.url, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert_versioned(
+        json["assigned"],
+        [
+            {
+                "id_persistent": c.id_persistent_merge_request_curated,
+                "created_by": {
+                    "user_name": "test-user1",
+                    "id_persistent": "2e858c5e-60cf-4ce5-946f-6b4559a21211",
+                    "permission_group": "APPLICANT",
+                },
+                "assigned_to": None,
+                "created_at": format_datetime(c.time_merge_request_curated),
+                "state": "OPEN",
+                "destination": {
+                    "id_persistent": "2ec43995-338b-4f4b-b1cc-4bfc71466fc5",
+                    "id_parent_persistent": None,
+                    "name": "name curated tag test",
+                    "name_path": ["name curated tag test"],
+                    "type": "STRING",
+                    "owner": None,
+                    "curated": True,
+                    "hidden": False,
+                },
+                "origin": {
+                    "id_persistent": "52d5de0a-2fdb-457f-80d0-6e10131ad1b9",
+                    "id_parent_persistent": None,
+                    "name": "name tag test1",
+                    "name_path": ["name tag test1"],
+                    "owner": "test-user1",
+                    "type": "STRING",
+                    "curated": False,
+                    "hidden": False,
+                },
+            }
+        ],
+    )
+    assert len(json["created"]) == 0
+
+
+def test_does_not_include_curated_for_normal_user(
+    auth_server,
+    merge_request_curated,
+):
+    server, cookies = auth_server
+    rsp = req.get_merge_requests(server.url, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == {"assigned": [], "created": []}
