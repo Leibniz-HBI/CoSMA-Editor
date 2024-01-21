@@ -92,9 +92,5 @@ def dispatch_display_txt_queue_process(
     **kwargs,  # pylint: disable=unused-argument
 ):
     "Dispatch method for updating entity display txt, when entity has changed."
-    if created or (
-        update_fields
-        and "display_txt" in update_fields
-        and instance.display_txt is None
-    ):
+    if created or (update_fields and instance.display_txt is None):
         enqueue(update_display_txt_cache, str(instance.id_persistent))
