@@ -25,10 +25,10 @@ import { MergeRequestConflictResolutionView } from './merge_request/conflicts/co
 import { UserPermissionGroup } from './user/state'
 import { ErrorToasts } from './util/error/components'
 import { Provider, useDispatch, useSelector } from 'react-redux'
-import store from './store'
+import store, { AppDispatch } from './store'
 import { selectUserInfo } from './user/selectors'
-import { logout } from './user/slice'
 import {
+    logoutThunk,
     refresh,
     remoteUserProfileChangeColumIndex,
     remoteUserProfileColumnAppend,
@@ -40,7 +40,7 @@ import { ManagementPage } from './management/components'
 
 export function CosmaeRoot() {
     const userInfo = useSelector(selectUserInfo)
-    const dispatch = useDispatch()
+    const dispatch: AppDispatch = useDispatch()
     return (
         <Row className="flex-grow-1 m-0 h-100">
             <Col className="ps-0 pe-0 h-100">
@@ -73,7 +73,13 @@ export function CosmaeRoot() {
                                     )}
                                 </Nav>
                                 <Nav>
-                                    <Nav.Link onClick={() => dispatch(logout())}>
+                                    <Nav.Link
+                                        onClick={() =>
+                                            dispatch(logoutThunk()).then(() =>
+                                                location.reload()
+                                            )
+                                        }
+                                    >
                                         Logout
                                     </Nav.Link>
                                 </Nav>

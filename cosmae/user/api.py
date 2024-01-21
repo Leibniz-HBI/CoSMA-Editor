@@ -1,4 +1,5 @@
 "API endpoints for handling user management."
+
 from typing import Union
 from urllib.parse import unquote
 from uuid import uuid4
@@ -46,10 +47,11 @@ def login_post(request, credentials: LoginRequest):
     return 200, user_db_to_login_response(user)
 
 
-@router.post("logout", auth=cosmae_auth)
-def logout_post(request):
+@router.post("logout", auth=cosmae_auth, response=None)
+def logout_post(request: HttpRequest):
     "API endpoint for logout"
     logout(request)
+    return 200, None
 
 
 @router.get("refresh", response={200: LoginResponse, 401: EmptyResponse})

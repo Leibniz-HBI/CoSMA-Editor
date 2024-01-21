@@ -3,6 +3,7 @@ import {
     loginError,
     loginStart,
     loginSuccess,
+    logout,
     refreshDenied,
     refreshStart,
     refreshSuccess,
@@ -13,7 +14,7 @@ import {
     userSearchStart,
     userSearchSuccess
 } from './slice'
-import { newErrorState } from '../util/error/slice'
+import { addError, newErrorState } from '../util/error/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
@@ -139,6 +140,29 @@ export function registration({
             }
         } catch (error: unknown) {
             dispatch(registrationError(newErrorState(exceptionMessage(error))))
+        }
+    }
+}
+export function logoutThunk(): ThunkWithFetch<void> {
+    return async (dispatch: AppDispatch, _getState, fetch) => {
+        dispatch(loginStart())
+        try {
+            const rsp = await fetch(config.api_path + '/user/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Access-Control-Allow-Credentials': 'true',
+                    'Content-Type': 'application/json'
+                }
+            })
+            if (rsp.status == 200) {
+                dispatch(logout())
+            } else {
+                const json = await rsp.json()
+                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+            }
+        } catch (e: unknown) {
+            dispatch(addError(newErrorState(exceptionMessage(e))))
         }
     }
 }
