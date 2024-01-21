@@ -111,7 +111,7 @@ export function mkCellContentCallback(
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
         let contentAlign = 'right'
-        let displayTxt = ''
+        let displayTxt: string | undefined = ''
         const themeOverride = {}
         let style = 'normal'
         if (row_idx < 4) {

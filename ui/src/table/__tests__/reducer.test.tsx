@@ -36,6 +36,7 @@ describe('reducer tests', () => {
         idPersistent: columnIdTest,
         columnType: TagType.String,
         curated: true,
+        hidden: false,
         version: 0
     }
     const tagDefTest1 = {
@@ -43,6 +44,7 @@ describe('reducer tests', () => {
         idPersistent: columnIdTest1,
         columnType: TagType.Inner,
         curated: false,
+        hidden: false,
         version: 0
     }
     const columnsTest = [

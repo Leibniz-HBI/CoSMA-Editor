@@ -5,7 +5,7 @@ import { RemoteInterface, newRemote } from '../../util/state'
 
 export interface ScoredEntity {
     idPersistent: string
-    displayTxt: string
+    displayTxt?: string
     displayTxtDetails: string | TagDefinition
     version: number
     similarity: number
@@ -22,7 +22,7 @@ export function newScoredEntity({
     idMatchTagDefinitionPersistentList = []
 }: {
     idPersistent: string
-    displayTxt: string
+    displayTxt?: string
     displayTxtDetails: string | TagDefinition
     version: number
     similarity: number
@@ -42,7 +42,7 @@ export function newScoredEntity({
 
 export interface EntityWithDuplicates {
     idPersistent: string
-    displayTxt: string
+    displayTxt?: string
     displayTxtDetails: TagDefinition | string
     version: number
     similarEntities: RemoteInterface<ScoredEntity[]>
@@ -61,7 +61,7 @@ export function newEntityWithDuplicates({
     entityMap = undefined
 }: {
     idPersistent: string
-    displayTxt: string
+    displayTxt?: string
     displayTxtDetails?: string | TagDefinition
     version: number
     similarEntities: RemoteInterface<ScoredEntity[]>

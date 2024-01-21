@@ -257,7 +257,7 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
 export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
     idPersistent?: string
     version?: number
-    displayTxt: string
+    displayTxt?: string
     disabled: boolean
 
     constructor({
@@ -266,7 +266,7 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
         version = undefined,
         disabled
     }: {
-        displayTxt: string
+        displayTxt?: string
         idPersistent?: string
         version?: number
         disabled: boolean

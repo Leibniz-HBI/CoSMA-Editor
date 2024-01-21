@@ -224,7 +224,7 @@ export class TableStateCsvIterator implements Iterator<string | undefined> {
 }
 export interface Entity {
     idPersistent: string
-    displayTxt: string
+    displayTxt?: string
     version: number
     disabled: boolean
     displayTxtDetails: string | TagDefinition
@@ -233,13 +233,13 @@ export interface Entity {
 export function newEntity({
     idPersistent,
     displayTxt,
-    displayTxtDetails,
+    displayTxtDetails = 'Display Text',
     version,
     disabled
 }: {
     idPersistent: string
-    displayTxt: string
-    displayTxtDetails: string | TagDefinition
+    displayTxt?: string
+    displayTxtDetails?: string | TagDefinition
     version: number
     disabled: boolean
 }) {
