@@ -233,6 +233,15 @@ export class ToggleEntityModalAction {
         this.show = show
     }
 }
+/**
+ * Indicate to show or hide the search
+ */
+export class ToggleShowSearchAction {
+    show: boolean
+    constructor(show: boolean) {
+        this.show = show
+    }
+}
 
 export type TableAction =
     | SetEntitiesAction
@@ -263,3 +272,4 @@ export type TableAction =
     | ShowEntityAddDialogAction
     | EntityChangeOrCreateClearErrorAction
     | ToggleEntityModalAction
+    | ToggleShowSearchAction

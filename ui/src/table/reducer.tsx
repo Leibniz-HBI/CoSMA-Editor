@@ -27,7 +27,8 @@ import {
     EntityChangeOrCreateSuccessAction,
     EntityChangeOrCreateErrorAction,
     EntityChangeOrCreateClearErrorAction,
-    ToggleEntityModalAction
+    ToggleEntityModalAction,
+    ToggleShowSearchAction
 } from './actions'
 import { newErrorState } from '../util/error/slice'
 import { Remote } from '../util/state'
@@ -295,6 +296,9 @@ export function tableReducer(state: TableState, action: TableAction) {
             showEntityAddDialog: action.show,
             entityAddState: new Remote(false)
         })
+    }
+    if (action instanceof ToggleShowSearchAction) {
+        return new TableState({ ...state, showSearch: action.show })
     }
     if (action instanceof EntityChangeOrCreateStartAction) {
         return new TableState({

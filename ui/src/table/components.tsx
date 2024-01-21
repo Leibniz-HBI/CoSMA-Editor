@@ -84,6 +84,14 @@ export function RemoteDataTable(props: {
                             </Col>
                         </Row>
                     </Col>
+                    <Col
+                        xs="auto"
+                        onClick={() =>
+                            localCallbacks.toggleSearchCallback(!syncInfo.showSearch)
+                        }
+                    >
+                        <Button>Search</Button>
+                    </Col>
                     <Col xs="auto" className="pe-0">
                         <Button
                             onClick={() =>
@@ -202,7 +210,8 @@ export function DataTable(props: {
         loadDataErrorState,
         submitValuesErrorState,
         columnHeaderMenuEntries,
-        tagDefinitionChangeOwnership
+        tagDefinitionChangeOwnership,
+        showSearch
     } = props.tableProps
     const {
         cellContentCallback,
@@ -214,7 +223,8 @@ export function DataTable(props: {
         columnHeaderBoundsCallback,
         clearSubmitValueErrorCallback,
         hideTagDefinitionOwnershipCallback,
-        updateTagDefinitionCallback
+        updateTagDefinitionCallback,
+        toggleSearchCallback
     } = props.tableCallbacks
     const headerMenuOpen = selectedColumnHeaderBounds !== undefined
     const { layerProps: columnMenuLayerProps, renderLayer: columnMenuRenderLayer } =
@@ -336,6 +346,9 @@ export function DataTable(props: {
                     gridSelection={tableSelection}
                     onGridSelectionChange={mkGridSelectionCallback(dispatch)}
                     onItemHovered={onItemHovered}
+                    showSearch={showSearch}
+                    onSearchClose={() => toggleSearchCallback(false)}
+                    getCellsForSelection={true}
                 />
                 {headerMenuOpen &&
                     columnMenuRenderLayer(

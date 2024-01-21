@@ -26,7 +26,8 @@ import {
     TagChangeOwnershipHideAction,
     TagChangeOwnershipShowAction,
     TagDefinitionChangeAction,
-    ToggleEntityModalAction
+    ToggleEntityModalAction,
+    ToggleShowSearchAction
 } from './actions'
 import {
     CurateAction,
@@ -168,6 +169,7 @@ export type LocalTableCallbacks = {
     clearEntityChangeErrorCallback: VoidFunction
     showEntityMergingModalCallback: VoidFunction
     hideEntityMergingModalCallback: VoidFunction
+    toggleSearchCallback: (show: boolean) => void
 }
 export type TableDataProps = {
     entities?: Entity[]
@@ -184,6 +186,7 @@ export type TableDataProps = {
     showEntityAddMenu: boolean
     entityAddState: Remote<boolean>
     showEntityMergingModal: boolean
+    showSearch: boolean
 }
 
 export interface ColumnHeaderMenuItem {
@@ -392,7 +395,9 @@ export function useRemoteTableData(
             showEntityMergingModalCallback: () =>
                 dispatch(new ToggleEntityModalAction(true)),
             hideEntityMergingModalCallback: () =>
-                dispatch(new ToggleEntityModalAction(false))
+                dispatch(new ToggleEntityModalAction(false)),
+            toggleSearchCallback: (show: boolean) =>
+                dispatch(new ToggleShowSearchAction(show))
         },
         {
             entities: state.entities,
@@ -408,7 +413,8 @@ export function useRemoteTableData(
             tagDefinitionChangeOwnership: state.ownershipChangeTagDefinition,
             showEntityAddMenu: state.showEntityAddDialog,
             entityAddState: state.entityAddState,
-            showEntityMergingModal: state.showEntityMergingModal
+            showEntityMergingModal: state.showEntityMergingModal,
+            showSearch: state.showSearch
         }
     ]
 }
