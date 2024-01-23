@@ -252,7 +252,6 @@ def mk_initial_contribution_candidate(
     return ContributionCandidateDb(
         name=contribution_api.name,
         description=contribution_api.description,
-        anonymous=contribution_api.anonymous,
         id_persistent=uuid,
         has_header=contribution_api.has_header,
         created_by=user,

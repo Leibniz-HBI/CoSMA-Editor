@@ -33,7 +33,6 @@ def contribution_candidate(user):
         id_persistent="dcd2d28e-22f7-4bbe-92f7-d22a2eccc7ff",
         name="contribution candidate duplicate entity test",
         description="A contribution candidate used in tests for removing duplicate entities",
-        anonymous=True,
         has_header=True,
         created_by=user,
         file_name="unknown.csv",

@@ -223,7 +223,6 @@ def test_related_by_contribution(
         name="contribution test",
         description="contribution for tests used for getting entities",
         id_persistent=c.id_contribution,
-        anonymous=True,
         has_header=False,
         created_by=tag_def_user.owner,
         file_name="",

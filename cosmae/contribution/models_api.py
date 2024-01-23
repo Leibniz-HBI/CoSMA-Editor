@@ -11,7 +11,6 @@ class ContributionPostRequest(Schema):
     "Request data for adding a new contribution"
     name: str
     description: str
-    anonymous: bool
     has_header: bool
 
 
@@ -34,10 +33,9 @@ class ContributionCandidate(Schema):
     id_persistent: str
     name: str
     description: str
-    anonymous: bool
     has_header: bool
     state: str
-    author: Optional[str]
+    author: str
     error_msg: Optional[str]
     error_details: Optional[str]
     match_tag_definition_list: Optional[List[TagDefinitionResponse]]
@@ -48,7 +46,6 @@ class ContributionCandidatePatchRequest(Schema):
     "API model for contribution candidate patch requests"
     name: Optional[str]
     description: Optional[str]
-    anonymous: Optional[bool]
     has_header: Optional[bool]
 
 

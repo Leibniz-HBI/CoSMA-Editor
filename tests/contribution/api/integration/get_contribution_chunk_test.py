@@ -48,7 +48,7 @@ def test_multiple(auth_server):
         contribution.pop("id_persistent")
         contribution.pop("match_tag_definition_list")
     assert contributions[0] == c.contribution_test_upload0
-    assert contributions[1] == c.contribution_test_upload_0
+    assert contributions[1] == c.contribution_test_upload1
 
 
 def test_multiple_users(auth_server1):
@@ -76,6 +76,6 @@ def test_multiple_users(auth_server1):
     contribution = contributions[0]
     contribution.pop("id_persistent")
     contribution.pop("match_tag_definition_list")
-    expected = c.contribution_test_upload_0.copy()
+    expected = c.contribution_test_upload1.copy()
     expected["author"] = cu.test_username1
     assert contribution == expected

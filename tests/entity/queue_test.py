@@ -119,7 +119,6 @@ def contribution_instance_without_display_txt(
         id_persistent=id_contribution_persistent,
         name="a test contribution",
         description="This is a contribution used in tests",
-        anonymous=False,
         has_header=True,
         created_by=user,
         file_name="file.csv",

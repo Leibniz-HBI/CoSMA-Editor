@@ -21,10 +21,7 @@ def contribution_db_to_api(
     contribution_db: ContributionCandidateDb,
 ) -> ContributionCandidate:
     "Transform a contribution candidate from DB to API representation."
-    if contribution_db.anonymous:
-        author = None
-    else:
-        author = contribution_db.created_by.username
+    author = contribution_db.created_by.username
     if hasattr(contribution_db, "matched_tag_definitions"):
         if contribution_db.matched_tag_definitions is None:
             match_tag_definition_list = []
@@ -40,7 +37,6 @@ def contribution_db_to_api(
         id_persistent=str(contribution_db.id_persistent),
         name=contribution_db.name,
         description=contribution_db.description,
-        anonymous=contribution_db.anonymous,
         has_header=contribution_db.has_header,
         state=_contribution_state_mapping_db_to_api[contribution_db.state],
         author=author,

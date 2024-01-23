@@ -146,7 +146,6 @@ def test_keeps_contribution_candidate(entity0, user):
         name="contribution entity test",
         description="contribution objects used in entity tests",
         id_persistent="9c6b5603-6fde-42f3-92a9-7d125449af43",
-        anonymous=True,
         has_header=True,
         created_by=user,
         file_name="test.csv",

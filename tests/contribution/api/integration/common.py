@@ -7,32 +7,28 @@ import tests.user.common as cu
 contribution_post0 = {
     "name": c.name_test0,
     "description": c.description_test0,
-    "anonymous": True,
     "has_header": False,
 }
 
 contribution_post1 = {
     "name": c.name_test1,
     "description": c.description_test1,
-    "anonymous": False,
     "has_header": True,
 }
 
 contribution_test_upload0 = {
     "name": c.name_test0,
     "description": c.description_test0,
-    "anonymous": True,
     "has_header": False,
-    "author": None,
+    "author": cu.test_username,
     "state": "UPLOADED",
     "error_msg": None,
     "error_details": None,
 }
 
-contribution_test_upload_0 = {
+contribution_test_upload1 = {
     "name": c.name_test1,
     "description": c.description_test1,
-    "anonymous": False,
     "has_header": True,
     "author": cu.test_username,
     "state": "UPLOADED",

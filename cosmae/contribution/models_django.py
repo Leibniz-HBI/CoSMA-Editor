@@ -37,7 +37,6 @@ class ContributionCandidate(models.Model):
     name = models.TextField()
     description = models.TextField()
     id_persistent = models.UUIDField(primary_key=True)
-    anonymous = models.BooleanField()
     has_header = models.BooleanField()
     created_by = models.ForeignKey("CosmaeUser", on_delete=models.CASCADE)
     file_name = models.TextField()
