@@ -18,27 +18,23 @@ import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 export class UploadContributionAction extends AsyncAction<ContributionAction, void> {
     name: string
     description: string
-    isAnonymous: boolean
     hasHeader: boolean
     file: File
 
     constructor({
         name,
         description,
-        isAnonymous,
         hasHeader,
         file
     }: {
         name: string
         description: string
-        isAnonymous: boolean
         hasHeader: boolean
         file: File
     }) {
         super()
         this.name = name
         this.description = description
-        this.isAnonymous = isAnonymous
         this.hasHeader = hasHeader
         this.file = file
     }
@@ -50,7 +46,6 @@ export class UploadContributionAction extends AsyncAction<ContributionAction, vo
             form.append('file', this.file)
             form.append('name', this.name)
             form.append('description', this.description)
-            form.append('anonymous', this.isAnonymous.toString())
             form.append('has_header', this.hasHeader.toString())
             const rsp = await fetch(config.api_path + '/contributions', {
                 method: 'POST',
@@ -144,7 +139,6 @@ export function parseContributionFromApi(contribution_json: any): Contribution {
         author: contribution_json['author'],
         step: contributionStepApiToUiMap[contribution_json['state']],
         hasHeader: contribution_json['has_header'],
-        anonymous: contribution_json['anonymous'],
         matchTagDefinitionList
     })
 }

@@ -45,7 +45,6 @@ describe('contribution details callback', () => {
             idPersistent: idPersistentTest,
             name: 'name test',
             description: 'updated description for contribution patch test',
-            anonymous: false,
             hasHeader: true
         }
         const dispatch = jest.fn()
@@ -57,7 +56,7 @@ describe('contribution details callback', () => {
             useContributionDetails(idPersistentTest)
         patchContributionDetailsCallback(patchPropsTest)
         expect(dispatch.mock.calls).toEqual([
-            [new PatchContributionAction({ ...patchPropsTest, isAnonymous: false })]
+            [new PatchContributionAction({ ...patchPropsTest })]
         ])
     })
     test('clear patch error', () => {

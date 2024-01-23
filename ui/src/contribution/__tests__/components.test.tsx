@@ -6,7 +6,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { Remote } from '../../util/state'
 import { useContribution } from '../hooks'
 import { ContributionList } from '../components'
-import { Contribution, ContributionStep, newContribution } from '../state'
+import { ContributionStep, newContribution } from '../state'
 import { useNavigate } from 'react-router-dom'
 import { act } from 'react-dom/test-utils'
 import { UploadForm } from '../components'
@@ -24,6 +24,7 @@ jest.mock('react-router-dom', () => {
         useNavigate: jest.fn().mockReturnValue(mockNavigate)
     }
 })
+const authorTest = 'author test'
 const testContributions = new Remote(
     [
         newContribution({
@@ -31,16 +32,15 @@ const testContributions = new Remote(
             description: 'a contribution for tests',
             step: ContributionStep.Uploaded,
             idPersistent: 'id-test-0',
-            anonymous: true,
-            hasHeader: false
+            hasHeader: false,
+            author: authorTest
         }),
         newContribution({
             name: 'contribution test 1',
             description: 'another contribution for tests',
             step: ContributionStep.ColumnsExtracted,
             idPersistent: 'id-test-1',
-            anonymous: false,
-            author: 'author test',
+            author: authorTest,
             hasHeader: true
         })
     ],
@@ -208,8 +208,7 @@ describe('upload form', () => {
                         name: nameTest,
                         description: descriptionTest,
                         file: fileTest,
-                        hasHeader: false,
-                        anonymous: false
+                        hasHeader: false
                     }
                 ]
             ])
@@ -253,8 +252,7 @@ describe('upload form', () => {
                         name: nameTest,
                         description: descriptionTest,
                         file: fileTest,
-                        hasHeader: true,
-                        anonymous: true
+                        hasHeader: true
                     }
                 ]
             ])

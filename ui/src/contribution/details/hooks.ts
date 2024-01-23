@@ -11,12 +11,10 @@ import { PatchContributionDetailsClearErrorAction } from './action'
 export type PatchContributionCallback = ({
     name,
     description,
-    anonymous,
     hasHeader
 }: {
     name?: string
     description?: string
-    anonymous?: boolean
     hasHeader?: boolean
 }) => void
 
@@ -42,18 +40,12 @@ export function useContributionDetails(idPersistent: string): ContributionDetail
             }
             dispatch(new LoadContributionDetailsAsyncAction(idPersistent))
         },
-        patchContributionDetailsCallback: ({
-            name,
-            description,
-            anonymous,
-            hasHeader
-        }) => {
+        patchContributionDetailsCallback: ({ name, description, hasHeader }) => {
             dispatch(
                 new PatchContributionAction({
                     idPersistent: idPersistent,
                     name: name,
                     description: description,
-                    isAnonymous: anonymous,
                     hasHeader: hasHeader
                 })
             )

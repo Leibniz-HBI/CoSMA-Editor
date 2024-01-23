@@ -52,13 +52,11 @@ export function ContributionDetailsStep() {
 export type EditFormArgs = {
     name: string
     description: string
-    anonymous: boolean
     hasHeader: boolean
 }
 const editSchema = yup.object({
     name: yup.string().defined().min(8),
     description: yup.string().defined().min(50),
-    anonymous: yup.boolean(),
     hasHeader: yup.boolean()
 })
 
@@ -79,14 +77,12 @@ export function EditForm({
                 onSubmit({
                     name: values.name,
                     description: values.description,
-                    anonymous: values.anonymous,
                     hasHeader: values.hasHeader
                 })
             }}
             initialValues={{
                 name: contribution.name,
                 description: contribution.description,
-                anonymous: contribution.anonymous,
                 hasHeader: contribution.hasHeader
             }}
             validationSchema={editSchema}
@@ -144,13 +140,6 @@ export function EditFormBody({
                         name="hasHeader"
                         label="File has header row"
                         checked={values.hasHeader}
-                        onChange={handleChange}
-                    />
-                    <Form.Check
-                        className="mb-4"
-                        name="anonymous"
-                        label="Submit anonymously"
-                        checked={values.anonymous}
                         onChange={handleChange}
                     />
                 </Col>

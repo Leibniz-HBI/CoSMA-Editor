@@ -10,12 +10,7 @@ import {
     Row
 } from 'react-bootstrap'
 import { useContribution, SubmitUploadCallback } from './hooks'
-import {
-    Contribution,
-    ContributionStep,
-    contributionGetAuthor,
-    contributionIsReady
-} from './state'
+import { Contribution, ContributionStep, contributionIsReady } from './state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange, SetFieldValue } from '../util/type'
 import { ChangeEvent, FormEvent, ReactElement, useEffect, useRef } from 'react'
@@ -166,7 +161,7 @@ export function ContributionListItem({
                         </Col>
                     </Row>
                 </Col>
-                <Col xs={2}>Author: {contributionGetAuthor(contribution)}</Col>
+                <Col xs={2}>Author: {contribution.author}</Col>
             </Row>
         </ListGroup.Item>
     )
@@ -179,14 +174,12 @@ export function ContributionStepActionButton({ step }: { step: ContributionStep 
 export type UploadFormArgs = {
     name: string
     description: string
-    anonymous: boolean
     hasHeader: boolean
     file?: File
 }
 const uploadSchema = yup.object({
     name: yup.string().ensure().min(8),
     description: yup.string().ensure().min(50),
-    anonymous: yup.boolean(),
     hasHeader: yup.boolean(),
     file: yup.mixed().nullable().defined()
 })
@@ -207,7 +200,6 @@ export function UploadForm({
                     onSubmit({
                         name: values.name,
                         description: values.description,
-                        anonymous: values.anonymous,
                         hasHeader: values.hasHeader,
                         file: values.file
                     })
@@ -216,7 +208,6 @@ export function UploadForm({
             initialValues={{
                 name: '',
                 description: '',
-                anonymous: false,
                 hasHeader: false,
                 file: undefined
             }}
@@ -309,13 +300,6 @@ export function UploadFormBody({
                 name="hasHeader"
                 label="File has header row"
                 value={values.hasHeader.toString()}
-                onChange={handleChange}
-            />
-            <Form.Check
-                className="mb-4"
-                name="anonymous"
-                label="Submit anonymously"
-                value={values.anonymous.toString()}
                 onChange={handleChange}
             />
             <Row>

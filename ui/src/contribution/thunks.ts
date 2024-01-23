@@ -54,7 +54,6 @@ export function parseContributionFromApi(contribution_json: any): Contribution {
         author: contribution_json['author'],
         step: contributionStepApiToUiMap[contribution_json['state']],
         hasHeader: contribution_json['has_header'],
-        anonymous: contribution_json['anonymous'],
         matchTagDefinitionList: contribution_json['match_tag_definition_list']?.map(
             (tagDefJson: unknown) => parseColumnDefinitionsFromApi(tagDefJson)
         )

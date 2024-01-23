@@ -12,12 +12,13 @@ import {
 import { contributionDetailsReducer } from '../reducer'
 import { ContributionDetailState } from '../state'
 
+const authorTest = 'author test'
 const contributionTest = newContribution({
     name: 'test contribution',
     idPersistent: 'id-contribution-test',
     description: 'contribution description for test',
     step: ContributionStep.Uploaded,
-    anonymous: true,
+    author: authorTest,
     hasHeader: false
 })
 

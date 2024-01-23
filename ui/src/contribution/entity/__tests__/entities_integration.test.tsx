@@ -18,7 +18,7 @@ import { Provider } from 'react-redux'
 import { EntitiesStep } from '../components'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
-import { ErrorManager, ErrorState, errorSlice } from '../../../util/error/slice'
+import { ErrorManager, errorSlice } from '../../../util/error/slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -90,7 +90,6 @@ const contributionTest = {
     id_persistent: idContribution,
     name: 'contribution test',
     description: 'A contribution used in tests',
-    anonymous: false,
     has_header: true,
     state: 'VALUES_EXTRACTED',
     author: 'author-test'

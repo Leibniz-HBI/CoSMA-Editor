@@ -100,13 +100,14 @@ export const contributionColumnActiveRsp1 = {
 }
 const errorMsg = 'Test Error'
 const errorDetails = 'Description of a test error'
+const authorTest = 'author test'
 export const contributionCandidateRsp = {
     name: 'contribution test',
     id_persistent: idContribution,
     description: 'a contribution for tests',
     step: ContributionStep.ColumnsExtracted,
     has_header: true,
-    anonymous: true,
+    author: authorTest,
     error_msg: errorMsg,
     error_details: errorDetails
 }

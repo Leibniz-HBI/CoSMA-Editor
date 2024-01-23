@@ -656,7 +656,7 @@ describe('reducer tests', () => {
             const endState = tableReducer(
                 initialState,
                 new SubmitValuesEndAction([
-                    [entityIdTest3, 'unknown_coloumn_id', versionedValueTest]
+                    [entityIdTest3, 'unknown_column_id', versionedValueTest]
                 ])
             )
             expect(endState).toBe(initialState)

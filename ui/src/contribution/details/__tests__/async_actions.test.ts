@@ -31,6 +31,7 @@ function responseSequence(responses: [number, () => any][]) {
 const nameTest0 = 'contribution test 0'
 const descriptionTest0 = 'a contribution for tests'
 const idTest0 = 'id-test-0'
+const authorTest = 'author test'
 describe('get details', () => {
     test('correct response', async () => {
         responseSequence([
@@ -41,7 +42,7 @@ describe('get details', () => {
                         name: nameTest0,
                         description: descriptionTest0,
                         id_persistent: idTest0,
-                        anonymous: true,
+                        author: authorTest,
                         has_header: false,
                         state: 'COLUMNS_EXTRACTED'
                     }
@@ -58,7 +59,7 @@ describe('get details', () => {
                         name: nameTest0,
                         description: descriptionTest0,
                         idPersistent: idTest0,
-                        anonymous: true,
+                        author: authorTest,
                         hasHeader: false,
                         step: ContributionStep.ColumnsExtracted
                     })
@@ -104,7 +105,7 @@ describe('patch contribution', () => {
                         name: nameTest0,
                         description: descriptionTest0,
                         id_persistent: idTest0,
-                        anonymous: true,
+                        author: authorTest,
                         has_header: true,
                         state: 'COLUMNS_ASSIGNED'
                     }
@@ -124,7 +125,7 @@ describe('patch contribution', () => {
                         name: nameTest0,
                         idPersistent: idTest0,
                         description: descriptionTest0,
-                        anonymous: true,
+                        author: authorTest,
                         hasHeader: true,
                         step: ContributionStep.ColumnsAssigned
                     })

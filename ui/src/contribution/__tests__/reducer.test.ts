@@ -12,6 +12,7 @@ import {
 import { contributionReducer } from '../reducer'
 import { ContributionStep, newContribution, newContributionState } from '../state'
 
+const authorTest = 'author test'
 describe('load contributions', () => {
     test('start loading', () => {
         const initialState = newContributionState({})
@@ -29,7 +30,7 @@ describe('load contributions', () => {
         idPersistent: 'id-contribution-test',
         description: 'contribution description for test',
         step: ContributionStep.Uploaded,
-        anonymous: true,
+        author: authorTest,
         hasHeader: false
     })
     test(' loading success', () => {

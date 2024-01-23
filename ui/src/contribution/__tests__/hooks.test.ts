@@ -57,7 +57,6 @@ describe('upload contribution', () => {
     const uploadPropsTest = {
         name: 'name test',
         description: 'description for test contribution',
-        anonymous: true,
         hasHeader: false,
         file: new File([''], 'filename', { type: 'text/csv' })
     }
@@ -70,7 +69,7 @@ describe('upload contribution', () => {
         const { submitUploadCallback } = useContribution()
         submitUploadCallback(uploadPropsTest)
         expect(dispatch.mock.calls).toEqual([
-            [new UploadContributionAction({ ...uploadPropsTest, isAnonymous: true })]
+            [new UploadContributionAction({ ...uploadPropsTest })]
         ])
     })
     test('clear error callback', () => {

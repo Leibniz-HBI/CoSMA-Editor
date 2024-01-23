@@ -21,27 +21,23 @@ export class PatchContributionAction extends AsyncAction<
     idPersistent: string
     name?: string
     description?: string
-    isAnonymous?: boolean
     hasHeader?: boolean
 
     constructor({
         idPersistent,
         name,
         description,
-        isAnonymous,
         hasHeader
     }: {
         idPersistent: string
         name?: string
         description?: string
-        isAnonymous?: boolean
         hasHeader?: boolean
     }) {
         super()
         this.idPersistent = idPersistent
         this.name = name
         this.description = description
-        this.isAnonymous = isAnonymous
         this.hasHeader = hasHeader
     }
 
@@ -54,9 +50,6 @@ export class PatchContributionAction extends AsyncAction<
             }
             if (this.description !== undefined) {
                 body['description'] = this.description
-            }
-            if (this.isAnonymous !== undefined) {
-                body['anonymous'] = this.isAnonymous
             }
             if (this.hasHeader !== undefined) {
                 body['has_header'] = this.hasHeader

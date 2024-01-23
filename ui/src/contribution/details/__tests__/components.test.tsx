@@ -22,12 +22,13 @@ jest.mock('react-router-dom', () => {
     }
 })
 
+const authorTest = 'author test'
 const contributionTest = newContribution({
     name: 'contribution test 0',
     description: 'this is a contribution for tests with sufficient length.',
     step: ContributionStep.Uploaded,
     idPersistent: 'id-test-0',
-    anonymous: true,
+    author: authorTest,
     hasHeader: false
 })
 
@@ -58,7 +59,7 @@ describe('rendering', () => {
         const inputs = screen.getAllByRole('textbox')
         expect(inputs.length).toEqual(2)
         const checkboxes = screen.getAllByRole('checkbox')
-        expect(checkboxes.length).toEqual(2)
+        expect(checkboxes.length).toEqual(1)
     })
 })
 describe('form', () => {
@@ -145,7 +146,6 @@ describe('form', () => {
                     {
                         name: contributionTest.name + 'aa',
                         description: contributionTest.description + 'bb',
-                        anonymous: true,
                         hasHeader: false
                     }
                 ]

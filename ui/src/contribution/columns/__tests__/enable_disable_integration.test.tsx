@@ -82,6 +82,7 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
     }
 }
 export const idContribution = 'id-contribution-test'
+const authorTest = 'author test'
 export const contributionColumnActiveRsp0 = {
     name: 'column definition contribution test active 0',
     id_persistent: 'id-active-0',
@@ -118,7 +119,7 @@ export const contributionCandidateRsp = {
     description: 'a contribution for tests',
     step: ContributionStep.ColumnsExtracted,
     has_header: true,
-    anonymous: true
+    author: authorTest
 }
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'

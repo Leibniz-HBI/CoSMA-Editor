@@ -10,13 +10,11 @@ import { Contribution, newContributionState } from './state'
 export type SubmitUploadCallback = ({
     name,
     description,
-    anonymous,
     hasHeader,
     file
 }: {
     name: string
     description: string
-    anonymous: boolean
     hasHeader: boolean
     file: File
 }) => void
@@ -46,12 +44,11 @@ export function useContribution(): ContributionListProps {
         },
         toggleShowAddContributionCallback: () =>
             dispatch(new ToggleShowAddContributionAction()),
-        submitUploadCallback: ({ name, description, anonymous, hasHeader, file }) => {
+        submitUploadCallback: ({ name, description, hasHeader, file }) => {
             dispatch(
                 new UploadContributionAction({
                     name: name,
                     description: description,
-                    isAnonymous: anonymous,
                     hasHeader: hasHeader,
                     file: file
                 })

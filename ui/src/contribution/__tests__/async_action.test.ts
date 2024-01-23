@@ -33,23 +33,22 @@ const descriptionTest0 = 'a contribution for tests'
 const idTest0 = 'id-test-0'
 describe('load contributions', () => {
     test('success', async () => {
+        const authorTest1 = 'author test 1'
         const contributionResponse0 = {
             name: nameTest0,
             description: descriptionTest0,
             id_persistent: idTest0,
-            anonymous: true,
+            author: authorTest1,
             has_header: false,
             state: 'UPLOADED'
         }
         const nameTest1 = 'contribution test 1'
         const descriptionTest1 = 'another contribution for tests'
         const idTest1 = 'id-test-1'
-        const authorTest1 = 'author test 1'
         const contributionResponse1 = {
             name: nameTest1,
             description: descriptionTest1,
             id_persistent: idTest1,
-            anonymous: false,
             has_header: true,
             state: 'VALUES_ASSIGNED',
             author: authorTest1
@@ -80,7 +79,7 @@ describe('load contributions', () => {
                         name: nameTest0,
                         description: descriptionTest0,
                         idPersistent: idTest0,
-                        anonymous: true,
+                        author: authorTest1,
                         hasHeader: false,
                         step: ContributionStep.Uploaded
                     }),
@@ -88,7 +87,6 @@ describe('load contributions', () => {
                         name: nameTest1,
                         description: descriptionTest1,
                         idPersistent: idTest1,
-                        anonymous: false,
                         hasHeader: true,
                         step: ContributionStep.ValuesAssigned,
                         author: authorTest1
@@ -133,7 +131,6 @@ describe('upload contribution', () => {
         await new UploadContributionAction({
             name: nameTest0,
             description: descriptionTest0,
-            isAnonymous: true,
             hasHeader: false,
             file: new File([''], 'testFileName', { type: 'text, csv' })
         }).run(dispatch)
@@ -164,7 +161,6 @@ describe('upload contribution', () => {
         await new UploadContributionAction({
             name: nameTest0,
             description: descriptionTest0,
-            isAnonymous: true,
             hasHeader: false,
             file: new File([''], 'testFileName', { type: 'text, csv' })
         }).run(dispatch)

@@ -23,9 +23,8 @@ export interface Contribution {
     idPersistent: string
     description: string
     step: ContributionStep
-    anonymous: boolean
     hasHeader: boolean
-    author?: string
+    author: string
     matchTagDefinitionList: TagDefinition[]
 }
 export function newContribution({
@@ -33,18 +32,16 @@ export function newContribution({
     idPersistent,
     description,
     step,
-    anonymous,
     hasHeader,
-    author = undefined,
+    author,
     matchTagDefinitionList = []
 }: {
     name: string
     idPersistent: string
     description: string
     step: ContributionStep
-    anonymous: boolean
     hasHeader: boolean
-    author?: string
+    author: string
     matchTagDefinitionList?: TagDefinition[]
 }) {
     return {
@@ -52,16 +49,10 @@ export function newContribution({
         idPersistent: idPersistent,
         description: description,
         step: step,
-        anonymous: anonymous,
         hasHeader: hasHeader,
         author: author,
         matchTagDefinitionList: matchTagDefinitionList
     }
-}
-
-export function contributionGetAuthor(contribution: Contribution): string {
-    // Could be selector
-    return contribution.anonymous ? 'Anonymous' : contribution.author ?? 'Anonymous'
 }
 
 export function contributionIsReady(contribution: Contribution): boolean {

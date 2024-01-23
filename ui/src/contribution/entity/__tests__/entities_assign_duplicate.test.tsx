@@ -151,7 +151,6 @@ const contributionTest = {
     id_persistent: idContribution,
     name: 'contribution test',
     description: 'A contribution used in tests',
-    anonymous: false,
     has_header: true,
     state: 'VALUES_EXTRACTED',
     author: 'author-test'
