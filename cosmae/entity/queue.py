@@ -70,17 +70,11 @@ def update_display_txt_cache(id_entity_persistent):
                         ),
                     )
                     return
-            entity_display_txt_information_cache.set(
-                id_entity_persistent, (id_entity_persistent, "id_persistent")
-            )
     except Exception as exc:  # pylint: disable=broad-except
         logging.error(
             "Could not compute display_txt for entity with id_persistent: %s",
             id_entity_persistent,
             exc_info=exc,
-        )
-        entity_display_txt_information_cache.set(
-            id_entity_persistent, (id_entity_persistent, "id_persistent")
         )
 
 

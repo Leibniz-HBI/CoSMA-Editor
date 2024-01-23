@@ -43,11 +43,14 @@ def entity_without_display_txt(db):
 
 
 def test_without_display_txt_and_no_tag_def_order(entity_without_display_txt):
+    entity_display_txt_information_cache.delete(
+        entity_without_display_txt.id_persistent
+    )
     update_display_txt_cache(entity_without_display_txt.id_persistent)
     result = entity_display_txt_information_cache.get(
         entity_without_display_txt.id_persistent
     )
-    assert result == (entity_without_display_txt.id_persistent, "id_persistent")
+    assert result is None
 
 
 @pytest.fixture
@@ -90,22 +93,26 @@ def test_without_display_txt_but_relevant_tag_instance(
 def test_without_display_txt_and_no_relevant_tag_instance(
     display_txt_order_0, instance_tag_def_1
 ):
+    entity_display_txt_information_cache.delete(instance_tag_def_1.id_entity_persistent)
     update_display_txt_cache(instance_tag_def_1.id_entity_persistent)
     result = entity_display_txt_information_cache.get(
         instance_tag_def_1.id_entity_persistent
     )
-    assert result == (id_persistent_entity_no_display_txt, "id_persistent")
+    assert result is None
 
 
 def test_exception(entity_without_display_txt):
     mock = MagicMock()
     mock.side_effect = Exception()
+    entity_display_txt_information_cache.delete(
+        entity_without_display_txt.id_persistent
+    )
     with patch("cosmae.entity.queue.get_display_txt_order_tag_definitions", mock):
         update_display_txt_cache(entity_without_display_txt.id_persistent)
     result = entity_display_txt_information_cache.get(
         entity_without_display_txt.id_persistent
     )
-    assert result == (entity_without_display_txt.id_persistent, "id_persistent")
+    assert result is None
 
 
 @pytest.fixture
