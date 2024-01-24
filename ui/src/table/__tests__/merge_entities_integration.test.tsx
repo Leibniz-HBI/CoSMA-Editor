@@ -239,14 +239,7 @@ test('start entity duplicate merging', async () => {
     }
     addResponseSequence(fetchMock, [[200, mergeRequestApi]])
     const { store } = renderWithProviders(
-        <RemoteDataTable
-            userInfoPromise={() => Promise.resolve(userInfo)}
-            defaultColumnCallbacks={{
-                appendToDefaultTagDefinitionsCallback: jest.fn(),
-                changeDefaultTagDefinitionsCallback: jest.fn(),
-                removeFromDefaultTagDefinitionListCallback: jest.fn()
-            }}
-        />,
+        <RemoteDataTable userInfoPromise={() => Promise.resolve(userInfo)} />,
         fetchMock
     )
     await waitFor(() => {

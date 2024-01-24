@@ -212,5 +212,5 @@ test('error', async () => {
     ])
     const closeButton = screen.getByRole('button', { name: /close/i })
     closeButton.click()
-    waitFor(() => expect(screen.queryByText(errorMsg)).toBeNull())
+    await waitFor(() => expect(screen.queryByText(errorMsg)).toBeNull())
 })

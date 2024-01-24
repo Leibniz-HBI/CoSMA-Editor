@@ -22,6 +22,7 @@ import {
 } from '../actions'
 import { UserInfo, UserPermissionGroup } from '../../user/state'
 import { LoadingType } from '../draw'
+import { useDispatch } from 'react-redux'
 
 jest.mock('../../util/state', () => {
     const original = jest.requireActual('../../util/state')
@@ -34,7 +35,8 @@ jest.mock('../../util/state', () => {
 jest.mock('react-redux', () => {
     return {
         // eslint-disable-next-line
-        useSelector: (_selector: any) => 'EDITOR' as UserPermissionGroup
+        useSelector: (_selector: any) => 'EDITOR' as UserPermissionGroup,
+        useDispatch: jest.fn()
     }
 })
 describe('create cell', () => {
@@ -259,20 +261,12 @@ const userInfoPromiseWithNoColumns = () =>
             permissionGroup: UserPermissionGroup.APPLICANT
         })
     )
-function mkDefaultTagDefinitionCallbacks() {
-    return {
-        appendToDefaultTagDefinitionsCallback: jest.fn(),
-        removeFromDefaultTagDefinitionListCallback: jest.fn(),
-        changeDefaultTagDefinitionsCallback: jest.fn()
-    }
-}
 describe('table hooks', () => {
     const columnNameTest = 'column name test'
     const columnIdTest = 'column_id_test'
     const columnNameTest1 = 'column name test 1'
     const columnIdTest1 = 'column_id_test_1'
     test('early exit when already loading column', async () => {
-        const columnCallbacks = mkDefaultTagDefinitionCallbacks()
         const dispatch = jest.fn()
         ;(useThunkReducer as jest.Mock).mockReturnValue([
             new TableState({
@@ -303,15 +297,11 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [remoteCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            columnCallbacks
-        )
+        const [remoteCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         remoteCallbacks.loadTableDataCallback()
         expect(dispatch.mock.calls.length).toBe(0)
     })
     test('early exit when data present', async () => {
-        const columnCallbacks = mkDefaultTagDefinitionCallbacks()
         const dispatch = jest.fn()
         const cellValueTest: CellValue = {
             value: 'test-value',
@@ -347,10 +337,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [remoteCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            columnCallbacks
-        )
+        const [remoteCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         remoteCallbacks.loadTableDataCallback()
         expect(dispatch.mock.calls.length).toBe(0)
     })
@@ -362,10 +349,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [remoteCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            mkDefaultTagDefinitionCallbacks()
-        )
+        const [remoteCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         remoteCallbacks.loadTableDataCallback()
         expect(dispatch.mock.calls.length).toBe(0)
     })
@@ -379,6 +363,8 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
+        const reduxDispatch = jest.fn()
+        ;(useDispatch as jest.Mock).mockReturnValueOnce(reduxDispatch)
         const columnDefinitionTest = newTagDefinition({
             namePath: ['column_test'],
             idPersistent: 'id_column_test',
@@ -388,19 +374,22 @@ describe('table hooks', () => {
             version: 0,
             hidden: false
         })
-        const profileCallbacks = mkDefaultTagDefinitionCallbacks()
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            profileCallbacks
-        )
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         localCallbacks.addColumnCallback(columnDefinitionTest)
         await new Promise((resolve) => setTimeout(resolve, 2000))
         expect(dispatch.mock.calls).toEqual([
             [new GetColumnAsyncAction(columnDefinitionTest)]
         ])
-        expect(
-            profileCallbacks.appendToDefaultTagDefinitionsCallback.mock.calls
-        ).toEqual([[columnDefinitionTest.idPersistent]])
+        const reduxMockCalls = reduxDispatch.mock.calls
+        expect(reduxMockCalls.length).toEqual(1)
+        const fetchMock = jest.fn()
+        reduxMockCalls[0][0](undefined, undefined, fetchMock)
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/user/tag_definitions/append/id_column_test',
+                { credentials: 'include', method: 'POST' }
+            ]
+        ])
     })
     test('showColumnAddMenuCallback dispatches correct action', () => {
         const dispatch = jest.fn()
@@ -410,10 +399,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            mkDefaultTagDefinitionCallbacks()
-        )
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         localCallbacks.showColumnAddMenuCallback()
         expect(dispatch.mock.calls).toEqual([[new ShowColumnAddMenuAction()]])
     })
@@ -425,10 +411,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            mkDefaultTagDefinitionCallbacks()
-        )
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         localCallbacks.hideColumnAddMenuCallback()
         expect(dispatch.mock.calls).toEqual([[new HideColumnAddMenuAction()]])
     })
@@ -440,10 +423,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            mkDefaultTagDefinitionCallbacks()
-        )
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         const rectangleTest = { x: 2, y: 5, width: 10, height: 20 }
         localCallbacks.showHeaderMenuCallback(0, rectangleTest)
         expect(dispatch.mock.calls).toEqual([
@@ -458,10 +438,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            mkDefaultTagDefinitionCallbacks()
-        )
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         localCallbacks.hideHeaderMenuCallback()
         expect(dispatch.mock.calls).toEqual([[new HideHeaderMenuAction()]])
     })
@@ -481,16 +458,21 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const profileCallbacks = mkDefaultTagDefinitionCallbacks()
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            profileCallbacks
-        )
+        const reduxDispatch = jest.fn()
+        ;(useDispatch as jest.Mock).mockReturnValueOnce(reduxDispatch)
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         localCallbacks.removeColumnCallback()
         expect(dispatch.mock.calls).toEqual([[new RemoveSelectedColumnAction()]])
-        expect(
-            profileCallbacks.removeFromDefaultTagDefinitionListCallback.mock.calls
-        ).toEqual([[columnIdTest]])
+        const reduxCalls = reduxDispatch.mock.calls
+        expect(reduxCalls.length).toEqual(1)
+        const fetchMock = jest.fn()
+        reduxCalls[0][0](undefined, undefined, fetchMock)
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/user/tag_definitions/column_id_test',
+                { credentials: 'include', method: 'DELETE' }
+            ]
+        ])
     })
     test('setColumnWidthCallback dispatches correct action', () => {
         const dispatch = jest.fn()
@@ -500,10 +482,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            mkDefaultTagDefinitionCallbacks()
-        )
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         const newSizeTest = 500
         const colIndexTest = 15
         localCallbacks.setColumnWidthCallback(
@@ -524,16 +503,21 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const profileCallbacks = mkDefaultTagDefinitionCallbacks()
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            profileCallbacks
-        )
+        const reduxDispatch = jest.fn()
+        ;(useDispatch as jest.Mock).mockReturnValueOnce(reduxDispatch)
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         localCallbacks.switchColumnsCallback(5, 7)
         expect(dispatch.mock.calls).toEqual([[new ChangeColumnIndexAction(5, 7)]])
-        expect(profileCallbacks.changeDefaultTagDefinitionsCallback.mock.calls).toEqual(
-            [[5, 7]]
-        )
+        const reduxCalls = reduxDispatch.mock.calls
+        expect(reduxCalls.length).toEqual(1)
+        const fetchMock = jest.fn()
+        reduxCalls[0][0](undefined, undefined, fetchMock)
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/user/tag_definitions/swap/5/7',
+                { credentials: 'include', method: 'POST' }
+            ]
+        ])
     })
     test('returns correct columnHeaderBoundsCallback', () => {
         const dispatch = jest.fn()
@@ -549,10 +533,7 @@ describe('table hooks', () => {
             }),
             dispatch
         ])
-        const [_a, localCallbacks] = useRemoteTableData(
-            userInfoPromiseWithNoColumns,
-            mkDefaultTagDefinitionCallbacks()
-        )
+        const [_a, localCallbacks] = useRemoteTableData(userInfoPromiseWithNoColumns)
         expect(localCallbacks.columnHeaderBoundsCallback()).toEqual({
             left: xTest,
             top: yTest,

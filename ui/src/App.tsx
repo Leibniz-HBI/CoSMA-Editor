@@ -209,12 +209,6 @@ function TableConnector() {
             userInfoPromise={() =>
                 refresh({ withDispatch: false })(dispatch, store.getState, fetch)
             }
-            defaultColumnCallbacks={{
-                appendToDefaultTagDefinitionsCallback: remoteUserProfileColumnAppend,
-                removeFromDefaultTagDefinitionListCallback:
-                    remoteUserProfileColumnDelete,
-                changeDefaultTagDefinitionsCallback: remoteUserProfileChangeColumIndex
-            }}
         />
     )
 }

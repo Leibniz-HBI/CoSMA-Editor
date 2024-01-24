@@ -202,26 +202,42 @@ export function userSearch(searchTerm: string): ThunkWithFetch<void> {
         }
     }
 }
-export async function remoteUserProfileColumnAppend(idTagPersistent: string) {
-    await fetch(config.api_path + `/user/tag_definitions/append/${idTagPersistent}`, {
-        credentials: 'include',
-        method: 'POST'
-    })
+export function remoteUserProfileColumnAppend(
+    idTagPersistent: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        await fetch(
+            config.api_path + `/user/tag_definitions/append/${idTagPersistent}`,
+            {
+                credentials: 'include',
+                method: 'POST'
+            }
+        )
+    }
 }
-export async function remoteUserProfileColumnDelete(idTagPersistent: string) {
-    await fetch(config.api_path + `/user/tag_definitions/${idTagPersistent}`, {
-        credentials: 'include',
-        method: 'DELETE'
-    })
+export function remoteUserProfileColumnDelete(
+    idTagPersistent: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        await fetch(config.api_path + `/user/tag_definitions/${idTagPersistent}`, {
+            credentials: 'include',
+            method: 'DELETE'
+        })
+    }
 }
-export async function remoteUserProfileChangeColumIndex(
+export function remoteUserProfileChangeColumIndex(
     idxStart: number,
     idxEnd: number
-) {
-    await fetch(config.api_path + `/user/tag_definitions/swap/${idxStart}/${idxEnd}`, {
-        credentials: 'include',
-        method: 'POST'
-    })
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        await fetch(
+            config.api_path + `/user/tag_definitions/swap/${idxStart}/${idxEnd}`,
+            {
+                credentials: 'include',
+                method: 'POST'
+            }
+        )
+    }
 }
 
 const permissionGroupApiMap: { [key: string]: UserPermissionGroup } = {

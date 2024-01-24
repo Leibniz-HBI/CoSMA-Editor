@@ -12,16 +12,6 @@ import {
 } from './slice'
 import { AppDispatch } from '../store'
 
-export type AppendToDefaultTagDefinitionsCallback = (idPersistent: string) => void
-export type ChangeDefaultTagDefinitionsCallback = (
-    idxStart: number,
-    idxEnd: number
-) => void
-export type DefaultTagDefinitionsCallbacks = {
-    appendToDefaultTagDefinitionsCallback: AppendToDefaultTagDefinitionsCallback
-    removeFromDefaultTagDefinitionListCallback: AppendToDefaultTagDefinitionsCallback
-    changeDefaultTagDefinitionsCallback: ChangeDefaultTagDefinitionsCallback
-}
 export type UserInfoWithCallbacks = {
     userInfo: UserInfo
     logoutCallback: VoidFunction

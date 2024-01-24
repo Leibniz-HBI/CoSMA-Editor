@@ -12,7 +12,6 @@ import { ColumnMenu } from '../column_menu/components/menu'
 import { ColumnAddButton } from '../column_menu/components/misc'
 import { HeaderMenu } from '../header_menu'
 import { useRemoteTableData, LocalTableCallbacks, TableDataProps } from './hooks'
-import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
 import { UserInfo } from '../user/state'
 import { drawCell } from './draw'
 import { ChangeOwnershipModal } from '../tag_management/components'
@@ -47,11 +46,9 @@ export function downloadWorkAround(csvLines: string[]) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function RemoteDataTable(props: {
     userInfoPromise: () => Promise<UserInfo | undefined>
-    defaultColumnCallbacks: DefaultTagDefinitionsCallbacks
 }) {
     const [remoteCallbacks, localCallbacks, syncInfo] = useRemoteTableData(
-        props.userInfoPromise,
-        props.defaultColumnCallbacks
+        props.userInfoPromise
     )
     useEffect(
         () => {

@@ -42,6 +42,7 @@ const testColumns = [
             namePath: ['test title 0'],
             columnType: TagType.String,
             curated: false,
+            hidden: false,
             version: 0
         },
         cellContents: new Remote([])
@@ -52,6 +53,7 @@ const testColumns = [
             namePath: ['test title 1'],
             columnType: TagType.String,
             curated: false,
+            hidden: false,
             version: 0
         },
         cellContents: new Remote([])
@@ -73,7 +75,8 @@ describe('table from state', () => {
         showEntityMergingModal: false,
         submitValuesErrorState: undefined,
         tagDefinitionChangeOwnership: undefined,
-        entityAddState: new Remote(false)
+        entityAddState: new Remote(false),
+        showSearch: false
     }
     const baseTableCallbacks: LocalTableCallbacks = {
         addColumnCallback: (columnDefinition: TagDefinition) => {},
@@ -93,6 +96,7 @@ describe('table from state', () => {
         updateTagDefinitionCallback: () => {},
         showHeaderMenuCallback(columnIdx, bounds) {},
         hideHeaderMenuCallback: () => {},
+        toggleSearchCallback: () => {},
         columnHeaderBoundsCallback: () => {
             return { left: 0, right: 0, top: 0, bottom: 0, height: 0, width: 0 }
         },

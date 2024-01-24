@@ -38,11 +38,16 @@ import {
 } from './async_actions'
 import { tableReducer } from './reducer'
 import { CellValue, ColumnState, Entity, TableState } from './state'
-import { DefaultTagDefinitionsCallbacks } from '../user/hooks'
 import { UserInfo, UserPermissionGroup } from '../user/state'
 import { LoadingType } from './draw'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { selectPermissionGroup } from '../user/selectors'
+import {
+    remoteUserProfileChangeColumIndex,
+    remoteUserProfileColumnAppend,
+    remoteUserProfileColumnDelete
+} from '../user/thunks'
+import { AppDispatch } from '../store'
 
 const emptyCell = {
     kind: 'text' as GridCellKind,
@@ -195,9 +200,10 @@ export interface ColumnHeaderMenuItem {
     labelClassName?: string
 }
 
-function mkColumnHeaderMenuEntries(
+export function mkColumnHeaderMenuEntries(
     permissionGroup: UserPermissionGroup | undefined,
     dispatch: ThunkMiddlewareDispatch<TableAction>,
+    reduxDispatch: AppDispatch,
     tagDefinitionSelected?: TagDefinition
 ): ColumnHeaderMenuItem[] {
     if (tagDefinitionSelected === undefined) {
@@ -206,14 +212,17 @@ function mkColumnHeaderMenuEntries(
     const ret = [
         {
             label: 'Hide Column',
-            className: 'danger text-danger',
+            labelClassName: 'danger text-danger',
             onClick: () => {
                 dispatch(new RemoveSelectedColumnAction())
+                reduxDispatch(
+                    remoteUserProfileColumnDelete(tagDefinitionSelected.idPersistent)
+                )
             }
         },
         {
             label: 'Change Owner',
-            className: '',
+            labelClassName: '',
             onClick: () =>
                 dispatch(new TagChangeOwnershipShowAction(tagDefinitionSelected))
         }
@@ -224,7 +233,7 @@ function mkColumnHeaderMenuEntries(
     ) {
         ret.push({
             label: 'Curate Tag Definition',
-            className: '',
+            labelClassName: '',
             onClick: () => {
                 dispatch(new CurateAction(tagDefinitionSelected.idPersistent))
             }
@@ -234,17 +243,18 @@ function mkColumnHeaderMenuEntries(
 }
 
 export function useRemoteTableData(
-    userInfoPromise: () => Promise<UserInfo | undefined>,
-    defaultColumnCallbacks: DefaultTagDefinitionsCallbacks
+    userInfoPromise: () => Promise<UserInfo | undefined>
 ): [RemoteTableCallbacks, LocalTableCallbacks, TableDataProps] {
     const [state, dispatch] = useThunkReducer(
         tableReducer,
         new TableState({ frozenColumns: 1 })
     )
     const permissionGroup = useSelector(selectPermissionGroup)
+    const reduxDispatch: AppDispatch = useDispatch()
     const columnMenuEntries = mkColumnHeaderMenuEntries(
         permissionGroup,
         dispatch,
+        reduxDispatch,
         state.selectedTagDefinition
     )
 
@@ -333,8 +343,8 @@ export function useRemoteTableData(
             cellContentCallback: useCellContentCallback(state),
             addColumnCallback: (columnDefinition: TagDefinition) =>
                 dispatch(new GetColumnAsyncAction(columnDefinition)).then(() =>
-                    defaultColumnCallbacks.appendToDefaultTagDefinitionsCallback(
-                        columnDefinition.idPersistent
+                    reduxDispatch(
+                        remoteUserProfileColumnAppend(columnDefinition.idPersistent)
                     )
                 ),
             showColumnAddMenuCallback: () => dispatch(new ShowColumnAddMenuAction()),
@@ -344,10 +354,12 @@ export function useRemoteTableData(
             },
             hideHeaderMenuCallback: () => dispatch(new HideHeaderMenuAction()),
             removeColumnCallback: () => {
-                dispatch(new RemoveSelectedColumnAction())
                 if (state.selectedTagDefinition) {
-                    defaultColumnCallbacks.removeFromDefaultTagDefinitionListCallback(
-                        state.selectedTagDefinition.idPersistent
+                    dispatch(new RemoveSelectedColumnAction())
+                    reduxDispatch(
+                        remoteUserProfileColumnDelete(
+                            state.selectedTagDefinition.idPersistent
+                        )
                     )
                 }
             },
@@ -360,10 +372,7 @@ export function useRemoteTableData(
             ) => dispatch(new SetColumnWidthAction(colIndex, newSize)),
             switchColumnsCallback: (startIndex: number, endIndex: number) => {
                 dispatch(new ChangeColumnIndexAction(startIndex, endIndex))
-                defaultColumnCallbacks.changeDefaultTagDefinitionsCallback(
-                    startIndex,
-                    endIndex
-                )
+                reduxDispatch(remoteUserProfileChangeColumIndex(startIndex, endIndex))
             },
             columnHeaderBoundsCallback: () => ({
                 left: state.selectedColumnHeaderBounds?.x ?? 0,
