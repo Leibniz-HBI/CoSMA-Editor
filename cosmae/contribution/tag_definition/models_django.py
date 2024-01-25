@@ -11,7 +11,7 @@ class TagDefinitionContribution(models.Model):
         "ContributionCandidate", on_delete=models.CASCADE
     )
     index_in_file = models.IntegerField()
-    discard = models.BooleanField(default=False)
+    discard = models.BooleanField(default=True)
 
     @classmethod
     def get_by_candidate_query_set(cls, candidate):

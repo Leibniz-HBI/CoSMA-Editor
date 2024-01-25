@@ -126,6 +126,7 @@ def test_incomplete_assignment(auth_server):
         name="name",
         id_existing_persistent="display_txt",
         index_in_file=0,
+        discard=False,
     )
     TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
@@ -133,6 +134,7 @@ def test_incomplete_assignment(auth_server):
         name="column_test",
         id_existing_persistent="None",
         index_in_file=1,
+        discard=False,
     )
 
     rsp = req_contrib.post_column_assignment_complete(
@@ -165,6 +167,7 @@ def test_duplicate_assignment(auth_server):
         name="name",
         id_existing_persistent="display_txt",
         index_in_file=0,
+        discard=False,
     )
     TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
@@ -172,6 +175,7 @@ def test_duplicate_assignment(auth_server):
         name="column_test",
         id_existing_persistent="display_txt",
         index_in_file=1,
+        discard=False,
     )
 
     rsp = req_contrib.post_column_assignment_complete(

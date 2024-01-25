@@ -71,6 +71,7 @@ def contribution_tag_def_1(contribution_user):
         id_persistent=c.id_persistent_tag_def_test1,
         contribution_candidate=contribution_user,
         index_in_file=900,
+        discard=False,
     )
 
 

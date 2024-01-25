@@ -41,7 +41,7 @@ tag_def_test0 = {
     "id_persistent": c.id_persistent_tag_def_test0,
     "id_existing_persistent": None,
     "index_in_file": 9000,
-    "discard": False,
+    "discard": True,
 }
 
 tag_def_test1 = {

@@ -128,7 +128,7 @@ def test_patch_display_txt(auth_server):
         "tag_definitions": [
             {
                 "name": "tag definition_test",
-                "discard": False,
+                "discard": True,
                 "id_existing_persistent": "display_txt",
                 "id_persistent": str(id_definition_persistent),
                 "index_in_file": 9000,
@@ -166,7 +166,7 @@ def test_patch_id_persistent(auth_server):
         "tag_definitions": [
             {
                 "name": "tag definition_test",
-                "discard": False,
+                "discard": True,
                 "id_existing_persistent": "id_persistent",
                 "id_persistent": str(id_definition_persistent),
                 "index_in_file": 9000,
@@ -227,7 +227,7 @@ def test_patch_id_existing(auth_server):
         "tag_definitions": [
             {
                 "name": "tag definition_test",
-                "discard": False,
+                "discard": True,
                 "id_existing_persistent": new_id_existing,
                 "id_persistent": str(id_definition_persistent),
                 "index_in_file": 9000,
@@ -251,7 +251,7 @@ def test_patch_discard(auth_server):
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
-        {"discard": True},
+        {"discard": False},
         cookies=cookies,
     )
     assert rsp.status_code == 200
@@ -265,7 +265,7 @@ def test_patch_discard(auth_server):
         "tag_definitions": [
             {
                 "name": "tag definition_test",
-                "discard": True,
+                "discard": False,
                 "id_existing_persistent": None,
                 "id_persistent": str(id_definition_persistent),
                 "index_in_file": 9000,

@@ -75,6 +75,7 @@ def display_txt_contribution(contribution_other):
         name="name",
         id_existing_persistent="display_txt",
         index_in_file=0,
+        discard=False,
     )[0]
 
 
@@ -88,6 +89,7 @@ def verified_contribution(
         name="column_test",
         id_existing_persistent=verified_tag_def.id_persistent,
         index_in_file=1,
+        discard=False,
     )[0]
 
 
@@ -99,6 +101,7 @@ def party_contribution(contribution_other, party_tag_def, display_txt_contributi
         name="column_test",
         id_existing_persistent=party_tag_def.id_persistent,
         index_in_file=2,
+        discard=False,
     )[0]
 
 
