@@ -59,12 +59,12 @@ def test_no_defs(auth_server):
     assert rsp.json() == {"msg": "No tag definitions match the given parameters."}
 
 
-def test_get_tag_defs(auth_server, contribution_tag_def):
+def test_get_tag_defs(auth_server, contribution_tag_def, contribution_tag_def_1):
     server, cookies = auth_server
     contribution_candidate = contribution_tag_def.contribution_candidate
     id_persistent = contribution_candidate.id_persistent
     rsp = req.get_tag_definition(server.url, id_persistent, cookies)
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "tag_definitions": [c.tag_def_test0],
+        "tag_definitions": [c.tag_def_test1, c.tag_def_test0],
     }

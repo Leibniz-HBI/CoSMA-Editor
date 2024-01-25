@@ -68,7 +68,9 @@ def get_tag_definitions(request: HttpRequest):
             return 404, ApiError(msg="Contribution candidate does not exist.")
         if candidate.state == ContributionCandidateDb.UPLOADED:
             return 400, ApiError(msg="Column definitions not yet extracted.")
-        tag_definitions_db = TagDefContributionDb.get_by_candidate(candidate)
+        tag_definitions_db = TagDefContributionDb.get_by_candidate_query_set(
+            candidate
+        ).order_by("index_in_file")
         if not tag_definitions_db:
             return 404, ApiError(msg="No tag definitions match the given parameters.")
         return 200, TagDefinitionContributionResponseList(

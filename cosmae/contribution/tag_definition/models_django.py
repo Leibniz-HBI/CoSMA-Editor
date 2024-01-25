@@ -14,11 +14,6 @@ class TagDefinitionContribution(models.Model):
     discard = models.BooleanField(default=False)
 
     @classmethod
-    def get_by_candidate(cls, candidate):
-        "Get the tag definitions for a specific contribution candidate"
-        return list(cls.get_by_candidate_query_set(candidate))
-
-    @classmethod
     def get_by_candidate_query_set(cls, candidate):
         "Get all tag definitions for a contribution candidate."
         return TagDefinitionContribution.objects.filter(  # pylint: disable=no-member

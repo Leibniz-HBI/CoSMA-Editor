@@ -164,7 +164,7 @@ class ContributionCandidate(models.Model):
         Also includes the number of considered tag definitions."""
         tag_definitions_curated = TagDefinition.curated_query_set()
         tag_definition_contribution_query_set = (
-            TagDefinitionContribution.get_by_candidate(self)
+            TagDefinitionContribution.get_by_candidate_query_set(self)
         )
         tag_definitions_relevant = tag_definitions_curated.annotate(
             id_tag_definition_contribution=models.Subquery(

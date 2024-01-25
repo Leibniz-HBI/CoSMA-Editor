@@ -6,6 +6,7 @@ import pytest
 import tests.tag.api.integration.requests as req
 from tests.entity import common as ce
 from tests.tag import common as c
+from tests.utils import assert_versioned
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import TagMergeRequest
@@ -154,59 +155,43 @@ def test_related_by_merge_request(
 
     assert rsp.status_code == 200
     json = rsp.json()
-    value_responses = json["value_responses"]
-    assert value_responses[0]["id_entity_persistent"] == ce.id_persistent_test_0
-    assert (
-        value_responses[0]["id_tag_definition_persistent"]
-        == c.id_tag_def_persistent_test_user
+    assert_versioned(
+        json["value_responses"],
+        [
+            {
+                "id_entity_persistent": ce.id_persistent_test_0,
+                "id_tag_definition_persistent": c.id_tag_def_persistent_test_user,
+                "id_tag_definition_requested_persistent": c.id_tag_def_persistent_test_user,
+                "id_persistent": c.id_instance_test0,
+                "is_existing": True,
+                "value": "value",
+            },
+            {
+                "id_entity_persistent": ce.id_persistent_test_1,
+                "id_tag_definition_persistent": c.id_tag_def_persistent_test_user,
+                "id_tag_definition_requested_persistent": c.id_tag_def_persistent_test_user,
+                "id_persistent": c.id_instance_test1,
+                "is_existing": True,
+                "value": "value 1",
+            },
+            {
+                "id_entity_persistent": ce.id_persistent_test_0,
+                "id_tag_definition_persistent": c.id_tag_def_persistent_test_user1,
+                "id_tag_definition_requested_persistent": c.id_tag_def_persistent_test_user,
+                "id_persistent": c.id_instance_test2,
+                "is_existing": False,
+                "value": "value 2",
+            },
+            {
+                "id_entity_persistent": ce.id_persistent_test_1,
+                "id_tag_definition_persistent": c.id_tag_def_persistent_test_user1,
+                "id_tag_definition_requested_persistent": c.id_tag_def_persistent_test_user,
+                "id_persistent": c.id_instance_test3,
+                "is_existing": False,
+                "value": "value 3",
+            },
+        ],
     )
-    assert (
-        value_responses[0]["id_tag_definition_requested_persistent"]
-        == c.id_tag_def_persistent_test_user
-    )
-    assert value_responses[0]["id_persistent"] == c.id_instance_test0
-    assert value_responses[0]["is_existing"]
-    assert value_responses[0]["value"] == "value"
-    assert "version" in value_responses[0]
-    assert value_responses[1]["id_entity_persistent"] == ce.id_persistent_test_1
-    assert (
-        value_responses[1]["id_tag_definition_persistent"]
-        == c.id_tag_def_persistent_test_user
-    )
-    assert (
-        value_responses[1]["id_tag_definition_requested_persistent"]
-        == c.id_tag_def_persistent_test_user
-    )
-    assert value_responses[1]["id_persistent"] == c.id_instance_test1
-    assert value_responses[1]["is_existing"]
-    assert value_responses[1]["value"] == "value 1"
-    assert "version" in value_responses[1]
-    assert value_responses[2]["id_entity_persistent"] == ce.id_persistent_test_0
-    assert (
-        value_responses[2]["id_tag_definition_persistent"]
-        == c.id_tag_def_persistent_test_user1
-    )
-    assert (
-        value_responses[2]["id_tag_definition_requested_persistent"]
-        == c.id_tag_def_persistent_test_user
-    )
-    assert value_responses[2]["id_persistent"] == c.id_instance_test2
-    assert not value_responses[2]["is_existing"]
-    assert value_responses[2]["value"] == "value 2"
-    assert "version" in value_responses[2]
-    assert value_responses[3]["id_entity_persistent"] == ce.id_persistent_test_1
-    assert (
-        value_responses[3]["id_tag_definition_persistent"]
-        == c.id_tag_def_persistent_test_user1
-    )
-    assert (
-        value_responses[3]["id_tag_definition_requested_persistent"]
-        == c.id_tag_def_persistent_test_user
-    )
-    assert value_responses[3]["id_persistent"] == c.id_instance_test3
-    assert not value_responses[3]["is_existing"]
-    assert value_responses[3]["value"] == "value 3"
-    assert "version" in value_responses[3]
 
 
 @pytest.mark.django_db

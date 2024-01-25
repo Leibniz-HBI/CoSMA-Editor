@@ -44,5 +44,13 @@ tag_def_test0 = {
     "discard": False,
 }
 
+tag_def_test1 = {
+    "name": c.name_definition_test1,
+    "id_persistent": c.id_persistent_tag_def_test1,
+    "id_existing_persistent": None,
+    "index_in_file": 900,
+    "discard": False,
+}
+
 id_tag_merge_request_persistent = "ab6a456e-4560-458b-9f8d-864bdcccc904"
 time_edit_tag_merge_request = datetime(2020, 2, 3)
