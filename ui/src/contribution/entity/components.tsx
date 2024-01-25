@@ -254,7 +254,7 @@ function AddTagDefinitionsModal({
             <Modal.Header closeButton>
                 <Modal.Title>Create a new tag</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="vh-85 bg-secondary">
                 <ColumnMenuBody
                     loadColumnDataCallback={(tagDef) => {
                         const chunkSize = 50

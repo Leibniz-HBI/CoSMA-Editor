@@ -53,7 +53,7 @@ export function ColumnMenuBody(props: {
     }
     return (
         <div className="container text-left bg-light rounded ps-0 pe-0 h-100 overflow-y-hidden">
-            <Col className="h-100">
+            <Col className="h-100 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1">
                 <Row className="ms-0 me-0">
                     <ul className="nav nav-tabs justify-content-center ">
                         <li
@@ -70,7 +70,7 @@ export function ColumnMenuBody(props: {
                         </li>
                     </ul>
                 </Row>
-                <Row className="ps-2 pe-2 h-100">
+                <div className="ps-2 pe-2 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1">
                     {isLoading ? (
                         <CosmaeLoading />
                     ) : createTabSelected ? (
@@ -139,7 +139,7 @@ export function ColumnMenuBody(props: {
                             })}
                         />
                     )}
-                </Row>
+                </div>
             </Col>
         </div>
     )

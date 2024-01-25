@@ -1,5 +1,5 @@
 import { ReactElement, ReactNode } from 'react'
-import { Col, Form, Row } from 'react-bootstrap'
+import { Col, Form, ListGroup, Row } from 'react-bootstrap'
 
 import { DashLg, PatchCheckFill, PlusLg, RecordFill } from 'react-bootstrap-icons'
 import {
@@ -37,18 +37,16 @@ export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
 
 export function ColumnSelector(props: { listEntries: ReactNode[] }) {
     return (
-        <Col className="h-100 overflow-y-hidden pb-5">
-            {/* <Row className="row mt-2">
+        <Col className="overflow-y-hidden pb-3 d-flex flex-column scroll-gutter">
+            {/* <Row className="row mt-2 flex-grow-0 flex-shrink-0">
                 <Col>
                     <Form.FloatingLabel label="Search">
                         <Form.Control type="text" name="name" placeholder="Search" />
                     </Form.FloatingLabel>
                 </Col>
             </Row> */}
-            <Row className="h-100 d-flex flex-row">
-                <Col className="h-100 overflow-y-scroll">
-                    <ul className="list-group pe-0 mb-1">{props.listEntries}</ul>
-                </Col>
+            <Row className="overflow-y-scroll flex-grow-1 flex-shrink-1 pe-2">
+                <ListGroup className="pe-0 mb-1">{props.listEntries}</ListGroup>
             </Row>
         </Col>
     )
@@ -103,8 +101,8 @@ export function mkColumnExplorerItem(props: {
         )
     }
     return (
-        <li
-            className="list-group-item d-flex flex-row justify-content-between"
+        <ListGroup.Item
+            className="d-flex flex-row justify-content-between"
             key={`cosmae-tree-menu-item-${columnDefinition.idPersistent}`}
             role="button"
         >
@@ -131,7 +129,7 @@ export function mkColumnExplorerItem(props: {
                 </div>
             </Col>
             {tailElement}
-        </li>
+        </ListGroup.Item>
     )
 }
 

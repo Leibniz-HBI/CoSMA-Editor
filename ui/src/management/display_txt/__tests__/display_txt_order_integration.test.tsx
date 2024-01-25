@@ -190,7 +190,7 @@ test('append and remove', async () => {
         const listEntry =
             tagDef0Text.parentElement?.parentElement?.parentElement?.parentElement
         expect(listEntry?.className).toEqual(
-            'list-group-item d-flex flex-row justify-content-between'
+            'd-flex flex-row justify-content-between list-group-item'
         )
         ;(listEntry?.children[listEntry.children.length - 1] as HTMLElement)?.click()
     })

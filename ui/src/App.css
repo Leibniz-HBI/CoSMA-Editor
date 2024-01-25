@@ -62,6 +62,13 @@ html {
     height: 50% !important;
 }
 
+.h-95 {
+    height: 95% !important
+}
+
+.h-90 {
+    height: 90% !important
+}
 
 .flex-basis-0 {
     flex-basis: 0;

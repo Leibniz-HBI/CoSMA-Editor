@@ -86,11 +86,11 @@ export function ColumnDefinitionStep() {
             <Row className="overflow-hidden h-100">
                 <Col
                     xs={3}
-                    className="h-100 overflow-y-scroll"
+                    className="h-100 overflow-hidden d-flex flex-column flex-grow-0"
                     key="column-definition-selection"
                     ref={listViewContainerRef}
                 >
-                    <Row className="ms-0 me-12px">
+                    <Row className="align-self-center d-block">
                         <CompleteColumnAssignmentButton
                             idContributionPersistent={idContributionPersistent}
                             ref={listViewContainerRef}
@@ -99,7 +99,7 @@ export function ColumnDefinitionStep() {
                     <Row className="text-primary">
                         <span>Columns extracted from upload:</span>
                     </Row>
-                    <Row>
+                    <Row className="flex-grow-1 overflow-y-scroll">
                         <ListGroup>
                             {definitions.value?.activeDefinitionsList.map((colDef) => (
                                 <ColumnDefinitionStepListItem
@@ -131,7 +131,7 @@ export function ColumnDefinitionStep() {
                 </Col>
                 <Col
                     key="column-definition-assignment-form"
-                    className="ps-0 pe-0"
+                    className="ps-1 pe-1 h-100"
                     data-testid="column-assignment-form-column"
                 >
                     <ContributionColumnAssignmentForm
@@ -216,20 +216,18 @@ export function ContributionColumnAssignmentForm({
     }
 
     return (
-        <Row>
-            <Col sm="6">
-                <Row data-testid="existing-column-form">
-                    {createTabSelected ? (
-                        <div />
-                    ) : (
-                        <ExistingColumnForm
-                            columnDefinitionContribution={columnDefinition}
-                            key={columnDefinition.idPersistent}
-                            idContributionPersistent={idContributionPersistent}
-                        />
-                    )}
-                </Row>
-                <Row className="ms-0 me-0">
+        <Row className="h-100 d-flex flex-row">
+            <div
+                data-testid="existing-column-form"
+                className="h-100 d-flex flex-column mb-2 col-6"
+            >
+                <div className="ps-2 flex-grow-0 flex-shrink-0 d-block">
+                    <span key="hint-note">
+                        Please select the tag that should receive the data of column "
+                    </span>
+                    <span key="hint-column-definition">{columnDefinition.name}":</span>
+                </div>
+                <Row className="ms-3 me-3 flex-grow-0 flex-shrink-0 flex-nowrap order-2">
                     <Button
                         onClick={() => dispatch(setColumnDefinitionFormTab(true))}
                         variant="outline-primary"
@@ -237,13 +235,23 @@ export function ContributionColumnAssignmentForm({
                         Create new tag
                     </Button>
                 </Row>
-            </Col>
-            <Col sm="6">Preview not implemented yet</Col>
+                {createTabSelected ? (
+                    <div />
+                ) : (
+                    <ExistingColumnForm
+                        columnDefinitionContribution={columnDefinition}
+                        key={columnDefinition.idPersistent}
+                        idContributionPersistent={idContributionPersistent}
+                    />
+                )}
+            </div>
+            <Col xs="6">Preview not implemented yet</Col>
             <Modal
                 show={createTabSelected}
                 onHide={() => dispatch(setColumnDefinitionFormTab(false))}
                 data-testid="create-column-modal"
                 size="lg"
+                className="overflow-hidden"
             >
                 <Modal.Header closeButton>
                     <Modal.Title>Create a new tag</Modal.Title>
@@ -267,60 +275,52 @@ export function ExistingColumnForm({
     const tagIsLoading = useSelector(selectTagSelectionLoading)
     const navigationEntries = useSelector(selectNavigationEntries)
     return (
-        <Col>
-            <Row className="ps-2">
-                <span>
-                    Please select the tag that should receive the data of column "
-                    {columnDefinitionContribution.name}":
-                </span>
-            </Row>
-            <Row className="ps-1 pe-1">
-                {tagIsLoading ? (
-                    <CosmaeLoading />
-                ) : (
-                    <ColumnSelector
-                        listEntries={mkListItems({
-                            columnSelectionEntries: navigationEntries,
-                            path: [],
-                            level: 0,
-                            additionalEntries: [
-                                {
-                                    idPersistent: 'id_persistent',
-                                    name: 'Persistent Entity Id'
-                                },
-                                {
-                                    idPersistent: 'display_txt',
-                                    name: 'Display Text'
+        <div className="ps-1 pe-1 flex-column d-flex flex-grow-1 overflow-hidden">
+            {tagIsLoading ? (
+                <CosmaeLoading />
+            ) : (
+                <ColumnSelector
+                    listEntries={mkListItems({
+                        columnSelectionEntries: navigationEntries,
+                        path: [],
+                        level: 0,
+                        additionalEntries: [
+                            {
+                                idPersistent: 'id_persistent',
+                                name: 'Persistent Entity Id'
+                            },
+                            {
+                                idPersistent: 'display_txt',
+                                name: 'Display Text'
+                            }
+                        ],
+                        toggleExpansionCallback: (path) =>
+                            dispatch(toggleExpansion(path)),
+                        mkTailElement: (columnDefinitionExisting) => (
+                            <Form.Check
+                                type="radio"
+                                name="idExisting"
+                                value={columnDefinitionExisting?.idPersistent}
+                                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                                    dispatch(
+                                        patchColumnDefinitionContribution({
+                                            idPersistent:
+                                                columnDefinitionContribution.idPersistent,
+                                            idContributionPersistent,
+                                            idExistingPersistent: event.target.value
+                                        })
+                                    )
                                 }
-                            ],
-                            toggleExpansionCallback: (path) =>
-                                dispatch(toggleExpansion(path)),
-                            mkTailElement: (columnDefinitionExisting) => (
-                                <Form.Check
-                                    type="radio"
-                                    name="idExisting"
-                                    value={columnDefinitionExisting?.idPersistent}
-                                    onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                                        dispatch(
-                                            patchColumnDefinitionContribution({
-                                                idPersistent:
-                                                    columnDefinitionContribution.idPersistent,
-                                                idContributionPersistent,
-                                                idExistingPersistent: event.target.value
-                                            })
-                                        )
-                                    }
-                                    checked={
-                                        columnDefinitionContribution.idExistingPersistent ==
-                                        columnDefinitionExisting?.idPersistent
-                                    }
-                                />
-                            )
-                        })}
-                    />
-                )}
-            </Row>
-        </Col>
+                                checked={
+                                    columnDefinitionContribution.idExistingPersistent ==
+                                    columnDefinitionExisting?.idPersistent
+                                }
+                            />
+                        )
+                    })}
+                />
+            )}
+        </div>
     )
 }
 

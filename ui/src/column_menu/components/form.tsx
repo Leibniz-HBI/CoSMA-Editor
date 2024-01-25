@@ -91,7 +91,7 @@ function ColumnTypeCreateFormBody(props: {
             noValidate
             onSubmit={props.handleSubmit}
             ref={containerRef}
-            className="h-100 d-block"
+            className="h-100 d-flex flex-column flex-grow-1 flex-shrink-1"
         >
             <Row>
                 {props.touchedValues.name && !!props.formErrors.name ? (
@@ -165,13 +165,13 @@ function ColumnTypeCreateFormBody(props: {
                     Select parent from below
                 </span>
             </Row>
-            <Row className="h-60">
+            <div className="overflow-hidden d-flex flex-column">
                 {props.children({
                     handleChange: props.handleChange,
                     selectedParent: props.formValues.parent,
                     errors: props.formErrors
                 })}
-            </Row>
+            </div>
             <Row className="ms-0 me-0">
                 <Button type="submit" ref={targetRef}>
                     Create
