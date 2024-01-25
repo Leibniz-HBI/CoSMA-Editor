@@ -129,6 +129,7 @@ def patch_tag_definition(
                 and id_existing_persistent not in allowed_additional_fields
             ):
                 TagDefinition.most_recent_by_id(id_existing_persistent)
+                patch_dict["discard"] = False
             patch_from_dict(candidate_definition, **patch_dict)
             return 200, tag_definitions_contribution_db_to_api(candidate_definition)
         except TagDefinition.DoesNotExist:  # pylint: disable=no-member

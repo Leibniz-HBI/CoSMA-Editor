@@ -227,7 +227,7 @@ def test_patch_id_existing(auth_server):
         "tag_definitions": [
             {
                 "name": "tag definition_test",
-                "discard": True,
+                "discard": False,
                 "id_existing_persistent": new_id_existing,
                 "id_persistent": str(id_definition_persistent),
                 "index_in_file": 9000,
