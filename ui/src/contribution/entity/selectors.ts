@@ -92,29 +92,38 @@ export const selectTagRowDefs = createSelector(
         })
 )
 
-export const selectEntityColumnDefs = createSelector(selectSelectedEntity, (entity) => [
-    {
-        id: 'Description',
-        title: 'Tag Name',
-        width: 200,
-        columnType: TagType.String
-    },
-    {
-        id: entity?.idPersistent,
-        title: 'Uploaded Entity',
-        width: 200,
-        columnType: TagType.String,
-        themeOverride: { textDark: '#197374' }
-    },
-    ...(entity?.similarEntities.value ?? []).map((similar, idx) => {
-        return {
-            id: similar.idPersistent,
-            title: `Match ${idx + 1}`,
-            width: 200,
+const selectMatchWidths = createSelector(
+    selectContributionEntity,
+    (state) => state.matchWidths
+)
+
+export const selectEntityColumnDefs = createSelector(
+    selectSelectedEntity,
+    selectMatchWidths,
+    (entity, widths) => [
+        {
+            id: 'Description',
+            title: 'Tag Name',
+            width: widths[0],
             columnType: TagType.String
-        } as GridColumWithType
-    })
-])
+        },
+        {
+            id: entity?.idPersistent,
+            title: 'Uploaded Entity',
+            width: widths[1],
+            columnType: TagType.String,
+            themeOverride: { textDark: '#197374' }
+        },
+        ...(entity?.similarEntities.value ?? []).map((similar, idx) => {
+            return {
+                id: similar.idPersistent,
+                title: `Match ${idx + 1}`,
+                width: widths[idx + 2],
+                columnType: TagType.String
+            } as GridColumWithType
+        })
+    ]
+)
 
 export const selectCompleteEntityAssignment = createSelector(
     selectContributionEntity,

@@ -52,6 +52,7 @@ import { AppDispatch } from '../../store'
 import {
     completeEntityAssignmentClearError,
     incrementSelectedEntityIdx,
+    setColumnWidth,
     setSelectedEntityIdx,
     toggleTagDefinitionMenu
 } from './slice'
@@ -345,6 +346,7 @@ export function EntitySimilarityItem({
         displayTxtDetails: entityDisplayTxtDetails,
         idPersistent
     } = entity
+    const dispatch = useDispatch()
     const [tooltip, setTooltip] = useState<
         { val: string; bounds: IBounds } | undefined
     >()
@@ -435,6 +437,9 @@ export function EntitySimilarityItem({
                     width="100%"
                     columnSelect="none"
                     rangeSelect="cell"
+                    onColumnResize={(_col, size, idx) =>
+                        dispatch(setColumnWidth({ idx, width: size }))
+                    }
                     onGridSelectionChange={(selection: GridSelection) => {
                         const current = selection.current
                         if (current !== undefined) {

@@ -115,6 +115,7 @@ export interface ContributionEntityState {
     tagDefinitionMap: { [key: string]: number }
     showTagDefinitionMenu: boolean
     selectedEntityIdx?: number
+    matchWidths: number[]
 }
 export function newContributionEntityState({
     entities = newRemote([]),
@@ -123,7 +124,8 @@ export function newContributionEntityState({
     tagDefinitions = [],
     tagDefinitionMap: columnDefinitionMap,
     showTagDefinitionMenu = false,
-    selectedEntityIdx = undefined
+    selectedEntityIdx = undefined,
+    matchWidths = [200, 200]
 }: {
     entities?: RemoteInterface<EntityWithDuplicates[]>
     entityMap?: { [key: string]: number }
@@ -132,6 +134,7 @@ export function newContributionEntityState({
     tagDefinitionMap?: { [key: string]: number }
     showTagDefinitionMenu?: boolean
     selectedEntityIdx?: number
+    matchWidths?: number[]
 }): ContributionEntityState {
     let newEntityMap: { [key: string]: number },
         newTagDefinitionMap: { [key: string]: number }
@@ -161,6 +164,7 @@ export function newContributionEntityState({
         showTagDefinitionMenu: showTagDefinitionMenu,
         entityMap: newEntityMap,
         tagDefinitionMap: newTagDefinitionMap,
-        selectedEntityIdx: selectedEntityIdx
+        selectedEntityIdx: selectedEntityIdx,
+        matchWidths: matchWidths
     }
 }

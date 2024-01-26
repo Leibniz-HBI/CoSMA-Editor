@@ -250,24 +250,44 @@ export const contributionEntitySlice = createSlice({
             state: ContributionEntityState,
             action: PayloadAction<number>
         ) {
-            state.selectedEntityIdx = action.payload
+            const selectedIdx = action.payload
+            state.selectedEntityIdx = selectedIdx
+            pushMatchWidth(state, selectedIdx)
         },
         incrementSelectedEntityIdx(state: ContributionEntityState) {
-            if (state.selectedEntityIdx !== undefined) {
-                for (
-                    let idx = state.selectedEntityIdx + 1;
-                    idx < state.entities.value.length;
-                    ++idx
-                ) {
-                    if (state.entities.value[idx].similarEntities.value.length > 0) {
-                        state.selectedEntityIdx = idx
-                        break
-                    }
+            for (
+                let idx = (state.selectedEntityIdx ?? -1) + 1;
+                idx < state.entities.value.length;
+                ++idx
+            ) {
+                if (state.entities.value[idx].similarEntities.value.length > 0) {
+                    state.selectedEntityIdx = idx
+                    pushMatchWidth(state, idx)
+                    break
                 }
             }
+        },
+        setColumnWidth(
+            state: ContributionEntityState,
+            action: PayloadAction<{ idx: number; width: number }>
+        ) {
+            state.matchWidths[action.payload.idx] = action.payload.width
         }
     }
 })
+function pushMatchWidth(state: ContributionEntityState, selectedIdx: number) {
+    for (
+        let idx =
+            state.entities.value[selectedIdx].similarEntities.value.length +
+            2 -
+            state.matchWidths.length;
+        idx > 0;
+        idx--
+    ) {
+        state.matchWidths.push(200)
+    }
+}
+
 function mkEntityGroupMap(
     instances: TagInstance[],
     reverseEntityGroupMap: Map<string, string[]>
@@ -443,5 +463,6 @@ export const {
     putDuplicateSuccess,
     toggleTagDefinitionMenu,
     setSelectedEntityIdx,
-    incrementSelectedEntityIdx
+    incrementSelectedEntityIdx,
+    setColumnWidth
 } = contributionEntitySlice.actions
