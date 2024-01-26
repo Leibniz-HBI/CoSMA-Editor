@@ -129,9 +129,11 @@ export const contributionEntitySlice = createSlice({
             }
             for (const idx in state.tagDefinitions) {
                 for (const entity of state.entities.value) {
-                    entity.cellContents[idx] = newRemote([])
-                    for (const candidate of entity.similarEntities.value) {
-                        candidate.cellContents[idx] = newRemote([])
+                    if (entity.cellContents[idx] === undefined) {
+                        entity.cellContents[idx] = newRemote([])
+                        for (const candidate of entity.similarEntities.value) {
+                            candidate.cellContents[idx] = newRemote([])
+                        }
                     }
                 }
             }

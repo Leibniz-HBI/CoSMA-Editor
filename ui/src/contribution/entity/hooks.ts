@@ -211,7 +211,7 @@ export function mkCellContentCallback(
                 entityGroup.similarEntities.value[
                     col_idx - 2
                 ].idMatchTagDefinitionPersistentList.includes(
-                    tagDefinitions[row_idx - 4].idPersistent
+                    tagDefinitions[row_idx - 4]?.idPersistent ?? ''
                 )
             ) {
                 themeOverride = { bgCell: '#d1e3e3', baseFontStyle: '600 13px' }

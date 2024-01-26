@@ -150,7 +150,10 @@ function mkMatches(
 }
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
-const idTagDefContribution = 'id-tag-def-contribution'
+const idTagDefContribution0 = 'id-tag-def-contribution-0'
+const idTagDefContribution1 = 'id-tag-def-contribution-1'
+const idTagDef1 = 'id-tag-test-1'
+const nameTagDef1 = 'tag def 1'
 function initialResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
         [200, { contributionTest }],
@@ -167,111 +170,52 @@ function initialResponses(fetchMock: jest.Mock) {
                         curated: true,
                         version: 0,
                         type: 'STRING'
+                    },
+                    {
+                        id_persistent: idTagDef1,
+                        name_path: [nameTagDef1],
+                        name: nameTagDef1,
+                        curated: true,
+                        version: 0,
+                        type: 'STRING'
                     }
                 ]
             }
         ],
+        [200, { tag_definitions: [] }],
         [200, { tag_definitions: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
         [200, { matches: mkMatches(personList.slice(50)) }]
     ])
 }
 
-test('add tag', async () => {
+test('add tag values.', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
-    addResponseSequence(fetchMock, [
-        [
-            200,
-            {
-                value_responses: personList.slice(0, 50).flatMap((entity, idx) => [
-                    {
-                        id_entity_persistent: entity.id_persistent,
-                        id_tag_definition: idTagDefContribution,
-                        id_tag_definition_requested_persistent: idTagDef0,
-                        is_existing: false,
-                        version: idx,
-                        value: 'val-' + idx,
-                        id_persistent: 'id-val-' + idx
-                    },
-                    {
-                        id_entity_persistent: entity.id_persistent + '-0',
-                        id_tag_definition_requested_persistent: idTagDef0,
-                        id_tag_definition: idTagDef0,
-                        is_existing: true,
-                        version: idx,
-                        value: 'val-0-' + idx,
-                        id_persistent: 'id-val-0-' + idx
-                    },
-                    {
-                        id_entity_persistent: entity.id_persistent + '-1',
-                        id_tag_definition: idTagDef0,
-                        id_tag_definition_requested_persistent: idTagDef0,
-                        is_existing: true,
-                        version: idx,
-                        value: 'val-1-' + idx,
-                        id_persistent: 'id-val-1-' + idx
-                    }
-                ])
-            }
-        ],
-        [200, { value_responses: [] }]
-    ])
+    addValueResponses(fetchMock, idTagDef0, '1')
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(7)
+        expect(fetchMock.mock.calls.length).toEqual(8)
     })
-    const additionalTagButtons = screen.getByRole('button', {
-        name: /show additional tag values/i
-    })
-    additionalTagButtons.click()
-    let tagDefLabel: HTMLElement | undefined
+    await addTagDefinitionByName(nameTagDef0)
+    checkTagValueCalls(fetchMock, idTagDef0)
     await waitFor(() => {
-        tagDefLabel = screen.getByText(nameTagDef0)
+        expect(fetchMock.mock.calls.length).toEqual(10)
     })
-    const tagListItem =
-        tagDefLabel?.parentElement?.parentElement?.parentElement?.parentElement
-    const tagButton = tagListItem?.children[1]
-    expect(tagButton?.className).toEqual('icon')
-    ;(tagButton as HTMLElement)?.click()
-
-    screen.getByRole('button', { name: /close/i }).click()
-    expect(fetchMock.mock.calls.at(-2)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/tags/entities',
-        {
-            credentials: 'include',
-            method: 'POST',
-            body: JSON.stringify({
-                id_tag_definition_persistent_list: [idTagDef0],
-                id_entity_persistent_list: personList
-                    .slice(0, 50)
-                    .flatMap((entity) => [
-                        entity.id_persistent,
-                        entity.id_persistent + '-0',
-                        entity.id_persistent + '-1'
-                    ]),
-                id_contribution_persistent: idContribution
-            })
-        }
-    ])
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/tags/entities',
-        {
-            credentials: 'include',
-            method: 'POST',
-            body: JSON.stringify({
-                id_tag_definition_persistent_list: [idTagDef0],
-                id_entity_persistent_list: personList
-                    .slice(50)
-                    .flatMap((entity) => [
-                        entity.id_persistent,
-                        entity.id_persistent + '-0',
-                        entity.id_persistent + '-1'
-                    ]),
-                id_contribution_persistent: idContribution
-            })
-        }
-    ])
+    addValueResponses(fetchMock, idTagDef1, '2')
+    await addTagDefinitionByName(nameTagDef1)
+    // check calls for additional values
+    await waitFor(() => {
+        expect(fetchMock.mock.calls.length).toEqual(12)
+    })
+    checkTagValueCalls(fetchMock, idTagDef1)
+    // check final values!
+    await waitFor(() => {
+        const state = store.getState()
+        expect(
+            state.contributionEntity.tagDefinitions.map((tag) => tag.idPersistent)
+        ).toEqual([idTagDef0, idTagDef1])
+    })
     await waitFor(() => {
         const state = store.getState().contributionEntity
         for (let idx = 0; idx < 50; ++idx) {
@@ -281,8 +225,17 @@ test('add tag', async () => {
                     {
                         isExisting: false,
                         isRequested: false,
-                        value: 'val-' + idx,
-                        idPersistent: 'id-val-' + idx,
+                        value: 'val-1-' + idx,
+                        idPersistent: 'id-val-1-' + idx,
+                        version: idx
+                    }
+                ]),
+                newRemote([
+                    {
+                        isExisting: false,
+                        isRequested: false,
+                        value: 'val-2-' + idx,
+                        idPersistent: 'id-val-2-' + idx,
                         version: idx
                     }
                 ])
@@ -298,10 +251,19 @@ test('add tag', async () => {
                         cellContents: [
                             newRemote([
                                 {
-                                    idPersistent: `id-val-0-${idx}`,
+                                    idPersistent: `id-val-1-0-${idx}`,
                                     isExisting: true,
                                     isRequested: false,
-                                    value: `val-0-${idx}`,
+                                    value: `val-1-0-${idx}`,
+                                    version: idx
+                                }
+                            ]),
+                            newRemote([
+                                {
+                                    idPersistent: `id-val-2-0-${idx}`,
+                                    isExisting: true,
+                                    isRequested: false,
+                                    value: `val-2-0-${idx}`,
                                     version: idx
                                 }
                             ])
@@ -316,10 +278,19 @@ test('add tag', async () => {
                         cellContents: [
                             newRemote([
                                 {
-                                    idPersistent: `id-val-1-${idx}`,
+                                    idPersistent: `id-val-1-1-${idx}`,
                                     isExisting: true,
                                     isRequested: false,
-                                    value: `val-1-${idx}`,
+                                    value: `val-1-1-${idx}`,
+                                    version: idx
+                                }
+                            ]),
+                            newRemote([
+                                {
+                                    idPersistent: `id-val-2-1-${idx}`,
+                                    isExisting: true,
+                                    isRequested: false,
+                                    value: `val-2-1-${idx}`,
                                     version: idx
                                 }
                             ])
@@ -340,7 +311,7 @@ test('add tag', async () => {
                         version: 0,
                         similarity: (idx - 50) / 100.0,
                         idMatchTagDefinitionPersistentList: [],
-                        cellContents: [newRemote([])]
+                        cellContents: [newRemote([]), newRemote([])]
                     }),
                     newScoredEntity({
                         displayTxt: entity.displayTxt + ` match 1`,
@@ -349,10 +320,113 @@ test('add tag', async () => {
                         version: 0,
                         similarity: (idx - 50) / 100.0 + 0.001,
                         idMatchTagDefinitionPersistentList: [],
-                        cellContents: [newRemote([])]
+                        cellContents: [newRemote([]), newRemote([])]
                     })
                 ])
             )
         }
     })
 })
+
+function addValueResponses(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fetchMock: jest.Mock<any, any>,
+    idTagDef: string,
+    suffix: string
+) {
+    addResponseSequence(fetchMock, [
+        [
+            200,
+            {
+                value_responses: personList.slice(0, 50).flatMap((entity, idx) => [
+                    {
+                        id_entity_persistent: entity.id_persistent,
+                        id_tag_definition: idTagDefContribution0,
+                        id_tag_definition_requested_persistent: idTagDef,
+                        is_existing: false,
+                        version: idx,
+                        value: `val-${suffix}-` + idx,
+                        id_persistent: `id-val-${suffix}-` + idx
+                    },
+                    {
+                        id_entity_persistent: entity.id_persistent + '-0',
+                        id_tag_definition_requested_persistent: idTagDef,
+                        id_tag_definition: idTagDef,
+                        is_existing: true,
+                        version: idx,
+                        value: `val-${suffix}-0-` + idx,
+                        id_persistent: `id-val-${suffix}-0-` + idx
+                    },
+                    {
+                        id_entity_persistent: entity.id_persistent + '-1',
+                        id_tag_definition: idTagDef,
+                        id_tag_definition_requested_persistent: idTagDef,
+                        is_existing: true,
+                        version: idx,
+                        value: `val-${suffix}-1-` + idx,
+                        id_persistent: `id-val-${suffix}-1-` + idx
+                    }
+                ])
+            }
+        ],
+        [200, { value_responses: [] }]
+    ])
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function checkTagValueCalls(fetchMock: jest.Mock<any, any>, idTagDef: string) {
+    expect(fetchMock.mock.calls.at(-2)).toEqual([
+        'http://127.0.0.1:8000/cosmae/api/tags/entities',
+        {
+            credentials: 'include',
+            method: 'POST',
+            body: JSON.stringify({
+                id_tag_definition_persistent_list: [idTagDef],
+                id_entity_persistent_list: personList
+                    .slice(0, 50)
+                    .flatMap((entity) => [
+                        entity.id_persistent,
+                        entity.id_persistent + '-0',
+                        entity.id_persistent + '-1'
+                    ]),
+                id_contribution_persistent: idContribution
+            })
+        }
+    ])
+    expect(fetchMock.mock.calls.at(-1)).toEqual([
+        'http://127.0.0.1:8000/cosmae/api/tags/entities',
+        {
+            credentials: 'include',
+            method: 'POST',
+            body: JSON.stringify({
+                id_tag_definition_persistent_list: [idTagDef],
+                id_entity_persistent_list: personList
+                    .slice(50)
+                    .flatMap((entity) => [
+                        entity.id_persistent,
+                        entity.id_persistent + '-0',
+                        entity.id_persistent + '-1'
+                    ]),
+                id_contribution_persistent: idContribution
+            })
+        }
+    ])
+}
+
+async function addTagDefinitionByName(nameTagDef: string) {
+    const additionalTagButtons = screen.getByRole('button', {
+        name: /show additional tag values/i
+    })
+    additionalTagButtons.click()
+    let tagDefLabel: HTMLElement | undefined
+    await waitFor(() => {
+        tagDefLabel = screen.getByText(nameTagDef)
+    })
+    const tagListItem =
+        tagDefLabel?.parentElement?.parentElement?.parentElement?.parentElement
+    const tagButton = tagListItem?.children[1]
+    expect(tagButton?.className).toEqual('icon')
+    ;(tagButton as HTMLElement)?.click()
+
+    screen.getByRole('button', { name: /close/i }).click()
+}
