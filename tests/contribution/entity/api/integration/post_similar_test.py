@@ -171,7 +171,7 @@ def test_similar_entities_with_tag_match(
                                 "version": 2,
                             },
                             "id_match_tag_definition_persistent_list": [
-                                "52d5de0a-2fdb-457f-80d0-6e10131ad1b9"
+                                "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
                             ],
                             "similarity": 0.9230769230769231,
                         },

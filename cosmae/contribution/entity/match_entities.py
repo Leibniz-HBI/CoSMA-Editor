@@ -75,10 +75,10 @@ MATCHES_QUERY_STRING = """
 				id_entity_origin
 				, id_entity_destination
 				, count (case when "value_origin" = "value_destination" then 1 end) equal_instance_count
-				, array_agg (case when "value_origin" = "value_destination" then "id_origin_persistent" end) equal_tag_definition_list
+				, array_agg (case when "value_origin" = "value_destination" then "id_destination_persistent" end) equal_tag_definition_list
 				, count(*) total_instance_count
 			from (
-				select "id_entity_origin", "value_origin", "id_entity_destination" ,"value_destination", "id_origin_persistent"
+				select "id_entity_origin", "value_origin", "id_entity_destination" ,"value_destination", "id_destination_persistent"
 				from (
 					(
                         select "id_origin_persistent",  "id_destination_persistent"
