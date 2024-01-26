@@ -20,7 +20,7 @@ export interface TagDefinition {
 export function newTagDefinition({
     namePath,
     idPersistent,
-    idParentPersistent,
+    idParentPersistent = undefined,
     columnType,
     curated,
     owner = 'Unknown User',

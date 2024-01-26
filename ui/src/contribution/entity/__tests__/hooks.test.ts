@@ -1,5 +1,5 @@
 import { GridCellKind } from '@glideapps/glide-data-grid'
-import { TagType } from '../../../column_menu/state'
+import { TagType, newTagDefinition } from '../../../column_menu/state'
 import { Remote } from '../../../util/state'
 import { mkCellContentCallback } from '../hooks'
 import { newEntityWithDuplicates, newScoredEntity } from '../state'
@@ -8,6 +8,7 @@ import { AssignType } from '../../../table/draw'
 jest.mock('../../../util/state', () => {
     return { ...jest.requireActual('../../../util/state'), useThunkReducer: jest.fn() }
 })
+const idTagDefinition = 'id-tag-def-test'
 describe('cell contents callback', () => {
     const entityTest = newEntityWithDuplicates({
         idPersistent: 'id-test',
@@ -22,6 +23,7 @@ describe('cell contents callback', () => {
             newScoredEntity({
                 idPersistent: 'id-similar-test',
                 displayTxt: 'similar entity test',
+                displayTxtDetails: 'display text',
                 version: 10,
                 similarity: 0.9,
                 cellContents: [
@@ -37,8 +39,9 @@ describe('cell contents callback', () => {
             newScoredEntity({
                 idPersistent: 'id-similar-test-1',
                 displayTxt: 'similar entity test 1',
+                displayTxtDetails: 'display text',
                 version: 11,
-                idMatchTagDefinitionPersistentList: ['some-id'],
+                idMatchTagDefinitionPersistentList: [idTagDefinition],
                 similarity: 0.8,
                 cellContents: [
                     new Remote([
@@ -60,8 +63,16 @@ describe('cell contents callback', () => {
             title: 'column test'
         }
     ]
+    const tagDefinition = newTagDefinition({
+        idPersistent: idTagDefinition,
+        namePath: ['some tag'],
+        curated: true,
+        hidden: false,
+        columnType: TagType.String,
+        version: 15
+    })
     test('handles tag names', () => {
-        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1)
+        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1, [])
         expect(cellCallback([0, 0])).toEqual({
             kind: 'text' as GridCellKind,
             data: '',
@@ -103,7 +114,7 @@ describe('cell contents callback', () => {
         })
     })
     test('handles original entity', () => {
-        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1)
+        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1, [])
         expect(cellCallback([1, 0])).toEqual({
             kind: 'custom' as GridCellKind,
             data: new AssignType(false, true)
@@ -143,11 +154,13 @@ describe('cell contents callback', () => {
             displayData: 'value group',
             data: 'value group',
             contentAlign: 'right',
-            themeOverride: undefined
+            themeOverride: {}
         })
     })
     test('handles similar entities', () => {
-        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1)
+        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1, [
+            tagDefinition
+        ])
         expect(cellCallback([2, 0])).toEqual({
             kind: 'custom' as GridCellKind,
             data: new AssignType(true, false)
@@ -185,7 +198,7 @@ describe('cell contents callback', () => {
             displayData: 'value similar',
             data: 'value similar',
             contentAlign: 'right',
-            themeOverride: undefined
+            themeOverride: {}
         })
         expect(cellCallback([3, 0])).toEqual({
             kind: 'custom' as GridCellKind,
@@ -224,7 +237,7 @@ describe('cell contents callback', () => {
             displayData: 'value similar 1',
             data: 'value similar 1',
             contentAlign: 'right',
-            themeOverride: undefined
+            themeOverride: { baseFontStyle: '600 13px', bgCell: '#d1e3e3' }
         })
     })
 })

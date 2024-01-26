@@ -340,6 +340,7 @@ export function EntitySimilarityItem({
 }) {
     const entityColumnDefs = useSelector(selectEntityColumnDefs)
     const tagRowDefs = useSelector(selectTagRowDefs)
+    const matchTagDefinitionList = useSelector(selectMatchTagDefinitionList)
     const {
         similarEntities,
         displayTxt,
@@ -428,7 +429,8 @@ export function EntitySimilarityItem({
                     getCellContent={mkCellContentCallback(
                         entity,
                         tagRowDefs,
-                        numMatchTags
+                        numMatchTags,
+                        matchTagDefinitionList
                     )}
                     freezeColumns={2}
                     columns={entityColumnDefs}

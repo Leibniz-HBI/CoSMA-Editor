@@ -340,7 +340,7 @@ export function parseScoredEntityFromJson(json: any): ScoredEntity {
         ...parseEntityObjectFromJson(json['entity']),
         similarity: json['similarity'],
         idMatchTagDefinitionPersistentList:
-            json['id_match_tag_definition_persistent_list']
+            json['id_match_tag_definition_persistent_list'] ?? []
     })
 }
 

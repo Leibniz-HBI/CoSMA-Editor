@@ -7,7 +7,7 @@ import {
     LoadingCell,
     Theme
 } from '@glideapps/glide-data-grid'
-import { TagType } from '../../column_menu/state'
+import { TagDefinition, TagType } from '../../column_menu/state'
 import { EntityWithDuplicates } from './state'
 import { CellValue } from '../../table/state'
 import { AssignType } from '../../table/draw'
@@ -106,15 +106,17 @@ export function mkComparisonCell(
 export function mkCellContentCallback(
     entityGroup: EntityWithDuplicates,
     tagTypes: GridColumWithType[],
-    numMatchTags: number
+    numMatchTags: number,
+    tagDefinitions: TagDefinition[]
 ): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
         let contentAlign = 'right'
         let displayTxt: string | undefined = ''
-        const themeOverride = {}
+        let themeOverride = {}
         let style = 'normal'
         if (row_idx < 4) {
+            // special case, not tag value
             if (row_idx == 0) {
                 // row with assignment buttons
                 let replaceInfo = undefined
@@ -192,6 +194,7 @@ export function mkCellContentCallback(
                 style
             } as GridCell
         }
+        // case tag value
         let cellContents: RemoteInterface<CellValue[]> | undefined = undefined
         if (col_idx == 0) {
             return {
@@ -204,6 +207,15 @@ export function mkCellContentCallback(
         } else if (col_idx == 1) {
             cellContents = entityGroup.cellContents[row_idx - 4]
         } else {
+            if (
+                entityGroup.similarEntities.value[
+                    col_idx - 2
+                ].idMatchTagDefinitionPersistentList.includes(
+                    tagDefinitions[row_idx - 4].idPersistent
+                )
+            ) {
+                themeOverride = { bgCell: '#d1e3e3', baseFontStyle: '600 13px' }
+            }
             if (entityGroup.similarEntities.isLoading) {
                 return loadingCell
             }
@@ -218,7 +230,8 @@ export function mkCellContentCallback(
         }
         return mkComparisonCell(
             tagTypes[row_idx - 4].columnType,
-            cellContents?.value ?? []
+            cellContents?.value ?? [],
+            themeOverride
         )
     }
 }
