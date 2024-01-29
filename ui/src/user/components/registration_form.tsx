@@ -29,7 +29,7 @@ const registrationSchema = yup.object({
         .string()
         .required()
         .matches(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*/\\§\-_[\](){}])(?=.{8,})/,
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[.,<>?!@#$%^&*/\\|'"´`~^§\-_[\](){}])(?=.{8,})/,
             'Insecure password'
         ),
     passwordRepeat: yup
