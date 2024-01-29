@@ -1,3 +1,5 @@
+/*global location*/
+/*eslint no-restricted-globals: 0*/
 import './App.css'
 import '@glideapps/glide-data-grid/dist/index.css'
 import './App.scss'
@@ -27,13 +29,7 @@ import { ErrorToasts } from './util/error/components'
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store, { AppDispatch } from './store'
 import { selectUserInfo } from './user/selectors'
-import {
-    logoutThunk,
-    refresh,
-    remoteUserProfileChangeColumIndex,
-    remoteUserProfileColumnAppend,
-    remoteUserProfileColumnDelete
-} from './user/thunks'
+import { logoutThunk, refresh } from './user/thunks'
 import { TagManagementPage } from './tag_management/components'
 import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
 import { ManagementPage } from './management/components'
