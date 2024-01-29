@@ -69,6 +69,7 @@ export function ColumnTypeCreateForm({
         </Formik>
     )
 }
+
 function ColumnTypeCreateFormBody(props: {
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
     touchedValues: FormikTouched<ColumnTypeCreateArgs>

@@ -173,7 +173,7 @@ export function mkListItems(args: {
         )
         return [
             ...additionalItems,
-            ...mkListItems({ ...args, level: 1, additionalEntries: undefined })
+            ...mkListItems({ ...args, level: 0, additionalEntries: undefined })
         ]
     }
     return columnSelectionEntries.flatMap((entry: TagSelectionEntry, idx: number) => {

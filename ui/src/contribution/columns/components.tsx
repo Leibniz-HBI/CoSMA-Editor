@@ -325,9 +325,13 @@ export function ExistingColumnForm({
 }
 
 export function NewColumnModalBody() {
+    const isLoading = useSelector(selectTagSelectionLoading)
     const navigationEntries = useSelector(selectNavigationEntries)
     const dispatch = useDispatch()
     const additionalEntries = [{ idPersistent: '', name: 'No parent' }]
+    if (isLoading) {
+        return <CosmaeLoading />
+    }
     return (
         <ColumnTypeCreateForm>
             {(columnTypeCreateFormProps: ColumnTypeCreateFormProps) => (

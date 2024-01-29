@@ -77,14 +77,19 @@ describe('form tests', () => {
         const { container } = render(
             <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
         )
+        const dispatchMock = useDispatch() as jest.Mock
+        dispatchMock.mockReset().mockReturnValue(Promise.resolve(true))
         const errorClasses = container.getElementsByClassName('text-danger fs-6')
         expect(errorClasses.length).toEqual(0)
-        const textInput = screen.getByRole('textbox')
+        const textInput = screen.getByRole('textbox') as HTMLInputElement
         const buttons = container.getElementsByTagName('button')
         const radioButtons = container.getElementsByClassName('form-check-input')
         const user = userEvent.setup()
         const inputTest = 'bla test'
         await user.type(textInput, inputTest)
+        await waitFor(() => {
+            expect(textInput.value).toEqual(inputTest)
+        })
         await user.click(radioButtons[1])
         await user.click(buttons[0])
         await waitFor(() =>
@@ -92,7 +97,25 @@ describe('form tests', () => {
                 0
             )
         )
-        expect((useDispatch() as jest.Mock).mock.calls.length).toEqual(1)
+        const fetchMock = jest.fn()
+        await waitFor(() => {
+            const mockCalls = (dispatchMock as jest.Mock).mock.calls
+            expect(mockCalls.length).toEqual(2)
+            mockCalls[0][0](jest.fn(), undefined, fetchMock)
+        })
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+                {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tag_definitions: [{ name: inputTest, type: 'STRING' }]
+                    })
+                }
+            ]
+        ])
     })
     test('popover when error', async () => {
         ;(useSelector as jest.Mock).mockReturnValue(newErrorState('test error'))
