@@ -106,6 +106,7 @@ export function MergeRequestListItem({
             onClick={() =>
                 navigateCallback('/review/tags/' + mergeRequest.idPersistent)
             }
+            role="button"
         >
             <Row>
                 <Col xs={1} className="align-self-center">

@@ -49,6 +49,7 @@ export function EntityMergeRequestListItem({
             onClick={() =>
                 navigateCallback('/review/entities/' + mergeRequest.idPersistent)
             }
+            role="button"
         >
             <Row>
                 <Col xs={1} className="align-self-center">

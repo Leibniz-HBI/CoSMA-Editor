@@ -81,6 +81,7 @@ function DisplayTxtOrderItem({
                     xs="auto"
                     className="ms-1 me-1 align-top"
                     onClick={() => removeTagDefinitionCallback(tagDefinition)}
+                    role="button"
                 >
                     <XLg />
                 </Col>

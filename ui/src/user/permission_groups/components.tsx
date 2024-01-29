@@ -60,7 +60,11 @@ export function UserInfoListItem({
     selectUserCallback: (userInfo: UserInfo) => void
 }): JSX.Element {
     return (
-        <ListGroup.Item active={active} onClick={() => selectUserCallback(userInfo)}>
+        <ListGroup.Item
+            active={active}
+            onClick={() => selectUserCallback(userInfo)}
+            role="button"
+        >
             {userInfo.userName}
         </ListGroup.Item>
     )

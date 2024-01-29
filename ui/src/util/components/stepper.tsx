@@ -70,12 +70,19 @@ export function StepTitle({
 }) {
     const icons = selectedIdx < idx ? inactiveIcons : activeIcons
     const icon = icons[idx]
+    let role = 'button'
     let textClass = 'fs-5'
     if (onClick == undefined) {
         textClass = 'fs-5 fw-light'
+        role = ''
     }
     return (
-        <Col sm="auto" className="align-self-start ms-2 me-2" onClick={onClick}>
+        <Col
+            sm="auto"
+            className="align-self-start ms-2 me-2"
+            onClick={onClick}
+            role={role}
+        >
             <Row className="justify-content-around align-items-center">
                 <Col className="align-self-center pe-0">
                     <span className="icon">
