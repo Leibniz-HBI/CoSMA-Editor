@@ -1,5 +1,4 @@
 """Utils for Django"""
-import logging
 from functools import lru_cache
 from typing import Iterable, Optional, Type
 
@@ -68,7 +67,6 @@ def patch_from_dict(object_db, **kwargs):
     This is required for (pre)|(post)_save signals to get a list of updated fields."""
     for key, value in kwargs.items():
         setattr(object_db, key, value)
-    logging.warning(list(kwargs))
     object_db.save(update_fields=list(kwargs))
 
 

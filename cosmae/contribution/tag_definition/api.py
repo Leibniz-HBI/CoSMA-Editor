@@ -124,12 +124,12 @@ def patch_tag_definition(
             )
             patch_dict = patch_data.dict(exclude_unset=True)
             id_existing_persistent = patch_dict.get("id_existing_persistent")
-            if (
-                id_existing_persistent is not None
-                and id_existing_persistent not in allowed_additional_fields
-            ):
-                TagDefinition.most_recent_by_id(id_existing_persistent)
+            if id_existing_persistent is not None:
+                if id_existing_persistent not in allowed_additional_fields:
+                    TagDefinition.most_recent_by_id(id_existing_persistent)
                 patch_dict["discard"] = False
+            elif "discard" not in patch_dict:
+                patch_dict["discard"] = True
             patch_from_dict(candidate_definition, **patch_dict)
             return 200, tag_definitions_contribution_db_to_api(candidate_definition)
         except TagDefinition.DoesNotExist:  # pylint: disable=no-member
