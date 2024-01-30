@@ -1,5 +1,5 @@
 import { ReactElement, ReactNode } from 'react'
-import { Col, Form, ListGroup, Row } from 'react-bootstrap'
+import { Col, ListGroup, Row } from 'react-bootstrap'
 
 import { DashLg, PatchCheckFill, PlusLg, RecordFill } from 'react-bootstrap-icons'
 import {
@@ -25,7 +25,7 @@ export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
             {'-> ' + namePath[namePath.length - 2] + ' '}
         </span>,
         <span className="pre-wrap" key="path-part-3">
-            {'-> ' + namePath[namePath.length - 1]}
+            {'-> ' + namePath[namePath.length - 1] + ' '}
         </span>
     ]
     if (namePath.length < 4) {
