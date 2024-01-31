@@ -1,3 +1,4 @@
+import { useAppDispatch } from '../hooks'
 import { Remote, useThunkReducer } from '../util/state'
 import {
     UploadContributionClearErrorAction,
@@ -29,9 +30,11 @@ export type ContributionListProps = {
 }
 
 export function useContribution(): ContributionListProps {
+    const reduxDispatch = useAppDispatch()
     const [state, dispatch] = useThunkReducer(
         contributionReducer,
-        newContributionState({})
+        newContributionState({}),
+        reduxDispatch
     )
     return {
         contributions: state.contributions,

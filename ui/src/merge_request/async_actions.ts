@@ -11,9 +11,10 @@ import { MergeRequest, MergeRequestStep } from './state'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { exceptionMessage } from '../util/exception'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { AppDispatch } from '../store'
 
 export class GetMergeRequestsAction extends AsyncAction<MergeRequestAction, void> {
-    async run(dispatch: Dispatch<MergeRequestAction>) {
+    async run(dispatch: Dispatch<MergeRequestAction>, _reduxDispatch: AppDispatch) {
         dispatch(new GetMergeRequestsStartAction())
         try {
             const rsp = await fetch(config.api_path + '/merge_requests', {

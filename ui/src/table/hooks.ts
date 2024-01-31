@@ -40,7 +40,7 @@ import { tableReducer } from './reducer'
 import { CellValue, ColumnState, Entity, TableState } from './state'
 import { UserInfo, UserPermissionGroup } from '../user/state'
 import { LoadingType } from './draw'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { selectPermissionGroup } from '../user/selectors'
 import {
     remoteUserProfileChangeColumIndex,
@@ -48,6 +48,7 @@ import {
     remoteUserProfileColumnDelete
 } from '../user/thunks'
 import { AppDispatch } from '../store'
+import { useAppDispatch } from '../hooks'
 
 const emptyCell = {
     kind: 'text' as GridCellKind,
@@ -245,12 +246,13 @@ export function mkColumnHeaderMenuEntries(
 export function useRemoteTableData(
     userInfoPromise: () => Promise<UserInfo | undefined>
 ): [RemoteTableCallbacks, LocalTableCallbacks, TableDataProps] {
+    const reduxDispatch = useAppDispatch()
     const [state, dispatch] = useThunkReducer(
         tableReducer,
-        new TableState({ frozenColumns: 1 })
+        new TableState({ frozenColumns: 1 }),
+        reduxDispatch
     )
     const permissionGroup = useSelector(selectPermissionGroup)
-    const reduxDispatch: AppDispatch = useDispatch()
     const columnMenuEntries = mkColumnHeaderMenuEntries(
         permissionGroup,
         dispatch,

@@ -13,6 +13,7 @@ import {
 import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
 import { parseContributionFromApi } from '../async_actions'
+import { AppDispatch } from '../../store'
 
 export class PatchContributionAction extends AsyncAction<
     ContributionDetailsAction,
@@ -41,7 +42,10 @@ export class PatchContributionAction extends AsyncAction<
         this.hasHeader = hasHeader
     }
 
-    async run(dispatch: Dispatch<ContributionDetailsAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<ContributionDetailsAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new PatchContributionDetailsStartAction())
         try {
             const body: { [key: string]: string | boolean } = {}
@@ -94,7 +98,10 @@ export class LoadContributionDetailsAsyncAction extends AsyncAction<
         this.idPersistent = idPersistent
     }
 
-    async run(dispatch: Dispatch<ContributionDetailsAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<ContributionDetailsAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new LoadContributionDetailsStartAction())
         try {
             const rsp = await fetch(

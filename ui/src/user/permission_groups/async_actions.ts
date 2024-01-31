@@ -13,12 +13,16 @@ import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
 import { parseUserInfoFromJson } from '../thunks'
 import { UserInfo, UserPermissionGroup } from '../state'
+import { AppDispatch } from '../../store'
 
 export class GetUserInfoListAction extends AsyncAction<
     UserPermissionGroupAction,
     void
 > {
-    async run(dispatch: Dispatch<UserPermissionGroupAction>) {
+    async run(
+        dispatch: Dispatch<UserPermissionGroupAction>,
+        _reduxDispatch: AppDispatch
+    ) {
         dispatch(new GetUserInfoListStartAction())
         try {
             let userInfoList: UserInfo[] = []
@@ -67,7 +71,10 @@ export class SetUserPermissionAction extends AsyncAction<
         this.idUserPersistent = idUserPersistent
         this.permission = permission
     }
-    async run(dispatch: Dispatch<UserPermissionGroupAction>) {
+    async run(
+        dispatch: Dispatch<UserPermissionGroupAction>,
+        _reduxDispatch: AppDispatch
+    ) {
         dispatch(new SetUserPermissionStartAction())
         try {
             const rsp = await fetch(

@@ -14,6 +14,7 @@ import { config } from '../config'
 import { Contribution, ContributionStep, newContribution } from './state'
 import { fetch_chunk_get } from '../util/fetch'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { AppDispatch } from '../store'
 
 export class UploadContributionAction extends AsyncAction<ContributionAction, void> {
     name: string
@@ -39,7 +40,10 @@ export class UploadContributionAction extends AsyncAction<ContributionAction, vo
         this.file = file
     }
 
-    async run(dispatch: Dispatch<ContributionAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<ContributionAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new UploadContributionStartAction())
         try {
             const form = new FormData()
@@ -70,7 +74,10 @@ export class UploadContributionAction extends AsyncAction<ContributionAction, vo
 }
 
 export class LoadContributionsAction extends AsyncAction<ContributionAction, void> {
-    async run(dispatch: Dispatch<ContributionAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<ContributionAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new LoadContributionsStartAction())
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -17,6 +17,14 @@ jest.mock('../../util/state', () => {
         useThunkReducer: jest.fn()
     }
 })
+jest.mock('react-redux', () => {
+    const mockDispatch = jest.fn()
+    return {
+        ...jest.requireActual('react-redux'),
+        useDispatch: jest.fn().mockReturnValue(mockDispatch)
+    }
+})
+
 describe('loading callback', () => {
     test('starts', () => {
         const dispatch = jest.fn()

@@ -26,13 +26,14 @@ import { config } from '../config'
 import { newErrorState } from '../util/error/slice'
 import { constructColumnTitle } from '../contribution/entity/hooks'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { AppDispatch } from '../store'
 
 const displayTxtColumnId = 'display_txt_id'
 /**
  * Async action for fetching table data.
  */
 export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
-    async run(dispatch: Dispatch<TableAction>) {
+    async run(dispatch: Dispatch<TableAction>, _reduxDispatch: AppDispatch) {
         dispatch(new SetEntityLoadingAction())
         dispatch(
             new SetColumnLoadingAction({
@@ -104,7 +105,10 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
         this.columnDefinition = column_definition
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async run(dispatch: Dispatch<TableAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<TableAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         const id_persistent = this.columnDefinition.idPersistent
         try {
             dispatch(new SetColumnLoadingAction(this.columnDefinition))
@@ -178,7 +182,7 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
         this.columnType = columnType
         this.edit = edit
     }
-    async run(dispatch: Dispatch<TableAction>) {
+    async run(dispatch: Dispatch<TableAction>, _reduxDispatch: AppDispatch) {
         dispatch(new SubmitValuesStartAction())
         try {
             const rsp = await fetch(config.api_path + '/tags', {
@@ -278,7 +282,10 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
         this.disabled = disabled
     }
 
-    async run(dispatch: Dispatch<TableAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<TableAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new EntityChangeOrCreateStartAction())
         try {
             const rsp = await fetch(config.api_path + '/persons', {
@@ -318,7 +325,10 @@ export class CurateAction extends AsyncAction<TableAction, void> {
         super()
         this.idTagDefinitionPersistent = idTagDefinitionPersistent
     }
-    async run(dispatch: Dispatch<TableAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<TableAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new CurateTagDefinitionStartAction())
         try {
             const rsp = await fetch(

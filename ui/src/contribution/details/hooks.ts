@@ -7,6 +7,7 @@ import {
 } from './async_action'
 import { Contribution } from '../state'
 import { PatchContributionDetailsClearErrorAction } from './action'
+import { useAppDispatch } from '../../hooks'
 
 export type PatchContributionCallback = ({
     name,
@@ -27,9 +28,11 @@ export type ContributionDetailProps = {
 }
 
 export function useContributionDetails(idPersistent: string): ContributionDetailProps {
+    const reduxDispatch = useAppDispatch()
     const [state, dispatch] = useThunkReducer(
         contributionDetailsReducer,
-        new ContributionDetailState({})
+        new ContributionDetailState({}),
+        reduxDispatch
     )
     return {
         remoteContribution: state.contribution,

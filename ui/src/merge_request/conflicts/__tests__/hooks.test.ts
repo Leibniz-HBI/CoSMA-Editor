@@ -16,6 +16,14 @@ jest.mock('../../../util/state', () => {
         useThunkReducer: jest.fn().mockImplementation()
     }
 })
+jest.mock('react-redux', () => {
+    const mockDispatch = jest.fn()
+    return {
+        ...jest.requireActual('react-redux'),
+        useDispatch: jest.fn().mockReturnValue(mockDispatch)
+    }
+})
+
 test('get conflicts', () => {
     const dispatch = jest.fn()
     ;(useThunkReducer as jest.Mock).mockReturnValue([

@@ -1,3 +1,4 @@
+import { useAppDispatch } from '../../hooks'
 import { useThunkReducer } from '../../util/state'
 import { UserInfo, UserPermissionGroup } from '../state'
 import { SelectUserInfoAction, SetUserPermissionClearErrorAction } from './actions'
@@ -6,9 +7,11 @@ import { permissionGroupReducer } from './reducer'
 import { PermissionGroupState } from './state'
 
 export function useUserPermissionGroup() {
+    const reduxDispatch = useAppDispatch()
     const [state, dispatch] = useThunkReducer(
         permissionGroupReducer,
-        new PermissionGroupState({})
+        new PermissionGroupState({}),
+        reduxDispatch
     )
     return {
         userInfoList: state.userList,

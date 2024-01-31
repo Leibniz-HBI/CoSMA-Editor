@@ -20,6 +20,7 @@ import { Entity } from '../../table/state'
 import { TagDefinition } from '../../column_menu/state'
 import { Remote } from '../../util/state'
 import { parseMergeRequestFromJson } from '../async_actions'
+import { AppDispatch } from '../../store'
 
 export class GetMergeRequestConflictAction extends AsyncAction<
     MergeRequestConflictResolutionAction,
@@ -32,7 +33,10 @@ export class GetMergeRequestConflictAction extends AsyncAction<
         this.idMergeRequestPersistent = idMergeRequestPersistent
     }
 
-    async run(dispatch: Dispatch<MergeRequestConflictResolutionAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<MergeRequestConflictResolutionAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new GetMergeRequestConflictStartAction())
         try {
             const rsp = await fetch(
@@ -110,7 +114,10 @@ export class ResolveConflictAction extends AsyncAction<
         this.replace = replace
     }
 
-    async run(dispatch: Dispatch<MergeRequestConflictResolutionAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<MergeRequestConflictResolutionAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new ResolveConflictStartAction(this.entity.idPersistent))
         try {
             const rsp = await fetch(
@@ -203,7 +210,10 @@ export class StartMergeAction extends AsyncAction<
         this.idMergeRequestPersistent = idMergeRequestPersistent
     }
 
-    async run(dispatch: Dispatch<MergeRequestConflictResolutionAction>): Promise<void> {
+    async run(
+        dispatch: Dispatch<MergeRequestConflictResolutionAction>,
+        _reduxDispatch: AppDispatch
+    ): Promise<void> {
         dispatch(new StartMergeStartAction())
         try {
             const rsp = await fetch(

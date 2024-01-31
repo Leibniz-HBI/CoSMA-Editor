@@ -1,4 +1,5 @@
 import { TagDefinition } from '../../column_menu/state'
+import { useAppDispatch } from '../../hooks'
 import { Entity } from '../../table/state'
 import { Remote, useThunkReducer } from '../../util/state'
 import { StartMergeClearErrorAction } from './actions'
@@ -11,12 +12,14 @@ import { mergeRequestConflictResolutionReducer } from './reducer'
 import { MergeRequestConflictResolutionState, TagInstance } from './state'
 
 export function useMergeRequestConflictResolutions(idMergeRequestPersistent: string) {
+    const reduxDispatch = useAppDispatch()
     const [state, dispatch] = useThunkReducer(
         mergeRequestConflictResolutionReducer,
         new MergeRequestConflictResolutionState(
             new Remote(undefined),
             new Remote(false)
-        )
+        ),
+        reduxDispatch
     )
     const [resolvedCount, conflictsCount] = computePercentResolved(state)
 

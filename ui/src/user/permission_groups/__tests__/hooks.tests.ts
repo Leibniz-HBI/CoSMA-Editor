@@ -12,6 +12,14 @@ jest.mock('../../../util/state', () => {
         useThunkReducer: jest.fn()
     }
 })
+jest.mock('react-redux', () => {
+    const mockDispatch = jest.fn()
+    return {
+        ...jest.requireActual('react-redux'),
+        useDispatch: jest.fn().mockReturnValue(mockDispatch)
+    }
+})
+
 const userNameTest = 'userTest'
 const emailTest = 'me@test.url'
 const namesPersonalTest = 'names personal test'

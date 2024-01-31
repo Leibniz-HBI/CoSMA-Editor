@@ -1,12 +1,15 @@
+import { useAppDispatch } from '../hooks'
 import { useThunkReducer } from '../util/state'
 import { GetMergeRequestsAction } from './async_actions'
 import { mergeRequestReducer } from './reducer'
 import { MergeRequestState } from './state'
 
 export function useMergeRequests() {
+    const reduxDispatch = useAppDispatch()
     const [state, dispatch] = useThunkReducer(
         mergeRequestReducer,
-        new MergeRequestState({})
+        new MergeRequestState({}),
+        reduxDispatch
     )
     return {
         getMergeRequestsCallback: () => dispatch(new GetMergeRequestsAction()),
