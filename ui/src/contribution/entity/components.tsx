@@ -467,9 +467,8 @@ export function CompleteAssignmentButton({
         <>
             <Col sm="auto" ref={buttonRef} key="entities-step-complete-button">
                 <RemoteTriggerButton
-                    normalLabel="Confirm Assigned Duplicates"
-                    successLabel="Duplicates Successfully Assigned"
-                    remoteState={completeEntityAssignmentState}
+                    label="Confirm Assigned Duplicates"
+                    isLoading={completeEntityAssignmentState.isLoading}
                     onClick={() =>
                         dispatch(completeEntityAssignment(idContributionPersistent))
                     }

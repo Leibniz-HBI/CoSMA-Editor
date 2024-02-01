@@ -29,7 +29,7 @@ import {
     putDuplicateSuccess
 } from './slice'
 import { newRemote } from '../../util/state'
-import { addError } from '../../util/notification/slice'
+import { addError, addSuccessVanish } from '../../util/notification/slice'
 
 export function getContributionEntitiesAction(
     idContributionPersistent: string
@@ -249,6 +249,7 @@ export function completeEntityAssignment(
             )
             if (rsp.status == 200) {
                 dispatch(completeEntityAssignmentSuccess())
+                dispatch(addSuccessVanish('Duplicates successfully assigned.'))
             } else {
                 const json = await rsp.json()
                 dispatch(completeEntityAssignmentError())

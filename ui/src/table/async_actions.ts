@@ -23,7 +23,7 @@ import { fetch_chunk } from '../util/fetch'
 import { TagDefinition, TagType } from '../column_menu/state'
 import { CellValue, Entity, newEntity } from './state'
 import { config } from '../config'
-import { addError } from '../util/notification/slice'
+import { addError, addSuccessVanish } from '../util/notification/slice'
 import { constructColumnTitle } from '../contribution/entity/hooks'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { AppDispatch } from '../store'
@@ -303,6 +303,9 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
                         parseEntityObjectFromJson(entity)
                     )
                 )
+                if (this.idPersistent === undefined) {
+                    reduxDispatch(addSuccessVanish('Entity created.'))
+                }
             } else {
                 dispatch(new EntityChangeOrCreateErrorAction())
                 reduxDispatch(addError(errorMessageFromApi(json)))

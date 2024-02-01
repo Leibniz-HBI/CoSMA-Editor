@@ -1,7 +1,7 @@
 import { TagType, newTagDefinition } from '../../../column_menu/state'
 import { newEntity } from '../../../table/state'
 import { PublicUserInfo, UserPermissionGroup } from '../../../user/state'
-import { addError } from '../../../util/notification/slice'
+import { addError, addSuccessVanish } from '../../../util/notification/slice'
 import { Remote } from '../../../util/state'
 import { MergeRequest, MergeRequestStep } from '../../state'
 import {
@@ -23,14 +23,17 @@ import {
 import { MergeRequestConflict, newTagInstance } from '../state'
 jest.mock('../../../util/notification/slice', () => {
     const addErrorMock = jest.fn()
+    const addSuccessVanish = jest.fn()
     return {
         ...jest.requireActual('../../../util/notification/slice'),
-        addError: addErrorMock
+        addError: addErrorMock,
+        addSuccessVanish
     }
 })
 
 beforeEach(() => {
     ;(addError as unknown as jest.Mock).mockReset()
+    ;(addSuccessVanish as unknown as jest.Mock).mockReset()
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -412,7 +415,10 @@ describe('start merge', () => {
             [new StartMergeStartAction()],
             [new StartMergeSuccessAction()]
         ])
-        expect(reduxDispatch.mock.calls.length).toEqual(0)
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+        expect((addSuccessVanish as unknown as jest.Mock).mock.calls).toEqual([
+            ['Application of resolutions started.']
+        ])
     })
     test('error', async () => {
         responseSequence([[400, { msg: 'test error from API' }]])

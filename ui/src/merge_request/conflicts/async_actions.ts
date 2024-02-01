@@ -21,7 +21,7 @@ import { TagDefinition } from '../../column_menu/state'
 import { Remote } from '../../util/state'
 import { parseMergeRequestFromJson } from '../async_actions'
 import { AppDispatch } from '../../store'
-import { addError } from '../../util/notification/slice'
+import { addError, addSuccessVanish } from '../../util/notification/slice'
 
 export class GetMergeRequestConflictAction extends AsyncAction<
     MergeRequestConflictResolutionAction,
@@ -221,6 +221,7 @@ export class StartMergeAction extends AsyncAction<
             )
             if (rsp.status == 200) {
                 dispatch(new StartMergeSuccessAction())
+                reduxDispatch(addSuccessVanish('Application of resolutions started.'))
             } else {
                 const json = await rsp.json()
                 let msg = json['msg']

@@ -14,13 +14,6 @@ describe('Add entity form', () => {
         const button = screen.getByRole('button')
         expect(button.textContent).toEqual('Add Entity')
     })
-    test('renders correctly success', async () => {
-        const state = new Remote(true)
-        render(<AddEntityForm state={state} addEntityCallback={jest.fn()} />)
-        screen.getByRole('textbox')
-        const button = screen.getByRole('button')
-        expect(button.textContent).toEqual('Entity Added')
-    })
     test('can submit', async () => {
         const state = new Remote(false)
         const addEntityCallback = jest.fn()

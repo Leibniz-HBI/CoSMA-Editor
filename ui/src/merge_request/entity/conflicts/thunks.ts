@@ -1,7 +1,7 @@
 import { config } from '../../../config'
 import { AppDispatch } from '../../../store'
 import { Entity } from '../../../table/state'
-import { addError } from '../../../util/notification/slice'
+import { addError, addSuccessVanish } from '../../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../../util/exception'
 import { RemoteInterface, newRemote } from '../../../util/state'
 import { ThunkWithFetch } from '../../../util/type'
@@ -262,6 +262,7 @@ export function mergeEntityMergeRequest(
             )
             if (rsp.status == 200) {
                 dispatch(mergeEntityMergeRequestSuccess(idEntityMergeRequest))
+                dispatch(addSuccessVanish('Application of resolutions started.'))
                 return
             }
             const json = await rsp.json()

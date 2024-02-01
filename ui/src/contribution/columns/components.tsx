@@ -368,9 +368,8 @@ function CompleteColumnAssignmentButtonInner({
     return (
         <div>
             <RemoteTriggerButton
-                successLabel="Column assignment successfully finalized"
-                normalLabel="Finalize Column Assignment"
-                remoteState={finalizeColumnAssignmentState}
+                label="Finalize Column Assignment"
+                isLoading={finalizeColumnAssignmentState.isLoading}
                 onClick={onClick}
             />
         </div>

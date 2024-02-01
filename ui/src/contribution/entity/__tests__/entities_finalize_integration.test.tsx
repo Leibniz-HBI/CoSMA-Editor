@@ -183,14 +183,18 @@ test('success', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
     addResponseSequence(fetchMock, [[200, {}]])
-    renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(7)
     })
     const button = screen.getByRole('button', { name: /Confirm Assigned Duplicates/i })
     button.click()
     await waitFor(() => {
-        screen.getByText('Duplicates Successfully Assigned')
+        const notifications = store.getState().notification.notificationList
+        expect(notifications.length).toEqual(1)
+        const notification = notifications[0]
+        expect(notification.type).toEqual(NotificationType.Success)
+        expect(notification.msg).toEqual('Duplicates successfully assigned.')
     })
     expect(fetchMock.mock.calls.at(-1)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entity_assignment_complete`,

@@ -15,10 +15,10 @@ import {
 } from 'react-bootstrap'
 import { EntityMergeRequestConflict } from './state'
 import { EntityMergeRequest } from '../state'
-import { RemoteInterface, newRemote } from '../../../util/state'
+import { RemoteInterface } from '../../../util/state'
 import { constructColumnTitleSpans } from '../../../column_menu/components/selection'
 import { ChoiceButton, RemoteTriggerButton } from '../../../util/components/misc'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { AppDispatch } from '../../../store'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
 import {
@@ -67,8 +67,6 @@ export function EntityMergeRequestConflictComponent({
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mergeRequest.value?.idPersistent])
-    const containerRef = useRef(null)
-    const buttonRef = useRef(null)
     const conflictsValue = conflicts.value
     const mergeRequestValue = mergeRequest.value
 
@@ -82,15 +80,11 @@ export function EntityMergeRequestConflictComponent({
     }
     return (
         <Row className="h-100">
-            <Col
-                className="h-100 overflow-hidden d-flex flex-column ps-5 pe-5"
-                ref={containerRef}
-            >
+            <Col className="h-100 overflow-hidden d-flex flex-column ps-5 pe-5">
                 <Row key="merge-button-row">
-                    <Col xs="auto" ref={buttonRef}>
+                    <Col xs="auto">
                         <RemoteTriggerButton
-                            normalLabel="Apply Resolutions to Destination"
-                            successLabel="Application of Resolutions started."
+                            label="Apply Resolutions to Destination"
                             onClick={() =>
                                 dispatch(
                                     mergeEntityMergeRequest(
@@ -98,10 +92,10 @@ export function EntityMergeRequestConflictComponent({
                                     )
                                 ).then(loadDataCallback)
                             }
-                            remoteState={newRemote(
-                                mergeState.value == mergeRequestValue.idPersistent,
-                                mergeState.isLoading
-                            )}
+                            isLoading={
+                                (mergeState.value == mergeRequestValue.idPersistent,
+                                mergeState.isLoading)
+                            }
                         />
                     </Col>
                     <Col>

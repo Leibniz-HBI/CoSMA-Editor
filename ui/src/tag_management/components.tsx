@@ -20,7 +20,7 @@ import { PublicUserInfo } from '../user/state'
 import { CheckCircle, XCircleFill } from 'react-bootstrap-icons'
 import { putOwnershipRequestClear } from './slice'
 import { OwnershipRequest } from './state'
-import { Remote, RemoteInterface } from '../util/state'
+import { RemoteInterface } from '../util/state'
 import { updateUserTagDefinition, userSearchClear } from '../user/slice'
 
 export function TagManagementPage() {
@@ -99,9 +99,8 @@ export function TagOwnershipRequestListItemBody({
         tailElements = (
             <Row>
                 <RemoteTriggerButton
-                    normalLabel="Accept"
-                    successLabel="Accepted"
-                    remoteState={new Remote(request.errorMsg !== undefined)}
+                    label="Accept"
+                    isLoading={request.errorMsg !== undefined}
                     onClick={() =>
                         dispatch(
                             acceptOwnershipRequest(request.value.idPersistent)
@@ -120,9 +119,8 @@ export function TagOwnershipRequestListItemBody({
         tailElements = (
             <Row>
                 <RemoteTriggerButton
-                    normalLabel="Withdraw"
-                    successLabel="Withdrawn"
-                    remoteState={new Remote(request.errorMsg !== undefined)}
+                    label="Withdraw"
+                    isLoading={request.errorMsg !== undefined}
                     onClick={() =>
                         dispatch(deleteOwnershipRequest(request.value.idPersistent))
                     }

@@ -1,4 +1,4 @@
-import { ChangeEvent, useRef, useState } from 'react'
+import { ChangeEvent, useState } from 'react'
 import { Col, Row } from 'react-bootstrap'
 import { FormField } from '../util/form'
 import { RemoteTriggerButton } from '../util/components/misc'
@@ -11,11 +11,9 @@ export function AddEntityForm({
     state: Remote<boolean>
     addEntityCallback: (displayTxt: string) => void
 }) {
-    const containerRef = useRef(null)
-    const buttonRef = useRef(null)
     const [entityDisplayTxt, setEntityDisplayTxt] = useState('')
     return (
-        <Col ref={containerRef}>
+        <Col>
             <FormField
                 name="new-entity-display-txt"
                 label="Entity Display Text"
@@ -25,12 +23,11 @@ export function AddEntityForm({
                 }
             />
             <Row className="justify-content-end">
-                <Col xs="auto" ref={buttonRef}>
+                <Col xs="auto">
                     <RemoteTriggerButton
-                        normalLabel="Add Entity"
-                        successLabel="Entity Added"
+                        label="Add Entity"
                         onClick={() => addEntityCallback(entityDisplayTxt)}
-                        remoteState={state}
+                        isLoading={state.isLoading}
                     />
                 </Col>
             </Row>

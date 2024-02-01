@@ -37,10 +37,9 @@ export function MergeRequestConflictResolutionView() {
                 <Row key="merge-button-row">
                     <Col xs="auto">
                         <RemoteTriggerButton
-                            normalLabel="Apply Resolutions to Destination"
-                            successLabel="Application of Resolutions started."
+                            label="Apply Resolutions to Destination"
                             onClick={startMergeCallback}
-                            remoteState={startMerge}
+                            isLoading={startMerge.isLoading}
                         />
                     </Col>
                     <Col>

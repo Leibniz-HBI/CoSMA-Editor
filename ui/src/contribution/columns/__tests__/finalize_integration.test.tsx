@@ -148,7 +148,7 @@ test('finish success', async () => {
         [200, {}],
         [200, { tag_definitions: [] }]
     ])
-    renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+    const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(3)
@@ -156,9 +156,11 @@ test('finish success', async () => {
     })
     button?.click()
     await waitFor(() => {
-        screen.getByRole('button', {
-            name: /Column assignment successfully finalized/i
-        })
+        const notifications = store.getState().notification.notificationList
+        expect(notifications.length).toEqual(1)
+        const notification = notifications[0]
+        expect(notification.type).toEqual(NotificationType.Success)
+        expect(notification.msg).toEqual('Columns successfully assigned.')
     })
     expect(fetchMock.mock.calls[fetchMock.mock.calls.length - 1]).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,

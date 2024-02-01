@@ -1,5 +1,4 @@
 import { Button, Card, Placeholder } from 'react-bootstrap'
-import { Remote, RemoteInterface } from '../state'
 import { ReactNode } from 'react'
 
 export function CosmaeLoading() {
@@ -7,29 +6,18 @@ export function CosmaeLoading() {
 }
 
 export function RemoteTriggerButton({
-    remoteState,
+    isLoading,
     onClick,
-    normalLabel,
-    successLabel
+    label
 }: {
-    normalLabel: string
-    successLabel: string
-    remoteState: Remote<boolean> | RemoteInterface<boolean>
+    label: string
+    isLoading: boolean
     onClick: VoidFunction
 }) {
-    const loading = remoteState.isLoading
-    const success = remoteState.value
-    if (success) {
-        return (
-            <Button active={false} variant="outline-primary">
-                <span className="text-primary fw-bold">{successLabel}</span>
-            </Button>
-        )
-    }
-    if (loading) {
+    if (isLoading) {
         return (
             <Placeholder.Button variant="primary" animation="wave">
-                <span>{normalLabel}</span>
+                <span>{label}</span>
             </Placeholder.Button>
         )
     }
@@ -39,7 +27,7 @@ export function RemoteTriggerButton({
             onClick={onClick}
             data-testid="complete-column-assignment-button"
         >
-            <span>{normalLabel}</span>
+            <span>{label}</span>
         </Button>
     )
 }

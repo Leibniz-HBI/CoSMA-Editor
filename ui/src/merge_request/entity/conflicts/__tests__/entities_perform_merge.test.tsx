@@ -9,6 +9,7 @@ import { Provider } from 'react-redux'
 import { UserPermissionGroup } from '../../../../user/state'
 import {
     NotificationManager,
+    NotificationType,
     notificationReducer
 } from '../../../../util/notification/slice'
 import {
@@ -490,10 +491,13 @@ test('apply conflicts', async () => {
         merge: newRemote(idEntityMr0)
     }
     await waitFor(() => {
-        expect(store.getState()).toEqual({
-            entityMergeRequestConflicts: expectedConflictState,
-            notification: { notificationList: [], notificationMap: {} }
-        })
+        const state = store.getState()
+        expect(state.entityMergeRequestConflicts).toEqual(expectedConflictState)
+        const notifications = state.notification.notificationList
+        expect(notifications.length).toEqual(1)
+        const notification = notifications[0]
+        expect(notification.type).toEqual(NotificationType.Success)
+        expect(notification.msg).toEqual('Application of resolutions started.')
     })
     expect(fetchMock.mock.calls).toEqual([
         [

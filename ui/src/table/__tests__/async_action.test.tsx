@@ -21,7 +21,7 @@ import {
     EntityChangeOrCreateAction,
     parseEntityObjectFromJson
 } from '../async_actions'
-import { addError, newNotification } from '../../util/notification/slice'
+import { addError, addSuccessVanish } from '../../util/notification/slice'
 import { newEntity } from '../state'
 
 jest.mock('uuid', () => {
@@ -31,14 +31,17 @@ jest.mock('uuid', () => {
 })
 jest.mock('../../util/notification/slice', () => {
     const addErrorMock = jest.fn()
+    const vanishingSuccessMock = jest.fn()
     return {
         ...jest.requireActual('../../util/notification/slice'),
-        addError: addErrorMock
+        addError: addErrorMock,
+        addSuccessVanish: vanishingSuccessMock
     }
 })
 
 beforeEach(() => {
     ;(addError as unknown as jest.Mock).mockReset()
+    ;(addSuccessVanish as unknown as jest.Mock).mockReset()
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -542,25 +545,21 @@ describe('get column async action', () => {
     })
 })
 describe('change or create entity', () => {
-    test('success new entity', async () => {
-        responseSequence([
-            [
-                200,
-                () => {
-                    return {
-                        persons: [
-                            {
-                                id_persistent: idPersistent0,
-                                display_txt: displayTxt0,
-                                display_txt_details: 'display_txt_detail',
-                                version: version0,
-                                disabled: false
-                            }
-                        ]
-                    }
+    const successResponse = () => {
+        return {
+            persons: [
+                {
+                    id_persistent: idPersistent0,
+                    display_txt: displayTxt0,
+                    display_txt_details: 'display_txt_detail',
+                    version: version0,
+                    disabled: false
                 }
             ]
-        ])
+        }
+    }
+    test('success new entity', async () => {
+        responseSequence([[200, successResponse]])
         const dispatch = jest.fn()
         const reduxDispatch = jest.fn()
         await new EntityChangeOrCreateAction({
@@ -591,6 +590,55 @@ describe('change or create entity', () => {
                 }
             ]
         ])
+        expect((addSuccessVanish as unknown as jest.Mock).mock.calls).toEqual([
+            ['Entity created.']
+        ])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+    })
+    test('success change entity', async () => {
+        responseSequence([[200, successResponse]])
+        const dispatch = jest.fn()
+        const reduxDispatch = jest.fn()
+        await new EntityChangeOrCreateAction({
+            idPersistent: idPersistent0,
+            version: 0,
+            displayTxt: displayTxt0,
+            disabled: false
+        }).run(dispatch, reduxDispatch)
+        expect(dispatch.mock.calls).toEqual([
+            [new EntityChangeOrCreateStartAction()],
+            [
+                new EntityChangeOrCreateSuccessAction(
+                    newEntity({
+                        idPersistent: idPersistent0,
+                        displayTxt: displayTxt0,
+                        displayTxtDetails: 'display_txt_detail',
+                        version: version0,
+                        disabled: false
+                    })
+                )
+            ]
+        ])
+        expect((fetch as jest.Mock).mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/persons',
+                {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        persons: [
+                            {
+                                display_txt: displayTxt0,
+                                id_persistent: idPersistent0,
+                                version: version0
+                            }
+                        ]
+                    })
+                }
+            ]
+        ])
+        expect((addSuccessVanish as unknown as jest.Mock).mock.calls).toEqual([])
+        expect(reduxDispatch.mock.calls.length).toEqual(0)
     })
     test('error', async () => {
         responseSequence([
@@ -609,8 +657,10 @@ describe('change or create entity', () => {
         }).run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new EntityChangeOrCreateStartAction()],
-            [new EntityChangeOrCreateErrorAction('error')]
+            [new EntityChangeOrCreateErrorAction()]
         ])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([['error']])
     })
 })
 

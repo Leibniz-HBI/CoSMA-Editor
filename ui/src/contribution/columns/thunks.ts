@@ -14,7 +14,7 @@ import {
     patchColumnDefinitionContributionSuccess
 } from './slice'
 import { columnTypeMapApiToApp } from '../../column_menu/thunks'
-import { addError } from '../../util/notification/slice'
+import { addError, addSuccessVanish } from '../../util/notification/slice'
 
 export function loadColumnDefinitionsContribution(
     idPersistent: string
@@ -128,6 +128,7 @@ export function finalizeColumnAssignment(
             )
             if (rsp.status == 200) {
                 dispatch(finalizeColumnAssignmentSuccess())
+                dispatch(addSuccessVanish('Columns successfully assigned.'))
             } else {
                 const json = await rsp.json()
                 dispatch(finalizeColumnAssignmentError())
