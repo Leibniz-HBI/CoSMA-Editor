@@ -117,13 +117,13 @@ export function EntitiesStepBody({
     return (
         <Row className="h-100 overflow-hidden">
             <Col xs={3} className="h-100 overflow-hidden d-flex flex-column">
-                <Row className="mb-2 justify-content-center">
+                <Row className="h-100 overflow-y-scroll">
+                    <EntityConflictList entityConflicts={entities.value} />
+                </Row>
+                <Row className="mt-2 justify-content-center">
                     <CompleteAssignmentButton
                         idContributionPersistent={idContributionPersistent}
                     />
-                </Row>
-                <Row className="h-100 overflow-y-scroll">
-                    <EntityConflictList entityConflicts={entities.value} />
                 </Row>
             </Col>
             <Col className="h-100 overflow-hidden d-flex flex-column">

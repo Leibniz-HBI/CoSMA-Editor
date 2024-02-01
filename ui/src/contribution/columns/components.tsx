@@ -73,15 +73,10 @@ export function ColumnDefinitionStep() {
                     className="h-100 overflow-hidden d-flex flex-column flex-grow-0"
                     key="column-definition-selection"
                 >
-                    <Row className="align-self-center d-block">
-                        <CompleteColumnAssignmentButton
-                            idContributionPersistent={idContributionPersistent}
-                        />
-                    </Row>
                     <Row className="text-primary">
                         <span>Columns extracted from upload:</span>
                     </Row>
-                    <Row className="flex-grow-1 overflow-y-scroll">
+                    <Row className="flex-grow-1 overflow-y-scroll mb-3">
                         <ListGroup>
                             {definitions.value?.activeDefinitionsList.map((colDef) => (
                                 <ColumnDefinitionStepListItem
@@ -109,6 +104,11 @@ export function ColumnDefinitionStep() {
                                 )
                             )}
                         </ListGroup>
+                    </Row>
+                    <Row className="align-self-center d-block">
+                        <CompleteColumnAssignmentButton
+                            idContributionPersistent={idContributionPersistent}
+                        />
                     </Row>
                 </Col>
                 <Col
@@ -201,7 +201,7 @@ export function ContributionColumnAssignmentForm({
         <Row className="h-100 d-flex flex-row">
             <div
                 data-testid="existing-column-form"
-                className="h-100 d-flex flex-column mb-2 col-6"
+                className="h-100 d-flex flex-column col-6"
             >
                 <div className="ps-2 flex-grow-0 flex-shrink-0 d-block">
                     <span key="hint-note">
@@ -209,14 +209,6 @@ export function ContributionColumnAssignmentForm({
                     </span>
                     <span key="hint-column-definition">{columnDefinition.name}":</span>
                 </div>
-                <Row className="ms-3 me-3 flex-grow-0 flex-shrink-0 flex-nowrap order-2">
-                    <Button
-                        onClick={() => dispatch(setColumnDefinitionFormTab(true))}
-                        variant="outline-primary"
-                    >
-                        Create new tag
-                    </Button>
-                </Row>
                 {createTabSelected ? (
                     <div />
                 ) : (
@@ -226,6 +218,14 @@ export function ContributionColumnAssignmentForm({
                         idContributionPersistent={idContributionPersistent}
                     />
                 )}
+                <Row className="ms-3 me-3 flex-grow-0 flex-shrink-0 flex-nowrap">
+                    <Button
+                        onClick={() => dispatch(setColumnDefinitionFormTab(true))}
+                        variant="outline-primary"
+                    >
+                        Create new tag
+                    </Button>
+                </Row>
             </div>
             <Col xs="6">Preview not implemented yet</Col>
             <Modal
