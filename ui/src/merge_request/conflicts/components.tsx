@@ -5,19 +5,10 @@ import {
     RemoteTriggerButton,
     CosmaeLoading
 } from '../../util/components/misc'
-import {
-    Accordion,
-    CloseButton,
-    Col,
-    ListGroup,
-    Overlay,
-    Popover,
-    ProgressBar,
-    Row
-} from 'react-bootstrap'
+import { Accordion, Col, ListGroup, ProgressBar, Row } from 'react-bootstrap'
 import { MergeRequestConflict, TagInstance } from './state'
 import { Remote } from '../../util/state'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect } from 'react'
 import { Entity } from '../../table/state'
 import { TagDefinition } from '../../column_menu/state'
 import { MergeRequest } from '../state'
@@ -31,54 +22,26 @@ export function MergeRequestConflictResolutionView() {
         resolveConflictCallback,
         startMerge,
         startMergeCallback,
-        startMergeClearErrorCallback,
         resolvedCount,
         conflictsCount
     } = useMergeRequestConflictResolutions(idMergeRequestPersistent)
     //eslint-disable-next-line react-hooks/exhaustive-deps
     useLayoutEffect(getMergeRequestConflictsCallback, [idMergeRequestPersistent])
-    const containerRef = useRef(null)
-    const buttonRef = useRef(null)
     const conflictsByCategoryValue = conflictsByCategory.value
     if (conflictsByCategory.isLoading || conflictsByCategoryValue === undefined) {
         return CosmaeLoading()
     }
     return (
         <Row className="h-100">
-            <Col
-                className="h-100 overflow-hidden d-flex flex-column ps-5 pe-5"
-                ref={containerRef}
-            >
+            <Col className="h-100 overflow-hidden d-flex flex-column ps-5 pe-5">
                 <Row key="merge-button-row">
-                    <Col xs="auto" ref={buttonRef}>
+                    <Col xs="auto">
                         <RemoteTriggerButton
                             normalLabel="Apply Resolutions to Destination"
                             successLabel="Application of Resolutions started."
                             onClick={startMergeCallback}
                             remoteState={startMerge}
                         />
-                        <Overlay
-                            show={startMerge.errorMsg !== undefined}
-                            target={buttonRef}
-                            container={containerRef}
-                            placement="bottom"
-                            key="merge-button-overlay"
-                        >
-                            <Popover id="start-merge-error-popover">
-                                <Popover.Header className="bg-danger text-light">
-                                    <Row className="justify-content-between">
-                                        <Col>Error</Col>
-                                        <CloseButton
-                                            variant="white"
-                                            onClick={startMergeClearErrorCallback}
-                                        ></CloseButton>
-                                    </Row>
-                                </Popover.Header>
-                                <Popover.Body>
-                                    <span>{startMerge.errorMsg}</span>
-                                </Popover.Body>
-                            </Popover>
-                        </Overlay>
                     </Col>
                     <Col>
                         <MergeRequestListItemBody

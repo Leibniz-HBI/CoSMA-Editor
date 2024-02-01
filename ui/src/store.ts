@@ -1,5 +1,5 @@
 import { PreloadedState, combineReducers, configureStore } from '@reduxjs/toolkit'
-import { errorSlice } from './util/error/slice'
+import { notificationReducer } from './util/notification/slice'
 import { userSlice } from './user/slice'
 import { tagManagementSlice } from './tag_management/slice'
 import { contributionColumnDefinitionSlice } from './contribution/columns/slice'
@@ -12,7 +12,7 @@ import { entityMergeRequestsReducer } from './merge_request/entity/slice'
 import { displayTxtManagementReducer } from './management/display_txt/slice'
 
 const rootReducer = combineReducers({
-    error: errorSlice.reducer,
+    notification: notificationReducer,
     user: userSlice.reducer,
     tagManagement: tagManagementSlice.reducer,
     tagSelection: tagSelectionSlice.reducer,

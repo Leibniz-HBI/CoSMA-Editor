@@ -18,10 +18,17 @@ import { Provider } from 'react-redux'
 import { ColumnMenu } from '../components/menu'
 import userEvent from '@testing-library/user-event'
 import { UserEvent } from '@testing-library/user-event/dist/types/setup/setup'
+import {
+    NotificationManager,
+    NotificationType,
+    notificationReducer
+} from '../../util/notification/slice'
+import { describe } from 'node:test'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         tagSelection: TagSelectionState
+        notification: NotificationManager
     }
 }
 
@@ -30,14 +37,16 @@ export function renderWithProviders(
     fetchMock: jest.Mock,
     {
         preloadedState = {
-            tagSelection: newTagSelectionState({})
+            tagSelection: newTagSelectionState({}),
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
 ) {
     const store = configureStore({
         reducer: {
-            tagSelection: tagSelectionSlice.reducer
+            tagSelection: tagSelectionSlice.reducer,
+            notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -170,54 +179,71 @@ function initialResponseSequence(fetchMock: jest.Mock) {
         [200, { tag_definitions: [] }]
     ])
 }
-test('get hierarchy expand collapse', async () => {
-    const fetchMock = jest.fn()
-    initialResponseSequence(fetchMock)
-    renderWithProviders(
-        <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
-        fetchMock
-    )
-    await waitInitialDataLoad()
-    let expandIcon, collapseIcon
-    await waitFor(() => {
-        const withLabel0 = screen.getAllByText(nameTagDef0)
-        expect(withLabel0.length).toEqual(2)
-        const withLabel1 = screen.getAllByText(nameTagDef1)
-        expect(withLabel1.length).toEqual(1)
-        const withLabel2 = screen.getAllByText(nameTagDef2)
-        expect(withLabel2.length).toEqual(3)
-        expandIcon =
-            withLabel2[2]?.parentElement?.parentElement?.children[0]?.children[1]
-
-        expect(expandIcon?.children[0]?.children[0]?.getAttribute('d')).toEqual(
-            'M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z'
+describe('get hierarchy', () => {
+    test('get hierarchy expand collapse', async () => {
+        const fetchMock = jest.fn()
+        initialResponseSequence(fetchMock)
+        renderWithProviders(
+            <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+            fetchMock
         )
-    })
-    ;(expandIcon as HTMLElement | undefined)?.click()
-    await waitFor(() => {
-        const withLabel0 = screen.getAllByText(nameTagDef0)
-        expect(withLabel0.length).toEqual(2)
-        const withLabel1 = screen.getAllByText(nameTagDef1)
-        expect(withLabel1.length).toEqual(1)
-        const withLabel2 = screen.getAllByText(nameTagDef2)
-        expect(withLabel2.length).toEqual(4)
-        collapseIcon =
-            withLabel2[2]?.parentElement?.parentElement?.children[0]?.children[1]
+        await waitInitialDataLoad()
+        let expandIcon, collapseIcon
+        await waitFor(() => {
+            const withLabel0 = screen.getAllByText(nameTagDef0)
+            expect(withLabel0.length).toEqual(2)
+            const withLabel1 = screen.getAllByText(nameTagDef1)
+            expect(withLabel1.length).toEqual(1)
+            const withLabel2 = screen.getAllByText(nameTagDef2)
+            expect(withLabel2.length).toEqual(3)
+            expandIcon =
+                withLabel2[2]?.parentElement?.parentElement?.children[0]?.children[1]
 
-        expect(collapseIcon?.children[0]?.children[0]?.getAttribute('d')).toEqual(
-            'M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8Z'
+            expect(expandIcon?.children[0]?.children[0]?.getAttribute('d')).toEqual(
+                'M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z'
+            )
+        })
+        ;(expandIcon as HTMLElement | undefined)?.click()
+        await waitFor(() => {
+            const withLabel0 = screen.getAllByText(nameTagDef0)
+            expect(withLabel0.length).toEqual(2)
+            const withLabel1 = screen.getAllByText(nameTagDef1)
+            expect(withLabel1.length).toEqual(1)
+            const withLabel2 = screen.getAllByText(nameTagDef2)
+            expect(withLabel2.length).toEqual(4)
+            collapseIcon =
+                withLabel2[2]?.parentElement?.parentElement?.children[0]?.children[1]
+
+            expect(collapseIcon?.children[0]?.children[0]?.getAttribute('d')).toEqual(
+                'M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8Z'
+            )
+        })
+        ;(collapseIcon as HTMLElement | undefined)?.click()
+        await waitFor(() => {
+            const withLabel0 = screen.getAllByText(nameTagDef0)
+            expect(withLabel0.length).toEqual(2)
+            const withLabel1 = screen.getAllByText(nameTagDef1)
+            expect(withLabel1.length).toEqual(1)
+            const withLabel2 = screen.getAllByText(nameTagDef2)
+            expect(withLabel2.length).toEqual(3)
+        })
+        expect(fetchMock.mock.calls.length).toEqual(8)
+    })
+    test('dispatches error', async () => {
+        const fetchMock = jest.fn()
+        const errorMsg = 'Error while loading hierarchy'
+        addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
+        const { store } = renderWithProviders(
+            <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+            fetchMock
         )
+        await waitFor(() => {
+            const notifications = store.getState().notification.notificationList
+            expect(notifications.length).toEqual(1)
+            expect(notifications[0].type).toEqual(NotificationType.Error)
+            expect(notifications[0].msg).toContain(errorMsg)
+        })
     })
-    ;(collapseIcon as HTMLElement | undefined)?.click()
-    await waitFor(() => {
-        const withLabel0 = screen.getAllByText(nameTagDef0)
-        expect(withLabel0.length).toEqual(2)
-        const withLabel1 = screen.getAllByText(nameTagDef1)
-        expect(withLabel1.length).toEqual(1)
-        const withLabel2 = screen.getAllByText(nameTagDef2)
-        expect(withLabel2.length).toEqual(3)
-    })
-    expect(fetchMock.mock.calls.length).toEqual(8)
 })
 
 describe('create tag definition', () => {
@@ -307,6 +333,26 @@ describe('create tag definition', () => {
                     headers: { 'Content-Type': 'application/json' }
                 }
             ])
+        })
+    })
+    test('dispatches error', async () => {
+        const fetchMock = jest.fn()
+        const errorMsg = 'Error while creating tag def'
+        initialResponseSequence(fetchMock)
+        addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
+        const { store } = renderWithProviders(
+            <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+            fetchMock
+        )
+        const user = userEvent.setup()
+        await setNameAndType(user)
+        const button = screen.getByRole('button', { name: 'Create' })
+        await user.click(button)
+        await waitFor(() => {
+            const notifications = store.getState().notification.notificationList
+            expect(notifications.length).toEqual(1)
+            expect(notifications[0].type).toEqual(NotificationType.Error)
+            expect(notifications[0].msg).toContain(errorMsg)
         })
     })
 })

@@ -75,7 +75,8 @@ describe('get users', () => {
             [200, { user_list: [], next_offset: -1 }]
         ])
         const dispatch = jest.fn()
-        await new GetUserInfoListAction().run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new GetUserInfoListAction().run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new GetUserInfoListStartAction()],
             [new GetUserInfoListSuccessAction([userInfoTest, userInfoTest1])]
@@ -101,7 +102,8 @@ describe('get users', () => {
             [400, { msg: 'error' }]
         ])
         const dispatch = jest.fn()
-        await new GetUserInfoListAction().run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new GetUserInfoListAction().run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new GetUserInfoListStartAction()],
             [new GetUserInfoListErrorAction('error')]
@@ -112,10 +114,11 @@ describe('set user permissions', () => {
     test('success', async () => {
         responseSequence([[200, {}]])
         const dispatch = jest.fn()
+        const reduxDispatch = jest.fn()
         await new SetUserPermissionAction(
             idPersistentTest,
             UserPermissionGroup.APPLICANT
-        ).run(dispatch)
+        ).run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new SetUserPermissionStartAction()],
             [
@@ -137,10 +140,11 @@ describe('set user permissions', () => {
     test('error', async () => {
         responseSequence([[400, { msg: 'error' }]])
         const dispatch = jest.fn()
+        const reduxDispatch = jest.fn()
         await new SetUserPermissionAction(
             idPersistentTest,
             UserPermissionGroup.APPLICANT
-        ).run(dispatch)
+        ).run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new SetUserPermissionStartAction()],
             [new SetUserPermissionErrorAction('error')]

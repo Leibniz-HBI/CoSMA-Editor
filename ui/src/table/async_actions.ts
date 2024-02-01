@@ -23,7 +23,7 @@ import { fetch_chunk } from '../util/fetch'
 import { TagDefinition, TagType } from '../column_menu/state'
 import { CellValue, Entity, newEntity } from './state'
 import { config } from '../config'
-import { newErrorState } from '../util/error/slice'
+import { addError } from '../util/notification/slice'
 import { constructColumnTitle } from '../contribution/entity/hooks'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { AppDispatch } from '../store'
@@ -33,7 +33,7 @@ const displayTxtColumnId = 'display_txt_id'
  * Async action for fetching table data.
  */
 export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
-    async run(dispatch: Dispatch<TableAction>, _reduxDispatch: AppDispatch) {
+    async run(dispatch: Dispatch<TableAction>, reduxDispatch: AppDispatch) {
         dispatch(new SetEntityLoadingAction())
         dispatch(
             new SetColumnLoadingAction({
@@ -58,13 +58,11 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                     new SetEntitiesAction([])
                     return
                 } else if (rsp.status !== 200) {
-                    dispatch(
-                        new SetLoadDataErrorAction(
-                            newErrorState(
-                                `Could not load entities chunk ${i}. Reason: "${
-                                    (await rsp.json())['msg']
-                                }"`
-                            )
+                    const json = await rsp.json()
+                    dispatch(new SetLoadDataErrorAction())
+                    reduxDispatch(
+                        addError(
+                            `Could not load entities chunk ${i}. Reason: "${json['msg']}"`
                         )
                     )
                     return
@@ -91,7 +89,8 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
             dispatch(new SetEntitiesAction(entities))
             dispatch(new AppendColumnAction(displayTxtColumnId, displayTxts))
         } catch (e: unknown) {
-            dispatch(new SetLoadDataErrorAction(newErrorState(exceptionMessage(e))))
+            dispatch(new SetLoadDataErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -107,7 +106,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async run(
         dispatch: Dispatch<TableAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ): Promise<void> {
         const id_persistent = this.columnDefinition.idPersistent
         try {
@@ -125,13 +124,12 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                     }
                 })
                 if (rsp.status !== 200) {
-                    dispatch(
-                        new SetLoadDataErrorAction(
-                            newErrorState(
-                                `Could not load entities chunk ${i}. Reason: "${
-                                    (await rsp.json())['msg']
-                                }"`
-                            )
+                    dispatch(new SetLoadDataErrorAction())
+                    reduxDispatch(
+                        addError(
+                            `Could not load entities chunk ${i}. Reason: "${
+                                (await rsp.json())['msg']
+                            }"`
                         )
                     )
                     return
@@ -168,7 +166,8 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
             }
             dispatch(new AppendColumnAction(id_persistent, column_data))
         } catch (e: unknown) {
-            dispatch(new SetLoadDataErrorAction(newErrorState(exceptionMessage(e))))
+            dispatch(new SetLoadDataErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -182,7 +181,7 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
         this.columnType = columnType
         this.edit = edit
     }
-    async run(dispatch: Dispatch<TableAction>, _reduxDispatch: AppDispatch) {
+    async run(dispatch: Dispatch<TableAction>, reduxDispatch: AppDispatch) {
         dispatch(new SubmitValuesStartAction())
         try {
             const rsp = await fetch(config.api_path + '/tags', {
@@ -211,12 +210,11 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
             if (rsp.status == 409) {
                 const tagInstance = json['tag_instances'][0]
                 dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
-                dispatch(
-                    new SubmitValuesErrorAction(
-                        newErrorState(
-                            'The data you entered changed in the remote location. ' +
-                                'The new values are updated in the table. Please review them.'
-                        )
+                dispatch(new SubmitValuesErrorAction())
+                reduxDispatch(
+                    addError(
+                        'The data you entered changed in the remote location. ' +
+                            'The new values are updated in the table. Please review them.'
                     )
                 )
                 return
@@ -225,23 +223,19 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                 const namePath = constructColumnTitle(
                     json['name_path'] ?? json['name'] ?? ['UNKNOWN']
                 )
-                dispatch(
-                    new SubmitValuesErrorAction(
-                        newErrorState(
-                            `You do not have sufficient permissions to change values for tag ${namePath}`
-                        )
+                dispatch(new SubmitValuesErrorAction())
+                reduxDispatch(
+                    addError(
+                        `You do not have sufficient permissions to change values for tag ${namePath}`
                     )
                 )
                 return
             }
-            const msg = json['msg']
-            dispatch(new SubmitValuesErrorAction(newErrorState(msg)))
+            dispatch(new SubmitValuesErrorAction())
+            reduxDispatch(addError(errorMessageFromApi(json)))
         } catch (e: unknown) {
-            dispatch(
-                new SubmitValuesErrorAction(
-                    newErrorState('Unknown error: ' + exceptionMessage(e))
-                )
-            )
+            dispatch(new SubmitValuesErrorAction())
+            reduxDispatch(addError('Unknown error: ' + exceptionMessage(e)))
         }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -284,7 +278,7 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
 
     async run(
         dispatch: Dispatch<TableAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ): Promise<void> {
         dispatch(new EntityChangeOrCreateStartAction())
         try {
@@ -310,10 +304,12 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
                     )
                 )
             } else {
-                dispatch(new EntityChangeOrCreateErrorAction(errorMessageFromApi(json)))
+                dispatch(new EntityChangeOrCreateErrorAction())
+                reduxDispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(new EntityChangeOrCreateErrorAction(exceptionMessage(e)))
+            dispatch(new EntityChangeOrCreateErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -327,7 +323,7 @@ export class CurateAction extends AsyncAction<TableAction, void> {
     }
     async run(
         dispatch: Dispatch<TableAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ): Promise<void> {
         dispatch(new CurateTagDefinitionStartAction())
         try {
@@ -347,12 +343,12 @@ export class CurateAction extends AsyncAction<TableAction, void> {
                     )
                 )
             } else {
-                dispatch(new CurateTagDefinitionErrorAction(newErrorState(json['msg'])))
+                dispatch(new CurateTagDefinitionErrorAction())
+                reduxDispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(
-                new CurateTagDefinitionErrorAction(newErrorState(exceptionMessage(e)))
-            )
+            dispatch(new CurateTagDefinitionErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }

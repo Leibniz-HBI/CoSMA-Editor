@@ -1,12 +1,10 @@
 import * as yup from 'yup'
 import { RegistrationCallback } from '../hooks'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
-import { FormEvent, useRef } from 'react'
+import { FormEvent } from 'react'
 import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
-import { ErrorState } from '../../util/error/slice'
-import { ErrorPopover } from '../../util/error/components'
 
 type RegistrationFormArgs = {
     userName: string
@@ -40,14 +38,10 @@ const registrationSchema = yup.object({
 
 export function RegistrationForm({
     registrationCallback,
-    closeRegistrationCallback,
-    registrationError,
-    clearRegistrationErrorCallback
+    closeRegistrationCallback
 }: {
     registrationCallback: RegistrationCallback
     closeRegistrationCallback: VoidFunction
-    registrationError?: ErrorState
-    clearRegistrationErrorCallback: VoidFunction
 }) {
     return (
         <Formik
@@ -78,8 +72,6 @@ export function RegistrationForm({
                     handleSubmit={handleSubmit}
                     handleChange={handleChange}
                     closeRegistrationCallback={closeRegistrationCallback}
-                    registrationError={registrationError}
-                    clearRegistrationErrorCallback={clearRegistrationErrorCallback}
                 />
             )}
         </Formik>
@@ -92,9 +84,7 @@ export function RegistrationFormBody({
     handleChange,
     touched,
     formErrors,
-    closeRegistrationCallback,
-    registrationError,
-    clearRegistrationErrorCallback
+    closeRegistrationCallback
 }: {
     values: RegistrationFormArgs
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
@@ -102,20 +92,11 @@ export function RegistrationFormBody({
     formErrors: FormikErrors<RegistrationFormArgs>
     touched: FormikTouched<RegistrationFormArgs>
     closeRegistrationCallback: VoidFunction
-    registrationError?: ErrorState
-    clearRegistrationErrorCallback: VoidFunction
 }) {
-    const formRef = useRef(null)
-    const buttonRef = useRef(null)
     const passwordHintClass =
         touched.password && formErrors.password ? 'text-danger' : ''
     return (
-        <Form
-            noValidate
-            onSubmit={handleSubmit}
-            className="has-validation"
-            ref={formRef}
-        >
+        <Form noValidate onSubmit={handleSubmit} className="has-validation">
             <FormField
                 name="userName"
                 label="Username"
@@ -179,18 +160,9 @@ export function RegistrationFormBody({
                     </Button>
                 </Col>
                 <Col sm="auto" className="align-self-center">
-                    <Button variant="primary" type="submit" ref={buttonRef}>
+                    <Button variant="primary" type="submit">
                         Register
                     </Button>
-                    {!!registrationError && (
-                        <ErrorPopover
-                            errorState={registrationError}
-                            placement="top"
-                            clearError={clearRegistrationErrorCallback}
-                            containerRef={formRef}
-                            targetRef={buttonRef}
-                        />
-                    )}
                 </Col>
             </Row>
         </Form>

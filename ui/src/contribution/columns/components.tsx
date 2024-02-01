@@ -1,19 +1,8 @@
 import { useLoaderData } from 'react-router-dom'
 import { ContributionStepper } from '../components'
-import {
-    Button,
-    CloseButton,
-    Col,
-    Form,
-    FormCheck,
-    ListGroup,
-    Modal,
-    Overlay,
-    Popover,
-    Row
-} from 'react-bootstrap'
+import { Button, Col, Form, FormCheck, ListGroup, Modal, Row } from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
-import { ChangeEvent, ForwardedRef, forwardRef, useLayoutEffect, useRef } from 'react'
+import { ChangeEvent, useLayoutEffect } from 'react'
 import { ColumnSelector, mkListItems } from '../../column_menu/components/selection'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
 import { TagDefinition } from '../../column_menu/state'
@@ -28,11 +17,7 @@ import {
     patchColumnDefinitionContribution
 } from './thunks'
 import { AppDispatch } from '../../store'
-import {
-    columnDefinitionContributionSelect,
-    finalizeColumnAssignmentClearError,
-    setColumnDefinitionFormTab
-} from './slice'
+import { columnDefinitionContributionSelect, setColumnDefinitionFormTab } from './slice'
 import {
     selectColumnDefinitionsContributionTriple,
     selectCreateTabSelected,
@@ -51,7 +36,6 @@ import { loadContributionDetails } from '../thunks'
 
 export function ColumnDefinitionStep() {
     const idContributionPersistent = useLoaderData() as string
-    const listViewContainerRef = useRef(null)
     const dispatch: AppDispatch = useDispatch()
     const definitions = useSelector(selectColumnDefinitionsContributionTriple)
     const selectedColumnDefinition = useSelector(selectSelectedColumnDefinition)
@@ -88,12 +72,10 @@ export function ColumnDefinitionStep() {
                     xs={3}
                     className="h-100 overflow-hidden d-flex flex-column flex-grow-0"
                     key="column-definition-selection"
-                    ref={listViewContainerRef}
                 >
                     <Row className="align-self-center d-block">
                         <CompleteColumnAssignmentButton
                             idContributionPersistent={idContributionPersistent}
-                            ref={listViewContainerRef}
                         />
                     </Row>
                     <Row className="text-primary">
@@ -362,72 +344,35 @@ export function NewColumnModalBody() {
     )
 }
 
-export const CompleteColumnAssignmentButton = forwardRef(
-    (
-        { idContributionPersistent }: { idContributionPersistent: string },
-        containerRef: ForwardedRef<HTMLElement>
-    ) => {
-        const dispatch: AppDispatch = useDispatch()
-        const finalizeColumnAssignmentState = useSelector(
-            selectFinalizeColumnAssignment
-        )
-        const buttonRef = useRef(null)
-        return (
-            <>
-                <CompleteColumnAssignmentButtonInner
-                    onClick={() =>
-                        dispatch(finalizeColumnAssignment(idContributionPersistent))
-                    }
-                    finalizeColumnAssignmentState={finalizeColumnAssignmentState}
-                    ref={buttonRef}
-                />
-                <Overlay
-                    show={finalizeColumnAssignmentState?.errorMsg !== undefined}
-                    target={buttonRef.current}
-                    ref={containerRef}
-                    placement="bottom"
-                >
-                    <Popover id="finalize-column-assignment-error-popover">
-                        <Popover.Header className="bg-danger text-light">
-                            <Row className="justify-content-between">
-                                <Col>Error</Col>
-                                <CloseButton
-                                    variant="white"
-                                    onClick={() =>
-                                        dispatch(finalizeColumnAssignmentClearError())
-                                    }
-                                ></CloseButton>
-                            </Row>
-                        </Popover.Header>
-                        <Popover.Body>
-                            <span>{finalizeColumnAssignmentState?.errorMsg}</span>
-                        </Popover.Body>
-                    </Popover>
-                </Overlay>
-            </>
-        )
-    }
-)
-const CompleteColumnAssignmentButtonInner = forwardRef(
-    (
-        {
-            onClick,
-            finalizeColumnAssignmentState
-        }: {
-            onClick: () => void
-            finalizeColumnAssignmentState: RemoteInterface<boolean>
-        },
-        ref: ForwardedRef<HTMLDivElement>
-    ) => {
-        return (
-            <div ref={ref}>
-                <RemoteTriggerButton
-                    successLabel="Column assignment successfully finalized"
-                    normalLabel="Finalize Column Assignment"
-                    remoteState={finalizeColumnAssignmentState}
-                    onClick={onClick}
-                />
-            </div>
-        )
-    }
-)
+export function CompleteColumnAssignmentButton({
+    idContributionPersistent
+}: {
+    idContributionPersistent: string
+}) {
+    const dispatch: AppDispatch = useDispatch()
+    const finalizeColumnAssignmentState = useSelector(selectFinalizeColumnAssignment)
+    return (
+        <CompleteColumnAssignmentButtonInner
+            onClick={() => dispatch(finalizeColumnAssignment(idContributionPersistent))}
+            finalizeColumnAssignmentState={finalizeColumnAssignmentState}
+        />
+    )
+}
+function CompleteColumnAssignmentButtonInner({
+    onClick,
+    finalizeColumnAssignmentState
+}: {
+    onClick: () => void
+    finalizeColumnAssignmentState: RemoteInterface<boolean>
+}) {
+    return (
+        <div>
+            <RemoteTriggerButton
+                successLabel="Column assignment successfully finalized"
+                normalLabel="Finalize Column Assignment"
+                remoteState={finalizeColumnAssignmentState}
+                onClick={onClick}
+            />
+        </div>
+    )
+}

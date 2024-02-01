@@ -1,33 +1,28 @@
 import {
     loginError,
-    loginErrorClear,
     loginStart,
     loginSuccess,
     logout,
     refreshDenied,
     refreshStart,
     registrationError,
-    registrationErrorClear,
     registrationStart,
     toggleRegistration,
     default as userReducer
 } from '../slice'
 import { UserInfo, UserPermissionGroup, mkUserState } from '../state'
-import { newErrorState } from '../../util/error/slice'
 import { newRemote } from '../../util/state'
 
 describe('user reducer', () => {
     const userNameTest = 'userTest'
     const emailTest = 'me@test.url'
     const namesPersonalTest = 'names personal test'
-    const testError = 'test error message'
     test('uses initial state', () => {
         expect(userReducer(undefined, { type: undefined })).toEqual({
             userInfo: undefined,
             isLoggingIn: false,
             isRefreshing: false,
             isRegistering: false,
-            loginErrorState: undefined,
             registrationErrorState: undefined,
             showRegistration: false,
             userSearchResults: newRemote([])
@@ -60,13 +55,8 @@ describe('user reducer', () => {
     })
     test('loginError', () => {
         const initialState = mkUserState({ isLoggingIn: true })
-        const expectedState = mkUserState({
-            loginErrorState: newErrorState(testError, 'id-error-test')
-        })
-        const endState = userReducer(
-            initialState,
-            loginError(newErrorState(testError, 'id-error-test'))
-        )
+        const expectedState = mkUserState({})
+        const endState = userReducer(initialState, loginError())
         expect(endState).toEqual(expectedState)
     })
     test('loginStart', () => {
@@ -75,14 +65,6 @@ describe('user reducer', () => {
             isLoggingIn: true
         })
         const endState = userReducer(initialState, loginStart())
-        expect(endState).toEqual(expectedState)
-    })
-    test('clear login error', () => {
-        const initialState = mkUserState({
-            loginErrorState: newErrorState(testError)
-        })
-        const expectedState = mkUserState({})
-        const endState = userReducer(initialState, loginErrorClear())
         expect(endState).toEqual(expectedState)
     })
     test('switch to registration', () => {
@@ -99,13 +81,8 @@ describe('user reducer', () => {
     })
     test('registrationError', () => {
         const initialState = mkUserState({ isRegistering: true })
-        const expectedState = mkUserState({
-            registrationErrorState: newErrorState(testError, 'id-error-test')
-        })
-        const endState = userReducer(
-            initialState,
-            registrationError(newErrorState(testError, 'id-error-test'))
-        )
+        const expectedState = mkUserState({ isRegistering: false })
+        const endState = userReducer(initialState, registrationError())
         expect(endState).toEqual(expectedState)
     })
     test('registrationStart', () => {
@@ -114,14 +91,6 @@ describe('user reducer', () => {
             isRegistering: true
         })
         const endState = userReducer(initialState, registrationStart())
-        expect(endState).toEqual(expectedState)
-    })
-    test('clear registration error', () => {
-        const initialState = mkUserState({
-            registrationErrorState: newErrorState(testError)
-        })
-        const expectedState = mkUserState({})
-        const endState = userReducer(initialState, registrationErrorClear())
         expect(endState).toEqual(expectedState)
     })
     test('logout', () => {

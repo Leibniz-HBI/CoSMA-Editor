@@ -16,7 +16,7 @@ import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
 import { RemoteDataTable } from '../components'
 import { ColumnState, TableState } from '../state'
 import { TagType } from '../../column_menu/state'
-import { ErrorManager, errorSlice } from '../../util/error/slice'
+import { NotificationManager, notificationReducer } from '../../util/notification/slice'
 import { Remote, RemoteInterface, newRemote, useThunkReducer } from '../../util/state'
 import {
     EntityMergeRequest,
@@ -60,7 +60,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
             entityMergeRequests: RemoteInterface<EntityMergeRequest[] | undefined>
         }
         entityMergeRequestConflicts: EntityMergeRequestConflictsState
-        error: ErrorManager
+        notification: NotificationManager
         tableSelection: TableSelectionState
         user: UserState
     }
@@ -79,7 +79,7 @@ export function renderWithProviders(
                 reverseOriginDestination: newRemote(undefined),
                 merge: newRemote(undefined)
             },
-            error: { errorList: [], errorMap: {} },
+            notification: { notificationList: [], notificationMap: {} },
             tableSelection: {
                 current: undefined,
                 cols: [],
@@ -94,7 +94,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             entityMergeRequests: entityMergeRequestsReducer,
-            error: errorSlice.reducer,
+            notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
             user: userSlice.reducer
@@ -204,8 +204,6 @@ test('start entity duplicate merging', async () => {
                     frozenColumns: 1,
                     selectedColumnHeaderBounds: undefined,
                     isLoading: false,
-                    loadDataErrorState: undefined,
-                    submitValuesErrorState: undefined,
                     entityAddState: new Remote(false),
                     showEntityMergingModal: false
                 }),

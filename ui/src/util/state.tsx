@@ -1,5 +1,4 @@
 import { useReducer, useCallback, Dispatch, Reducer } from 'react'
-import { LogoutAction } from '../user/actions'
 import { AsyncAction } from './async_action'
 import { AppDispatch } from '../store'
 
@@ -14,16 +13,11 @@ export type ThunkMiddlewareDispatch<U> = <V>(
  */
 function thunker<U>(
     dispatch: Dispatch<U>,
-    reduxDispatch: AppDispatch,
-    userDispatch?: Dispatch<LogoutAction>
+    reduxDispatch: AppDispatch
 ): ThunkMiddlewareDispatch<U> {
     return function <V>(action: AsyncAction<U, V> | U): Promise<V | undefined> {
         if (action instanceof AsyncAction) {
-            return (action as AsyncAction<U, V>).run(
-                dispatch,
-                reduxDispatch,
-                userDispatch
-            )
+            return (action as AsyncAction<U, V>).run(dispatch, reduxDispatch)
         } else {
             dispatch(action)
             return Promise.resolve(undefined)
@@ -82,7 +76,7 @@ export class Remote<U> implements RemoteInterface<U> {
         return new Remote<U>(this.value, this.isLoading)
     }
 
-    withError(errorMsg: string) {
+    withError(errorMsg?: string) {
         return new Remote<U>(this.value, false, errorMsg)
     }
 

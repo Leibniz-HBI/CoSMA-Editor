@@ -15,7 +15,11 @@ import { Provider } from 'react-redux'
 import { EntityMergeRequests } from '../components'
 import { newEntity } from '../../../table/state'
 import { UserPermissionGroup } from '../../../user/state'
-import { ErrorManager, errorSlice, newErrorState } from '../../../util/error/slice'
+import {
+    NotificationManager,
+    notificationReducer,
+    NotificationType
+} from '../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
 
 jest.mock('react-router-dom', () => {
@@ -34,7 +38,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         entityMergeRequests: {
             entityMergeRequests: RemoteInterface<EntityMergeRequest[] | undefined>
         }
-        error: ErrorManager
+        notification: NotificationManager
     }
 }
 
@@ -44,7 +48,7 @@ export function renderWithProviders(
     {
         preloadedState = {
             entityMergeRequests: { entityMergeRequests: newRemote(undefined) },
-            error: { errorList: [], errorMap: {} }
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -52,7 +56,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             entityMergeRequests: entityMergeRequestsReducer,
-            error: errorSlice.reducer
+            notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -111,7 +115,7 @@ test('success', async () => {
         screen.getByText(displayTextDestination1)
     })
     expect(store.getState()).toEqual({
-        error: { errorList: [], errorMap: {} },
+        notification: { notificationList: [], notificationMap: {} },
         entityMergeRequests: {
             entityMergeRequests: newRemote([
                 newEntityMergeRequest({
@@ -186,14 +190,17 @@ test('error', async () => {
     const fetchMock = jest.fn()
     addResponseSequence(fetchMock, [[400, { msg: 'error' }]])
     const { store } = renderWithProviders(<EntityMergeRequests />, fetchMock)
+    // TODO test for correct error message dispatch
     await waitFor(() => {
-        expect(store.getState()).toEqual({
-            entityMergeRequests: { entityMergeRequests: newRemote(undefined) },
-            error: {
-                errorList: [newErrorState('error', 'id-error-test')],
-                errorMap: { 'id-error-test': 0 }
-            }
+        const state = store.getState()
+        expect(state.entityMergeRequests).toEqual({
+            entityMergeRequests: newRemote(undefined)
         })
+        const notifications = state.notification.notificationList
+        expect(notifications.length).toEqual(1)
+        const notification = notifications[0]
+        expect(notification.type).toEqual(NotificationType.Error)
+        expect(notification.msg).toEqual('error')
     })
     expect(fetchMock.mock.calls).toEqual([
         [

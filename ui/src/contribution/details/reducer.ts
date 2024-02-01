@@ -29,7 +29,7 @@ export function contributionDetailsReducer(
     if (action instanceof LoadContributionDetailsErrorAction) {
         return new ContributionDetailState({
             ...state,
-            contribution: state.contribution.withError(action.msg)
+            contribution: state.contribution.withError(undefined)
         })
     }
     if (action instanceof PatchContributionDetailsStartAction) {
@@ -48,7 +48,7 @@ export function contributionDetailsReducer(
     if (action instanceof PatchContributionDetailsErrorAction) {
         return new ContributionDetailState({
             ...state,
-            contributionPatch: state.contributionPatch.withError(action.msg)
+            contributionPatch: state.contributionPatch.withError(undefined)
         })
     }
     if (action instanceof PatchContributionDetailsClearErrorAction) {

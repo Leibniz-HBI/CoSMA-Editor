@@ -17,6 +17,12 @@ import { ContributionStep } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 import { ContributionState, contributionSlice } from '../../slice'
+import {
+    NotificationManager,
+    NotificationType,
+    notificationReducer
+} from '../../../util/notification/slice'
+import { NotificationToastList } from '../../../util/notification/components'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -29,6 +35,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         contributionColumnDefinition: ColumnDefinitionsContributionState
         contribution: ContributionState
         tagSelection: TagSelectionState
+        notification: NotificationManager
     }
 }
 
@@ -41,7 +48,8 @@ export function renderWithProviders(
                 columns: newRemote(undefined)
             }),
             contribution: { selectedContribution: newRemote(undefined) },
-            tagSelection: newTagSelectionState({})
+            tagSelection: newTagSelectionState({}),
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -50,7 +58,8 @@ export function renderWithProviders(
         reducer: {
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer
+            tagSelection: tagSelectionSlice.reducer,
+            notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -164,7 +173,7 @@ test('finish error', async () => {
         [500, { msg: errorMsg }],
         [200, { tag_definitions: [] }]
     ])
-    renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+    const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(3)
@@ -177,13 +186,14 @@ test('finish error', async () => {
                 name: /Column assignment successfully finalized/i
             })
         ).toBeNull()
-        screen.getByText(errorMsg)
+        const notifications = store.getState().notification.notificationList
+        expect(notifications.length).toEqual(1)
+        const notification = notifications[0]
+        expect(notification.type).toEqual(NotificationType.Error)
+        expect(notification.msg).toEqual(errorMsg)
     })
     expect(fetchMock.mock.calls[fetchMock.mock.calls.length - 1]).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     ])
-    const closeButton = screen.getByRole('button', { name: /close/i })
-    closeButton.click()
-    await waitFor(() => expect(screen.queryByText(errorMsg)).toBeNull())
 })

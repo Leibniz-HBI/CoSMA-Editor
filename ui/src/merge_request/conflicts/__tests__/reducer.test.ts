@@ -198,12 +198,12 @@ describe('get conflicts', () => {
             new Remote(false)
         )
         const expectedState = new MergeRequestConflictResolutionState(
-            new Remote(undefined, false, 'error'),
+            new Remote(undefined, false, undefined),
             new Remote(false)
         )
         const endState = mergeRequestConflictResolutionReducer(
             initialState,
-            new GetMergeRequestConflictErrorAction('error')
+            new GetMergeRequestConflictErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })
@@ -318,7 +318,11 @@ describe('resolve conflict', () => {
             ),
             new Remote(false)
         )
-        const expectedSharedConflict = new Remote(sharedConflict.value, false, 'error')
+        const expectedSharedConflict = new Remote(
+            sharedConflict.value,
+            false,
+            undefined
+        )
         const expectedState = new MergeRequestConflictResolutionState(
             new Remote(
                 new MergeRequestConflictsByState({
@@ -338,10 +342,7 @@ describe('resolve conflict', () => {
         )
         const endState = mergeRequestConflictResolutionReducer(
             initialState,
-            new ResolveConflictErrorAction(
-                sharedConflict.value.entity.idPersistent,
-                'error'
-            )
+            new ResolveConflictErrorAction(sharedConflict.value.entity.idPersistent)
         )
         expect(endState).toEqual(expectedState)
     })
@@ -385,11 +386,11 @@ describe('start merge', () => {
         )
         const expectedState = new MergeRequestConflictResolutionState(
             new Remote(undefined),
-            new Remote(false, false, 'error')
+            new Remote(false, false, undefined)
         )
         const endState = mergeRequestConflictResolutionReducer(
             initialState,
-            new StartMergeErrorAction('error')
+            new StartMergeErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })

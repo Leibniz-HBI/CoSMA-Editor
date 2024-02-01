@@ -3,6 +3,7 @@ import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { config } from '../config'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
+import { addError } from '../util/notification/slice'
 import { ThunkWithFetch } from '../util/type'
 import {
     acceptOwnershipRequestError,
@@ -39,10 +40,12 @@ export function getOwnershipRequests(): ThunkWithFetch<void> {
                     })
                 )
             } else {
-                dispatch(getOwnershipRequestsError(json['msg']))
+                dispatch(getOwnershipRequestsError())
+                dispatch(addError(json['msg']))
             }
         } catch (e: unknown) {
-            dispatch(getOwnershipRequestsError)
+            dispatch(getOwnershipRequestsError())
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -65,15 +68,12 @@ export function putOwnershipRequest(
                     return parseColumnDefinitionsFromApi(json)
                 }
             } else {
-                dispatch(
-                    putOwnerShipRequestError({
-                        ...args,
-                        msg: errorMessageFromApi(json)
-                    })
-                )
+                dispatch(putOwnerShipRequestError(args))
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(putOwnerShipRequestError({ ...args, msg: exceptionMessage(e) }))
+            dispatch(putOwnerShipRequestError(args))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -93,16 +93,11 @@ export function acceptOwnershipRequest(
                 dispatch(acceptOwnershipRequestSuccess(idPersistent))
                 return parseColumnDefinitionsFromApi(json)
             }
-            dispatch(
-                acceptOwnershipRequestError({
-                    idPersistent,
-                    msg: errorMessageFromApi(json)
-                })
-            )
+            dispatch(acceptOwnershipRequestError(idPersistent))
+            dispatch(addError(errorMessageFromApi(json)))
         } catch (e: unknown) {
-            dispatch(
-                acceptOwnershipRequestError({ idPersistent, msg: exceptionMessage(e) })
-            )
+            dispatch(acceptOwnershipRequestError(idPersistent))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -118,17 +113,12 @@ export function deleteOwnershipRequest(idPersistent: string): ThunkWithFetch<voi
                 dispatch(deleteOwnershipRequestSuccess(idPersistent))
             } else {
                 const json = await rsp.json()
-                dispatch(
-                    deleteOwnershipRequestError({
-                        idPersistent,
-                        msg: errorMessageFromApi(json)
-                    })
-                )
+                dispatch(deleteOwnershipRequestError(idPersistent))
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(
-                deleteOwnershipRequestError({ idPersistent, msg: exceptionMessage(e) })
-            )
+            dispatch(deleteOwnershipRequestError(idPersistent))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }

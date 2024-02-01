@@ -25,12 +25,7 @@ export class GetMergeRequestsSuccessAction {
 /**
  * Indicate an error during loading merge requests
  */
-export class GetMergeRequestsErrorAction {
-    msg: string
-    constructor(msg: string) {
-        this.msg = msg
-    }
-}
+export class GetMergeRequestsErrorAction {}
 
 export type MergeRequestAction =
     | GetMergeRequestsStartAction

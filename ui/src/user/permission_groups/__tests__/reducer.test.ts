@@ -71,11 +71,11 @@ describe('get users', () => {
             userIndexMap: new Map()
         })
         const expectedState = new PermissionGroupState({
-            userList: new Remote([], false, 'error')
+            userList: new Remote([], false, undefined)
         })
         const endState = permissionGroupReducer(
             initialState,
-            new GetUserInfoListErrorAction('error')
+            new GetUserInfoListErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })
@@ -125,11 +125,11 @@ describe('set permissions', () => {
         })
         const expectedState = new PermissionGroupState({
             userList: new Remote([userInfoTest, userInfoTest1]),
-            selectedUser: new Remote(userInfoTest1, false, 'error')
+            selectedUser: new Remote(userInfoTest1, false, undefined)
         })
         const endState = permissionGroupReducer(
             initialState,
-            new SetUserPermissionErrorAction('error')
+            new SetUserPermissionErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })

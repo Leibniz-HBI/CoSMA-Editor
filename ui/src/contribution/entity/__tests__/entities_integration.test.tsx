@@ -18,7 +18,10 @@ import { Provider } from 'react-redux'
 import { EntitiesStep } from '../components'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
-import { ErrorManager, errorSlice } from '../../../util/error/slice'
+import {
+    NotificationManager,
+    notificationReducer
+} from '../../../util/notification/slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -37,7 +40,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
             selectedContribution: RemoteInterface<Contribution | undefined>
         }
         tagSelection: TagSelectionState
-        error: ErrorManager
+        notification: NotificationManager
     }
 }
 
@@ -49,7 +52,7 @@ export function renderWithProviders(
             contributionEntity: newContributionEntityState({}),
             contribution: { selectedContribution: newRemote(undefined) },
             tagSelection: newTagSelectionState({}),
-            error: { errorList: [], errorMap: {} }
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -59,7 +62,7 @@ export function renderWithProviders(
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
             tagSelection: tagSelectionSlice.reducer,
-            error: errorSlice.reducer
+            error: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

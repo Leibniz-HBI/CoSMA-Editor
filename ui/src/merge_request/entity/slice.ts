@@ -13,7 +13,6 @@ const entityMergeRequestSlice = createSlice({
     reducers: {
         getEntityMergeRequestStart(state: EntityMergeRequestState) {
             state.entityMergeRequests.isLoading = true
-            state.entityMergeRequests.errorMsg = undefined
         },
         getEntityMergeRequestsSuccess(
             state: EntityMergeRequestState,

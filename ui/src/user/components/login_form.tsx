@@ -1,12 +1,10 @@
 import * as yup from 'yup'
 import { LoginCallback } from '../hooks'
 import { Formik } from 'formik'
-import { FormEvent, useRef } from 'react'
+import { FormEvent } from 'react'
 import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
-import { ErrorState } from '../../util/error/slice'
-import { ErrorPopover } from '../../util/error/components'
 
 type LoginFormArgs = { userName: string; password: string }
 
@@ -16,13 +14,9 @@ const loginSchema = yup.object({
 })
 
 export function LoginForm({
-    loginError,
-    clearLoginErrorCallback,
     loginCallback,
     openRegistrationCallback
 }: {
-    loginError?: ErrorState
-    clearLoginErrorCallback: VoidFunction
     loginCallback: LoginCallback
     openRegistrationCallback: VoidFunction
 }) {
@@ -37,8 +31,6 @@ export function LoginForm({
             {({ handleSubmit, handleChange, values }) => (
                 <LoginFormBody
                     values={values}
-                    loginError={loginError}
-                    clearLoginErrorCallback={clearLoginErrorCallback}
                     handleChange={handleChange}
                     handleSubmit={handleSubmit}
                     openRegistrationCallback={openRegistrationCallback}
@@ -52,22 +44,11 @@ export function LoginFormBody(props: {
     values: LoginFormArgs
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
     handleChange: HandleChange
-    loginError?: ErrorState
-    clearLoginErrorCallback: VoidFunction
     openRegistrationCallback: VoidFunction
 }) {
-    const {
-        handleSubmit,
-        handleChange,
-        values,
-        loginError,
-        openRegistrationCallback,
-        clearLoginErrorCallback
-    } = props
-    const containerRef = useRef(null)
-    const buttonRef = useRef(null)
+    const { handleSubmit, handleChange, values, openRegistrationCallback } = props
     return (
-        <Form noValidate onSubmit={handleSubmit} ref={containerRef}>
+        <Form noValidate onSubmit={handleSubmit}>
             <FormField
                 name="userName"
                 label="Username"
@@ -92,18 +73,7 @@ export function LoginFormBody(props: {
                     </Button>
                 </Col>
                 <Col sm="auto">
-                    <Button type="submit" ref={buttonRef}>
-                        Login
-                    </Button>
-                    {!!loginError && (
-                        <ErrorPopover
-                            errorState={loginError}
-                            placement="top"
-                            clearError={clearLoginErrorCallback}
-                            targetRef={buttonRef}
-                            containerRef={containerRef}
-                        />
-                    )}
+                    <Button type="submit">Login</Button>
                 </Col>
             </Row>
         </Form>

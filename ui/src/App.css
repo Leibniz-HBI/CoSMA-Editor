@@ -227,3 +227,7 @@ div#layers > div > .container {
 .bg-primary-subtle {
     background-color: #d1e3e3 !important;
 }
+
+.z-toast {
+    z-index: 5000;
+}

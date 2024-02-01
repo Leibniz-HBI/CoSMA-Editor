@@ -75,13 +75,13 @@ export function permissionGroupReducer(
     if (action instanceof GetUserInfoListErrorAction) {
         return new PermissionGroupState({
             ...state,
-            userList: state.userList.withError(action.msg)
+            userList: state.userList.withError(undefined)
         })
     }
     if (action instanceof SetUserPermissionErrorAction) {
         return new PermissionGroupState({
             ...state,
-            selectedUser: state.selectedUser.withError(action.msg)
+            selectedUser: state.selectedUser.withError(undefined)
         })
     }
     if (action instanceof SetUserPermissionClearErrorAction) {

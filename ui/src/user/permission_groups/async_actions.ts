@@ -14,6 +14,7 @@ import { config } from '../../config'
 import { parseUserInfoFromJson } from '../thunks'
 import { UserInfo, UserPermissionGroup } from '../state'
 import { AppDispatch } from '../../store'
+import { addError } from '../../util/notification/slice'
 
 export class GetUserInfoListAction extends AsyncAction<
     UserPermissionGroupAction,
@@ -21,7 +22,7 @@ export class GetUserInfoListAction extends AsyncAction<
 > {
     async run(
         dispatch: Dispatch<UserPermissionGroupAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ) {
         dispatch(new GetUserInfoListStartAction())
         try {
@@ -37,7 +38,8 @@ export class GetUserInfoListAction extends AsyncAction<
                 )
                 const json = await rsp.json()
                 if (rsp.status != 200) {
-                    dispatch(new GetUserInfoListErrorAction(json['msg']))
+                    dispatch(new GetUserInfoListErrorAction())
+                    reduxDispatch(addError(json['msg']))
                     return
                 }
                 userInfoList = [
@@ -54,7 +56,8 @@ export class GetUserInfoListAction extends AsyncAction<
                 }
             }
         } catch (e: unknown) {
-            dispatch(new GetUserInfoListErrorAction(exceptionMessage(e)))
+            dispatch(new GetUserInfoListErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -73,7 +76,7 @@ export class SetUserPermissionAction extends AsyncAction<
     }
     async run(
         dispatch: Dispatch<UserPermissionGroupAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ) {
         dispatch(new SetUserPermissionStartAction())
         try {
@@ -96,10 +99,12 @@ export class SetUserPermissionAction extends AsyncAction<
                 )
             } else {
                 const json = await rsp.json()
-                dispatch(new SetUserPermissionErrorAction(json['msg']))
+                dispatch(new SetUserPermissionErrorAction())
+                reduxDispatch(addError(json['msg']))
             }
         } catch (e: unknown) {
-            dispatch(new SetUserPermissionErrorAction(exceptionMessage(e)))
+            dispatch(new SetUserPermissionErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }

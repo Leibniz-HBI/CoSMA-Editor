@@ -24,13 +24,7 @@ export class GetMergeRequestConflictSuccessAction {
     }
 }
 
-export class GetMergeRequestConflictErrorAction {
-    msg: string
-
-    constructor(msg: string) {
-        this.msg = msg
-    }
-}
+export class GetMergeRequestConflictErrorAction {}
 
 export class ResolveConflictBaseAction {
     idEntityPersistent: string
@@ -47,24 +41,13 @@ export class ResolveConflictSuccessAction extends ResolveConflictBaseAction {
         this.replace = replace
     }
 }
-export class ResolveConflictErrorAction extends ResolveConflictBaseAction {
-    msg: string
-    constructor(idEntityPersistent: string, msg: string) {
-        super(idEntityPersistent)
-        this.msg = msg
-    }
-}
+export class ResolveConflictErrorAction extends ResolveConflictBaseAction {}
 
 export class StartMergeStartAction {}
 
 export class StartMergeSuccessAction {}
 
-export class StartMergeErrorAction {
-    msg: string
-    constructor(msg: string) {
-        this.msg = msg
-    }
-}
+export class StartMergeErrorAction {}
 
 export class StartMergeClearErrorAction {}
 

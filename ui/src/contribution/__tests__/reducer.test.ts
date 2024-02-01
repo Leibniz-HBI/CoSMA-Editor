@@ -1,6 +1,5 @@
 import { Remote } from '../../util/state'
 import {
-    UploadContributionClearErrorAction,
     LoadContributionsErrorAction,
     LoadContributionsStartAction,
     LoadContributionsSuccessAction,
@@ -51,11 +50,11 @@ describe('load contributions', () => {
             contributions: new Remote([], true)
         })
         const expectedState = newContributionState({
-            contributions: new Remote([], false, 'test error')
+            contributions: new Remote([], false)
         })
         const endState = contributionReducer(
             initialState,
-            new LoadContributionsErrorAction('test error')
+            new LoadContributionsErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })
@@ -93,25 +92,11 @@ describe('upload contribution', () => {
             showAddContribution: new Remote(true, true)
         })
         const expectedState = newContributionState({
-            showAddContribution: new Remote(true, false, 'test error')
-        })
-        const endState = contributionReducer(
-            initialState,
-            new UploadContributionErrorAction('test error')
-        )
-        expect(endState).toEqual(expectedState)
-    })
-    test('clear upload error', () => {
-        const initialState = newContributionState({
-            showAddContribution: new Remote(true, false, 'test error')
-        })
-
-        const expectedState = newContributionState({
             showAddContribution: new Remote(true, false)
         })
         const endState = contributionReducer(
             initialState,
-            new UploadContributionClearErrorAction()
+            new UploadContributionErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })

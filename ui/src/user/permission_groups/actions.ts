@@ -10,13 +10,7 @@ export class GetUserInfoListSuccessAction {
     }
 }
 
-export class GetUserInfoListErrorAction {
-    msg: string
-
-    constructor(msg: string) {
-        this.msg = msg
-    }
-}
+export class GetUserInfoListErrorAction {}
 
 export class SelectUserInfoAction {
     userInfo: UserInfo
@@ -36,13 +30,7 @@ export class SetUserPermissionSuccessAction {
     }
 }
 
-export class SetUserPermissionErrorAction {
-    msg: string
-
-    constructor(msg: string) {
-        this.msg = msg
-    }
-}
+export class SetUserPermissionErrorAction {}
 
 export class SetUserPermissionClearErrorAction {}
 export type UserPermissionGroupAction =

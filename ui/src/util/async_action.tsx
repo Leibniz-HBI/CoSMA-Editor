@@ -1,5 +1,4 @@
 import { Dispatch } from 'react'
-import { LogoutAction } from '../user/actions'
 import { AppDispatch } from '../store'
 
 /**
@@ -7,9 +6,5 @@ import { AppDispatch } from '../store'
  */
 
 export abstract class AsyncAction<U, V> {
-    abstract run(
-        dispatch: Dispatch<U>,
-        reduxDispatch: AppDispatch,
-        logoutDispatch?: Dispatch<LogoutAction>
-    ): Promise<V>
+    abstract run(dispatch: Dispatch<U>, reduxDispatch: AppDispatch): Promise<V>
 }

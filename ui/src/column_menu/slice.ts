@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { TagSelectionEntry, newTagSelectionState, TagSelectionState } from './state'
-import { ErrorState } from '../util/error/slice'
 
 const initialState = newTagSelectionState({})
 
@@ -8,11 +7,8 @@ export const tagSelectionSlice = createSlice({
     name: 'tagSelection',
     initialState,
     reducers: {
-        loadTagHierarchyError(
-            state: TagSelectionState,
-            action: PayloadAction<ErrorState>
-        ) {
-            state.errorState = action.payload
+        loadTagHierarchyError(state: TagSelectionState) {
+            state.isLoading = false
         },
         startSearch(state: TagSelectionState) {
             state.isSearching = true
@@ -68,20 +64,12 @@ export const tagSelectionSlice = createSlice({
         },
         submitTagDefinitionStart(state: TagSelectionState) {
             state.isSubmittingDefinition = true
-            state.submissionErrorState = undefined
         },
         submitTagDefinitionSuccess(state: TagSelectionState) {
             state.isSubmittingDefinition = false
         },
-        submitTagDefinitionError(
-            state: TagSelectionState,
-            action: PayloadAction<ErrorState>
-        ) {
+        submitTagDefinitionError(state: TagSelectionState) {
             state.isSubmittingDefinition = false
-            state.submissionErrorState = action.payload
-        },
-        submitTagDefinitionClearError(state: TagSelectionState) {
-            state.submissionErrorState = undefined
         }
     }
 })
@@ -104,7 +92,6 @@ export const {
     loadTagHierarchySuccess,
     setSearchEntries,
     startSearch,
-    submitTagDefinitionClearError,
     submitTagDefinitionError,
     submitTagDefinitionStart,
     submitTagDefinitionSuccess,

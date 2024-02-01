@@ -19,12 +19,7 @@ export class LoadContributionDetailsSuccessAction {
 /**
  * Indicates error during loading of contribution
  */
-export class LoadContributionDetailsErrorAction {
-    msg: string
-    constructor(msg: string) {
-        this.msg = msg
-    }
-}
+export class LoadContributionDetailsErrorAction {}
 
 /**
  * Indicates start of contribution patch
@@ -43,14 +38,9 @@ export class PatchContributionDetailsSuccessAction {
 }
 
 /**
- * Indidcates an error during contribution patch
+ * Indicates an error during contribution patch
  */
-export class PatchContributionDetailsErrorAction {
-    msg: string
-    constructor(msg: string) {
-        this.msg = msg
-    }
-}
+export class PatchContributionDetailsErrorAction {}
 
 /**
  * Indicate that the error of patching contributions should be cleared

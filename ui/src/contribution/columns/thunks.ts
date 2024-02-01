@@ -14,7 +14,7 @@ import {
     patchColumnDefinitionContributionSuccess
 } from './slice'
 import { columnTypeMapApiToApp } from '../../column_menu/thunks'
-import { addError, newErrorState } from '../../util/error/slice'
+import { addError } from '../../util/notification/slice'
 
 export function loadColumnDefinitionsContribution(
     idPersistent: string
@@ -50,10 +50,10 @@ export function loadColumnDefinitionsContribution(
             }
             const json = await rsp.json()
             dispatch(loadColumnDefinitionsContributionError())
-            dispatch(addError(newErrorState(json['msg'])))
+            dispatch(addError(json['msg']))
         } catch (e: unknown) {
             dispatch(loadColumnDefinitionsContributionError())
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -106,11 +106,11 @@ export function patchColumnDefinitionContribution({
             } else {
                 const json = await rsp.json()
                 dispatch(patchColumnDefinitionContributionError())
-                dispatch(addError(newErrorState(json['msg'])))
+                dispatch(addError(json['msg']))
             }
         } catch (e: unknown) {
             dispatch(patchColumnDefinitionContributionError())
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -130,10 +130,12 @@ export function finalizeColumnAssignment(
                 dispatch(finalizeColumnAssignmentSuccess())
             } else {
                 const json = await rsp.json()
-                dispatch(finalizeColumnAssignmentError(json['msg']))
+                dispatch(finalizeColumnAssignmentError())
+                dispatch(addError(json['msg']))
             }
         } catch (e: unknown) {
-            dispatch(finalizeColumnAssignmentError(exceptionMessage(e)))
+            dispatch(finalizeColumnAssignmentError())
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }

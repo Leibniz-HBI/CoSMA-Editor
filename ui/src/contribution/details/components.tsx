@@ -8,17 +8,13 @@ import { FormField } from '../../util/form'
 import { ContributionStepper } from '../components'
 import { useLoaderData } from 'react-router-dom'
 import { Contribution } from '../state'
-import { ErrorPopover } from '../../util/error/components'
-import { newErrorState } from '../../util/error/slice'
 
 export function ContributionDetailsStep() {
     const idPersistent = useLoaderData() as string
     const {
         remoteContribution,
-        patchContribution,
         loadContributionDetailsCallback,
-        patchContributionDetailsCallback,
-        clearPatchContributionErrorCallback
+        patchContributionDetailsCallback
     } = useContributionDetails(idPersistent)
     useLayoutEffect(() => {
         loadContributionDetailsCallback()
@@ -42,8 +38,6 @@ export function ContributionDetailsStep() {
             <EditForm
                 contribution={remoteContribution.value}
                 onSubmit={patchContributionDetailsCallback}
-                editErrorMsg={patchContribution.errorMsg}
-                clearEditErrorCallback={clearPatchContributionErrorCallback}
             />
         </ContributionStepper>
     )
@@ -62,14 +56,10 @@ const editSchema = yup.object({
 
 export function EditForm({
     contribution,
-    onSubmit,
-    editErrorMsg,
-    clearEditErrorCallback
+    onSubmit
 }: {
     contribution: Contribution
     onSubmit: PatchContributionCallback
-    editErrorMsg?: string
-    clearEditErrorCallback: VoidFunction
 }) {
     return (
         <Formik
@@ -94,8 +84,6 @@ export function EditForm({
                     handleSubmit={handleSubmit}
                     touched={touched}
                     formErrors={errors}
-                    editErrorMsg={editErrorMsg}
-                    clearEditErrorCallback={clearEditErrorCallback}
                 />
             )}
         </Formik>
@@ -107,17 +95,13 @@ export function EditFormBody({
     handleSubmit,
     handleChange,
     formErrors,
-    touched,
-    editErrorMsg,
-    clearEditErrorCallback
+    touched
 }: {
     values: EditFormArgs
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
     handleChange: HandleChange
     touched: FormikTouched<EditFormArgs>
     formErrors: FormikErrors<EditFormArgs>
-    editErrorMsg?: string
-    clearEditErrorCallback: VoidFunction
 }) {
     const containerRef = useRef(null)
     const buttonRef = useRef(null)
@@ -162,15 +146,6 @@ export function EditFormBody({
                     <Button type="submit" ref={buttonRef}>
                         Edit
                     </Button>
-                    {!!editErrorMsg && (
-                        <ErrorPopover
-                            errorState={newErrorState(editErrorMsg)}
-                            placement="top"
-                            clearError={clearEditErrorCallback}
-                            targetRef={buttonRef}
-                            containerRef={containerRef}
-                        />
-                    )}
                 </Col>
             </Row>
         </Form>

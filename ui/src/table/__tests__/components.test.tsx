@@ -21,7 +21,7 @@ import {
 import { TagDefinition, TagType } from '../../column_menu/state'
 import { LocalTableCallbacks, TableDataProps } from '../hooks'
 import { ColumnAddButton } from '../../column_menu/components/misc'
-import { newErrorState } from '../../util/error/slice'
+import { newNotification } from '../../util/notification/slice'
 import { Remote } from '../../util/state'
 jest.mock('react-redux', () => {
     return {
@@ -68,12 +68,10 @@ describe('table from state', () => {
         isLoading: false,
         frozenColumns: 1,
         isShowColumnAddMenu: false,
-        loadDataErrorState: undefined,
         selectedColumnHeaderBounds: undefined,
         columnHeaderMenuEntries: [],
         showEntityAddMenu: false,
         showEntityMergingModal: false,
-        submitValuesErrorState: undefined,
         tagDefinitionChangeOwnership: undefined,
         entityAddState: new Remote(false),
         showSearch: false
@@ -90,7 +88,6 @@ describe('table from state', () => {
         },
         hideEntityMergingModalCallback: () => {},
         showEntityMergingModalCallback: () => {},
-        clearEntityChangeErrorCallback: () => {},
         showColumnAddMenuCallback: () => {},
         hideColumnAddMenuCallback: () => {},
         updateTagDefinitionCallback: () => {},
@@ -108,26 +105,11 @@ describe('table from state', () => {
             newSizeWithGrow: number
         ) => {},
         switchColumnsCallback: (startIndex, endIndex) => {},
-        clearSubmitValueErrorCallback: () => {},
         hideTagDefinitionOwnershipCallback: () => {},
         showEntityAddMenuCallback: () => {},
         hideEntityAddMenuCallback: () => {},
         csvLines: () => []
     }
-    test('should show error', () => {
-        const tableProps = {
-            ...baseTableProps,
-            loadDataErrorState: newErrorState('test error')
-        }
-        render(
-            <DataTable
-                tableProps={tableProps}
-                tableCallbacks={baseTableCallbacks}
-                submitValueCallback={jest.fn()}
-            />
-        )
-        screen.getByText('test error', { exact: false })
-    })
     test('should show loading with loading set', () => {
         const tableProps = { ...baseTableProps, isLoading: true }
         const { container } = render(

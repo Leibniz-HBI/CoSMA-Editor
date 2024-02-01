@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { addError } from '../../util/notification/slice'
 import {
     LoadContributionsErrorAction,
     LoadContributionsStartAction,
@@ -11,6 +12,18 @@ import {
 } from '../actions'
 import { LoadContributionsAction, UploadContributionAction } from '../async_actions'
 import { ContributionStep, newContribution } from '../state'
+
+jest.mock('../../util/notification/slice', () => {
+    const addErrorMock = jest.fn()
+    return {
+        ...jest.requireActual('../../util/notification/slice'),
+        addError: addErrorMock
+    }
+})
+
+beforeEach(() => {
+    ;(addError as unknown as jest.Mock).mockReset()
+})
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {
@@ -31,6 +44,9 @@ function responseSequence(responses: [number, () => any][]) {
 const nameTest0 = 'contribution test 0'
 const descriptionTest0 = 'a contribution for tests'
 const idTest0 = 'id-test-0'
+beforeEach(() => {
+    ;(addError as unknown as jest.Mock).mockReset()
+})
 describe('load contributions', () => {
     test('success', async () => {
         const authorTest1 = 'author test 1'
@@ -70,7 +86,8 @@ describe('load contributions', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoadContributionsAction().run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new LoadContributionsAction().run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoadContributionsStartAction()],
             [
@@ -94,6 +111,7 @@ describe('load contributions', () => {
                 ])
             ]
         ])
+        expect(reduxDispatch.mock.calls.length).toEqual(0)
     })
     test('server error', async () => {
         responseSequence([
@@ -105,14 +123,15 @@ describe('load contributions', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoadContributionsAction().run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new LoadContributionsAction().run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new LoadContributionsStartAction()],
-            [
-                new LoadContributionsErrorAction(
-                    'Could not load contributions. Reason: "test error".'
-                )
-            ]
+            [new LoadContributionsErrorAction()]
+        ])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([
+            ['Could not load contributions. Reason: "test error".']
         ])
     })
 })
@@ -128,12 +147,13 @@ describe('upload contribution', () => {
             ]
         ])
         const dispatch = jest.fn()
+        const reduxDispatch = jest.fn()
         await new UploadContributionAction({
             name: nameTest0,
             description: descriptionTest0,
             hasHeader: false,
             file: new File([''], 'testFileName', { type: 'text, csv' })
-        }).run(dispatch)
+        }).run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new UploadContributionStartAction()],
             [new UploadContributionSuccessAction()]
@@ -147,6 +167,7 @@ describe('upload contribution', () => {
                 ]
             ])
         )
+        expect(reduxDispatch.mock.calls.length).toEqual(0)
     })
     test('server error', async () => {
         responseSequence([
@@ -158,19 +179,20 @@ describe('upload contribution', () => {
             ]
         ])
         const dispatch = jest.fn()
+        const reduxDispatch = jest.fn()
         await new UploadContributionAction({
             name: nameTest0,
             description: descriptionTest0,
             hasHeader: false,
             file: new File([''], 'testFileName', { type: 'text, csv' })
-        }).run(dispatch)
+        }).run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new UploadContributionStartAction()],
-            [
-                new UploadContributionErrorAction(
-                    'Could not upload contribution. Reason: "test error".'
-                )
-            ]
+            [new UploadContributionErrorAction()]
+        ])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([
+            ['Could not upload contribution. Reason: "test error".']
         ])
     })
 })

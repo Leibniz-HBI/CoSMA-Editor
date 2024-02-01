@@ -4,7 +4,7 @@ import { constructColumnTitleSpans } from '../column_menu/components/selection'
 import { FormField } from '../util/form'
 import { useDispatch, useSelector } from 'react-redux'
 import { userSearch } from '../user/thunks'
-import { ChangeEvent, MutableRefObject, useEffect, useRef, useState } from 'react'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { AppDispatch } from '../store'
 import { selectSearchResults } from '../user/selectors'
 import { debounce } from 'debounce'
@@ -18,8 +18,7 @@ import { selectPutTagOwnership, selectTagOwnershipRequests } from './selectors'
 import { RemoteTriggerButton, CosmaeLoading, CosmaeCard } from '../util/components/misc'
 import { PublicUserInfo } from '../user/state'
 import { CheckCircle, XCircleFill } from 'react-bootstrap-icons'
-import { ErrorPopover } from '../util/error/components'
-import { putOwnershipRequestClear, putOwnershipRequestErrorClear } from './slice'
+import { putOwnershipRequestClear } from './slice'
 import { OwnershipRequest } from './state'
 import { Remote, RemoteInterface } from '../util/state'
 import { updateUserTagDefinition, userSearchClear } from '../user/slice'
@@ -178,13 +177,12 @@ export function ChangeOwnershipModal({
         onClose()
     }
     const searchResults = useSelector(selectSearchResults)
-    const modalBodyRef = useRef(null)
     return (
         <Modal show={tagDefinition !== undefined} onHide={closeCallback}>
             <Modal.Header closeButton={true} closeVariant="white">
                 Change Tag Ownership
             </Modal.Header>
-            <Modal.Body ref={modalBodyRef}>
+            <Modal.Body>
                 {tagDefinition === undefined ? (
                     <div />
                 ) : (
@@ -218,7 +216,6 @@ export function ChangeOwnershipModal({
                                                 idTagDefinitionPersistent={
                                                     tagDefinition.idPersistent
                                                 }
-                                                containerRef={modalBodyRef}
                                                 updateTagDefinitionChangeCallback={
                                                     updateTagDefinitionChangeCallback
                                                 }
@@ -238,12 +235,10 @@ export function ChangeOwnershipModal({
 export function OwnershipSearchResultsItem({
     userInfo,
     idTagDefinitionPersistent,
-    containerRef,
     updateTagDefinitionChangeCallback
 }: {
     userInfo: PublicUserInfo
     idTagDefinitionPersistent: string
-    containerRef: MutableRefObject<null>
     updateTagDefinitionChangeCallback: (tagDefinition: TagDefinition) => void
 }) {
     const dispatch: AppDispatch = useDispatch()
@@ -265,12 +260,10 @@ export function OwnershipSearchResultsItem({
     }
     const tailElementRef = useRef(null)
     let tailElement
-    let showError = false
     if (userInfo.idPersistent == putOwnershipRequestState.value?.idUserPersistent) {
         if (putOwnershipRequestState.isLoading) {
             tailElement = <Spinner />
         } else if (putOwnershipRequestState.errorMsg !== undefined) {
-            showError = true
             tailElement = (
                 <>
                     <span
@@ -293,26 +286,7 @@ export function OwnershipSearchResultsItem({
         <Row onClick={callback}>
             <Col>{userInfo.userName}</Col>
             <Col xs="1" ref={tailElementRef}>
-                <>
-                    {tailElement}
-                    <ErrorPopover
-                        errorState={{ msg: putOwnershipRequestState.errorMsg ?? '' }}
-                        placement="top"
-                        show={showError}
-                        targetRef={tailElementRef}
-                        containerRef={containerRef}
-                        clearError={(e) => {
-                            e.stopPropagation()
-                            dispatch(
-                                putOwnershipRequestErrorClear({
-                                    idUserPersistent: userInfo.idPersistent,
-                                    idTagDefinitionPersistent: idTagDefinitionPersistent
-                                })
-                            )
-                            return true
-                        }}
-                    />
-                </>
+                {tailElement}
             </Col>
         </Row>
     )

@@ -6,7 +6,7 @@ import {
     Item
 } from '@glideapps/glide-data-grid'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Col, Modal, Row, Toast, ToastContainer } from 'react-bootstrap'
+import { Button, Col, Modal, Row } from 'react-bootstrap'
 import { IBounds, useLayer } from 'react-laag'
 import { ColumnMenu } from '../column_menu/components/menu'
 import { ColumnAddButton } from '../column_menu/components/misc'
@@ -153,9 +153,6 @@ export function RemoteDataTable(props: {
                                     addEntityCallback={
                                         remoteCallbacks.addEntityCallback
                                     }
-                                    clearErrorCallback={
-                                        localCallbacks.clearEntityChangeErrorCallback
-                                    }
                                 />
                             </Modal.Body>
                         </Modal>
@@ -204,8 +201,6 @@ export function DataTable(props: {
         frozenColumns,
         selectedColumnHeaderBounds,
         isLoading,
-        loadDataErrorState,
-        submitValuesErrorState,
         columnHeaderMenuEntries,
         tagDefinitionChangeOwnership,
         showSearch
@@ -218,7 +213,6 @@ export function DataTable(props: {
         setColumnWidthCallback,
         switchColumnsCallback,
         columnHeaderBoundsCallback,
-        clearSubmitValueErrorCallback,
         hideTagDefinitionOwnershipCallback,
         updateTagDefinitionCallback,
         toggleSearchCallback
@@ -294,12 +288,6 @@ export function DataTable(props: {
 
     if (isLoading || entities === undefined) {
         return <div className="shimmer"></div>
-    } else if (!(loadDataErrorState === undefined)) {
-        return (
-            <div>
-                <p>Error: {loadDataErrorState.msg}</p>
-            </div>
-        )
     } else {
         const columnDefs: GridColumn[] = []
         for (let i = 0; i < columnStates.length; ++i) {
@@ -372,18 +360,6 @@ export function DataTable(props: {
                             {tooltip.val}
                         </div>
                     )}
-                {!!submitValuesErrorState && (
-                    <ToastContainer position="bottom-end" className="p-3">
-                        <Toast onClose={clearSubmitValueErrorCallback}>
-                            <Toast.Header className="bg-danger" closeVariant="white">
-                                <strong className="me-auto">Error</strong>
-                            </Toast.Header>
-                            <Toast.Body>
-                                <Row>{submitValuesErrorState.msg}</Row>
-                            </Toast.Body>
-                        </Toast>
-                    </ToastContainer>
-                )}
                 <ChangeOwnershipModal
                     tagDefinition={tagDefinitionChangeOwnership}
                     onClose={hideTagDefinitionOwnershipCallback}

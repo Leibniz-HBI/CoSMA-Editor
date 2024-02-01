@@ -1,7 +1,6 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { TagDefinition } from '../column_menu/state'
 import { CellValue, Entity } from './state'
-import { ErrorState } from '../util/error/slice'
 
 export type Edit = [string, string, CellValue]
 
@@ -96,12 +95,7 @@ export class ChangeColumnIndexAction {
 /**
  * Indicates an error during table data fetch.
  */
-export class SetLoadDataErrorAction {
-    error: ErrorState
-    constructor(error: ErrorState) {
-        this.error = error
-    }
-}
+export class SetLoadDataErrorAction {}
 
 /**
  * Indicates that submitting values has started
@@ -112,13 +106,7 @@ export class SubmitValuesStartAction {}
  * Indicates that an error has occurred during value submission
  */
 
-export class SubmitValuesErrorAction {
-    error: ErrorState
-
-    constructor(error: ErrorState) {
-        this.error = error
-    }
-}
+export class SubmitValuesErrorAction {}
 
 /**
  * Indicates that values have been edited.
@@ -129,11 +117,6 @@ export class SubmitValuesEndAction {
         this.edits = edits
     }
 }
-
-/**
- * Indicates that the SubmitValuesErrorState should be cleared
- */
-export class SubmitValuesClearErrorAction {}
 
 /**
  * Indicate that a tag definition has changed
@@ -161,13 +144,7 @@ export class CurateTagDefinitionSuccessAction extends TagDefinitionChangeAction 
 /**
  * Indicate an error during a curation request
  */
-export class CurateTagDefinitionErrorAction {
-    error: ErrorState
-
-    constructor(error: ErrorState) {
-        this.error = error
-    }
-}
+export class CurateTagDefinitionErrorAction {}
 
 /**
  * Indicate that a tag ownership change UI element should be shown
@@ -202,12 +179,7 @@ export class EntityChangeOrCreateSuccessAction {
 /**
  * Indicate an error during changing or creating an entity
  */
-export class EntityChangeOrCreateErrorAction {
-    msg: string
-    constructor(msg: string) {
-        this.msg = msg
-    }
-}
+export class EntityChangeOrCreateErrorAction {}
 
 /**
  * Indicate that the entity add dialog should be shown or hidden.
@@ -218,11 +190,6 @@ export class ShowEntityAddDialogAction {
         this.show = show
     }
 }
-
-/**
- * Indicate that the error for adding an entity should be cleared
- */
-export class EntityChangeOrCreateClearErrorAction {}
 
 /**
  * Indicate wether the entity duplicate overlay should be shown.
@@ -259,7 +226,6 @@ export type TableAction =
     | SubmitValuesStartAction
     | SubmitValuesErrorAction
     | SubmitValuesEndAction
-    | SubmitValuesClearErrorAction
     | CurateTagDefinitionStartAction
     | CurateTagDefinitionSuccessAction
     | CurateTagDefinitionErrorAction
@@ -270,6 +236,5 @@ export type TableAction =
     | EntityChangeOrCreateSuccessAction
     | EntityChangeOrCreateErrorAction
     | ShowEntityAddDialogAction
-    | EntityChangeOrCreateClearErrorAction
     | ToggleEntityModalAction
     | ToggleShowSearchAction

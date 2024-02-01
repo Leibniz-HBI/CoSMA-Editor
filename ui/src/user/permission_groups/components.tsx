@@ -1,7 +1,7 @@
 import { useLayoutEffect } from 'react'
 import { useUserPermissionGroup } from './hooks'
 import { CosmaeLoading } from '../../util/components/misc'
-import { Alert, Col, FormCheck, ListGroup, Row } from 'react-bootstrap'
+import { Col, FormCheck, ListGroup, Row } from 'react-bootstrap'
 import { UserInfo, UserPermissionGroup } from '../state'
 import { Remote } from '../../util/state'
 export function UserPermissionGroupComponent() {
@@ -10,8 +10,7 @@ export function UserPermissionGroupComponent() {
         selectedUser,
         getUserInfoListCallback,
         selectUserCallback,
-        setUserPermissionCallback,
-        setUserPermissionClearErrorCallback
+        setUserPermissionCallback
     } = useUserPermissionGroup()
     useLayoutEffect(
         () => {
@@ -44,7 +43,6 @@ export function UserPermissionGroupComponent() {
                 <UserPermissionGroupForm
                     userInfo={selectedUser}
                     setUserPermissionCallback={setUserPermissionCallback}
-                    clearErrorCallback={setUserPermissionClearErrorCallback}
                 />
             </Col>
         </Row>
@@ -72,15 +70,13 @@ export function UserInfoListItem({
 
 export function UserPermissionGroupForm({
     userInfo,
-    setUserPermissionCallback,
-    clearErrorCallback
+    setUserPermissionCallback
 }: {
     userInfo: Remote<UserInfo | undefined>
     setUserPermissionCallback: (
         idUserPersistent: string,
         permission: UserPermissionGroup
     ) => void
-    clearErrorCallback: VoidFunction
 }) {
     if (userInfo.value === undefined) {
         return <span>Please select a user.</span>
@@ -123,17 +119,6 @@ export function UserPermissionGroupForm({
                     />
                 ))}
             </Row>
-            {userInfo.errorMsg !== undefined && (
-                <Alert
-                    variant="danger"
-                    dismissible
-                    onClose={clearErrorCallback}
-                    closeVariant="white"
-                >
-                    <Alert.Heading>Error</Alert.Heading>
-                    {userInfo.errorMsg}
-                </Alert>
-            )}
         </>
     )
 }

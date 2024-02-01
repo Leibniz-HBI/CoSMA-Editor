@@ -14,7 +14,7 @@ import {
     userSearchStart,
     userSearchSuccess
 } from './slice'
-import { addError, newErrorState } from '../util/error/slice'
+import { addError } from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
@@ -38,7 +38,8 @@ export function login(userName: string, password: string): ThunkWithFetch<void> 
                 const json = await rsp.json()
                 const msg = json['msg']
                 if (msg !== undefined) {
-                    dispatch(loginError(json['msg']))
+                    dispatch(loginError())
+                    dispatch(addError(errorMessageFromApi(json)))
                 } else {
                     dispatch(loginSuccess(parseUserInfoFromJson(json)))
                 }
@@ -48,10 +49,12 @@ export function login(userName: string, password: string): ThunkWithFetch<void> 
                 if (msg === undefined) {
                     msg = 'Unknown error'
                 }
-                dispatch(loginError(newErrorState(msg)))
+                dispatch(loginError())
+                dispatch(addError(msg))
             }
         } catch (e: unknown) {
-            dispatch(loginError(newErrorState(exceptionMessage(e))))
+            dispatch(loginError())
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -136,10 +139,12 @@ export function registration({
                         msg = 'Unknown error'
                     }
                 }
-                dispatch(registrationError(newErrorState(msg)))
+                dispatch(registrationError())
+                dispatch(addError(msg))
             }
         } catch (error: unknown) {
-            dispatch(registrationError(newErrorState(exceptionMessage(error))))
+            dispatch(registrationError())
+            dispatch(addError(exceptionMessage(error)))
         }
     }
 }
@@ -159,10 +164,10 @@ export function logoutThunk(): ThunkWithFetch<void> {
                 dispatch(logout())
             } else {
                 const json = await rsp.json()
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -195,10 +200,12 @@ export function userSearch(searchTerm: string): ThunkWithFetch<void> {
                 }
                 dispatch(userSearchSuccess(userInfos))
             } else {
-                dispatch(userSearchError(newErrorState(json['msg'])))
+                dispatch(userSearchError())
+                dispatch(addError(json['msg']))
             }
         } catch (e: unknown) {
-            dispatch(userSearchError(newErrorState(exceptionMessage(e))))
+            dispatch(userSearchError())
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }

@@ -12,7 +12,7 @@ import {
     getEntityMergeRequestsError,
     getEntityMergeRequestsSuccess
 } from './slice'
-import { addError, newErrorState } from '../../util/error/slice'
+import { addError } from '../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
 
 export function getEntityMergeRequests(): ThunkWithFetch<void> {
@@ -31,11 +31,11 @@ export function getEntityMergeRequests(): ThunkWithFetch<void> {
                 dispatch(getEntityMergeRequestsSuccess(entityMergeRequests))
             } else {
                 const json = await rsp.json()
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
                 dispatch(getEntityMergeRequestsError())
             }
         } catch (exc: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(exc))))
+            dispatch(addError(exceptionMessage(exc)))
             dispatch(getEntityMergeRequestsError())
         }
     }

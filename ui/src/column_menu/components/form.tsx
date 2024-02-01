@@ -1,22 +1,11 @@
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { ChangeEvent, FormEvent, ReactNode, useRef } from 'react'
-import {
-    Button,
-    Col,
-    FormLabel,
-    Row,
-    Form,
-    Overlay,
-    Popover,
-    CloseButton
-} from 'react-bootstrap'
+import { Button, Col, FormLabel, Row, Form } from 'react-bootstrap'
 import { TagType } from '../state'
 import * as yup from 'yup'
-import { useDispatch, useSelector } from 'react-redux'
 import { submitTagDefinition, loadTagDefinitionHierarchy } from '../thunks'
 import { AppDispatch } from '../../store'
-import { selectTagSubmitError } from '../selectors'
-import { submitTagDefinitionClearError } from '../slice'
+import { useAppDispatch } from '../../hooks'
 
 const schema = yup.object({
     columnType: yup.number().required(),
@@ -36,7 +25,7 @@ export function ColumnTypeCreateForm({
 }: {
     children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }) {
-    const dispatch: AppDispatch = useDispatch()
+    const dispatch: AppDispatch = useAppDispatch()
     return (
         <Formik
             initialValues={{ columnType: '', name: '', parent: '' }}
@@ -85,8 +74,6 @@ function ColumnTypeCreateFormBody(props: {
 }): JSX.Element {
     const containerRef = useRef(null)
     const targetRef = useRef(null)
-    const dispatch = useDispatch()
-    const submitError = useSelector(selectTagSubmitError)
     return (
         <Form
             noValidate
@@ -177,31 +164,6 @@ function ColumnTypeCreateFormBody(props: {
                 <Button type="submit" ref={targetRef}>
                     Create
                 </Button>
-                {!!submitError && (
-                    <Overlay
-                        show={true}
-                        target={targetRef}
-                        container={containerRef}
-                        placement="top"
-                    >
-                        <Popover id="submit-column-definition-error-popover">
-                            <Popover.Header className="bg-danger text-light">
-                                <Row className="justify-content-between">
-                                    <Col>Error</Col>
-                                    <CloseButton
-                                        variant="white"
-                                        onClick={() =>
-                                            dispatch(submitTagDefinitionClearError())
-                                        }
-                                    ></CloseButton>
-                                </Row>
-                            </Popover.Header>
-                            <Popover.Body>
-                                <Row>{submitError?.msg}</Row>
-                            </Popover.Body>
-                        </Popover>
-                    </Overlay>
-                )}
             </Row>
         </Form>
     )

@@ -16,7 +16,11 @@ import { ColumnDefinitionStep } from '../components'
 import { ContributionStep } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
-import { ErrorManager, errorSlice } from '../../../util/error/slice'
+import {
+    NotificationManager,
+    NotificationType,
+    notificationReducer
+} from '../../../util/notification/slice'
 import { ContributionState, contributionSlice } from '../../slice'
 
 jest.mock('react-router-dom', () => {
@@ -35,7 +39,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         contributionColumnDefinition: ColumnDefinitionsContributionState
         contribution: ContributionState
         tagSelection: TagSelectionState
-        error: ErrorManager
+        notification: NotificationManager
     }
 }
 
@@ -49,7 +53,7 @@ export function renderWithProviders(
             }),
             contribution: { selectedContribution: newRemote(undefined) },
             tagSelection: newTagSelectionState({}),
-            error: { errorList: [], errorMap: {} }
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -59,7 +63,7 @@ export function renderWithProviders(
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
             contribution: contributionSlice.reducer,
             tagSelection: tagSelectionSlice.reducer,
-            error: errorSlice.reducer
+            notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -151,9 +155,15 @@ test('sets error', async () => {
     const expectedMessage = `${errorMsg}\n${errorDetails}`
     await waitFor(() => {
         const state = store.getState()
-        expect(state.error).toEqual({
-            errorList: [{ id: 'id-error-test', msg: expectedMessage }],
-            errorMap: { 'id-error-test': 0 }
+        expect(state.notification).toEqual({
+            notificationList: [
+                {
+                    id: 'id-error-test',
+                    msg: expectedMessage,
+                    type: NotificationType.Error
+                }
+            ],
+            notificationMap: { 'id-error-test': 0 }
         })
     })
 })

@@ -18,9 +18,18 @@ import { ChangeOwnershipModal } from '../components'
 import userEvent from '@testing-library/user-event'
 import { TagManagementState } from '../state'
 import { Remote, newRemote } from '../../util/state'
+import {
+    NotificationManager,
+    NotificationType,
+    notificationReducer
+} from '../../util/notification/slice'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: { user: UserState; tagManagement: TagManagementState }
+    preloadedState?: {
+        user: UserState
+        tagManagement: TagManagementState
+        notification: NotificationManager
+    }
 }
 export function renderWithProviders(
     ui: React.ReactElement,
@@ -31,13 +40,18 @@ export function renderWithProviders(
             tagManagement: {
                 ownershipRequests: newRemote({ petitioned: [], received: [] }),
                 putOwnershipRequest: newRemote(undefined)
-            }
+            },
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
 ) {
     const store = configureStore({
-        reducer: { user: userReducer, tagManagement: tagManagementReducer },
+        reducer: {
+            user: userReducer,
+            tagManagement: tagManagementReducer,
+            notification: notificationReducer
+        },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
         preloadedState
@@ -90,7 +104,8 @@ describe('Ownership search', () => {
         curated: false,
         namePath: namePathTest,
         version: 4,
-        owner: ownerTest
+        owner: ownerTest,
+        hidden: false
     }
     const stateWithUserSearchResults = {
         user: mkUserState({
@@ -99,7 +114,8 @@ describe('Ownership search', () => {
         tagManagement: {
             ownershipRequests: newRemote({ petitioned: [], received: [] }),
             putOwnershipRequest: newRemote(undefined)
-        }
+        },
+        notification: { notificationList: [], notificationMap: {} }
     }
     const stateWithUserSearchResultsAndError = {
         user: mkUserState({
@@ -174,6 +190,7 @@ describe('Ownership search', () => {
                     owner: ownerTest,
                     version: 4,
                     type: 'INNER',
+                    hidden: false,
                     curated: false
                 }
             ]
@@ -212,7 +229,7 @@ describe('Ownership search', () => {
         ])
         expect(changeMock.mock.calls).toEqual([[tagDefinitionTest]])
     })
-    test('shows error', async () => {
+    test('dispatches error', async () => {
         const fetchMock = jest.fn()
         addResponseSequence(fetchMock, [
             [
@@ -223,7 +240,7 @@ describe('Ownership search', () => {
             ]
         ])
         const changeMock = jest.fn()
-        renderWithProviders(
+        const { store } = renderWithProviders(
             <ChangeOwnershipModal
                 tagDefinition={tagDefinitionTest}
                 onClose={jest.fn()}
@@ -244,8 +261,14 @@ describe('Ownership search', () => {
             expect((paths[0] as Element).getAttribute('d')).toEqual(
                 'M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z'
             )
-            screen.getByText('Error')
-            screen.getByText(testError)
+        })
+        await waitFor(() => {
+            const state = store.getState()
+            const notifications = state.notification.notificationList
+            expect(notifications.length).toEqual(1)
+            const notification = notifications[0]
+            expect(notification.type).toEqual(NotificationType.Error)
+            expect(notification.msg).toEqual(testError)
         })
         expect(fetchMock.mock.calls).toEqual([
             [
@@ -254,27 +277,6 @@ describe('Ownership search', () => {
             ]
         ])
         expect(changeMock.mock.calls).toEqual([])
-    })
-    test('can close error', async () => {
-        const fetchMock = jest.fn()
-        renderWithProviders(
-            <ChangeOwnershipModal
-                tagDefinition={tagDefinitionTest}
-                onClose={jest.fn()}
-                updateTagDefinitionChangeCallback={jest.fn()}
-            />,
-            fetchMock,
-            {
-                preloadedState: stateWithUserSearchResultsAndError
-            }
-        )
-        screen.getByText('Error')
-        const closeButtons = screen.getAllByRole('button')
-        expect(closeButtons.length).toEqual(2)
-        closeButtons[1].click()
-        await waitFor(() => {
-            expect(screen.queryAllByText('Error').length).toEqual(0)
-        })
     })
     test('close', async () => {
         const fetchMock = jest.fn()

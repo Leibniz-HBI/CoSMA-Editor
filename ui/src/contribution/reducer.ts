@@ -1,6 +1,5 @@
 import { Remote } from '../util/state'
 import {
-    UploadContributionClearErrorAction,
     ContributionAction,
     LoadContributionsErrorAction,
     LoadContributionsStartAction,
@@ -31,7 +30,7 @@ export function contributionReducer(
     if (action instanceof LoadContributionsErrorAction) {
         return newContributionState({
             ...state,
-            contributions: state.contributions.withError(action.msg)
+            contributions: state.contributions.success(state.contributions.value)
         })
     }
     if (action instanceof UploadContributionStartAction) {
@@ -49,19 +48,15 @@ export function contributionReducer(
     if (action instanceof UploadContributionErrorAction) {
         return newContributionState({
             ...state,
-            showAddContribution: state.showAddContribution.withError(action.msg)
+            showAddContribution: state.showAddContribution.success(
+                state.showAddContribution.value
+            )
         })
     }
     if (action instanceof ToggleShowAddContributionAction) {
         return newContributionState({
             ...state,
             showAddContribution: new Remote(!state.showAddContribution.value)
-        })
-    }
-    if (action instanceof UploadContributionClearErrorAction) {
-        return newContributionState({
-            ...state,
-            showAddContribution: state.showAddContribution.withoutError()
         })
     }
     return state

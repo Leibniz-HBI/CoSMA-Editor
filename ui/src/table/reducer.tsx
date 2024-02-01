@@ -16,7 +16,6 @@ import {
     SubmitValuesStartAction,
     SubmitValuesEndAction,
     SubmitValuesErrorAction,
-    SubmitValuesClearErrorAction,
     CurateTagDefinitionStartAction,
     CurateTagDefinitionErrorAction,
     TagChangeOwnershipShowAction,
@@ -26,11 +25,9 @@ import {
     EntityChangeOrCreateStartAction,
     EntityChangeOrCreateSuccessAction,
     EntityChangeOrCreateErrorAction,
-    EntityChangeOrCreateClearErrorAction,
     ToggleEntityModalAction,
     ToggleShowSearchAction
 } from './actions'
-import { newErrorState } from '../util/error/slice'
 import { Remote } from '../util/state'
 import { TagDefinition } from '../column_menu/state'
 
@@ -38,8 +35,7 @@ export function tableReducer(state: TableState, action: TableAction) {
     if (action instanceof SetEntityLoadingAction) {
         return new TableState({
             ...state,
-            isLoading: true,
-            loadDataErrorState: undefined
+            isLoading: true
         })
     } else if (action instanceof SetEntitiesAction) {
         const entityIndices = new Map(
@@ -201,32 +197,21 @@ export function tableReducer(state: TableState, action: TableAction) {
         return new TableState({
             ...state,
             isLoading: false,
-            loadDataErrorState: action.error,
             rowObjects: undefined
         })
     } else if (action instanceof SubmitValuesStartAction) {
         return new TableState({
             ...state,
-            isSubmittingValues: true,
-            submitValuesErrorState: undefined
+            isSubmittingValues: true
         })
     } else if (action instanceof SubmitValuesErrorAction) {
         return new TableState({
             ...state,
-            isSubmittingValues: false,
-            submitValuesErrorState: action.error
+            isSubmittingValues: false
         })
     } else if (action instanceof SubmitValuesEndAction) {
-        if (action.edits.length == 0) {
+        if (action.edits.length != 1) {
             return new TableState({ ...state, isSubmittingValues: false })
-        }
-        if (action.edits.length > 1) {
-            const batchErrorMsg = 'Batch edits not implemented. Values are not changed.'
-            return new TableState({
-                ...state,
-                isSubmittingValues: false,
-                submitValuesErrorState: newErrorState(batchErrorMsg, 'id-error-batch')
-            })
         }
         const [idEntity, idPersistentColumn, value] = action.edits[0]
         const idxColumn = state.columnIndices.get(idPersistentColumn)
@@ -258,8 +243,6 @@ export function tableReducer(state: TableState, action: TableAction) {
                 ...state.columnStates.slice(idxColumn + 1)
             ]
         })
-    } else if (action instanceof SubmitValuesClearErrorAction) {
-        return new TableState({ ...state, submitValuesErrorState: undefined })
     }
     if (action instanceof CurateTagDefinitionStartAction) {
         return state
@@ -358,13 +341,7 @@ export function tableReducer(state: TableState, action: TableAction) {
     if (action instanceof EntityChangeOrCreateErrorAction) {
         return new TableState({
             ...state,
-            entityAddState: state.entityAddState.withError(action.msg)
-        })
-    }
-    if (action instanceof EntityChangeOrCreateClearErrorAction) {
-        return new TableState({
-            ...state,
-            entityAddState: state.entityAddState.withoutError()
+            entityAddState: state.entityAddState.withError(undefined)
         })
     }
     if (action instanceof ToggleEntityModalAction) {

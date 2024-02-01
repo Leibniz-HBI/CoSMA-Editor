@@ -3,7 +3,10 @@
  */
 import { configureStore } from '@reduxjs/toolkit'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
-import { ErrorManager, errorSlice } from '../../../util/error/slice'
+import {
+    NotificationManager,
+    notificationReducer
+} from '../../../util/notification/slice'
 import { newRemote } from '../../../util/state'
 import { DisplayTxtManagementState } from '../state'
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
@@ -17,7 +20,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         displayTxtManagement: DisplayTxtManagementState
         tagSelection: TagSelectionState
-        error: ErrorManager
+        notification: NotificationManager
     }
 }
 
@@ -28,7 +31,7 @@ export function renderWithProviders(
         preloadedState = {
             displayTxtManagement: { tagDefinitions: newRemote([]) },
             tagSelection: newTagSelectionState({}),
-            error: { errorList: [], errorMap: {} }
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -37,7 +40,7 @@ export function renderWithProviders(
         reducer: {
             displayTxtManagement: displayTxtManagementReducer,
             tagSelection: tagSelectionSlice.reducer,
-            error: errorSlice.reducer
+            error: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

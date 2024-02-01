@@ -1,4 +1,4 @@
-import { newErrorState } from '../util/error/slice'
+import { addError } from '../util/notification/slice'
 import { exceptionMessage } from '../util/exception'
 import {
     TagDefinition,
@@ -43,11 +43,10 @@ export function loadTagDefinitionHierarchy({
             })
             const json = await rsp.json()
             if (rsp.status != 200) {
+                dispatch(loadTagHierarchyError())
                 dispatch(
-                    loadTagHierarchyError(
-                        newErrorState(
-                            `Could not load column definitions. Reason: "${json['msg']}"`
-                        )
+                    addError(
+                        `Could not load column definitions. Reason: "${json['msg']}"`
                     )
                 )
                 return
@@ -88,7 +87,8 @@ export function loadTagDefinitionHierarchy({
 
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
-            dispatch(loadTagHierarchyError(newErrorState(exceptionMessage(e))))
+            dispatch(loadTagHierarchyError())
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -127,16 +127,15 @@ export function submitTagDefinition({
             }
             const msg = (await rsp.json())['msg']
 
-            dispatch(submitTagDefinitionError(newErrorState(msg)))
+            dispatch(submitTagDefinitionError())
+            dispatch(addError(msg))
 
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
+            dispatch(submitTagDefinitionError())
             dispatch(
-                submitTagDefinitionError(
-                    newErrorState(
-                        'Submitting the column definition failed: ' +
-                            exceptionMessage(e)
-                    )
+                addError(
+                    'Submitting the column definition failed: ' + exceptionMessage(e)
                 )
             )
         }

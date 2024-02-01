@@ -1,5 +1,4 @@
 import { TagDefinition } from '../column_menu/state'
-import { ErrorState } from '../util/error/slice'
 import { Remote, RemoteInterface } from '../util/state'
 
 export enum UserPermissionGroup {
@@ -65,8 +64,6 @@ export interface UserState {
     isLoggingIn: boolean
     isRegistering: boolean
     isRefreshing: boolean
-    loginErrorState?: ErrorState
-    registrationErrorState?: ErrorState
     userSearchResults: RemoteInterface<(PublicUserInfo | UserInfo)[]>
 }
 
@@ -76,8 +73,6 @@ export function mkUserState({
     isLoggingIn = false,
     isRegistering = false,
     isRefreshing = false,
-    loginErrorState = undefined,
-    registrationErrorState = undefined,
     userSearchResults = new Remote([])
 }: {
     userInfo?: UserInfo
@@ -85,8 +80,6 @@ export function mkUserState({
     isLoggingIn?: boolean
     isRegistering?: boolean
     isRefreshing?: boolean
-    loginErrorState?: ErrorState
-    registrationErrorState?: ErrorState
     userSearchResults?: Remote<(PublicUserInfo | UserInfo)[]>
 }): UserState {
     return {
@@ -95,8 +88,6 @@ export function mkUserState({
         isLoggingIn,
         isRegistering,
         isRefreshing,
-        loginErrorState,
-        registrationErrorState,
         userSearchResults
     }
 }

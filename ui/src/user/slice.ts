@@ -1,6 +1,5 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { PublicUserInfo, UserInfo, UserState } from './state'
-import { ErrorState } from '../util/error/slice'
 import { newRemote } from '../util/state'
 import { TagDefinition } from '../column_menu/state'
 
@@ -10,8 +9,6 @@ const initialState: UserState = {
     isLoggingIn: false,
     isRegistering: false,
     isRefreshing: false,
-    loginErrorState: undefined,
-    registrationErrorState: undefined,
     userSearchResults: newRemote([])
 }
 
@@ -39,22 +36,14 @@ export const userSlice = createSlice({
             state.isLoggingIn = false
             state.isRegistering = false
         },
-        loginError: (state: UserState, action: PayloadAction<ErrorState>) => {
+        loginError: (state: UserState) => {
             state.isLoggingIn = false
-            state.loginErrorState = action.payload
-        },
-        loginErrorClear: (state: UserState) => {
-            state.loginErrorState = undefined
         },
         registrationStart: (state: UserState) => {
             state.isRegistering = true
         },
-        registrationError: (state: UserState, action: PayloadAction<ErrorState>) => {
+        registrationError: (state: UserState) => {
             state.isRegistering = false
-            state.registrationErrorState = action.payload
-        },
-        registrationErrorClear: (state: UserState) => {
-            state.registrationErrorState = undefined
         },
         toggleRegistration: (state: UserState) => {
             state.showRegistration = !state.showRegistration
@@ -71,8 +60,8 @@ export const userSlice = createSlice({
         ) {
             state.userSearchResults = newRemote(action.payload)
         },
-        userSearchError(state: UserState, action: PayloadAction<ErrorState>) {
-            state.userSearchResults = newRemote([], false, action.payload.msg)
+        userSearchError(state: UserState) {
+            state.userSearchResults = newRemote([], false)
         },
         userSearchErrorClear(state: UserState) {
             state.userSearchResults.errorMsg = undefined
@@ -101,14 +90,12 @@ export const userSlice = createSlice({
 export const {
     loginStart,
     loginError,
-    loginErrorClear,
     loginSuccess,
     refreshStart,
     refreshDenied,
     refreshSuccess,
     registrationStart,
     registrationError,
-    registrationErrorClear,
     toggleRegistration,
     logout,
     userSearchStart,

@@ -17,8 +17,6 @@ import { ChangeEvent, FormEvent, ReactElement, useEffect, useRef } from 'react'
 import { FormField } from '../util/form'
 import { useNavigate } from 'react-router-dom'
 import { StepHeader } from '../util/components/stepper'
-import { ErrorPopover } from '../util/error/components'
-import { newErrorState } from '../util/error/slice'
 
 export function ContributionList() {
     const {
@@ -26,8 +24,7 @@ export function ContributionList() {
         showAddContribution,
         loadContributionsCallback,
         toggleShowAddContributionCallback,
-        submitUploadCallback,
-        clearUploadErrorCallback
+        submitUploadCallback
     } = useContribution()
     useEffect(() => {
         loadContributionsCallback()
@@ -69,11 +66,7 @@ export function ContributionList() {
                         onHide={toggleShowAddContributionCallback}
                     ></Modal.Header>
                     <ModalBody>
-                        <UploadForm
-                            onSubmit={submitUploadCallback}
-                            uploadErrorMsg={showAddContribution.errorMsg}
-                            clearUploadErrorCallback={clearUploadErrorCallback}
-                        />
+                        <UploadForm onSubmit={submitUploadCallback} />
                     </ModalBody>
                 </Modal>
             </Row>
@@ -184,15 +177,7 @@ const uploadSchema = yup.object({
     file: yup.mixed().nullable().defined()
 })
 
-export function UploadForm({
-    onSubmit,
-    uploadErrorMsg,
-    clearUploadErrorCallback
-}: {
-    onSubmit: SubmitUploadCallback
-    uploadErrorMsg?: string
-    clearUploadErrorCallback: VoidFunction
-}) {
+export function UploadForm({ onSubmit }: { onSubmit: SubmitUploadCallback }) {
     return (
         <Formik
             onSubmit={(values) => {
@@ -227,9 +212,7 @@ export function UploadForm({
                     handleSubmit={handleSubmit}
                     touched={touched}
                     formErrors={errors}
-                    uploadErrorMsg={uploadErrorMsg}
                     setFieldValue={setFieldValue}
-                    clearUploadErrorCallback={clearUploadErrorCallback}
                 />
             )}
         </Formik>
@@ -242,18 +225,14 @@ export function UploadFormBody({
     handleChange,
     formErrors,
     touched,
-    uploadErrorMsg,
-    setFieldValue,
-    clearUploadErrorCallback
+    setFieldValue
 }: {
     values: UploadFormArgs
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
     handleChange: HandleChange
     touched: FormikTouched<UploadFormArgs>
     formErrors: FormikErrors<UploadFormArgs>
-    uploadErrorMsg?: string
     setFieldValue: SetFieldValue
-    clearUploadErrorCallback: VoidFunction
 }) {
     const containerRef = useRef(null)
     const buttonRef = useRef(null)
@@ -307,15 +286,6 @@ export function UploadFormBody({
                     <Button type="submit" ref={buttonRef}>
                         Submit
                     </Button>
-                    {!!uploadErrorMsg && (
-                        <ErrorPopover
-                            errorState={newErrorState(uploadErrorMsg)}
-                            placement="top"
-                            clearError={clearUploadErrorCallback}
-                            targetRef={buttonRef}
-                            containerRef={containerRef}
-                        />
-                    )}
                 </Col>
             </Row>
         </Form>

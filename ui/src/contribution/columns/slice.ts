@@ -109,18 +109,8 @@ export const contributionColumnDefinitionSlice = createSlice({
         finalizeColumnAssignmentSuccess(state: ColumnDefinitionsContributionState) {
             state.finalizeColumnAssignment = new Remote(true)
         },
-        finalizeColumnAssignmentError(
-            state: ColumnDefinitionsContributionState,
-            action: PayloadAction<string>
-        ) {
-            state.finalizeColumnAssignment = newRemote(
-                state.finalizeColumnAssignment.value,
-                false,
-                action.payload
-            )
-        },
-        finalizeColumnAssignmentClearError(state: ColumnDefinitionsContributionState) {
-            state.finalizeColumnAssignment.errorMsg = undefined
+        finalizeColumnAssignmentError(state: ColumnDefinitionsContributionState) {
+            state.finalizeColumnAssignment.isLoading = false
         },
         loadColumnDefinitionsContributionError(
             state: ColumnDefinitionsContributionState
@@ -140,7 +130,6 @@ export const {
     finalizeColumnAssignmentStart,
     finalizeColumnAssignmentSuccess,
     finalizeColumnAssignmentError,
-    finalizeColumnAssignmentClearError,
     loadColumnDefinitionsContributionStart,
     loadColumnDefinitionsContributionSuccess,
     loadColumnDefinitionsContributionError,

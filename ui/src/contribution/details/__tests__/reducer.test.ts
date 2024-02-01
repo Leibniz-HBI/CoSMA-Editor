@@ -52,11 +52,11 @@ describe('get contribution details', () => {
             contribution: new Remote(undefined, true)
         })
         const expectedState = new ContributionDetailState({
-            contribution: new Remote(undefined, false, 'test error')
+            contribution: new Remote(undefined, false, undefined)
         })
         const endState = contributionDetailsReducer(
             initialState,
-            new LoadContributionDetailsErrorAction('test error')
+            new LoadContributionDetailsErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })
@@ -92,11 +92,11 @@ describe('patch contribution', () => {
             contributionPatch: new Remote(undefined, true)
         })
         const expectedState = new ContributionDetailState({
-            contributionPatch: new Remote(undefined, false, 'test error')
+            contributionPatch: new Remote(undefined, false, undefined)
         })
         const endState = contributionDetailsReducer(
             initialState,
-            new PatchContributionDetailsErrorAction('test error')
+            new PatchContributionDetailsErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })

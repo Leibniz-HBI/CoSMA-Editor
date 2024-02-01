@@ -217,6 +217,8 @@ export const contributionEntitySlice = createSlice({
         },
         getContributionEntitiesStart(state: ContributionEntityState) {
             state.entities.isLoading = true
+            // still need to set error message here, to not show no conflicts in UI.
+            state.entities.errorMsg = undefined
         },
         getContributionEntitiesSuccess(
             state: ContributionEntityState,
@@ -232,6 +234,8 @@ export const contributionEntitySlice = createSlice({
         },
         getContributionEntitiesError(state: ContributionEntityState) {
             state.entities.isLoading = false
+            // still need to set error message here, to not show no conflicts in UI.
+            state.entities.errorMsg = 'Could not get contribution entities'
         },
         completeEntityAssignmentStart(state: ContributionEntityState) {
             state.completeEntityAssignment.isLoading = true
@@ -239,14 +243,8 @@ export const contributionEntitySlice = createSlice({
         completeEntityAssignmentSuccess(state: ContributionEntityState) {
             state.completeEntityAssignment = newRemote(true, false)
         },
-        completeEntityAssignmentError(
-            state: ContributionEntityState,
-            action: PayloadAction<string>
-        ) {
-            state.completeEntityAssignment = newRemote(false, false, action.payload)
-        },
-        completeEntityAssignmentClearError(state: ContributionEntityState) {
-            state.completeEntityAssignment.errorMsg = undefined
+        completeEntityAssignmentError(state: ContributionEntityState) {
+            state.completeEntityAssignment = newRemote(false, false)
         },
         setSelectedEntityIdx(
             state: ContributionEntityState,
@@ -447,7 +445,6 @@ export function contributionTagInstanceCellContentReducer(
 }
 
 export const {
-    completeEntityAssignmentClearError,
     completeEntityAssignmentError,
     completeEntityAssignmentStart,
     completeEntityAssignmentSuccess,

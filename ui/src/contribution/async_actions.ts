@@ -15,6 +15,7 @@ import { Contribution, ContributionStep, newContribution } from './state'
 import { fetch_chunk_get } from '../util/fetch'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { AppDispatch } from '../store'
+import { addError } from '../util/notification/slice'
 
 export class UploadContributionAction extends AsyncAction<ContributionAction, void> {
     name: string
@@ -42,7 +43,7 @@ export class UploadContributionAction extends AsyncAction<ContributionAction, vo
 
     async run(
         dispatch: Dispatch<ContributionAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ): Promise<void> {
         dispatch(new UploadContributionStartAction())
         try {
@@ -60,15 +61,14 @@ export class UploadContributionAction extends AsyncAction<ContributionAction, vo
                 dispatch(new UploadContributionSuccessAction())
                 return
             }
-            dispatch(
-                new UploadContributionErrorAction(
-                    `Could not upload contribution. Reason: "${
-                        (await rsp.json())['msg']
-                    }".`
-                )
+            const json = await rsp.json()
+            dispatch(new UploadContributionErrorAction())
+            reduxDispatch(
+                addError(`Could not upload contribution. Reason: "${json['msg']}".`)
             )
         } catch (e: unknown) {
-            dispatch(new UploadContributionErrorAction(exceptionMessage(e)))
+            dispatch(new UploadContributionErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -76,7 +76,7 @@ export class UploadContributionAction extends AsyncAction<ContributionAction, vo
 export class LoadContributionsAction extends AsyncAction<ContributionAction, void> {
     async run(
         dispatch: Dispatch<ContributionAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ): Promise<void> {
         dispatch(new LoadContributionsStartAction())
         try {
@@ -89,8 +89,9 @@ export class LoadContributionsAction extends AsyncAction<ContributionAction, voi
                     limit: 5000
                 })
                 if (rsp.status !== 200) {
-                    dispatch(
-                        new LoadContributionsErrorAction(
+                    dispatch(new LoadContributionsErrorAction())
+                    reduxDispatch(
+                        addError(
                             `Could not load contributions. Reason: "${
                                 (await rsp.json())['msg']
                             }".`
@@ -109,7 +110,8 @@ export class LoadContributionsAction extends AsyncAction<ContributionAction, voi
             }
             dispatch(new LoadContributionsSuccessAction(contributions))
         } catch (e: unknown) {
-            dispatch(new LoadContributionsErrorAction(exceptionMessage(e)))
+            dispatch(new LoadContributionsErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }

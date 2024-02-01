@@ -9,10 +9,13 @@ import { UserPermissionGroup, UserState, mkUserState } from '../../state'
 import userReducer from '../../slice'
 import { LoginProvider } from '../provider'
 import userEvent from '@testing-library/user-event'
-import { newErrorState } from '../../../util/error/slice'
 import { newRemote } from '../../../util/state'
+import {
+    NotificationManager,
+    notificationReducer
+} from '../../../util/notification/slice'
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: { user: UserState }
+    preloadedState?: { user: UserState; notification: NotificationManager }
 }
 
 const idErrorTest = 'id-error-test'
@@ -26,12 +29,15 @@ export function renderWithProviders(
     ui: React.ReactElement,
     fetchMock: jest.Mock,
     {
-        preloadedState = { user: mkUserState({}) },
+        preloadedState = {
+            user: mkUserState({}),
+            notification: { notificationList: [], notificationMap: {} }
+        },
         ...renderOptions
     }: ExtendedRenderOptions = {}
 ) {
     const store = configureStore({
-        reducer: { user: userReducer },
+        reducer: { user: userReducer, notification: notificationReducer },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
         preloadedState
@@ -137,12 +143,14 @@ describe('login', () => {
         performLogin(container)
         await waitFor(() => {
             expect(screen.queryByText('You are logged in')).toBeNull()
-            screen.getByText(testError)
         })
-        expect(store.getState()).toEqual({
-            user: mkUserState({
-                loginErrorState: newErrorState(testError, idErrorTest)
-            })
+        await waitFor(() => {
+            const state = store.getState()
+            expect(state.user).toEqual(mkUserState({}))
+            const notifications = state.notification.notificationList
+            expect(notifications.length).toEqual(1)
+            const notification = notifications[0]
+            expect(notification.msg).toEqual(testError)
         })
     })
     test('login error without message', async () => {
@@ -157,15 +165,18 @@ describe('login', () => {
         )
         performLogin(container)
         await waitFor(async () => {
-            expect(store.getState()).toEqual({
-                user: mkUserState({
-                    loginErrorState: newErrorState('Unknown error', idErrorTest)
-                })
-            })
+            expect(store.getState().user).toEqual(mkUserState({}))
         })
         await waitFor(() => {
             expect(screen.queryByText('You are logged in')).toBeNull()
-            screen.getByText('Unknown error')
+        })
+        await waitFor(async () => {
+            const state = store.getState()
+            expect(state.user).toEqual(mkUserState({}))
+            const notifications = state.notification.notificationList
+            expect(notifications.length).toEqual(1)
+            const notification = notifications[0]
+            expect(notification.msg).toEqual('Unknown error')
         })
     })
 })
@@ -224,17 +235,21 @@ describe('registration', () => {
         await performRegistration(container)
         await waitFor(async () => {
             expect(screen.queryByText('You are logged in')).toBeNull()
-            screen.getByText('registration error')
         })
-        expect(store.getState().user).toEqual({
-            userInfo: undefined,
-            showRegistration: true,
-            registrationErrorState: newErrorState('registration error', idErrorTest),
-            isLoggingIn: false,
-            isRefreshing: false,
-            isRegistering: false,
-            loginErrorState: undefined,
-            userSearchResults: newRemote([])
+        await waitFor(async () => {
+            const state = store.getState()
+            expect(state.user).toEqual({
+                userInfo: undefined,
+                showRegistration: true,
+                isLoggingIn: false,
+                isRefreshing: false,
+                isRegistering: false,
+                userSearchResults: newRemote([])
+            })
+            const notifications = state.notification.notificationList
+            expect(notifications.length).toEqual(1)
+            const notification = notifications[0]
+            expect(notification.msg).toEqual('registration error')
         })
     })
     test('error without message', async () => {
@@ -250,17 +265,21 @@ describe('registration', () => {
         await performRegistration(container)
         await waitFor(async () => {
             expect(screen.queryByText('You are logged in')).toBeNull()
-            screen.getByText('Unknown error')
         })
-        expect(store.getState().user).toEqual({
-            userInfo: undefined,
-            showRegistration: true,
-            registrationErrorState: newErrorState('Unknown error', idErrorTest),
-            isLoggingIn: false,
-            isRefreshing: false,
-            isRegistering: false,
-            loginErrorState: undefined,
-            userSearchResults: newRemote([])
+        await waitFor(async () => {
+            const state = store.getState()
+            expect(state.user).toEqual({
+                userInfo: undefined,
+                showRegistration: true,
+                isLoggingIn: false,
+                isRefreshing: false,
+                isRegistering: false,
+                userSearchResults: newRemote([])
+            })
+            const notifications = state.notification.notificationList
+            expect(notifications.length).toEqual(1)
+            const notification = notifications[0]
+            expect(notification.msg).toEqual('Unknown error')
         })
     })
 })

@@ -1,5 +1,3 @@
-import { ErrorState } from '../util/error/slice'
-
 export enum TagType {
     String,
     Float,
@@ -78,34 +76,26 @@ export interface TagSelectionState {
     searchEntries: TagSelectionEntry[]
     isLoading: boolean
     isSearching: boolean
-    errorState?: ErrorState
     isSubmittingDefinition: boolean
-    submissionErrorState?: ErrorState
 }
 export function newTagSelectionState({
     navigationEntries: columnSelectionEntries = [],
     searchEntries: searchSelectionEntries = [],
     isLoading = false,
     isSearching = false,
-    errorState = undefined,
-    isSubmittingDefinition = false,
-    submissionErrorState = undefined
+    isSubmittingDefinition = false
 }: {
     navigationEntries?: TagSelectionEntry[]
     searchEntries?: TagSelectionEntry[]
     isLoading?: boolean
     isSearching?: boolean
-    errorState?: ErrorState
     isSubmittingDefinition?: boolean
-    submissionErrorState?: ErrorState
 }): TagSelectionState {
     return {
         navigationEntries: columnSelectionEntries,
         searchEntries: searchSelectionEntries,
         isLoading: isLoading,
         isSearching: isSearching,
-        errorState: errorState,
-        isSubmittingDefinition: isSubmittingDefinition,
-        submissionErrorState: submissionErrorState
+        isSubmittingDefinition: isSubmittingDefinition
     }
 }

@@ -4,9 +4,8 @@
 import { describe } from '@jest/globals'
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { newErrorState } from '../../../util/error/slice'
 import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from '../form'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 jest.mock('react-redux', () => {
     const dispatchMock = jest.fn()
     return {
@@ -116,19 +115,5 @@ describe('form tests', () => {
                 }
             ]
         ])
-    })
-    test('popover when error', async () => {
-        ;(useSelector as jest.Mock).mockReturnValue(newErrorState('test error'))
-        const { container } = render(
-            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
-        )
-        const overlay = screen.getByRole('tooltip')
-        expect(overlay.textContent).toEqual('Error' + 'test error')
-        const closeButtons = container.getElementsByClassName(
-            'btn-close btn-close-white'
-        )
-        const user = userEvent.setup()
-        await user.click(closeButtons[0])
-        expect((useDispatch() as jest.Mock).mock.calls.length).toEqual(1)
     })
 })

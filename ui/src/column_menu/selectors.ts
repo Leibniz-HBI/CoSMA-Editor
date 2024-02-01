@@ -14,8 +14,3 @@ export const selectTagSelectionLoading = createSelector(
     selectTagSelection,
     (state) => state.isLoading
 )
-
-export const selectTagSubmitError = createSelector(
-    selectTagSelection,
-    (state) => state.submissionErrorState
-)

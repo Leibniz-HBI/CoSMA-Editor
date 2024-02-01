@@ -8,11 +8,10 @@ import {
     Rectangle
 } from '@glideapps/glide-data-grid'
 import { TagDefinition, TagType } from '../column_menu/state'
-import { newErrorState, ErrorState } from '../util/error/slice'
+import { addError } from '../util/notification/slice'
 import { Remote, ThunkMiddlewareDispatch, useThunkReducer } from '../util/state'
 import {
     ChangeColumnIndexAction,
-    EntityChangeOrCreateClearErrorAction,
     HideColumnAddMenuAction,
     HideHeaderMenuAction,
     RemoveSelectedColumnAction,
@@ -21,7 +20,6 @@ import {
     ShowColumnAddMenuAction,
     ShowEntityAddDialogAction,
     ShowHeaderMenuAction,
-    SubmitValuesClearErrorAction,
     TableAction,
     TagChangeOwnershipHideAction,
     TagChangeOwnershipShowAction,
@@ -166,13 +164,11 @@ export type LocalTableCallbacks = {
         width: number
         height: number
     }
-    clearSubmitValueErrorCallback: VoidFunction
     csvLines: () => string[]
     hideTagDefinitionOwnershipCallback: VoidFunction
     updateTagDefinitionCallback: (tagDefinition: TagDefinition) => void
     showEntityAddMenuCallback: VoidFunction
     hideEntityAddMenuCallback: VoidFunction
-    clearEntityChangeErrorCallback: VoidFunction
     showEntityMergingModalCallback: VoidFunction
     hideEntityMergingModalCallback: VoidFunction
     toggleSearchCallback: (show: boolean) => void
@@ -185,8 +181,6 @@ export type TableDataProps = {
     selectedColumnHeaderBounds?: Rectangle
     isShowColumnAddMenu: boolean
     isLoading: boolean
-    loadDataErrorState?: ErrorState
-    submitValuesErrorState?: ErrorState
     columnHeaderMenuEntries: ColumnHeaderMenuItem[]
     tagDefinitionChangeOwnership?: TagDefinition
     showEntityAddMenu: boolean
@@ -269,11 +263,9 @@ export function useRemoteTableData(
                 }
                 userInfoPromise().then(async (userInfo) => {
                     if (userInfo === undefined) {
-                        dispatch(
-                            new SetLoadDataErrorAction(
-                                newErrorState('Please refresh the page and log in')
-                            )
-                        )
+                        dispatch(new SetLoadDataErrorAction())
+                        reduxDispatch(addError('Please refresh the page and log in'))
+                        return
                     }
                     await dispatch(new GetTableAsyncAction())
                     userInfo?.columns.forEach(async (col: TagDefinition) => {
@@ -388,8 +380,6 @@ export function useRemoteTableData(
                     (state.selectedColumnHeaderBounds?.y ?? 0) +
                     (state.selectedColumnHeaderBounds?.height ?? 0)
             }),
-            clearSubmitValueErrorCallback: () =>
-                dispatch(new SubmitValuesClearErrorAction()),
             csvLines: () => {
                 return state.csvLines()
             },
@@ -401,8 +391,6 @@ export function useRemoteTableData(
                 dispatch(new ShowEntityAddDialogAction(true)),
             hideEntityAddMenuCallback: () =>
                 dispatch(new ShowEntityAddDialogAction(false)),
-            clearEntityChangeErrorCallback: () =>
-                dispatch(new EntityChangeOrCreateClearErrorAction()),
             showEntityMergingModalCallback: () =>
                 dispatch(new ToggleEntityModalAction(true)),
             hideEntityMergingModalCallback: () =>
@@ -417,8 +405,6 @@ export function useRemoteTableData(
             frozenColumns: state.frozenColumns,
             isShowColumnAddMenu: state.showColumnAddMenu,
             selectedColumnHeaderBounds: state.selectedColumnHeaderBounds,
-            loadDataErrorState: state.loadDataErrorState,
-            submitValuesErrorState: state.submitValuesErrorState,
             isLoading: isLoading,
             columnHeaderMenuEntries: columnMenuEntries,
             tagDefinitionChangeOwnership: state.ownershipChangeTagDefinition,

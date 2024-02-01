@@ -1,7 +1,7 @@
 import { TagDefinition } from '../../column_menu/state'
 import { parseColumnDefinitionsFromApi } from '../../column_menu/thunks'
 import { config } from '../../config'
-import { addError, newErrorState } from '../../util/error/slice'
+import { addError } from '../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
 import { ThunkWithFetch } from '../../util/type'
 import {
@@ -21,7 +21,7 @@ export function getDisplayTxtTagDefinitions(): ThunkWithFetch<void> {
             })
             const json = await rsp.json()
             if (rsp.status != 200) {
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
                 dispatch(getDisplayTxtTagDefinitionsError())
             } else {
                 const tagDefinitions = json['tag_definitions'].map(
@@ -30,7 +30,7 @@ export function getDisplayTxtTagDefinitions(): ThunkWithFetch<void> {
                 dispatch(getDisplayTxtTagDefinitionsSuccess(tagDefinitions))
             }
         } catch (e: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
             dispatch(getDisplayTxtTagDefinitionsError())
         }
     }
@@ -55,10 +55,10 @@ export function appendTagDefinitionThunk(
                 dispatch(appendTagDefinition(tagDefinition))
             } else {
                 const json = await rsp.json()
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -80,10 +80,10 @@ export function removeTagDefinitionThunk(
                 dispatch(removeTagDefinition(tagDefinition))
             } else {
                 const json = await rsp.json()
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }

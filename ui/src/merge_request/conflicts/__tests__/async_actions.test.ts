@@ -1,6 +1,7 @@
 import { TagType, newTagDefinition } from '../../../column_menu/state'
 import { newEntity } from '../../../table/state'
 import { PublicUserInfo, UserPermissionGroup } from '../../../user/state'
+import { addError } from '../../../util/notification/slice'
 import { Remote } from '../../../util/state'
 import { MergeRequest, MergeRequestStep } from '../../state'
 import {
@@ -20,6 +21,17 @@ import {
     StartMergeAction
 } from '../async_actions'
 import { MergeRequestConflict, newTagInstance } from '../state'
+jest.mock('../../../util/notification/slice', () => {
+    const addErrorMock = jest.fn()
+    return {
+        ...jest.requireActual('../../../util/notification/slice'),
+        addError: addErrorMock
+    }
+})
+
+beforeEach(() => {
+    ;(addError as unknown as jest.Mock).mockReset()
+})
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, any][]) {
@@ -272,7 +284,11 @@ describe('get conflicts', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new GetMergeRequestConflictAction('id-merge-request-test').run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new GetMergeRequestConflictAction('id-merge-request-test').run(
+            dispatch,
+            reduxDispatch
+        )
         expect(dispatch.mock.calls).toEqual([
             [new GetMergeRequestConflictStartAction()],
             [
@@ -298,15 +314,22 @@ describe('get conflicts', () => {
                 })
             ]
         ])
+        expect(reduxDispatch.mock.calls.length).toEqual(0)
     })
     test('error', async () => {
         responseSequence([[400, { msg: 'error' }]])
         const dispatch = jest.fn()
-        await new GetMergeRequestConflictAction('id-merge-request-test').run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new GetMergeRequestConflictAction('id-merge-request-test').run(
+            dispatch,
+            reduxDispatch
+        )
         expect(dispatch.mock.calls).toEqual([
             [new GetMergeRequestConflictStartAction()],
-            [new GetMergeRequestConflictErrorAction('error')]
+            [new GetMergeRequestConflictErrorAction()]
         ])
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([['error']])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
     })
 })
 
@@ -314,6 +337,7 @@ describe('resolve conflict', () => {
     test('success', async () => {
         responseSequence([[200, {}]])
         const dispatch = jest.fn()
+        const reduxDispatch = jest.fn()
         await new ResolveConflictAction({
             idMergeRequestPersistent: 'id-merge-request-test',
             entity: entity,
@@ -322,7 +346,7 @@ describe('resolve conflict', () => {
             tagInstanceOrigin: tagInstanceOrigin,
             tagInstanceDestination: tagInstanceDestination,
             replace: true
-        }).run(dispatch)
+        }).run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new ResolveConflictStartAction(entity.idPersistent)],
             [new ResolveConflictSuccessAction(entity.idPersistent, true)]
@@ -354,10 +378,12 @@ describe('resolve conflict', () => {
                 }
             ]
         ])
+        expect(reduxDispatch.mock.calls.length).toEqual(0)
     })
     test('error', async () => {
         responseSequence([[400, { msg: 'error' }]])
         const dispatch = jest.fn()
+        const reduxDispatch = jest.fn()
         await new ResolveConflictAction({
             idMergeRequestPersistent: 'id-merge-request-test',
             entity: entity,
@@ -366,11 +392,13 @@ describe('resolve conflict', () => {
             tagInstanceOrigin: tagInstanceOrigin,
             tagInstanceDestination: tagInstanceDestination,
             replace: true
-        }).run(dispatch)
+        }).run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new ResolveConflictStartAction(entity.idPersistent)],
-            [new ResolveConflictErrorAction(entity.idPersistent, 'error')]
+            [new ResolveConflictErrorAction(entity.idPersistent)]
         ])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([['error']])
     })
 })
 
@@ -378,59 +406,71 @@ describe('start merge', () => {
     test('success', async () => {
         responseSequence([[200, {}]])
         const dispatch = jest.fn()
-        await new StartMergeAction('id-merge-request-test').run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new StartMergeAction('id-merge-request-test').run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new StartMergeStartAction()],
             [new StartMergeSuccessAction()]
         ])
+        expect(reduxDispatch.mock.calls.length).toEqual(0)
     })
     test('error', async () => {
         responseSequence([[400, { msg: 'test error from API' }]])
         const dispatch = jest.fn()
-        await new StartMergeAction('id-merge-request-test').run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new StartMergeAction('id-merge-request-test').run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new StartMergeStartAction()],
-            [new StartMergeErrorAction('test error from API')]
+            [new StartMergeErrorAction()]
+        ])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([
+            ['test error from API']
         ])
     })
     test('error underlying changes', async () => {
+        const errorMsg =
+            'There are conflicts for the merge request, where the underlying data has changed.'
         responseSequence([
             [
                 400,
                 {
-                    msg: 'There are conflicts for the merge request, where the underlying data has changed.'
+                    msg: errorMsg
                 }
             ]
         ])
         const dispatch = jest.fn()
-        await new StartMergeAction('id-merge-request-test').run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new StartMergeAction('id-merge-request-test').run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new StartMergeStartAction()],
-            [
-                new StartMergeErrorAction(
-                    'There are conflicts for the merge request, where the underlying data has changed. Reload the page to see the changes.'
-                )
-            ]
+            [new StartMergeErrorAction()]
+        ])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([
+            [errorMsg + ' Reload the page to see the changes.']
         ])
     })
     test('error unresolved conflicts', async () => {
+        const errorMsg = 'There are unresolved conflicts for the merge request.'
         responseSequence([
             [
                 400,
                 {
-                    msg: 'There are unresolved conflicts for the merge request.'
+                    msg: errorMsg
                 }
             ]
         ])
         const dispatch = jest.fn()
-        await new StartMergeAction('id-merge-request-test').run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new StartMergeAction('id-merge-request-test').run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new StartMergeStartAction()],
-            [
-                new StartMergeErrorAction(
-                    'There are unresolved conflicts for the merge request. Reload the page to see the changes.'
-                )
-            ]
+            [new StartMergeErrorAction()]
+        ])
+        expect(reduxDispatch.mock.calls.length).toEqual(1)
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([
+            [errorMsg + ' Reload the page to see the changes.']
         ])
     })
 })

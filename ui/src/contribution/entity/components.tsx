@@ -2,24 +2,8 @@ import { useLoaderData } from 'react-router-dom'
 import { constructColumnTitle, mkCellContentCallback } from './hooks'
 import { ContributionStepper } from '../components'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
-import {
-    Button,
-    CloseButton,
-    Col,
-    ListGroup,
-    Modal,
-    Overlay,
-    Popover,
-    Row
-} from 'react-bootstrap'
-import {
-    ForwardedRef,
-    forwardRef,
-    useCallback,
-    useEffect,
-    useRef,
-    useState
-} from 'react'
+import { Button, Col, ListGroup, Modal, Row } from 'react-bootstrap'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { EntityWithDuplicates } from './state'
 import { ColumnMenuBody } from '../../column_menu/components/menu'
 import {
@@ -50,7 +34,6 @@ import {
 } from './thunks'
 import { AppDispatch } from '../../store'
 import {
-    completeEntityAssignmentClearError,
     incrementSelectedEntityIdx,
     setColumnWidth,
     setSelectedEntityIdx,
@@ -128,17 +111,15 @@ export function EntitiesStepBody({
             })
         ).then(() => dispatch(incrementSelectedEntityIdx()))
     }
-    const containerRef = useRef(null)
     if (isLoading) {
         return <CosmaeLoading />
     }
     return (
-        <Row className="h-100 overflow-hidden" ref={containerRef}>
+        <Row className="h-100 overflow-hidden">
             <Col xs={3} className="h-100 overflow-hidden d-flex flex-column">
                 <Row className="mb-2 justify-content-center">
                     <CompleteAssignmentButton
                         idContributionPersistent={idContributionPersistent}
-                        ref={containerRef}
                     />
                 </Row>
                 <Row className="h-100 overflow-y-scroll">
@@ -341,12 +322,7 @@ export function EntitySimilarityItem({
     const entityColumnDefs = useSelector(selectEntityColumnDefs)
     const tagRowDefs = useSelector(selectTagRowDefs)
     const matchTagDefinitionList = useSelector(selectMatchTagDefinitionList)
-    const {
-        similarEntities,
-        displayTxt,
-        displayTxtDetails: entityDisplayTxtDetails,
-        idPersistent
-    } = entity
+    const { similarEntities, displayTxtDetails: entityDisplayTxtDetails } = entity
     const dispatch = useDispatch()
     const [tooltip, setTooltip] = useState<
         { val: string; bounds: IBounds } | undefined
@@ -407,12 +383,7 @@ export function EntitySimilarityItem({
         [similarEntities.value, entityDisplayTxtDetails]
     )
     if (similarEntities.errorMsg !== undefined) {
-        return (
-            <ListGroup.Item className="bg-danger" key={idPersistent}>
-                <span key="span-0">{`Could not get duplicates for ${displayTxt}.\n`}</span>
-                <span key="span-1">{`Reason: ${similarEntities.errorMsg}`}</span>
-            </ListGroup.Item>
-        )
+        return <CosmaeLoading />
     }
     if (similarEntities.value.length == 0) {
         return <NoConflictBody />
@@ -484,55 +455,29 @@ export function EntitySimilarityItem({
     )
 }
 
-export const CompleteAssignmentButton = forwardRef(
-    (
-        { idContributionPersistent }: { idContributionPersistent: string },
-        containerRef: ForwardedRef<HTMLElement>
-    ) => {
-        const buttonRef = useRef(null)
-        const completeEntityAssignmentState = useSelector(
-            selectCompleteEntityAssignment
-        )
-        const dispatch: AppDispatch = useDispatch()
-        return (
-            <>
-                <Col sm="auto" ref={buttonRef} key="entities-step-complete-button">
-                    <RemoteTriggerButton
-                        normalLabel="Confirm Assigned Duplicates"
-                        successLabel="Duplicates Successfully Assigned"
-                        remoteState={completeEntityAssignmentState}
-                        onClick={() =>
-                            dispatch(completeEntityAssignment(idContributionPersistent))
-                        }
-                    />
-                </Col>
-                <Overlay
-                    show={completeEntityAssignmentState?.errorMsg !== undefined}
-                    target={buttonRef.current}
-                    placement="bottom"
-                    ref={containerRef}
-                >
-                    <Popover id="finalize-column-assignment-error-popover">
-                        <Popover.Header className="bg-danger text-light">
-                            <Row className="justify-content-between">
-                                <Col>Error</Col>
-                                <CloseButton
-                                    variant="white"
-                                    onClick={() =>
-                                        dispatch(completeEntityAssignmentClearError())
-                                    }
-                                ></CloseButton>
-                            </Row>
-                        </Popover.Header>
-                        <Popover.Body>
-                            <span>{completeEntityAssignmentState?.errorMsg}</span>
-                        </Popover.Body>
-                    </Popover>
-                </Overlay>
-            </>
-        )
-    }
-)
+export function CompleteAssignmentButton({
+    idContributionPersistent
+}: {
+    idContributionPersistent: string
+}) {
+    const buttonRef = useRef(null)
+    const completeEntityAssignmentState = useSelector(selectCompleteEntityAssignment)
+    const dispatch: AppDispatch = useDispatch()
+    return (
+        <>
+            <Col sm="auto" ref={buttonRef} key="entities-step-complete-button">
+                <RemoteTriggerButton
+                    normalLabel="Confirm Assigned Duplicates"
+                    successLabel="Duplicates Successfully Assigned"
+                    remoteState={completeEntityAssignmentState}
+                    onClick={() =>
+                        dispatch(completeEntityAssignment(idContributionPersistent))
+                    }
+                />
+            </Col>
+        </>
+    )
+}
 
 export function EntityConflictList({
     entityConflicts

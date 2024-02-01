@@ -1,9 +1,6 @@
 import { useAppDispatch } from '../hooks'
 import { Remote, useThunkReducer } from '../util/state'
-import {
-    UploadContributionClearErrorAction,
-    ToggleShowAddContributionAction
-} from './actions'
+import { ToggleShowAddContributionAction } from './actions'
 import { LoadContributionsAction, UploadContributionAction } from './async_actions'
 import { contributionReducer } from './reducer'
 import { Contribution, newContributionState } from './state'
@@ -26,7 +23,6 @@ export type ContributionListProps = {
     loadContributionsCallback: VoidFunction
     toggleShowAddContributionCallback: VoidFunction
     submitUploadCallback: SubmitUploadCallback
-    clearUploadErrorCallback: VoidFunction
 }
 
 export function useContribution(): ContributionListProps {
@@ -56,8 +52,6 @@ export function useContribution(): ContributionListProps {
                     file: file
                 })
             )
-        },
-        clearUploadErrorCallback: () =>
-            dispatch(new UploadContributionClearErrorAction())
+        }
     }
 }

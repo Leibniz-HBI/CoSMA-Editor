@@ -1,9 +1,8 @@
 import { describe, expect, test } from '@jest/globals'
 import { TagType } from '../../column_menu/state'
-import { newErrorState } from '../../util/error/slice'
+import { newNotification } from '../../util/notification/slice'
 import {
     SetEntityLoadingAction,
-    SetLoadDataErrorAction,
     SetEntitiesAction,
     SetColumnLoadingAction,
     AppendColumnAction,
@@ -17,10 +16,8 @@ import {
     SubmitValuesStartAction,
     SubmitValuesErrorAction,
     SubmitValuesEndAction,
-    SubmitValuesClearErrorAction,
     EntityChangeOrCreateSuccessAction,
     EntityChangeOrCreateErrorAction,
-    EntityChangeOrCreateClearErrorAction,
     ShowEntityAddDialogAction
 } from '../actions'
 import { tableReducer } from '../reducer'
@@ -79,18 +76,6 @@ describe('reducer tests', () => {
         const expected_state = new TableState({ isLoading: true })
         expect(end_state).toEqual(expected_state)
     })
-    test('loading to error', () => {
-        const state = new TableState({})
-        const end_state = tableReducer(
-            state,
-            new SetLoadDataErrorAction(newErrorState('test error', 'id-error-test'))
-        )
-        const expected_state = new TableState({
-            isLoading: false,
-            loadDataErrorState: newErrorState('test error', 'id-error-test')
-        })
-        expect(end_state).toEqual(expected_state)
-    })
     test('loading to success', () => {
         const state = new TableState({ isLoading: true })
         const entities = [
@@ -123,14 +108,6 @@ describe('reducer tests', () => {
                 ['entity3', 2]
             ])
         })
-        expect(end_state).toEqual(expected_state)
-    })
-    test('error to loading', () => {
-        const state = new TableState({
-            loadDataErrorState: newErrorState('test error')
-        })
-        const end_state = tableReducer(state, new SetEntityLoadingAction())
-        const expected_state = new TableState({ isLoading: true })
         expect(end_state).toEqual(expected_state)
     })
     test('reload', () => {
@@ -533,9 +510,7 @@ describe('reducer tests', () => {
             version: 8
         }
         test('start submit value', () => {
-            const initialState = new TableState({
-                submitValuesErrorState: newErrorState('error test')
-            })
+            const initialState = new TableState({})
             const expectedState = new TableState({ isSubmittingValues: true })
             const endState = tableReducer(initialState, new SubmitValuesStartAction())
             expect(endState).toEqual(expectedState)
@@ -546,18 +521,11 @@ describe('reducer tests', () => {
                 entities: entities,
                 entityIndices: entityIndices
             })
-            const testError = newErrorState('error test', 'id-error-test')
             const expectedState = new TableState({
-                submitValuesErrorState: testError,
                 entities: entities,
                 entityIndices: entityIndices
             })
-            const endState = tableReducer(
-                initialState,
-                new SubmitValuesErrorAction(
-                    newErrorState(testError.msg, 'id-error-test')
-                )
-            )
+            const endState = tableReducer(initialState, new SubmitValuesErrorAction())
             expect(endState).toEqual(expectedState)
         })
         test('change Value', () => {
@@ -703,11 +671,7 @@ describe('reducer tests', () => {
             })
             const expectedState = new TableState({
                 entities: entities,
-                entityIndices: entityIndices,
-                submitValuesErrorState: newErrorState(
-                    'Batch edits not implemented. Values are not changed.',
-                    'id-error-batch'
-                )
+                entityIndices: entityIndices
             })
             const endState = tableReducer(
                 initialState,
@@ -723,22 +687,6 @@ describe('reducer tests', () => {
                         { value: 3.2, version: 5, idPersistent: 'id-value-1' }
                     ]
                 ])
-            )
-            expect(endState).toEqual(expectedState)
-        })
-        test('clear error state', () => {
-            const initialState = new TableState({
-                entities: entities,
-                entityIndices: entityIndices,
-                submitValuesErrorState: newErrorState('test error')
-            })
-            const expectedState = new TableState({
-                entities: entities,
-                entityIndices: entityIndices
-            })
-            const endState = tableReducer(
-                initialState,
-                new SubmitValuesClearErrorAction()
             )
             expect(endState).toEqual(expectedState)
         })
@@ -836,24 +784,11 @@ describe('reducer tests', () => {
     test('entity change error', () => {
         const initialState = new TableState({ entityAddState: new Remote(false, true) })
         const expectedState = new TableState({
-            entityAddState: new Remote(false, false, 'error')
+            entityAddState: new Remote(false, false, undefined)
         })
         const endState = tableReducer(
             initialState,
-            new EntityChangeOrCreateErrorAction('error')
-        )
-        expect(endState).toEqual(expectedState)
-    })
-    test('entity change clear error', () => {
-        const initialState = new TableState({
-            entityAddState: new Remote(false, false, 'error')
-        })
-        const expectedState = new TableState({
-            entityAddState: new Remote(false, false)
-        })
-        const endState = tableReducer(
-            initialState,
-            new EntityChangeOrCreateClearErrorAction()
+            new EntityChangeOrCreateErrorAction()
         )
         expect(endState).toEqual(expectedState)
     })

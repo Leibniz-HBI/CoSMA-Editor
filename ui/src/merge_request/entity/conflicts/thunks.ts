@@ -1,7 +1,7 @@
 import { config } from '../../../config'
 import { AppDispatch } from '../../../store'
 import { Entity } from '../../../table/state'
-import { addError, newErrorState } from '../../../util/error/slice'
+import { addError } from '../../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../../util/exception'
 import { RemoteInterface, newRemote } from '../../../util/state'
 import { ThunkWithFetch } from '../../../util/type'
@@ -53,12 +53,12 @@ export function getEntityMergeRequest(
                 dispatch(getEntityMergeRequestSuccess(entityMergeRequest))
                 return json['id_persistent']
             } else {
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
                 dispatch(getEntityMergeRequestError())
                 return undefined
             }
         } catch (e: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
         return undefined
     }
@@ -89,12 +89,12 @@ export function putEntityMergeRequest(
                 )
                 return json['id_persistent']
             } else {
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
                 dispatch(putEntityMergeRequestError())
                 return undefined
             }
         } catch (e: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
             dispatch(putEntityMergeRequestError())
         }
         return undefined
@@ -153,11 +153,11 @@ export function getEntityMergeRequestConflicts(
                 )
             } else {
                 dispatch(getEntityMergeRequestConflictsError())
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
             dispatch(getEntityMergeRequestConflictsError())
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -213,11 +213,11 @@ export function resolveEntityConflict({
             } else {
                 const json = await rsp.json()
                 dispatch(resolveEntityConflictError(tagDefinition.idPersistent))
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
             dispatch(resolveEntityConflictError(tagDefinition.idPersistent))
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -240,11 +240,11 @@ export function reverseOriginDestination(
                 return mergeRequest
             } else {
                 dispatch(reverseOriginDestinationError(idEntityMergeRequest))
-                dispatch(addError(newErrorState(errorMessageFromApi(json))))
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
             dispatch(reverseOriginDestinationError(idEntityMergeRequest))
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
         return undefined
     }
@@ -265,10 +265,10 @@ export function mergeEntityMergeRequest(
                 return
             }
             const json = await rsp.json()
-            dispatch(addError(newErrorState(errorMessageFromApi(json))))
+            dispatch(addError(errorMessageFromApi(json)))
             dispatch(mergeEntityMergeRequestError(idEntityMergeRequest))
         } catch (e: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
             dispatch(mergeEntityMergeRequestError(idEntityMergeRequest))
         }
     }

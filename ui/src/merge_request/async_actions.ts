@@ -12,9 +12,10 @@ import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { exceptionMessage } from '../util/exception'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { AppDispatch } from '../store'
+import { addError } from '../util/notification/slice'
 
 export class GetMergeRequestsAction extends AsyncAction<MergeRequestAction, void> {
-    async run(dispatch: Dispatch<MergeRequestAction>, _reduxDispatch: AppDispatch) {
+    async run(dispatch: Dispatch<MergeRequestAction>, reduxDispatch: AppDispatch) {
         dispatch(new GetMergeRequestsStartAction())
         try {
             const rsp = await fetch(config.api_path + '/merge_requests', {
@@ -33,10 +34,12 @@ export class GetMergeRequestsAction extends AsyncAction<MergeRequestAction, void
                 dispatch(new GetMergeRequestsSuccessAction({ created, assigned }))
             } else {
                 const json = await rsp.json()
-                dispatch(new GetMergeRequestsErrorAction(json['msg']))
+                dispatch(new GetMergeRequestsErrorAction())
+                reduxDispatch(addError(json['msg']))
             }
         } catch (exc: unknown) {
-            dispatch(new GetMergeRequestsErrorAction(exceptionMessage(exc)))
+            dispatch(new GetMergeRequestsErrorAction())
+            reduxDispatch(addError(exceptionMessage(exc)))
         }
     }
 }

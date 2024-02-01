@@ -110,14 +110,14 @@ export function mergeRequestConflictResolutionReducer(
     }
     if (action instanceof GetMergeRequestConflictErrorAction) {
         return new MergeRequestConflictResolutionState(
-            state.conflicts.withError(action.msg),
+            state.conflicts.withError(undefined),
             state.startMerge
         )
     }
     if (action instanceof StartMergeErrorAction) {
         return new MergeRequestConflictResolutionState(
             state.conflicts,
-            new Remote(false, false, action.msg)
+            new Remote(false, false, undefined)
         )
     }
     if (action instanceof StartMergeClearErrorAction) {
@@ -142,7 +142,7 @@ export function resolutionReducer(
         )
     }
     if (action instanceof ResolveConflictErrorAction) {
-        return state.withError(action.msg)
+        return state.withError(undefined)
     }
     return state
 }

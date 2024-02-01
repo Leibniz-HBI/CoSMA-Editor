@@ -1,6 +1,5 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { TagDefinition, TagType } from '../column_menu/state'
-import { ErrorState } from '../util/error/slice'
 import { Remote } from '../util/state'
 
 export class TableState {
@@ -14,9 +13,7 @@ export class TableState {
     selectedTagDefinition?: TagDefinition
     selectedColumnHeaderBounds?: Rectangle
     frozenColumns: number
-    loadDataErrorState?: ErrorState
     isSubmittingValues: boolean
-    submitValuesErrorState?: ErrorState
     ownershipChangeTagDefinition?: TagDefinition
     showEntityAddDialog: boolean
     entityAddState: Remote<boolean>
@@ -33,9 +30,7 @@ export class TableState {
         selectedTagDefinition = undefined,
         selectedColumnHeaderBounds = undefined,
         frozenColumns = 0,
-        loadDataErrorState = undefined,
         isSubmittingValues = false,
-        submitValuesErrorState = undefined,
         ownershipChangeTagDefinition = undefined,
         showEntityAddDialog = false,
         entityAddState = new Remote(false),
@@ -53,9 +48,7 @@ export class TableState {
         selectedTagDefinition?: TagDefinition
         selectedColumnHeaderBounds?: Rectangle
         frozenColumns?: number
-        loadDataErrorState?: ErrorState
         isSubmittingValues?: boolean
-        submitValuesErrorState?: ErrorState
         ownershipChangeTagDefinition?: TagDefinition
         showEntityAddDialog?: boolean
         entityAddState?: Remote<boolean>
@@ -81,9 +74,7 @@ export class TableState {
         this.selectedTagDefinition = selectedTagDefinition
         this.selectedColumnHeaderBounds = selectedColumnHeaderBounds
         this.frozenColumns = frozenColumns
-        this.loadDataErrorState = loadDataErrorState
         this.isSubmittingValues = isSubmittingValues
-        this.submitValuesErrorState = submitValuesErrorState
         this.ownershipChangeTagDefinition = ownershipChangeTagDefinition
         this.showEntityAddDialog = showEntityAddDialog
         this.entityAddState = entityAddState

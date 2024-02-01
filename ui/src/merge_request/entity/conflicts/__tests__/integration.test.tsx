@@ -13,7 +13,10 @@ import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { UserPermissionGroup } from '../../../../user/state'
-import { ErrorManager, errorSlice } from '../../../../util/error/slice'
+import {
+    NotificationManager,
+    notificationReducer
+} from '../../../../util/notification/slice'
 import {
     EntityMergeRequestConflictsState,
     newEntityMergeRequestConflict
@@ -40,7 +43,7 @@ jest.mock('react-router-dom', () => {
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
-        error: ErrorManager
+        notification: NotificationManager
         entityMergeRequestConflicts: EntityMergeRequestConflictsState
     }
 }
@@ -57,7 +60,7 @@ export function renderWithProviders(
                 reverseOriginDestination: newRemote(undefined),
                 merge: newRemote(undefined)
             },
-            error: { errorList: [], errorMap: {} }
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -65,7 +68,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
-            error: errorSlice.reducer
+            notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -467,7 +470,7 @@ test('update conflicts', async () => {
     }
     expect(store.getState()).toEqual({
         entityMergeRequestConflicts: expectedState,
-        error: { errorList: [], errorMap: {} }
+        notification: { notificationList: [], notificationMap: {} }
     })
     const updatedConflictsLabel = screen.getByText(
         'For the following conflicts the underlying data has changed'

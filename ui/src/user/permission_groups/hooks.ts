@@ -1,7 +1,7 @@
 import { useAppDispatch } from '../../hooks'
 import { useThunkReducer } from '../../util/state'
 import { UserInfo, UserPermissionGroup } from '../state'
-import { SelectUserInfoAction, SetUserPermissionClearErrorAction } from './actions'
+import { SelectUserInfoAction } from './actions'
 import { GetUserInfoListAction, SetUserPermissionAction } from './async_actions'
 import { permissionGroupReducer } from './reducer'
 import { PermissionGroupState } from './state'
@@ -32,8 +32,6 @@ export function useUserPermissionGroup() {
             dispatch(new SetUserPermissionAction(idUserPersistent, permission))
         },
         selectUserCallback: (userInfo: UserInfo) =>
-            dispatch(new SelectUserInfoAction(userInfo)),
-        setUserPermissionClearErrorCallback: () =>
-            dispatch(new SetUserPermissionClearErrorAction())
+            dispatch(new SelectUserInfoAction(userInfo))
     }
 }

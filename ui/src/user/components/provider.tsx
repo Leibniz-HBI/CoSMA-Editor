@@ -8,13 +8,9 @@ export function LoginProvider({ body }: { body: ReactElement }) {
     const {
         userInfoWithCallbacks,
         showRegistration,
-        loginErrorState,
-        registrationErrorState,
         refreshCallback,
         loginCallback,
-        clearLoginErrorCallback,
         registrationCallback,
-        clearRegistrationErrorCallback,
         toggleRegistrationCallback
     } = useLogin()
 
@@ -35,15 +31,9 @@ export function LoginProvider({ body }: { body: ReactElement }) {
                         <RegistrationForm
                             registrationCallback={registrationCallback}
                             closeRegistrationCallback={toggleRegistrationCallback}
-                            registrationError={registrationErrorState}
-                            clearRegistrationErrorCallback={
-                                clearRegistrationErrorCallback
-                            }
                         />
                     ) : (
                         <LoginForm
-                            loginError={loginErrorState}
-                            clearLoginErrorCallback={clearLoginErrorCallback}
                             loginCallback={loginCallback}
                             openRegistrationCallback={toggleRegistrationCallback}
                         />

@@ -1,15 +1,8 @@
 import { UserInfo } from './state'
-import { ErrorState } from '../util/error/slice'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectUser, selectUserInfo } from './selectors'
 import { login, refresh, registration } from './thunks'
-import {
-    loginErrorClear,
-    loginSuccess,
-    logout,
-    registrationErrorClear,
-    toggleRegistration
-} from './slice'
+import { loginSuccess, logout, toggleRegistration } from './slice'
 import { AppDispatch } from '../store'
 
 export type UserInfoWithCallbacks = {
@@ -36,14 +29,10 @@ export type HeaderProps = { logoutCallback?: VoidFunction }
 export type UserProps = {
     userInfoWithCallbacks?: UserInfoWithCallbacks
     showRegistration: boolean
-    loginErrorState?: ErrorState
-    registrationErrorState?: ErrorState
     refreshCallback: VoidFunction
     loginCallback: LoginCallback
-    clearLoginErrorCallback: VoidFunction
     registrationCallback: RegistrationCallback
     toggleRegistrationCallback: VoidFunction
-    clearRegistrationErrorCallback: VoidFunction
 }
 
 export function useLogin(): UserProps {
@@ -59,8 +48,6 @@ export function useLogin(): UserProps {
               }
             : undefined,
         showRegistration: state.showRegistration,
-        loginErrorState: state.loginErrorState,
-        registrationErrorState: state.registrationErrorState,
         refreshCallback: () =>
             dispatch(refresh({})).then((userInfo) => {
                 if (userInfo !== undefined) {
@@ -72,7 +59,6 @@ export function useLogin(): UserProps {
                 dispatch(login(userName, password))
             }
         },
-        clearLoginErrorCallback: loginErrorClear,
         registrationCallback: ({
             userName,
             namesPersonal,
@@ -92,7 +78,6 @@ export function useLogin(): UserProps {
                 )
             }
         },
-        clearRegistrationErrorCallback: () => dispatch(registrationErrorClear()),
         toggleRegistrationCallback: () => dispatch(toggleRegistration())
     }
 }

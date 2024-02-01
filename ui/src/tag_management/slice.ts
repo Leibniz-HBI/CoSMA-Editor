@@ -30,11 +30,8 @@ export const tagManagementSlice = createSlice({
                 received: action.payload.received.map((request) => newRemote(request))
             })
         },
-        getOwnershipRequestsError(
-            state: TagManagementState,
-            action: PayloadAction<string>
-        ) {
-            state.ownershipRequests.errorMsg = action.payload
+        getOwnershipRequestsError(state: TagManagementState) {
+            state.ownershipRequests.isLoading = false
         },
         putOwnershipRequestStart(
             state: TagManagementState,
@@ -47,12 +44,10 @@ export const tagManagementSlice = createSlice({
                 state.putOwnershipRequest.isLoading = false
             }
         },
-        putOwnerShipRequestError(
-            state,
-            action: PayloadAction<PutOwnershipRequest & { msg: string }>
-        ) {
+        putOwnerShipRequestError(state, action: PayloadAction<PutOwnershipRequest>) {
             if (checkOwnershipRequestMatch(state, action)) {
-                state.putOwnershipRequest.errorMsg = action.payload.msg
+                // Still need to keep error here for showing correct icon in UI.
+                state.putOwnershipRequest.errorMsg = 'error'
                 state.putOwnershipRequest.isLoading = false
             }
         },
@@ -85,19 +80,17 @@ export const tagManagementSlice = createSlice({
             }
             state.ownershipRequests.value.received.splice(idx, 1)
         },
-        acceptOwnershipRequestError(
-            state,
-            action: PayloadAction<{ idPersistent: string; msg: string }>
-        ) {
+        acceptOwnershipRequestError(state, action: PayloadAction<string>) {
             const idx = state.ownershipRequests.value.received.findIndex(
-                (request) => request.value.idPersistent == action.payload.idPersistent
+                (request) => request.value.idPersistent == action.payload
             )
             if (idx < 0) {
                 return
             }
             const ownershipRequest = state.ownershipRequests.value.received[idx]
             ownershipRequest.isLoading = false
-            ownershipRequest.errorMsg = action.payload.msg
+            // Still need to keep error here for showing correct icon in UI.
+            ownershipRequest.errorMsg = 'error'
         },
         deleteOwnershipRequestStart(state, action: PayloadAction<string>) {
             const idx = state.ownershipRequests.value.petitioned.findIndex(
@@ -117,19 +110,17 @@ export const tagManagementSlice = createSlice({
             }
             state.ownershipRequests.value.petitioned.splice(idx, 1)
         },
-        deleteOwnershipRequestError(
-            state,
-            action: PayloadAction<{ idPersistent: string; msg: string }>
-        ) {
+        deleteOwnershipRequestError(state, action: PayloadAction<string>) {
             const idx = state.ownershipRequests.value.petitioned.findIndex(
-                (request) => request.value.idPersistent == action.payload.idPersistent
+                (request) => request.value.idPersistent == action.payload
             )
             if (idx < 0) {
                 return
             }
             const ownershipRequest = state.ownershipRequests.value.petitioned[idx]
             ownershipRequest.isLoading = false
-            ownershipRequest.errorMsg = action.payload.msg
+            // Still need to keep error here for showing correct icon in UI.
+            ownershipRequest.errorMsg = 'error'
         }
     }
 })

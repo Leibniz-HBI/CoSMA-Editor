@@ -30,7 +30,7 @@ export function mergeRequestReducer(
     if (action instanceof GetMergeRequestsErrorAction) {
         return new MergeRequestState({
             ...state,
-            byCategory: state.byCategory.withError(action.msg)
+            byCategory: state.byCategory.withError(undefined)
         })
     }
     return state

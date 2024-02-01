@@ -1,6 +1,6 @@
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { config } from '../config'
-import { addError, newErrorState } from '../util/error/slice'
+import { addError } from '../util/notification/slice'
 import { exceptionMessage } from '../util/exception'
 import { ThunkWithFetch } from '../util/type'
 import { getContributionStart, getContributionSuccess } from './slice'
@@ -22,9 +22,7 @@ export function loadContributionDetails(
             if (rsp.status != 200) {
                 dispatch(
                     addError(
-                        newErrorState(
-                            `Could not load contribution details. Reason: "${json['msg']}".`
-                        )
+                        `Could not load contribution details. Reason: "${json['msg']}".`
                     )
                 )
                 return
@@ -34,14 +32,14 @@ export function loadContributionDetails(
             if (errorMsg) {
                 const errorDetails = json['error_details']
                 if (errorDetails) {
-                    dispatch(addError(newErrorState(errorMsg + '\n' + errorDetails)))
+                    dispatch(addError(errorMsg + '\n' + errorDetails))
                 } else {
-                    dispatch(addError(newErrorState(errorMsg)))
+                    dispatch(addError(errorMsg))
                 }
             }
             dispatch(getContributionSuccess(contribution))
         } catch (e: unknown) {
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }

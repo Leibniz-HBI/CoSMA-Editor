@@ -1,5 +1,4 @@
 import { Remote, useThunkReducer } from '../../../util/state'
-import { PatchContributionDetailsClearErrorAction } from '../action'
 import {
     LoadContributionDetailsAsyncAction,
     PatchContributionAction
@@ -65,19 +64,6 @@ describe('contribution details callback', () => {
         patchContributionDetailsCallback(patchPropsTest)
         expect(dispatch.mock.calls).toEqual([
             [new PatchContributionAction({ ...patchPropsTest })]
-        ])
-    })
-    test('clear patch error', () => {
-        const dispatch = jest.fn()
-        ;(useThunkReducer as jest.Mock).mockReturnValue([
-            new ContributionDetailState({}),
-            dispatch
-        ])
-        const { clearPatchContributionErrorCallback } =
-            useContributionDetails(idPersistentTest)
-        clearPatchContributionErrorCallback()
-        expect(dispatch.mock.calls).toEqual([
-            [new PatchContributionDetailsClearErrorAction()]
         ])
     })
 })

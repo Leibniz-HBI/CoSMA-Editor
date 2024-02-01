@@ -29,7 +29,7 @@ import {
     putDuplicateSuccess
 } from './slice'
 import { newRemote } from '../../util/state'
-import { addError, newErrorState } from '../../util/error/slice'
+import { addError } from '../../util/notification/slice'
 
 export function getContributionEntitiesAction(
     idContributionPersistent: string
@@ -65,13 +65,13 @@ export function getContributionEntitiesAction(
                         }
                     } else {
                         dispatch(getContributionEntitiesError())
-                        dispatch(addError(newErrorState(json.msg)))
+                        dispatch(addError(json.msg))
                         return []
                     }
                 }
             } catch (exc: unknown) {
                 dispatch(getContributionEntitiesError())
-                dispatch(addError(newErrorState(exceptionMessage(exc))))
+                dispatch(addError(exceptionMessage(exc)))
             }
             return []
         }
@@ -125,7 +125,7 @@ export function putDuplicateAction({
                         details: undefined
                     })
                 )
-                dispatch(addError(newErrorState(json['msg'])))
+                dispatch(addError(json['msg']))
             }
         } catch (e: unknown) {
             dispatch(
@@ -134,7 +134,7 @@ export function putDuplicateAction({
                     details: undefined
                 })
             )
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -213,7 +213,7 @@ export function getContributionEntityDuplicateCandidatesAction({
                             })
                         )
                     }
-                    dispatch(addError(newErrorState(json['msg'])))
+                    dispatch(addError(json['msg']))
                     break
                 }
             }
@@ -227,7 +227,7 @@ export function getContributionEntityDuplicateCandidatesAction({
                     })
                 )
             }
-            dispatch(addError(newErrorState(exceptionMessage(exc))))
+            dispatch(addError(exceptionMessage(exc)))
         }
         return {}
     }
@@ -251,10 +251,12 @@ export function completeEntityAssignment(
                 dispatch(completeEntityAssignmentSuccess())
             } else {
                 const json = await rsp.json()
-                dispatch(completeEntityAssignmentError(json['msg']))
+                dispatch(completeEntityAssignmentError())
+                dispatch(addError(json['msg']))
             }
         } catch (exc: unknown) {
-            dispatch(completeEntityAssignmentError(exceptionMessage(exc)))
+            dispatch(completeEntityAssignmentError())
+            dispatch(addError(exceptionMessage(exc)))
         }
     }
 }
@@ -319,7 +321,7 @@ export function getContributionTagInstances({
                         details: undefined
                     })
                 )
-                dispatch(addError(newErrorState(json['msg'])))
+                dispatch(addError(json['msg']))
             }
         } catch (e: unknown) {
             dispatch(
@@ -329,7 +331,7 @@ export function getContributionTagInstances({
                     details: undefined
                 })
             )
-            dispatch(addError(newErrorState(exceptionMessage(e))))
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }

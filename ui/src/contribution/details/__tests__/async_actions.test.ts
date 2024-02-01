@@ -1,3 +1,4 @@
+import { addError } from '../../../util/notification/slice'
 import { ContributionStep, newContribution } from '../../state'
 import {
     LoadContributionDetailsErrorAction,
@@ -11,6 +12,18 @@ import {
     LoadContributionDetailsAsyncAction,
     PatchContributionAction
 } from '../async_action'
+
+jest.mock('../../../util/notification/slice', () => {
+    const addErrorMock = jest.fn()
+    return {
+        ...jest.requireActual('../../../util/notification/slice'),
+        addError: addErrorMock
+    }
+})
+
+beforeEach(() => {
+    ;(addError as unknown as jest.Mock).mockReset()
+})
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, () => any][]) {
@@ -50,7 +63,11 @@ describe('get details', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoadContributionDetailsAsyncAction(idTest0).run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new LoadContributionDetailsAsyncAction(idTest0).run(
+            dispatch,
+            reduxDispatch
+        )
         expect(dispatch.mock.calls).toEqual([
             [new LoadContributionDetailsStartAction()],
             [
@@ -72,6 +89,7 @@ describe('get details', () => {
                 { credentials: 'include' }
             ]
         ])
+        expect(reduxDispatch.mock.calls.length).toEqual(0)
     })
     test('error response', async () => {
         responseSequence([
@@ -83,14 +101,17 @@ describe('get details', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new LoadContributionDetailsAsyncAction(idTest0).run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new LoadContributionDetailsAsyncAction(idTest0).run(
+            dispatch,
+            reduxDispatch
+        )
         expect(dispatch.mock.calls).toEqual([
             [new LoadContributionDetailsStartAction()],
-            [
-                new LoadContributionDetailsErrorAction(
-                    'Could not load contribution details. Reason: "test error".'
-                )
-            ]
+            [new LoadContributionDetailsErrorAction()]
+        ])
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([
+            ['Could not load contribution details. Reason: "test error".']
         ])
     })
 })
@@ -113,10 +134,11 @@ describe('patch contribution', () => {
             ]
         ])
         const dispatch = jest.fn()
+        const reduxDispatch = jest.fn()
         await new PatchContributionAction({
             idPersistent: idTest0,
             hasHeader: true
-        }).run(dispatch)
+        }).run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new PatchContributionDetailsStartAction()],
             [
@@ -132,6 +154,7 @@ describe('patch contribution', () => {
                 )
             ]
         ])
+        expect(reduxDispatch.mock.calls.length).toEqual(0)
         const body: { [key: string]: string | boolean } = { has_header: true }
         expect((fetch as jest.Mock).mock.calls).toEqual([
             [
@@ -150,14 +173,17 @@ describe('patch contribution', () => {
             ]
         ])
         const dispatch = jest.fn()
-        await new PatchContributionAction({ idPersistent: idTest0 }).run(dispatch)
+        const reduxDispatch = jest.fn()
+        await new PatchContributionAction({ idPersistent: idTest0 }).run(
+            dispatch,
+            reduxDispatch
+        )
         expect(dispatch.mock.calls).toEqual([
             [new PatchContributionDetailsStartAction()],
-            [
-                new PatchContributionDetailsErrorAction(
-                    'Could not update contribution. Reason: "test error".'
-                )
-            ]
+            [new PatchContributionDetailsErrorAction()]
+        ])
+        expect((addError as unknown as jest.Mock).mock.calls).toEqual([
+            ['Could not update contribution. Reason: "test error".']
         ])
     })
 })

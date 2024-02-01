@@ -21,6 +21,7 @@ import { TagDefinition } from '../../column_menu/state'
 import { Remote } from '../../util/state'
 import { parseMergeRequestFromJson } from '../async_actions'
 import { AppDispatch } from '../../store'
+import { addError } from '../../util/notification/slice'
 
 export class GetMergeRequestConflictAction extends AsyncAction<
     MergeRequestConflictResolutionAction,
@@ -35,7 +36,7 @@ export class GetMergeRequestConflictAction extends AsyncAction<
 
     async run(
         dispatch: Dispatch<MergeRequestConflictResolutionAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ): Promise<void> {
         dispatch(new GetMergeRequestConflictStartAction())
         try {
@@ -68,10 +69,12 @@ export class GetMergeRequestConflictAction extends AsyncAction<
                 )
             } else {
                 const msg = json['msg']
-                dispatch(new GetMergeRequestConflictErrorAction(msg))
+                dispatch(new GetMergeRequestConflictErrorAction())
+                reduxDispatch(addError(msg))
             }
         } catch (e: unknown) {
-            dispatch(new GetMergeRequestConflictErrorAction(exceptionMessage(e)))
+            dispatch(new GetMergeRequestConflictErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -116,7 +119,7 @@ export class ResolveConflictAction extends AsyncAction<
 
     async run(
         dispatch: Dispatch<MergeRequestConflictResolutionAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ): Promise<void> {
         dispatch(new ResolveConflictStartAction(this.entity.idPersistent))
         try {
@@ -157,20 +160,12 @@ export class ResolveConflictAction extends AsyncAction<
                 )
             } else {
                 const json = await rsp.json()
-                dispatch(
-                    new ResolveConflictErrorAction(
-                        this.entity.idPersistent,
-                        json['msg']
-                    )
-                )
+                dispatch(new ResolveConflictErrorAction(this.entity.idPersistent))
+                reduxDispatch(addError(json['msg']))
             }
         } catch (e: unknown) {
-            dispatch(
-                new ResolveConflictErrorAction(
-                    this.entity.idPersistent,
-                    exceptionMessage(e)
-                )
-            )
+            dispatch(new ResolveConflictErrorAction(this.entity.idPersistent))
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -212,7 +207,7 @@ export class StartMergeAction extends AsyncAction<
 
     async run(
         dispatch: Dispatch<MergeRequestConflictResolutionAction>,
-        _reduxDispatch: AppDispatch
+        reduxDispatch: AppDispatch
     ): Promise<void> {
         dispatch(new StartMergeStartAction())
         try {
@@ -236,10 +231,12 @@ export class StartMergeAction extends AsyncAction<
                 ) {
                     msg = msg + ' Reload the page to see the changes.'
                 }
-                dispatch(new StartMergeErrorAction(msg))
+                dispatch(new StartMergeErrorAction())
+                reduxDispatch(addError(msg))
             }
         } catch (e: unknown) {
-            dispatch(new StartMergeErrorAction(exceptionMessage(e)))
+            dispatch(new StartMergeErrorAction())
+            reduxDispatch(addError(exceptionMessage(e)))
         }
     }
 }

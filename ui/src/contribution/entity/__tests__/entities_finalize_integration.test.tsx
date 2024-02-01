@@ -18,6 +18,11 @@ import { Provider } from 'react-redux'
 import { EntitiesStep } from '../components'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
+import {
+    NotificationManager,
+    NotificationType,
+    notificationReducer
+} from '../../../util/notification/slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -36,6 +41,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
             selectedContribution: RemoteInterface<Contribution | undefined>
         }
         tagSelection: TagSelectionState
+        notification: NotificationManager
     }
 }
 
@@ -46,7 +52,8 @@ export function renderWithProviders(
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
             contribution: { selectedContribution: newRemote(undefined) },
-            tagSelection: newTagSelectionState({})
+            tagSelection: newTagSelectionState({}),
+            notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -55,7 +62,8 @@ export function renderWithProviders(
         reducer: {
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer
+            tagSelection: tagSelectionSlice.reducer,
+            notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -195,7 +203,7 @@ test('error', async () => {
     initialResponses(fetchMock)
     const errorMsg = 'Could not finalize'
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
-    renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(7)
     })
@@ -204,13 +212,14 @@ test('error', async () => {
     })
     completeButton.click()
     await waitFor(() => {
-        screen.getByText(errorMsg)
+        const notifications = store.getState().notification.notificationList
+        expect(notifications.length).toEqual(1)
+        const notification = notifications[0]
+        expect(notification.type).toEqual(NotificationType.Error)
+        expect(notification.msg).toEqual(errorMsg)
     })
     expect(fetchMock.mock.calls.at(-1)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entity_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     ])
-    const closeButton = screen.getByRole('button', { name: /close/i })
-    closeButton.click()
-    await waitFor(() => expect(screen.queryByText(errorMsg)).toBeNull())
 })

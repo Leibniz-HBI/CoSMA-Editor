@@ -25,7 +25,7 @@ import { ReviewList } from './merge_request/components'
 import { CompleteStep } from './contribution/complete/components'
 import { MergeRequestConflictResolutionView } from './merge_request/conflicts/components'
 import { UserPermissionGroup } from './user/state'
-import { ErrorToasts } from './util/error/components'
+import { NotificationToastList } from './util/notification/components'
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store, { AppDispatch } from './store'
 import { selectUserInfo } from './user/selectors'
@@ -193,7 +193,7 @@ function App() {
             >
                 <LoginProvider body={<RouterProvider router={router} />} />
             </Container>
-            <ErrorToasts />
+            <NotificationToastList />
         </Provider>
     )
 }
