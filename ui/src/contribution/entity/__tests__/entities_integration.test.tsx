@@ -12,7 +12,7 @@ import { RemoteInterface, newRemote } from '../../../util/state'
 import { Contribution } from '../../state'
 import { configureStore } from '@reduxjs/toolkit'
 import { contributionEntitySlice } from '../slice'
-import { contributionSlice } from '../../slice'
+import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { EntitiesStep } from '../components'
@@ -36,9 +36,7 @@ function MockTable(props: any) {
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionEntity: ContributionEntityState
-        contribution: {
-            selectedContribution: RemoteInterface<Contribution | undefined>
-        }
+        contribution: ContributionState
         tagSelection: TagSelectionState
         notification: NotificationManager
     }
@@ -50,7 +48,7 @@ export function renderWithProviders(
     {
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
-            contribution: { selectedContribution: newRemote(undefined) },
+            contribution: newContributionState({}),
             tagSelection: newTagSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },

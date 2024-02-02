@@ -12,7 +12,7 @@ import {
 } from './action'
 import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
-import { parseContributionFromApi } from '../async_actions'
+import { parseContributionFromApi } from '../thunks'
 import { AppDispatch } from '../../store'
 import { addError } from '../../util/notification/slice'
 

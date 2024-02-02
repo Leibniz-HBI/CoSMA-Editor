@@ -9,7 +9,6 @@ import {
     ModalBody,
     Row
 } from 'react-bootstrap'
-import { useContribution } from './hooks'
 import { Contribution, ContributionStep, contributionIsReady } from './state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange, SetFieldValue } from '../util/type'
@@ -17,29 +16,27 @@ import { ChangeEvent, FormEvent, ReactElement, useEffect, useRef } from 'react'
 import { FormField } from '../util/form'
 import { useNavigate } from 'react-router-dom'
 import { StepHeader } from '../util/components/stepper'
-import { useAppDispatch } from '../hooks'
-import { uploadContribution } from './thunks'
+import { useAppDispatch, useAppSelector } from '../hooks'
+import { getContributionList, uploadContribution } from './thunks'
+import { selectContributionList, selectShowAddContribution } from './selectors'
+import { CosmaeLoading } from '../util/components/misc'
+import { toggleShowAddContribution } from './slice'
 
 export function ContributionList() {
-    const {
-        contributions,
-        showAddContribution,
-        loadContributionsCallback,
-        toggleShowAddContributionCallback
-    } = useContribution()
+    const dispatch = useAppDispatch()
+    const contributions = useAppSelector(selectContributionList)
+    const showAddContribution = useAppSelector(selectShowAddContribution)
     useEffect(() => {
-        loadContributionsCallback()
+        if (!contributions.isLoading) {
+            dispatch(getContributionList())
+        }
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showAddContribution])
     if (contributions.isLoading) {
-        return (
-            <div className="cosmae-table-container-outer">
-                <div className="cosmae-table-container-inner">
-                    <div className="shimmer"></div>
-                </div>
-            </div>
-        )
+        return <CosmaeLoading />
     }
+    const toggleShowAddContributionCallback = () =>
+        dispatch(toggleShowAddContribution())
     return (
         <Col className="d-flex flex-column h-100 ps-1 pe-1">
             <Row className="justify-content-end ps-2 pe-4 mb-2">
@@ -59,7 +56,7 @@ export function ContributionList() {
                         />
                     ))}
                 </ListGroup>
-                <Modal show={showAddContribution.value}>
+                <Modal show={showAddContribution}>
                     <Modal.Header
                         className="bg-primary"
                         closeButton
@@ -242,7 +239,7 @@ export function UploadFormBody({
     const buttonRef = useRef(null)
 
     return (
-        <Form noValidate onSubmit={handleSubmit} ref={containerRef}>
+        <Form noValidate onSubmit={handleSubmit} ref={containerRef} role="form">
             <FormField
                 name="name"
                 handleChange={handleChange}
