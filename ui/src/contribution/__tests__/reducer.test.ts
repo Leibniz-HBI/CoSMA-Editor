@@ -3,10 +3,7 @@ import {
     LoadContributionsErrorAction,
     LoadContributionsStartAction,
     LoadContributionsSuccessAction,
-    ToggleShowAddContributionAction,
-    UploadContributionErrorAction,
-    UploadContributionStartAction,
-    UploadContributionSuccessAction
+    ToggleShowAddContributionAction
 } from '../actions'
 import { contributionReducer } from '../reducer'
 import { ContributionStep, newContribution, newContributionState } from '../state'
@@ -60,47 +57,6 @@ describe('load contributions', () => {
     })
 })
 
-describe('upload contribution', () => {
-    test('start upload', () => {
-        const initialState = newContributionState({
-            showAddContribution: new Remote(true)
-        })
-        const expectedState = newContributionState({
-            showAddContribution: new Remote(true, true)
-        })
-        const endState = contributionReducer(
-            initialState,
-            new UploadContributionStartAction()
-        )
-        expect(endState).toEqual(expectedState)
-    })
-    test('finish upload', () => {
-        const initialState = newContributionState({
-            showAddContribution: new Remote(true, true)
-        })
-        const expectedState = newContributionState({
-            showAddContribution: new Remote(false, false)
-        })
-        const endState = contributionReducer(
-            initialState,
-            new UploadContributionSuccessAction()
-        )
-        expect(endState).toEqual(expectedState)
-    })
-    test('upload error', () => {
-        const initialState = newContributionState({
-            showAddContribution: new Remote(true, true)
-        })
-        const expectedState = newContributionState({
-            showAddContribution: new Remote(true, false)
-        })
-        const endState = contributionReducer(
-            initialState,
-            new UploadContributionErrorAction()
-        )
-        expect(endState).toEqual(expectedState)
-    })
-})
 describe('toggle show contribution', () => {
     test('show', () => {
         const initialState = newContributionState({})

@@ -1,9 +1,14 @@
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { config } from '../config'
-import { addError } from '../util/notification/slice'
+import { addError, addSuccessVanish } from '../util/notification/slice'
 import { exceptionMessage } from '../util/exception'
 import { ThunkWithFetch } from '../util/type'
-import { getContributionStart, getContributionSuccess } from './slice'
+import {
+    getContributionStart,
+    getContributionSuccess,
+    uploadContributionEnd,
+    uploadContributionStart
+} from './slice'
 import { Contribution, ContributionStep, newContribution } from './state'
 
 export function loadContributionDetails(
@@ -40,6 +45,45 @@ export function loadContributionDetails(
             dispatch(getContributionSuccess(contribution))
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+export function uploadContribution({
+    name,
+    description,
+    hasHeader,
+    file
+}: {
+    name: string
+    description: string
+    hasHeader: boolean
+    file: File
+}): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(uploadContributionStart())
+        try {
+            const form = new FormData()
+            form.append('file', file)
+            form.append('name', name)
+            form.append('description', description)
+            form.append('has_header', hasHeader.toString())
+            const rsp = await fetch(config.api_path + '/contributions', {
+                method: 'POST',
+                credentials: 'include',
+                body: form
+            })
+            if (rsp.status == 200) {
+                dispatch(addSuccessVanish('Successfully added contribution.'))
+            } else {
+                const json = await rsp.json()
+                dispatch(
+                    addError(`Could not upload contribution. Reason: "${json['msg']}".`)
+                )
+            }
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+        } finally {
+            dispatch(uploadContributionEnd())
         }
     }
 }

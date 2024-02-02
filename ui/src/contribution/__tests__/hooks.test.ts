@@ -3,7 +3,7 @@
  */
 import { Remote, useThunkReducer } from '../../util/state'
 import { ToggleShowAddContributionAction } from '../actions'
-import { LoadContributionsAction, UploadContributionAction } from '../async_actions'
+import { LoadContributionsAction } from '../async_actions'
 import { useContribution } from '../hooks'
 import { newContributionState } from '../state'
 
@@ -56,25 +56,5 @@ describe('toggle Upload visibility', () => {
         const { toggleShowAddContributionCallback } = useContribution()
         toggleShowAddContributionCallback()
         expect(dispatch.mock.calls).toEqual([[new ToggleShowAddContributionAction()]])
-    })
-})
-describe('upload contribution', () => {
-    const uploadPropsTest = {
-        name: 'name test',
-        description: 'description for test contribution',
-        hasHeader: false,
-        file: new File([''], 'filename', { type: 'text/csv' })
-    }
-    test('upload contribution', () => {
-        const dispatch = jest.fn()
-        ;(useThunkReducer as jest.Mock).mockReturnValue([
-            newContributionState({}),
-            dispatch
-        ])
-        const { submitUploadCallback } = useContribution()
-        submitUploadCallback(uploadPropsTest)
-        expect(dispatch.mock.calls).toEqual([
-            [new UploadContributionAction({ ...uploadPropsTest })]
-        ])
     })
 })

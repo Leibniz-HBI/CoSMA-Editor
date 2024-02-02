@@ -4,10 +4,7 @@ import {
     ContributionAction,
     LoadContributionsErrorAction,
     LoadContributionsStartAction,
-    LoadContributionsSuccessAction,
-    UploadContributionErrorAction,
-    UploadContributionStartAction,
-    UploadContributionSuccessAction
+    LoadContributionsSuccessAction
 } from './actions'
 import { exceptionMessage } from '../util/exception'
 import { config } from '../config'
@@ -16,62 +13,6 @@ import { fetch_chunk_get } from '../util/fetch'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { AppDispatch } from '../store'
 import { addError } from '../util/notification/slice'
-
-export class UploadContributionAction extends AsyncAction<ContributionAction, void> {
-    name: string
-    description: string
-    hasHeader: boolean
-    file: File
-
-    constructor({
-        name,
-        description,
-        hasHeader,
-        file
-    }: {
-        name: string
-        description: string
-        hasHeader: boolean
-        file: File
-    }) {
-        super()
-        this.name = name
-        this.description = description
-        this.hasHeader = hasHeader
-        this.file = file
-    }
-
-    async run(
-        dispatch: Dispatch<ContributionAction>,
-        reduxDispatch: AppDispatch
-    ): Promise<void> {
-        dispatch(new UploadContributionStartAction())
-        try {
-            const form = new FormData()
-            form.append('file', this.file)
-            form.append('name', this.name)
-            form.append('description', this.description)
-            form.append('has_header', this.hasHeader.toString())
-            const rsp = await fetch(config.api_path + '/contributions', {
-                method: 'POST',
-                credentials: 'include',
-                body: form
-            })
-            if (rsp.status == 200) {
-                dispatch(new UploadContributionSuccessAction())
-                return
-            }
-            const json = await rsp.json()
-            dispatch(new UploadContributionErrorAction())
-            reduxDispatch(
-                addError(`Could not upload contribution. Reason: "${json['msg']}".`)
-            )
-        } catch (e: unknown) {
-            dispatch(new UploadContributionErrorAction())
-            reduxDispatch(addError(exceptionMessage(e)))
-        }
-    }
-}
 
 export class LoadContributionsAction extends AsyncAction<ContributionAction, void> {
     async run(

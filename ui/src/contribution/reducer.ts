@@ -4,10 +4,7 @@ import {
     LoadContributionsErrorAction,
     LoadContributionsStartAction,
     LoadContributionsSuccessAction,
-    ToggleShowAddContributionAction,
-    UploadContributionErrorAction,
-    UploadContributionStartAction,
-    UploadContributionSuccessAction
+    ToggleShowAddContributionAction
 } from './actions'
 import { ContributionState, newContributionState } from './state'
 
@@ -31,26 +28,6 @@ export function contributionReducer(
         return newContributionState({
             ...state,
             contributions: state.contributions.success(state.contributions.value)
-        })
-    }
-    if (action instanceof UploadContributionStartAction) {
-        return newContributionState({
-            ...state,
-            showAddContribution: state.showAddContribution.startLoading()
-        })
-    }
-    if (action instanceof UploadContributionSuccessAction) {
-        return newContributionState({
-            ...state,
-            showAddContribution: state.showAddContribution.success(false)
-        })
-    }
-    if (action instanceof UploadContributionErrorAction) {
-        return newContributionState({
-            ...state,
-            showAddContribution: state.showAddContribution.success(
-                state.showAddContribution.value
-            )
         })
     }
     if (action instanceof ToggleShowAddContributionAction) {

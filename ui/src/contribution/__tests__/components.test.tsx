@@ -2,15 +2,13 @@
  * @jest-environment jsdom
  */
 
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { Remote } from '../../util/state'
 import { useContribution } from '../hooks'
 import { ContributionList } from '../components'
 import { ContributionStep, newContribution } from '../state'
 import { useNavigate } from 'react-router-dom'
 import { act } from 'react-dom/test-utils'
-import { UploadForm } from '../components'
-import userEvent from '@testing-library/user-event'
 
 jest.mock('../hooks', () => {
     return {
@@ -119,148 +117,5 @@ describe('contribution list', () => {
         expect((navigateMock as jest.Mock).mock.calls).toEqual([
             ['/contribute/id-test-0']
         ])
-    })
-})
-
-describe('upload form', () => {
-    test('empty does not submit', async () => {
-        const onSubmit = jest.fn()
-        const { container } = render(
-            <UploadForm
-                clearUploadErrorCallback={jest.fn()}
-                onSubmit={onSubmit}
-                uploadErrorMsg=""
-            />
-        )
-        const feedbacks = container.getElementsByClassName('invalid-feedback')
-        for (let i = 0; i < feedbacks.length; ++i) {
-            expect(feedbacks[i].textContent).toEqual('')
-        }
-        const button = screen.getByText('Submit')
-        button.click()
-        await waitFor(() => {
-            expect(onSubmit.mock.calls).toEqual([])
-            const feedbacks = container.getElementsByClassName('invalid-feedback')
-            expect(feedbacks.length).toEqual(3)
-            for (let i = 0; i < feedbacks.length; ++i) {
-                expect(feedbacks[i].textContent).not.toEqual('')
-            }
-        })
-    })
-    test('feedback for short inputs', async () => {
-        const onSubmit = jest.fn()
-        const { container } = render(
-            <UploadForm
-                clearUploadErrorCallback={jest.fn()}
-                onSubmit={onSubmit}
-                uploadErrorMsg=""
-            />
-        )
-        const feedbacks = container.getElementsByClassName('invalid-feedback')
-        for (let i = 0; i < feedbacks.length; ++i) {
-            expect(feedbacks[i].textContent).toEqual('')
-        }
-        const user = userEvent.setup()
-        const inputs = screen.getAllByRole('textbox')
-        expect(inputs.length).toEqual(2)
-        await user.type(inputs[0], 'aa')
-        await user.type(inputs[1], 'bb')
-        const button = screen.getByText('Submit')
-        button.click()
-        await waitFor(() => {
-            expect(onSubmit.mock.calls).toEqual([])
-            const feedbacks = container.getElementsByClassName('invalid-feedback')
-            expect(feedbacks.length).toEqual(3)
-            for (let i = 0; i < feedbacks.length; ++i) {
-                expect(feedbacks[i].textContent).not.toEqual('')
-            }
-        })
-    })
-    const nameTest = 'aaaaaaaaaaaa'
-    const descriptionTest = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
-    const fileTest = new File([''], 'test.csv', { type: 'text.csv' })
-    test('valid submit with checkboxes off', async () => {
-        const onSubmit = jest.fn()
-        const { container } = render(
-            <UploadForm
-                clearUploadErrorCallback={jest.fn()}
-                onSubmit={onSubmit}
-                uploadErrorMsg=""
-            />
-        )
-        const feedbacks = container.getElementsByClassName('invalid-feedback')
-        for (let i = 0; i < feedbacks.length; ++i) {
-            expect(feedbacks[i].textContent).toEqual('')
-        }
-        const user = userEvent.setup()
-        const inputs = screen.getAllByRole('textbox')
-        expect(inputs.length).toEqual(2)
-        await user.type(inputs[0], nameTest)
-        await user.type(inputs[1], descriptionTest)
-        const fileInput = container.getElementsByClassName('form-control')[2]
-        await user.upload(fileInput as HTMLElement, fileTest)
-        const button = screen.getByText('Submit')
-        button.click()
-        await waitFor(() => {
-            expect(onSubmit.mock.calls).toEqual([
-                [
-                    {
-                        name: nameTest,
-                        description: descriptionTest,
-                        file: fileTest,
-                        hasHeader: false
-                    }
-                ]
-            ])
-            const feedbacks = container.getElementsByClassName('invalid-feedback')
-            expect(feedbacks.length).toEqual(3)
-            for (let i = 0; i < feedbacks.length; ++i) {
-                expect(feedbacks[i].textContent).toEqual('')
-            }
-        })
-    })
-    test('valid submit with checkboxes on', async () => {
-        const onSubmit = jest.fn()
-        const { container } = render(
-            <UploadForm
-                clearUploadErrorCallback={jest.fn()}
-                onSubmit={onSubmit}
-                uploadErrorMsg=""
-            />
-        )
-        const feedbacks = container.getElementsByClassName('invalid-feedback')
-        for (let i = 0; i < feedbacks.length; ++i) {
-            expect(feedbacks[i].textContent).toEqual('')
-        }
-        const user = userEvent.setup()
-        const inputs = screen.getAllByRole('textbox')
-        expect(inputs.length).toEqual(2)
-        await user.type(inputs[0], nameTest)
-        await user.type(inputs[1], descriptionTest)
-        const fileInput = container.getElementsByClassName('form-control')[2]
-        await user.upload(fileInput as HTMLElement, fileTest)
-        const checkboxes = screen.getAllByRole('checkbox')
-        for (let i = 0; i < checkboxes.length; ++i) {
-            await user.click(checkboxes[i])
-        }
-        const button = screen.getByText('Submit')
-        await user.click(button)
-        await waitFor(() => {
-            expect(onSubmit.mock.calls).toEqual([
-                [
-                    {
-                        name: nameTest,
-                        description: descriptionTest,
-                        file: fileTest,
-                        hasHeader: true
-                    }
-                ]
-            ])
-            const feedbacks = container.getElementsByClassName('invalid-feedback')
-            expect(feedbacks.length).toEqual(3)
-            for (let i = 0; i < feedbacks.length; ++i) {
-                expect(feedbacks[i].textContent).toEqual('')
-            }
-        })
     })
 })

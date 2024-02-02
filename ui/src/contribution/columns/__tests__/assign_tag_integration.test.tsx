@@ -22,7 +22,7 @@ import { ColumnDefinitionStep } from '../components'
 import { ContributionStep } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
-import { ContributionState, contributionSlice } from '../../slice'
+import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -46,7 +46,7 @@ export function renderWithProviders(
             contributionColumnDefinition: newColumnDefinitionsContributionState({
                 columns: newRemote(undefined)
             }),
-            contribution: { selectedContribution: newRemote(undefined) },
+            contribution: newContributionState({}),
             tagSelection: newTagSelectionState({})
         },
         ...renderOptions

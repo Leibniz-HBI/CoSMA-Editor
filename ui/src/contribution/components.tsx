@@ -9,7 +9,7 @@ import {
     ModalBody,
     Row
 } from 'react-bootstrap'
-import { useContribution, SubmitUploadCallback } from './hooks'
+import { useContribution } from './hooks'
 import { Contribution, ContributionStep, contributionIsReady } from './state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange, SetFieldValue } from '../util/type'
@@ -17,14 +17,15 @@ import { ChangeEvent, FormEvent, ReactElement, useEffect, useRef } from 'react'
 import { FormField } from '../util/form'
 import { useNavigate } from 'react-router-dom'
 import { StepHeader } from '../util/components/stepper'
+import { useAppDispatch } from '../hooks'
+import { uploadContribution } from './thunks'
 
 export function ContributionList() {
     const {
         contributions,
         showAddContribution,
         loadContributionsCallback,
-        toggleShowAddContributionCallback,
-        submitUploadCallback
+        toggleShowAddContributionCallback
     } = useContribution()
     useEffect(() => {
         loadContributionsCallback()
@@ -66,7 +67,7 @@ export function ContributionList() {
                         onHide={toggleShowAddContributionCallback}
                     ></Modal.Header>
                     <ModalBody>
-                        <UploadForm onSubmit={submitUploadCallback} />
+                        <UploadForm />
                     </ModalBody>
                 </Modal>
             </Row>
@@ -172,22 +173,25 @@ export type UploadFormArgs = {
 }
 const uploadSchema = yup.object({
     name: yup.string().ensure().min(8),
-    description: yup.string().ensure().min(50),
+    description: yup.string(),
     hasHeader: yup.boolean(),
     file: yup.mixed().nullable().defined()
 })
 
-export function UploadForm({ onSubmit }: { onSubmit: SubmitUploadCallback }) {
+export function UploadForm() {
+    const dispatch = useAppDispatch()
     return (
         <Formik
             onSubmit={(values) => {
                 if (values.file !== undefined) {
-                    onSubmit({
-                        name: values.name,
-                        description: values.description,
-                        hasHeader: values.hasHeader,
-                        file: values.file
-                    })
+                    dispatch(
+                        uploadContribution({
+                            name: values.name,
+                            description: values.description,
+                            hasHeader: values.hasHeader,
+                            file: values.file
+                        })
+                    )
                 }
             }}
             initialValues={{

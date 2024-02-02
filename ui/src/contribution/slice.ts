@@ -3,9 +3,21 @@ import { Contribution } from './state'
 import { RemoteInterface, newRemote } from '../util/state'
 export interface ContributionState {
     selectedContribution: RemoteInterface<Contribution | undefined>
+    isUploadingContribution: boolean
 }
+export function newContributionState({
+    selectedContribution = newRemote(undefined),
+    isUploadingContribution = false
+}: {
+    selectedContribution?: RemoteInterface<Contribution | undefined>
+    isUploadingContribution?: boolean
+}) {
+    return { selectedContribution, isUploadingContribution }
+}
+
 const initialState: ContributionState = {
-    selectedContribution: newRemote(undefined)
+    selectedContribution: newRemote(undefined),
+    isUploadingContribution: false
 }
 export const contributionSlice = createSlice({
     name: 'contribution',
@@ -23,6 +35,12 @@ export const contributionSlice = createSlice({
         },
         clearSelectedContribution(state: ContributionState) {
             state.selectedContribution.value = undefined
+        },
+        uploadContributionStart(state: ContributionState) {
+            state.isUploadingContribution = true
+        },
+        uploadContributionEnd(state: ContributionState) {
+            state.isUploadingContribution = false
         }
     }
 })
@@ -30,5 +48,7 @@ export const contributionSlice = createSlice({
 export const {
     getContributionStart,
     getContributionSuccess,
-    clearSelectedContribution
+    clearSelectedContribution,
+    uploadContributionStart,
+    uploadContributionEnd
 } = contributionSlice.actions
