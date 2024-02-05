@@ -1,6 +1,6 @@
 import { Form } from 'react-bootstrap'
 import { HandleChange } from './type'
-import { ElementType } from 'react'
+import { AriaRole, ElementType } from 'react'
 
 export function FormField({
     type = 'text',
@@ -11,7 +11,8 @@ export function FormField({
     error,
     handleChange,
     as = undefined,
-    className = ''
+    className = '',
+    role = undefined
 }: {
     type?: string
     name: string
@@ -22,6 +23,7 @@ export function FormField({
     handleChange: HandleChange
     as?: ElementType
     className?: string
+    role?: AriaRole
 }) {
     const isInvalid = isTouched && !!error
     const field_id = 'formField-' + name
@@ -38,6 +40,7 @@ export function FormField({
                 isInvalid={isInvalid}
                 as={as}
                 className={className}
+                role={role}
             />
             <Form.Control.Feedback type="invalid">
                 <span>{error}</span>

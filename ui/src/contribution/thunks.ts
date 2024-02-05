@@ -8,6 +8,8 @@ import {
     getContributionListStart,
     getContributionStart,
     getContributionSuccess,
+    patchSelectedContributionEnd,
+    patchSelectedContributionStart,
     uploadContributionEnd,
     uploadContributionStart
 } from './slice'
@@ -131,6 +133,62 @@ export function uploadContribution({
         }
     }
 }
+
+export function patchContributionDetails({
+    idPersistent,
+    name,
+    description,
+    hasHeader
+}: {
+    idPersistent: string
+    name?: string
+    description?: string
+    hasHeader?: boolean
+}): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch): Promise<void> => {
+        dispatch(patchSelectedContributionStart())
+        try {
+            const body: { [key: string]: string | boolean } = {}
+            if (name !== undefined) {
+                body['name'] = name
+            }
+            if (description !== undefined) {
+                body['description'] = description
+            }
+            if (hasHeader !== undefined) {
+                body['has_header'] = hasHeader
+            }
+            const rsp = await fetch(
+                config.api_path + '/contributions/' + idPersistent,
+                {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    body: JSON.stringify(body)
+                }
+            )
+            if (rsp.status == 200) {
+                dispatch(
+                    patchSelectedContributionEnd(
+                        parseContributionFromApi(await rsp.json())
+                    )
+                )
+                return
+            }
+            dispatch(patchSelectedContributionEnd(undefined))
+            dispatch(
+                addError(
+                    `Could not update contribution. Reason: "${
+                        (await rsp.json())['msg']
+                    }".`
+                )
+            )
+        } catch (e: unknown) {
+            dispatch(patchSelectedContributionEnd(undefined))
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseContributionFromApi(contribution_json: any): Contribution {
     return newContribution({

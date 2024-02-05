@@ -17,7 +17,6 @@ import { ContributionList } from './contribution/components'
 import { ContributionDetailsStep } from './contribution/details/components'
 import { ColumnDefinitionStep } from './contribution/columns/components'
 import { config } from './config'
-import { contributionStepApiToUiMap } from './contribution/async_actions'
 import { ContributionStep } from './contribution/state'
 import { exceptionMessage } from './util/exception'
 import { EntitiesStep } from './contribution/entity/components'
@@ -33,6 +32,7 @@ import { logoutThunk, refresh } from './user/thunks'
 import { TagManagementPage } from './tag_management/components'
 import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
 import { ManagementPage } from './management/components'
+import { contributionStepApiToUiMap } from './contribution/thunks'
 
 export function CosmaeRoot() {
     const userInfo = useSelector(selectUserInfo)

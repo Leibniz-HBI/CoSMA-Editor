@@ -6,23 +6,27 @@ export interface ContributionState {
     isUploadingContribution: boolean
     contributions: RemoteInterface<Contribution[]>
     showAddContribution: boolean
+    patchSelectedContribution: boolean
 }
 export function newContributionState({
     selectedContribution = newRemote(undefined),
     isUploadingContribution = false,
     contributions = newRemote([]),
-    showAddContribution = false
+    showAddContribution = false,
+    patchSelectedContribution = false
 }: {
     selectedContribution?: RemoteInterface<Contribution | undefined>
     isUploadingContribution?: boolean
     contributions?: RemoteInterface<Contribution[]>
     showAddContribution?: boolean
+    patchSelectedContribution?: boolean
 }) {
     return {
         selectedContribution,
         isUploadingContribution,
         contributions,
-        showAddContribution
+        showAddContribution,
+        patchSelectedContribution
     }
 }
 
@@ -66,6 +70,19 @@ export const contributionSlice = createSlice({
         },
         toggleShowAddContribution(state: ContributionState) {
             state.showAddContribution = !state.showAddContribution
+        },
+        patchSelectedContributionStart(state: ContributionState) {
+            state.patchSelectedContribution = true
+        },
+        patchSelectedContributionEnd(
+            state: ContributionState,
+            action: PayloadAction<Contribution | undefined>
+        ) {
+            const contribution = action.payload
+            if (contribution !== undefined) {
+                state.selectedContribution = newRemote(contribution)
+            }
+            state.patchSelectedContribution = false
         }
     }
 })
@@ -78,5 +95,7 @@ export const {
     clearSelectedContribution,
     uploadContributionStart,
     uploadContributionEnd,
-    toggleShowAddContribution
+    toggleShowAddContribution,
+    patchSelectedContributionStart,
+    patchSelectedContributionEnd
 } = contributionSlice.actions
