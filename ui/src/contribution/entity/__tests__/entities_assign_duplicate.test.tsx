@@ -13,8 +13,7 @@ jest.mock('@glideapps/glide-data-grid', () => {
 })
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { ContributionEntityState, newContributionEntityState } from '../state'
-import { RemoteInterface, newRemote } from '../../../util/state'
-import { Contribution } from '../../state'
+import { newRemote } from '../../../util/state'
 import { configureStore } from '@reduxjs/toolkit'
 import { contributionEntitySlice } from '../slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
@@ -209,7 +208,7 @@ function mkMatches(
 }
 function initialResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { contributionTest }],
+        [200, contributionTest],
         [200, { persons: personList }],
         [200, { persons: [] }],
         [200, { tag_definitions: [] }],

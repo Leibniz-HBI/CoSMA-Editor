@@ -16,13 +16,12 @@ import { ColumnDefinitionStep } from '../components'
 import { ContributionStep } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
-import { ContributionState, contributionSlice } from '../../slice'
+import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 import {
     NotificationManager,
     NotificationType,
     notificationReducer
 } from '../../../util/notification/slice'
-import { NotificationToastList } from '../../../util/notification/components'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -47,7 +46,9 @@ export function renderWithProviders(
             contributionColumnDefinition: newColumnDefinitionsContributionState({
                 columns: newRemote(undefined)
             }),
-            contribution: { selectedContribution: newRemote(undefined) },
+            contribution: newContributionState({
+                selectedContribution: newRemote(undefined)
+            }),
             tagSelection: newTagSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
@@ -151,7 +152,7 @@ test('finish success', async () => {
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(3)
+        expect(fetchMock.mock.calls.length).toEqual(4)
         button = screen.getByRole('button', { name: /finalize column assignment/i })
     })
     button?.click()
@@ -178,7 +179,7 @@ test('finish error', async () => {
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(3)
+        expect(fetchMock.mock.calls.length).toEqual(4)
         button = screen.getByRole('button', { name: /finalize column assignment/i })
     })
     button?.click()

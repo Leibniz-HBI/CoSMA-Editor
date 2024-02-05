@@ -1,4 +1,3 @@
-import { useLoaderData } from 'react-router-dom'
 import { constructColumnTitle, mkCellContentCallback } from './hooks'
 import { ContributionStepper } from '../components'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
@@ -39,38 +38,22 @@ import {
     setSelectedEntityIdx,
     toggleTagDefinitionMenu
 } from './slice'
-import { loadContributionDetails } from '../thunks'
 import { selectContribution } from '../selectors'
-import { clearSelectedContribution } from '../slice'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
-import { ContributionStep } from '../state'
 import { IBounds, useLayer } from 'react-laag'
 import { TagDefinition } from '../../column_menu/state'
 
 export function EntitiesStep() {
-    const idContributionPersistent = useLoaderData() as string
-    const dispatch: AppDispatch = useDispatch()
     const contributionCandidate = useSelector(selectContribution)
-    useEffect(() => {
-        dispatch(loadContributionDetails(idContributionPersistent))
-        return function cleanup() {
-            dispatch(clearSelectedContribution())
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [idContributionPersistent])
-    let body = <EntitiesStepBody idContributionPersistent={idContributionPersistent} />
-    if (contributionCandidate.value === undefined) {
-        body = <CosmaeLoading />
+    let body = <CosmaeLoading />
+    if (contributionCandidate.value !== undefined) {
+        body = (
+            <EntitiesStepBody
+                idContributionPersistent={contributionCandidate.value.idPersistent}
+            />
+        )
     }
-    return (
-        <ContributionStepper
-            selectedIdx={2}
-            id_persistent={idContributionPersistent}
-            step={contributionCandidate.value?.step ?? ContributionStep.ValuesExtracted}
-        >
-            {body}
-        </ContributionStepper>
-    )
+    return <ContributionStepper selectedIdx={2}>{body}</ContributionStepper>
 }
 
 export function EntitiesStepBody({

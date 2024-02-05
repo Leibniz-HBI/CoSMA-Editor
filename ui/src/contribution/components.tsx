@@ -7,20 +7,29 @@ import {
     ListGroup,
     Modal,
     ModalBody,
-    Row
+    Row,
+    Spinner
 } from 'react-bootstrap'
 import { Contribution, ContributionStep, contributionIsReady } from './state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange, SetFieldValue } from '../util/type'
 import { ChangeEvent, FormEvent, ReactElement, useEffect, useRef } from 'react'
 import { FormField } from '../util/form'
-import { useNavigate } from 'react-router-dom'
+import { useLoaderData, useNavigate } from 'react-router-dom'
 import { StepHeader } from '../util/components/stepper'
 import { useAppDispatch, useAppSelector } from '../hooks'
-import { getContributionList, uploadContribution } from './thunks'
-import { selectContributionList, selectShowAddContribution } from './selectors'
+import {
+    getContributionList,
+    loadContributionDetails,
+    uploadContribution
+} from './thunks'
+import {
+    selectContribution,
+    selectContributionList,
+    selectShowAddContribution
+} from './selectors'
 import { CosmaeLoading } from '../util/components/misc'
-import { toggleShowAddContribution } from './slice'
+import { clearSelectedContribution, toggleShowAddContribution } from './slice'
 
 export function ContributionList() {
     const dispatch = useAppDispatch()
@@ -74,25 +83,71 @@ export function ContributionList() {
 
 export function ContributionStepper({
     selectedIdx,
-    id_persistent,
-    children,
-    step = ContributionStep.Uploaded
+    children
 }: {
-    selectedIdx?: number
-    id_persistent: string
+    selectedIdx: number
     children: ReactElement
-    step?: ContributionStep
 }) {
+    const idContributionPersistent = useLoaderData() as string
+    const contribution = useAppSelector(selectContribution)
+    const dispatch = useAppDispatch()
+    useEffect(() => {
+        if (contribution.value === undefined || !contribution.isLoading) {
+            dispatch(loadContributionDetails(idContributionPersistent))
+        }
+        return function cleanup() {
+            dispatch(clearSelectedContribution())
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [idContributionPersistent])
     const navigate = useNavigate()
     let maxIdx = 1
-    if (
-        step === ContributionStep.ColumnsAssigned ||
-        step === ContributionStep.ValuesExtracted
-    ) {
-        maxIdx = 2
+    let processingMessage = undefined
+    switch (contribution.value?.step) {
+        case ContributionStep.Uploaded:
+            processingMessage = 'Columns not yet extracted'
+            break
+        case ContributionStep.ColumnsAssigned:
+            processingMessage = 'Values not yet extracted'
+            maxIdx = 2
+            break
+        case ContributionStep.ValuesExtracted:
+            maxIdx = 2
+            break
+        case ContributionStep.EntitiesAssigned:
+            processingMessage = 'Entities not yet merged.'
+            maxIdx = 3
+            break
+        // eslint-disable-next-line no-fallthrough
+        case ContributionStep.Merged:
+            maxIdx = 3
     }
-    if (step === ContributionStep.EntitiesAssigned) {
-        maxIdx = 3
+    let body = children
+    if (selectedIdx > maxIdx) {
+        body = (
+            <Row>
+                This step is not yet available for this contribution. Please select an
+                available step.
+            </Row>
+        )
+    }
+    if (selectedIdx == maxIdx && processingMessage != undefined) {
+        if (!contribution.isLoading) {
+            body = <CosmaeLoading />
+            setTimeout(
+                () => dispatch(loadContributionDetails(idContributionPersistent)),
+                1000
+            )
+        } else {
+            body = (
+                <>
+                    <Row>{`Data not yet available: "${processingMessage}".`}</Row>
+                    <Row>
+                        <Spinner color="primary" />
+                    </Row>
+                </>
+            )
+        }
     }
     return (
         <Col
@@ -104,11 +159,15 @@ export function ContributionStepper({
                 selectedIdx={selectedIdx ?? 0}
                 activeIdx={maxIdx}
                 navigateCallback={(name: string) =>
-                    navigate(`/contribute/${id_persistent}/${name.toLowerCase()}`)
+                    navigate(
+                        `/contribute/${
+                            contribution.value?.idPersistent
+                        }/${name.toLowerCase()}`
+                    )
                 }
             />
             <Row className="d-block flex-basis-0 flex-grow-1 overflow-auto scroll-gutter h-100">
-                <Col className="ps-5 pe-5 h-100">{children}</Col>
+                <Col className="ps-5 pe-5 h-100">{body}</Col>
             </Row>
         </Col>
     )

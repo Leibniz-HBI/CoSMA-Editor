@@ -1,17 +1,18 @@
-import { useLoaderData, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ContributionStepper } from '../components'
-import { ContributionStep } from '../state'
 import { Button, Row } from 'react-bootstrap'
+import { useAppSelector } from '../../hooks'
+import { selectContribution } from '../selectors'
+import { CosmaeLoading } from '../../util/components/misc'
 
 export function CompleteStep() {
-    const idContributionPersistent = useLoaderData() as string
+    const contribution = useAppSelector(selectContribution)
     const navigate = useNavigate()
+    if (contribution.value === undefined || contribution.isLoading) {
+        return <CosmaeLoading />
+    }
     return (
-        <ContributionStepper
-            selectedIdx={3}
-            id_persistent={idContributionPersistent}
-            step={ContributionStep.EntitiesAssigned}
-        >
+        <ContributionStepper selectedIdx={3}>
             <>
                 <Row>
                     All entities were assigned. Please review the merge requests created

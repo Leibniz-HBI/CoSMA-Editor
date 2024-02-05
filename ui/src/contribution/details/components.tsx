@@ -1,5 +1,5 @@
 import * as yup from 'yup'
-import { FormEvent, useLayoutEffect } from 'react'
+import { FormEvent } from 'react'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
@@ -9,7 +9,7 @@ import { useLoaderData } from 'react-router-dom'
 import { Contribution } from '../state'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import { selectContribution } from '../selectors'
-import { loadContributionDetails, patchContributionDetails } from '../thunks'
+import { patchContributionDetails } from '../thunks'
 
 export type PatchContributionCallback = ({
     name,
@@ -25,28 +25,17 @@ export function ContributionDetailsStep() {
     const idPersistent = useLoaderData() as string
     const dispatch = useAppDispatch()
     const contribution = useAppSelector(selectContribution)
-
-    useLayoutEffect(() => {
-        if (!contribution.isLoading) {
-            dispatch(loadContributionDetails(idPersistent))
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [idPersistent])
+    let body
     if (contribution.isLoading || contribution.value == undefined) {
-        return (
+        body = (
             <div className="cosmae-table-container-outer">
                 <div className="cosmae-table-container-inner">
                     <div className="shimmer"></div>
                 </div>
             </div>
         )
-    }
-    return (
-        <ContributionStepper
-            selectedIdx={0}
-            id_persistent={idPersistent}
-            step={contribution.value.step}
-        >
+    } else {
+        body = (
             <EditForm
                 contribution={contribution.value}
                 onSubmit={({ name, description, hasHeader }) => {
@@ -60,8 +49,9 @@ export function ContributionDetailsStep() {
                     )
                 }}
             />
-        </ContributionStepper>
-    )
+        )
+    }
+    return <ContributionStepper selectedIdx={0}>{body}</ContributionStepper>
 }
 
 export type EditFormArgs = {

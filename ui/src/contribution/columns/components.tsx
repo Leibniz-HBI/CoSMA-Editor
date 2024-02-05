@@ -1,8 +1,7 @@
-import { useLoaderData } from 'react-router-dom'
 import { ContributionStepper } from '../components'
 import { Button, Col, Form, FormCheck, ListGroup, Modal, Row } from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
-import { ChangeEvent, useLayoutEffect } from 'react'
+import { ChangeEvent, useEffect } from 'react'
 import { ColumnSelector, mkListItems } from '../../column_menu/components/selection'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
 import { TagDefinition } from '../../column_menu/state'
@@ -32,41 +31,42 @@ import { toggleExpansion } from '../../column_menu/slice'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
 import { RemoteInterface } from '../../util/state'
 import { selectContribution } from '../selectors'
-import { loadContributionDetails } from '../thunks'
 
 export function ColumnDefinitionStep() {
-    const idContributionPersistent = useLoaderData() as string
     const dispatch: AppDispatch = useDispatch()
     const definitions = useSelector(selectColumnDefinitionsContributionTriple)
     const selectedColumnDefinition = useSelector(selectSelectedColumnDefinition)
     const createTabSelected = useSelector(selectCreateTabSelected)
     const isLoadingTags = useSelector(selectTagSelectionLoading)
     const contributionCandidate = useSelector(selectContribution)
-    useLayoutEffect(() => {
-        dispatch(loadContributionDetails(idContributionPersistent))
-            .then(() => {
-                dispatch(loadColumnDefinitionsContribution(idContributionPersistent))
-            })
-            .then(async () => {
+    useEffect(() => {
+        if (contributionCandidate.value != undefined && !definitions.isLoading) {
+            dispatch(
+                loadColumnDefinitionsContribution(
+                    contributionCandidate.value.idPersistent
+                )
+            ).then(async () => {
                 if (!isLoadingTags) {
                     await dispatch(loadTagDefinitionHierarchy({ expand: true }))
                 }
             })
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [idContributionPersistent])
+    }, [contributionCandidate.value?.idPersistent])
     if (
         definitions.isLoading ||
         contributionCandidate.isLoading ||
         contributionCandidate.value === undefined
     ) {
-        return <CosmaeLoading />
+        return (
+            <ContributionStepper selectedIdx={1}>
+                <CosmaeLoading />
+            </ContributionStepper>
+        )
     }
+    const idContributionPersistent = contributionCandidate.value?.idPersistent
     return (
-        <ContributionStepper
-            selectedIdx={1}
-            id_persistent={idContributionPersistent}
-            step={contributionCandidate.value.step}
-        >
+        <ContributionStepper selectedIdx={1}>
             <Row className="overflow-hidden h-100">
                 <Col
                     xs={3}

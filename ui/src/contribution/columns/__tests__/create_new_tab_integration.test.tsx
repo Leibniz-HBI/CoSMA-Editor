@@ -23,7 +23,7 @@ import { ContributionStep } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 import userEvent from '@testing-library/user-event'
-import { ContributionState, contributionSlice } from '../../slice'
+import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -47,7 +47,9 @@ export function renderWithProviders(
             contributionColumnDefinition: newColumnDefinitionsContributionState({
                 columns: newRemote(undefined)
             }),
-            contribution: { selectedContribution: newRemote(undefined) },
+            contribution: newContributionState({
+                selectedContribution: newRemote(undefined)
+            }),
             tagSelection: newTagSelectionState({})
         },
         ...renderOptions
@@ -110,7 +112,7 @@ const nameTagDef0 = 'tag def 0'
 
 function initialResponseSequence(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { contributionCandidateRsp }],
+        [200, { ...contributionCandidateRsp }],
         [
             200,
             {
