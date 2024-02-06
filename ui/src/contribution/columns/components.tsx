@@ -31,6 +31,8 @@ import { toggleExpansion } from '../../column_menu/slice'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
 import { RemoteInterface } from '../../util/state'
 import { selectContribution } from '../selectors'
+import { useNavigate } from 'react-router-dom'
+import { loadContributionDetails } from '../thunks'
 
 export function ColumnDefinitionStep() {
     const dispatch: AppDispatch = useDispatch()
@@ -351,9 +353,19 @@ export function CompleteColumnAssignmentButton({
 }) {
     const dispatch: AppDispatch = useDispatch()
     const finalizeColumnAssignmentState = useSelector(selectFinalizeColumnAssignment)
+    const navigate = useNavigate()
     return (
         <CompleteColumnAssignmentButtonInner
-            onClick={() => dispatch(finalizeColumnAssignment(idContributionPersistent))}
+            onClick={() =>
+                dispatch(finalizeColumnAssignment(idContributionPersistent)).then(
+                    (success) => {
+                        if (success) {
+                            dispatch(loadContributionDetails(idContributionPersistent))
+                            navigate(`/contribute/${idContributionPersistent}/entities`)
+                        }
+                    }
+                )
+            }
             finalizeColumnAssignmentState={finalizeColumnAssignmentState}
         />
     )

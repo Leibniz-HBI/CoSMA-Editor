@@ -42,6 +42,8 @@ import { selectContribution } from '../selectors'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
 import { IBounds, useLayer } from 'react-laag'
 import { TagDefinition } from '../../column_menu/state'
+import { useNavigate } from 'react-router-dom'
+import { loadContributionDetails } from '../thunks'
 
 export function EntitiesStep() {
     const contributionCandidate = useSelector(selectContribution)
@@ -443,17 +445,28 @@ export function CompleteAssignmentButton({
 }: {
     idContributionPersistent: string
 }) {
-    const buttonRef = useRef(null)
     const completeEntityAssignmentState = useSelector(selectCompleteEntityAssignment)
     const dispatch: AppDispatch = useDispatch()
+    const navigate = useNavigate()
     return (
         <>
-            <Col sm="auto" ref={buttonRef} key="entities-step-complete-button">
+            <Col sm="auto" key="entities-step-complete-button">
                 <RemoteTriggerButton
                     label="Confirm Assigned Duplicates"
                     isLoading={completeEntityAssignmentState.isLoading}
                     onClick={() =>
-                        dispatch(completeEntityAssignment(idContributionPersistent))
+                        dispatch(
+                            completeEntityAssignment(idContributionPersistent)
+                        ).then((success) => {
+                            if (success) {
+                                dispatch(
+                                    loadContributionDetails(idContributionPersistent)
+                                )
+                                navigate(
+                                    `/contribute/${idContributionPersistent}/complete`
+                                )
+                            }
+                        })
                     }
                 />
             </Col>

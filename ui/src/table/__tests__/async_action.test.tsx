@@ -40,8 +40,8 @@ jest.mock('../../util/notification/slice', () => {
 })
 
 beforeEach(() => {
-    ;(addError as unknown as jest.Mock).mockReset()
-    ;(addSuccessVanish as unknown as jest.Mock).mockReset()
+    ;(addError as unknown as jest.Mock).mockClear()
+    ;(addSuccessVanish as unknown as jest.Mock).mockClear()
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -117,7 +117,7 @@ export function patchColumnDefinitionContribution({
 
 export function finalizeColumnAssignment(
     idCandidatePersistent: string
-): ThunkWithFetch<void> {
+): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(finalizeColumnAssignmentStart())
         try {
@@ -129,6 +129,7 @@ export function finalizeColumnAssignment(
             if (rsp.status == 200) {
                 dispatch(finalizeColumnAssignmentSuccess())
                 dispatch(addSuccessVanish('Columns successfully assigned.'))
+                return true
             } else {
                 const json = await rsp.json()
                 dispatch(finalizeColumnAssignmentError())
@@ -138,6 +139,7 @@ export function finalizeColumnAssignment(
             dispatch(finalizeColumnAssignmentError())
             dispatch(addError(exceptionMessage(e)))
         }
+        return false
     }
 }
 

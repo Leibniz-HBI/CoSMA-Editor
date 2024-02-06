@@ -21,16 +21,26 @@ import {
     NotificationType,
     notificationReducer
 } from '../../../util/notification/slice'
+import { useNavigate } from 'react-router-dom'
+import { ContributionStep } from '../../state'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    const navigateMock = jest.fn()
+    return {
+        useLoaderData: loaderMock,
+        useNavigate: jest.fn().mockReturnValue(navigateMock)
+    }
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
     return <div className="mock"></div>
 }
+
+beforeEach(() => {
+    ;(useNavigate() as jest.Mock).mockClear()
+})
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -179,6 +189,9 @@ test('success', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
     addResponseSequence(fetchMock, [[200, {}]])
+    addResponseSequence(fetchMock, [
+        [200, { ...contributionTest, state: 'ENTITIES_ASSIGNED' }]
+    ])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(7)
@@ -192,9 +205,21 @@ test('success', async () => {
         expect(notification.type).toEqual(NotificationType.Success)
         expect(notification.msg).toEqual('Duplicates successfully assigned.')
     })
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await waitFor(() => {
+        expect(store.getState().contribution.selectedContribution.value?.step).toEqual(
+            ContributionStep.EntitiesAssigned
+        )
+    })
+    expect(fetchMock.mock.calls.at(-2)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entity_assignment_complete`,
         { method: 'POST', credentials: 'include' }
+    ])
+    expect(fetchMock.mock.calls.at(-1)).toEqual([
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
+        { credentials: 'include' }
+    ])
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+        [`/contribute/${idContribution}/complete`]
     ])
 })
 
@@ -222,4 +247,5 @@ test('error', async () => {
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entity_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     ])
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
 })

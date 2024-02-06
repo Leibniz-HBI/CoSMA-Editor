@@ -22,11 +22,20 @@ import {
     NotificationType,
     notificationReducer
 } from '../../../util/notification/slice'
+import { useNavigate } from 'react-router-dom'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    const navigateMock = jest.fn()
+    return {
+        useLoaderData: loaderMock,
+        useNavigate: jest.fn().mockReturnValue(navigateMock)
+    }
+})
+
+beforeEach(() => {
+    ;(useNavigate() as jest.Mock).mockClear()
 })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -147,7 +156,7 @@ test('finish success', async () => {
     initialResponseSequence(fetchMock)
     addResponseSequence(fetchMock, [
         [200, {}],
-        [200, { tag_definitions: [] }]
+        [200, { ...contributionCandidateRsp, state: 'COLUMNS_ASSIGNED' }]
     ])
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
@@ -163,9 +172,21 @@ test('finish success', async () => {
         expect(notification.type).toEqual(NotificationType.Success)
         expect(notification.msg).toEqual('Columns successfully assigned.')
     })
-    expect(fetchMock.mock.calls[fetchMock.mock.calls.length - 1]).toEqual([
+    await waitFor(() => {
+        expect(store.getState().contribution.selectedContribution.value?.step).toEqual(
+            ContributionStep.ColumnsAssigned
+        )
+    })
+    expect(fetchMock.mock.calls.at(-2)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
+    ])
+    expect(fetchMock.mock.calls.at(-1)).toEqual([
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
+        { credentials: 'include' }
+    ])
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+        ['/contribute/id-contribution-test/entities']
     ])
 })
 test('finish error', async () => {
@@ -199,4 +220,5 @@ test('finish error', async () => {
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     ])
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
 })

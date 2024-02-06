@@ -235,7 +235,7 @@ export function getContributionEntityDuplicateCandidatesAction({
 
 export function completeEntityAssignment(
     idContributionPersistent: string
-): ThunkWithFetch<void> {
+): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(completeEntityAssignmentStart())
         try {
@@ -250,6 +250,7 @@ export function completeEntityAssignment(
             if (rsp.status == 200) {
                 dispatch(completeEntityAssignmentSuccess())
                 dispatch(addSuccessVanish('Duplicates successfully assigned.'))
+                return true
             } else {
                 const json = await rsp.json()
                 dispatch(completeEntityAssignmentError())
@@ -259,6 +260,7 @@ export function completeEntityAssignment(
             dispatch(completeEntityAssignmentError())
             dispatch(addError(exceptionMessage(exc)))
         }
+        return false
     }
 }
 
