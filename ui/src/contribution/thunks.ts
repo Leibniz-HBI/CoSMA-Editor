@@ -104,9 +104,10 @@ export function uploadContribution({
     description: string
     hasHeader: boolean
     file: File
-}): ThunkWithFetch<void> {
+}): ThunkWithFetch<string | undefined> {
     return async (dispatch, _getState, fetch) => {
         dispatch(uploadContributionStart())
+        let idPersistent = undefined
         try {
             const form = new FormData()
             form.append('file', file)
@@ -119,6 +120,8 @@ export function uploadContribution({
                 body: form
             })
             if (rsp.status == 200) {
+                const json = await rsp.json()
+                idPersistent = json['id_persistent']
                 dispatch(addSuccessVanish('Successfully added contribution.'))
             } else {
                 const json = await rsp.json()
@@ -131,6 +134,7 @@ export function uploadContribution({
         } finally {
             dispatch(uploadContributionEnd())
         }
+        return idPersistent
     }
 }
 

@@ -14,13 +14,22 @@ import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { UploadForm } from '../components'
 import userEvent from '@testing-library/user-event'
+import { useNavigate } from 'react-router-dom'
 
+jest.mock('react-router-dom', () => {
+    const navigateMock = jest.fn()
+    return { useNavigate: jest.fn().mockReturnValue(navigateMock) }
+})
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contribution: ContributionState
         notification: NotificationManager
     }
 }
+
+beforeEach(() => {
+    ;(useNavigate() as jest.Mock).mockRestore()
+})
 
 export function renderWithProviders(
     ui: React.ReactElement,
@@ -74,6 +83,7 @@ test('empty does not submit', async () => {
         expect(feedbacks[0].textContent).not.toEqual('')
         expect(feedbacks[2].textContent).not.toEqual('')
         expect(fetchMock.mock.calls).toEqual([])
+        expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
     })
 })
 test('feedback for short name', async () => {
@@ -87,13 +97,15 @@ test('feedback for short name', async () => {
         expect(feedbacks[0].textContent).not.toEqual('')
         expect(feedbacks[2].textContent).not.toEqual('')
         expect(fetchMock.mock.calls).toEqual([])
+        expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
     })
 })
 const nameTest = 'aaaaaaaaaaaa'
 const fileTest = new File([''], 'test.csv', { type: 'text.csv' })
+const idPersistentReturn = 'id-persistent-return'
 test('submit correct name', async () => {
     const fetchMock = jest.fn()
-    addResponseSequence(fetchMock, [[200, {}]])
+    addResponseSequence(fetchMock, [[200, { id_persistent: idPersistentReturn }]])
     const { store, container } = renderWithProviders(<UploadForm />, fetchMock)
     checkEmptyFeedbacks(container)
     await submitFormWithValues(container, nameTest, fileTest)
@@ -116,11 +128,14 @@ test('submit correct name', async () => {
         description: '',
         has_header: 'false'
     })
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+        [`/contribute/${idPersistentReturn}/columns`]
+    ])
 })
 test('submit with description and header', async () => {
     const fetchMock = jest.fn()
     const description = 'test description'
-    addResponseSequence(fetchMock, [[200, {}]])
+    addResponseSequence(fetchMock, [[200, { id_persistent: idPersistentReturn }]])
     const { store, container } = renderWithProviders(<UploadForm />, fetchMock)
     checkEmptyFeedbacks(container)
     await submitFormWithValues(container, nameTest, fileTest, description, true)
@@ -143,6 +158,9 @@ test('submit with description and header', async () => {
         description: description,
         has_header: 'true'
     })
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+        [`/contribute/${idPersistentReturn}/columns`]
+    ])
 })
 test('error', async () => {
     const fetchMock = jest.fn()
@@ -170,6 +188,7 @@ test('error', async () => {
         description: '',
         has_header: 'false'
     })
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
 })
 
 function checkFormData(formData: FormData, object: { [key: string]: unknown }) {

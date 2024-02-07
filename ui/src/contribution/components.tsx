@@ -7,8 +7,7 @@ import {
     ListGroup,
     Modal,
     ModalBody,
-    Row,
-    Spinner
+    Row
 } from 'react-bootstrap'
 import { Contribution, ContributionStep, contributionIsReady } from './state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
@@ -246,6 +245,7 @@ const uploadSchema = yup.object({
 })
 
 export function UploadForm() {
+    const navigate = useNavigate()
     const dispatch = useAppDispatch()
     return (
         <Formik
@@ -258,7 +258,11 @@ export function UploadForm() {
                             hasHeader: values.hasHeader,
                             file: values.file
                         })
-                    )
+                    ).then((idPersistent) => {
+                        if (idPersistent !== undefined) {
+                            navigate('/contribute/' + idPersistent + '/columns')
+                        }
+                    })
                 }
             }}
             initialValues={{

@@ -12,7 +12,7 @@ import {
     newContributionEntityState,
     newScoredEntity
 } from '../state'
-import { RemoteInterface, newRemote } from '../../../util/state'
+import { newRemote } from '../../../util/state'
 import { configureStore } from '@reduxjs/toolkit'
 import { contributionEntitySlice } from '../slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
@@ -148,7 +148,6 @@ function mkMatches(
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
 const idTagDefContribution0 = 'id-tag-def-contribution-0'
-const idTagDefContribution1 = 'id-tag-def-contribution-1'
 const idTagDef1 = 'id-tag-test-1'
 const nameTagDef1 = 'tag def 1'
 function initialResponses(fetchMock: jest.Mock) {

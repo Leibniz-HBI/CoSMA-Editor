@@ -8,7 +8,9 @@ import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ContributionList } from '../components'
-
+jest.mock('react-router-dom', () => {
+    return { useNavigate: jest.fn() }
+})
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contribution: ContributionState

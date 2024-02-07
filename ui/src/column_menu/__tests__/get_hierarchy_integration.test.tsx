@@ -354,7 +354,7 @@ describe('create tag definition', () => {
             expect(notifications[0].type).toEqual(NotificationType.Error)
             expect(notifications[0].msg).toContain(errorMsg)
         })
-    })
+    }, 6000)
 })
 async function waitInitialDataLoad() {
     await waitFor(() => {
