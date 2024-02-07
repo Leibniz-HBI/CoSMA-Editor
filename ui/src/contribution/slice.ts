@@ -1,32 +1,39 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { Contribution } from './state'
 import { RemoteInterface, newRemote } from '../util/state'
+
+const initialCountdownValue = 5
+
 export interface ContributionState {
     selectedContribution: RemoteInterface<Contribution | undefined>
     isUploadingContribution: boolean
     contributions: RemoteInterface<Contribution[]>
     showAddContribution: boolean
     patchSelectedContribution: boolean
+    reloadDelay: number
 }
 export function newContributionState({
     selectedContribution = newRemote(undefined),
     isUploadingContribution = false,
     contributions = newRemote([]),
     showAddContribution = false,
-    patchSelectedContribution = false
+    patchSelectedContribution = false,
+    reloadDelay = initialCountdownValue
 }: {
     selectedContribution?: RemoteInterface<Contribution | undefined>
     isUploadingContribution?: boolean
     contributions?: RemoteInterface<Contribution[]>
     showAddContribution?: boolean
     patchSelectedContribution?: boolean
+    reloadDelay?: number
 }) {
     return {
         selectedContribution,
         isUploadingContribution,
         contributions,
         showAddContribution,
-        patchSelectedContribution
+        patchSelectedContribution,
+        reloadDelay
     }
 }
 
@@ -83,6 +90,12 @@ export const contributionSlice = createSlice({
                 state.selectedContribution = newRemote(contribution)
             }
             state.patchSelectedContribution = false
+        },
+        resetDelay(state: ContributionState) {
+            state.reloadDelay = initialCountdownValue
+        },
+        decrementDelay(state: ContributionState) {
+            state.reloadDelay = state.reloadDelay - 1
         }
     }
 })
@@ -97,5 +110,7 @@ export const {
     uploadContributionEnd,
     toggleShowAddContribution,
     patchSelectedContributionStart,
-    patchSelectedContributionEnd
+    patchSelectedContributionEnd,
+    decrementDelay,
+    resetDelay
 } = contributionSlice.actions

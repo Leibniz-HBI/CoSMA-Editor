@@ -8,22 +8,23 @@ import { CosmaeLoading } from '../../util/components/misc'
 export function CompleteStep() {
     const contribution = useAppSelector(selectContribution)
     const navigate = useNavigate()
+    let body
     if (contribution.value === undefined || contribution.isLoading) {
-        return <CosmaeLoading />
-    }
-    return (
-        <ContributionStepper selectedIdx={3}>
+        body = <CosmaeLoading />
+    } else {
+        body = (
             <>
-                <Row>
+                <Row className="justify-content-center">
                     All entities were assigned. Please review the merge requests created
                     for this contribution
                 </Row>
-                <Row>
+                <Row className="justify-content-center">
                     <Button onClick={() => navigate('/review')}>
                         Review Merge Requests
                     </Button>
                 </Row>
             </>
-        </ContributionStepper>
-    )
+        )
+    }
+    return <ContributionStepper selectedIdx={3}>{body}</ContributionStepper>
 }

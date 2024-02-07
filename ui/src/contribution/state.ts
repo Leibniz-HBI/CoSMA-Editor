@@ -1,5 +1,4 @@
 import { TagDefinition } from '../column_menu/state'
-import { Remote } from '../util/state'
 
 export enum ContributionStep {
     Uploaded = 'Uploaded',
@@ -58,21 +57,4 @@ export function newContribution({
 export function contributionIsReady(contribution: Contribution): boolean {
     // Could be selector
     return activeSteps.has(contribution.step)
-}
-
-export interface ContributionState {
-    contributions: Remote<Contribution[]>
-    showAddContribution: Remote<boolean>
-}
-export function newContributionState({
-    contributions = new Remote([]),
-    showAddContribution = new Remote(false)
-}: {
-    contributions?: Remote<Contribution[]>
-    showAddContribution?: Remote<boolean>
-}) {
-    return {
-        contributions: contributions,
-        showAddContribution: showAddContribution
-    }
 }

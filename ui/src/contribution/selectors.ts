@@ -24,3 +24,8 @@ export const selectShowAddContribution = createSelector(
     selectContributionState,
     (state) => state.showAddContribution
 )
+
+export const selectReloadDelay = createSelector(
+    selectContributionState,
+    (state) => state.reloadDelay
+)

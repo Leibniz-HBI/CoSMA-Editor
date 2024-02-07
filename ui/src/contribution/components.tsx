@@ -26,10 +26,12 @@ import {
 import {
     selectContribution,
     selectContributionList,
+    selectReloadDelay,
     selectShowAddContribution
 } from './selectors'
 import { CosmaeLoading } from '../util/components/misc'
-import { clearSelectedContribution, toggleShowAddContribution } from './slice'
+import { decrementDelay, resetDelay, toggleShowAddContribution } from './slice'
+import { secondDelay } from '../config'
 
 export function ContributionList() {
     const dispatch = useAppDispatch()
@@ -88,21 +90,13 @@ export function ContributionStepper({
     selectedIdx: number
     children: ReactElement
 }) {
+    const navigate = useNavigate()
     const idContributionPersistent = useLoaderData() as string
     const contribution = useAppSelector(selectContribution)
+    const reloadDelay = useAppSelector(selectReloadDelay)
     const dispatch = useAppDispatch()
-    useEffect(() => {
-        if (contribution.value === undefined || !contribution.isLoading) {
-            dispatch(loadContributionDetails(idContributionPersistent))
-        }
-        return function cleanup() {
-            dispatch(clearSelectedContribution())
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [idContributionPersistent])
-    const navigate = useNavigate()
     let maxIdx = 1
-    let processingMessage = undefined
+    let processingMessage: string | undefined = undefined
     switch (contribution.value?.step) {
         case ContributionStep.Uploaded:
             processingMessage = 'Columns not yet extracted'
@@ -118,10 +112,33 @@ export function ContributionStepper({
             processingMessage = 'Entities not yet merged.'
             maxIdx = 3
             break
-        // eslint-disable-next-line no-fallthrough
         case ContributionStep.Merged:
             maxIdx = 3
+            break
     }
+    useEffect(() => {
+        if (contribution?.isLoading) {
+            return
+        }
+        if (contribution.value === undefined) {
+            dispatch(loadContributionDetails(idContributionPersistent))
+        } else if (selectedIdx == maxIdx && processingMessage !== undefined) {
+            if (reloadDelay == 0) {
+                dispatch(loadContributionDetails(idContributionPersistent)).then(() =>
+                    dispatch(resetDelay())
+                )
+            } else {
+                setTimeout(() => dispatch(decrementDelay()), secondDelay)
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        contribution.value?.idPersistent,
+        reloadDelay,
+        selectedIdx,
+        maxIdx,
+        processingMessage
+    ])
     let body = children
     if (selectedIdx > maxIdx) {
         body = (
@@ -131,21 +148,15 @@ export function ContributionStepper({
             </Row>
         )
     }
-    if (selectedIdx == maxIdx && processingMessage != undefined) {
+    if (selectedIdx == maxIdx && processingMessage !== undefined) {
         if (!contribution.isLoading) {
-            body = <CosmaeLoading />
-            setTimeout(
-                () => dispatch(loadContributionDetails(idContributionPersistent)),
-                1000
-            )
-        } else {
             body = (
-                <>
-                    <Row>{`Data not yet available: "${processingMessage}".`}</Row>
-                    <Row>
-                        <Spinner color="primary" />
-                    </Row>
-                </>
+                <Row>
+                    <Col>
+                        <Row className="justify-content-center">{`Data not yet available: "${processingMessage}".`}</Row>
+                        <Row className="justify-content-center">{`Reloading in ${reloadDelay} seconds.`}</Row>
+                    </Col>
+                </Row>
             )
         }
     }
