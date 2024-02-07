@@ -22,7 +22,8 @@ import {
     notificationReducer
 } from '../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
-import { ContributionStep } from '../../state'
+import { ContributionStep, newContribution } from '../../state'
+import { newRemote } from '../../../util/state'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -57,7 +58,18 @@ export function renderWithProviders(
     {
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
-            contribution: newContributionState({}),
+            contribution: newContributionState({
+                selectedContribution: newRemote(
+                    newContribution({
+                        idPersistent: idContribution,
+                        name: 'contribution test',
+                        description: 'A contribution used in tests',
+                        hasHeader: true,
+                        step: ContributionStep.ValuesExtracted,
+                        author: 'author-test'
+                    })
+                )
+            }),
             tagSelection: newTagSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
@@ -141,14 +153,6 @@ function mkMatches(
 }
 
 const idContribution = 'id-contribution-test'
-const contributionTest = {
-    id_persistent: idContribution,
-    name: 'contribution test',
-    description: 'A contribution used in tests',
-    has_header: true,
-    state: 'VALUES_EXTRACTED',
-    author: 'author-test'
-}
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
@@ -161,7 +165,6 @@ const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
 function initialResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, contributionTest],
         [200, { persons: personList }],
         [200, { persons: [] }],
         [
@@ -190,11 +193,21 @@ test('success', async () => {
     initialResponses(fetchMock)
     addResponseSequence(fetchMock, [[200, {}]])
     addResponseSequence(fetchMock, [
-        [200, { ...contributionTest, state: 'ENTITIES_ASSIGNED' }]
+        [
+            200,
+            {
+                id_persistent: idContribution,
+                name: 'contribution test',
+                description: 'A contribution used in tests',
+                has_header: true,
+                author: 'author-test',
+                state: 'ENTITIES_ASSIGNED'
+            }
+        ]
     ])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(7)
+        expect(fetchMock.mock.calls.length).toEqual(6)
     })
     const button = screen.getByRole('button', { name: /Confirm Assigned Duplicates/i })
     button.click()
@@ -230,7 +243,7 @@ test('error', async () => {
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(7)
+        expect(fetchMock.mock.calls.length).toEqual(6)
     })
     const completeButton = screen.getByRole('button', {
         name: /Confirm Assigned Duplicates/i

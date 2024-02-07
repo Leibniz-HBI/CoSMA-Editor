@@ -29,6 +29,7 @@ import {
     Item,
     Rectangle
 } from '@glideapps/glide-data-grid'
+import { ContributionStep, newContribution } from '../../state'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -107,7 +108,18 @@ export function renderWithProviders(
     {
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
-            contribution: newContributionState({}),
+            contribution: newContributionState({
+                selectedContribution: newRemote(
+                    newContribution({
+                        idPersistent: idContribution,
+                        name: 'contribution test',
+                        description: 'A contribution used in tests',
+                        hasHeader: true,
+                        step: ContributionStep.ValuesExtracted,
+                        author: 'author-test'
+                    })
+                )
+            }),
             tagSelection: newTagSelectionState({})
         },
         ...renderOptions
@@ -144,14 +156,6 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
     }
 }
 const idContribution = 'id-contribution-test'
-const contributionTest = {
-    id_persistent: idContribution,
-    name: 'contribution test',
-    description: 'A contribution used in tests',
-    has_header: true,
-    state: 'VALUES_EXTRACTED',
-    author: 'author-test'
-}
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
@@ -208,7 +212,6 @@ function mkMatches(
 }
 function initialResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, contributionTest],
         [200, { persons: personList }],
         [200, { persons: [] }],
         [200, { tag_definitions: [] }],
@@ -252,7 +255,7 @@ test('assign duplicate', async () => {
     ])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(6)
+        expect(fetchMock.mock.calls.length).toEqual(5)
     })
     screen.getByText(/Please select an entity/i)
     screen.queryByText('entity-1')?.click()

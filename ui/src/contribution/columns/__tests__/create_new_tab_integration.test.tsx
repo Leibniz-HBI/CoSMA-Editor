@@ -19,7 +19,7 @@ import { contributionColumnDefinitionSlice } from '../slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ColumnDefinitionStep } from '../components'
-import { ContributionStep } from '../../state'
+import { ContributionStep, newContribution } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 import userEvent from '@testing-library/user-event'
@@ -48,7 +48,16 @@ export function renderWithProviders(
                 columns: newRemote(undefined)
             }),
             contribution: newContributionState({
-                selectedContribution: newRemote(undefined)
+                selectedContribution: newRemote(
+                    newContribution({
+                        name: 'contribution test',
+                        idPersistent: idContribution,
+                        description: 'a contribution for tests',
+                        step: ContributionStep.ColumnsExtracted,
+                        hasHeader: true,
+                        author: authorTest
+                    })
+                )
             }),
             tagSelection: newTagSelectionState({})
         },
@@ -99,20 +108,11 @@ export const contributionColumnActiveRsp1 = {
     index_in_file: 2,
     discard: false
 }
-export const contributionCandidateRsp = {
-    name: 'contribution test',
-    id_persistent: idContribution,
-    description: 'a contribution for tests',
-    step: ContributionStep.ColumnsExtracted,
-    has_header: true,
-    author: authorTest
-}
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
 
 function initialResponseSequence(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { ...contributionCandidateRsp }],
         [
             200,
             {
@@ -172,7 +172,7 @@ test('create, select and assign tag definition', async () => {
             store.getState().contributionColumnDefinition.selectedColumnDefinition.value
                 ?.idPersistent
         ).toEqual(contributionColumnActiveRsp1.id_persistent)
-        expect(fetchMock.mock.calls.length).toEqual(3)
+        expect(fetchMock.mock.calls.length).toEqual(2)
     })
     const createMenuButton = screen.getByRole('button', { name: /Create new tag/i })
     await user.click(createMenuButton)
@@ -193,7 +193,7 @@ test('create, select and assign tag definition', async () => {
     await user.click(createButton)
     const closeButton = screen.getByRole('button', { name: /close/i })
     await user.click(closeButton)
-    expect(fetchMock.mock.calls.length).toEqual(6)
+    expect(fetchMock.mock.calls.length).toEqual(5)
     const tagDefLabel = await screen.findByText(nameTagDef0)
     const tagDefEntry =
         tagDefLabel.parentElement?.parentElement?.parentElement?.parentElement

@@ -1,4 +1,3 @@
-import { ContributionStepper } from '../components'
 import { Button, Col, Form, FormCheck, ListGroup, Modal, Row } from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
 import { ChangeEvent, useEffect } from 'react'
@@ -33,6 +32,7 @@ import { RemoteInterface } from '../../util/state'
 import { selectContribution } from '../selectors'
 import { useNavigate } from 'react-router-dom'
 import { loadContributionDetails } from '../thunks'
+import { useAppSelector } from '../../hooks'
 
 export function ColumnDefinitionStep() {
     const dispatch: AppDispatch = useDispatch()
@@ -55,77 +55,72 @@ export function ColumnDefinitionStep() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contributionCandidate.value?.idPersistent])
-    if (
-        definitions.isLoading ||
-        contributionCandidate.isLoading ||
-        contributionCandidate.value === undefined
-    ) {
-        return (
-            <ContributionStepper selectedIdx={1}>
-                <CosmaeLoading />
-            </ContributionStepper>
-        )
+    if (definitions.isLoading || contributionCandidate.value === undefined) {
+        return <CosmaeLoading />
     }
-    const idContributionPersistent = contributionCandidate.value?.idPersistent
+    const idContributionPersistent = contributionCandidate.value.idPersistent
     return (
-        <ContributionStepper selectedIdx={1}>
-            <Row className="overflow-hidden h-100">
-                <Col
-                    xs={3}
-                    className="h-100 overflow-hidden d-flex flex-column flex-grow-0"
-                    key="column-definition-selection"
-                >
-                    <Row className="text-primary">
-                        <span>Columns extracted from upload:</span>
-                    </Row>
-                    <Row className="flex-grow-1 overflow-y-scroll mb-3">
-                        <ListGroup>
-                            {definitions.value?.activeDefinitionsList.map((colDef) => (
-                                <ColumnDefinitionStepListItem
-                                    columnDefinition={colDef}
-                                    selected={colDef == selectedColumnDefinition.value}
-                                    idContributionPersistent={idContributionPersistent}
-                                    key={colDef.idPersistent}
-                                />
-                            ))}
-                            {definitions.value?.discardedDefinitionsList.map(
-                                (colDef) => (
-                                    <ColumnDefinitionStepListItem
-                                        columnDefinition={colDef}
-                                        selected={
-                                            colDef == selectedColumnDefinition.value
-                                        }
-                                        idContributionPersistent={
-                                            idContributionPersistent
-                                        }
-                                        key={
-                                            colDef.idPersistent +
-                                            colDef.discard.toString()
-                                        }
-                                    />
-                                )
-                            )}
-                        </ListGroup>
-                    </Row>
-                    <Row className="align-self-center d-block">
-                        <CompleteColumnAssignmentButton
-                            idContributionPersistent={idContributionPersistent}
-                        />
-                    </Row>
-                </Col>
-                <Col
-                    key="column-definition-assignment-form"
-                    className="ps-1 pe-1 h-100"
-                    data-testid="column-assignment-form-column"
-                >
-                    <ContributionColumnAssignmentForm
-                        columnDefinition={selectedColumnDefinition.value}
-                        createTabSelected={createTabSelected}
+        <Row className="overflow-hidden h-100">
+            <Col
+                xs={3}
+                className="h-100 overflow-hidden d-flex flex-column flex-grow-0"
+                key="column-definition-selection"
+            >
+                <Row className="text-primary">
+                    <span>Columns extracted from upload:</span>
+                </Row>
+                <Row className="flex-grow-1 overflow-y-scroll mb-3">
+                    <ContributionColumnsList
                         idContributionPersistent={idContributionPersistent}
                     />
-                </Col>
-            </Row>
-        </ContributionStepper>
+                </Row>
+                <Row className="align-self-center d-block">
+                    <CompleteColumnAssignmentButton
+                        idContributionPersistent={idContributionPersistent}
+                    />
+                </Row>
+            </Col>
+            <Col
+                key="column-definition-assignment-form"
+                className="ps-1 pe-1 h-100"
+                data-testid="column-assignment-form-column"
+            >
+                <ContributionColumnAssignmentForm
+                    columnDefinition={selectedColumnDefinition.value}
+                    createTabSelected={createTabSelected}
+                    idContributionPersistent={idContributionPersistent}
+                />
+            </Col>
+        </Row>
+    )
+}
+
+function ContributionColumnsList({
+    idContributionPersistent
+}: {
+    idContributionPersistent: string
+}) {
+    const definitions = useAppSelector(selectColumnDefinitionsContributionTriple)
+    const selectedColumnDefinition = useAppSelector(selectSelectedColumnDefinition)
+    return (
+        <ListGroup>
+            {definitions.value?.activeDefinitionsList.map((colDef) => (
+                <ColumnDefinitionStepListItem
+                    columnDefinition={colDef}
+                    selected={colDef == selectedColumnDefinition.value}
+                    idContributionPersistent={idContributionPersistent}
+                    key={colDef.idPersistent}
+                />
+            ))}
+            {definitions.value?.discardedDefinitionsList.map((colDef) => (
+                <ColumnDefinitionStepListItem
+                    columnDefinition={colDef}
+                    selected={colDef == selectedColumnDefinition.value}
+                    idContributionPersistent={idContributionPersistent}
+                    key={colDef.idPersistent + colDef.discard.toString()}
+                />
+            ))}
+        </ListGroup>
     )
 }
 

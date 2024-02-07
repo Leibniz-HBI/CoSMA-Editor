@@ -36,7 +36,18 @@ export function renderWithProviders(
     fetchMock: jest.Mock,
     {
         preloadedState = {
-            contribution: newContributionState({}),
+            contribution: newContributionState({
+                selectedContribution: newRemote(
+                    newContribution({
+                        name: nameTest0,
+                        description: descriptionTest0,
+                        idPersistent: idTest0,
+                        author: authorTest,
+                        hasHeader: false,
+                        step: ContributionStep.ColumnsExtracted
+                    })
+                )
+            }),
             notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
@@ -76,25 +87,8 @@ const descriptionTest0 = 'a contribution for tests'
 const idTest0 = 'id-test-0'
 const authorTest = 'author test'
 
-function addContributionGetResponse(mock: jest.Mock) {
-    addResponseSequence(mock, [
-        [
-            200,
-            {
-                name: nameTest0,
-                description: descriptionTest0,
-                id_persistent: idTest0,
-                author: authorTest,
-                has_header: false,
-                state: 'COLUMNS_EXTRACTED'
-            }
-        ]
-    ])
-}
-
 test('no submit for short input', async () => {
     const fetchMock = jest.fn()
-    addContributionGetResponse(fetchMock)
     const { container } = renderWithProviders(<ContributionDetailsStep />, fetchMock)
     const feedbacks = container.getElementsByClassName('invalid-feedback')
     for (let i = 0; i < feedbacks.length; ++i) {
@@ -110,12 +104,7 @@ test('no submit for short input', async () => {
         await user.click(button)
     })
     await waitFor(() => {
-        expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
-                { credentials: 'include' }
-            ]
-        ])
+        expect(fetchMock.mock.calls).toEqual([])
         const feedbacks = container.getElementsByClassName('invalid-feedback')
         expect(feedbacks.length).toEqual(2)
         expect(feedbacks[0].textContent).not.toEqual('')
@@ -125,7 +114,6 @@ test('no submit for short input', async () => {
 const changedName = 'changed name use in tests'
 test('submit for changed name', async () => {
     const fetchMock = jest.fn()
-    addContributionGetResponse(fetchMock)
     addResponseSequence(fetchMock, [
         [
             200,
@@ -157,10 +145,6 @@ test('submit for changed name', async () => {
     })
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
-                { credentials: 'include' }
-            ],
             [
                 `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
                 {
@@ -198,7 +182,6 @@ test('submit for changed name', async () => {
 
 test('submit for changed header flag', async () => {
     const fetchMock = jest.fn()
-    addContributionGetResponse(fetchMock)
     addResponseSequence(fetchMock, [
         [
             200,
@@ -228,10 +211,6 @@ test('submit for changed header flag', async () => {
     })
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
-                { credentials: 'include' }
-            ],
             [
                 `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
                 {
@@ -270,7 +249,6 @@ test('submit for changed header flag', async () => {
 test('API error', async () => {
     const fetchMock = jest.fn()
     const errorMsg = 'could not patch contribution'
-    addContributionGetResponse(fetchMock)
     addResponseSequence(fetchMock, [
         [
             500,
@@ -295,10 +273,6 @@ test('API error', async () => {
     })
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
-                { credentials: 'include' }
-            ],
             [
                 `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
                 {

@@ -6,22 +6,22 @@ import { RenderOptions, render, waitFor } from '@testing-library/react'
 import {
     ColumnDefinitionsContributionState,
     newColumnDefinitionsContributionState
-} from '../state'
-import { newRemote } from '../../../util/state'
+} from '../columns/state'
+import { newRemote } from '../../util/state'
 import { configureStore } from '@reduxjs/toolkit'
-import { contributionColumnDefinitionSlice } from '../slice'
+import { contributionColumnDefinitionSlice } from '../columns/slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { ColumnDefinitionStep } from '../components'
-import { ContributionStep } from '../../state'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { ColumnDefinitionStep } from '../columns/components'
+import { TagSelectionState, newTagSelectionState } from '../../column_menu/state'
+import { tagSelectionSlice } from '../../column_menu/slice'
 import {
     NotificationManager,
     NotificationType,
     notificationReducer
-} from '../../../util/notification/slice'
-import { ContributionState, contributionSlice } from '../../slice'
+} from '../../util/notification/slice'
+import { ContributionState, contributionSlice, newContributionState } from '../slice'
+import { ContributionStepper } from '../components'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -51,7 +51,9 @@ export function renderWithProviders(
             contributionColumnDefinition: newColumnDefinitionsContributionState({
                 columns: newRemote(undefined)
             }),
-            contribution: { selectedContribution: newRemote(undefined) },
+            contribution: newContributionState({
+                selectedContribution: newRemote(undefined)
+            }),
             tagSelection: newTagSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
@@ -105,53 +107,23 @@ export const contributionColumnActiveRsp1 = {
 const errorMsg = 'Test Error'
 const errorDetails = 'Description of a test error'
 const authorTest = 'author test'
-export const contributionCandidateRsp = {
+const contributionRsp = {
     name: 'contribution test',
     id_persistent: idContribution,
     description: 'a contribution for tests',
-    step: ContributionStep.ColumnsExtracted,
+    step: 'COLUMNS_EXTRACTED',
     has_header: true,
     author: authorTest,
     error_msg: errorMsg,
     error_details: errorDetails
 }
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
 test('sets error', async () => {
     const fetchMock = jest.fn()
-    addResponseSequence(fetchMock, [
-        [200, contributionCandidateRsp],
-        [
-            200,
-            {
-                tag_definitions: [
-                    contributionColumnActiveRsp0,
-                    contributionColumnActiveRsp1
-                ]
-            }
-        ],
-        [
-            200,
-            {
-                tag_definitions: [
-                    {
-                        id_persistent: idTagDef0,
-                        name_path: [nameTagDef0],
-                        name: nameTagDef0,
-                        curated: true,
-                        version: 0,
-                        type: 'STRING'
-                    }
-                ]
-            }
-        ],
-        [200, { tag_definitions: [] }],
-        [
-            200,
-            { ...contributionColumnActiveRsp1, id_existing_persistent: 'display_txt' }
-        ]
-    ])
-    const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+    addResponseSequence(fetchMock, [[200, contributionRsp]])
+    const { store } = renderWithProviders(
+        <ContributionStepper selectedIdx={0} />,
+        fetchMock
+    )
     const expectedMessage = `${errorMsg}\n${errorDetails}`
     await waitFor(() => {
         const state = store.getState()

@@ -12,7 +12,7 @@ import {
 import { Contribution, ContributionStep, contributionIsReady } from './state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange, SetFieldValue } from '../util/type'
-import { ChangeEvent, FormEvent, ReactElement, useEffect, useRef } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useRef } from 'react'
 import { FormField } from '../util/form'
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { StepHeader } from '../util/components/stepper'
@@ -29,8 +29,17 @@ import {
     selectShowAddContribution
 } from './selectors'
 import { CosmaeLoading } from '../util/components/misc'
-import { decrementDelay, resetDelay, toggleShowAddContribution } from './slice'
+import {
+    decrementDelay,
+    resetDelay,
+    resetSelectedContribution,
+    toggleShowAddContribution
+} from './slice'
 import { secondDelay } from '../config'
+import { ContributionDetailsStep } from './details/components'
+import { ColumnDefinitionStep } from './columns/components'
+import { EntitiesStep } from './entity/components'
+import { CompleteStep } from './complete/components'
 
 export function ContributionList() {
     const dispatch = useAppDispatch()
@@ -82,13 +91,7 @@ export function ContributionList() {
     )
 }
 
-export function ContributionStepper({
-    selectedIdx,
-    children
-}: {
-    selectedIdx: number
-    children: ReactElement
-}) {
+export function ContributionStepper({ selectedIdx }: { selectedIdx: number }) {
     const navigate = useNavigate()
     const idContributionPersistent = useLoaderData() as string
     const contribution = useAppSelector(selectContribution)
@@ -119,6 +122,13 @@ export function ContributionStepper({
         if (contribution?.isLoading) {
             return
         }
+        if (
+            contribution.value?.idPersistent !== undefined &&
+            idContributionPersistent != contribution.value?.idPersistent
+        ) {
+            dispatch(resetSelectedContribution())
+            return
+        }
         if (contribution.value === undefined) {
             dispatch(loadContributionDetails(idContributionPersistent))
         } else if (selectedIdx == maxIdx && processingMessage !== undefined) {
@@ -138,17 +148,21 @@ export function ContributionStepper({
         maxIdx,
         processingMessage
     ])
-    let body = children
+    let body
     if (selectedIdx > maxIdx) {
         body = (
-            <Row>
+            <Row className="justify-content-center">
                 This step is not yet available for this contribution. Please select an
                 available step.
             </Row>
         )
-    }
-    if (selectedIdx == maxIdx && processingMessage !== undefined) {
-        if (!contribution.isLoading) {
+    } else if (selectedIdx == maxIdx && processingMessage !== undefined) {
+        if (
+            contribution.isLoading ||
+            contribution.value?.idPersistent != idContributionPersistent
+        ) {
+            body = <CosmaeLoading />
+        } else {
             body = (
                 <Row>
                     <Col>
@@ -157,6 +171,25 @@ export function ContributionStepper({
                     </Col>
                 </Row>
             )
+        }
+    } else {
+        switch (selectedIdx) {
+            case 0:
+                body = <ContributionDetailsStep />
+                break
+            case 1:
+                body = <ColumnDefinitionStep />
+                break
+            case 2:
+                body = <EntitiesStep />
+                break
+            case 3:
+                body = <CompleteStep />
+                break
+            default:
+                body = (
+                    <Row className="justify-content-center"> Invalid step selected</Row>
+                )
         }
     }
     return (

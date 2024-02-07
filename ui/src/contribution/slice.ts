@@ -96,6 +96,9 @@ export const contributionSlice = createSlice({
         },
         decrementDelay(state: ContributionState) {
             state.reloadDelay = state.reloadDelay - 1
+        },
+        resetSelectedContribution(state: ContributionState) {
+            state.selectedContribution = newRemote(undefined)
         }
     }
 })
@@ -112,5 +115,6 @@ export const {
     patchSelectedContributionStart,
     patchSelectedContributionEnd,
     decrementDelay,
-    resetDelay
+    resetDelay,
+    resetSelectedContribution
 } = contributionSlice.actions

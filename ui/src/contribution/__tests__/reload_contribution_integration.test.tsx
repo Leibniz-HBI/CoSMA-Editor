@@ -77,7 +77,7 @@ const contributionResponse1 = {
     description: descriptionTest1,
     id_persistent: idTest1,
     has_header: true,
-    state: 'COLUMNS_ASSIGNED',
+    state: 'ENTITIES_ASSIGNED',
     author: authorTest1
 }
 test('reloads automatically', async () => {
@@ -85,13 +85,10 @@ test('reloads automatically', async () => {
     addResponseSequence(fetchMock, [
         [200, { ...contributionResponse1 }],
         [200, { ...contributionResponse1 }],
-        [200, { ...contributionResponse1, state: 'VALUES_EXTRACTED' }]
+        [200, { ...contributionResponse1, state: 'MERGED' }]
     ])
-    const testBodyText = 'body of contribution step for tests'
     renderWithProviders(
-        <ContributionStepper selectedIdx={2}>
-            <div>{testBodyText}</div>
-        </ContributionStepper>,
+        <ContributionStepper selectedIdx={3}></ContributionStepper>,
         fetchMock
     )
     await waitFor(() => {
@@ -109,5 +106,7 @@ test('reloads automatically', async () => {
         },
         { timeout: 2000 }
     )
-    screen.getByText(testBodyText)
+    await waitFor(() => {
+        screen.getByRole('button', { name: 'Review Merge Requests' })
+    })
 })

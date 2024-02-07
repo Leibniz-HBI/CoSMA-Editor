@@ -13,7 +13,7 @@ import { contributionColumnDefinitionSlice } from '../slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ColumnDefinitionStep } from '../components'
-import { ContributionStep } from '../../state'
+import { ContributionStep, newContribution } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
@@ -56,7 +56,16 @@ export function renderWithProviders(
                 columns: newRemote(undefined)
             }),
             contribution: newContributionState({
-                selectedContribution: newRemote(undefined)
+                selectedContribution: newRemote(
+                    newContribution({
+                        name: 'contribution test',
+                        idPersistent: idContribution,
+                        description: 'a contribution for tests',
+                        step: ContributionStep.ColumnsExtracted,
+                        hasHeader: true,
+                        author: authorTest
+                    })
+                )
             }),
             tagSelection: newTagSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
@@ -109,20 +118,11 @@ export const contributionColumnActiveRsp1 = {
     index_in_file: 2,
     discard: false
 }
-export const contributionCandidateRsp = {
-    name: 'contribution test',
-    id_persistent: idContribution,
-    description: 'a contribution for tests',
-    step: ContributionStep.ColumnsExtracted,
-    has_header: true,
-    author: authorTest
-}
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
 
 function initialResponseSequence(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, contributionCandidateRsp],
         [
             200,
             {
@@ -156,12 +156,22 @@ test('finish success', async () => {
     initialResponseSequence(fetchMock)
     addResponseSequence(fetchMock, [
         [200, {}],
-        [200, { ...contributionCandidateRsp, state: 'COLUMNS_ASSIGNED' }]
+        [
+            200,
+            {
+                name: 'contribution test',
+                id_persistent: idContribution,
+                description: 'a contribution for tests',
+                has_header: true,
+                author: authorTest,
+                state: 'COLUMNS_ASSIGNED'
+            }
+        ]
     ])
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(4)
+        expect(fetchMock.mock.calls.length).toEqual(2)
         button = screen.getByRole('button', { name: /finalize column assignment/i })
     })
     button?.click()
@@ -177,14 +187,14 @@ test('finish success', async () => {
             ContributionStep.ColumnsAssigned
         )
     })
-    expect(fetchMock.mock.calls.at(-2)).toEqual([
+    expect(fetchMock).toHaveBeenCalledWith(
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
-    ])
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
         { credentials: 'include' }
-    ])
+    )
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([
         ['/contribute/id-contribution-test/entities']
     ])
@@ -200,7 +210,7 @@ test('finish error', async () => {
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(4)
+        expect(fetchMock.mock.calls.length).toEqual(3)
         button = screen.getByRole('button', { name: /finalize column assignment/i })
     })
     button?.click()
@@ -216,9 +226,9 @@ test('finish error', async () => {
         expect(notification.type).toEqual(NotificationType.Error)
         expect(notification.msg).toEqual(errorMsg)
     })
-    expect(fetchMock.mock.calls[fetchMock.mock.calls.length - 1]).toEqual([
+    expect(fetchMock).toHaveBeenCalledWith(
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
-    ])
+    )
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
 })

@@ -4,7 +4,6 @@ import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
-import { ContributionStepper } from '../components'
 import { useLoaderData } from 'react-router-dom'
 import { Contribution } from '../state'
 import { useAppDispatch, useAppSelector } from '../../hooks'
@@ -25,33 +24,30 @@ export function ContributionDetailsStep() {
     const idPersistent = useLoaderData() as string
     const dispatch = useAppDispatch()
     const contribution = useAppSelector(selectContribution)
-    let body
     if (contribution.isLoading || contribution.value == undefined) {
-        body = (
+        return (
             <div className="cosmae-table-container-outer">
                 <div className="cosmae-table-container-inner">
                     <div className="shimmer"></div>
                 </div>
             </div>
         )
-    } else {
-        body = (
-            <EditForm
-                contribution={contribution.value}
-                onSubmit={({ name, description, hasHeader }) => {
-                    dispatch(
-                        patchContributionDetails({
-                            idPersistent,
-                            name,
-                            description,
-                            hasHeader
-                        })
-                    )
-                }}
-            />
-        )
     }
-    return <ContributionStepper selectedIdx={0}>{body}</ContributionStepper>
+    return (
+        <EditForm
+            contribution={contribution.value}
+            onSubmit={({ name, description, hasHeader }) => {
+                dispatch(
+                    patchContributionDetails({
+                        idPersistent,
+                        name,
+                        description,
+                        hasHeader
+                    })
+                )
+            }}
+        />
+    )
 }
 
 export type EditFormArgs = {

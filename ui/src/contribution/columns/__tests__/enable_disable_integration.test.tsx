@@ -20,10 +20,10 @@ import { Provider } from 'react-redux'
 import { PropsWithChildren } from 'react'
 import { ColumnDefinitionStep } from '../components'
 import { ToolkitStore } from '@reduxjs/toolkit/dist/configureStore'
-import { ContributionStep } from '../../state'
+import { ContributionStep, newContribution } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
-import { ContributionState, contributionSlice } from '../../slice'
+import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
     loaderMock.mockReturnValue('id-contribution-test')
@@ -45,7 +45,18 @@ export function renderWithProviders(
             contributionColumnDefinition: newColumnDefinitionsContributionState({
                 columns: newRemote(undefined)
             }),
-            contribution: { selectedContribution: newRemote(undefined) },
+            contribution: newContributionState({
+                selectedContribution: newRemote(
+                    newContribution({
+                        name: 'contribution test',
+                        idPersistent: idContribution,
+                        description: 'a contribution for tests',
+                        step: ContributionStep.ColumnsExtracted,
+                        hasHeader: true,
+                        author: authorTest
+                    })
+                )
+            }),
             tagSelection: newTagSelectionState({})
         },
         ...renderOptions
@@ -112,14 +123,6 @@ export const contributionColumnDiscardRsp3 = {
     id_persistent: 'id-discard-3',
     index_in_file: 3,
     discard: true
-}
-export const contributionCandidateRsp = {
-    name: 'contribution test',
-    id_persistent: idContribution,
-    description: 'a contribution for tests',
-    step: ContributionStep.ColumnsExtracted,
-    has_header: true,
-    author: authorTest
 }
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
@@ -193,10 +196,6 @@ describe('beginning', () => {
             )
         })
         expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
-                { credentials: 'include' }
-            ],
             [
                 `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags`,
                 { credentials: 'include' }
@@ -380,7 +379,6 @@ describe('end', () => {
 })
 function initialResponseSequence(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, contributionCandidateRsp],
         [
             200,
             {

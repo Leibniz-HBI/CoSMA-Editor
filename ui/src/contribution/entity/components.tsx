@@ -1,5 +1,4 @@
 import { constructColumnTitle, mkCellContentCallback } from './hooks'
-import { ContributionStepper } from '../components'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
 import { Button, Col, ListGroup, Modal, Row } from 'react-bootstrap'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -47,15 +46,14 @@ import { loadContributionDetails } from '../thunks'
 
 export function EntitiesStep() {
     const contributionCandidate = useSelector(selectContribution)
-    let body = <CosmaeLoading />
-    if (contributionCandidate.value !== undefined) {
-        body = (
-            <EntitiesStepBody
-                idContributionPersistent={contributionCandidate.value.idPersistent}
-            />
-        )
+    if (contributionCandidate.value === undefined) {
+        return <CosmaeLoading />
     }
-    return <ContributionStepper selectedIdx={2}>{body}</ContributionStepper>
+    return (
+        <EntitiesStepBody
+            idContributionPersistent={contributionCandidate.value.idPersistent}
+        />
+    )
 }
 
 export function EntitiesStepBody({

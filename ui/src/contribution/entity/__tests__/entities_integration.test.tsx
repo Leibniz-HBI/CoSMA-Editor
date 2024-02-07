@@ -9,7 +9,7 @@ jest.mock('@glideapps/glide-data-grid', () => ({
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { ContributionEntityState, newContributionEntityState } from '../state'
 import { RemoteInterface, newRemote } from '../../../util/state'
-import { Contribution } from '../../state'
+import { Contribution, ContributionStep, newContribution } from '../../state'
 import { configureStore } from '@reduxjs/toolkit'
 import { contributionEntitySlice } from '../slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
@@ -48,7 +48,18 @@ export function renderWithProviders(
     {
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
-            contribution: newContributionState({}),
+            contribution: newContributionState({
+                selectedContribution: newRemote(
+                    newContribution({
+                        idPersistent: idContribution,
+                        name: 'contribution test',
+                        description: 'A contribution used in tests',
+                        hasHeader: true,
+                        step: ContributionStep.ValuesExtracted,
+                        author: 'author-test'
+                    })
+                )
+            }),
             tagSelection: newTagSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
@@ -87,14 +98,6 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
     }
 }
 const idContribution = 'id-contribution-test'
-const contributionTest = {
-    id_persistent: idContribution,
-    name: 'contribution test',
-    description: 'A contribution used in tests',
-    has_header: true,
-    state: 'VALUES_EXTRACTED',
-    author: 'author-test'
-}
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
@@ -152,7 +155,6 @@ function mkMatches(
 }
 function initialResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, contributionTest],
         [200, { persons: personList }],
         [200, { persons: [] }],
         [

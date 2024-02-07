@@ -121,6 +121,12 @@ export const contributionColumnDefinitionSlice = createSlice({
             state: ColumnDefinitionsContributionState
         ) {
             state.selectedColumnDefinition.isLoading = false
+        },
+        resetColumnDefinitionContribution(state: ColumnDefinitionsContributionState) {
+            state.columns = newRemote(undefined)
+            state.createTabSelected = false
+            state.finalizeColumnAssignment = newRemote(false)
+            state.selectedColumnDefinition = newRemote(undefined)
         }
     }
 })
@@ -136,7 +142,8 @@ export const {
     patchColumnDefinitionContributionStart,
     patchColumnDefinitionContributionSuccess,
     patchColumnDefinitionContributionError,
-    setColumnDefinitionFormTab
+    setColumnDefinitionFormTab,
+    resetColumnDefinitionContribution
 } = contributionColumnDefinitionSlice.actions
 
 export default contributionColumnDefinitionSlice.reducer
