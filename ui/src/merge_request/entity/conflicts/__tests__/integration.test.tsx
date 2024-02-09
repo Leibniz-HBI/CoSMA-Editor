@@ -133,9 +133,6 @@ const versionTagDefResolvable2 = 7772
 const idTagInstanceOriginResolvable2 = 'id-instance-origin-resolvable-2'
 const versionTagInstanceOriginResolvable2 = 7782
 const valueTagInstanceOriginResolvable2 = 'resolvable value origin 2'
-const idTagInstanceDestinationResolvable2 = 'id-instance-resolvable-destination-2'
-const versionTagInstanceDestinationResolvable2 = 7742
-const valueTagInstanceDestinationResolvable2 = 'resolvable value destination 2'
 const namePathUnresolvable0 = ['name path', 'unresolvable 0']
 const idTagDefUnresolvable0 = 'id-tag-def-unresolvable-0'
 const idTagDefParentUnresolvable0 = 'id-tag-def-parent-unresolvable-0'
@@ -241,11 +238,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             value: valueTagInstanceOriginResolvable2,
                             version: versionTagInstanceOriginResolvable2
                         },
-                        tag_instance_destination: {
-                            id_persistent: idTagInstanceDestinationResolvable2,
-                            value: valueTagInstanceDestinationResolvable2,
-                            version: versionTagInstanceDestinationResolvable2
-                        },
+                        tag_instance_destination: null,
                         replace: false
                     }
                 ],
@@ -312,7 +305,6 @@ test('update conflicts', async () => {
         )
         expect(textValueDestinationList.length).toEqual(2)
         screen.getByText(valueTagInstanceOriginResolvable2)
-        screen.getByText(valueTagInstanceDestinationResolvable2)
         screen.getByText(valueTagInstanceOriginUnresolvable0)
         screen.getByText(valueTagInstanceDestinationUnresolvable0)
         screen.getByText(valueTagInstanceOriginUnresolvable1)
@@ -378,11 +370,7 @@ test('update conflicts', async () => {
                             value: valueTagInstanceOriginResolvable2,
                             version: versionTagInstanceOriginResolvable2
                         },
-                        tagInstanceDestination: {
-                            idPersistent: idTagInstanceDestinationResolvable2,
-                            value: valueTagInstanceDestinationResolvable2,
-                            version: versionTagInstanceDestinationResolvable2
-                        },
+                        tagInstanceDestination: undefined,
                         replace: false
                     })
                 )

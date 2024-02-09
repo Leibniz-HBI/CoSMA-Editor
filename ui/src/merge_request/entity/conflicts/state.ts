@@ -13,19 +13,19 @@ export interface TagDefinition {
 export interface EntityMergeRequestConflict {
     tagDefinition: TagDefinition
     tagInstanceOrigin: TagInstance
-    tagInstanceDestination: TagInstance
+    tagInstanceDestination?: TagInstance
     replace: boolean | undefined
 }
 
 export function newEntityMergeRequestConflict({
     tagDefinition,
     tagInstanceOrigin,
-    tagInstanceDestination,
+    tagInstanceDestination = undefined,
     replace = undefined
 }: {
     tagDefinition: TagDefinition
     tagInstanceOrigin: TagInstance
-    tagInstanceDestination: TagInstance
+    tagInstanceDestination?: TagInstance
     replace?: boolean | undefined
 }): EntityMergeRequestConflict {
     return {

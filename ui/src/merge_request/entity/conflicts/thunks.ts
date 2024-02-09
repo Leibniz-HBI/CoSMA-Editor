@@ -278,14 +278,17 @@ function parseEntityMergeRequestConflictFromJson(conflictJson: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any
 }): EntityMergeRequestConflict {
+    let tagInstanceDestination = undefined
+    const destinationJson = conflictJson['tag_instance_destination']
+    if (!(destinationJson === null || destinationJson === undefined)) {
+        tagInstanceDestination = parseTagInstanceFromJson(destinationJson)
+    }
     return newEntityMergeRequestConflict({
         tagDefinition: parseTagDefinitionFromJson(conflictJson['tag_definition']),
         tagInstanceOrigin: parseTagInstanceFromJson(
             conflictJson['tag_instance_origin']
         ),
-        tagInstanceDestination: parseTagInstanceFromJson(
-            conflictJson['tag_instance_destination']
-        ),
+        tagInstanceDestination,
         replace: conflictJson['replace'] ?? undefined
     })
 }
