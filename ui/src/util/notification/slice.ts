@@ -1,4 +1,4 @@
-import { PayloadAction, createSlice } from '@reduxjs/toolkit'
+import { PayloadAction, createSelector, createSlice } from '@reduxjs/toolkit'
 import { v4 as uuid4 } from 'uuid'
 import { AppDispatch, RootState } from '../../store'
 
@@ -36,6 +36,19 @@ export function newNotification({
 export interface NotificationManager {
     notificationList: Notification[]
     notificationMap: { [key: string]: number }
+    helpPath?: string
+}
+
+export function newNotificationManager({
+    notificationList = [],
+    notificationMap = {},
+    helpPath = undefined
+}: {
+    notificationList?: Notification[]
+    notificationMap?: { [key: string]: number }
+    helpPath?: string
+}): NotificationManager {
+    return { notificationList, notificationMap, helpPath }
 }
 
 const initialState: NotificationManager = {
@@ -75,14 +88,25 @@ const notificationSlice = createSlice({
                     }
                 }
             }
+        },
+        setHelpPath: (state: NotificationManager, action: PayloadAction<string>) => {
+            state.helpPath = action.payload
+        },
+        clearHelpPath: (state: NotificationManager) => {
+            state.helpPath = undefined
         }
     }
 })
 
 export const notificationReducer = notificationSlice.reducer
 
-export const { addError, addNotification, removeNotification } =
-    notificationSlice.actions
+export const {
+    addError,
+    addNotification,
+    removeNotification,
+    setHelpPath,
+    clearHelpPath
+} = notificationSlice.actions
 
 function addNotificationToState(
     state: NotificationManager,
@@ -117,6 +141,15 @@ export function addSuccessVanish(msg: string, vanishDelay = 3000) {
     })
 }
 
-export function selectNotificationList(state: RootState): Notification[] {
-    return state.notification.notificationList
+export function selectNotificationManager(state: RootState): NotificationManager {
+    return state.notification
 }
+
+export const selectNotificationList = createSelector(
+    selectNotificationManager,
+    (manager) => manager.notificationList
+)
+export const selectHelpPath = createSelector(
+    selectNotificationManager,
+    (manager) => manager.helpPath
+)

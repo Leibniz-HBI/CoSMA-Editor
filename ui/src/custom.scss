@@ -2,7 +2,11 @@
 $primary: #197374;
 $secondary: #eceff4;
 $red: #ea5e5f;
-
+$orange: #f18f01;
+$green: #99c24d;
+$blue: #355881;
+$blue-dark: #3e474f;
+$blue-body: #216eb1;
 
 $component-active-color: $secondary;
 $component-active-bg: $primary;
@@ -18,5 +22,6 @@ $theme-colors: map-merge($theme-colors, (
     'primary': $primary,
     'secondary': $secondary,
     'light': $secondary,
-    'danger': $red
+    'danger': $red,
+    'warning': $orange
 ));

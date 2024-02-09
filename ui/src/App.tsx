@@ -20,7 +20,11 @@ import { exceptionMessage } from './util/exception'
 import { ReviewList } from './merge_request/components'
 import { MergeRequestConflictResolutionView } from './merge_request/conflicts/components'
 import { UserPermissionGroup } from './user/state'
-import { NotificationToastList } from './util/notification/components'
+import {
+    HelpButton,
+    HelpModal,
+    NotificationToastList
+} from './util/notification/components'
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store, { AppDispatch } from './store'
 import { selectUserInfo } from './user/selectors'
@@ -34,56 +38,62 @@ export function CosmaeRoot() {
     const userInfo = useSelector(selectUserInfo)
     const dispatch: AppDispatch = useDispatch()
     return (
-        <Row className="flex-grow-1 m-0 h-100">
-            <Col className="ps-0 pe-0 h-100">
-                <div className="cosmae-page-container">
-                    <Navbar expand="lg" className="bg-primary flex-shrink-0 mb-3">
-                        <Container className="text-secondary">
-                            <Navbar.Brand href="/">CoSMA-E</Navbar.Brand>
-                            <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                            <Navbar.Collapse id="basic-navbar-nav">
-                                <Nav className="me-auto">
-                                    <Nav.Link as={NavLink} to="/">
-                                        View
-                                    </Nav.Link>
-                                    <Nav.Link as={NavLink} to="/contribute">
-                                        Contribute
-                                    </Nav.Link>
-                                    <Nav.Link as={NavLink} to="/review">
-                                        Review
-                                    </Nav.Link>
-                                    <Nav.Link as={NavLink} to="/tags">
-                                        Tags
-                                    </Nav.Link>
-                                </Nav>
-                                <Nav>
-                                    {userInfo?.permissionGroup ==
-                                        UserPermissionGroup.COMMISSIONER && (
-                                        <Nav.Link as={NavLink} to="/management">
-                                            Manage
+        <>
+            <Row className="flex-grow-1 m-0 h-100">
+                <Col className="ps-0 pe-0 h-100">
+                    <div className="cosmae-page-container">
+                        <Navbar expand="lg" className="bg-primary flex-shrink-0 mb-3">
+                            <Container className="text-secondary">
+                                <Navbar.Brand href="/">CoSMA-E</Navbar.Brand>
+                                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                                <Navbar.Collapse id="basic-navbar-nav">
+                                    <Nav className="me-5">
+                                        <Nav.Link as={NavLink} to="/">
+                                            View
                                         </Nav.Link>
-                                    )}
-                                </Nav>
-                                <Nav>
-                                    <Nav.Link
-                                        onClick={() =>
-                                            dispatch(logoutThunk()).then(() =>
-                                                location.reload()
-                                            )
-                                        }
-                                    >
-                                        Logout
-                                    </Nav.Link>
-                                </Nav>
-                            </Navbar.Collapse>
-                        </Container>
-                    </Navbar>
-                    <div className="cosmae-page-body flex-grow-1 flex-basis-0 flex-fill">
-                        <Outlet />
+                                        <Nav.Link as={NavLink} to="/contribute">
+                                            Contribute
+                                        </Nav.Link>
+                                        <Nav.Link as={NavLink} to="/review">
+                                            Review
+                                        </Nav.Link>
+                                        <Nav.Link as={NavLink} to="/tags">
+                                            Tags
+                                        </Nav.Link>
+                                    </Nav>
+                                    <Nav className="me-auto">
+                                        <HelpButton />
+                                    </Nav>
+                                    <Nav>
+                                        {userInfo?.permissionGroup ==
+                                            UserPermissionGroup.COMMISSIONER && (
+                                            <Nav.Link as={NavLink} to="/management">
+                                                Manage
+                                            </Nav.Link>
+                                        )}
+                                    </Nav>
+                                    <Nav>
+                                        <Nav.Link
+                                            onClick={() =>
+                                                dispatch(logoutThunk()).then(() =>
+                                                    location.reload()
+                                                )
+                                            }
+                                        >
+                                            Logout
+                                        </Nav.Link>
+                                    </Nav>
+                                </Navbar.Collapse>
+                            </Container>
+                        </Navbar>
+                        <div className="cosmae-page-body flex-grow-1 flex-basis-0 flex-fill">
+                            <Outlet />
+                        </div>
                     </div>
-                </div>
-            </Col>
-        </Row>
+                </Col>
+            </Row>
+            <HelpModal />
+        </>
     )
 }
 
