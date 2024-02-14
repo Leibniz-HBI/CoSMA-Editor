@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -24,8 +24,6 @@ def test_name_as_default_path_and_enqueues(tag_def_user):
 
 
 def test_enqueues_children(tag_def_parent, tag_def_child_0, tag_def_child_1):
-    tag_def_child_0.save()
-    tag_def_child_1.save()
     mock = MagicMock()
     with patch("cosmae.tag.queue.enqueue", mock):
         q.update_tag_definition_name_path(tag_def_parent.id_persistent)
@@ -44,13 +42,13 @@ def test_enqueues_children(tag_def_parent, tag_def_child_0, tag_def_child_1):
                 tag_def_child_1.id_persistent,
                 [tag_def_parent.name],
             ),
-        ]
+        ],
+        any_order=True,
     )
 
 
 @pytest.mark.django_db
-def test_uses_provided_parent_path(tag_def_child_0):
-    tag_def_child_0.save()
+def test_uses_provided_parent_path(tag_def_parent, tag_def_child_0):
     q.update_tag_definition_name_path(
         tag_def_child_0.id_persistent, ["name", "path", "parent", "test"]
     )

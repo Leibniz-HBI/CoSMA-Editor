@@ -6,9 +6,20 @@ def format_datetime(datetime):
     return datetime.isoformat() + "Z"
 
 
+def version_sort_key(dictionary):
+    "Sort key for sorting dicts according to entry with key 'version'"
+    return dictionary["version"]
+
+
+def sort_versioned(lst):
+    "Sort a list of dictionaries according to their entries with key 'version'"
+    return sorted(lst, key=version_sort_key)
+
+
 def assert_versioned(actual, expected, path=None):
     """Helper function for checking nested dictionaries with version information.
-    The actual value of the version is ignored, as it may change depending on test order."""
+    The actual value of the version is ignored, as it may change depending on test order.
+    """
     if path is None:
         path = []
     if isinstance(actual, dict):

@@ -44,7 +44,7 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
         {
             "tag_definitions": [
                 {
-                    "id_persistent": ct.id_tag_persistent_test,
+                    "id_persistent": ct.id_tag_def_persistent_test,
                     "id_parent_persistent": None,
                     "name": ct.name_tag_def_test,
                     "name_path": [ct.name_tag_def_test],

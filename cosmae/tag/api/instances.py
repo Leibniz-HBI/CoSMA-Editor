@@ -1,4 +1,5 @@
 "API methods for tag instances."
+
 from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
@@ -20,8 +21,6 @@ from cosmae.exception import (
     ValidationException,
 )
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.api.definitions import tag_definition_db_to_api
-from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.tag.models_django import TagInstance as TagInstanceDb
 from cosmae.tag.models_django import TagInstanceAbstract as TagInstanceAbstractDb
 from cosmae.tag.models_django import TagInstanceHistory as TagInstanceHistoryDb
@@ -61,6 +60,7 @@ class TagInstancePostChunkRequest(Schema):
 
 class TagInstanceForEntitiesPostRequest(Schema):
     "Request body for getting tag instances for a set of entities"
+
     # pylint: disable=too-few-public-methods
     id_tag_definition_persistent_list: List[str]
     id_entity_persistent_list: List[str]
@@ -128,7 +128,7 @@ class TagInstanceUpdatedResponse(Schema):
         200: TagInstancePostList,
         400: ApiError,
         401: ApiError,
-        403: TagDefinitionResponse,
+        403: ApiError,
         409: TagInstanceUpdatedResponse,
         500: ApiError,
     },
@@ -167,7 +167,10 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
             f"for tag with id_persistent {exc.tag_id_persistent}."
         )
     except TagDefinitionPermissionException as exc:
-        return 403, tag_definition_db_to_api(exc.tag_definition)
+        return 403, ApiError(
+            msg="Your are not allowed to change the tag definition with id_persistent: "
+            f"{exc.id_persistent}"
+        )
     except EntityUpdatedException as exc:
         return 409, TagInstanceUpdatedResponse(
             msg="There has been a concurrent modification "

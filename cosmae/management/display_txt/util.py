@@ -17,7 +17,7 @@ def get_display_txt_order_tag_definitions(id_contribution_persistent=None):
             When(id_persistent=val, then=idx)
             for idx, val in enumerate(id_tag_def_persistent_list)
         ]
-        tag_def_query = TagDefinition.most_recent_query_set().filter(
+        tag_def_query = TagDefinition.query_set().filter(
             id_persistent__in=id_tag_def_persistent_list
         )
 
@@ -29,7 +29,7 @@ def get_display_txt_order_tag_definitions(id_contribution_persistent=None):
             id_destination_persistent__in=id_tag_def_persistent_list
         )
         tag_def_query = (
-            TagDefinition.most_recent_query_set()
+            TagDefinition.query_set()
             .annotate(
                 id_destination_persistent=Subquery(
                     relevant_for_display_txt_order.filter(

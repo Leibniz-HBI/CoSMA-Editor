@@ -5,24 +5,36 @@ import pytest
 
 import tests.entity.common as ce
 import tests.tag.common as c
-from cosmae.tag.models_django import OwnershipRequest, TagDefinition, TagInstanceHistory
+from cosmae.tag.models_django import (
+    OwnershipRequest,
+    TagDefinition,
+    TagDefinitionHistory,
+    TagInstanceHistory,
+)
 
 
 @pytest.fixture
-def tag_def():
+def tag_def_history(db):
     "Shared tag definition for tests."
-    return TagDefinition(
+    tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=c.id_tag_def_persistent_test,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
         name=c.name_tag_def_test,
         time_edit=c.time_edit_test,
     )
+    tag_def.save()
+    return tag_def
 
 
 @pytest.fixture
-def tag_def_user(user):
-    tag_def = TagDefinition(  # pylint: disable=no-member
+def tag_def(tag_def_history):
+    return TagDefinition.objects.get(id=tag_def_history.id)  # pylint: disable=no-member
+
+
+@pytest.fixture
+def tag_def_user_history(user):
+    tag_def = TagDefinitionHistory(  # pylint: disable=no-member
         id_persistent=c.id_tag_def_persistent_test_user,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
@@ -35,8 +47,15 @@ def tag_def_user(user):
 
 
 @pytest.fixture
+def tag_def_user(tag_def_user_history):
+    return TagDefinition.objects.get(  # pylint: disable=no-member
+        id=tag_def_user_history.id
+    )
+
+
+@pytest.fixture
 def tag_def_user1(user):
-    tag_def = TagDefinition(  # pylint: disable=no-member
+    tag_def = TagDefinitionHistory(  # pylint: disable=no-member
         id_persistent=c.id_tag_def_persistent_test_user1,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
@@ -50,10 +69,10 @@ def tag_def_user1(user):
 
 @pytest.fixture
 def tag_def_parent(db):
-    tag_def = TagDefinition(
+    tag_def = TagDefinitionHistory(
         id_persistent=c.id_tag_def_parent_persistent_test,
         type=TagDefinition.FLOAT,
-        name="tag_def_parent_test",
+        name=c.name_tag_def_parent_test,
         time_edit=c.time_edit_test + timedelta(seconds=5),
     )
     tag_def.save()
@@ -61,33 +80,51 @@ def tag_def_parent(db):
 
 
 @pytest.fixture
-def tag_def_child_0():
+def tag_def_child_0_history():
     "A shared child tag definition for tests"
-    return TagDefinition(
+    tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=c.id_tag_def_persistent_child_0,
         type=TagDefinition.FLOAT,
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
         name="test tag definition child 0",
         time_edit=c.time_edit_test + timedelta(seconds=10),
     )
+    tag_def.save()
+    return tag_def
 
 
 @pytest.fixture
-def tag_def_child_1():
+def tag_def_child_0(tag_def_child_0_history):
+    return TagDefinition.objects.get(  # pylint: disable=no-member
+        id=tag_def_child_0_history.id
+    )
+
+
+@pytest.fixture
+def tag_def_child_1_history():
     "Another shared child tag definition for tests"
-    return TagDefinition(
+    tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=c.id_tag_def_persistent_child_1,
         type=TagDefinition.FLOAT,
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
         name="test tag definition child 1",
         time_edit=c.time_edit_test + timedelta(seconds=10),
     )
+    tag_def.save()
+    return tag_def
+
+
+@pytest.fixture
+def tag_def_child_1(tag_def_child_1_history):
+    return TagDefinition.objects.get(  # pylint: disable=no-member
+        id=tag_def_child_1_history.id
+    )
 
 
 @pytest.fixture
 def tag_def_curated():
     "A curated tag definition for tests"
-    return TagDefinition.objects.create(  # pylint: disable=no-member
+    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_tag_def_curated_test,
         type=TagDefinition.INNER,
         name=c.name_tag_def_curated_test,

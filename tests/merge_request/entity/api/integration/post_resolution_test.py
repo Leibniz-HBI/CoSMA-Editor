@@ -183,7 +183,7 @@ def test_resolve_conflicts(
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test_user,
+                    "id_persistent": ct.id_tag_def_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },

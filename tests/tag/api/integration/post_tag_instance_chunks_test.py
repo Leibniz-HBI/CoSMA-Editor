@@ -11,7 +11,6 @@ from tests.tag.api.integration.requests import (
 
 
 def test_empty_chunk(auth_server, tag_def):
-    tag_def.save()
     live_server, cookies = auth_server
     rsp = post_tag_instance_chunks(
         live_server.url, tag_def.id_persistent, 0, 20, cookies=cookies
@@ -64,7 +63,6 @@ def test_can_slice(auth_server, tag_def_user, entity0):
 
 def test_non_existent_slice(auth_server, tag_def, entity0):
     live_server, cookies = auth_server
-    tag_def.save()
     entity0.save()
     instances = [
         {

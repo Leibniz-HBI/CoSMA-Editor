@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from django.db import DatabaseError
 
 from tests.tag.api.integration import requests as r
+from tests.utils import assert_versioned, sort_versioned
 
 
 def test_empty_db(auth_server):
@@ -36,9 +37,10 @@ def test_multi_root(auth_server, root_tag_def):
     req = r.post_tag_def_children(live_server.url, None, cookies=cookies)
     assert req.status_code == 200
     tag_definitions = req.json()["tag_definitions"]
-    assert len(tag_definitions) == 2
-    assert tag_definitions[0] == root_tag_def_rsps[0]
-    assert tag_definitions[1] == root_tag_def_rsps[1]
+    assert_versioned(
+        sort_versioned(tag_definitions),
+        sort_versioned(root_tag_def_rsps),
+    )
 
 
 def test_single_child(auth_server, root_tag_def, child_tag_def):
@@ -77,9 +79,7 @@ def test_multi_child(auth_server, root_tag_def, child_tag_def):
     )
     assert req.status_code == 200
     tag_definitions = req.json()["tag_definitions"]
-    assert len(tag_definitions) == 2
-    assert tag_definitions[0] == child_tag_def_rsps[0]
-    assert tag_definitions[1] == child_tag_def_rsps[1]
+    assert sort_versioned(tag_definitions) == sort_versioned(child_tag_def_rsps)
 
 
 def test_multi_child_no_disabled(auth_server, root_tag_def, child_tag_def):
@@ -100,7 +100,9 @@ def test_multi_child_no_disabled(auth_server, root_tag_def, child_tag_def):
     )
     assert req.status_code == 200
     tag_definitions = req.json()["tag_definitions"]
-    assert tag_definitions == [child_tag_def_rsps[0]]
+    assert_versioned(
+        sort_versioned(tag_definitions), sort_versioned(child_tag_def_rsps)
+    )
 
 
 def test_bad_db(auth_server):

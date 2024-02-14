@@ -7,7 +7,7 @@ from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
 from tests.utils import assert_versioned, format_datetime
 from cosmae.exception import NotAuthenticatedException
-from cosmae.tag.models_django import TagDefinition
+from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
 
 
 def test_unknown_user(auth_server):
@@ -122,7 +122,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
 def test_get_merge_requests_with_hidden(
     auth_server, merge_request_user, merge_request_user1, origin_tag_def_for_mr1
 ):
-    tag_def, _ = TagDefinition.change_or_create(
+    tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=origin_tag_def_for_mr1.id_persistent,
         id_parent_persistent=origin_tag_def_for_mr1.id_parent_persistent,
         name=origin_tag_def_for_mr1.name,

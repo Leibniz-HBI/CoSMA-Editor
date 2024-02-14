@@ -72,6 +72,6 @@ def test_append_to_existing(
     )
     assert rsp.status_code == 200
     assert ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY) == [
-        ct.id_tag_persistent_test,
+        ct.id_tag_def_persistent_test,
         ct.id_tag_def_curated_test,
     ]

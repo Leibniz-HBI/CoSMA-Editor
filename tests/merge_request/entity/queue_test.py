@@ -21,9 +21,9 @@ def test_creates_tag_merge_requests(conflict_resolution_replace):
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 3
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 3
-    tag_defs_including_hidden = TagDefinition.most_recent_query_set(include_hidden=True)
+    tag_defs_including_hidden = TagDefinition.query_set(include_hidden=True)
     assert len(tag_defs_including_hidden) == 6
-    assert len(TagDefinition.most_recent_query_set()) == 3
+    assert len(TagDefinition.query_set()) == 3
     hidden_tag_def_instances = (
         TagInstance.objects.all()  # pylint: disable=no-member
         .annotate(
@@ -48,8 +48,8 @@ def test_applies_resolutions(conflict_resolution_replace, user1):
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 2
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
-    assert len(TagDefinition.most_recent_query_set(include_hidden=True)) == 5
-    assert len(TagDefinition.most_recent_query_set()) == 3
+    assert len(TagDefinition.query_set(include_hidden=True)) == 5
+    assert len(TagDefinition.query_set()) == 3
 
 
 def test_creates_tag_merge_request_for_updated(
@@ -66,9 +66,9 @@ def test_creates_tag_merge_request_for_updated(
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 3
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 3
-    tag_defs_including_hidden = TagDefinition.most_recent_query_set(include_hidden=True)
+    tag_defs_including_hidden = TagDefinition.query_set(include_hidden=True)
     assert len(tag_defs_including_hidden) == 6
-    assert len(TagDefinition.most_recent_query_set()) == 3
+    assert len(TagDefinition.query_set()) == 3
     hidden_tag_def_instances = (
         TagInstance.objects.all()  # pylint: disable=no-member
         .annotate(

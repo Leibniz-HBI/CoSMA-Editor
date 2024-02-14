@@ -10,7 +10,7 @@ from tests.user import common as cu
 from tests.utils import assert_versioned, format_datetime
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import TagConflictResolution
-from cosmae.tag.models_django import TagDefinition, TagInstanceHistory
+from cosmae.tag.models_django import TagDefinitionHistory, TagInstanceHistory
 
 
 def test_unknown_user(auth_server):
@@ -292,7 +292,7 @@ def test_conflict_resolved_tag_def_origin_changed(
     auth_server, merge_request_user, conflict_resolution_replace
 ):
     old_tag_definition = conflict_resolution_replace.tag_definition_origin
-    TagDefinition.change_or_create(
+    TagDefinitionHistory.change_or_create(
         id_persistent=old_tag_definition.id_persistent,
         version=old_tag_definition.id,
         name="changed tag definition test",

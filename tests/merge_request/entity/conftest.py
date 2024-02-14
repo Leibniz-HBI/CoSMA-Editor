@@ -7,7 +7,7 @@ from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,
 )
-from cosmae.tag.models_django import TagDefinition, TagInstanceHistory
+from cosmae.tag.models_django import TagDefinitionHistory, TagInstanceHistory
 
 
 @pytest.fixture
@@ -199,7 +199,7 @@ def instance_merge_request_destination_user_same_value1(merge_request_user):
 
 @pytest.fixture()
 def tag_def_for_mr_changed(tag_def1):
-    tag_def, _ = TagDefinition.change_or_create(
+    tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=tag_def1.id_persistent,
         version=tag_def1.id,
         time_edit=c.time_tag_def_changed,

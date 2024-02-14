@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 name_tag_def_test = "name tag test"
 name_tag_def_test_user = "name tag test_user"
 name_tag_def_test1 = "name tag test1"
+name_tag_def_parent_test = "tag_def_parent_test"
 name_tag_def_curated_test = "name curated tag test"
 time_edit_test = datetime(2022, 12, 20, tzinfo=timezone.utc)
 time_edit_test1 = datetime(2022, 12, 21, tzinfo=timezone.utc)
@@ -12,7 +13,7 @@ id_entity_test = "6def6d63-e688-4343-a8ad-edd578146174"
 id_tag_def_persistent_test = "b17463e5-8f95-4b12-bc31-b469030f813a"
 id_tag_def_parent_persistent_test = "5a682460-9a91-414e-8c87-b5e1cb00dd97"
 id_tag_persistent_test = "934e25f9-ebc4-4fcb-97ea-a33c4186bfc3"
-id_tag_def_persistent_test_user = "934e25f9-ebc4-4fcb-97ea-a33c4186bfc3"
+id_tag_def_persistent_test_user = "e37a05ca-d5f1-4bff-ba6f-d2f3a1f45e76"
 id_tag_def_persistent_test_user1 = "52d5de0a-2fdb-457f-80d0-6e10131ad1b9"
 id_tag_def_persistent_child_0 = "f2a2e623-404d-494c-9f6d-3436f5d0ad48"
 id_tag_def_persistent_child_1 = "e0a3ec8d-3365-4979-8e51-6fcc3e445afd"

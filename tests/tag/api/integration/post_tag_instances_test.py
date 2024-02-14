@@ -114,7 +114,6 @@ def test_no_tag_def(auth_server, entity0):
 
 def test_no_entity(auth_server, tag_def):
     live_server, cookies = auth_server
-    tag_def.save()
     tag_inst = {
         "value": "2.0",
         "id_tag_definition_persistent": tag_def.id_persistent,

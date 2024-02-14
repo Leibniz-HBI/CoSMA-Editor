@@ -128,9 +128,9 @@ class ContributionCandidate(models.Model):
         )
         invalid = active.exclude(id_existing_persistent="display_txt").exclude(
             id_existing_persistent__in=Subquery(
-                TagDefinition.most_recent_query_set().values(  # pylint: disable=no-member
-                    "id_persistent"
-                )
+                TagDefinition.objects.filter(  # pylint: disable=no-member
+                    hidden=False
+                ).values("id_persistent")
             )
         )
         if len(invalid) > 0:

@@ -193,7 +193,7 @@ def test_double_reverse(
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test_user,
+                    "id_persistent": ct.id_tag_def_persistent_test,
                     "curated": False,
                 },
                 "tag_instance_origin": {

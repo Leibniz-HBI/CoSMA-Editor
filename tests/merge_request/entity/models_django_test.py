@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from cosmae.merge_request.entity.models_django import EntityConflictResolution
-from cosmae.tag.models_django import TagDefinition
+from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
 
 
 def test_no_change_user(merge_request_user, conflict_resolution_replace, user):
@@ -345,7 +345,7 @@ def test_change_all(
     conflict_resolution_replace,
 ):
     old_tag_def = conflict_resolution_replace.tag_definition
-    TagDefinition.change_or_create(
+    TagDefinitionHistory.change_or_create(
         id_persistent=old_tag_def.id_persistent,
         time_edit=datetime(1912, 4, 7),
         name="edited tag definition",

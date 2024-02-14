@@ -2,12 +2,12 @@
 import pytest
 
 import tests.user.common as c
-from cosmae.tag.models_django import TagDefinition
+from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
 
 
 @pytest.fixture
 def tag_def_user_profile():
-    return TagDefinition.objects.create(
+    return TagDefinitionHistory.objects.create(
         name=c.name_tag_def,
         id_persistent=c.id_tag_def_persistent,
         time_edit=c.time_edit_tag_def,
@@ -17,7 +17,7 @@ def tag_def_user_profile():
 
 @pytest.fixture
 def tag_def_user_profile1():
-    return TagDefinition.objects.create(
+    return TagDefinitionHistory.objects.create(
         name=c.name_tag_def1,
         id_persistent=c.id_tag_def_persistent1,
         time_edit=c.time_edit_tag_def1,
@@ -27,7 +27,7 @@ def tag_def_user_profile1():
 
 @pytest.fixture
 def tag_def_user_profile2():
-    return TagDefinition.objects.create(
+    return TagDefinitionHistory.objects.create(
         name=c.name_tag_def2,
         id_persistent=c.id_tag_def_persistent2,
         time_edit=c.time_edit_tag_def2,
@@ -37,7 +37,7 @@ def tag_def_user_profile2():
 
 @pytest.fixture
 def tag_def_user_profile3():
-    return TagDefinition.objects.create(
+    return TagDefinitionHistory.objects.create(
         name=c.name_tag_def3,
         id_persistent=c.id_tag_def_persistent3,
         time_edit=c.time_edit_tag_def3,

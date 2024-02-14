@@ -12,7 +12,7 @@ from cosmae.contribution.tag_definition.models_django import TagDefinitionContri
 from cosmae.contribution.tag_definition.queue.ingest import ingest_values_from_csv
 from cosmae.entity.models_django import Entity
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory, TagInstance
 
 csv_cols = {
     "names": ["name_0", "name_1"],
@@ -47,7 +47,7 @@ def csv_mock_with_empty_lines():
 
 @pytest.fixture
 def verified_tag_def(db):
-    return TagDefinition.objects.create(  # pylint: disable=no-member
+    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         name="tag definition verified_test",
         id_parent_persistent=None,
         type=TagDefinition.INNER,
@@ -58,7 +58,7 @@ def verified_tag_def(db):
 
 @pytest.fixture
 def party_tag_def(db):
-    return TagDefinition.objects.create(  # pylint: disable=no-member
+    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         name="tag definition party test",
         id_parent_persistent=None,
         type=TagDefinition.STRING,

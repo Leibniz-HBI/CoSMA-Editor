@@ -19,6 +19,7 @@ from cosmae.merge_request.entity.models_django import (
 from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import (
     TagDefinition,
+    TagDefinitionHistory,
     TagInstanceAbstract,
     TagInstanceHistory,
 )
@@ -56,7 +57,7 @@ def apply_entity_merge_request(
                 include_resolved=False, resolution_values=recent_resolutions
             ).annotate(
                 tag_definition_dict=models.Subquery(
-                    TagDefinition.most_recent_query_set()
+                    TagDefinition.query_set()
                     .filter(
                         id_persistent=models.OuterRef("id_tag_definition_persistent")
                     )[:1]
@@ -109,7 +110,7 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
     # Create temporary i.e. disabled tag definition
     while True:
         try:
-            tag_definition_new, _do_write = TagDefinition.change_or_create(
+            tag_definition_new, _do_write = TagDefinitionHistory.change_or_create(
                 id_persistent=uuid4(),
                 name=f"from entity merge {entity_merge_request.id_persistent}_{count}",
                 id_parent_persistent=tag_definition_existing_dict["id_persistent"],

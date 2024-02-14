@@ -1,4 +1,5 @@
 "API endpoints for tag definitions."
+
 from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
@@ -18,6 +19,7 @@ from cosmae.exception import (
 )
 from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
+from cosmae.tag.models_django import TagDefinitionHistory as TagDefinitionHistoryDb
 from cosmae.tag.queue import (
     get_tag_definition_name_path,
     get_tag_definition_name_path_from_parts,
@@ -55,24 +57,28 @@ class TagDefinitionRequest(Schema):
 
 class TagDefinitionRequestList(Schema):
     "API model for a list of request tag definition objects."
+
     # pylint: disable=too-few-public-methods
     tag_definitions: List[TagDefinitionRequest]
 
 
 class TagDefinitionResponseList(Schema):
     "API model for a list of response tag definition objects."
+
     # pylint: disable=too-few-public-methods
     tag_definitions: List[TagDefinitionResponse]
 
 
 class PostGetChildrenRequest(Schema):
     "API model for getting tag definitions by parent_id_persistent"
+
     # pylint: disable=too-few-public-methods
     id_parent_persistent: Optional[str]
 
 
 class CurationPostRequest(Schema):
     "Request for changing the curation state of a tag definition"
+
     # pylint: disable=too-few-public-methods
     id_persistent: bool
     is_curated: bool
@@ -172,7 +178,7 @@ def tag_definition_api_to_db(
                 "has version but no id_persistent."
             )
         persistent_id = str(uuid4())
-    return TagDefinitionDb.change_or_create(
+    return TagDefinitionHistoryDb.change_or_create(
         id_persistent=persistent_id,
         id_parent_persistent=tag_definition.id_parent_persistent,
         version=tag_definition.version,
