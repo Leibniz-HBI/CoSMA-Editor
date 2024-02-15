@@ -38,6 +38,36 @@ def test_creates_tag_merge_requests(conflict_resolution_replace):
     assert len(hidden_tag_def_instances) == 3
 
 
+def test_creates_tag_merge_requests_empty_destination(
+    conflict_resolution_replace_empty_destination,
+):
+    merge_request = conflict_resolution_replace_empty_destination.merge_request
+    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.save()
+    user = merge_request.created_by
+    apply_entity_merge_request(merge_request.id_persistent, user.id_persistent)
+    most_recent = Entity.most_recent().get()
+    assert most_recent.display_txt == c.display_txt_entity_destination
+    tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
+    assert len(tag_merge_requests) == 3
+    assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 3
+    tag_defs_including_hidden = TagDefinition.query_set(include_hidden=True)
+    assert len(tag_defs_including_hidden) == 6
+    assert len(TagDefinition.query_set()) == 3
+    hidden_tag_def_instances = (
+        TagInstance.objects.all()  # pylint: disable=no-member
+        .annotate(
+            hidden=models.Subquery(
+                tag_defs_including_hidden.filter(
+                    id_persistent=models.OuterRef("id_tag_definition_persistent")
+                ).values("hidden")
+            )
+        )
+        .filter(hidden=True)
+    )
+    assert len(hidden_tag_def_instances) == 3
+
+
 def test_applies_resolutions(conflict_resolution_replace, user1):
     merge_request = conflict_resolution_replace.merge_request
     merge_request.state = EntityMergeRequest.RESOLVED

@@ -237,6 +237,25 @@ def conflict_resolution_replace(
 
 
 @pytest.fixture
+def conflict_resolution_replace_empty_destination(
+    merge_request_user,
+    origin_entity_for_mr,
+    destination_entity_for_mr,
+    tag_def1,
+    instances_merge_request_origin_user,
+):
+    return EntityConflictResolution.objects.create(  # pylint: disable=no-member
+        tag_definition=tag_def1,
+        entity_origin=origin_entity_for_mr,
+        entity_destination=destination_entity_for_mr,
+        tag_instance_origin=instances_merge_request_origin_user[1],
+        tag_instance_destination=None,
+        merge_request=merge_request_user,
+        replace=True,
+    )
+
+
+@pytest.fixture
 def conflict_resolution_keep(
     merge_request_user,
     origin_entity_for_mr,
