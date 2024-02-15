@@ -87,17 +87,8 @@ MATCHES_QUERY_STRING = """
 					) tagmergerequest
 					inner join (
 						select "id_persistent"
-						from (
-							select  max(id) "max_id"
-							from cosmae_tagdefinition
-							group by "id_persistent"
-						) with_max
-						left join (
-							select *
-							from cosmae_tagdefinition
-						) tag_definition0
-						on "tag_definition0"."id" = "with_max"."max_id"
-						where "tag_definition0"."id" = "with_max"."max_id" and "curated"
+						from cosmae_tagdefinition
+						where "curated"
 					) tag_definition_curated
 					on "id_destination_persistent" = "tag_definition_curated"."id_persistent"
 				) merge_requests
