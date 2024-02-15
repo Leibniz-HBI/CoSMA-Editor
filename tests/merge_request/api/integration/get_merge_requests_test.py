@@ -31,91 +31,91 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
     assert rsp.status_code == 200
     json = rsp.json()
     assert len(json) == 2
-    created_list = json["created"]
-    assert len(created_list) == 1
-    created = created_list[0]
-    assert len(created) == 7
-    assert created["created_at"] == format_datetime(c.time_merge_request1)
-    assert created["id_persistent"] == c.id_persistent_merge_request1
-    assert created["created_by"] == {
-        "user_name": cu.test_username,
-        "id_persistent": cu.test_uuid,
-        "permission_group": "APPLICANT",
-    }
-    assert created["assigned_to"] == {
-        "user_name": cu.test_username1,
-        "id_persistent": cu.test_uuid1,
-        "permission_group": "APPLICANT",
-    }
-    assert created["state"] == "OPEN"
     assert_versioned(
-        created["destination"],
-        {
-            "id_persistent": c.id_persistent_tag_def_destination1,
-            "id_parent_persistent": None,
-            "name": c.name_tag_def_destination1,
-            "name_path": [c.name_tag_def_destination1],
-            "type": "STRING",
-            "owner": "test-user1",
-            "curated": False,
-            "hidden": False,
-        },
+        json["created"],
+        [
+            {
+                "created_at": format_datetime(c.time_merge_request1),
+                "id_persistent": c.id_persistent_merge_request1,
+                "created_by": {
+                    "user_name": cu.test_username,
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
+                "assigned_to": {
+                    "user_name": cu.test_username1,
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
+                "state": "OPEN",
+                "disable_origin_on_merge": False,
+                "destination": {
+                    "id_persistent": c.id_persistent_tag_def_destination1,
+                    "id_parent_persistent": None,
+                    "name": c.name_tag_def_destination1,
+                    "name_path": [c.name_tag_def_destination1],
+                    "type": "STRING",
+                    "owner": "test-user1",
+                    "curated": False,
+                    "hidden": False,
+                    "disabled": False,
+                },
+                "origin": {
+                    "name": c.name_tag_def_origin1,
+                    "name_path": [c.name_tag_def_origin1],
+                    "id_parent_persistent": None,
+                    "id_persistent": c.id_persistent_tag_def_origin1,
+                    "type": "STRING",
+                    "owner": "test-user",
+                    "curated": False,
+                    "hidden": False,
+                    "disabled": False,
+                },
+            }
+        ],
     )
     assert_versioned(
-        created["origin"],
-        {
-            "name": c.name_tag_def_origin1,
-            "name_path": [c.name_tag_def_origin1],
-            "id_parent_persistent": None,
-            "id_persistent": c.id_persistent_tag_def_origin1,
-            "type": "STRING",
-            "owner": "test-user",
-            "curated": False,
-            "hidden": False,
-        },
-    )
-    assigned_list = json["assigned"]
-    assert len(assigned_list) == 1
-    assigned = assigned_list[0]
-    assert len(assigned) == 7
-    assert assigned["created_at"] == format_datetime(c.time_merge_request)
-    assert assigned["id_persistent"] == c.id_persistent_merge_request
-    assert assigned["created_by"] == {
-        "user_name": cu.test_username1,
-        "id_persistent": cu.test_uuid1,
-        "permission_group": "APPLICANT",
-    }
-    assert assigned["assigned_to"] == {
-        "user_name": cu.test_username,
-        "id_persistent": cu.test_uuid,
-        "permission_group": "APPLICANT",
-    }
-    assert assigned["state"] == "OPEN"
-    assert_versioned(
-        assigned["destination"],
-        {
-            "id_persistent": c.id_persistent_tag_def_destination,
-            "id_parent_persistent": None,
-            "name": c.name_tag_def_destination,
-            "name_path": [c.name_tag_def_destination],
-            "type": "STRING",
-            "owner": "test-user",
-            "curated": False,
-            "hidden": False,
-        },
-    )
-    assert_versioned(
-        assigned["origin"],
-        {
-            "name": c.name_tag_def_origin,
-            "name_path": [c.name_tag_def_origin],
-            "id_persistent": c.id_persistent_tag_def_origin,
-            "id_parent_persistent": None,
-            "type": "STRING",
-            "owner": "test-user1",
-            "curated": False,
-            "hidden": False,
-        },
+        json["assigned"],
+        [
+            {
+                "created_at": format_datetime(c.time_merge_request),
+                "id_persistent": c.id_persistent_merge_request,
+                "created_by": {
+                    "user_name": cu.test_username1,
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
+                "assigned_to": {
+                    "user_name": cu.test_username,
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
+                "state": "OPEN",
+                "disable_origin_on_merge": False,
+                "destination": {
+                    "id_persistent": c.id_persistent_tag_def_destination,
+                    "id_parent_persistent": None,
+                    "name": c.name_tag_def_destination,
+                    "name_path": [c.name_tag_def_destination],
+                    "type": "STRING",
+                    "owner": "test-user",
+                    "curated": False,
+                    "hidden": False,
+                    "disabled": False,
+                },
+                "origin": {
+                    "name": c.name_tag_def_origin,
+                    "name_path": [c.name_tag_def_origin],
+                    "id_persistent": c.id_persistent_tag_def_origin,
+                    "id_parent_persistent": None,
+                    "type": "STRING",
+                    "owner": "test-user1",
+                    "curated": False,
+                    "hidden": False,
+                    "disabled": False,
+                },
+            }
+        ],
     )
 
 
@@ -139,91 +139,91 @@ def test_get_merge_requests_with_hidden(
     assert rsp.status_code == 200
     json = rsp.json()
     assert len(json) == 2
-    created_list = json["created"]
-    assert len(created_list) == 1
-    created = created_list[0]
-    assert len(created) == 7
-    assert created["created_at"] == format_datetime(c.time_merge_request1)
-    assert created["id_persistent"] == c.id_persistent_merge_request1
-    assert created["created_by"] == {
-        "user_name": cu.test_username,
-        "id_persistent": cu.test_uuid,
-        "permission_group": "APPLICANT",
-    }
-    assert created["assigned_to"] == {
-        "user_name": cu.test_username1,
-        "id_persistent": cu.test_uuid1,
-        "permission_group": "APPLICANT",
-    }
-    assert created["state"] == "OPEN"
     assert_versioned(
-        created["destination"],
-        {
-            "id_persistent": c.id_persistent_tag_def_destination1,
-            "id_parent_persistent": None,
-            "name": c.name_tag_def_destination1,
-            "name_path": [c.name_tag_def_destination1],
-            "type": "STRING",
-            "owner": "test-user1",
-            "curated": False,
-            "hidden": False,
-        },
+        json["created"],
+        [
+            {
+                "created_at": format_datetime(c.time_merge_request1),
+                "id_persistent": c.id_persistent_merge_request1,
+                "created_by": {
+                    "user_name": cu.test_username,
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
+                "assigned_to": {
+                    "user_name": cu.test_username1,
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
+                "state": "OPEN",
+                "disable_origin_on_merge": False,
+                "destination": {
+                    "id_persistent": c.id_persistent_tag_def_destination1,
+                    "id_parent_persistent": None,
+                    "name": c.name_tag_def_destination1,
+                    "name_path": [c.name_tag_def_destination1],
+                    "type": "STRING",
+                    "owner": "test-user1",
+                    "curated": False,
+                    "hidden": False,
+                    "disabled": False,
+                },
+                "origin": {
+                    "name": c.name_tag_def_origin1,
+                    "name_path": [c.name_tag_def_origin1],
+                    "id_parent_persistent": None,
+                    "id_persistent": c.id_persistent_tag_def_origin1,
+                    "type": "STRING",
+                    "owner": "test-user",
+                    "curated": False,
+                    "hidden": True,
+                    "disabled": False,
+                },
+            }
+        ],
     )
     assert_versioned(
-        created["origin"],
-        {
-            "name": c.name_tag_def_origin1,
-            "name_path": [c.name_tag_def_origin1],
-            "id_parent_persistent": None,
-            "id_persistent": c.id_persistent_tag_def_origin1,
-            "type": "STRING",
-            "owner": "test-user",
-            "curated": False,
-            "hidden": True,
-        },
-    )
-    assigned_list = json["assigned"]
-    assert len(assigned_list) == 1
-    assigned = assigned_list[0]
-    assert len(assigned) == 7
-    assert assigned["created_at"] == format_datetime(c.time_merge_request)
-    assert assigned["id_persistent"] == c.id_persistent_merge_request
-    assert assigned["created_by"] == {
-        "user_name": cu.test_username1,
-        "id_persistent": cu.test_uuid1,
-        "permission_group": "APPLICANT",
-    }
-    assert assigned["assigned_to"] == {
-        "user_name": cu.test_username,
-        "id_persistent": cu.test_uuid,
-        "permission_group": "APPLICANT",
-    }
-    assert assigned["state"] == "OPEN"
-    assert_versioned(
-        assigned["destination"],
-        {
-            "id_persistent": c.id_persistent_tag_def_destination,
-            "id_parent_persistent": None,
-            "name": c.name_tag_def_destination,
-            "name_path": [c.name_tag_def_destination],
-            "type": "STRING",
-            "owner": "test-user",
-            "curated": False,
-            "hidden": False,
-        },
-    )
-    assert_versioned(
-        assigned["origin"],
-        {
-            "name": c.name_tag_def_origin,
-            "name_path": [c.name_tag_def_origin],
-            "id_persistent": c.id_persistent_tag_def_origin,
-            "id_parent_persistent": None,
-            "type": "STRING",
-            "owner": "test-user1",
-            "curated": False,
-            "hidden": False,
-        },
+        json["assigned"],
+        [
+            {
+                "created_at": format_datetime(c.time_merge_request),
+                "id_persistent": c.id_persistent_merge_request,
+                "created_by": {
+                    "user_name": cu.test_username1,
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
+                "assigned_to": {
+                    "user_name": cu.test_username,
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
+                "state": "OPEN",
+                "disable_origin_on_merge": False,
+                "destination": {
+                    "id_persistent": c.id_persistent_tag_def_destination,
+                    "id_parent_persistent": None,
+                    "name": c.name_tag_def_destination,
+                    "name_path": [c.name_tag_def_destination],
+                    "type": "STRING",
+                    "owner": "test-user",
+                    "curated": False,
+                    "hidden": False,
+                    "disabled": False,
+                },
+                "origin": {
+                    "name": c.name_tag_def_origin,
+                    "name_path": [c.name_tag_def_origin],
+                    "id_persistent": c.id_persistent_tag_def_origin,
+                    "id_parent_persistent": None,
+                    "type": "STRING",
+                    "owner": "test-user1",
+                    "curated": False,
+                    "hidden": False,
+                    "disabled": False,
+                },
+            }
+        ],
     )
 
 
@@ -250,6 +250,7 @@ def test_includes_curated(
                 "assigned_to": None,
                 "created_at": format_datetime(c.time_merge_request_curated),
                 "state": "OPEN",
+                "disable_origin_on_merge": False,
                 "destination": {
                     "id_persistent": "2ec43995-338b-4f4b-b1cc-4bfc71466fc5",
                     "id_parent_persistent": None,
@@ -259,6 +260,7 @@ def test_includes_curated(
                     "owner": None,
                     "curated": True,
                     "hidden": False,
+                    "disabled": False,
                 },
                 "origin": {
                     "id_persistent": "52d5de0a-2fdb-457f-80d0-6e10131ad1b9",
@@ -269,6 +271,7 @@ def test_includes_curated(
                     "type": "STRING",
                     "curated": False,
                     "hidden": False,
+                    "disabled": False,
                 },
             }
         ],

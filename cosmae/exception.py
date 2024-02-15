@@ -102,3 +102,10 @@ class TagDefinitionPermissionException(Exception):
 
     def __init__(self, id_persistent) -> None:
         self.id_persistent = id_persistent
+
+
+class TagDefinitionDisabledException(Exception):
+    "Indicates a write to a disabled tag definition."
+
+    def __init__(self, id_persistent):
+        self.id_persistent = id_persistent

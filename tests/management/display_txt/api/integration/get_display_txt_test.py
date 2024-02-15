@@ -51,6 +51,7 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "type": "STRING",
                     "curated": False,
                     "hidden": False,
+                    "disabled": False,
                     "owner": "test-user",
                 },
                 {
@@ -61,6 +62,7 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "type": "STRING",
                     "curated": False,
                     "hidden": False,
+                    "disabled": False,
                     "owner": "test-user1",
                 },
                 {
@@ -71,6 +73,7 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "type": "STRING",
                     "curated": True,
                     "hidden": False,
+                    "disabled": False,
                     "owner": None,
                 },
             ]

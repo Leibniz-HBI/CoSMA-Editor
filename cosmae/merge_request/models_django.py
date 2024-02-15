@@ -38,6 +38,7 @@ class TagMergeRequest(AbstractMergeRequest):
         blank=True,
         null=True,
     )
+    disable_origin_on_merge = models.BooleanField(default=False)
 
     @classmethod
     def assigned_to_user(cls, user: CosmaeUser):
@@ -222,6 +223,7 @@ class TagMergeRequest(AbstractMergeRequest):
                                 curated="curated",
                                 owner="owner",
                                 hidden="hidden",
+                                disabled="disabled",
                             )
                         )
                         .filter(tag_def_json__isnull=False)

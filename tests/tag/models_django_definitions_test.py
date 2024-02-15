@@ -204,7 +204,7 @@ def test_inner_check_invalid(tag_def):
 
 @pytest.mark.django_db
 def test_childrens(tag_def_parent, tag_def_child_0, tag_def_child_1):
-    ret = TagDefinition.most_recent_children(c.id_tag_def_parent_persistent_test)
+    ret = TagDefinition.children_query_set(c.id_tag_def_parent_persistent_test)
     assert set(ret) == {tag_def_child_0, tag_def_child_1}
 
 
@@ -222,20 +222,20 @@ def test_children_updated(tag_def_parent, tag_def_child_0, tag_def_child_1):
     tag_def_child_0_updated = TagDefinition.objects.get(  # pylint: disable=no-member
         id=tag_def_child_0_updated_history.id
     )
-    ret = TagDefinition.most_recent_children(c.id_tag_def_parent_persistent_test)
+    ret = TagDefinition.children_query_set(c.id_tag_def_parent_persistent_test)
     assert set(ret) == {tag_def_child_1, tag_def_child_0_updated}
 
 
 @pytest.mark.django_db
 def test_children_empty(tag_def_parent):
-    ret = TagDefinition.most_recent_children(c.id_tag_def_parent_persistent_test)
+    ret = TagDefinition.children_query_set(c.id_tag_def_parent_persistent_test)
     assert not ret
 
 
 @pytest.mark.django_db
 def test_children_root(tag_def):
-    ret = TagDefinition.most_recent_children(None)
-    assert ret == [tag_def]
+    ret = TagDefinition.children_query_set(None)
+    assert list(ret) == [tag_def]
 
 
 @pytest.mark.django_db

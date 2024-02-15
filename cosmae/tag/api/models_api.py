@@ -16,3 +16,4 @@ class TagDefinitionResponse(Schema):
     owner: Optional[str]
     curated: bool
     hidden: bool
+    disabled: bool

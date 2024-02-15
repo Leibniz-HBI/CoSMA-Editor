@@ -82,6 +82,7 @@ def test_get_with_match_tag_definition_list(auth_server, tag_def1, tag_def_curat
             "name_path": [tag_def_curated.name],
             "type": "STRING",
             "hidden": tag_def_curated.hidden,
+            "disabled": tag_def_curated.disabled,
             "owner": None,
         }
     ]

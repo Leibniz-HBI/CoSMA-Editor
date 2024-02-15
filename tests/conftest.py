@@ -74,6 +74,19 @@ def tag_def(user):
 
 
 @pytest.fixture()
+def tag_def_disabled(user):
+    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=ct.id_tag_def_disabled_test,
+        name=ct.name_tag_def_disabled_test,
+        time_edit=ct.time_edit_test,
+        type=TagDefinition.STRING,
+        owner=user,
+        curated=False,
+        disabled=True,
+    )
+
+
+@pytest.fixture()
 def tag_def1(user1):
     return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         id_persistent=ct.id_tag_def_persistent_test_user1,

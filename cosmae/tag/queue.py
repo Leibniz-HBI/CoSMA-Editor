@@ -55,7 +55,7 @@ def update_tag_definition_name_path(
                     )
             name_path = parent_name_path + [tag_definition.name]
             tag_definition_name_path_cache.set(tag_definition.id_persistent, name_path)
-            children = TagDefinition.most_recent_children(tag_definition.id_persistent)
+            children = TagDefinition.children_query_set(tag_definition.id_persistent)
             for child in children:
                 enqueue(update_tag_definition_name_path, child.id_persistent, name_path)
 

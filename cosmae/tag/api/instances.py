@@ -15,6 +15,7 @@ from cosmae.exception import (
     EntityUpdatedException,
     InvalidTagValueException,
     NotAuthenticatedException,
+    TagDefinitionDisabledException,
     TagDefinitionMissingException,
     TagDefinitionPermissionException,
     TagInstanceExistsException,
@@ -170,6 +171,10 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
         return 403, ApiError(
             msg="Your are not allowed to change the tag definition with id_persistent: "
             f"{exc.id_persistent}"
+        )
+    except TagDefinitionDisabledException as exc:
+        return 403, ApiError(
+            msg=f"Tag definition with with id_persistent: {exc.id_persistent} is disabled."
         )
     except EntityUpdatedException as exc:
         return 409, TagInstanceUpdatedResponse(

@@ -17,7 +17,6 @@ def child_tag_def():
 
 @pytest.fixture
 def float_tag(tag_def_user, entity0):
-    entity0.save()
     return {
         "value": "2.0",
         "id_tag_definition_persistent": tag_def_user.id_persistent,

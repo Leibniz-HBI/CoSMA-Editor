@@ -7,6 +7,7 @@ import tests.person.common as cp
 import tests.tag.common as c
 from cosmae.exception import (
     EntityMissingException,
+    TagDefinitionDisabledException,
     TagDefinitionMissingException,
     TagDefinitionPermissionException,
 )
@@ -127,6 +128,20 @@ def test_tag_def_missing(entity0, user):
             id_tag_definition_persistent=c.id_tag_def_persistent_test,
         )
     assert exc.value.args[0] == c.id_tag_def_persistent_test
+
+
+@pytest.mark.django_db
+def test_disabled_tag(tag_def_disabled, entity0):
+    id_persistent = "7693b6cd-b0da-4207-adc1-e15f367b010a"
+    with pytest.raises(TagDefinitionDisabledException):
+        TagInstanceHistory.change_or_create(
+            id_persistent=id_persistent,
+            id_tag_definition_persistent=tag_def_disabled.id_persistent,
+            id_entity_persistent=entity0.id_persistent,
+            value="some value",
+            user=tag_def_disabled.owner,
+            time_edit=c.time_edit_test,
+        )
 
 
 @pytest.mark.django_db

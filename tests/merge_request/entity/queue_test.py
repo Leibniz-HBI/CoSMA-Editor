@@ -21,6 +21,8 @@ def test_creates_tag_merge_requests(conflict_resolution_replace):
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 3
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 3
+    for mr in tag_merge_requests:
+        assert mr.disable_origin_on_merge
     tag_defs_including_hidden = TagDefinition.query_set(include_hidden=True)
     assert len(tag_defs_including_hidden) == 6
     assert len(TagDefinition.query_set()) == 3
@@ -51,6 +53,8 @@ def test_creates_tag_merge_requests_empty_destination(
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 3
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 3
+    for mr in tag_merge_requests:
+        assert mr.disable_origin_on_merge
     tag_defs_including_hidden = TagDefinition.query_set(include_hidden=True)
     assert len(tag_defs_including_hidden) == 6
     assert len(TagDefinition.query_set()) == 3

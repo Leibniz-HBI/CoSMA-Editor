@@ -32,6 +32,7 @@ class MergeRequest(Schema):
     created_at: datetime
     assigned_to: Optional[PublicUserInfo]
     state: str
+    disable_origin_on_merge: bool
 
 
 class MergeRequestConflict(Schema):
@@ -289,6 +290,7 @@ def merge_request_db_to_api(mr_db: MergeRequestDb) -> MergeRequest:
         created_at=mr_db.created_at,
         assigned_to=user_db_to_public_user_info(mr_db.assigned_to),
         state=merge_request_step_db_to_api_map[mr_db.state],
+        disable_origin_on_merge=mr_db.disable_origin_on_merge,
     )
 
 

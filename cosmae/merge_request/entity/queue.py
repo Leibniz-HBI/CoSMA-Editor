@@ -145,6 +145,7 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
         state=TagMergeRequest.OPEN,
         created_at=time_edit,
         id_persistent=uuid4(),
+        disable_origin_on_merge=True,
     )
 
 

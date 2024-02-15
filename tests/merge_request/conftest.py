@@ -97,6 +97,22 @@ def merge_request_user_fast_forward(
 
 
 @pytest.fixture
+def merge_request_user_fast_forward_disable_origin(
+    db, origin_tag_def_for_mr, destination_tag_def_for_mr_user1, contribution_for_mr
+):
+    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+        id_origin_persistent=origin_tag_def_for_mr.id_persistent,
+        id_destination_persistent=destination_tag_def_for_mr_user1.id_persistent,
+        created_by=origin_tag_def_for_mr.owner,
+        assigned_to=destination_tag_def_for_mr_user1.owner,
+        created_at=c.time_merge_request,
+        id_persistent=c.id_persistent_merge_request_fast_forward,
+        contribution_candidate=contribution_for_mr,
+        disable_origin_on_merge=True,
+    )
+
+
+@pytest.fixture
 def merge_request_user(
     db, origin_tag_def_for_mr, destination_tag_def_for_mr, contribution_for_mr
 ):
@@ -108,6 +124,22 @@ def merge_request_user(
         created_at=c.time_merge_request,
         id_persistent=c.id_persistent_merge_request,
         contribution_candidate=contribution_for_mr,
+    )
+
+
+@pytest.fixture
+def merge_request_user_disable_origin(
+    db, origin_tag_def_for_mr, destination_tag_def_for_mr, contribution_for_mr
+):
+    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+        id_origin_persistent=origin_tag_def_for_mr.id_persistent,
+        id_destination_persistent=destination_tag_def_for_mr.id_persistent,
+        created_by=origin_tag_def_for_mr.owner,
+        assigned_to=destination_tag_def_for_mr.owner,
+        created_at=c.time_merge_request,
+        id_persistent=c.id_persistent_merge_request,
+        contribution_candidate=contribution_for_mr,
+        disable_origin_on_merge=True,
     )
 
 

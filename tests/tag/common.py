@@ -6,6 +6,7 @@ name_tag_def_test_user = "name tag test_user"
 name_tag_def_test1 = "name tag test1"
 name_tag_def_parent_test = "tag_def_parent_test"
 name_tag_def_curated_test = "name curated tag test"
+name_tag_def_disabled_test = "name tag def disabled test"
 time_edit_test = datetime(2022, 12, 20, tzinfo=timezone.utc)
 time_edit_test1 = datetime(2022, 12, 21, tzinfo=timezone.utc)
 time_edit_curated_test = datetime(2022, 12, 22, tzinfo=timezone.utc)
@@ -18,6 +19,7 @@ id_tag_def_persistent_test_user1 = "52d5de0a-2fdb-457f-80d0-6e10131ad1b9"
 id_tag_def_persistent_child_0 = "f2a2e623-404d-494c-9f6d-3436f5d0ad48"
 id_tag_def_persistent_child_1 = "e0a3ec8d-3365-4979-8e51-6fcc3e445afd"
 id_tag_def_curated_test = "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
+id_tag_def_disabled_test = "6698156c-a425-40d1-b792-014d81ca216f"
 id_instance_test0 = "efee09fd-cee7-402f-8e8e-6ca790352e41"
 id_instance_test1 = "3f7f1a90-cf62-4b73-8dee-8982bd422edf"
 id_instance_test2 = "602364a9-1e75-4c93-833d-1c4fa0296f04"

@@ -161,6 +161,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                     assigned_to=destination.owner,
                     created_at=time_add,
                     contribution_candidate=contribution,
+                    disable_origin_on_merge=True,
                 ).save()
             contribution.set_state(ContributionCandidate.VALUES_EXTRACTED)
             contribution.save()

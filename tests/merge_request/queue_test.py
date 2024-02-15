@@ -2,7 +2,7 @@
 
 import cosmae.merge_request.queue as q
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagInstance
+from cosmae.tag.models_django import TagDefinition, TagInstance
 
 
 def test_fast_forward_destination_empty(
@@ -14,6 +14,25 @@ def test_fast_forward_destination_empty(
         merge_request_user_fast_forward.created_by,
     )
     assert merge_request_after.state == TagMergeRequest.MERGED
+    assert not TagDefinition.most_recent_by_id(
+        merge_request_user_fast_forward.id_origin_persistent
+    ).disabled
+
+
+def test_fast_forward_destination_empty_with_disable(
+    merge_request_user_fast_forward_disable_origin, instances_merge_request_origin_user
+):
+    q.merge_request_fast_forward(
+        merge_request_user_fast_forward_disable_origin.id_persistent
+    )
+    merge_request_after = TagMergeRequest.by_id_persistent(
+        merge_request_user_fast_forward_disable_origin.id_persistent,
+        merge_request_user_fast_forward_disable_origin.created_by,
+    )
+    assert merge_request_after.state == TagMergeRequest.MERGED
+    assert TagDefinition.most_recent_by_id(
+        merge_request_user_fast_forward_disable_origin.id_origin_persistent
+    ).disabled
 
 
 def test_fast_forward_origin_empty(
@@ -82,6 +101,24 @@ def test_applies_resolutions(
     assert len(instances) == 1
     instance = instances[0]
     assert instance.value == "value origin 1"
+
+
+def test_applies_resolutions_disable_origin(merge_request_user_disable_origin):
+    q.merge_request_resolve_conflicts(merge_request_user_disable_origin.id_persistent)
+    merge_request = TagMergeRequest.by_id_persistent(
+        merge_request_user_disable_origin.id_persistent,
+        merge_request_user_disable_origin.assigned_to,
+    )
+    assert merge_request.state == TagMergeRequest.MERGED
+    instances = list(
+        TagInstance.objects.filter(  # pylint: disable=no-member
+            id_tag_definition_persistent=merge_request_user_disable_origin.id_destination_persistent
+        )
+    )
+    assert len(instances) == 0
+    assert TagDefinition.most_recent_by_id(
+        merge_request_user_disable_origin.id_origin_persistent
+    ).disabled
 
 
 def test_incomplete_resolution_stays_open_keep(

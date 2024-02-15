@@ -1,4 +1,5 @@
 "Queue methods for merge requests."
+
 import logging
 from uuid import uuid4
 
@@ -8,8 +9,34 @@ from django.db.utils import OperationalError
 
 from cosmae.exception import EntityUpdatedException
 from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagInstance, TagInstanceHistory
+from cosmae.tag.models_django import (
+    TagDefinition,
+    TagDefinitionHistory,
+    TagInstance,
+    TagInstanceHistory,
+)
 from cosmae.util import timestamp
+
+
+def disable_origin(merge_request: TagMergeRequest, time_edit):
+    "If configured: disable the origin tag of a merge request."
+    if merge_request.disable_origin_on_merge:
+        tag_definition = TagDefinition.most_recent_by_id(
+            merge_request.id_origin_persistent
+        )
+        disabled, _ = TagDefinitionHistory.change_or_create(
+            tag_definition.id_persistent,
+            time_edit,
+            tag_definition.name,
+            tag_definition.id_parent_persistent,
+            tag_definition.id,
+            owner=tag_definition.owner,
+            type=tag_definition.type,
+            curated=tag_definition.curated,
+            hidden=tag_definition.hidden,
+            disabled=True,
+        )
+        disabled.save()
 
 
 def merge_request_fast_forward(id_merge_request_persistent):
@@ -53,6 +80,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                     tag_instance.save()
                 merge_request.state = TagMergeRequest.MERGED
                 merge_request.save()
+                disable_origin(merge_request, time_merge)
                 return
             merge_request.state = merge_request.CONFLICTS
             merge_request.save(update_fields=["state"])
@@ -125,6 +153,7 @@ def merge_request_resolve_conflicts(id_merge_request_persistent):
 
             merge_request.state = merge_request.MERGED
             merge_request.save()
+            disable_origin(merge_request, time_merge)
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():

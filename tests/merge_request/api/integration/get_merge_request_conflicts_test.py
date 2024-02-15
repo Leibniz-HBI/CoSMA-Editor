@@ -70,6 +70,7 @@ def test_conflicts_no_resolution(
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
             "state": "OPEN",
+            "disable_origin_on_merge": False,
             "origin": {
                 "id_persistent": c.id_persistent_tag_def_origin,
                 "id_parent_persistent": None,
@@ -79,6 +80,7 @@ def test_conflicts_no_resolution(
                 "owner": "test-user1",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -89,6 +91,7 @@ def test_conflicts_no_resolution(
                 "owner": "test-user",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
         },
     )
@@ -172,6 +175,7 @@ def test_conflicts_same_value(
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
             "state": "OPEN",
+            "disable_origin_on_merge": False,
             "origin": {
                 "id_persistent": c.id_persistent_tag_def_origin,
                 "id_parent_persistent": None,
@@ -181,6 +185,7 @@ def test_conflicts_same_value(
                 "owner": "test-user1",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -191,6 +196,7 @@ def test_conflicts_same_value(
                 "owner": "test-user",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
         },
     )
@@ -227,6 +233,7 @@ def test_conflict_resolved(
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
             "state": "OPEN",
+            "disable_origin_on_merge": False,
             "origin": {
                 "id_persistent": c.id_persistent_tag_def_origin,
                 "id_parent_persistent": None,
@@ -236,6 +243,7 @@ def test_conflict_resolved(
                 "owner": "test-user1",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -246,6 +254,7 @@ def test_conflict_resolved(
                 "owner": "test-user",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
         },
     )
@@ -321,6 +330,7 @@ def test_conflict_resolved_tag_def_origin_changed(
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
             "state": "OPEN",
+            "disable_origin_on_merge": False,
             "origin": {
                 "id_persistent": c.id_persistent_tag_def_origin,
                 "id_parent_persistent": None,
@@ -330,6 +340,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "owner": "test-user1",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -340,6 +351,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "owner": "test-user",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
         },
     )
@@ -453,6 +465,7 @@ def test_tag_instance_destination_value_added(
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
             "state": "OPEN",
+            "disable_origin_on_merge": False,
             "origin": {
                 "id_persistent": c.id_persistent_tag_def_origin,
                 "id_parent_persistent": None,
@@ -462,6 +475,7 @@ def test_tag_instance_destination_value_added(
                 "owner": "test-user1",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
             "destination": {
                 "id_persistent": c.id_persistent_tag_def_destination,
@@ -472,6 +486,7 @@ def test_tag_instance_destination_value_added(
                 "owner": "test-user",
                 "curated": False,
                 "hidden": False,
+                "disabled": False,
             },
         },
     )
