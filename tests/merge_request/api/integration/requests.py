@@ -56,3 +56,12 @@ def post_start_merge(url, id_merge_request_persistent, cookies=None):
         cookies=cookies,
         timeout=900,
     )
+
+
+def patch_merge_request(url, id_merge_request_persistent, patch_dict, cookies=None):
+    return requests.patch(
+        url + f"/cosmae/api/merge_requests/{id_merge_request_persistent}",
+        json=patch_dict,
+        cookies=cookies,
+        timeout=900,
+    )

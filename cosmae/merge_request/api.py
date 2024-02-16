@@ -75,6 +75,12 @@ class ConflictResolutionPostRequest(Schema):
     replace: bool
 
 
+class PatchMergeRequestRequest(Schema):
+    "Body for changing a merge request"
+    # pylint: disable=too-few-public-methods
+    disable_origin_on_merge: Optional[bool]
+
+
 @router.get(
     "",
     response={
@@ -104,6 +110,41 @@ def get_merge_requests(request: HttpRequest):
         return 500, ApiError(msg="Could not get the merge requests from the database.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get the requested merge requests.")
+
+
+@router.patch(
+    "/{id_merge_request_persistent}",
+    response={
+        200: MergeRequest,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def patch_merge_request(
+    request: HttpRequest,
+    id_merge_request_persistent,
+    patch_data: PatchMergeRequestRequest,
+):
+    "Change a merge request"
+    try:
+        user = check_user(request)
+        merge_request = MergeRequestDb.by_id_persistent(
+            id_merge_request_persistent, user
+        )
+        if patch_data.disable_origin_on_merge is not None:
+            merge_request.disable_origin_on_merge = patch_data.disable_origin_on_merge
+        merge_request.save()
+        return 200, merge_request_db_to_api(merge_request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Merge Request does not exist")
+    except ForbiddenException:
+        return 403, ApiError(msg="Insufficient permissions.")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not patch merge request.")
 
 
 @router.get(
