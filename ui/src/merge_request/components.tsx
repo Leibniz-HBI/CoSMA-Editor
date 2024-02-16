@@ -1,5 +1,4 @@
 import { useLayoutEffect } from 'react'
-import { useMergeRequests } from './hooks'
 import { CosmaeLoading, CosmaeCard } from '../util/components/misc'
 import { Badge, Col, ListGroup, Row } from 'react-bootstrap'
 import { MergeRequest } from './state'
@@ -12,14 +11,23 @@ import { selectPermissionGroup } from '../user/selectors'
 import { UserPermissionGroup } from '../user/state'
 import { getEntityMergeRequests } from './entity/thunks'
 import { EntityMergeRequests } from './entity/components'
+import { getTagMergeRequests } from './thunks'
+import {
+    selectTagMergeRequestByCategory,
+    selectTagMergeRequestsIsLoading
+} from './selectors'
+import { useAppSelector } from '../hooks'
 
 export function ReviewList() {
     const dispatch: AppDispatch = useDispatch()
     const permissionGroup = useSelector(selectPermissionGroup)
-    const { getMergeRequestsCallback, isLoading, assigned, created } =
-        useMergeRequests()
+    const isLoading = useAppSelector(selectTagMergeRequestsIsLoading)
+    const { assigned, created } = useAppSelector(selectTagMergeRequestByCategory)
     useLayoutEffect(() => {
-        getMergeRequestsCallback()
+        if (isLoading) {
+            return
+        }
+        dispatch(getTagMergeRequests())
         if (
             permissionGroup === UserPermissionGroup.EDITOR ||
             permissionGroup === UserPermissionGroup.COMMISSIONER

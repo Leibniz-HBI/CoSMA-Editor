@@ -20,7 +20,7 @@ import {
     ShowColumnAddMenuAction,
     ShowHeaderMenuAction
 } from '../actions'
-import { UserInfo, UserPermissionGroup } from '../../user/state'
+import { UserPermissionGroup, newUserInfo } from '../../user/state'
 import { LoadingType } from '../draw'
 import { useDispatch } from 'react-redux'
 
@@ -252,7 +252,7 @@ describe('column types', () => {
 })
 const userInfoPromiseWithNoColumns = () =>
     Promise.resolve(
-        new UserInfo({
+        newUserInfo({
             userName: 'user-name-test',
             idPersistent: 'id-user-test',
             email: 'test@domain.org',

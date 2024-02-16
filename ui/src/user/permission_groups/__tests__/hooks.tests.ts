@@ -1,5 +1,5 @@
 import { Remote, useThunkReducer } from '../../../util/state'
-import { UserInfo, UserPermissionGroup } from '../../state'
+import { UserPermissionGroup, newUserInfo } from '../../state'
 import { SelectUserInfoAction } from '../actions'
 import { GetUserInfoListAction, SetUserPermissionAction } from '../async_actions'
 import { useUserPermissionGroup } from '../hooks'
@@ -25,7 +25,7 @@ const emailTest = 'me@test.url'
 const namesPersonalTest = 'names personal test'
 const idPersistentTest = 'id-user=test'
 const permissionGroupTest = UserPermissionGroup.EDITOR
-const userInfoTest = new UserInfo({
+const userInfoTest = newUserInfo({
     userName: userNameTest,
     email: emailTest,
     namesPersonal: namesPersonalTest,

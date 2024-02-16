@@ -10,7 +10,7 @@ import {
     toggleRegistration,
     default as userReducer
 } from '../slice'
-import { UserInfo, UserPermissionGroup, mkUserState } from '../state'
+import { UserPermissionGroup, newUserState, newUserInfo } from '../state'
 import { newRemote } from '../../util/state'
 
 describe('user reducer', () => {
@@ -29,9 +29,9 @@ describe('user reducer', () => {
         })
     })
     test('successful login', () => {
-        const initialState = mkUserState({})
-        const expectedState = mkUserState({
-            userInfo: new UserInfo({
+        const initialState = newUserState({})
+        const expectedState = newUserState({
+            userInfo: newUserInfo({
                 userName: userNameTest,
                 email: emailTest,
                 namesPersonal: namesPersonalTest,
@@ -42,7 +42,7 @@ describe('user reducer', () => {
         const endState = userReducer(
             initialState,
             loginSuccess(
-                new UserInfo({
+                newUserInfo({
                     userName: userNameTest,
                     email: emailTest,
                     namesPersonal: namesPersonalTest,
@@ -54,48 +54,48 @@ describe('user reducer', () => {
         expect(endState).toEqual(expectedState)
     })
     test('loginError', () => {
-        const initialState = mkUserState({ isLoggingIn: true })
-        const expectedState = mkUserState({})
+        const initialState = newUserState({ isLoggingIn: true })
+        const expectedState = newUserState({})
         const endState = userReducer(initialState, loginError())
         expect(endState).toEqual(expectedState)
     })
     test('loginStart', () => {
-        const initialState = mkUserState({})
-        const expectedState = mkUserState({
+        const initialState = newUserState({})
+        const expectedState = newUserState({
             isLoggingIn: true
         })
         const endState = userReducer(initialState, loginStart())
         expect(endState).toEqual(expectedState)
     })
     test('switch to registration', () => {
-        const initialState = mkUserState({})
-        const expectedState = mkUserState({ showRegistration: true })
+        const initialState = newUserState({})
+        const expectedState = newUserState({ showRegistration: true })
         const endState = userReducer(initialState, toggleRegistration())
         expect(endState).toEqual(expectedState)
     })
     test('switch  from registration', () => {
-        const initialState = mkUserState({ showRegistration: true })
-        const expectedState = mkUserState({})
+        const initialState = newUserState({ showRegistration: true })
+        const expectedState = newUserState({})
         const endState = userReducer(initialState, toggleRegistration())
         expect(endState).toEqual(expectedState)
     })
     test('registrationError', () => {
-        const initialState = mkUserState({ isRegistering: true })
-        const expectedState = mkUserState({ isRegistering: false })
+        const initialState = newUserState({ isRegistering: true })
+        const expectedState = newUserState({ isRegistering: false })
         const endState = userReducer(initialState, registrationError())
         expect(endState).toEqual(expectedState)
     })
     test('registrationStart', () => {
-        const initialState = mkUserState({})
-        const expectedState = mkUserState({
+        const initialState = newUserState({})
+        const expectedState = newUserState({
             isRegistering: true
         })
         const endState = userReducer(initialState, registrationStart())
         expect(endState).toEqual(expectedState)
     })
     test('logout', () => {
-        const initialState = mkUserState({
-            userInfo: new UserInfo({
+        const initialState = newUserState({
+            userInfo: newUserInfo({
                 userName: userNameTest,
                 email: emailTest,
                 namesPersonal: namesPersonalTest,
@@ -103,19 +103,19 @@ describe('user reducer', () => {
                 permissionGroup: UserPermissionGroup.EDITOR
             })
         })
-        const expectedState = mkUserState({})
+        const expectedState = newUserState({})
         const endState = userReducer(initialState, logout())
         expect(endState).toEqual(expectedState)
     })
     test('refresh start', () => {
-        const initialState = mkUserState({})
-        const expectedState = mkUserState({ isRefreshing: true })
+        const initialState = newUserState({})
+        const expectedState = newUserState({ isRefreshing: true })
         const endState = userReducer(initialState, refreshStart())
         expect(endState).toEqual(expectedState)
     })
     test('refresh error', () => {
-        const initialState = mkUserState({
-            userInfo: new UserInfo({
+        const initialState = newUserState({
+            userInfo: newUserInfo({
                 userName: userNameTest,
                 email: emailTest,
                 namesPersonal: namesPersonalTest,
@@ -123,7 +123,7 @@ describe('user reducer', () => {
                 permissionGroup: UserPermissionGroup.EDITOR
             })
         })
-        const expectedState = mkUserState({})
+        const expectedState = newUserState({})
         const endState = userReducer(initialState, refreshDenied())
         expect(endState).toEqual(expectedState)
     })

@@ -20,17 +20,17 @@ import {
     newTagInstance
 } from '../state'
 import { TagType, newTagDefinition } from '../../../column_menu/state'
-import { MergeRequest, MergeRequestStep } from '../../state'
-import { PublicUserInfo, UserPermissionGroup } from '../../../user/state'
+import { MergeRequestStep, newMergeRequest } from '../../state'
+import { UserPermissionGroup, newPublicUserInfo } from '../../../user/state'
 
 const idMergeRequestTest = 'id-merge-request-test'
-const assignedToUserTest = new PublicUserInfo({
+const assignedToUserTest = newPublicUserInfo({
     idPersistent: 'id-assigned-to-test',
     userName: 'assignedToTest',
     permissionGroup: UserPermissionGroup.APPLICANT
 })
 
-const createdByUserTest = new PublicUserInfo({
+const createdByUserTest = newPublicUserInfo({
     idPersistent: 'id-created-by-test',
     userName: 'createdByTest',
     permissionGroup: UserPermissionGroup.CONTRIBUTOR
@@ -163,7 +163,7 @@ describe('get conflicts', () => {
                 new MergeRequestConflictsByState({
                     conflicts: conflicts,
                     updated: updatedConflicts,
-                    mergeRequest: new MergeRequest({
+                    mergeRequest: newMergeRequest({
                         idPersistent: idMergeRequestTest,
                         assignedTo: assignedToUserTest,
                         createdBy: createdByUserTest,
@@ -180,7 +180,7 @@ describe('get conflicts', () => {
             new GetMergeRequestConflictSuccessAction({
                 conflicts: conflicts,
                 updated: updatedConflicts,
-                mergeRequest: new MergeRequest({
+                mergeRequest: newMergeRequest({
                     idPersistent: idMergeRequestTest,
                     assignedTo: assignedToUserTest,
                     createdBy: createdByUserTest,
@@ -215,7 +215,7 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: updatedConflicts,
                     conflicts: conflicts,
-                    mergeRequest: new MergeRequest({
+                    mergeRequest: newMergeRequest({
                         idPersistent: idMergeRequestTest,
                         assignedTo: assignedToUserTest,
                         createdBy: createdByUserTest,
@@ -233,7 +233,7 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [changedSharedConflict, sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), changedSharedConflict],
-                    mergeRequest: new MergeRequest({
+                    mergeRequest: newMergeRequest({
                         idPersistent: idMergeRequestTest,
                         assignedTo: assignedToUserTest,
                         createdBy: createdByUserTest,
@@ -258,7 +258,7 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [changedSharedConflict, sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), changedSharedConflict],
-                    mergeRequest: new MergeRequest({
+                    mergeRequest: newMergeRequest({
                         idPersistent: idMergeRequestTest,
                         assignedTo: assignedToUserTest,
                         createdBy: createdByUserTest,
@@ -278,7 +278,7 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), expectedSharedConflict],
-                    mergeRequest: new MergeRequest({
+                    mergeRequest: newMergeRequest({
                         idPersistent: idMergeRequestTest,
                         assignedTo: assignedToUserTest,
                         createdBy: createdByUserTest,
@@ -306,7 +306,7 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [changedSharedConflict, sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), changedSharedConflict],
-                    mergeRequest: new MergeRequest({
+                    mergeRequest: newMergeRequest({
                         idPersistent: idMergeRequestTest,
                         assignedTo: assignedToUserTest,
                         createdBy: createdByUserTest,
@@ -328,7 +328,7 @@ describe('resolve conflict', () => {
                 new MergeRequestConflictsByState({
                     updated: [expectedSharedConflict, sharedConflict1],
                     conflicts: [...conflicts.slice(0, 3), expectedSharedConflict],
-                    mergeRequest: new MergeRequest({
+                    mergeRequest: newMergeRequest({
                         idPersistent: idMergeRequestTest,
                         assignedTo: assignedToUserTest,
                         createdBy: createdByUserTest,

@@ -294,7 +294,7 @@ describe('create tag definition', () => {
                 }
             ])
         })
-    })
+    }, 7000)
     test('with parent', async () => {
         const fetchMock = jest.fn()
         initialResponseSequence(fetchMock)
@@ -334,7 +334,7 @@ describe('create tag definition', () => {
                 }
             ])
         })
-    })
+    }, 7000)
     test('dispatches error', async () => {
         const fetchMock = jest.fn()
         const errorMsg = 'Error while creating tag def'

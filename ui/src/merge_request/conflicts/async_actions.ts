@@ -19,7 +19,7 @@ import { parseEntityObjectFromJson } from '../../table/async_actions'
 import { Entity } from '../../table/state'
 import { TagDefinition } from '../../column_menu/state'
 import { Remote } from '../../util/state'
-import { parseMergeRequestFromJson } from '../async_actions'
+import { parseMergeRequestFromJson } from '../thunks'
 import { AppDispatch } from '../../store'
 import { addError, addSuccessVanish } from '../../util/notification/slice'
 

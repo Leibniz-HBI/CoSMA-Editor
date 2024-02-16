@@ -28,7 +28,12 @@ import { configureStore } from '@reduxjs/toolkit'
 import { entityMergeRequestsReducer } from '../../merge_request/entity/slice'
 import { PropsWithChildren, Reducer } from 'react'
 import { Provider } from 'react-redux'
-import { UserInfo, UserPermissionGroup, UserState, mkUserState } from '../../user/state'
+import {
+    UserPermissionGroup,
+    UserState,
+    newUserState,
+    newUserInfo
+} from '../../user/state'
 import { TableAction, ToggleEntityModalAction } from '../actions'
 import { userSlice } from '../../user/slice'
 import {
@@ -86,7 +91,7 @@ export function renderWithProviders(
                 rows: [0, 1],
                 rowSelectionOrder: [0, 1]
             },
-            user: mkUserState({ userInfo })
+            user: newUserState({ userInfo })
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -179,7 +184,7 @@ jest.mock('../../util/state', () => {
 })
 const nameUser = 'userNameTest'
 const idUser = 'id-user-test'
-const userInfo = new UserInfo({
+const userInfo = newUserInfo({
     userName: nameUser,
     idPersistent: idUser,
     namesPersonal: 'name test',

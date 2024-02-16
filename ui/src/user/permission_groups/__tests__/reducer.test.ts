@@ -1,5 +1,5 @@
 import { Remote } from '../../../util/state'
-import { UserInfo, UserPermissionGroup } from '../../state'
+import { UserPermissionGroup, newUserInfo } from '../../state'
 import {
     GetUserInfoListErrorAction,
     GetUserInfoListStartAction,
@@ -23,14 +23,14 @@ const emailTest1 = 'me1@test.url'
 const namesPersonalTest1 = 'names personal test1'
 const idPersistentTest1 = 'id-user=test1'
 const permissionGroupTest1 = UserPermissionGroup.CONTRIBUTOR
-const userInfoTest = new UserInfo({
+const userInfoTest = newUserInfo({
     userName: userNameTest,
     email: emailTest,
     namesPersonal: namesPersonalTest,
     idPersistent: idPersistentTest,
     permissionGroup: permissionGroupTest
 })
-const userInfoTest1 = new UserInfo({
+const userInfoTest1 = newUserInfo({
     userName: userNameTest1,
     email: emailTest1,
     namesPersonal: namesPersonalTest1,
@@ -101,7 +101,7 @@ describe('set permissions', () => {
             userList: new Remote([userInfoTest, userInfoTest1]),
             selectedUser: new Remote(userInfoTest1, true)
         })
-        const changedUserInfo = new UserInfo({
+        const changedUserInfo = newUserInfo({
             ...userInfoTest1,
             permissionGroup: UserPermissionGroup.APPLICANT
         })

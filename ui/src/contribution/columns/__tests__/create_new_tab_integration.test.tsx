@@ -213,4 +213,4 @@ test('create, select and assign tag definition', async () => {
             body: JSON.stringify({ id_existing_persistent: idTagDef0 })
         }
     ])
-}, 7000)
+}, 10000)

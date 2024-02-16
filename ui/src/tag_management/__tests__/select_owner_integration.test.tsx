@@ -4,10 +4,10 @@
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
 import { TagDefinition, TagType } from '../../column_menu/state'
 import {
-    PublicUserInfo,
     UserPermissionGroup,
     UserState,
-    mkUserState
+    newUserState,
+    newPublicUserInfo
 } from '../../user/state'
 import userReducer from '../../user/slice'
 import tagManagementReducer from '../slice'
@@ -36,7 +36,7 @@ export function renderWithProviders(
     fetchMock: jest.Mock,
     {
         preloadedState = {
-            user: mkUserState({}),
+            user: newUserState({}),
             tagManagement: {
                 ownershipRequests: newRemote({ petitioned: [], received: [] }),
                 putOwnershipRequest: newRemote(undefined)
@@ -80,7 +80,7 @@ describe('Ownership search', () => {
     const idUserTest = 'id-user-test'
     const usernameTest = 'user test'
     const permissionGroupTest = UserPermissionGroup.CONTRIBUTOR
-    const userInfoTest = new PublicUserInfo({
+    const userInfoTest = newPublicUserInfo({
         idPersistent: idUserTest,
         userName: usernameTest,
         permissionGroup: permissionGroupTest
@@ -88,7 +88,7 @@ describe('Ownership search', () => {
     const idUserTest1 = 'id-user-test-1'
     const usernameTest1 = 'user test 1'
     const permissionGroupTest1 = UserPermissionGroup.EDITOR
-    const userInfoTest1 = new PublicUserInfo({
+    const userInfoTest1 = newPublicUserInfo({
         idPersistent: idUserTest1,
         userName: usernameTest1,
         permissionGroup: permissionGroupTest1
@@ -108,7 +108,7 @@ describe('Ownership search', () => {
         hidden: false
     }
     const stateWithUserSearchResults = {
-        user: mkUserState({
+        user: newUserState({
             userSearchResults: new Remote([userInfoTest, userInfoTest1])
         }),
         tagManagement: {
@@ -118,7 +118,7 @@ describe('Ownership search', () => {
         notification: { notificationList: [], notificationMap: {} }
     }
     const stateWithUserSearchResultsAndError = {
-        user: mkUserState({
+        user: newUserState({
             userSearchResults: new Remote([userInfoTest, userInfoTest1])
         }),
         tagManagement: {

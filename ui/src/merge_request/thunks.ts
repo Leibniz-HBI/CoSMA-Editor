@@ -1,22 +1,19 @@
-import { Dispatch } from 'react'
-import { AsyncAction } from '../util/async_action'
-import {
-    GetMergeRequestsErrorAction,
-    GetMergeRequestsStartAction,
-    GetMergeRequestsSuccessAction,
-    MergeRequestAction
-} from './actions'
 import { config } from '../config'
-import { MergeRequest, MergeRequestStep } from './state'
+import { MergeRequestStep, newMergeRequest } from './state'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { exceptionMessage } from '../util/exception'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
-import { AppDispatch } from '../store'
 import { addError } from '../util/notification/slice'
+import { ThunkWithFetch } from '../util/type'
+import {
+    getMergeRequestsError,
+    getMergeRequestsStart,
+    getMergeRequestsSuccess
+} from './slice'
 
-export class GetMergeRequestsAction extends AsyncAction<MergeRequestAction, void> {
-    async run(dispatch: Dispatch<MergeRequestAction>, reduxDispatch: AppDispatch) {
-        dispatch(new GetMergeRequestsStartAction())
+export function getTagMergeRequests(): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(getMergeRequestsStart())
         try {
             const rsp = await fetch(config.api_path + '/merge_requests', {
                 credentials: 'include'
@@ -31,15 +28,15 @@ export class GetMergeRequestsAction extends AsyncAction<MergeRequestAction, void
                 const assigned = json['assigned'].map((mr: any) =>
                     parseMergeRequestFromJson(mr)
                 )
-                dispatch(new GetMergeRequestsSuccessAction({ created, assigned }))
+                dispatch(getMergeRequestsSuccess({ created, assigned }))
             } else {
                 const json = await rsp.json()
-                dispatch(new GetMergeRequestsErrorAction())
-                reduxDispatch(addError(json['msg']))
+                dispatch(getMergeRequestsError())
+                dispatch(addError(json['msg']))
             }
         } catch (exc: unknown) {
-            dispatch(new GetMergeRequestsErrorAction())
-            reduxDispatch(addError(exceptionMessage(exc)))
+            dispatch(getMergeRequestsError())
+            dispatch(addError(exceptionMessage(exc)))
         }
     }
 }
@@ -61,7 +58,7 @@ export function parseMergeRequestFromJson(mrJson: any) {
         undefined
     )
     const step = mergeRequestStateFromApiMap[mrJson['state']]
-    return new MergeRequest({
+    return newMergeRequest({
         idPersistent,
         assignedTo,
         createdBy,

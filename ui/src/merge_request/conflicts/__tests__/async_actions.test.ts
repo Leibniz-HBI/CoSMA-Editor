@@ -1,9 +1,9 @@
 import { TagType, newTagDefinition } from '../../../column_menu/state'
 import { newEntity } from '../../../table/state'
-import { PublicUserInfo, UserPermissionGroup } from '../../../user/state'
+import { UserPermissionGroup, newPublicUserInfo } from '../../../user/state'
 import { addError, addSuccessVanish } from '../../../util/notification/slice'
 import { Remote } from '../../../util/state'
-import { MergeRequest, MergeRequestStep } from '../../state'
+import { MergeRequestStep, newMergeRequest } from '../../state'
 import {
     GetMergeRequestConflictErrorAction,
     GetMergeRequestConflictStartAction,
@@ -298,15 +298,15 @@ describe('get conflicts', () => {
                 new GetMergeRequestConflictSuccessAction({
                     updated: updatedConflicts,
                     conflicts: conflicts,
-                    mergeRequest: new MergeRequest({
+                    mergeRequest: newMergeRequest({
                         idPersistent: 'id-merge-request',
                         step: MergeRequestStep.Open,
-                        createdBy: new PublicUserInfo({
+                        createdBy: newPublicUserInfo({
                             userName: 'user_created',
                             idPersistent: 'id-user-created',
                             permissionGroup: UserPermissionGroup.CONTRIBUTOR
                         }),
-                        assignedTo: new PublicUserInfo({
+                        assignedTo: newPublicUserInfo({
                             userName: 'user_assigned',
                             idPersistent: 'id-user-assigned',
                             permissionGroup: UserPermissionGroup.CONTRIBUTOR

@@ -5,7 +5,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
 import { PropsWithChildren } from 'react'
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import { UserPermissionGroup, UserState, mkUserState } from '../../state'
+import { UserPermissionGroup, UserState, newUserState } from '../../state'
 import userReducer from '../../slice'
 import { LoginProvider } from '../provider'
 import userEvent from '@testing-library/user-event'
@@ -30,7 +30,7 @@ export function renderWithProviders(
     fetchMock: jest.Mock,
     {
         preloadedState = {
-            user: mkUserState({}),
+            user: newUserState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
@@ -79,7 +79,7 @@ const userInfoApi = {
     id_persistent: idPersistentTest,
     permission_group: 'CONTRIBUTOR'
 }
-const userInfoUi = mkUserState({
+const userInfoUi = newUserState({
     userInfo: {
         userName: userNameTest,
         namesPersonal: namesPersonalTest,
@@ -146,7 +146,7 @@ describe('login', () => {
         })
         await waitFor(() => {
             const state = store.getState()
-            expect(state.user).toEqual(mkUserState({}))
+            expect(state.user).toEqual(newUserState({}))
             const notifications = state.notification.notificationList
             expect(notifications.length).toEqual(1)
             const notification = notifications[0]
@@ -165,14 +165,14 @@ describe('login', () => {
         )
         performLogin(container)
         await waitFor(async () => {
-            expect(store.getState().user).toEqual(mkUserState({}))
+            expect(store.getState().user).toEqual(newUserState({}))
         })
         await waitFor(() => {
             expect(screen.queryByText('You are logged in')).toBeNull()
         })
         await waitFor(async () => {
             const state = store.getState()
-            expect(state.user).toEqual(mkUserState({}))
+            expect(state.user).toEqual(newUserState({}))
             const notifications = state.notification.notificationList
             expect(notifications.length).toEqual(1)
             const notification = notifications[0]

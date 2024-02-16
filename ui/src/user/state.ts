@@ -9,52 +9,58 @@ export enum UserPermissionGroup {
     COMMISSIONER = 'Commissioner'
 }
 
-export class PublicUserInfo {
+export interface PublicUserInfo {
     idPersistent: string
     userName: string
     permissionGroup: UserPermissionGroup
-    constructor({
-        idPersistent,
-        userName,
-        permissionGroup
-    }: {
-        idPersistent: string
-        userName: string
-        permissionGroup: UserPermissionGroup
-    }) {
-        this.userName = userName
-        this.idPersistent = idPersistent
-        this.permissionGroup = permissionGroup
+}
+export function newPublicUserInfo({
+    idPersistent,
+    userName,
+    permissionGroup
+}: {
+    idPersistent: string
+    userName: string
+    permissionGroup: UserPermissionGroup
+}) {
+    return {
+        userName: userName,
+        idPersistent: idPersistent,
+        permissionGroup: permissionGroup
     }
 }
 
-export class UserInfo extends PublicUserInfo {
+export interface UserInfo extends PublicUserInfo {
     email: string
     namesPersonal: string
     namesFamily?: string
     columns: TagDefinition[]
-    constructor({
+}
+export function newUserInfo({
+    userName,
+    idPersistent,
+    email,
+    namesPersonal,
+    namesFamily = undefined,
+    permissionGroup,
+    columns = []
+}: {
+    userName: string
+    idPersistent: string
+    email: string
+    namesPersonal: string
+    namesFamily?: string
+    permissionGroup: UserPermissionGroup
+    columns?: TagDefinition[]
+}): UserInfo {
+    return {
         userName,
         idPersistent,
-        email,
-        namesPersonal,
-        namesFamily = undefined,
         permissionGroup,
-        columns = []
-    }: {
-        userName: string
-        idPersistent: string
-        email: string
-        namesPersonal: string
-        namesFamily?: string
-        permissionGroup: UserPermissionGroup
-        columns?: TagDefinition[]
-    }) {
-        super({ userName, idPersistent, permissionGroup })
-        this.email = email
-        this.namesPersonal = namesPersonal
-        this.namesFamily = namesFamily
-        this.columns = columns
+        email: email,
+        namesPersonal: namesPersonal,
+        namesFamily: namesFamily,
+        columns: columns
     }
 }
 
@@ -67,7 +73,7 @@ export interface UserState {
     userSearchResults: RemoteInterface<(PublicUserInfo | UserInfo)[]>
 }
 
-export function mkUserState({
+export function newUserState({
     userInfo = undefined,
     showRegistration = false,
     isLoggingIn = false,
