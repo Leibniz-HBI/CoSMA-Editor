@@ -1,5 +1,5 @@
 import { Entity } from '../../table/state'
-import { Remote } from '../../util/state'
+import { RemoteInterface, newRemote } from '../../util/state'
 import { MergeRequest } from '../state'
 
 export interface TagInstance {
@@ -23,84 +23,93 @@ export function newTagInstance({
     }
 }
 
-export class MergeRequestConflict {
+export interface MergeRequestConflict {
     entity: Entity
     tagInstanceOrigin: TagInstance
     tagInstanceDestination?: TagInstance
     replace?: boolean
-    constructor({
-        entity,
-        tagInstanceOrigin,
-        tagInstanceDestination,
-        replace = undefined
-    }: {
-        entity: Entity
-        tagInstanceOrigin: TagInstance
-        tagInstanceDestination?: TagInstance
-        replace?: boolean
-    }) {
-        this.entity = entity
-        this.tagInstanceOrigin = tagInstanceOrigin
-        this.tagInstanceDestination = tagInstanceDestination
-        this.replace = replace
+}
+export function newMergeRequestConflict({
+    entity,
+    tagInstanceOrigin,
+    tagInstanceDestination,
+    replace = undefined
+}: {
+    entity: Entity
+    tagInstanceOrigin: TagInstance
+    tagInstanceDestination?: TagInstance
+    replace?: boolean
+}) {
+    return {
+        entity: entity,
+        tagInstanceOrigin: tagInstanceOrigin,
+        tagInstanceDestination: tagInstanceDestination,
+        replace: replace
     }
 }
 
-export class MergeRequestConflictsByState {
-    updated: Remote<MergeRequestConflict>[]
-    conflicts: Remote<MergeRequestConflict>[]
+export interface MergeRequestConflictsByState {
+    updated: RemoteInterface<MergeRequestConflict>[]
+    conflicts: RemoteInterface<MergeRequestConflict>[]
     mergeRequest: MergeRequest
-    updatedEntityIdMap: Map<string, number>
-    conflictsEntityIdMap: Map<string, number>
+    updatedEntityIdMap: { [key: string]: number }
+    conflictsEntityIdMap: { [key: string]: number }
+}
 
-    constructor({
-        updated,
-        conflicts,
-        mergeRequest,
-        updatedEntityIdMap,
-        conflictsEntityIdMap
-    }: {
-        updated: Remote<MergeRequestConflict>[]
-        conflicts: Remote<MergeRequestConflict>[]
-        mergeRequest: MergeRequest
-        updatedEntityIdMap?: Map<string, number>
-        conflictsEntityIdMap?: Map<string, number>
-    }) {
-        this.updated = updated
-        this.conflicts = conflicts
-        this.mergeRequest = mergeRequest
-        if (
-            updatedEntityIdMap === undefined ||
-            updated.length != updatedEntityIdMap.size
-        ) {
-            this.updatedEntityIdMap = new Map(
-                updated.map((entry, idx) => [entry.value.entity.idPersistent, idx])
-            )
-        } else {
-            this.updatedEntityIdMap = updatedEntityIdMap
-        }
-        if (
-            conflictsEntityIdMap === undefined ||
-            conflicts.length != conflictsEntityIdMap.size
-        ) {
-            this.conflictsEntityIdMap = new Map(
-                conflicts.map((entry, idx) => [entry.value.entity.idPersistent, idx])
-            )
-        } else {
-            this.conflictsEntityIdMap = conflictsEntityIdMap
-        }
+export function newMergeRequestConflictsByState({
+    updated,
+    conflicts,
+    mergeRequest,
+    updatedEntityIdMap,
+    conflictsEntityIdMap
+}: {
+    updated: RemoteInterface<MergeRequestConflict>[]
+    conflicts: RemoteInterface<MergeRequestConflict>[]
+    mergeRequest: MergeRequest
+    updatedEntityIdMap?: { [key: string]: number }
+    conflictsEntityIdMap?: { [key: string]: number }
+}): MergeRequestConflictsByState {
+    let newUpdatedEntityIdMap = updatedEntityIdMap
+    if (
+        newUpdatedEntityIdMap === undefined ||
+        updated.length != newUpdatedEntityIdMap.size
+    ) {
+        newUpdatedEntityIdMap = Object.fromEntries(
+            updated.map((entry, idx) => [entry.value.entity.idPersistent, idx])
+        )
+    }
+    let newConflictsEntityIdMap = conflictsEntityIdMap
+    if (
+        newConflictsEntityIdMap === undefined ||
+        conflicts.length != newConflictsEntityIdMap.size
+    ) {
+        newConflictsEntityIdMap = Object.fromEntries(
+            conflicts.map((entry, idx) => [entry.value.entity.idPersistent, idx])
+        )
+    }
+
+    return {
+        updated: updated,
+        conflicts: conflicts,
+        mergeRequest: mergeRequest,
+        updatedEntityIdMap: newUpdatedEntityIdMap,
+        conflictsEntityIdMap: newConflictsEntityIdMap
     }
 }
 
-export class MergeRequestConflictResolutionState {
-    conflicts: Remote<MergeRequestConflictsByState | undefined>
-    startMerge: Remote<boolean>
-
-    constructor(
-        conflicts: Remote<MergeRequestConflictsByState | undefined>,
-        startMerge: Remote<boolean>
-    ) {
-        this.conflicts = conflicts
-        this.startMerge = startMerge
+export interface MergeRequestConflictResolutionState {
+    conflicts: RemoteInterface<MergeRequestConflictsByState | undefined>
+    startMerge: RemoteInterface<boolean>
+}
+export function newMergeRequestConflictResolutionState({
+    conflicts = newRemote(undefined),
+    startMerge = newRemote(false)
+}: {
+    conflicts?: RemoteInterface<MergeRequestConflictsByState | undefined>
+    startMerge?: RemoteInterface<boolean>
+}) {
+    return {
+        conflicts: conflicts,
+        startMerge: startMerge
     }
 }
