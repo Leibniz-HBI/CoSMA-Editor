@@ -47,7 +47,7 @@ export function CosmaeRoot() {
                                 <Navbar.Brand href="/">CoSMA-E</Navbar.Brand>
                                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                                 <Navbar.Collapse id="basic-navbar-nav">
-                                    <Nav className="me-5">
+                                    <Nav className="me-auto">
                                         <Nav.Link as={NavLink} to="/">
                                             View
                                         </Nav.Link>
@@ -61,7 +61,7 @@ export function CosmaeRoot() {
                                             Tags
                                         </Nav.Link>
                                     </Nav>
-                                    <Nav className="me-auto">
+                                    <Nav className="me-2">
                                         <HelpButton />
                                     </Nav>
                                     <Nav>

@@ -9,7 +9,7 @@ import {
 } from './slice'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '../../store'
-import { QuestionDiamondFill } from 'react-bootstrap-icons'
+import { QuestionSquareFill } from 'react-bootstrap-icons'
 import { useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import Markdown from 'react-markdown'
@@ -80,7 +80,7 @@ export function HelpButton() {
                 dispatch(setHelpPath(location.pathname))
             }}
         >
-            <QuestionDiamondFill size={20} />
+            <QuestionSquareFill size={20} />
         </div>
     )
 }
