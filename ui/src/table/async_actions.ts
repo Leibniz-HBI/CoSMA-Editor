@@ -20,7 +20,7 @@ import {
 } from './actions'
 import { AsyncAction } from '../util/async_action'
 import { fetch_chunk } from '../util/fetch'
-import { TagDefinition, TagType } from '../column_menu/state'
+import { TagDefinition, TagType, newTagDefinition } from '../column_menu/state'
 import { CellValue, Entity, newEntity } from './state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
@@ -36,14 +36,16 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
     async run(dispatch: Dispatch<TableAction>, reduxDispatch: AppDispatch) {
         dispatch(new SetEntityLoadingAction())
         dispatch(
-            new SetColumnLoadingAction({
-                namePath: ['Display Text'],
-                idPersistent: displayTxtColumnId,
-                columnType: TagType.String,
-                curated: true,
-                version: 0,
-                hidden: false
-            })
+            new SetColumnLoadingAction(
+                newTagDefinition({
+                    namePath: ['Display Text'],
+                    idPersistent: displayTxtColumnId,
+                    columnType: TagType.String,
+                    curated: true,
+                    version: 0,
+                    hidden: false
+                })
+            )
         )
         try {
             const entities: Entity[] = []

@@ -115,6 +115,7 @@ const idMergeRequest = 'id-mr-test'
 const mergeRequest = {
     id_persistent: idMergeRequest,
     state: 'OPEN',
+    disable_origin_on_merge: true,
     created_by: {
         id_persistent: idUser,
         user_name: nameUser,
@@ -145,6 +146,7 @@ const mergeRequest = {
 const mergeRequest1 = {
     id_persistent: idMergeRequest,
     state: 'OPEN',
+    disable_origin_on_merge: false,
     assigned_to: {
         id_persistent: idUser,
         user_name: nameUser,
@@ -222,7 +224,8 @@ test('success', async () => {
                         hidden: false,
                         version: versionTag1
                     }),
-                    step: MergeRequestStep.Open
+                    step: MergeRequestStep.Open,
+                    disableOriginOnMerge: true
                 })
             ],
             assigned: [
@@ -254,7 +257,8 @@ test('success', async () => {
                         hidden: false,
                         version: versionTag1
                     }),
-                    step: MergeRequestStep.Open
+                    step: MergeRequestStep.Open,
+                    disableOriginOnMerge: false
                 })
             ]
         })

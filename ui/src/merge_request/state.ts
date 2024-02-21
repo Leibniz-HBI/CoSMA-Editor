@@ -17,6 +17,7 @@ export interface MergeRequest {
     assignedTo: PublicUserInfo
     originTagDefinition: TagDefinition
     destinationTagDefinition: TagDefinition
+    disableOriginOnMerge: boolean
     step: MergeRequestStep
 }
 export function newMergeRequest({
@@ -25,6 +26,7 @@ export function newMergeRequest({
     assignedTo,
     originTagDefinition,
     destinationTagDefinition,
+    disableOriginOnMerge,
     step
 }: {
     idPersistent: string
@@ -32,6 +34,7 @@ export function newMergeRequest({
     assignedTo: PublicUserInfo
     originTagDefinition: TagDefinition
     destinationTagDefinition: TagDefinition
+    disableOriginOnMerge: boolean
     step: MergeRequestStep
 }) {
     return {
@@ -40,6 +43,7 @@ export function newMergeRequest({
         assignedTo: assignedTo,
         originTagDefinition: originTagDefinition,
         destinationTagDefinition: destinationTagDefinition,
+        disableOriginOnMerge,
         step: step
     }
 }

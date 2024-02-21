@@ -100,16 +100,20 @@ export function newMergeRequestConflictsByState({
 export interface MergeRequestConflictResolutionState {
     conflicts: RemoteInterface<MergeRequestConflictsByState | undefined>
     startMerge: RemoteInterface<boolean>
+    disableOriginOnMerge: RemoteInterface<undefined>
 }
 export function newMergeRequestConflictResolutionState({
     conflicts = newRemote(undefined),
-    startMerge = newRemote(false)
+    startMerge = newRemote(false),
+    disableOriginOnMerge = newRemote(undefined)
 }: {
     conflicts?: RemoteInterface<MergeRequestConflictsByState | undefined>
     startMerge?: RemoteInterface<boolean>
+    disableOriginOnMerge?: RemoteInterface<undefined>
 }) {
     return {
         conflicts: conflicts,
-        startMerge: startMerge
+        startMerge: startMerge,
+        disableOriginOnMerge
     }
 }

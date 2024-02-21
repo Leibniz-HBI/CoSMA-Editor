@@ -150,7 +150,8 @@ export class ColumnState {
             columnType: TagType.String,
             curated: false,
             version: 0,
-            hidden: false
+            hidden: false,
+            disabled: false
         },
         cellContents = new Remote([]),
         width = 200

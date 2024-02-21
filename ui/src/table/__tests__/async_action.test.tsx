@@ -107,14 +107,14 @@ const display_txt_column_as_normal_column = {
 
 const tagDefName = 'Display Text'
 const idTagDefPersistent = 'display_txt_id'
-const displayTextTagDef: TagDefinition = {
+const displayTextTagDef: TagDefinition = newTagDefinition({
     namePath: [tagDefName],
     idPersistent: idTagDefPersistent,
     columnType: TagType.String,
     curated: true,
     version: 0,
     hidden: false
-}
+})
 const test_person_rsp_with_tag_def_details = {
     display_txt: displayTxt0,
     id_persistent: idPersistent0,
@@ -278,7 +278,7 @@ describe('get column async action', () => {
         owner: nameUserTest1,
         version: 1
     }
-    const tagDefTest: TagDefinition = {
+    const tagDefTest: TagDefinition = newTagDefinition({
         namePath: [columnNameTest],
         idPersistent: columnIdTest,
         idParentPersistent: undefined,
@@ -287,7 +287,7 @@ describe('get column async action', () => {
         owner: nameUserTest,
         version: 2,
         hidden: false
-    }
+    })
 
     test('loads column with one chunk', async () => {
         responseSequence([

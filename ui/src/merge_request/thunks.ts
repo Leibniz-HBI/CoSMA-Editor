@@ -58,13 +58,15 @@ export function parseMergeRequestFromJson(mrJson: any) {
         undefined
     )
     const step = mergeRequestStateFromApiMap[mrJson['state']]
+    const disableOriginOnMerge = mrJson['disable_origin_on_merge']
     return newMergeRequest({
         idPersistent,
         assignedTo,
         createdBy,
         destinationTagDefinition,
         originTagDefinition,
-        step
+        step,
+        disableOriginOnMerge
     })
 }
 

@@ -33,6 +33,7 @@ import {
 import { tagMergeRequestConflictsReducer } from '../slice'
 import { newEntity } from '../../../table/state'
 import { MergeRequestStep, newMergeRequest } from '../../state'
+import { error } from 'node:console'
 
 jest.mock('react-router-dom', () => {
     const mockNavigate = jest.fn()
@@ -487,8 +488,85 @@ describe('submit', () => {
             ],
             [
                 'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/merge',
-
                 { credentials: 'include', method: 'POST' }
+            ]
+        ])
+    })
+})
+describe('toggle disable origin on merge', () => {
+    test('success', async () => {
+        const fetchMock = jest.fn()
+        initialResponseSequence(fetchMock)
+        addResponseSequence(fetchMock, [[200, {}]])
+        const { store } = renderWithProviders(
+            <MergeRequestConflictResolutionView />,
+            fetchMock
+        )
+        await waitFor(() => {
+            const toggle = screen.getByRole('checkbox')
+            toggle.click()
+        })
+        expect(
+            store.getState().tagMergeRequestConflicts.conflicts.value?.mergeRequest
+                .disableOriginOnMerge
+        ).toEqual(false)
+        expect(store.getState().notification).toEqual(newNotificationManager({}))
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request',
+                {
+                    credentials: 'include',
+                    method: 'PATCH',
+                    body: JSON.stringify({ disable_origin_on_merge: false })
+                }
+            ]
+        ])
+    })
+    test('error', async () => {
+        const fetchMock = jest.fn()
+        const testError = 'Could not patch merge request.'
+        initialResponseSequence(fetchMock)
+        addResponseSequence(fetchMock, [[500, { msg: testError }]])
+        const { store } = renderWithProviders(
+            <MergeRequestConflictResolutionView />,
+            fetchMock
+        )
+        await waitFor(() => {
+            const toggle = screen.getByRole('checkbox')
+            toggle.click()
+        })
+        expect(
+            store.getState().tagMergeRequestConflicts.conflicts.value?.mergeRequest
+                .disableOriginOnMerge
+        ).toEqual(true)
+        expect(store.getState().notification).toEqual(
+            newNotificationManager({
+                notificationList: [
+                    newNotification({
+                        msg: testError,
+                        type: NotificationType.Error,
+                        id: expect.anything()
+                    })
+                ],
+                notificationMap: expect.anything()
+            })
+        )
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request',
+                {
+                    credentials: 'include',
+                    method: 'PATCH',
+                    body: JSON.stringify({ disable_origin_on_merge: false })
+                }
             ]
         ])
     })
@@ -508,7 +586,8 @@ const mergeRequest = newMergeRequest({
     }),
     step: MergeRequestStep.Open,
     originTagDefinition: tagDefOrigin,
-    destinationTagDefinition: tagDefDestination
+    destinationTagDefinition: tagDefDestination,
+    disableOriginOnMerge: true
 })
 
 function checkConflicts(
@@ -543,6 +622,7 @@ function initialResponseSequence(fetchMock: jest.Mock<any, any>) {
                         permission_group: 'CONTRIBUTOR'
                     },
                     state: 'OPEN',
+                    disable_origin_on_merge: true,
                     origin: {
                         name: tagDefOrigin.namePath[0],
                         name_path: tagDefOrigin.namePath,
@@ -550,7 +630,8 @@ function initialResponseSequence(fetchMock: jest.Mock<any, any>) {
                         type: 'STRING',
                         curated: false,
                         version: tagDefOrigin.version,
-                        hidden: false
+                        hidden: false,
+                        disabled: false
                     },
                     destination: {
                         name: tagDefDestination.namePath[0],
@@ -559,7 +640,8 @@ function initialResponseSequence(fetchMock: jest.Mock<any, any>) {
                         type: 'STRING',
                         curated: false,
                         version: tagDefDestination.version,
-                        hidden: false
+                        hidden: false,
+                        disabled: false
                     }
                 },
                 updated: [sharedConflictJson, sharedConflictJson1],

@@ -4,7 +4,16 @@ import {
     RemoteTriggerButton,
     CosmaeLoading
 } from '../../util/components/misc'
-import { Accordion, Col, ListGroup, ProgressBar, Row } from 'react-bootstrap'
+import {
+    Accordion,
+    Col,
+    Form,
+    ListGroup,
+    OverlayTrigger,
+    ProgressBar,
+    Row,
+    Tooltip
+} from 'react-bootstrap'
 import { MergeRequestConflict, TagInstance } from './state'
 import { RemoteInterface } from '../../util/state'
 import { useEffect } from 'react'
@@ -13,8 +22,14 @@ import { TagDefinition } from '../../column_menu/state'
 import { MergeRequest } from '../state'
 import { MergeRequestListItemBody } from '../components'
 import { useAppDispatch, useAppSelector } from '../../hooks'
-import { getMergeRequestConflicts, resolveConflict, startMerge } from './thunks'
 import {
+    getMergeRequestConflicts,
+    resolveConflict,
+    startMerge,
+    toggleDisableOriginOnMerge
+} from './thunks'
+import {
+    selectDisableOriginOnMerge,
     selectResolvedCount,
     selectStartMerge,
     selectTagMergeRequestConflictsByCategory
@@ -84,6 +99,25 @@ export function MergeRequestConflictResolutionView() {
                             mergeRequest={conflictsByCategoryValue.mergeRequest}
                         />
                     </Col>
+                    <OverlayTrigger
+                        overlay={
+                            <Tooltip id="disable-origin-on-merge-tooltip">
+                                When this toggle is enabled, the origin tag definition
+                                will be disabled. I.e., the tag definition will not
+                                appear anymore in the the tag definition explorer but is
+                                still kept in the history.
+                            </Tooltip>
+                        }
+                        placement="left"
+                    >
+                        <Col>
+                            <DisableOriginOnMergeToggle
+                                idMergeRequestPersistent={
+                                    conflictsByCategoryValue.mergeRequest.idPersistent
+                                }
+                            />
+                        </Col>
+                    </OverlayTrigger>
                 </Row>
                 <Row>
                     <MergeRequestConflictProgressBar
@@ -292,4 +326,29 @@ export function MergeRequestConflictProgressBar({
         }
     }
     return <ProgressBar variant={variant} label={label} striped={striped} now={now} />
+}
+
+export function DisableOriginOnMergeToggle({
+    idMergeRequestPersistent
+}: {
+    idMergeRequestPersistent: string
+}) {
+    const dispatch = useAppDispatch()
+    const disableOriginOnMerge = useAppSelector(selectDisableOriginOnMerge)
+    return (
+        <Form.Check
+            type="switch"
+            label="Disable Origin on Merge"
+            checked={disableOriginOnMerge}
+            onChange={(evt) => {
+                evt.stopPropagation()
+                dispatch(
+                    toggleDisableOriginOnMerge(
+                        idMergeRequestPersistent,
+                        !disableOriginOnMerge
+                    )
+                )
+            }}
+        />
+    )
 }

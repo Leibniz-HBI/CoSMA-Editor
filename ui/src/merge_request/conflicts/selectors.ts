@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
+import { create } from 'node:domain'
 
 function selectTagMergeRequestConflicts(state: RootState) {
     return state.tagMergeRequestConflicts
@@ -29,4 +30,14 @@ export const selectResolvedCount = createSelector(
         }
         return [numResolved, state.conflicts.value?.conflicts.length]
     }
+)
+
+export const selectConflictsMergeRequest = createSelector(
+    selectTagMergeRequestConflictsByCategory,
+    (state) => state.value?.mergeRequest
+)
+
+export const selectDisableOriginOnMerge = createSelector(
+    selectConflictsMergeRequest,
+    (state) => state?.disableOriginOnMerge ?? false
 )

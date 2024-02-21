@@ -13,6 +13,7 @@ export interface TagDefinition {
     version: number
     owner?: string
     hidden: boolean
+    disabled: boolean
 }
 
 export function newTagDefinition({
@@ -23,7 +24,8 @@ export function newTagDefinition({
     curated,
     owner = 'Unknown User',
     version,
-    hidden
+    hidden,
+    disabled = false
 }: {
     namePath: string[]
     idPersistent: string
@@ -33,7 +35,8 @@ export function newTagDefinition({
     owner?: string
     version: number
     hidden: boolean
-}) {
+    disabled?: boolean
+}): TagDefinition {
     return {
         namePath,
         idPersistent,
@@ -42,7 +45,8 @@ export function newTagDefinition({
         curated,
         owner,
         version,
-        hidden
+        hidden,
+        disabled
     }
 }
 

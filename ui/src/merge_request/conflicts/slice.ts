@@ -84,6 +84,21 @@ const tagMergeRequestConflictsSlice = createSlice({
         },
         startMergeError: (state: MergeRequestConflictResolutionState) => {
             state.startMerge.isLoading = false
+        },
+        toggleDisableOnMergeStart: (state: MergeRequestConflictResolutionState) => {
+            state.disableOriginOnMerge.isLoading = true
+        },
+        toggleDisableOnMergeSuccess: (
+            state: MergeRequestConflictResolutionState,
+            action: PayloadAction<boolean>
+        ) => {
+            state.disableOriginOnMerge.isLoading = false
+            if (state.conflicts.value !== undefined) {
+                state.conflicts.value.mergeRequest.disableOriginOnMerge = action.payload
+            }
+        },
+        toggleDisableOnMergeError: (state: MergeRequestConflictResolutionState) => {
+            state.disableOriginOnMerge.isLoading = false
         }
     }
 })
@@ -131,5 +146,8 @@ export const {
     resolveConflictError,
     startMergeStart,
     startMergeSuccess,
-    startMergeError
+    startMergeError,
+    toggleDisableOnMergeStart,
+    toggleDisableOnMergeSuccess,
+    toggleDisableOnMergeError
 } = tagMergeRequestConflictsSlice.actions

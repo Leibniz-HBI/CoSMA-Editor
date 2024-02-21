@@ -16,7 +16,10 @@ import {
     resolveConflictSuccess,
     startMergeError,
     startMergeStart,
-    startMergeSuccess
+    startMergeSuccess,
+    toggleDisableOnMergeError,
+    toggleDisableOnMergeStart,
+    toggleDisableOnMergeSuccess
 } from './slice'
 
 export function getMergeRequestConflicts(
@@ -181,6 +184,37 @@ export function startMerge(idMergeRequestPersistent: string): ThunkWithFetch<voi
         } catch (e: unknown) {
             dispatch(startMergeError())
             dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+
+export function toggleDisableOriginOnMerge(
+    idMergeRequestPersistent: string,
+    disableOriginOnMerge: boolean
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(toggleDisableOnMergeStart())
+        try {
+            const rsp = await fetch(
+                config.api_path + `/merge_requests/${idMergeRequestPersistent}`,
+                {
+                    credentials: 'include',
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        disable_origin_on_merge: disableOriginOnMerge
+                    })
+                }
+            )
+            if (rsp.status == 200) {
+                dispatch(toggleDisableOnMergeSuccess(disableOriginOnMerge))
+            } else {
+                const msg = (await rsp.json())['msg']
+                dispatch(addError(msg))
+                dispatch(toggleDisableOnMergeError())
+            }
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+            dispatch(toggleDisableOnMergeError())
         }
     }
 }
