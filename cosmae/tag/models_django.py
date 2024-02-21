@@ -47,8 +47,7 @@ class TagDefinitionAbstract(models.Model):
     hidden = models.BooleanField(default=False)
     """Flag for not showing the tag definition.
     This is currently set for tag definitions for new merge requests.
-    It is not respected when retrieving tag definitions.
-    This is done to allow edit of user data."""
+    """
     disabled = models.BooleanField(default=False)
     """Flag for indicating soft delete.
     This is necessary to ensure that old versions are kept in the history."""

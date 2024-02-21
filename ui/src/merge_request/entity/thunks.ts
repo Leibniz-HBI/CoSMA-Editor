@@ -19,7 +19,7 @@ export function getEntityMergeRequests(): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(getEntityMergeRequestStart())
         try {
-            const rsp = await fetch(config.api_path + '/merge_requests/entities', {
+            const rsp = await fetch(config.api_path + '/merge_requests/entities/all', {
                 credentials: 'include'
             })
             if (rsp.status == 200) {

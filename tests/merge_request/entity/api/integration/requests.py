@@ -34,7 +34,7 @@ def post_reverse_origin_destination(url, id_merge_request_persistent, cookies=No
 
 def get_merge_requests(url, cookies=None):
     return requests.get(
-        url + "/cosmae/api/merge_requests/entities", cookies=cookies, timeout=900
+        url + "/cosmae/api/merge_requests/entities/all", cookies=cookies, timeout=900
     )
 
 
@@ -86,7 +86,8 @@ def post_resolution(  # pylint: disable=too-many-arguments
 
 def post_start_merge(url, id_merge_request_persistent, cookies=None):
     return requests.post(
-        url + f"/cosmae/api/merge_requests/entities/{id_merge_request_persistent}/merge",
+        url
+        + f"/cosmae/api/merge_requests/entities/{id_merge_request_persistent}/merge",
         cookies=cookies,
         timeout=900,
     )

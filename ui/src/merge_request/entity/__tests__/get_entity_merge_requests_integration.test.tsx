@@ -169,7 +169,7 @@ test('success', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/merge_requests/entities',
+            'http://127.0.0.1:8000/cosmae/api/merge_requests/entities/all',
             { credentials: 'include' }
         ]
     ])
@@ -204,7 +204,7 @@ test('error', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/merge_requests/entities',
+            'http://127.0.0.1:8000/cosmae/api/merge_requests/entities/all',
             { credentials: 'include' }
         ]
     ])

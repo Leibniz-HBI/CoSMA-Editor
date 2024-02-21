@@ -408,7 +408,7 @@ merge_request_step_db_to_api_map = {
 
 
 @router.get(
-    "",
+    "all",
     response={
         200: EntityMergeRequestList,
         400: ApiError,
