@@ -16,7 +16,7 @@ def sort_versioned(lst):
     return sorted(lst, key=version_sort_key)
 
 
-def assert_versioned(actual, expected, path=None):
+def assert_versioned(actual, expected, path=None, version_key="version"):
     """Helper function for checking nested dictionaries with version information.
     The actual value of the version is ignored, as it may change depending on test order.
     """
@@ -25,12 +25,12 @@ def assert_versioned(actual, expected, path=None):
     if isinstance(actual, dict):
         assert isinstance(expected, dict)
         if len(actual) == len(expected) + 1:
-            assert "version" in actual
-            assert "version" not in expected
+            assert version_key in actual
+            assert version_key not in expected
         else:
             assert len(actual) == len(expected)
         for key in actual:
-            if key != "version":
+            if key != version_key:
                 assert_versioned(actual[key], expected[key], path + [key])
     elif isinstance(actual, list):
         assert isinstance(expected, list)

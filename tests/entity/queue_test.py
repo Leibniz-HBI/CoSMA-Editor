@@ -5,10 +5,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import tests.tag.common as ct
+from tests.utils import assert_versioned
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
 from cosmae.entity.queue import (
     entity_display_txt_information_cache,
+    tag_def_db_to_dict,
     update_display_txt_cache,
 )
 from cosmae.merge_request.models_django import TagMergeRequest
@@ -76,18 +78,20 @@ def test_without_display_txt_but_relevant_tag_instance(
     )
     assert result[0] == value_instance_tag_def_1
     tag_def = result[1]
-    assert len(tag_def) == 8
-    assert "id" in tag_def
-    tag_def.pop("id")
-    assert tag_def == {
-        "id_persistent": ct.id_tag_def_persistent_test_user1,
-        "id_parent_persistent": None,
-        "name": ct.name_tag_def_test1,
-        "type": "STR",
-        "owner": {"username": "test-user1"},
-        "curated": False,
-        "hidden": False,
-    }
+    assert_versioned(
+        tag_def,
+        {
+            "id_persistent": ct.id_tag_def_persistent_test_user1,
+            "id_parent_persistent": None,
+            "name": ct.name_tag_def_test1,
+            "type": "STR",
+            "owner": {"username": "test-user1"},
+            "curated": False,
+            "hidden": False,
+            "disabled": False,
+        },
+        version_key="id",
+    )
 
 
 def test_without_display_txt_and_no_relevant_tag_instance(
@@ -159,15 +163,36 @@ def test_contribution(contribution_instance_without_display_txt, display_txt_ord
     )
     assert result[0] == value_instance_tag_def_1
     tag_def = result[1]
-    assert len(tag_def) == 8
-    assert "id" in tag_def
-    tag_def.pop("id")
-    assert tag_def == {
-        "id_persistent": ct.id_tag_def_persistent_test_user1,
-        "id_parent_persistent": None,
-        "name": ct.name_tag_def_test1,
-        "type": "STR",
-        "owner": {"username": "test-user1"},
-        "curated": False,
-        "hidden": False,
-    }
+    assert_versioned(
+        tag_def,
+        {
+            "id_persistent": ct.id_tag_def_persistent_test_user1,
+            "id_parent_persistent": None,
+            "name": ct.name_tag_def_test1,
+            "type": "STR",
+            "owner": {"username": "test-user1"},
+            "curated": False,
+            "hidden": False,
+            "disabled": False,
+        },
+        version_key="id",
+    )
+
+
+def test_db_to_dict(tag_def):
+    tag_def.disabled = True
+    tag_def_dict = tag_def_db_to_dict(tag_def)
+    assert_versioned(
+        tag_def_dict,
+        {
+            "id_persistent": ct.id_tag_def_persistent_test,
+            "id_parent_persistent": None,
+            "name": ct.name_tag_def_test,
+            "type": "STR",
+            "owner": {"username": "test-user"},
+            "curated": False,
+            "hidden": False,
+            "disabled": True,
+        },
+        version_key="id",
+    )

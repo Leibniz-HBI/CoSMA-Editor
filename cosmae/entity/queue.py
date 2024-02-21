@@ -49,24 +49,13 @@ def update_display_txt_cache(id_entity_persistent):
             )
             for tag_definition in with_tag_instance_value_query:
                 if tag_definition.tag_instance_value is not None:
-                    if tag_definition.owner is not None:
-                        username = tag_definition.owner.username
-                    else:
-                        username = None
+                    tag_def_dict = tag_def_db_to_dict(tag_definition)
+
                     entity_display_txt_information_cache.set(
                         id_entity_persistent,
                         (
                             tag_definition.tag_instance_value,
-                            {
-                                "id_persistent": tag_definition.id_persistent,
-                                "id_parent_persistent": tag_definition.id_parent_persistent,
-                                "name": tag_definition.name,
-                                "id": tag_definition.id,
-                                "type": tag_definition.type,
-                                "owner": {"username": username},
-                                "curated": tag_definition.curated,
-                                "hidden": tag_definition.hidden,
-                            },
+                            tag_def_dict,
                         ),
                     )
                     return
@@ -76,6 +65,27 @@ def update_display_txt_cache(id_entity_persistent):
             id_entity_persistent,
             exc_info=exc,
         )
+
+
+def tag_def_db_to_dict(tag_definition):
+    "Convert a tag definition from Django ORM to dict representation."
+    if tag_definition.owner is not None:
+        username = tag_definition.owner.username
+    else:
+        username = None
+    tag_def_dict = {
+        "id_persistent": tag_definition.id_persistent,
+        "id_parent_persistent": tag_definition.id_parent_persistent,
+        "name": tag_definition.name,
+        "id": tag_definition.id,
+        "type": tag_definition.type,
+        "owner": {"username": username},
+        "curated": tag_definition.curated,
+        "hidden": tag_definition.hidden,
+        "disabled": tag_definition.disabled,
+    }
+
+    return tag_def_dict
 
 
 def dispatch_display_txt_queue_process(
