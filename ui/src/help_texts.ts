@@ -84,6 +84,8 @@ In the future you will be able to compare data from the selected column and the 
 When you have assigned all the columns you want to contribute, click on **Finalize Column Assignment** to  proceed to the next step.`,
                 entities: `# Match Entities
 Please assign the rows of your uploaded \`csv\` to existing entities wherever possible.
+### Note
+This view is not intended for correcting values.
 ## Entity List
 On the left you find a list of all entities, i.e., rows, found in the contributed \`csv\` file.
 Select an entry to view and assign matches found in the trustee.
