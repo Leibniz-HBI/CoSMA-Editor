@@ -41,7 +41,7 @@ def test_conversion_api_to_db_with_id():
     person_db, _ = api.person_api_to_db(person_api, c.time_edit_test)
     assert person_db.display_txt == c.display_txt_test + " changed"
     assert person_db.id_persistent == c.id_persistent_test
-    assert person_db.previous_version_id is prev.id  # pylint: disable=no-member
+    assert person_db.previous_version_id == prev.id  # pylint: disable=no-member
 
 
 def test_conversion_api_to_db_with_id_no_version():
