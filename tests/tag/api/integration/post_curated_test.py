@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import tests.tag.api.integration.requests as req
 import tests.tag.common as c
 from cosmae.exception import NotAuthenticatedException
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import OwnershipRequest as OwnershipRequestDb
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 
@@ -69,4 +70,29 @@ def test_curate_removes_ownership_requests(
         OwnershipRequestDb.by_id_tag_definition_persistent_query_set(
             ownership_request_user.id_tag_definition_persistent
         )
+    )
+
+
+def test_curate_changes_mrs(auth_server_commissioner, tag_def_user, user_editor):
+    "Check whether a commissioner can curate a tag."
+    id_mr_persistent = "83cea683-d504-495f-b9dc-d14b025267a2"
+    TagMergeRequest.objects.create(  # pylint: disable=no-member
+        assigned_to=tag_def_user.owner,
+        created_by=user_editor,
+        state=TagMergeRequest.OPEN,
+        id_origin_persistent="origin_for_test",
+        id_destination_persistent=tag_def_user.id_persistent,
+        created_at=c.time_edit_test,
+        id_persistent=id_mr_persistent,
+    )
+    server, cookies = auth_server_commissioner
+    rsp = req.post_curation(server.url, tag_def_user.id_persistent, cookies=cookies)
+    assert rsp.status_code == 200
+    assert (
+        TagMergeRequest.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_mr_persistent
+        )
+        .get()
+        .assigned_to
+        is None
     )
