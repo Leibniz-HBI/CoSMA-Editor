@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import tests.tag.api.integration.requests as req
 import tests.tag.common as c
 from cosmae.exception import NotAuthenticatedException
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagDefinition
 
 
@@ -55,3 +56,32 @@ def test_correct_user_curated(auth_server, ownership_request_curated):
     )
     assert tag_definition.owner == ownership_request_curated.receiver
     assert not tag_definition.curated
+
+
+def test_changes_owner_of_mrs(auth_server1, ownership_request_user, user_editor):
+    "Make sure that for existing merge requests the owner is changed"
+    server, _, cookies = auth_server1
+    id_mr_persistent = "ccc5e4bd-2db1-4c52-b21b-cd9d138c21ea"
+    TagMergeRequest.objects.create(  # pylint: disable=no-member
+        assigned_to=ownership_request_user.petitioner,
+        created_by=user_editor,
+        state=TagMergeRequest.OPEN,
+        id_origin_persistent="origin_for_test",
+        id_destination_persistent=ownership_request_user.id_tag_definition_persistent,
+        created_at=c.time_edit_test,
+        id_persistent=id_mr_persistent,
+    )
+    rsp = req.post_accept(server.url, c.id_ownership_request_test, cookies=cookies)
+    assert rsp.status_code == 200
+    tag_definition = TagDefinition.most_recent_by_id(
+        ownership_request_user.id_tag_definition_persistent
+    )
+    assert tag_definition.owner == ownership_request_user.receiver
+    assert (
+        TagMergeRequest.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_mr_persistent
+        )
+        .get()
+        .assigned_to
+        == ownership_request_user.receiver
+    )

@@ -81,6 +81,16 @@ class TagMergeRequest(AbstractMergeRequest):
         )
 
     @classmethod
+    def change_owner_for_tag_def(
+        cls, id_tag_definition_persistent: str, user: CosmaeUser
+    ):
+        """Change the owner for all merge requests that have
+        a specific tag definition as destination."""
+        cls.objects.filter(  # pylint: disable=no-member
+            id_destination_persistent=id_tag_definition_persistent
+        ).update(assigned_to=user)
+
+    @classmethod
     def get_for_contribution_query_set(cls, id_contribution_persistent):
         "Get all tag merge requests for a contribution candidate."
         return cls.objects.filter(  # pylint: disable=no-member
