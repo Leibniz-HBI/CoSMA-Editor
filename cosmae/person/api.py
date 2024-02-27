@@ -1,4 +1,5 @@
 """API for handling natural persons."""
+
 from datetime import datetime
 from typing import List, Optional, Union
 from uuid import uuid4
@@ -16,10 +17,8 @@ from cosmae.exception import (
     NotAuthenticatedException,
     ValidationException,
 )
-from cosmae.tag.api.definitions import (
-    TagDefinitionResponse,
-    tag_definition_db_dict_to_api,
-)
+from cosmae.tag.api.definitions import TagDefinitionResponse
+from cosmae.tag.api.models_conversion import tag_definition_db_dict_to_api
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
 from cosmae.util.django import save_many_atomic
@@ -94,7 +93,7 @@ def persons_post(
         return 403, ApiError(msg="Insufficient Permissions")
     now = datetime.utcnow()
     try:
-        person_dbs = [person_api_to_db(person, now) for person in persons.persons]
+        person_dbs = [person_api_to_db(person, now, user) for person in persons.persons]
     except ValidationException as valid_x:
         return 400, ApiError(msg=str(valid_x))
     except DbObjectExistsException as exists_x:
@@ -163,7 +162,9 @@ def merge_entities(
     return 400, ApiError
 
 
-def person_api_to_db(person: PersonNatural, time_edit: datetime) -> EntityDb:
+def person_api_to_db(
+    person: PersonNatural, time_edit: datetime, requester: CosmaeUser
+) -> EntityDb:
     """Transform an natural person from API to DB model."""
     if person.id_persistent:
         persistent_id = person.id_persistent
@@ -183,6 +184,7 @@ def person_api_to_db(person: PersonNatural, time_edit: datetime) -> EntityDb:
         display_txt=person.display_txt,
         time_edit=time_edit,
         id_persistent=persistent_id,
+        requester=requester,
         version=person.version,
         disabled=person.disabled or False,
     )

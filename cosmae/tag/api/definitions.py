@@ -13,34 +13,24 @@ from cosmae.exception import (
     DbObjectExistsException,
     EntityUpdatedException,
     NoParentTagException,
+    NoSelfParentTagException,
     NotAuthenticatedException,
+    PermissionException,
     TagDefinitionExistsException,
     ValidationException,
 )
 from cosmae.tag.api.models_api import TagDefinitionResponse
+from cosmae.tag.api.models_conversion import (
+    _tag_type_mapping_api_to_db,
+    tag_definition_db_to_api,
+)
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.tag.models_django import TagDefinitionHistory as TagDefinitionHistoryDb
-from cosmae.tag.queue import (
-    get_tag_definition_name_path,
-    get_tag_definition_name_path_from_parts,
-)
+from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
 router = Router()
-
-
-_tag_type_mapping_api_to_db = {
-    "INNER": TagDefinitionDb.INNER,
-    "FLOAT": TagDefinitionDb.FLOAT,
-    "STRING": TagDefinitionDb.STRING,
-}
-
-_tag_type_mapping_db_to_api = {
-    TagDefinitionDb.INNER: "INNER",
-    TagDefinitionDb.FLOAT: "FLOAT",
-    TagDefinitionDb.STRING: "STRING",
-}
 
 
 class TagDefinitionRequest(Schema):
@@ -51,7 +41,7 @@ class TagDefinitionRequest(Schema):
     name: str
     version: Optional[int]
     type: str
-    owner: Optional[str]
+    owner: Optional[PublicUserInfo]
     hidden: Optional[bool]
     disabled: Optional[bool]
 
@@ -86,7 +76,13 @@ class CurationPostRequest(Schema):
 
 
 @router.post(
-    "", response={200: TagDefinitionResponseList, 400: ApiError, 500: ApiError}
+    "",
+    response={
+        200: TagDefinitionResponseList,
+        400: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
 )
 def post_tag_definitions(
     request: HttpRequest, tag_definition_list: TagDefinitionRequestList
@@ -123,6 +119,10 @@ def post_tag_definitions(
             msg="There has been a concurrent modification to the tag definition "
             f"with id_persistent {exc.new_value.id_persistent}."
         )
+    except PermissionException:
+        return 403, ApiError(msg="Insufficient permissions")
+    except NoSelfParentTagException:
+        return 400, ApiError(msg="Can not set a tag definition as its own parent.")
     except KeyError as exc:
         return 400, ApiError(msg=f"Type {exc.args[0]} is not known.")
 
@@ -165,9 +165,10 @@ def post_get_tag_definition_children(
 
 
 def tag_definition_api_to_db(
-    tag_definition: TagDefinitionRequest, owner: CosmaeUser, time_edit: datetime
+    tag_definition: TagDefinitionRequest, requester: CosmaeUser, time_edit: datetime
 ) -> TagDefinitionDb:
     "Convert a tag definition from API to database model."
+    additional_values = {}
     if tag_definition.id_persistent:
         persistent_id = tag_definition.id_persistent
         if tag_definition.version is None:
@@ -181,6 +182,8 @@ def tag_definition_api_to_db(
                 f"Tag definition with name {tag_definition.name} "
                 "has version but no id_persistent."
             )
+        # new tag definition.
+        additional_values["owner_id"] = requester.id
         persistent_id = str(uuid4())
     return TagDefinitionHistoryDb.change_or_create(
         id_persistent=persistent_id,
@@ -189,52 +192,8 @@ def tag_definition_api_to_db(
         time_edit=time_edit,
         name=tag_definition.name,
         type=_tag_type_mapping_api_to_db[tag_definition.type],
-        owner=owner,
+        requester=requester,
         hidden=tag_definition.hidden or False,
         disabled=tag_definition.disabled or False,
-    )
-
-
-def tag_definition_db_to_api(tag_definition: TagDefinitionDb) -> TagDefinitionResponse:
-    "Convert a tag definition from database to API model."
-    owner = tag_definition.owner
-    if owner is None:
-        username = None
-    else:
-        username = owner.get_username()
-    return TagDefinitionResponse(
-        id_persistent=tag_definition.id_persistent,
-        id_parent_persistent=tag_definition.id_parent_persistent,
-        name=tag_definition.name,
-        name_path=get_tag_definition_name_path(tag_definition),
-        version=tag_definition.id,
-        type=_tag_type_mapping_db_to_api[tag_definition.type],
-        owner=username,
-        curated=tag_definition.curated,
-        hidden=tag_definition.hidden,
-        disabled=tag_definition.disabled,
-    )
-
-
-def tag_definition_db_dict_to_api(
-    tag_definition: TagDefinitionDb,
-) -> TagDefinitionResponse:
-    "Convert a tag definition from database to API model."
-    id_persistent = tag_definition["id_persistent"]
-    name = tag_definition["name"]
-    if tag_definition["owner"] is not None:
-        username = tag_definition["owner"]["username"]
-    else:
-        username = None
-    return TagDefinitionResponse(
-        id_persistent=id_persistent,
-        id_parent_persistent=tag_definition["id_parent_persistent"],
-        name=name,
-        name_path=get_tag_definition_name_path_from_parts(id_persistent, name),
-        version=tag_definition["id"],
-        type=_tag_type_mapping_db_to_api[tag_definition["type"]],
-        owner=username,
-        curated=tag_definition["curated"],
-        hidden=tag_definition["hidden"],
-        disabled=tag_definition["disabled"],
+        **additional_values,
     )

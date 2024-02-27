@@ -47,6 +47,7 @@ def entity1_changed(entity1):
         time_edit=ce.time_edit_test_1_changed,
         display_txt="edited_entity",
         version=entity1.id,
+        requester=None,
     )[0].save()
 
 
@@ -117,7 +118,7 @@ def auth_server(live_server):
         rsp = post_register(
             live_server.url,
             {
-                "user_name": cu.test_username,
+                "username": cu.test_username,
                 "password": cu.test_password,
                 "email": cu.test_email,
                 "names_personal": cu.test_names_personal,
@@ -138,7 +139,7 @@ def auth_server1(auth_server):
         rsp = post_register(
             url,
             {
-                "user_name": cu.test_username1,
+                "username": cu.test_username1,
                 "password": cu.test_password1,
                 "email": cu.test_email1,
                 "names_personal": cu.test_names_personal1,
@@ -156,7 +157,7 @@ def auth_server_commissioner(live_server):
         rsp = post_register(
             live_server.url,
             {
-                "user_name": cu.test_username_commissioner,
+                "username": cu.test_username_commissioner,
                 "password": cu.test_password_commissioner,
                 "email": cu.test_email_commissioner,
                 "names_personal": cu.test_names_personal_commissioner,

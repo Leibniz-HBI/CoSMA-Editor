@@ -1,4 +1,5 @@
 """Models for entities."""
+
 from datetime import datetime
 from typing import Optional
 
@@ -7,6 +8,7 @@ from django.db import models
 from django.db.models.aggregates import Max
 
 from cosmae.exception import DbObjectExistsException
+from cosmae.util import CosmaeUser
 from cosmae.util.django import change_or_create_versioned
 
 
@@ -27,6 +29,7 @@ class Entity(models.Model):
 
     class Meta:
         "Meta class for entity model"
+
         # pylint: disable=too-few-public-methods
         indexes = [
             models.Index(fields=["id_persistent"]),
@@ -64,10 +67,11 @@ class Entity(models.Model):
         return most_recent.filter(disabled=False)
 
     @classmethod
-    def change_or_create(
+    def change_or_create(  # pylint: disable=too-many-arguments
         cls,
         id_persistent: str,
         time_edit: datetime,
+        requester: CosmaeUser,
         display_txt: Optional[str] = None,
         version: Optional[int] = None,
         **kwargs,
@@ -83,6 +87,7 @@ class Entity(models.Model):
             return change_or_create_versioned(
                 cls,
                 id_persistent,
+                requester,
                 version,
                 display_txt=display_txt,
                 time_edit=time_edit,

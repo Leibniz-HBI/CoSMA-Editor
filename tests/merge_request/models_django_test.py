@@ -122,6 +122,7 @@ def test_recent_change_all(
         time_edit=datetime(1912, 4, 7),
         display_txt="edited_entity",
         version=old_entity.id,
+        requester=merge_request_user.created_by,
     )[0].save()
 
     recent = TagConflictResolution.only_recent()

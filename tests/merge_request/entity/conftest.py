@@ -20,12 +20,13 @@ def origin_entity_for_mr(db):
 
 
 @pytest.fixture
-def origin_entity_for_mr_changed(origin_entity_for_mr):
+def origin_entity_for_mr_changed(origin_entity_for_mr, user):
     entity, _ = Entity.change_or_create(
         id_persistent=origin_entity_for_mr.id_persistent,
         time_edit=c.time_entity_origin_changed,
         version=origin_entity_for_mr.id,
         display_txt="Changed entity origin",
+        requester=user,
     )
     entity.save()
     return entity
@@ -41,12 +42,13 @@ def destination_entity_for_mr(db):
 
 
 @pytest.fixture
-def destination_entity_for_mr_changed(destination_entity_for_mr):
+def destination_entity_for_mr_changed(destination_entity_for_mr, user):
     entity, _ = Entity.change_or_create(
         id_persistent=destination_entity_for_mr.id_persistent,
         version=destination_entity_for_mr.id,
         display_txt="changed entity destination",
         time_edit=c.time_entity_destination_changed,
+        requester=user,
     )
     entity.save()
     return entity
@@ -204,6 +206,7 @@ def tag_def_for_mr_changed(tag_def1):
         version=tag_def1.id,
         time_edit=c.time_tag_def_changed,
         name="changed tag def 1",
+        requester=tag_def1.owner,
     )
     tag_def.save()
     return tag_def
@@ -211,7 +214,9 @@ def tag_def_for_mr_changed(tag_def1):
 
 @pytest.fixture()
 def tag_def_for_mr_changed_owner(tag_def1, user_commissioner):
-    tag_def, _ = tag_def1.set_owner(user_commissioner, c.time_tag_def_changed)
+    tag_def, _ = tag_def1.set_owner(
+        user_commissioner, tag_def1.owner, c.time_tag_def_changed
+    )
     tag_def.save()
     return tag_def
 

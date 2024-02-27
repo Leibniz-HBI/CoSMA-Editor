@@ -13,15 +13,18 @@ from ninja import Router, Schema
 from ninja.constants import NOT_SET
 
 from cosmae.exception import ApiError, NotAuthenticatedException
-from cosmae.tag.api.definitions import tag_definition_db_to_api
+from cosmae.tag.api.models_conversion import tag_definition_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
-from cosmae.user.models_api import (
+from cosmae.user.models_api.login import (
     LoginRequest,
     LoginResponse,
     LoginResponseList,
-    PublicUserInfo,
     RegisterRequest,
     SearchResponse,
+)
+from cosmae.user.models_conversion import (
+    permission_group_db_to_api,
+    user_db_to_public_user_info,
 )
 from cosmae.util import EmptyResponse, CosmaeUser
 from cosmae.util.auth import CosmaeGroup, check_user, cosmae_auth
@@ -77,7 +80,7 @@ def register_post(_, registration_info: RegisterRequest):
             if len(CosmaeUser.objects.exclude(is_superuser=True)) == 0:
                 permission_group = CosmaeUser.COMMISSIONER
         user = CosmaeUser.objects.create_user(
-            username=registration_info.user_name,
+            username=registration_info.username,
             email=registration_info.email,
             password=registration_info.password,
             first_name=registration_info.names_personal,
@@ -293,14 +296,6 @@ permission_group_api_to_db = {
     "COMMISSIONER": CosmaeUser.COMMISSIONER,
 }
 
-permission_group_db_to_api = {
-    CosmaeUser.APPLICANT: "APPLICANT",
-    CosmaeUser.READER: "READER",
-    CosmaeUser.CONTRIBUTOR: "CONTRIBUTOR",
-    CosmaeUser.EDITOR: "EDITOR",
-    CosmaeUser.COMMISSIONER: "COMMISSIONER",
-}
-
 
 def user_db_to_login_response(user: CosmaeUser):
     "Converts a django user to a login response."
@@ -315,22 +310,11 @@ def user_db_to_login_response(user: CosmaeUser):
         except TagDefinitionDb.DoesNotExist:  # pylint: disable=no-member
             user.remove_tag_definition_by_id(id_tag_definition_persistent)
     return LoginResponse(
-        user_name=user.get_username(),
+        username=user.get_username(),
         id_persistent=str(user.id_persistent),
         names_personal=user.first_name,
         names_family=user.last_name,
         email=user.email,
         tag_definition_list=tag_definitions,
-        permission_group=permission_group_db_to_api[user.permission_group],
-    )
-
-
-def user_db_to_public_user_info(user):
-    "Convert a django user to a public user info"
-    if user is None:
-        return None
-    return PublicUserInfo(
-        user_name=user.get_username(),
-        id_persistent=str(user.id_persistent),
         permission_group=permission_group_db_to_api[user.permission_group],
     )

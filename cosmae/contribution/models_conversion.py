@@ -1,9 +1,10 @@
 "Convert models between database and API representation."
+
 from cosmae.contribution.models_api import ContributionCandidate
 from cosmae.contribution.models_django import (
     ContributionCandidate as ContributionCandidateDb,
 )
-from cosmae.tag.api.definitions import tag_definition_db_dict_to_api
+from cosmae.tag.api.models_conversion import tag_definition_db_dict_to_api
 
 _contribution_state_mapping_db_to_api = {
     ContributionCandidateDb.UPLOADED: "UPLOADED",

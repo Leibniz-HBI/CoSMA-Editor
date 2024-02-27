@@ -1,4 +1,5 @@
 "API methods for entity merge requests"
+
 from typing import List, Optional
 from uuid import uuid4
 
@@ -19,8 +20,8 @@ from cosmae.merge_request.entity.queue import apply_entity_merge_request
 from cosmae.person.api import PersonNatural, person_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.tag.queue import get_tag_definition_name_path_from_parts
-from cosmae.user.api import user_db_to_public_user_info
-from cosmae.user.models_api import PublicUserInfo
+from cosmae.user.models_api.public import PublicUserInfo
+from cosmae.user.models_conversion import user_db_to_public_user_info
 from cosmae.util import CosmaeUser as CosmaeUserDb
 from cosmae.util import timestamp
 from cosmae.util.auth import check_user
@@ -30,6 +31,7 @@ router = Router()
 
 class TagDefinition(Schema):
     "A stripped down view on tag definitions"
+
     # pylint: disable=too-few-public-methods
     name_path: List[str]
     id_persistent: str
@@ -40,6 +42,7 @@ class TagDefinition(Schema):
 
 class TagInstance(Schema):
     "Stripped down view on tag instances."
+
     # pylint: disable=too-few-public-methods
     id_persistent: str
     value: str
@@ -48,6 +51,7 @@ class TagInstance(Schema):
 
 class EntityMergeRequest(Schema):
     "API model for entity merge requests"
+
     # pylint: disable=too-few-public-methods
     id_persistent: str
     origin: PersonNatural
@@ -58,12 +62,14 @@ class EntityMergeRequest(Schema):
 
 class EntityMergeRequestList(Schema):
     "API model for multiple entity merge requests"
+
     # pylint: disable=too-few-public-methods
     entity_merge_requests: List[EntityMergeRequest]
 
 
 class EntityMergeRequestConflict(Schema):
     "API model for entity merge request conflicts."
+
     # pylint: disable=too-few-public-methods
     tag_definition: TagDefinition
     tag_instance_origin: TagInstance
@@ -73,6 +79,7 @@ class EntityMergeRequestConflict(Schema):
 
 class GetEntityMergeRequestConflictsResponse(Schema):
     "Response for get entity merge request requests."
+
     # pylint: disable=too-few-public-methods
     merge_request: EntityMergeRequest
     resolvable_conflicts: List[EntityMergeRequestConflict]
@@ -82,6 +89,7 @@ class GetEntityMergeRequestConflictsResponse(Schema):
 
 class EntityConflictResolutionPostRequest(Schema):
     "Body for requests that resolve entity merge request conflicts"
+
     # pylint: disable=too-few-public-methods
     id_tag_definition_version: int
     id_entity_origin_version: int
@@ -169,7 +177,10 @@ def post_resolve_conflict(
     # pylint: disable=too-many-return-statements
     try:
         user = check_user(request)
-        if user.permission_group not in [CosmaeUserDb.EDITOR, CosmaeUserDb.COMMISSIONER]:
+        if user.permission_group not in [
+            CosmaeUserDb.EDITOR,
+            CosmaeUserDb.COMMISSIONER,
+        ]:
             return 403, ApiError(msg="Insufficient permissions.")
         merge_request = EntityMergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
@@ -234,7 +245,10 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
     "API method for marking a merge request for merging."
     try:
         user = check_user(request)
-        if not user.permission_group in [CosmaeUserDb.EDITOR, CosmaeUserDb.COMMISSIONER]:
+        if not user.permission_group in [
+            CosmaeUserDb.EDITOR,
+            CosmaeUserDb.COMMISSIONER,
+        ]:
             return 403, ApiError(msg="Insufficient permissions")
         with transaction.atomic():
             merge_request = (

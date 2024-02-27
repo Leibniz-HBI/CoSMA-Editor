@@ -84,6 +84,7 @@ def apply_entity_merge_request(
             disabled, _ = Entity.change_or_create(
                 display_txt=origin.display_txt,
                 id_persistent=origin.id_persistent,
+                requester=user,
                 version=origin.id,
                 disabled=True,
                 time_edit=time_edit,
@@ -121,6 +122,7 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
                 time_edit=time_edit,
                 owner=user,
                 hidden=True,
+                requester=user,
             )
             tag_definition_new.save()
             break

@@ -14,7 +14,7 @@ from cosmae.tag.models_django import (
 
 
 @pytest.fixture
-def tag_def_history(db):
+def tag_def_history(db, user):
     "Shared tag definition for tests."
     tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=c.id_tag_def_persistent_test,
@@ -22,6 +22,24 @@ def tag_def_history(db):
         id_parent_persistent=None,
         name=c.name_tag_def_test,
         time_edit=c.time_edit_test,
+        owner_id=user.id,
+        requester=user,
+    )
+    tag_def.save()
+    return tag_def
+
+
+@pytest.fixture
+def tag_def_no_owner_history(db, user):
+    "Shared tag definition for tests."
+    tag_def, _ = TagDefinitionHistory.change_or_create(
+        id_persistent=c.id_tag_def_persistent_test,
+        type=TagDefinition.FLOAT,
+        id_parent_persistent=None,
+        name=c.name_tag_def_test,
+        time_edit=c.time_edit_test,
+        owner_id=None,
+        requester=user,
     )
     tag_def.save()
     return tag_def
@@ -80,7 +98,7 @@ def tag_def_parent(db):
 
 
 @pytest.fixture
-def tag_def_child_0_history():
+def tag_def_child_0_history(user):
     "A shared child tag definition for tests"
     tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=c.id_tag_def_persistent_child_0,
@@ -88,6 +106,8 @@ def tag_def_child_0_history():
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
         name="test tag definition child 0",
         time_edit=c.time_edit_test + timedelta(seconds=10),
+        owner_id=user.id,
+        requester=user,
     )
     tag_def.save()
     return tag_def
@@ -101,7 +121,7 @@ def tag_def_child_0(tag_def_child_0_history):
 
 
 @pytest.fixture
-def tag_def_child_1_history():
+def tag_def_child_1_history(user):
     "Another shared child tag definition for tests"
     tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=c.id_tag_def_persistent_child_1,
@@ -109,6 +129,8 @@ def tag_def_child_1_history():
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
         name="test tag definition child 1",
         time_edit=c.time_edit_test + timedelta(seconds=10),
+        owner_id=user.id,
+        requester=user,
     )
     tag_def.save()
     return tag_def

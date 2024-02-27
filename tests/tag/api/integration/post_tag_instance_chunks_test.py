@@ -74,7 +74,7 @@ def test_non_existent_slice(auth_server, tag_def, entity0):
     ]
     post_tag_instances(live_server.url, instances, cookies=cookies)
     rsp = post_tag_instance_chunks(
-        live_server.url, tag_def.id_persistent, 3, 4, cookies=cookies
+        live_server.url, tag_def.id_persistent, 30000, 4, cookies=cookies
     )
     assert rsp.status_code == 200
     persons = rsp.json()["tag_instances"]

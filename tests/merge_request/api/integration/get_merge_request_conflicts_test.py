@@ -58,12 +58,12 @@ def test_conflicts_no_resolution(
         json["merge_request"],
         {
             "assigned_to": {
-                "user_name": cu.test_username,
+                "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
                 "permission_group": "APPLICANT",
             },
             "created_by": {
-                "user_name": cu.test_username1,
+                "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
                 "permission_group": "APPLICANT",
             },
@@ -77,7 +77,11 @@ def test_conflicts_no_resolution(
                 "name": c.name_tag_def_origin,
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
-                "owner": "test-user1",
+                "owner": {
+                    "username": "test-user1",
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -88,7 +92,11 @@ def test_conflicts_no_resolution(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
-                "owner": "test-user",
+                "owner": {
+                    "username": "test-user",
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -163,12 +171,12 @@ def test_conflicts_same_value(
         json["merge_request"],
         {
             "assigned_to": {
-                "user_name": cu.test_username,
+                "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
                 "permission_group": "APPLICANT",
             },
             "created_by": {
-                "user_name": cu.test_username1,
+                "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
                 "permission_group": "APPLICANT",
             },
@@ -182,7 +190,11 @@ def test_conflicts_same_value(
                 "name": c.name_tag_def_origin,
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
-                "owner": "test-user1",
+                "owner": {
+                    "username": "test-user1",
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -193,7 +205,11 @@ def test_conflicts_same_value(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
-                "owner": "test-user",
+                "owner": {
+                    "username": "test-user",
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -221,12 +237,12 @@ def test_conflict_resolved(
         json["merge_request"],
         {
             "assigned_to": {
-                "user_name": cu.test_username,
+                "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
                 "permission_group": "APPLICANT",
             },
             "created_by": {
-                "user_name": cu.test_username1,
+                "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
                 "permission_group": "APPLICANT",
             },
@@ -240,7 +256,11 @@ def test_conflict_resolved(
                 "name": c.name_tag_def_origin,
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
-                "owner": "test-user1",
+                "owner": {
+                    "username": "test-user1",
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -251,7 +271,11 @@ def test_conflict_resolved(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
-                "owner": "test-user",
+                "owner": {
+                    "username": "test-user",
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -306,6 +330,8 @@ def test_conflict_resolved_tag_def_origin_changed(
         version=old_tag_definition.id,
         name="changed tag definition test",
         time_edit=datetime(1912, 4, 8),
+        requester=merge_request_user.created_by,
+        owner_id=merge_request_user.created_by.id,
     )[0].save()
     server, cookies = auth_server
     rsp = req.get_conflicts(
@@ -318,12 +344,12 @@ def test_conflict_resolved_tag_def_origin_changed(
         json["merge_request"],
         {
             "assigned_to": {
-                "user_name": cu.test_username,
+                "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
                 "permission_group": "APPLICANT",
             },
             "created_by": {
-                "user_name": cu.test_username1,
+                "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
                 "permission_group": "APPLICANT",
             },
@@ -337,7 +363,11 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "name": "changed tag definition test",
                 "name_path": ["changed tag definition test"],
                 "type": "STRING",
-                "owner": "test-user1",
+                "owner": {
+                    "username": "test-user1",
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -348,7 +378,11 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
-                "owner": "test-user",
+                "owner": {
+                    "username": "test-user",
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -453,12 +487,12 @@ def test_tag_instance_destination_value_added(
         json["merge_request"],
         {
             "assigned_to": {
-                "user_name": cu.test_username,
+                "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
                 "permission_group": "APPLICANT",
             },
             "created_by": {
-                "user_name": cu.test_username1,
+                "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
                 "permission_group": "APPLICANT",
             },
@@ -472,7 +506,11 @@ def test_tag_instance_destination_value_added(
                 "name": c.name_tag_def_origin,
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
-                "owner": "test-user1",
+                "owner": {
+                    "username": "test-user1",
+                    "id_persistent": cu.test_uuid1,
+                    "permission_group": "APPLICANT",
+                },
                 "curated": False,
                 "hidden": False,
                 "disabled": False,
@@ -483,8 +521,12 @@ def test_tag_instance_destination_value_added(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
-                "owner": "test-user",
                 "curated": False,
+                "owner": {
+                    "username": "test-user",
+                    "id_persistent": cu.test_uuid,
+                    "permission_group": "APPLICANT",
+                },
                 "hidden": False,
                 "disabled": False,
             },

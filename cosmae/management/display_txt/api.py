@@ -1,4 +1,5 @@
 "API methods for managing display_txt order."
+
 from django.http import HttpRequest
 from ninja import Router, Schema
 
@@ -8,11 +9,8 @@ from cosmae.management.display_txt.util import (
     get_display_txt_order_tag_definitions,
 )
 from cosmae.management.models_django import AlreadyInListException, ConfigValue
-from cosmae.tag.api.definitions import (
-    TagDefinitionResponse,
-    TagDefinitionResponseList,
-    tag_definition_db_to_api,
-)
+from cosmae.tag.api.definitions import TagDefinitionResponse, TagDefinitionResponseList
+from cosmae.tag.api.models_conversion import tag_definition_db_to_api
 from cosmae.tag.models_django import TagDefinition
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
@@ -22,6 +20,7 @@ router = Router()
 
 class DisplayTxtOrderAppend(Schema):
     "API model for appending a tag definition to the display text order"
+
     # pylint: disable=too-few-public-methods
     id_tag_definition_persistent: str
 

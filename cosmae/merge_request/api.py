@@ -1,4 +1,5 @@
 "API methods for merge requests."
+
 from datetime import datetime
 from typing import List, Optional
 
@@ -7,16 +8,19 @@ from django.http import HttpRequest
 from ninja import Router, Schema
 
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
-from cosmae.merge_request.entity.api import TagInstance, merge_request_step_db_to_api_map
+from cosmae.merge_request.entity.api import (
+    TagInstance,
+    merge_request_step_db_to_api_map,
+)
 from cosmae.merge_request.models_django import TagConflictResolution
 from cosmae.merge_request.models_django import TagMergeRequest as MergeRequestDb
 from cosmae.person.api import PersonNatural, person_db_dict_to_api
-from cosmae.tag.api.definitions import tag_definition_db_to_api
 from cosmae.tag.api.models_api import TagDefinitionResponse
+from cosmae.tag.api.models_conversion import tag_definition_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.tag.models_django import TagInstance as TagInstanceDb
-from cosmae.user.api import user_db_to_public_user_info
-from cosmae.user.models_api import PublicUserInfo
+from cosmae.user.models_api.public import PublicUserInfo
+from cosmae.user.models_conversion import user_db_to_public_user_info
 from cosmae.util.auth import check_user
 
 router = Router()
@@ -61,6 +65,7 @@ class MergeRequestResponseList(Schema):
 
 class ConflictResolutionPostRequest(Schema):
     "Body for requests that resolve merge request conflicts"
+
     # pylint: disable=too-few-public-methods
     id_entity_version: int
     id_tag_definition_origin_version: int
@@ -77,6 +82,7 @@ class ConflictResolutionPostRequest(Schema):
 
 class PatchMergeRequestRequest(Schema):
     "Body for changing a merge request"
+
     # pylint: disable=too-few-public-methods
     disable_origin_on_merge: Optional[bool]
 

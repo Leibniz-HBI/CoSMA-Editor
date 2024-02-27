@@ -7,17 +7,17 @@ from django.db import transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.exception import ApiError, NotAuthenticatedException
+from cosmae.exception import ApiError, NotAuthenticatedException, PermissionException
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.api.definitions import (
+from cosmae.tag.api.models_api import TagDefinitionResponse
+from cosmae.tag.api.models_conversion import (
     tag_definition_db_dict_to_api,
     tag_definition_db_to_api,
 )
-from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.tag.models_django import OwnershipRequest as OwnershipRequestDb
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
-from cosmae.user.api import user_db_to_public_user_info
-from cosmae.user.models_api import PublicUserInfo
+from cosmae.user.models_api.public import PublicUserInfo
+from cosmae.user.models_conversion import user_db_to_public_user_info
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
@@ -65,7 +65,7 @@ def post_curation(request: HttpRequest, id_tag_definition_persistent):
                 id_tag_definition_persistent
             )
             time_edit = timestamp()
-            tag_definition, do_write = tag_definition.set_curated(time_edit)
+            tag_definition, do_write = tag_definition.set_curated(user, time_edit)
             if do_write:
                 tag_definition.save()
             OwnershipRequestDb.by_id_tag_definition_persistent_query_set(
@@ -75,6 +75,8 @@ def post_curation(request: HttpRequest, id_tag_definition_persistent):
         return 200, tag_definition_db_to_api(tag_definition)
     except TagDefinitionDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Tag Definition does not exist.")
+    except PermissionException:
+        return 403, ApiError(msg="Insufficient permissions.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not change curation status of tag definition")
 
@@ -118,7 +120,9 @@ def post_ownership_request(  # pylint:: disable=too-many-return-statements
             ).delete()
             if str(user.id_persistent) == id_user_persistent:
                 time_edit = timestamp()
-                tag_definition_new, do_save = tag_definition.set_owner(user, time_edit)
+                tag_definition_new, do_save = tag_definition.set_owner(
+                    user, user, time_edit
+                )
                 if do_save:
                     with transaction.atomic():
                         tag_definition_new.save()
@@ -168,7 +172,9 @@ def post_accept_ownership_request(
         tag_definition = TagDefinitionDb.most_recent_by_id(
             ownership_request.id_tag_definition_persistent
         )
-        tag_definition_new, do_save = tag_definition.set_owner(user, time_edit)
+        tag_definition_new, do_save = tag_definition.set_owner(
+            user, ownership_request.petitioner, time_edit
+        )
         if do_save:
             with transaction.atomic():
                 tag_definition_new.save()

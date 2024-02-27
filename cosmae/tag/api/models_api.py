@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from ninja import Schema
 
+from cosmae.user.models_api.public import PublicUserInfo
+
 
 class TagDefinitionResponse(Schema):
     "API model for a tag definition as a response object."
@@ -13,7 +15,7 @@ class TagDefinitionResponse(Schema):
     name_path: List[str]
     version: int
     type: str
-    owner: Optional[str]
+    owner: Optional[PublicUserInfo]
     curated: bool
     hidden: bool
     disabled: bool

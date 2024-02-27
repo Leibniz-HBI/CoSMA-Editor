@@ -64,7 +64,7 @@ def test_reverse(
         json["merge_request"],
         {
             "created_by": {
-                "user_name": cu.test_username_commissioner,
+                "username": cu.test_username_commissioner,
                 "id_persistent": cu.test_uuid_commissioner,
                 "permission_group": "COMMISSIONER",
             },
@@ -145,7 +145,7 @@ def test_double_reverse(
         json["merge_request"],
         {
             "created_by": {
-                "user_name": cu.test_username_commissioner,
+                "username": cu.test_username_commissioner,
                 "id_persistent": cu.test_uuid_commissioner,
                 "permission_group": "COMMISSIONER",
             },

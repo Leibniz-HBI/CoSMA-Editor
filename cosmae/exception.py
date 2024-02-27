@@ -58,6 +58,10 @@ class NoChildTagDefinitionsAllowedException(Exception):
         self.id_persistent = id_persistent
 
 
+class NoSelfParentTagException(Exception):
+    "Indicates that the tag was set to have itself as parent.."
+
+
 class NoParentTagException(Exception):
     "Indicates that the tag with the specified id_persistent does not exist."
 
@@ -94,6 +98,13 @@ class TagDefinitionMissingException(Exception):
     "Indicates that there is no tag definition with the given persistent id."
 
     def __init__(self, id_persistent):
+        self.id_persistent = id_persistent
+
+
+class PermissionException(Exception):
+    "Indicates that there are insufficient permissions."
+
+    def __init__(self, id_persistent) -> None:
         self.id_persistent = id_persistent
 
 

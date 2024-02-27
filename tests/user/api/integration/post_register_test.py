@@ -13,7 +13,7 @@ def test_same_name(auth_server):
     rsp = post_register(
         live_server.url,
         {
-            "user_name": c.test_username,
+            "username": c.test_username,
             "email": "other@test.org",
             "names_personal": c.test_names_personal,
             "password": c.test_password,
@@ -28,7 +28,7 @@ def test_same_email(auth_server):
     rsp = post_register(
         live_server.url,
         {
-            "user_name": "other",
+            "username": "other",
             "email": c.test_email,
             "names_personal": c.test_names_personal,
             "password": c.test_password,
@@ -46,7 +46,7 @@ def test_same_names(auth_server):
         rsp = post_register(
             live_server.url,
             {
-                "user_name": "other",
+                "username": "other",
                 "email": "other@test.org",
                 "names_personal": c.test_names_personal,
                 "password": c.test_password,
@@ -54,7 +54,7 @@ def test_same_names(auth_server):
         )
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "user_name": "other",
+        "username": "other",
         "email": "other@test.org",
         "names_personal": c.test_names_personal,
         "names_family": "",
@@ -72,7 +72,7 @@ def test_bad_db(auth_server):
         req = post_register(
             live_server.url,
             {
-                "user_name": "other",
+                "username": "other",
                 "email": "other@test.org",
                 "names_personal": c.test_names_personal,
                 "password": c.test_password,

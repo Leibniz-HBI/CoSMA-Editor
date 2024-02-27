@@ -14,7 +14,7 @@ def test_logged_in(auth_server):
     rsp = get_refresh(live_server.url, cookies=cookies)
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "user_name": c.test_username,
+        "username": c.test_username,
         "names_personal": c.test_names_personal,
         "email": c.test_email,
         "names_family": "",

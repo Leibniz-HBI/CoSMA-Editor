@@ -1,4 +1,5 @@
 """Utils for Django"""
+
 from functools import lru_cache
 from typing import Iterable, Optional, Type
 
@@ -7,7 +8,12 @@ from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import Aggregate, JSONField, Model
 from django.db.transaction import atomic
 
-from cosmae.exception import DbObjectExistsException, EntityUpdatedException
+from cosmae.exception import (
+    DbObjectExistsException,
+    EntityUpdatedException,
+    PermissionException,
+)
+from cosmae.util import CosmaeUser
 
 
 def save_many_atomic(models: Iterable[Model]):
@@ -20,7 +26,9 @@ def save_many_atomic(models: Iterable[Model]):
 def change_or_create_versioned(
     cls,
     id_persistent: str,
+    requester: CosmaeUser,
     version: Optional[int] = None,
+    skip_write_check: bool = False,
     **kwargs,
 ):
     """Changes a versioned model instance in the database by adding a new version.
@@ -41,6 +49,11 @@ def change_or_create_versioned(
     if most_recent is None:
         new_values = {}
     else:
+        if not skip_write_check:
+            if hasattr(most_recent, "has_write_access"):
+                can_write = most_recent.has_write_access(requester)
+                if not can_write:
+                    raise PermissionException(id_persistent)
         new_values = {
             field.attname: getattr(most_recent, field.attname)
             for field in cls._meta.get_fields()  # pylint: disable=protected-access
@@ -72,6 +85,7 @@ def patch_from_dict(object_db, **kwargs):
 
 class JsonGroupArray(Aggregate):  # pylint: disable=abstract-method
     "Django JSON array aggregation for SQLite"
+
     function = "JSON_GROUP_ARRAY"
     output_field = JSONField()
     template = "%(function)s(%(distinct)s%(expressions)s)"

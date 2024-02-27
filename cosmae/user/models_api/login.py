@@ -1,10 +1,11 @@
-"Models for user API"
+"API models for login and registration."
 from typing import List, Union
 
 from ninja import Schema
 from pydantic import Field
 
 from cosmae.tag.api.models_api import TagDefinitionResponse
+from cosmae.user.models_api.public import PublicUserInfo
 
 
 class LoginRequest(Schema):
@@ -20,7 +21,7 @@ class LoginRequest(Schema):
 class LoginResponse(Schema):
     # pylint: disable=too-few-public-methods
     "API model for response to login requests"
-    user_name: str
+    username: str
     id_persistent: str
     names_personal: str
     names_family: str
@@ -36,17 +37,9 @@ class LoginResponseList(Schema):
     next_offset: int
 
 
-class PublicUserInfo(Schema):
-    # pylint: disable=too-few-public-methods
-    "API model for public user information."
-    user_name: str
-    id_persistent: str
-    permission_group: str
-
-
 class RegisterRequest(Schema):
     "API model for register requests."
-    user_name: str = Field(None, min_length=2, max_length=150)
+    username: str = Field(None, min_length=2, max_length=150)
     names_personal: str = Field(None, min_length=2, max_length=150)
     names_family: str = Field(None, min_length=2, max_length=150)
     email: str = Field(None, min_length=2, max_length=150)

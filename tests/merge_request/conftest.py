@@ -30,6 +30,7 @@ def destination_tag_def_for_mr_changed(destination_tag_def_for_mr):
         version=destination_tag_def_for_mr.id,
         name="changed tag definition test",
         time_edit=c.time_tag_def_destination_changed,
+        requester=destination_tag_def_for_mr.owner,
     )
     tag_def.save()
     return tag_def
@@ -64,6 +65,7 @@ def origin_tag_def_for_mr_changed(origin_tag_def_for_mr):
         version=origin_tag_def_for_mr.id,
         name="changed tag definition test",
         time_edit=c.time_tag_def_origin_changed,
+        requester=origin_tag_def_for_mr.owner,
     )
     tag_def.save()
     return tag_def

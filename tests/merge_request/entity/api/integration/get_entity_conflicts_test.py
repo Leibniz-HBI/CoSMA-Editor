@@ -57,7 +57,7 @@ def test_conflicts_no_resolution(
         json["merge_request"],
         {
             "created_by": {
-                "user_name": cu.test_username_commissioner,
+                "username": cu.test_username_commissioner,
                 "id_persistent": cu.test_uuid_commissioner,
                 "permission_group": "COMMISSIONER",
             },
@@ -167,7 +167,7 @@ def test_conflicts_same_value(
         json["merge_request"],
         {
             "created_by": {
-                "user_name": cu.test_username_commissioner,
+                "username": cu.test_username_commissioner,
                 "id_persistent": cu.test_uuid_commissioner,
                 "permission_group": "COMMISSIONER",
             },
@@ -208,7 +208,7 @@ def test_conflicts_resolved(
         json["merge_request"],
         {
             "created_by": {
-                "user_name": cu.test_username_commissioner,
+                "username": cu.test_username_commissioner,
                 "id_persistent": cu.test_uuid_commissioner,
                 "permission_group": "COMMISSIONER",
             },

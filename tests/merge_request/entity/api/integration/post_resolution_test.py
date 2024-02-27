@@ -134,7 +134,7 @@ def test_resolve_conflicts(
         json["merge_request"],
         {
             "created_by": {
-                "user_name": cu.test_username_commissioner,
+                "username": cu.test_username_commissioner,
                 "id_persistent": cu.test_uuid_commissioner,
                 "permission_group": "COMMISSIONER",
             },

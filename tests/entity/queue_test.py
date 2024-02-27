@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import tests.tag.common as ct
+import tests.user.common as cu
 from tests.utils import assert_versioned
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
@@ -35,10 +36,11 @@ def test_with_display_txt(entity0):
 
 
 @pytest.fixture
-def entity_without_display_txt(db):
+def entity_without_display_txt(db, user):
     entity, _ = Entity.change_or_create(
         id_persistent=id_persistent_entity_no_display_txt,
         time_edit=time_edit_entity_no_display_txt,
+        requester=user,
     )
     entity.save()
     return entity
@@ -70,7 +72,7 @@ def instance_tag_def_1(entity_without_display_txt, tag_def1):
 
 
 def test_without_display_txt_but_relevant_tag_instance(
-    display_txt_order_0_1_curated, instance_tag_def_1
+    user1, display_txt_order_0_1_curated, instance_tag_def_1
 ):
     update_display_txt_cache(instance_tag_def_1.id_entity_persistent)
     result = entity_display_txt_information_cache.get(
@@ -85,7 +87,11 @@ def test_without_display_txt_but_relevant_tag_instance(
             "id_parent_persistent": None,
             "name": ct.name_tag_def_test1,
             "type": "STR",
-            "owner": {"username": "test-user1"},
+            "owner": {
+                "username": "test-user1",
+                "permission_group": "APPLICANT",
+                "id_persistent": user1.id_persistent,
+            },
             "curated": False,
             "hidden": False,
             "disabled": False,
@@ -140,6 +146,7 @@ def contribution_instance_without_display_txt(
         time_edit_entity_contribution_no_display_txt,
         version=entity_without_display_txt.id,
         contribution_candidate_id=contribution.id_persistent,
+        requester=user,
     )
     entity.save()
     TagMergeRequest.objects.create(  # pylint: disable=no-member
@@ -170,7 +177,11 @@ def test_contribution(contribution_instance_without_display_txt, display_txt_ord
             "id_parent_persistent": None,
             "name": ct.name_tag_def_test1,
             "type": "STR",
-            "owner": {"username": "test-user1"},
+            "owner": {
+                "username": "test-user1",
+                "id_persistent": cu.test_uuid1,
+                "permission_group": "APPLICANT",
+            },
             "curated": False,
             "hidden": False,
             "disabled": False,
@@ -189,7 +200,11 @@ def test_db_to_dict(tag_def):
             "id_parent_persistent": None,
             "name": ct.name_tag_def_test,
             "type": "STR",
-            "owner": {"username": "test-user"},
+            "owner": {
+                "username": "test-user",
+                "id_persistent": tag_def.owner.id_persistent,
+                "permission_group": "APPLICANT",
+            },
             "curated": False,
             "hidden": False,
             "disabled": True,

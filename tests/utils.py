@@ -31,13 +31,15 @@ def assert_versioned(actual, expected, path=None, version_key="version"):
             assert len(actual) == len(expected)
         for key in actual:
             if key != version_key:
-                assert_versioned(actual[key], expected[key], path + [key])
+                assert_versioned(actual[key], expected[key], path + [key], version_key)
     elif isinstance(actual, list):
         assert isinstance(expected, list)
         assert len(actual) == len(expected)
         for idx, tpl in enumerate(zip(actual, expected)):
             actual_element, expected_element = tpl
-            assert_versioned(actual_element, expected_element, path + [idx])
+            assert_versioned(
+                actual_element, expected_element, path + [idx], version_key
+            )
     else:
         try:
             assert actual == expected

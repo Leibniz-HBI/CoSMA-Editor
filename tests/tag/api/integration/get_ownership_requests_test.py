@@ -25,7 +25,14 @@ def test_no_cookies(auth_server):
     assert rsp.status_code == 401
 
 
-def test_get_request(auth_server, ownership_request_curated, ownership_request_user):
+def test_get_request(
+    auth_server,
+    user,
+    user1,
+    user_commissioner,
+    ownership_request_curated,
+    ownership_request_user,
+):
     "Make sure that permission requests are returned from api."
     server, cookies = auth_server
     rsp = req.get_ownership_requests(server.url, cookies)
@@ -37,12 +44,12 @@ def test_get_request(auth_server, ownership_request_curated, ownership_request_u
             "received": [
                 {
                     "petitioner": {
-                        "user_name": cu.test_username_commissioner,
+                        "username": cu.test_username_commissioner,
                         "id_persistent": cu.test_uuid_commissioner,
                         "permission_group": "COMMISSIONER",
                     },
                     "receiver": {
-                        "user_name": cu.test_username,
+                        "username": cu.test_username,
                         "id_persistent": cu.test_uuid,
                         "permission_group": "APPLICANT",
                     },
@@ -63,12 +70,12 @@ def test_get_request(auth_server, ownership_request_curated, ownership_request_u
             "petitioned": [
                 {
                     "petitioner": {
-                        "user_name": cu.test_username,
+                        "username": cu.test_username,
                         "id_persistent": cu.test_uuid,
                         "permission_group": "APPLICANT",
                     },
                     "receiver": {
-                        "user_name": cu.test_username1,
+                        "username": cu.test_username1,
                         "id_persistent": cu.test_uuid1,
                         "permission_group": "APPLICANT",
                     },
@@ -79,7 +86,11 @@ def test_get_request(auth_server, ownership_request_curated, ownership_request_u
                         "curated": False,
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_test_user],
-                        "owner": cu.test_username,
+                        "owner": {
+                            "username": cu.test_username,
+                            "id_persistent": cu.test_uuid,
+                            "permission_group": "APPLICANT",
+                        },
                         "hidden": False,
                         "disabled": False,
                     },
@@ -106,12 +117,12 @@ def test_get_request_commissioner(
             "petitioned": [
                 {
                     "petitioner": {
-                        "user_name": cu.test_username_editor,
+                        "username": cu.test_username_editor,
                         "id_persistent": cu.test_uuid_editor,
                         "permission_group": "EDITOR",
                     },
                     "receiver": {
-                        "user_name": cu.test_username,
+                        "username": cu.test_username,
                         "id_persistent": cu.test_uuid,
                         "permission_group": "APPLICANT",
                     },

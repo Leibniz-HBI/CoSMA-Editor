@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import tests.management.display_txt.api.integration.requests as req
 import tests.tag.common as ct
+import tests.user.common as cu
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
 
@@ -52,7 +53,11 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "curated": False,
                     "hidden": False,
                     "disabled": False,
-                    "owner": "test-user",
+                    "owner": {
+                        "username": "test-user",
+                        "id_persistent": cu.test_uuid,
+                        "permission_group": "APPLICANT",
+                    },
                 },
                 {
                     "id_persistent": ct.id_tag_def_persistent_test_user1,
@@ -63,7 +68,11 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "curated": False,
                     "hidden": False,
                     "disabled": False,
-                    "owner": "test-user1",
+                    "owner": {
+                        "username": "test-user1",
+                        "id_persistent": cu.test_uuid1,
+                        "permission_group": "APPLICANT",
+                    },
                 },
                 {
                     "id_persistent": ct.id_tag_def_curated_test,

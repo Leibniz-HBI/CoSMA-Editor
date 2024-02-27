@@ -51,12 +51,13 @@ def test_different_type(tag_def_history):
 
 
 @pytest.mark.django_db
-def test_same(tag_def_history):
+def test_same(tag_def_history, user):
     tag_def1 = TagDefinitionHistory(
         id_persistent=tag_def_history.id_persistent,
         time_edit=tag_def_history.time_edit,
         name=c.name_tag_def_test,
         type=TagDefinition.FLOAT,
+        owner=user,
     )
     assert not tag_def_history.check_different_before_save(tag_def1)
     assert not tag_def1.check_different_before_save(tag_def_history)
@@ -73,12 +74,13 @@ def test_store_and_retrieve_tag_def(tag_def_history):
 
 
 @pytest.mark.django_db
-def test_missing_parent():
+def test_missing_parent(user):
     with pytest.raises(NoParentTagException) as exc:
         TagDefinitionHistory.change_or_create(
             c.id_tag_def_persistent_test,
             c.time_edit_test,
             c.name_tag_def_test,
+            user,
             c.id_tag_def_parent_persistent_test,
         )
     assert exc.value.args[0] == c.id_tag_def_parent_persistent_test
@@ -93,6 +95,7 @@ def test_valid_parent_same_name(tag_def_history):
         c.id_tag_def_persistent_test,
         c.time_edit_test,
         c.name_tag_def_test,
+        tag_def_history.owner,
         c.id_tag_def_parent_persistent_test,
     )
     assert ret.id_parent_persistent == c.id_tag_def_parent_persistent_test
@@ -119,6 +122,7 @@ def test_tag_exists_child(tag_def_parent):
         c.id_tag_def_persistent_test,
         c.time_edit_test,
         c.name_tag_def_test,
+        tag_def_parent.owner,
         c.id_tag_def_parent_persistent_test,
     )
     old.save()
@@ -128,6 +132,7 @@ def test_tag_exists_child(tag_def_parent):
             "other_tag_def_id_test",
             c.time_edit_test,
             c.name_tag_def_test,
+            tag_def_parent.owner,
             c.id_tag_def_parent_persistent_test,
         )
     assert exc.value.args[0] == c.name_tag_def_test
@@ -217,6 +222,7 @@ def test_children_updated(tag_def_parent, tag_def_child_0, tag_def_child_1):
         name=tag_def_child_0.name + "modified",
         time_edit=tag_def_child_0.time_edit + timedelta(seconds=10),
         version=tag_def_child_0.id,
+        requester=tag_def_child_0.owner,
     )
     tag_def_child_0_updated_history.save()
     tag_def_child_0_updated = TagDefinition.objects.get(  # pylint: disable=no-member
@@ -239,7 +245,7 @@ def test_children_root(tag_def):
 
 
 @pytest.mark.django_db
-def test_only_for_user(tag_def_user, tag_def):
+def test_only_for_user(tag_def_user, tag_def_no_owner_history):
     ret = TagDefinition.for_user(tag_def_user.owner).get()
     assert ret == tag_def_user
 
@@ -251,8 +257,9 @@ def test_most_recent_for_user(tag_def_user):
         id_parent_persistent=None,
         time_edit=timestamp(),
         name="new_name",
-        owner=tag_def_user.owner,
+        owner_id=tag_def_user.owner.id,
         version=tag_def_user.id,
+        requester=tag_def_user.owner,
     )
     tag_def_edited.save()
     ret = TagDefinition.for_user(tag_def_user.owner).get()
@@ -260,7 +267,7 @@ def test_most_recent_for_user(tag_def_user):
 
 
 @pytest.mark.django_db
-def test_can_create_hidden():
+def test_can_create_hidden(user):
     tag_def, _ = TagDefinitionHistory.change_or_create(
         id_persistent=c.id_tag_def_persistent_test,
         id_parent_persistent=None,
@@ -268,6 +275,7 @@ def test_can_create_hidden():
         name="new_name",
         owner=None,
         hidden=True,
+        requester=user,
     )
     tag_def.save()
     retrieved = TagDefinition.most_recent_by_id(c.id_tag_def_persistent_test)

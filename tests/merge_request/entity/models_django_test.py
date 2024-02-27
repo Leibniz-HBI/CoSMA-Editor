@@ -350,6 +350,8 @@ def test_change_all(
         time_edit=datetime(1912, 4, 7),
         name="edited tag definition",
         version=old_tag_def.id,
+        owner_id=old_tag_def.owner.id,
+        requester=old_tag_def.owner,
     )[0].save()
 
     recent = EntityConflictResolution.only_recent()

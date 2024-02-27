@@ -69,7 +69,7 @@ def test_get_entity_merge_request(auth_server_commissioner, merge_request_user):
             },
             "created_by": {
                 "id_persistent": cu.test_uuid_commissioner,
-                "user_name": cu.test_username_commissioner,
+                "username": cu.test_username_commissioner,
                 "permission_group": "COMMISSIONER",
             },
             "state": "OPEN",

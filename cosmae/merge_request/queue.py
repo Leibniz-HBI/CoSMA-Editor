@@ -28,6 +28,7 @@ def disable_origin(merge_request: TagMergeRequest, time_edit):
             tag_definition.id_persistent,
             time_edit,
             tag_definition.name,
+            merge_request.created_by,
             tag_definition.id_parent_persistent,
             tag_definition.id,
             owner=tag_definition.owner,
