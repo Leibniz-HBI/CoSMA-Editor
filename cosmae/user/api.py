@@ -4,6 +4,7 @@ from typing import Union
 from urllib.parse import unquote
 from uuid import uuid4
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import AnonymousUser, Group
 from django.db import DatabaseError, IntegrityError
@@ -71,13 +72,17 @@ def refresh_get(request):
 def register_post(_, registration_info: RegisterRequest):
     "API endpoint for registration"
     try:
+        permission_group = CosmaeUser.APPLICANT
+        if not (settings.DEBUG or settings.IS_UNITTEST):
+            if len(CosmaeUser.objects.exclude(is_superuser=True)) == 0:
+                permission_group = CosmaeUser.COMMISSIONER
         user = CosmaeUser.objects.create_user(
             username=registration_info.user_name,
             email=registration_info.email,
             password=registration_info.password,
             first_name=registration_info.names_personal,
             id_persistent=uuid4(),
-            permission_group=CosmaeUser.APPLICANT,
+            permission_group=permission_group,
         )
         if user.last_name and user.last_name != "":
             user.last_name = registration_info.names_family

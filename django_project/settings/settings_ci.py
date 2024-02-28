@@ -197,7 +197,7 @@ CACHES = {
     },
 }
 
-IS_UNITTEST = False
+IS_UNITTEST = True
 
 LOGGING = {
     "version": 1,

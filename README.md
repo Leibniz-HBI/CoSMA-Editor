@@ -8,23 +8,22 @@ Currently the following features are supported:
 * Change the displayed metadata fields
 * Create new metadata fields
 * Edit Data
-
-### Planned Features
-The following features will be implemented
-* Bulk data upload
-* Assisted review for merging data from bulk uploads into the database
-
+* Upload batch data in `.csv` format and merge it with existing data, with automatic duplicate detection.
 
 # Running
 You can run CoSMA-Editor using `docker compose`.
-The following instructions use a single node docker swarm.
-You can also edit the file to use different ports than the standard 443 for HTTPS and 80 for HTTP
+The following instructions use a single node Docker Swarm.
+## Setup Docker Swarm
+1. [Install docker](https://docs.docker.com/engine/install/)
+2. Setup swarm: `docker swarm init`
+
+You can also edit the file located `docker-compose.yml` to use different ports than the standard 443 for HTTPS and 80 for HTTP
 (HTTP is only used SSL certificate renewal challenges).
 For more details how to edit the configuration please check the [Docker Compose file reference](https://docs.docker.com/compose/compose-file/compose-file-v3)
-The following secrets are needed.
 Please substitute your values for patterns starting with a **$** like `$REPLACE_THIS`.
 1. Start a container running a registry: `docker service create --name registry --publish published=5000,target=5000 registry:2`
-2. Create the following secrets using ` echo '$SECRET_CONTENTS | docker secret create $SECRET_NAME -'`
+2. Create the secrets.
+you can either use the `quick_setup.py` script for setting up secrets or register the following secrets manually using ` echo '$SECRET_CONTENTS | docker secret create $SECRET_NAME -'`
   * `cosmae_db_password` contains the database password.
   * `cosmae_db_user` contains the database user name.
   * `cosmae_db_name` contains the name of the database.
@@ -41,9 +40,14 @@ Please substitute your values for patterns starting with a **$** like `$REPLACE_
   You can generate it using `< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-64};echo;`
   * `cosmae_redis_password` contains the redis password
   * `cosmae_redis_conf` contains `requirepass $REDIS_PASSWORD`
-3. From the base directory of the repository run `docker-compose build` to build the containers.
-4. Run `docker-compose push` to push the images to the registry.
-5. Add a SSL certificate (`cosmae.crt`) and key (`cosmae.key`) to a folder called `/srv/cosmae/ssl`.
+3. From the base directory of the repository run `docker compose build` to build the containers.
+4. Run `docker compose push` to push the images to the registry.
+5. Create empty directories:
+    * `/srv/cosmae/ssl`
+    * `/srv/cosmae/contributions`
+    * `/srv/cosmae/acme-challenge`
+6. Set your user as owner of the directories: `chown -R ${USER} /srv/cosmae`
+7. Add a SSL certificate (`cosmae.crt`) and key (`cosmae.key`) while being in directory `/srv/cosmae/ssl`.
 you can create a temporary insecure certificate and key using
 ```
 openssl req -x509 -out /srv/cosmae/ssl/cosmae.crt -keyout /srv/cosmae/ssl/cosmae.key \
@@ -52,11 +56,10 @@ openssl req -x509 -out /srv/cosmae/ssl/cosmae.crt -keyout /srv/cosmae/ssl/cosmae
    printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
 ```
 For proper credentials please use [certbot](https://certbot.eff.org/) or [getssl](https://github.com/srvrco/getssl)
-6. Create an empty folder `/srv/cosmae/acme-challenge`.
-7. Run CoSMA-Editor using `docker stack deploy --compose-file docker-compose.yml cosmae`
-8. Check that CoSMA-Editor is now accessible over HTTPS's default port 443 on your machine using a browser.
-9. Navigate to `http:127.0.0.1:8000` and login using the username `admin` and the password `changeme`.
-10. Change the password and possibly the username in the django admin UI.
+8. Run CoSMA-Editor using `docker stack deploy --compose-file docker-compose.yml cosmae`
+9. Check that CoSMA-Editor is now accessible over HTTPS's default port 443 on your machine using a browser.
+10. Navigate to `http:127.0.0.1:8000` and login using the username `admin` and the password `changeme`.
+11. Change the password and possibly the username in the django admin UI.
 
 # Development
 There are two projects in this repository.
@@ -91,4 +94,4 @@ The easiest way is to launch it in a container: `docker run -p 6379:6379 redis`.
 * In a seperate shell switch to the `ui` directory and run `npm start`.
 
 # Funding
-The CoSMA-Editor is funded by the German Federal Ministry of Education and Reasearch under grant numbers 01UG2151A-D and 16DTM208A&B
+The CoSMA-Editor is funded by the German Federal Ministry of Education and Reasearch under grant numbers 01UG2151A-D, 16DTM208A&B and 16DTM404A-E
