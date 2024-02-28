@@ -71,7 +71,7 @@ const namesPersonalTest = 'names personal test'
 const testError = 'test error message'
 const idPersistentTest = 'id-user-test'
 const userInfoApi = {
-    user_name: userNameTest,
+    username: userNameTest,
     names_personal: namesPersonalTest,
     email: emailTest,
     names_family: '',
@@ -81,7 +81,7 @@ const userInfoApi = {
 }
 const userInfoUi = newUserState({
     userInfo: {
-        userName: userNameTest,
+        username: userNameTest,
         namesPersonal: namesPersonalTest,
         email: emailTest,
         namesFamily: '',

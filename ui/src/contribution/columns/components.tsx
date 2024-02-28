@@ -1,7 +1,7 @@
 import { Button, Col, Form, FormCheck, ListGroup, Modal, Row } from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
 import { ChangeEvent, useEffect } from 'react'
-import { ColumnSelector, mkListItems } from '../../column_menu/components/selection'
+import { ColumnSelector } from '../../column_menu/components/selection'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
 import { TagDefinition } from '../../column_menu/state'
 import {
@@ -22,11 +22,7 @@ import {
     selectFinalizeColumnAssignment,
     selectSelectedColumnDefinition
 } from './selectors'
-import {
-    selectNavigationEntries,
-    selectTagSelectionLoading
-} from '../../column_menu/selectors'
-import { toggleExpansion } from '../../column_menu/slice'
+import { selectTagSelectionLoading } from '../../column_menu/selectors'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
 import { RemoteInterface } from '../../util/state'
 import { selectContribution } from '../selectors'
@@ -252,51 +248,43 @@ export function ExistingColumnForm({
 }) {
     const dispatch: AppDispatch = useDispatch()
     const tagIsLoading = useSelector(selectTagSelectionLoading)
-    const navigationEntries = useSelector(selectNavigationEntries)
     return (
         <div className="ps-1 pe-1 flex-column d-flex flex-grow-1 overflow-hidden">
             {tagIsLoading ? (
                 <CosmaeLoading />
             ) : (
                 <ColumnSelector
-                    listEntries={mkListItems({
-                        columnSelectionEntries: navigationEntries,
-                        path: [],
-                        level: 0,
-                        additionalEntries: [
-                            {
-                                idPersistent: 'id_persistent',
-                                name: 'Persistent Entity Id'
-                            },
-                            {
-                                idPersistent: 'display_txt',
-                                name: 'Display Text'
+                    mkTailElement={(columnDefinitionExisting) => (
+                        <Form.Check
+                            type="radio"
+                            name="idExisting"
+                            value={columnDefinitionExisting?.idPersistent}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                                dispatch(
+                                    patchColumnDefinitionContribution({
+                                        idPersistent:
+                                            columnDefinitionContribution.idPersistent,
+                                        idContributionPersistent,
+                                        idExistingPersistent: event.target.value
+                                    })
+                                )
                             }
-                        ],
-                        toggleExpansionCallback: (path) =>
-                            dispatch(toggleExpansion(path)),
-                        mkTailElement: (columnDefinitionExisting) => (
-                            <Form.Check
-                                type="radio"
-                                name="idExisting"
-                                value={columnDefinitionExisting?.idPersistent}
-                                onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                                    dispatch(
-                                        patchColumnDefinitionContribution({
-                                            idPersistent:
-                                                columnDefinitionContribution.idPersistent,
-                                            idContributionPersistent,
-                                            idExistingPersistent: event.target.value
-                                        })
-                                    )
-                                }
-                                checked={
-                                    columnDefinitionContribution.idExistingPersistent ==
-                                    columnDefinitionExisting?.idPersistent
-                                }
-                            />
-                        )
-                    })}
+                            checked={
+                                columnDefinitionContribution.idExistingPersistent ==
+                                columnDefinitionExisting?.idPersistent
+                            }
+                        />
+                    )}
+                    additionalEntries={[
+                        {
+                            idPersistent: 'id_persistent',
+                            name: 'Persistent Entity Id'
+                        },
+                        {
+                            idPersistent: 'display_txt',
+                            name: 'Display Text'
+                        }
+                    ]}
                 />
             )}
         </div>
@@ -305,8 +293,6 @@ export function ExistingColumnForm({
 
 export function NewColumnModalBody() {
     const isLoading = useSelector(selectTagSelectionLoading)
-    const navigationEntries = useSelector(selectNavigationEntries)
-    const dispatch = useDispatch()
     const additionalEntries = [{ idPersistent: '', name: 'No parent' }]
     if (isLoading) {
         return <CosmaeLoading />
@@ -315,26 +301,19 @@ export function NewColumnModalBody() {
         <ColumnTypeCreateForm>
             {(columnTypeCreateFormProps: ColumnTypeCreateFormProps) => (
                 <ColumnSelector
-                    listEntries={mkListItems({
-                        columnSelectionEntries: navigationEntries,
-                        path: [],
-                        toggleExpansionCallback: (path) =>
-                            dispatch(toggleExpansion(path)),
-                        level: 0,
-                        additionalEntries: additionalEntries,
-                        mkTailElement: (columnDefinition: TagDefinition) => (
-                            <Form.Check
-                                type="radio"
-                                name="parent"
-                                value={columnDefinition.idPersistent}
-                                onChange={columnTypeCreateFormProps.handleChange}
-                                checked={
-                                    columnTypeCreateFormProps.selectedParent ==
-                                    columnDefinition.idPersistent
-                                }
-                            />
-                        )
-                    })}
+                    additionalEntries={additionalEntries}
+                    mkTailElement={(columnDefinition: TagDefinition) => (
+                        <Form.Check
+                            type="radio"
+                            name="parent"
+                            value={columnDefinition.idPersistent}
+                            onChange={columnTypeCreateFormProps.handleChange}
+                            checked={
+                                columnTypeCreateFormProps.selectedParent ==
+                                columnDefinition.idPersistent
+                            }
+                        />
+                    )}
                 />
             )}
         </ColumnTypeCreateForm>

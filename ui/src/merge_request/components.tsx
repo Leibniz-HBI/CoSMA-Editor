@@ -128,7 +128,7 @@ export function MergeRequestListItem({
                 <Col xs={2}>
                     <Row>
                         <span>Opened by:</span>
-                        <span className="fw-bold">{`${mergeRequest.createdBy.userName}`}</span>
+                        <span className="fw-bold">{`${mergeRequest.createdBy.username}`}</span>
                     </Row>
                 </Col>
             </Row>

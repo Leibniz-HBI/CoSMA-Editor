@@ -11,20 +11,20 @@ export enum UserPermissionGroup {
 
 export interface PublicUserInfo {
     idPersistent: string
-    userName: string
+    username: string
     permissionGroup: UserPermissionGroup
 }
 export function newPublicUserInfo({
     idPersistent,
-    userName,
+    username,
     permissionGroup
 }: {
     idPersistent: string
-    userName: string
+    username: string
     permissionGroup: UserPermissionGroup
 }) {
     return {
-        userName: userName,
+        username: username,
         idPersistent: idPersistent,
         permissionGroup: permissionGroup
     }
@@ -37,7 +37,7 @@ export interface UserInfo extends PublicUserInfo {
     columns: TagDefinition[]
 }
 export function newUserInfo({
-    userName,
+    username,
     idPersistent,
     email,
     namesPersonal,
@@ -45,7 +45,7 @@ export function newUserInfo({
     permissionGroup,
     columns = []
 }: {
-    userName: string
+    username: string
     idPersistent: string
     email: string
     namesPersonal: string
@@ -54,7 +54,7 @@ export function newUserInfo({
     columns?: TagDefinition[]
 }): UserInfo {
     return {
-        userName,
+        username: username,
         idPersistent,
         permissionGroup,
         email: email,

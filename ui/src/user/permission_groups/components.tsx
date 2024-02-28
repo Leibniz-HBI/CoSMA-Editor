@@ -63,7 +63,7 @@ export function UserInfoListItem({
             onClick={() => selectUserCallback(userInfo)}
             role="button"
         >
-            {userInfo.userName}
+            {userInfo.username}
         </ListGroup.Item>
     )
 }
@@ -87,7 +87,7 @@ export function UserPermissionGroupForm({
                 <Col>
                     <span key="description">Change permissions for user: </span>
                     <span className="fw-bold" key="user-name">
-                        {userInfo.value.userName}
+                        {userInfo.value.username}
                     </span>
                 </Col>
             </Row>

@@ -118,12 +118,12 @@ const mergeRequest = {
     disable_origin_on_merge: true,
     created_by: {
         id_persistent: idUser,
-        user_name: nameUser,
+        username: nameUser,
         permission_group: 'CONTRIBUTOR'
     },
     assigned_to: {
         id_persistent: idUser1,
-        user_name: nameUser1,
+        username: nameUser1,
         permission_group: 'CONTRIBUTOR'
     },
     destination: {
@@ -149,12 +149,12 @@ const mergeRequest1 = {
     disable_origin_on_merge: false,
     assigned_to: {
         id_persistent: idUser,
-        user_name: nameUser,
+        username: nameUser,
         permission_group: 'CONTRIBUTOR'
     },
     created_by: {
         id_persistent: idUser1,
-        user_name: nameUser1,
+        username: nameUser1,
         permission_group: 'CONTRIBUTOR'
     },
     origin: {
@@ -200,12 +200,12 @@ test('success', async () => {
                     idPersistent: idMergeRequest,
                     createdBy: newPublicUserInfo({
                         idPersistent: idUser,
-                        userName: nameUser,
+                        username: nameUser,
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     }),
                     assignedTo: newPublicUserInfo({
                         idPersistent: idUser1,
-                        userName: nameUser1,
+                        username: nameUser1,
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     }),
                     destinationTagDefinition: newTagDefinition({
@@ -233,12 +233,12 @@ test('success', async () => {
                     idPersistent: idMergeRequest,
                     assignedTo: newPublicUserInfo({
                         idPersistent: idUser,
-                        userName: nameUser,
+                        username: nameUser,
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     }),
                     createdBy: newPublicUserInfo({
                         idPersistent: idUser1,
-                        userName: nameUser1,
+                        username: nameUser1,
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     }),
                     originTagDefinition: newTagDefinition({

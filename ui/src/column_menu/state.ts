@@ -1,3 +1,6 @@
+import { PublicUserInfo, newPublicUserInfo } from '../user/state'
+import { RemoteInterface, newRemote } from '../util/state'
+
 export enum TagType {
     String,
     Float,
@@ -11,7 +14,7 @@ export interface TagDefinition {
     columnType: TagType
     curated: boolean
     version: number
-    owner?: string
+    owner?: PublicUserInfo
     hidden: boolean
     disabled: boolean
 }
@@ -22,7 +25,7 @@ export function newTagDefinition({
     idParentPersistent = undefined,
     columnType,
     curated,
-    owner = 'Unknown User',
+    owner,
     version,
     hidden,
     disabled = false
@@ -32,7 +35,7 @@ export function newTagDefinition({
     idParentPersistent?: string
     columnType: TagType
     curated: boolean
-    owner?: string
+    owner?: PublicUserInfo
     version: number
     hidden: boolean
     disabled?: boolean
@@ -81,25 +84,29 @@ export interface TagSelectionState {
     isLoading: boolean
     isSearching: boolean
     isSubmittingDefinition: boolean
+    editTagDefinition: RemoteInterface<TagDefinition | undefined>
 }
 export function newTagSelectionState({
     navigationEntries: columnSelectionEntries = [],
     searchEntries: searchSelectionEntries = [],
     isLoading = false,
     isSearching = false,
-    isSubmittingDefinition = false
+    isSubmittingDefinition = false,
+    editTagDefinition = newRemote(undefined)
 }: {
     navigationEntries?: TagSelectionEntry[]
     searchEntries?: TagSelectionEntry[]
     isLoading?: boolean
     isSearching?: boolean
     isSubmittingDefinition?: boolean
+    editTagDefinition?: RemoteInterface<TagDefinition | undefined>
 }): TagSelectionState {
     return {
         navigationEntries: columnSelectionEntries,
         searchEntries: searchSelectionEntries,
         isLoading: isLoading,
         isSearching: isSearching,
-        isSubmittingDefinition: isSubmittingDefinition
+        isSubmittingDefinition: isSubmittingDefinition,
+        editTagDefinition
     }
 }

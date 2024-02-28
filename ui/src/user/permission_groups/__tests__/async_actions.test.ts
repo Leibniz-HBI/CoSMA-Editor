@@ -50,7 +50,7 @@ const userInfoTest1 = newUserInfo({
 })
 
 const userInfoJsonTest = {
-    user_name: userNameTest,
+    username: userNameTest,
     email: emailTest,
     names_personal: namesPersonalTest,
     id_persistent: idPersistentTest,
@@ -59,7 +59,7 @@ const userInfoJsonTest = {
 }
 
 const userInfoJsonTest1 = {
-    user_name: userNameTest1,
+    username: userNameTest1,
     email: emailTest1,
     names_personal: namesPersonalTest1,
     id_persistent: idPersistentTest1,

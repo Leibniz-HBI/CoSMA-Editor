@@ -23,6 +23,7 @@ import {
 } from '../async_actions'
 import { addError, addSuccessVanish } from '../../util/notification/slice'
 import { newEntity } from '../state'
+import { UserPermissionGroup, newPublicUserInfo } from '../../user/state'
 
 jest.mock('uuid', () => {
     return {
@@ -252,14 +253,21 @@ describe('get column async action', () => {
     const columnNameTest = 'column name test'
     const columnIdTest = 'column_id_test'
     const nameUserTest = 'user_test'
+    const idUserTest = 'id-user-test'
+    const userTest = newPublicUserInfo({
+        idPersistent: idUserTest,
+        username: nameUserTest,
+        permissionGroup: UserPermissionGroup.CONTRIBUTOR
+    })
     const nameUserTest1 = 'user_test1'
+    const idUserTest1 = 'id-user-test-1'
     const columnDefTest = newTagDefinition({
         idPersistent: columnIdTest,
         namePath: [columnNameTest],
         version: 2,
         curated: false,
         columnType: TagType.String,
-        owner: nameUserTest,
+        owner: userTest,
         hidden: false
     })
     const tagResponse = {
@@ -267,7 +275,11 @@ describe('get column async action', () => {
         id_tag_definition_persistent: columnIdTest,
         value: displayTxt0,
         id_persistent: 'test-value-id-0',
-        owner: nameUserTest,
+        owner: {
+            id_persistent: idUserTest,
+            username: nameUserTest,
+            permission_group: 'CONTRIBUTOR'
+        },
         version: 12
     }
     const tagResponse1 = {
@@ -275,7 +287,11 @@ describe('get column async action', () => {
         id_tag_definition_persistent: columnIdTest,
         value: displayTxt1,
         id_persistent: 'test-value-id-1',
-        owner: nameUserTest1,
+        owner: {
+            id_persistent: idUserTest1,
+            username: nameUserTest1,
+            permission_group: 'CONTRIBUTOR'
+        },
         version: 1
     }
     const tagDefTest: TagDefinition = newTagDefinition({
@@ -284,7 +300,7 @@ describe('get column async action', () => {
         idParentPersistent: undefined,
         columnType: TagType.String,
         curated: false,
-        owner: nameUserTest,
+        owner: userTest,
         version: 2,
         hidden: false
     })
@@ -676,7 +692,7 @@ test('parses entity_with tag_definition details', () => {
             displayTxtDetails: {
                 ...displayTextTagDef,
                 idParentPersistent: undefined,
-                owner: 'Unknown User'
+                owner: undefined
             }
         })
     )

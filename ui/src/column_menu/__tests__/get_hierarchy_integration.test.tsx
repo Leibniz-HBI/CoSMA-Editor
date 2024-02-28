@@ -87,6 +87,11 @@ const idTagDef21 = 'id-tag-def-2-1'
 const nameTagDef21 = 'child def 2 1'
 const idTagDef210 = 'id-tag-def-2-1-0'
 const nameTagDef210 = 'grandchild def 2 1 0'
+const owner_api = {
+    id_persistent: 'id-user-test',
+    permission_group: 'CONTRIBUTOR',
+    username: 'user-test'
+}
 function initialResponseSequence(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
         [
@@ -106,6 +111,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
                         name_path: [nameTagDef1],
                         name: nameTagDef1,
                         curated: false,
+                        owner: owner_api,
                         version: 1,
                         type: 'STRING'
                     },
@@ -153,6 +159,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
                         name_path: [nameTagDef2, nameTagDef21],
                         name: nameTagDef21,
                         curated: false,
+                        owner: owner_api,
                         version: 21,
                         type: 'STRING'
                     }
@@ -169,7 +176,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
                         id_persistent: idTagDef210,
                         name_path: [nameTagDef2, nameTagDef21, nameTagDef210],
                         name: nameTagDef210,
-                        curate: true,
+                        curated: true,
                         version: 210,
                         type: 'STRING'
                     }

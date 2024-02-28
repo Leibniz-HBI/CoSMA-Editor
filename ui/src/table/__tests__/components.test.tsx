@@ -43,7 +43,8 @@ const testColumns = [
             columnType: TagType.String,
             curated: false,
             hidden: false,
-            version: 0
+            version: 0,
+            disabled: false
         },
         cellContents: new Remote([])
     }),
@@ -54,7 +55,8 @@ const testColumns = [
             columnType: TagType.String,
             curated: false,
             hidden: false,
-            version: 0
+            version: 0,
+            disabled: true
         },
         cellContents: new Remote([])
     })

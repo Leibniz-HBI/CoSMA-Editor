@@ -118,7 +118,7 @@ export function registration({
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    user_name: userName,
+                    username: userName,
                     email: email,
                     names_family: namesFamily == '' ? null : namesFamily,
                     names_personal: namesPersonal,
@@ -258,7 +258,7 @@ const permissionGroupApiMap: { [key: string]: UserPermissionGroup } = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseUserInfoFromJson(json: any): UserInfo {
     return {
-        userName: json['user_name'],
+        username: json['username'],
         idPersistent: json['id_persistent'],
         email: json['email'],
         namesPersonal: json['names_personal'],
@@ -272,10 +272,12 @@ export function parseUserInfoFromJson(json: any): UserInfo {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parsePublicUserInfoFromJson(userInfoJson: any): PublicUserInfo {
+export function parsePublicUserInfoFromJson(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    userInfoJson: any
+): PublicUserInfo {
     const idPersistent = userInfoJson['id_persistent']
-    const userName = userInfoJson['user_name']
+    const userName = userInfoJson['username']
     const permissionGroup = permissionGroupApiMap[userInfoJson['permission_group']]
-    return { userName, idPersistent, permissionGroup }
+    return { username: userName, idPersistent, permissionGroup }
 }

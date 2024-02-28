@@ -63,7 +63,7 @@ export function EntityMergeRequestListItem({
                 <Col xs={3}>
                     <Row>
                         <span>Opened by:</span>
-                        <span className="fw-bold">{`${mergeRequest.createdBy.userName}`}</span>
+                        <span className="fw-bold">{`${mergeRequest.createdBy.username}`}</span>
                     </Row>
                 </Col>
             </Row>

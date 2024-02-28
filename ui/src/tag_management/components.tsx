@@ -95,7 +95,7 @@ export function TagOwnershipRequestListItemBody({
     let otherPartyLabel, otherParty, tailElements
     if (isReceiver) {
         otherPartyLabel = 'Petitioner: '
-        otherParty = request.value.petitioner.userName
+        otherParty = request.value.petitioner.username
         tailElements = (
             <Row>
                 <RemoteTriggerButton
@@ -115,7 +115,7 @@ export function TagOwnershipRequestListItemBody({
         )
     } else {
         otherPartyLabel = 'Recipient: '
-        otherParty = request.value.receiver.userName
+        otherParty = request.value.receiver.username
         tailElements = (
             <Row>
                 <RemoteTriggerButton
@@ -282,7 +282,7 @@ export function OwnershipSearchResultsItem({
     }
     return (
         <Row onClick={callback}>
-            <Col>{userInfo.userName}</Col>
+            <Col>{userInfo.username}</Col>
             <Col xs="1" ref={tailElementRef}>
                 {tailElement}
             </Col>

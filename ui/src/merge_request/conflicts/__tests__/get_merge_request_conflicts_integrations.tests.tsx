@@ -575,12 +575,12 @@ describe('toggle disable origin on merge', () => {
 const mergeRequest = newMergeRequest({
     idPersistent: 'id-merge-request',
     assignedTo: newPublicUserInfo({
-        userName: 'user_assigned',
+        username: 'user_assigned',
         idPersistent: 'id-user-assigned',
         permissionGroup: UserPermissionGroup.CONTRIBUTOR
     }),
     createdBy: newPublicUserInfo({
-        userName: 'user_created',
+        username: 'user_created',
         idPersistent: 'id-user-created',
         permissionGroup: UserPermissionGroup.CONTRIBUTOR
     }),
@@ -612,12 +612,12 @@ function initialResponseSequence(fetchMock: jest.Mock<any, any>) {
                 merge_request: {
                     id_persistent: 'id-merge-request',
                     assigned_to: {
-                        user_name: 'user_assigned',
+                        username: 'user_assigned',
                         id_persistent: 'id-user-assigned',
                         permission_group: 'CONTRIBUTOR'
                     },
                     created_by: {
-                        user_name: 'user_created',
+                        username: 'user_created',
                         id_persistent: 'id-user-created',
                         permission_group: 'CONTRIBUTOR'
                     },

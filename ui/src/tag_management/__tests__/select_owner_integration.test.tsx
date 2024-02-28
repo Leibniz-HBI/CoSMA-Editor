@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import { TagDefinition, TagType, newTagDefinition } from '../../column_menu/state'
+import { TagType, newTagDefinition } from '../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
@@ -82,7 +82,7 @@ describe('Ownership search', () => {
     const permissionGroupTest = UserPermissionGroup.CONTRIBUTOR
     const userInfoTest = newPublicUserInfo({
         idPersistent: idUserTest,
-        userName: usernameTest,
+        username: usernameTest,
         permissionGroup: permissionGroupTest
     })
     const idUserTest1 = 'id-user-test-1'
@@ -90,13 +90,17 @@ describe('Ownership search', () => {
     const permissionGroupTest1 = UserPermissionGroup.EDITOR
     const userInfoTest1 = newPublicUserInfo({
         idPersistent: idUserTest1,
-        userName: usernameTest1,
+        username: usernameTest1,
         permissionGroup: permissionGroupTest1
     })
     const idTagDefinitionTest = 'id-tag-def-test'
     const tagTypeTest = TagType.Inner
     const namePathTest = ['tag', 'path', 'test']
-    const ownerTest = 'owner test'
+    const ownerTest = {
+        username: usernameTest,
+        idPersistent: idUserTest,
+        permissionGroup: permissionGroupTest
+    }
     const tagDefinitionTest = newTagDefinition({
         columnType: tagTypeTest,
         idPersistent: idTagDefinitionTest,
@@ -117,22 +121,6 @@ describe('Ownership search', () => {
         },
         notification: { notificationList: [], notificationMap: {} }
     }
-    const stateWithUserSearchResultsAndError = {
-        user: newUserState({
-            userSearchResults: new Remote([userInfoTest, userInfoTest1])
-        }),
-        tagManagement: {
-            ownershipRequests: newRemote({ petitioned: [], received: [] }),
-            putOwnershipRequest: newRemote(
-                {
-                    idTagDefinitionPersistent: idTagDefinitionTest,
-                    idUserPersistent: idUserTest1
-                },
-                false,
-                'You do not own this tag'
-            )
-        }
-    }
     const testError = 'You do not own this tag.'
     test('search', async () => {
         const fetchMock = jest.fn()
@@ -143,12 +131,12 @@ describe('Ownership search', () => {
                     contains_complete_info: false,
                     results: [
                         {
-                            user_name: usernameTest,
+                            username: usernameTest,
                             id_persistent: idUserTest,
                             permission_group: 'CONTRIBUTOR'
                         },
                         {
-                            user_name: usernameTest1,
+                            username: usernameTest1,
                             id_persistent: idUserTest1,
                             permission_group: 'EDITOR'
                         }
@@ -156,7 +144,7 @@ describe('Ownership search', () => {
                 }
             ]
         ])
-        await renderWithProviders(
+        renderWithProviders(
             <ChangeOwnershipModal
                 tagDefinition={tagDefinitionTest}
                 onClose={jest.fn()}
@@ -187,7 +175,11 @@ describe('Ownership search', () => {
                     id_persistent: idTagDefinitionTest,
                     name_path: namePathTest,
                     name: namePathTest[2],
-                    owner: ownerTest,
+                    owner: {
+                        id_persistent: idUserTest,
+                        username: usernameTest,
+                        permission_group: 'CONTRIBUTOR'
+                    },
                     version: 4,
                     type: 'INNER',
                     hidden: false,

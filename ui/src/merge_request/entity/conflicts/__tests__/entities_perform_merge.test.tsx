@@ -170,7 +170,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
             disabled: false
         },
         created_by: {
-            user_name: userName0,
+            username: userName0,
             id_persistent: idUser0,
             permission_group: permissionGroup0
         },
@@ -313,7 +313,7 @@ test('apply conflicts', async () => {
         createdBy: {
             idPersistent: idUser0,
             permissionGroup: 'Commissioner' as UserPermissionGroup,
-            userName: userName0
+            username: userName0
         },
         state: 'open' as EntityMergeRequestStep
     })
@@ -479,7 +479,7 @@ test('apply conflicts', async () => {
                     disabled: false
                 },
                 createdBy: {
-                    userName: userName0,
+                    username: userName0,
                     idPersistent: idUser0,
                     permissionGroup: 'Commissioner' as UserPermissionGroup
                 },

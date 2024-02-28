@@ -14,3 +14,8 @@ export const selectTagSelectionLoading = createSelector(
     selectTagSelection,
     (state) => state.isLoading
 )
+
+export const selectEditTagDefinition = createSelector(
+    selectTagSelection,
+    (state) => state.editTagDefinition
+)

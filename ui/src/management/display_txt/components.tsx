@@ -9,8 +9,7 @@ import { CosmaeLoading } from '../../util/components/misc'
 import { TagDefinition } from '../../column_menu/state'
 import {
     ColumnSelector,
-    constructColumnTitleSpans,
-    mkListItems
+    constructColumnTitleSpans
 } from '../../column_menu/components/selection'
 import { PlusLg, XLg } from 'react-bootstrap-icons'
 import { useEffect } from 'react'
@@ -19,8 +18,6 @@ import {
     getDisplayTxtTagDefinitions,
     removeTagDefinitionThunk
 } from './thunks'
-import { selectNavigationEntries } from '../../column_menu/selectors'
-import { toggleExpansion } from '../../column_menu/slice'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
 
 export function DisplayTxtManagementComponent() {
@@ -92,30 +89,22 @@ function DisplayTxtOrderItem({
 
 function DisplayTxtAddMenu() {
     const dispatch: AppDispatch = useDispatch()
-    const selectionEntries = useSelector(selectNavigationEntries)
     const alreadyPresentTagDefIdPersistentList = useSelector(
         selectDisplayTxtTagIdPersistentSet
     )
-    const toggleExpansionCallback = (path: number[]) => dispatch(toggleExpansion(path))
     const appendTagDefinitionCallback = (tagDef: TagDefinition) =>
         dispatch(appendTagDefinitionThunk(tagDef))
     return (
         <ColumnSelector
-            listEntries={mkListItems({
-                columnSelectionEntries: selectionEntries,
-                toggleExpansionCallback,
-                path: [],
-                level: 0,
-                mkTailElement: (tagDef) => (
-                    <DisplayTxtAddTailElement
-                        tagDefinition={tagDef}
-                        alreadyPresent={
-                            alreadyPresentTagDefIdPersistentList[tagDef.idPersistent]
-                        }
-                        appendTagDefinitionCallback={appendTagDefinitionCallback}
-                    />
-                )
-            })}
+            mkTailElement={(tagDef) => (
+                <DisplayTxtAddTailElement
+                    tagDefinition={tagDef}
+                    alreadyPresent={
+                        alreadyPresentTagDefIdPersistentList[tagDef.idPersistent]
+                    }
+                    appendTagDefinitionCallback={appendTagDefinitionCallback}
+                />
+            )}
         />
     )
 }

@@ -66,12 +66,12 @@ describe('Ownership Request List', () => {
     const usernameTest1 = 'user test 1'
     const userInfoApiTest = {
         id_persistent: idUserTest,
-        user_name: usernameTest,
+        username: usernameTest,
         permission_group: 'CONTRIBUTOR'
     }
     const userInfoApiTest1 = {
         id_persistent: idUserTest1,
-        user_name: usernameTest1,
+        username: usernameTest1,
         permission_group: 'EDITOR'
     }
     const idTagDefinitionTest = 'id-tag-def-test'

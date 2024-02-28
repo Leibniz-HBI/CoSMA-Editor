@@ -221,7 +221,7 @@ test('start entity duplicate merging', async () => {
         id_persistent: idMrPersistent,
         created_by: {
             id_persistent: idUser,
-            user_name: nameUser,
+            username: nameUser,
             permission_group: 'COMMISSIONER'
         },
         origin: {
@@ -258,7 +258,7 @@ test('start entity duplicate merging', async () => {
                     idPersistent: idMrPersistent,
                     createdBy: {
                         idPersistent: idUser,
-                        userName: nameUser,
+                        username: nameUser,
                         permissionGroup: UserPermissionGroup.COMMISSIONER
                     },
                     entityOrigin: {

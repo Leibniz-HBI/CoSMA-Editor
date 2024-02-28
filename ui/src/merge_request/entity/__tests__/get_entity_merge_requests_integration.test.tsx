@@ -136,7 +136,7 @@ test('success', async () => {
                     }),
                     createdBy: {
                         idPersistent: idUser0,
-                        userName: userName0,
+                        username: userName0,
                         permissionGroup: 'Commissioner' as UserPermissionGroup
                     },
                     state: 'open' as EntityMergeRequestStep
@@ -159,7 +159,7 @@ test('success', async () => {
                     }),
                     createdBy: {
                         idPersistent: idUser1,
-                        userName: userName1,
+                        username: userName1,
                         permissionGroup: 'Editor' as UserPermissionGroup
                     },
                     state: 'open' as EntityMergeRequestStep
@@ -232,7 +232,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             disabled: false
                         },
                         created_by: {
-                            user_name: userName0,
+                            username: userName0,
                             id_persistent: idUser0,
                             permission_group: permissionGroup0
                         },
@@ -255,7 +255,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             disabled: false
                         },
                         created_by: {
-                            user_name: userName1,
+                            username: userName1,
                             id_persistent: idUser1,
                             permission_group: permissionGroup1
                         },
