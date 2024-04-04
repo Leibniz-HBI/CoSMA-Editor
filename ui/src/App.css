@@ -70,6 +70,10 @@ html {
     height: 90% !important
 }
 
+.h-1px {
+    height: 1px !important;
+}
+
 .flex-basis-0 {
     flex-basis: 0;
 }

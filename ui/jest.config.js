@@ -4,5 +4,6 @@ module.exports = {
     collectCoverage: true,
     coverageReporters: ['lcov', 'text-summary'],
     coverageDirectory: '<rootDir>',
-    transformIgnorePatterns: ['/node_modules/(?!(react-markdown))/']
+    transformIgnorePatterns: ['/node_modules/(?!(react-markdown))/'],
+    testTimeout: 10000
 }

@@ -35,14 +35,14 @@ const namesPersonalTest1 = 'names personal test1'
 const idPersistentTest1 = 'id-user=test1'
 const permissionGroupTest1 = UserPermissionGroup.CONTRIBUTOR
 const userInfoTest = newUserInfo({
-    userName: userNameTest,
+    username: userNameTest,
     email: emailTest,
     namesPersonal: namesPersonalTest,
     idPersistent: idPersistentTest,
     permissionGroup: permissionGroupTest
 })
 const userInfoTest1 = newUserInfo({
-    userName: userNameTest1,
+    username: userNameTest1,
     email: emailTest1,
     namesPersonal: namesPersonalTest1,
     idPersistent: idPersistentTest1,

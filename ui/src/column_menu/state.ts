@@ -1,4 +1,4 @@
-import { PublicUserInfo, newPublicUserInfo } from '../user/state'
+import { PublicUserInfo } from '../user/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
 export enum TagType {
@@ -85,6 +85,7 @@ export interface TagSelectionState {
     isSearching: boolean
     isSubmittingDefinition: boolean
     editTagDefinition: RemoteInterface<TagDefinition | undefined>
+    isDragging: boolean
 }
 export function newTagSelectionState({
     navigationEntries: columnSelectionEntries = [],
@@ -92,7 +93,8 @@ export function newTagSelectionState({
     isLoading = false,
     isSearching = false,
     isSubmittingDefinition = false,
-    editTagDefinition = newRemote(undefined)
+    editTagDefinition = newRemote(undefined),
+    isDragging = false
 }: {
     navigationEntries?: TagSelectionEntry[]
     searchEntries?: TagSelectionEntry[]
@@ -100,6 +102,8 @@ export function newTagSelectionState({
     isSearching?: boolean
     isSubmittingDefinition?: boolean
     editTagDefinition?: RemoteInterface<TagDefinition | undefined>
+    draggedSelectionEntry?: TagSelectionEntry
+    isDragging?: boolean
 }): TagSelectionState {
     return {
         navigationEntries: columnSelectionEntries,
@@ -107,6 +111,7 @@ export function newTagSelectionState({
         isLoading: isLoading,
         isSearching: isSearching,
         isSubmittingDefinition: isSubmittingDefinition,
-        editTagDefinition
+        editTagDefinition,
+        isDragging
     }
 }

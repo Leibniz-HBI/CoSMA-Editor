@@ -40,18 +40,20 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 const nameTagDef = 'tag name'
 const nameTagDef1 = 'tag name 1'
 
+const idTagDef = 'id-tag-test'
 const tagDefTest = newTagDefinition({
     namePath: [nameTagDef],
-    idPersistent: 'id-tag-test',
+    idPersistent: idTagDef,
     columnType: TagType.String,
     idParentPersistent: undefined,
     hidden: false,
     version: 4,
     curated: true
 })
+const idTagDef1 = 'id-tag-test-1'
 const tagDefTest1 = newTagDefinition({
     namePath: [nameTagDef1],
-    idPersistent: 'id-tag-test-1',
+    idPersistent: idTagDef1,
     columnType: TagType.String,
     idParentPersistent: undefined,
     hidden: false,
@@ -69,7 +71,10 @@ export function renderWithProviders(
                     newTagSelectionEntry({
                         columnDefinition: tagDefTest
                     }),
-                    newTagSelectionEntry({ columnDefinition: tagDefTest1 })
+                    newTagSelectionEntry({
+                        columnDefinition: tagDefTest1,
+                        isExpanded: true
+                    })
                 ]
             }),
             notification: newNotificationManager({})
@@ -107,9 +112,12 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
     }
 }
 
-function dragTagDefinition() {
-    const start = screen.getByRole('button', { name: nameTagDef })
-    const end = screen.getByText(nameTagDef1)
+function dragTagDefinition(startName: string | RegExp, endName: string | undefined) {
+    const start = screen.getByRole('button', { name: startName })
+    let end = screen.getByTestId('no-parent-drop-zone')
+    if (endName !== undefined) {
+        end = screen.getByText(endName)
+    }
     const dataTransferObject: { [key: string]: string } = {}
     const dataTransfer = {
         setData: (key: string, data: string) => (dataTransferObject[key] = data),
@@ -127,26 +135,84 @@ function mkTailElement(_tagDefinition: TagDefinition) {
 
 test('success', async () => {
     const fetchMock = jest.fn()
-    addResponseSequence(fetchMock, [[200, {}]])
+    const newVersion = 5,
+        newVersion1 = 6
+    addResponseSequence(fetchMock, [
+        [
+            200,
+            {
+                tag_definitions: [
+                    {
+                        name_path: [nameTagDef],
+                        id_persistent: idTagDef,
+                        id_parent_persistent: idTagDef1,
+                        type: 'STRING',
+                        curated: true,
+                        hidden: false,
+                        version: newVersion
+                    }
+                ]
+            }
+        ],
+        [
+            200,
+            {
+                tag_definitions: [
+                    {
+                        name_path: [nameTagDef1, nameTagDef],
+                        id_persistent: idTagDef,
+                        id_parent_persistent: undefined,
+                        type: 'STRING',
+                        curated: true,
+                        hidden: false,
+                        version: newVersion1
+                    }
+                ]
+            }
+        ]
+    ])
     const { store } = renderWithProviders(
         <ColumnSelector mkTailElement={mkTailElement} />,
         fetchMock
     )
-    await waitFor(() => dragTagDefinition())
+    await waitFor(() => dragTagDefinition(nameTagDef, nameTagDef1))
     await waitFor(() => {
         expect(store.getState()).toEqual({
             tagSelection: newTagSelectionState({
                 navigationEntries: [
                     newTagSelectionEntry({
                         columnDefinition: tagDefTest1,
+                        isExpanded: true,
                         children: [
                             newTagSelectionEntry({
                                 columnDefinition: {
                                     ...tagDefTest,
-                                    namePath: [nameTagDef1, nameTagDef]
+                                    namePath: [nameTagDef1, nameTagDef],
+                                    idParentPersistent: idTagDef1,
+                                    version: newVersion
                                 }
                             })
                         ]
+                    })
+                ]
+            }),
+            notification: newNotificationManager({})
+        })
+    })
+    await waitFor(() => dragTagDefinition(/-> tag name/i, undefined))
+    await waitFor(() => {
+        expect(store.getState()).toEqual({
+            tagSelection: newTagSelectionState({
+                navigationEntries: [
+                    newTagSelectionEntry({
+                        columnDefinition: tagDefTest1,
+                        isExpanded: true
+                    }),
+                    newTagSelectionEntry({
+                        columnDefinition: {
+                            ...tagDefTest,
+                            version: newVersion1
+                        }
                     })
                 ]
             }),
@@ -171,9 +237,27 @@ test('success', async () => {
                     ]
                 })
             }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+            {
+                method: 'POST',
+                credentials: 'include',
+                body: JSON.stringify({
+                    tag_definitions: [
+                        {
+                            id_persistent: tagDefTest.idPersistent,
+                            name: nameTagDef,
+                            type: 'STRING',
+                            version: newVersion
+                        }
+                    ]
+                })
+            }
         ]
     ])
 })
+
 test('error', async () => {
     const fetchMock = jest.fn()
     const testError = 'Could not change parent'
@@ -182,14 +266,15 @@ test('error', async () => {
         <ColumnSelector mkTailElement={mkTailElement} />,
         fetchMock
     )
-    await waitFor(() => dragTagDefinition())
+    await waitFor(() => dragTagDefinition(nameTagDef, nameTagDef1))
     await waitFor(() => {
         expect(store.getState()).toEqual({
             tagSelection: newTagSelectionState({
                 navigationEntries: [
                     newTagSelectionEntry({ columnDefinition: tagDefTest }),
                     newTagSelectionEntry({
-                        columnDefinition: tagDefTest1
+                        columnDefinition: tagDefTest1,
+                        isExpanded: true
                     })
                 ]
             }),

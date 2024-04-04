@@ -26,6 +26,7 @@ from cosmae.tag.api.models_conversion import (
 )
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.tag.models_django import TagDefinitionHistory as TagDefinitionHistoryDb
+from cosmae.tag.queue import update_tag_definition_name_path
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
@@ -131,6 +132,7 @@ def post_tag_definitions(
             for tag_def, do_write in tag_def_dbs:
                 if do_write:
                     tag_def.save()
+                    update_tag_definition_name_path(tag_def.id_parent_persistent)
     except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
 

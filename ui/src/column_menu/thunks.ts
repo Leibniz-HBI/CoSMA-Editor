@@ -13,7 +13,7 @@ import {
     submitTagDefinitionSuccess
 } from './slice'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
-import { PublicUserInfo, newPublicUserInfo } from '../user/state'
+import { PublicUserInfo } from '../user/state'
 
 export function loadTagDefinitionHierarchy({
     idParentPersistent = undefined,
@@ -145,12 +145,16 @@ export function changeTagDefinitionParent({
     oldPath: number[]
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
+        let idParentPersistentRequest: string | undefined = idParentPersistent
+        if (idParentPersistentRequest === '') {
+            idParentPersistentRequest = undefined
+        }
         try {
             const tagDefinition = tagSelectionEntry.columnDefinition
             const payload = {
                 id_persistent: tagDefinition.idPersistent,
                 name: tagDefinition.namePath.at(-1),
-                id_parent_persistent: idParentPersistent,
+                id_parent_persistent: idParentPersistentRequest,
                 type: tagTypeMapAppToApi.get(tagDefinition.columnType),
                 version: tagDefinition.version
             }
@@ -160,7 +164,19 @@ export function changeTagDefinitionParent({
                 body: JSON.stringify({ tag_definitions: [payload] })
             })
             if (rsp.status == 200) {
-                dispatch(changeParentSuccess({ newPath, oldPath, tagSelectionEntry }))
+                const json = await rsp.json()
+                const tagDefinitionJson = json['tag_definitions'][0]
+                const tagDefinition = parseColumnDefinitionsFromApi(tagDefinitionJson)
+                dispatch(
+                    changeParentSuccess({
+                        newPath,
+                        oldPath,
+                        tagSelectionEntry: {
+                            ...tagSelectionEntry,
+                            columnDefinition: tagDefinition
+                        }
+                    })
+                )
             } else {
                 const json = await rsp.json()
                 dispatch(addError(errorMessageFromApi(json)))

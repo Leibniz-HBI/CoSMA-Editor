@@ -19,3 +19,8 @@ export const selectEditTagDefinition = createSelector(
     selectTagSelection,
     (state) => state.editTagDefinition
 )
+
+export const selectIsDragging = createSelector(
+    selectTagSelection,
+    (state) => state.isDragging
+)

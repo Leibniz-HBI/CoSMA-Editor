@@ -114,6 +114,12 @@ export const tagSelectionSlice = createSlice({
                 state.editTagDefinition.isLoading = false
             }
         },
+        dragTagDefinitionStart(state: TagSelectionState) {
+            state.isDragging = true
+        },
+        dragTagDefinitionEnd(state: TagSelectionState) {
+            state.isDragging = false
+        },
         changeParentSuccess(
             state: TagSelectionState,
             action: PayloadAction<{
@@ -122,25 +128,23 @@ export const tagSelectionSlice = createSlice({
                 newPath: number[]
             }>
         ) {
-            const newParent = pickTagSelectionEntry(
-                state.navigationEntries,
-                action.payload.newPath
-            )
-            if (newParent !== undefined) {
-                const tagSelectionEntry = action.payload.tagSelectionEntry
-                newParent.children.push({
-                    ...tagSelectionEntry,
-                    columnDefinition: {
-                        ...tagSelectionEntry.columnDefinition,
-                        namePath: [
-                            ...newParent.columnDefinition.namePath,
-                            tagSelectionEntry.columnDefinition.namePath.at(-1) ?? ''
-                        ]
-                    }
-                })
-            }
-            //TODO find old parent remove new
+            const tagSelectionEntry = action.payload.tagSelectionEntry
             const oldParentPath = action.payload.oldPath.slice(0, -1)
+            let targetArray: TagSelectionEntry[] | undefined = state.navigationEntries
+            let namePath: string[] = []
+            if (action.payload.newPath.length > 0) {
+                const newParent = pickTagSelectionEntry(
+                    state.navigationEntries,
+                    action.payload.newPath
+                )
+                targetArray = newParent?.children
+                namePath = newParent?.columnDefinition.namePath ?? namePath
+            }
+            if (targetArray !== undefined) {
+                updateNamePaths(tagSelectionEntry, oldParentPath.length, namePath)
+                targetArray.push(tagSelectionEntry)
+            }
+
             let childList = state.navigationEntries
             if (oldParentPath.length > 0) {
                 const oldParent = pickTagSelectionEntry(
@@ -182,6 +186,23 @@ function pickTagSelectionEntry(
     return ret
 }
 
+function updateNamePaths(
+    rootEntry: TagSelectionEntry,
+    oldPrefixLength: number,
+    newPrefix: string[]
+) {
+    const queue = [rootEntry]
+    //eslint-disable-next-line no-constant-condition
+    while (true) {
+        const entry = queue.pop()
+        if (entry == undefined) {
+            break
+        }
+        queue.push(...entry.children)
+        entry.columnDefinition.namePath.splice(0, oldPrefixLength, ...newPrefix)
+    }
+}
+
 export const {
     clearSearchEntries,
     loadTagHierarchyError,
@@ -197,5 +218,7 @@ export const {
     clearEditTagDefinition,
     editTagDefinitionStart,
     editTagDefinitionError,
-    changeParentSuccess
+    changeParentSuccess,
+    dragTagDefinitionStart,
+    dragTagDefinitionEnd
 } = tagSelectionSlice.actions
