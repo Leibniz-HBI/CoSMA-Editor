@@ -34,6 +34,7 @@ import {
     selectStartMerge,
     selectTagMergeRequestConflictsByCategory
 } from './selectors'
+import { ArrowLeftCircle } from 'react-bootstrap-icons'
 
 export function MergeRequestConflictResolutionView() {
     const idMergeRequestPersistent = useLoaderData() as string
@@ -102,10 +103,20 @@ export function MergeRequestConflictResolutionView() {
                     <OverlayTrigger
                         overlay={
                             <Tooltip id="disable-origin-on-merge-tooltip">
-                                When this toggle is enabled, the origin tag definition
-                                will be disabled. I.e., the tag definition will not
-                                appear anymore in the the tag definition explorer but is
-                                still kept in the history.
+                                <span>
+                                    When this toggle is enabled, the origin tag
+                                    definition, marked with
+                                </span>
+                                <span> </span>
+                                <span>
+                                    <ArrowLeftCircle />
+                                </span>
+                                <span> </span>
+                                <span>
+                                    will be disabled. I.e., the tag definition will not
+                                    appear anymore in the the tag definition explorer
+                                    but is still kept in the history.
+                                </span>
                             </Tooltip>
                         }
                         placement="left"
@@ -338,7 +349,17 @@ export function DisableOriginOnMergeToggle({
     return (
         <Form.Check
             type="switch"
-            label="Disable Origin on Merge"
+            label={
+                <>
+                    <span>Disable </span>
+                    <span> </span>
+                    <span>
+                        <ArrowLeftCircle />
+                    </span>
+                    <span> </span>
+                    <span>Tag on Merge</span>
+                </>
+            }
             checked={disableOriginOnMerge}
             onChange={(evt) => {
                 evt.stopPropagation()

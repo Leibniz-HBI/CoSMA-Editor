@@ -1,6 +1,6 @@
 import { useLayoutEffect } from 'react'
 import { CosmaeLoading, CosmaeCard } from '../util/components/misc'
-import { Badge, Col, ListGroup, Row } from 'react-bootstrap'
+import { Badge, Col, ListGroup, OverlayTrigger, Row, Tooltip } from 'react-bootstrap'
 import { MergeRequest } from './state'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
@@ -143,30 +143,49 @@ export function MergeRequestListItemBody({
     return (
         <Row>
             <Col>
-                <Row>
-                    <Col xs="auto">
-                        <ArrowRightCircleFill />
-                    </Col>
-                    <Col className="ps-0">
-                        <span className="fw-bold">
-                            {constructColumnTitleSpans(
-                                mergeRequest.destinationTagDefinition.namePath
-                            )}
-                        </span>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col xs="auto">
-                        <ArrowLeftCircle />
-                    </Col>
-                    <Col className="ps-0">
-                        <span>
-                            {constructColumnTitleSpans(
-                                mergeRequest.originTagDefinition.namePath
-                            )}
-                        </span>
-                    </Col>
-                </Row>
+                <OverlayTrigger
+                    placement="bottom"
+                    overlay={
+                        <Tooltip>
+                            The destination tag definition, to where data will be
+                            written.
+                        </Tooltip>
+                    }
+                >
+                    <Row>
+                        <Col xs="auto">
+                            <ArrowRightCircleFill />
+                        </Col>
+                        <Col className="ps-0">
+                            <span className="fw-bold">
+                                {constructColumnTitleSpans(
+                                    mergeRequest.destinationTagDefinition.namePath
+                                )}
+                            </span>
+                        </Col>
+                    </Row>
+                </OverlayTrigger>
+                <OverlayTrigger
+                    placement="bottom"
+                    overlay={
+                        <Tooltip>
+                            The origin tag definition, from where data is used.
+                        </Tooltip>
+                    }
+                >
+                    <Row>
+                        <Col xs="auto">
+                            <ArrowLeftCircle />
+                        </Col>
+                        <Col className="ps-0">
+                            <span>
+                                {constructColumnTitleSpans(
+                                    mergeRequest.originTagDefinition.namePath
+                                )}
+                            </span>
+                        </Col>
+                    </Row>
+                </OverlayTrigger>
             </Col>
         </Row>
     )
