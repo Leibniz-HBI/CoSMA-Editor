@@ -4,7 +4,7 @@
 import { describe } from '@jest/globals'
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from '../form'
+import { TagCreateForm, ColumnTypeCreateFormProps } from '../form'
 import { useDispatch } from 'react-redux'
 jest.mock('react-redux', () => {
     const dispatchMock = jest.fn()
@@ -24,24 +24,15 @@ describe('form tests', () => {
         return <li className={testClassName}>{formProps?.selectedParent}</li>
     }
     test('empty submit will result in red text labels', async () => {
-        const { container } = render(
-            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
-        )
-        const errorClasses = container.getElementsByClassName('text-danger fs-6')
-        expect(errorClasses.length).toEqual(0)
+        const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
+        expectErrorsEmpty(container)
         const buttons = container.getElementsByTagName('button')
         const user = userEvent.setup()
         await user.click(buttons[0])
-        await waitFor(() =>
-            expect(container.getElementsByClassName('text-danger fs-6').length).toEqual(
-                2
-            )
-        )
+        await expectErrorsHaveContent(container)
     })
     test('type only submit will result in red name label', async () => {
-        const { container } = render(
-            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
-        )
+        const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
         const errorClasses = container.getElementsByClassName('text-danger fs-6')
         expect(errorClasses.length).toEqual(0)
         const radioButtons = container.getElementsByClassName('form-check-input')
@@ -49,38 +40,24 @@ describe('form tests', () => {
         const user = userEvent.setup()
         await user.click(radioButtons[1])
         await user.click(buttons[0])
-        await waitFor(() =>
-            expect(container.getElementsByClassName('text-danger fs-6').length).toEqual(
-                1
-            )
-        )
+        await expectErrorsHaveContent(container)
     })
-    test('text only submit will result in red type label', async () => {
-        const { container } = render(
-            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
-        )
-        const errorClasses = container.getElementsByClassName('text-danger fs-6')
-        expect(errorClasses.length).toEqual(0)
-        const textInput = screen.getByRole('textbox')
+    test('name only submit will result in red type label', async () => {
+        const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
+        expectErrorsEmpty(container)
+        const textInput = screen.getAllByRole('textbox')[0]
         const buttons = container.getElementsByTagName('button')
         const user = userEvent.setup()
         await user.type(textInput, 'bla test')
         await user.click(buttons[0])
-        await waitFor(() =>
-            expect(container.getElementsByClassName('text-danger fs-6').length).toEqual(
-                1
-            )
-        )
+        await expectErrorsHaveContent(container)
     })
     test('submit handled for complete form', async () => {
-        const { container } = render(
-            <ColumnTypeCreateForm>{childTest}</ColumnTypeCreateForm>
-        )
+        const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
         const dispatchMock = useDispatch() as jest.Mock
         dispatchMock.mockReset().mockReturnValue(Promise.resolve(true))
-        const errorClasses = container.getElementsByClassName('text-danger fs-6')
-        expect(errorClasses.length).toEqual(0)
-        const textInput = screen.getByRole('textbox') as HTMLInputElement
+        expectErrorsEmpty(container)
+        const textInput = screen.getAllByRole('textbox')[0] as HTMLInputElement
         const buttons = container.getElementsByTagName('button')
         const radioButtons = container.getElementsByClassName('form-check-input')
         const user = userEvent.setup()
@@ -91,12 +68,8 @@ describe('form tests', () => {
         })
         await user.click(radioButtons[1])
         await user.click(buttons[0])
-        await waitFor(() =>
-            expect(container.getElementsByClassName('text-danger fs-6').length).toEqual(
-                0
-            )
-        )
         const fetchMock = jest.fn()
+        expectErrorsEmpty(container)
         await waitFor(() => {
             const mockCalls = (dispatchMock as jest.Mock).mock.calls
             expect(mockCalls.length).toEqual(2)
@@ -110,10 +83,29 @@ describe('form tests', () => {
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        tag_definitions: [{ name: inputTest, type: 'STRING' }]
+                        tag_definitions: [
+                            { name: inputTest, type: 'STRING', description: '' }
+                        ]
                     })
                 }
             ]
         ])
     })
 })
+async function expectErrorsHaveContent(container: HTMLElement) {
+    await waitFor(() => {
+        const errorClasses = container.getElementsByClassName('invalid-feedback')
+        let isEmpty = false
+        for (const error of errorClasses) {
+            isEmpty ||= !(error.textContent == '')
+        }
+        expect(isEmpty).toBeFalsy
+    })
+}
+
+function expectErrorsEmpty(container: HTMLElement) {
+    const errorClasses = container.getElementsByClassName('invalid-feedback')
+    for (const error of errorClasses) {
+        expect(error.textContent).toEqual('')
+    }
+}

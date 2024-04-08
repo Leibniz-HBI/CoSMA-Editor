@@ -28,7 +28,7 @@ export function FormField({
     const isInvalid = isTouched && !!error
     const field_id = 'formField-' + name
     return (
-        <Form.FloatingLabel label={label} className="mb-2">
+        <Form.FloatingLabel label={label} className="mb-1">
             <Form.Control
                 type={type}
                 name={name}

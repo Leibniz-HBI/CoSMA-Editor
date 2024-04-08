@@ -86,16 +86,37 @@ export function loadTagDefinitionHierarchy({
 
 export function submitTagDefinition({
     name,
+    description,
     idParentPersistent,
-    columnTypeIdx
+    type,
+    idPersistent,
+    version,
+    namePath,
+    parentNamePath
 }: {
     name: string
+    description: string
     idParentPersistent?: string
-    columnTypeIdx: number
+    type: TagType
+    idPersistent?: string
+    version?: number
+    namePath?: string[]
+    parentNamePath: string[]
 }): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(submitTagDefinitionStart())
         try {
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const body: { [key: string]: any } = {
+                name: name,
+                id_parent_persistent: idParentPersistent,
+                type: type,
+                description
+            }
+            if (idPersistent !== undefined) {
+                body.idPersistent = idPersistent
+                body.version = version
+            }
             const rsp = await fetch(config.api_path + '/tags/definitions', {
                 method: 'POST',
                 credentials: 'include',
@@ -103,17 +124,21 @@ export function submitTagDefinition({
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    tag_definitions: [
-                        {
-                            name: name,
-                            id_parent_persistent: idParentPersistent,
-                            type: columnTypeIdxToApi[columnTypeIdx]
-                        }
-                    ]
+                    tag_definitions: [body]
                 })
             })
             if (rsp.status == 200) {
-                dispatch(submitTagDefinitionSuccess())
+                const json = await rsp.json()
+                const tagDefinition = parseColumnDefinitionsFromApi(
+                    json['tag_definitions'][0]
+                )
+                dispatch(
+                    submitTagDefinitionSuccess({
+                        parentNamePath,
+                        tagDefinition,
+                        namePath
+                    })
+                )
                 return true
             }
             const msg = (await rsp.json())['msg']
@@ -222,6 +247,7 @@ export function parseColumnDefinitionsFromApi(
         curated: tagDefinitionApi['curated'],
         columnType: columnType,
         owner: owner,
+        description: tagDefinitionApi['description'],
         hidden: tagDefinitionApi['hidden'],
         disabled: tagDefinitionApi['disabled']
     })

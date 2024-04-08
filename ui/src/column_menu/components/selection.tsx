@@ -1,13 +1,5 @@
 import { ReactElement, useState } from 'react'
-import {
-    Button,
-    Col,
-    ListGroup,
-    Modal,
-    OverlayTrigger,
-    Row,
-    Tooltip
-} from 'react-bootstrap'
+import { Col, ListGroup, Modal, OverlayTrigger, Row, Tooltip } from 'react-bootstrap'
 
 import {
     DashLg,
@@ -37,6 +29,7 @@ import {
     selectNavigationEntries
 } from '../selectors'
 import { changeTagDefinitionParent } from '../thunks'
+import { CreateTabBody } from './menu'
 
 export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
     if (namePath === undefined || namePath.length == 0) {
@@ -65,18 +58,19 @@ export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
 
 export function ColumnSelector({
     mkTailElement,
-    additionalEntries = []
+    additionalEntries = [],
+    allowEdit = true
 }: {
     mkTailElement: (def: TagDefinition) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
+    allowEdit?: boolean
 }) {
     const tagSelectionEntries = useAppSelector(selectNavigationEntries)
     const dispatch = useAppDispatch()
     const toggleExpansionCallback = (path: number[]) => dispatch(toggleExpansion(path))
-    const setEditTagDefinitionCallback = (tagDef: TagDefinition) =>
-        dispatch(setEditTagDefinition(tagDef))
-    const editTagDefinition = useAppSelector(selectEditTagDefinition)
-    const closeEditCallback = () => dispatch(clearEditTagDefinition())
+    const setEditTagDefinitionCallback = allowEdit
+        ? (tagDef: TagDefinition) => dispatch(setEditTagDefinition(tagDef))
+        : undefined
     const changeParentCallback = ({
         entry,
         idParentPersistent,
@@ -133,30 +127,34 @@ export function ColumnSelector({
                             additionalEntries,
                             changeParentCallback,
                             dragTagDefinitionStartCallback,
-                            dragTagDefinitionEndCallback
+                            dragTagDefinitionEndCallback,
+                            allowEdit
                         })}
                     </ListGroup>
                 </Row>
             </Col>
-            <Modal
-                show={editTagDefinition.value !== undefined}
-                size="xl"
-                onHide={closeEditCallback}
-                className="h-100"
-            >
-                <Modal.Header closeButton={true}>
-                    <div className="modal-title h4">Edit Tag Definition</div>
-                </Modal.Header>
-                <Modal.Body className="bg-secondary vh-85">
-                    {
-                        <EditTabBody
-                            tagDefinition={editTagDefinition.value}
-                            closeEditCallback={closeEditCallback}
-                        />
-                    }
-                </Modal.Body>
-            </Modal>
         </>
+    )
+}
+
+export function EditModal() {
+    const editTagDefinition = useAppSelector(selectEditTagDefinition)
+    const dispatch = useAppDispatch()
+    const closeEditCallback = () => dispatch(clearEditTagDefinition())
+    return (
+        <Modal
+            show={editTagDefinition.value !== undefined}
+            size="xl"
+            onHide={closeEditCallback}
+            className="h-100"
+        >
+            <Modal.Header closeButton={true}>
+                <div className="modal-title h4">Edit Tag Definition</div>
+            </Modal.Header>
+            <Modal.Body className="bg-light vh-85 z-3000">
+                {<CreateTabBody existingTagDefinition={editTagDefinition.value} />}
+            </Modal.Body>
+        </Modal>
     )
 }
 
@@ -209,37 +207,6 @@ function NoParentEntry({
                 <div className={innerClass} style={{ height: '4px' }}></div>
             </div>
         </OverlayTrigger>
-    )
-}
-
-function EditTabBody({
-    tagDefinition,
-    closeEditCallback
-}: {
-    tagDefinition?: TagDefinition
-    closeEditCallback: VoidFunction
-}) {
-    if (tagDefinition === undefined) {
-        return <div>ERROR: No tag definition selected</div>
-    }
-    return (
-        <Col className="h-100">
-            <Row>
-                <div>{constructColumnTitleSpans(tagDefinition.namePath)}</div>{' '}
-            </Row>
-            <Row>
-                <Col>
-                    <Button onClick={closeEditCallback}>Cancel</Button>
-                    <Button
-                        onClick={() => {
-                            closeEditCallback()
-                        }}
-                    >
-                        Save
-                    </Button>
-                </Col>
-            </Row>
-        </Col>
     )
 }
 
@@ -395,7 +362,7 @@ export function mkListItems(args: {
     mkTailElement: (def: TagDefinition) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
     expansionGroup?: string
-    startEditCallback: (tagDef: TagDefinition) => void
+    startEditCallback?: (tagDef: TagDefinition) => void
     changeParentCallback: (props: {
         entry: TagSelectionEntry
         idParentPersistent: string
@@ -404,6 +371,7 @@ export function mkListItems(args: {
     }) => void
     dragTagDefinitionStartCallback: VoidFunction
     dragTagDefinitionEndCallback: VoidFunction
+    allowEdit: boolean
 }): ReactElement[] {
     const {
         tagSelectionEntries,
@@ -436,7 +404,7 @@ export function mkListItems(args: {
                 expansionGroup: expansionGroup,
                 level: 0,
                 mkTailElement: mkTailElement,
-                startEditCallback,
+                startEditCallback: undefined,
                 changeParentCallback,
                 dragTagDefinitionStartCallback,
                 dragTagDefinitionEndCallback

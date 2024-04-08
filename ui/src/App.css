@@ -50,6 +50,10 @@ html {
     min-height: 200px !important;
 }
 
+.min-h-100px {
+    min-height: 100px !important;
+}
+
 .w-200px {
     width: 200px !important;
 }
@@ -230,6 +234,10 @@ div#layers > div > .container {
 
 .bg-primary-subtle {
     background-color: #d1e3e3 !important;
+}
+
+.z-3000 {
+    z-index: 3000;
 }
 
 .z-toast {

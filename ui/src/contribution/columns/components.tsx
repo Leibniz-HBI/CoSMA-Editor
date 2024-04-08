@@ -1,11 +1,11 @@
 import { Button, Col, Form, FormCheck, ListGroup, Modal, Row } from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
 import { ChangeEvent, useEffect } from 'react'
-import { ColumnSelector } from '../../column_menu/components/selection'
+import { ColumnSelector, EditModal } from '../../column_menu/components/selection'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
 import { TagDefinition } from '../../column_menu/state'
 import {
-    ColumnTypeCreateForm,
+    TagCreateForm,
     ColumnTypeCreateFormProps
 } from '../../column_menu/components/form'
 import { useDispatch, useSelector } from 'react-redux'
@@ -231,10 +231,11 @@ export function ContributionColumnAssignmentForm({
                 <Modal.Header closeButton>
                     <Modal.Title>Create a new tag</Modal.Title>
                 </Modal.Header>
-                <Modal.Body className="bg-secondary vh-85">
+                <Modal.Body className="bg-light vh-85">
                     <NewColumnModalBody />
                 </Modal.Body>
             </Modal>
+            <EditModal />
         </Row>
     )
 }
@@ -298,16 +299,22 @@ export function NewColumnModalBody() {
         return <CosmaeLoading />
     }
     return (
-        <ColumnTypeCreateForm>
+        <TagCreateForm>
             {(columnTypeCreateFormProps: ColumnTypeCreateFormProps) => (
                 <ColumnSelector
+                    allowEdit={false}
                     additionalEntries={additionalEntries}
                     mkTailElement={(columnDefinition: TagDefinition) => (
                         <Form.Check
                             type="radio"
                             name="parent"
                             value={columnDefinition.idPersistent}
-                            onChange={columnTypeCreateFormProps.handleChange}
+                            onChange={(_event) =>
+                                columnTypeCreateFormProps.setParent(
+                                    columnDefinition.idPersistent,
+                                    columnDefinition.namePath
+                                )
+                            }
                             checked={
                                 columnTypeCreateFormProps.selectedParent ==
                                 columnDefinition.idPersistent
@@ -316,7 +323,7 @@ export function NewColumnModalBody() {
                     )}
                 />
             )}
-        </ColumnTypeCreateForm>
+        </TagCreateForm>
     )
 }
 

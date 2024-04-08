@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Col, Form, Row } from 'react-bootstrap'
 import { TagDefinition } from '../state'
-import { ColumnTypeCreateForm, ColumnTypeCreateFormProps } from './form'
-import { ColumnSelector } from './selection'
+import { TagCreateForm, ColumnTypeCreateFormProps } from './form'
+import { ColumnSelector, EditModal } from './selection'
 import { Eye, EyeFill } from 'react-bootstrap-icons'
 import { CosmaeLoading } from '../../util/components/misc'
 import { useDispatch, useSelector } from 'react-redux'
@@ -92,26 +92,35 @@ export function ColumnMenuBody({
                 </Row>
                 {body}
             </Col>
+            <EditModal />
         </div>
     )
 }
-function CreateTabBody({
-    additionalEntries
+export function CreateTabBody({
+    additionalEntries = [],
+    existingTagDefinition
 }: {
-    additionalEntries: { idPersistent: string; name: string }[]
+    additionalEntries?: { idPersistent: string; name: string }[]
+    existingTagDefinition?: TagDefinition
 }) {
     return (
         <div className="ps-2 pe-2 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1">
-            <ColumnTypeCreateForm>
+            <TagCreateForm existingTagDefinition={existingTagDefinition}>
                 {(columnTypeCreateFormProps: ColumnTypeCreateFormProps) => (
                     <ColumnSelector
+                        allowEdit={false}
                         additionalEntries={additionalEntries}
                         mkTailElement={(columnDefinition: TagDefinition) => (
                             <Form.Check
                                 type="radio"
                                 name="parent"
                                 value={columnDefinition.idPersistent}
-                                onChange={columnTypeCreateFormProps.handleChange}
+                                onChange={(_event) =>
+                                    columnTypeCreateFormProps.setParent(
+                                        columnDefinition.idPersistent,
+                                        columnDefinition.namePath
+                                    )
+                                }
                                 checked={
                                     columnTypeCreateFormProps.selectedParent ==
                                     columnDefinition.idPersistent
@@ -120,7 +129,7 @@ function CreateTabBody({
                         )}
                     />
                 )}
-            </ColumnTypeCreateForm>
+            </TagCreateForm>
         </div>
     )
 }

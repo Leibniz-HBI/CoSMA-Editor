@@ -23,7 +23,6 @@ import {
     NotificationType,
     notificationReducer
 } from '../../util/notification/slice'
-import { describe } from 'node:test'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -254,12 +253,23 @@ describe('get hierarchy', () => {
 })
 
 describe('create tag definition', () => {
+    const tagDefinitionRsp = {
+        id_persistent: 'id-tag-def-created-test',
+        name: 'creation test',
+        description: 'tag definition created during tests',
+        curated: false,
+        hidden: false,
+        owner: {
+            username: 'user-test'
+        }
+    }
+
     async function setNameAndType(user: UserEvent) {
         await waitInitialDataLoad()
         const createButton = screen.getByText('Create')
         createButton.click()
         await waitFor(() => {
-            screen.getByText('Choose a column name:')
+            screen.getAllByText('Name')
         })
         const textBox = screen.getAllByRole('textbox')[0]
         await user.type(textBox, 'new tag def')
@@ -276,7 +286,7 @@ describe('create tag definition', () => {
     test('no parent', async () => {
         const fetchMock = jest.fn()
         initialResponseSequence(fetchMock)
-        addResponseSequence(fetchMock, [[200, {}]])
+        addResponseSequence(fetchMock, [[200, { tag_definitions: [tagDefinitionRsp] }]])
         initialResponseSequence(fetchMock)
         renderWithProviders(
             <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
@@ -295,17 +305,19 @@ describe('create tag definition', () => {
                     method: 'POST',
                     credentials: 'include',
                     body: JSON.stringify({
-                        tag_definitions: [{ name: 'new tag def', type: 'STRING' }]
+                        tag_definitions: [
+                            { name: 'new tag def', type: 'STRING', description: '' }
+                        ]
                     }),
                     headers: { 'Content-Type': 'application/json' }
                 }
             ])
         })
-    }, 7000)
+    })
     test('with parent', async () => {
         const fetchMock = jest.fn()
         initialResponseSequence(fetchMock)
-        addResponseSequence(fetchMock, [[200, {}]])
+        addResponseSequence(fetchMock, [[200, { tag_definitions: [tagDefinitionRsp] }]])
         initialResponseSequence(fetchMock)
         renderWithProviders(
             <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
@@ -333,7 +345,8 @@ describe('create tag definition', () => {
                             {
                                 name: 'new tag def',
                                 id_parent_persistent: idTagDef1,
-                                type: 'STRING'
+                                type: 'STRING',
+                                description: ''
                             }
                         ]
                     }),
@@ -341,7 +354,7 @@ describe('create tag definition', () => {
                 }
             ])
         })
-    }, 7000)
+    })
     test('dispatches error', async () => {
         const fetchMock = jest.fn()
         const errorMsg = 'Error while creating tag def'
@@ -361,7 +374,39 @@ describe('create tag definition', () => {
             expect(notifications[0].type).toEqual(NotificationType.Error)
             expect(notifications[0].msg).toContain(errorMsg)
         })
-    }, 6000)
+    })
+})
+test('open edit menu', async () => {
+    const fetchMock = jest.fn()
+    initialResponseSequence(fetchMock)
+    const { store } = renderWithProviders(
+        <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+        fetchMock
+    )
+    const user = userEvent.setup()
+    expect(store.getState().tagSelection.editTagDefinition.value).toBeUndefined()
+    await waitFor(() => {
+        const label = screen.getAllByText(nameTagDef0)[0]
+        const enclosing = label.parentElement?.parentElement
+        const svg = enclosing?.children[enclosing.children.length - 1].children[0]
+        expect(svg?.children[0].getAttribute('d')).toEqual(
+            'M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z'
+        )
+        expect(svg?.children[1].getAttribute('d')).toEqual(
+            'M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z'
+        )
+        if (svg !== undefined) {
+            user.click(svg)
+        }
+    })
+    await waitFor(() => {
+        const textboxes = screen.getAllByRole('textbox')
+        expect(textboxes.length).toEqual(2)
+        const radios = screen.getAllByRole('radio')
+        // 3 type radios + 6 for parent selection
+        expect(radios.length).toEqual(9)
+    })
+    expect(store.getState().tagSelection.editTagDefinition.value).not.toBeUndefined()
 })
 async function waitInitialDataLoad() {
     await waitFor(() => {

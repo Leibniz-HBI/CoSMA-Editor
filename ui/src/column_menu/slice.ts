@@ -83,8 +83,50 @@ export const tagSelectionSlice = createSlice({
         submitTagDefinitionStart(state: TagSelectionState) {
             state.isSubmittingDefinition = true
         },
-        submitTagDefinitionSuccess(state: TagSelectionState) {
+        submitTagDefinitionSuccess(
+            state: TagSelectionState,
+            action: PayloadAction<{
+                tagDefinition: TagDefinition
+                parentNamePath: string[]
+                namePath?: string[]
+            }>
+        ) {
             state.isSubmittingDefinition = false
+            const parentNamePath = action.payload.parentNamePath
+            const oldNamePath = action.payload.namePath
+            if (oldNamePath !== undefined) {
+                // remove previous entry, if existing
+                let entries: TagSelectionEntry[] | undefined = state.navigationEntries
+                if (oldNamePath.length > 0) {
+                    entries = pickTagSelectionEntryByNamePath(
+                        entries,
+                        oldNamePath
+                    )?.children
+                }
+                if (entries !== undefined) {
+                    for (const idx in entries) {
+                        if (
+                            entries[idx].columnDefinition.idPersistent ==
+                            action.payload.tagDefinition.idPersistent
+                        ) {
+                            entries.splice(parseInt(idx), 1)
+                        }
+                    }
+                }
+            }
+            const tagSelectionEntry = newTagSelectionEntry({
+                columnDefinition: action.payload.tagDefinition,
+                children: []
+            })
+            if (parentNamePath.length == 0) {
+                state.navigationEntries.push(tagSelectionEntry)
+            } else {
+                const parentEntry = pickTagSelectionEntryByNamePath(
+                    state.navigationEntries,
+                    parentNamePath
+                )
+                parentEntry?.children.push(tagSelectionEntry)
+            }
         },
         submitTagDefinitionError(state: TagSelectionState) {
             state.isSubmittingDefinition = false
@@ -184,6 +226,24 @@ function pickTagSelectionEntry(
         ret = ret?.children[path[idx]]
     }
     return ret
+}
+
+function pickTagSelectionEntryByNamePath(
+    entries: TagSelectionEntry[],
+    namePath: string[]
+) {
+    let entriesTmp = entries
+    let parent = undefined
+    for (const name of namePath) {
+        for (const idx in entriesTmp) {
+            if (entriesTmp[idx].columnDefinition.namePath.at(-1) == name) {
+                parent = entriesTmp[idx]
+                entriesTmp = parent.children
+                break
+            }
+        }
+    }
+    return parent
 }
 
 function updateNamePaths(

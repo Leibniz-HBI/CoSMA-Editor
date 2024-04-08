@@ -177,7 +177,7 @@ test('create, select and assign tag definition', async () => {
     const createMenuButton = screen.getByRole('button', { name: /Create new tag/i })
     await user.click(createMenuButton)
     await waitFor(() => {
-        screen.getByText('Choose a column name:')
+        screen.getAllByText('Name')
     })
     const textBox = screen.getAllByRole('textbox')[0]
     await user.type(textBox, nameTagDef0)

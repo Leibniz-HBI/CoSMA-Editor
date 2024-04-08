@@ -296,7 +296,7 @@ function parseEntityMergeRequestConflictFromJson(conflictJson: {
 function parseTagDefinitionFromJson(tagDefJson: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any
-}) {
+}): TagDefinition {
     return {
         idPersistent: tagDefJson['id_persistent'],
         idParentPersistent: tagDefJson['id_parent_persistent'],

@@ -2,9 +2,9 @@ import { PublicUserInfo } from '../user/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
 export enum TagType {
-    String,
-    Float,
-    Inner
+    String = 'STRING',
+    Float = 'FLOAT',
+    Inner = 'INNER'
 }
 
 export interface TagDefinition {
@@ -15,6 +15,7 @@ export interface TagDefinition {
     curated: boolean
     version: number
     owner?: PublicUserInfo
+    description?: string
     hidden: boolean
     disabled: boolean
 }
@@ -27,6 +28,7 @@ export function newTagDefinition({
     curated,
     owner,
     version,
+    description = undefined,
     hidden,
     disabled = false
 }: {
@@ -37,6 +39,7 @@ export function newTagDefinition({
     curated: boolean
     owner?: PublicUserInfo
     version: number
+    description?: string
     hidden: boolean
     disabled?: boolean
 }): TagDefinition {
@@ -48,6 +51,7 @@ export function newTagDefinition({
         curated,
         owner,
         version,
+        description,
         hidden,
         disabled
     }
