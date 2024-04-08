@@ -44,7 +44,7 @@ export function TagCreateForm({
     let initialValues = emptyTagValues
     if (existingTagDefinition !== undefined) {
         initialValues = {
-            columnType: existingTagDefinition.columnType,
+            columnType: existingTagDefinition.columnType as string,
             name: existingTagDefinition.namePath.at(-1) ?? '',
             parent: existingTagDefinition.idParentPersistent ?? '',
             description: existingTagDefinition.description ?? '',
@@ -116,7 +116,6 @@ function ColumnTypeCreateFormBody(props: {
     alreadyExists: boolean
     children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }): JSX.Element {
-    console.log(props.formValues)
     return (
         <Form
             noValidate
@@ -153,7 +152,9 @@ function ColumnTypeCreateFormBody(props: {
                                 name="columnType"
                                 label="boolean"
                                 value={TagType.Inner}
+                                checked={props.formValues.columnType === TagType.Inner}
                                 onChange={props.handleChange}
+                                disabled={props.alreadyExists}
                                 isInvalid={
                                     props.touchedValues.columnType &&
                                     !!props.formErrors.columnType
@@ -167,7 +168,9 @@ function ColumnTypeCreateFormBody(props: {
                                 label="string"
                                 name="columnType"
                                 value={TagType.String}
+                                checked={props.formValues.columnType === TagType.String}
                                 onChange={props.handleChange}
+                                disabled={props.alreadyExists}
                                 isInvalid={
                                     props.touchedValues.columnType &&
                                     !!props.formErrors.columnType
@@ -181,7 +184,9 @@ function ColumnTypeCreateFormBody(props: {
                                 name="columnType"
                                 label="number"
                                 value={TagType.Float}
+                                checked={props.formValues.columnType === TagType.Float}
                                 onChange={props.handleChange}
+                                disabled={props.alreadyExists}
                                 isInvalid={
                                     props.touchedValues.columnType &&
                                     !!props.formErrors.columnType
