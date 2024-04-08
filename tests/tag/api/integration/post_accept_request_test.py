@@ -62,6 +62,7 @@ def test_changes_owner_of_mrs(auth_server1, ownership_request_user, user_editor)
     "Make sure that for existing merge requests the owner is changed"
     server, _, cookies = auth_server1
     id_mr_persistent = "ccc5e4bd-2db1-4c52-b21b-cd9d138c21ea"
+    id_mr_persistent1 = "83e1ff75-ed82-4147-a8fc-30ddf76900ce"
     TagMergeRequest.objects.create(  # pylint: disable=no-member
         assigned_to=ownership_request_user.petitioner,
         created_by=user_editor,
@@ -70,6 +71,15 @@ def test_changes_owner_of_mrs(auth_server1, ownership_request_user, user_editor)
         id_destination_persistent=ownership_request_user.id_tag_definition_persistent,
         created_at=c.time_edit_test,
         id_persistent=id_mr_persistent,
+    )
+    TagMergeRequest.objects.create(  # pylint: disable=no-member
+        assigned_to=user_editor,
+        created_by=ownership_request_user.petitioner,
+        state=TagMergeRequest.OPEN,
+        id_origin_persistent=ownership_request_user.id_tag_definition_persistent,
+        id_destination_persistent="destination_for_test",
+        created_at=c.time_edit_test,
+        id_persistent=id_mr_persistent1,
     )
     rsp = req.post_accept(server.url, c.id_ownership_request_test, cookies=cookies)
     assert rsp.status_code == 200
@@ -83,5 +93,13 @@ def test_changes_owner_of_mrs(auth_server1, ownership_request_user, user_editor)
         )
         .get()
         .assigned_to
+        == ownership_request_user.receiver
+    )
+    assert (
+        TagMergeRequest.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_mr_persistent1
+        )
+        .get()
+        .created_by
         == ownership_request_user.receiver
     )

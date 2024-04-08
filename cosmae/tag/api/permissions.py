@@ -126,6 +126,9 @@ def post_ownership_request(  # pylint:: disable=too-many-return-statements
                 if do_save:
                     with transaction.atomic():
                         tag_definition_new.save()
+                        TagMergeRequest.change_owner_for_tag_def(
+                            id_tag_definition_persistent, user
+                        )
                 return 200, tag_definition_db_to_api(tag_definition_new)
             receiver = CosmaeUser.objects.filter(id_persistent=id_user_persistent).get()
             OwnershipRequestDb.objects.create(  # pylint: disable = no-member

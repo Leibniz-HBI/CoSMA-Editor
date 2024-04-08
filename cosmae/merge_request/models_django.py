@@ -72,6 +72,36 @@ class TagMergeRequest(AbstractMergeRequest):
             return assigned.annotate(curated=models.Value(False)).union(curated)
         return assigned
 
+    @classmethod
+    def created_by_user(cls, user: CosmaeUser):
+        "Get all merge requests created by a user"
+        states = [
+            TagMergeRequest.OPEN,
+            TagMergeRequest.CONFLICTS,
+            TagMergeRequest.ERROR,
+        ]
+
+        created = TagMergeRequest.objects.filter(  # pylint: disable=no-member
+            created_by=user,
+            state__in=states,
+        )
+        if user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
+            curated = (
+                TagMergeRequest.objects.filter(  # pylint: disable=no-member
+                    state__in=states
+                )
+                .annotate(
+                    curated=models.Subquery(
+                        TagDefinition.query_set()
+                        .filter(id_persistent=models.OuterRef("id_origin_persistent"))
+                        .values("curated")
+                    )
+                )
+                .filter(curated=True)
+            )
+            return created.annotate(curated=models.Value(False)).union(curated)
+        return created
+
     def has_read_access(self, user: CosmaeUser):
         "Check wether a user can read the merge request."
         return (
@@ -89,6 +119,9 @@ class TagMergeRequest(AbstractMergeRequest):
         cls.objects.filter(  # pylint: disable=no-member
             id_destination_persistent=id_tag_definition_persistent
         ).update(assigned_to=user)
+        cls.objects.filter(  # pylint: disable=no-member
+            id_origin_persistent=id_tag_definition_persistent,
+        ).update(created_by=user)
 
     @classmethod
     def get_for_contribution_query_set(cls, id_contribution_persistent):
