@@ -53,6 +53,7 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "curated": False,
                     "hidden": False,
                     "disabled": False,
+                    "description": None,
                     "owner": {
                         "username": "test-user",
                         "id_persistent": cu.test_uuid,
@@ -68,6 +69,7 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "curated": False,
                     "hidden": False,
                     "disabled": False,
+                    "description": None,
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
@@ -80,6 +82,7 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "name": ct.name_tag_def_curated_test,
                     "name_path": [ct.name_tag_def_curated_test],
                     "type": "STRING",
+                    "description": None,
                     "curated": True,
                     "hidden": False,
                     "disabled": False,

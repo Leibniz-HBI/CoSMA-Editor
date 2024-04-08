@@ -40,6 +40,7 @@ class TagDefinitionRequest(Schema):
     id_persistent: Optional[str]
     id_parent_persistent: Optional[str]
     name: str
+    description: Optional[str]
     version: Optional[int]
     type: str
     owner: Optional[PublicUserInfo]
@@ -193,6 +194,7 @@ def tag_definition_api_to_db(
         version=tag_definition.version,
         time_edit=time_edit,
         name=tag_definition.name,
+        description=tag_definition.description,
         type=_tag_type_mapping_api_to_db[tag_definition.type],
         requester=requester,
         hidden=tag_definition.hidden or False,

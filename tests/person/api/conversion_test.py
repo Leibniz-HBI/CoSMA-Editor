@@ -153,11 +153,13 @@ def test_conversion_db_to_api_UNKNOWN_in_cache_no_display_txt():
 def test_conversion_db_to_api_tag_def_in_cache():
     cache_display_txt = "cache display_txt"
     id_entity_persistent = "873eccfb-cf6c-4ade-bdb4-5aae8f9668e2"
+    description = "description for test"
     cache_tag_def = {
         "id_persistent": ct.id_tag_def_persistent_test,
         "id_parent_persistent": None,
         "name": ct.name_tag_def_test,
         "type": "STR",
+        "description": description,
         "hidden": False,
         "disabled": False,
         "curated": True,
@@ -180,6 +182,7 @@ def test_conversion_db_to_api_tag_def_in_cache():
             "id_parent_persistent": None,
             "name": ct.name_tag_def_test,
             "name_path": [ct.name_tag_def_test],
+            "description": description,
             "type": "STRING",
             "hidden": False,
             "curated": True,

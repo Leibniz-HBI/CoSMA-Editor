@@ -88,6 +88,7 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
@@ -103,6 +104,7 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
                 "id_persistent": c.id_persistent_tag_def_origin,
                 "id_parent_persistent": None,
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,

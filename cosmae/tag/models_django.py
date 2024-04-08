@@ -34,6 +34,7 @@ class TagDefinitionAbstract(models.Model):
     STRING = "STR"
     TYPE_CHOICES = [(INNER, "inner"), (FLOAT, "float"), (STRING, "string")]
     name = models.TextField()
+    description = models.TextField(blank=True, null=True)
     id_persistent = models.TextField()
     id_parent_persistent = models.TextField(null=True, blank=True)
     type = models.CharField(max_length=3, choices=TYPE_CHOICES, default=INNER)
@@ -210,6 +211,7 @@ class TagDefinitionHistory(TagDefinitionAbstract):
             or other.curated != self.curated
             or other.hidden != self.hidden
             or other.disabled != self.disabled
+            or other.description != self.description
         )
 
 
@@ -519,6 +521,7 @@ class TagInstance(TagInstanceAbstract):
                         id="id",
                         id_persistent="id_persistent",
                         id_parent_persistent="id_parent_persistent",
+                        description="description",
                         name="name",
                         type="type",
                         curated="curated",
@@ -574,6 +577,7 @@ class OwnershipRequest(models.Model):
                     name="name",
                     id_persistent="id_persistent",
                     id_parent_persistent="id_parent_persistent",
+                    description="description",
                     time_edit="time_edit",
                     type="type",
                     previous_version="previous_version",

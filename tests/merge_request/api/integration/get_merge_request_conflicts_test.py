@@ -77,6 +77,7 @@ def test_conflicts_no_resolution(
                 "name": c.name_tag_def_origin,
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
@@ -92,6 +93,7 @@ def test_conflicts_no_resolution(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
@@ -190,6 +192,7 @@ def test_conflicts_same_value(
                 "name": c.name_tag_def_origin,
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
@@ -205,6 +208,7 @@ def test_conflicts_same_value(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
@@ -256,6 +260,7 @@ def test_conflict_resolved(
                 "name": c.name_tag_def_origin,
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
@@ -271,6 +276,7 @@ def test_conflict_resolved(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
@@ -363,6 +369,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "name": "changed tag definition test",
                 "name_path": ["changed tag definition test"],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
@@ -378,6 +385,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
@@ -506,6 +514,7 @@ def test_tag_instance_destination_value_added(
                 "name": c.name_tag_def_origin,
                 "name_path": [c.name_tag_def_origin],
                 "type": "STRING",
+                "description": None,
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
@@ -521,6 +530,7 @@ def test_tag_instance_destination_value_added(
                 "name": c.name_tag_def_destination,
                 "name_path": [c.name_tag_def_destination],
                 "type": "STRING",
+                "description": None,
                 "curated": False,
                 "owner": {
                     "username": "test-user",

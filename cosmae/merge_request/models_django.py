@@ -230,6 +230,7 @@ class TagMergeRequest(AbstractMergeRequest):
                                 id_parent_persistent="id_parent_persistent",
                                 name="name",
                                 type="type",
+                                description="description",
                                 curated="curated",
                                 owner="owner",
                                 hidden="hidden",

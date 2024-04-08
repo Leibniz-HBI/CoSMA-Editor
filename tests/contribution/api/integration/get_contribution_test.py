@@ -77,6 +77,7 @@ def test_get_with_match_tag_definition_list(auth_server, tag_def1, tag_def_curat
             "id_persistent": tag_def_curated.id_persistent,
             "name": tag_def_curated.name,
             "curated": tag_def_curated.curated,
+            "description": None,
             "id_parent_persistent": tag_def_curated.id_parent_persistent,
             "version": tag_def_curated.id,
             "name_path": [tag_def_curated.name],

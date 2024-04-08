@@ -55,6 +55,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "name": c.name_tag_def_destination1,
                     "name_path": [c.name_tag_def_destination1],
                     "type": "STRING",
+                    "description": None,
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
@@ -70,6 +71,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "id_parent_persistent": None,
                     "id_persistent": c.id_persistent_tag_def_origin1,
                     "type": "STRING",
+                    "description": None,
                     "curated": False,
                     "owner": {
                         "username": "test-user",
@@ -106,6 +108,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "name": c.name_tag_def_destination,
                     "name_path": [c.name_tag_def_destination],
                     "type": "STRING",
+                    "description": None,
                     "owner": {
                         "username": "test-user",
                         "id_persistent": cu.test_uuid,
@@ -121,6 +124,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "id_persistent": c.id_persistent_tag_def_origin,
                     "id_parent_persistent": None,
                     "type": "STRING",
+                    "description": None,
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
@@ -180,6 +184,7 @@ def test_get_merge_requests_with_hidden(
                     "name": c.name_tag_def_destination1,
                     "name_path": [c.name_tag_def_destination1],
                     "type": "STRING",
+                    "description": None,
                     "curated": False,
                     "owner": {
                         "username": "test-user1",
@@ -195,6 +200,7 @@ def test_get_merge_requests_with_hidden(
                     "id_parent_persistent": None,
                     "id_persistent": c.id_persistent_tag_def_origin1,
                     "type": "STRING",
+                    "description": None,
                     "owner": {
                         "username": "test-user",
                         "id_persistent": cu.test_uuid,
@@ -231,6 +237,7 @@ def test_get_merge_requests_with_hidden(
                     "name": c.name_tag_def_destination,
                     "name_path": [c.name_tag_def_destination],
                     "type": "STRING",
+                    "description": None,
                     "curated": False,
                     "owner": {
                         "username": "test-user",
@@ -246,6 +253,7 @@ def test_get_merge_requests_with_hidden(
                     "id_persistent": c.id_persistent_tag_def_origin,
                     "id_parent_persistent": None,
                     "type": "STRING",
+                    "description": None,
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
@@ -290,6 +298,7 @@ def test_includes_curated(
                     "name": "name curated tag test",
                     "name_path": ["name curated tag test"],
                     "type": "STRING",
+                    "description": None,
                     "owner": None,
                     "curated": True,
                     "hidden": False,
@@ -306,6 +315,7 @@ def test_includes_curated(
                         "permission_group": "APPLICANT",
                     },
                     "type": "STRING",
+                    "description": None,
                     "curated": False,
                     "hidden": False,
                     "disabled": False,

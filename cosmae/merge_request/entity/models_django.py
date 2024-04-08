@@ -282,6 +282,7 @@ class EntityConflictResolution(AbstractConflictResolution):
                         id="id",
                         id_persistent="id_persistent",
                         id_parent_persistent="id_parent_persistent",
+                        description="description",
                         name="name",
                         type="type",
                         curated="curated",

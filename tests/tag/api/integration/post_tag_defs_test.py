@@ -119,6 +119,23 @@ def test_no_permissions(auth_server1, root_tag_def):
     assert req.status_code == 403
 
 
+def test_change_description(auth_server, root_tag_def):
+    test_description = "Changed description for test"
+    live_server, cookies = auth_server
+    req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
+    assert req.status_code == 200
+    created = req.json()["tag_definitions"][0]
+    id_persistent = created["id_persistent"]
+    version = created["version"]
+    new_tag_def = root_tag_def.copy()
+    new_tag_def["id_persistent"] = id_persistent
+    new_tag_def["version"] = version
+    new_tag_def["description"] = test_description
+    req = r.post_tag_def(live_server.url, new_tag_def, cookies=cookies)
+    assert req.status_code == 200
+    assert req.json()["tag_definitions"][0]["description"] == test_description
+
+
 def test_change_type(auth_server, root_tag_def):
     live_server, cookies = auth_server
     req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
@@ -132,7 +149,7 @@ def test_change_type(auth_server, root_tag_def):
     new_tag_def["type"] = "FLOAT"
     req = r.post_tag_def(live_server.url, new_tag_def, cookies=cookies)
     assert req.status_code == 200
-    assert req.json()["tag_definitions"][0]["owner"]["username"] == "test-user"
+    assert req.json()["tag_definitions"][0]["type"] == "FLOAT"
 
 
 def test_no_parent(auth_server, child_tag_def):

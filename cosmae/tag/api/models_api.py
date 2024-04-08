@@ -12,6 +12,7 @@ class TagDefinitionResponse(Schema):
     id_persistent: Optional[str]
     id_parent_persistent: Optional[str]
     name: str
+    description: Optional[str]
     name_path: List[str]
     version: int
     type: str

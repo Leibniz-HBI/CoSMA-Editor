@@ -60,6 +60,7 @@ def test_get_request(
                         "curated": True,
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_curated_test],
+                        "description": None,
                         "owner": None,
                         "hidden": False,
                         "disabled": False,
@@ -86,6 +87,7 @@ def test_get_request(
                         "curated": False,
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_test_user],
+                        "description": None,
                         "owner": {
                             "username": cu.test_username,
                             "id_persistent": cu.test_uuid,
@@ -133,6 +135,7 @@ def test_get_request_commissioner(
                         "curated": True,
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_curated_test],
+                        "description": None,
                         "owner": None,
                         "hidden": False,
                         "disabled": False,

@@ -172,9 +172,9 @@ def test_merges_for_equal_value_replace(
     )
     assert len(instances) == 2
     instance = instances[0]
-    assert instance.value == "value origin"
-    instance = instances[1]
     assert instance.value == "value origin 1"
+    instance = instances[1]
+    assert instance.value == "value origin"
 
 
 def test_merges_for_equal_value_keep(
