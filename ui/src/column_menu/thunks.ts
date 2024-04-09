@@ -114,7 +114,7 @@ export function submitTagDefinition({
                 description
             }
             if (idPersistent !== undefined) {
-                body.idPersistent = idPersistent
+                body.id_persistent = idPersistent
                 body.version = version
             }
             const rsp = await fetch(config.api_path + '/tags/definitions', {
