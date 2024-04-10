@@ -40,7 +40,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                 "created_by": {
                     "username": cu.test_username,
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "assigned_to": {
                     "username": cu.test_username1,
@@ -76,7 +76,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "owner": {
                         "username": "test-user",
                         "id_persistent": cu.test_uuid,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "hidden": False,
                     "disabled": False,
@@ -98,7 +98,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                 "assigned_to": {
                     "username": cu.test_username,
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
@@ -112,7 +112,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "owner": {
                         "username": "test-user",
                         "id_persistent": cu.test_uuid,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "curated": False,
                     "hidden": False,
@@ -169,7 +169,7 @@ def test_get_merge_requests_with_hidden(
                 "created_by": {
                     "username": cu.test_username,
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "assigned_to": {
                     "username": cu.test_username1,
@@ -204,7 +204,7 @@ def test_get_merge_requests_with_hidden(
                     "owner": {
                         "username": "test-user",
                         "id_persistent": cu.test_uuid,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "curated": False,
                     "hidden": True,
@@ -227,7 +227,7 @@ def test_get_merge_requests_with_hidden(
                 "assigned_to": {
                     "username": cu.test_username,
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
@@ -242,7 +242,7 @@ def test_get_merge_requests_with_hidden(
                     "owner": {
                         "username": "test-user",
                         "id_persistent": cu.test_uuid,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "hidden": False,
                     "disabled": False,

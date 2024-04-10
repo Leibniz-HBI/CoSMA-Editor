@@ -113,7 +113,8 @@ def tag_def_curated():
 
 @pytest.fixture
 def auth_server(live_server):
-    uuidMock = MagicMock(return_value=UUID(cu.test_uuid))
+    id_user_persistent = cu.test_uuid
+    uuidMock = MagicMock(return_value=UUID(id_user_persistent))
     with patch("cosmae.user.api.uuid4", uuidMock):
         rsp = post_register(
             live_server.url,
@@ -124,6 +125,10 @@ def auth_server(live_server):
                 "names_personal": cu.test_names_personal,
             },
         )
+
+    user = CosmaeUser.objects.filter(id_persistent=id_user_persistent).get()
+    user.permission_group = CosmaeUser.CONTRIBUTOR
+    user.save()
     rsp = post_login(
         live_server.url, {"name": cu.test_username, "password": cu.test_password}
     )
@@ -147,6 +152,31 @@ def auth_server1(auth_server):
         )
     rsp = post_login(url, {"name": cu.test_username1, "password": cu.test_password1})
     return live_server, cookies_user0, rsp.cookies
+
+
+@pytest.fixture()
+def auth_server_applicant(live_server):
+    url = live_server.url
+    user_id_persistent = cu.test_uuid_applicant
+    uuidMock = MagicMock(return_value=UUID(user_id_persistent))
+    with patch("cosmae.user.api.uuid4", uuidMock):
+        rsp = post_register(
+            url,
+            {
+                "username": cu.test_username_applicant,
+                "password": cu.test_password_applicant,
+                "email": cu.test_email_applicant,
+                "names_personal": cu.test_names_personal_applicant,
+            },
+        )
+    user = CosmaeUser.objects.filter(id_persistent=user_id_persistent).get()
+    user.permission_group = CosmaeUser.APPLICANT
+    user.save()
+    rsp = post_login(
+        url,
+        {"name": cu.test_username_applicant, "password": cu.test_password_applicant},
+    )
+    return live_server, rsp.cookies
 
 
 @pytest.fixture

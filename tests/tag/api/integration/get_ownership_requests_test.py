@@ -51,7 +51,7 @@ def test_get_request(
                     "receiver": {
                         "username": cu.test_username,
                         "id_persistent": cu.test_uuid,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "tag_definition": {
                         "id_persistent": c.id_tag_def_curated_test,
@@ -73,7 +73,7 @@ def test_get_request(
                     "petitioner": {
                         "username": cu.test_username,
                         "id_persistent": cu.test_uuid,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "receiver": {
                         "username": cu.test_username1,
@@ -91,7 +91,7 @@ def test_get_request(
                         "owner": {
                             "username": cu.test_username,
                             "id_persistent": cu.test_uuid,
-                            "permission_group": "APPLICANT",
+                            "permission_group": "CONTRIBUTOR",
                         },
                         "hidden": False,
                         "disabled": False,

@@ -78,7 +78,7 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
             "assigned_to": {
                 "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "state": "OPEN",
             "disable_origin_on_merge": False,
@@ -92,7 +92,7 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,

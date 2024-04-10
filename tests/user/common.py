@@ -20,6 +20,12 @@ test_email_commissioner = "commissioner@test.org"
 test_names_personal_commissioner = "test commissioner name"
 test_uuid_commissioner = "91c23612-fc8d-4bb1-a16c-d868fffeb916"
 
+test_username_applicant = "test-user-applicant"
+test_password_applicant = "test6783"
+test_email_applicant = "applicant@test.org"
+test_names_personal_applicant = "test applicant name"
+test_uuid_applicant = "08dc696e-0d90-495b-a556-92e259703a42"
+
 test_username_editor = "test-user-editor"
 test_password_editor = "test1538"
 test_email_editor = "editor@test.org"

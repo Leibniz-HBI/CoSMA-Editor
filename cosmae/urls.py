@@ -6,6 +6,7 @@ from django.urls import path
 from ninja import NinjaAPI, Schema
 from ninja.constants import NOT_SET
 
+from cosmae.comments.api import router as comment_router
 from cosmae.contribution.api import router as contribution_router
 from cosmae.management import router as management_router
 from cosmae.merge_request.router import router
@@ -21,6 +22,7 @@ ninja_api.add_router("tags", tag_router, auth=cosmae_auth)
 ninja_api.add_router("contributions", contribution_router, auth=cosmae_auth)
 ninja_api.add_router("merge_requests", router, auth=cosmae_auth)
 ninja_api.add_router("manage", management_router, auth=cosmae_auth)
+ninja_api.add_router("comments", comment_router, auth=cosmae_auth)
 
 
 class LoginRequest(Schema):

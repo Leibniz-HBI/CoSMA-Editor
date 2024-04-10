@@ -26,8 +26,8 @@ def test_no_cookies(auth_server, display_txt_only):
     assert req.status_code == 401
 
 
-def test_insufficient_permissions(auth_server, display_txt_only):
-    live_server, cookies = auth_server
+def test_insufficient_permissions(auth_server_applicant, display_txt_only):
+    live_server, cookies = auth_server_applicant
     person = display_txt_only.copy()
     person["id_persistent"] = test_id_persistent_0
     req = post_person(live_server.url, person, cookies=cookies)

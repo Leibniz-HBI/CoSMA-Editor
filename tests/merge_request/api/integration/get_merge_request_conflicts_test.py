@@ -60,7 +60,7 @@ def test_conflicts_no_resolution(
             "assigned_to": {
                 "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "created_by": {
                 "username": cu.test_username1,
@@ -97,7 +97,7 @@ def test_conflicts_no_resolution(
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,
@@ -175,7 +175,7 @@ def test_conflicts_same_value(
             "assigned_to": {
                 "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "created_by": {
                 "username": cu.test_username1,
@@ -212,7 +212,7 @@ def test_conflicts_same_value(
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,
@@ -243,7 +243,7 @@ def test_conflict_resolved(
             "assigned_to": {
                 "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "created_by": {
                 "username": cu.test_username1,
@@ -280,7 +280,7 @@ def test_conflict_resolved(
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,
@@ -352,7 +352,7 @@ def test_conflict_resolved_tag_def_origin_changed(
             "assigned_to": {
                 "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "created_by": {
                 "username": cu.test_username1,
@@ -389,7 +389,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,
@@ -497,7 +497,7 @@ def test_tag_instance_destination_value_added(
             "assigned_to": {
                 "username": cu.test_username,
                 "id_persistent": cu.test_uuid,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "created_by": {
                 "username": cu.test_username1,
@@ -535,7 +535,7 @@ def test_tag_instance_destination_value_added(
                 "owner": {
                     "username": "test-user",
                     "id_persistent": cu.test_uuid,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "hidden": False,
                 "disabled": False,

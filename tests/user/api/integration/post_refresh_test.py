@@ -20,5 +20,5 @@ def test_logged_in(auth_server):
         "names_family": "",
         "tag_definition_list": [],
         "id_persistent": c.test_uuid,
-        "permission_group": "APPLICANT",
+        "permission_group": "CONTRIBUTOR",
     }
