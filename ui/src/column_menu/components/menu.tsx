@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Col, Form, Row } from 'react-bootstrap'
 import { TagDefinition } from '../state'
 import { TagCreateForm, ColumnTypeCreateFormProps } from './form'
 import { ColumnSelector, EditModal } from './selection'
 import { Eye, EyeFill } from 'react-bootstrap-icons'
-import { CosmaeLoading } from '../../util/components/misc'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectTagSelectionLoading } from '../selectors'
 import { loadTagDefinitionHierarchy } from '../thunks'
 import { AppDispatch } from '../../store'
+import { TabView } from '../../util/components/tabs'
+import { useAppSelector } from '../../hooks'
 
 export function ColumnMenu(props: {
     columnIndices: Map<string, number>
@@ -40,60 +41,36 @@ export function ColumnMenuBody({
     columnIndices: Map<string, number>
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
-    const isLoading = useSelector(selectTagSelectionLoading)
-    let showLinkClass = 'nav-link'
-    let createLinkClass = 'nav-link'
-    const [createTabSelected, setCreateTabSelected] = useState(false)
-    let body = <CosmaeLoading />
+    const isLoading = useAppSelector(selectTagSelectionLoading)
 
-    if (!isLoading) {
-        if (createTabSelected) {
-            createLinkClass += ' active bg-light'
-            body = (
-                <CreateTabBody
-                    additionalEntries={[{ idPersistent: '', name: 'No parent' }]}
-                />
-            )
-        } else {
-            showLinkClass += ' active bg-light'
-            body = (
-                <ShowTabBody
-                    columnIndices={columnIndices}
-                    loadColumnDataCallback={loadColumnDataCallback}
-                />
-            )
-        }
-    }
-    const tabs = [
-        <li
-            className="nav-item "
-            key="select-tab-label"
-            onClick={() => {
-                setCreateTabSelected(false)
-            }}
-        >
-            <a className={showLinkClass}>Load</a>
-        </li>,
-        <li
-            className="nav-item "
-            key="create-tab-label"
-            onClick={() => {
-                setCreateTabSelected(true)
-            }}
-        >
-            <a className={createLinkClass}>Create</a>
-        </li>
-    ]
     return (
-        <div className="container text-left bg-light rounded ps-0 pe-0 h-100 overflow-y-hidden">
-            <Col className="h-100 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1">
-                <Row className="ms-0 me-0">
-                    <ul className="nav nav-tabs justify-content-center ">{tabs}</ul>
-                </Row>
-                {body}
-            </Col>
+        <>
+            <TabView
+                isLoading={isLoading}
+                tabList={[
+                    {
+                        name: 'Load',
+                        component: (
+                            <ShowTabBody
+                                columnIndices={columnIndices}
+                                loadColumnDataCallback={loadColumnDataCallback}
+                            />
+                        )
+                    },
+                    {
+                        name: 'Create',
+                        component: (
+                            <CreateTabBody
+                                additionalEntries={[
+                                    { idPersistent: '', name: 'No parent' }
+                                ]}
+                            />
+                        )
+                    }
+                ]}
+            />
             <EditModal />
-        </div>
+        </>
     )
 }
 export function CreateTabBody({
