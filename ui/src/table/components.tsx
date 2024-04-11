@@ -127,7 +127,9 @@ export function RemoteDataTable(props: {
                             className="h-100"
                         >
                             <Modal.Header closeButton>
-                                <Modal.Title>Show Additional Tag Values</Modal.Title>
+                                <Modal.Title className="text-dark">
+                                    Show Additional Tag Values
+                                </Modal.Title>
                             </Modal.Header>
                             <Modal.Body className="bg-secondary vh-85">
                                 <ColumnMenu

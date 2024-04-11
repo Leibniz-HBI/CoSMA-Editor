@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Col, Form, Row } from 'react-bootstrap'
+import { Form } from 'react-bootstrap'
 import { TagDefinition } from '../state'
 import { TagCreateForm, ColumnTypeCreateFormProps } from './form'
 import { ColumnSelector, EditModal } from './selection'

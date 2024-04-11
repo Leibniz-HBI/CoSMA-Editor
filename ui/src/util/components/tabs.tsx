@@ -24,7 +24,9 @@ export function TabView({
             body = tab.component
             tabItems.push(
                 <li className="nav-item " key={idx}>
-                    <a className="nav-link active bg-light">{tab.name}</a>
+                    <a className="nav-link active bg-transparent border-primary border-bottom-0">
+                        {tab.name}
+                    </a>
                 </li>
             )
         } else {
@@ -36,7 +38,9 @@ export function TabView({
                         setSelectedTabIdx(idx)
                     }}
                 >
-                    <a className="nav-link">{tab.name}</a>
+                    <a className="nav-link fw-semibold border-primary border-0 bg-primary-subtle">
+                        {tab.name}
+                    </a>
                 </li>
             )
         }
@@ -45,10 +49,12 @@ export function TabView({
         body = <CosmaeLoading />
     }
     return (
-        <div className="container text-left bg-light rounded ps-0 pe-0 h-100 overflow-y-hidden">
+        <div className="text-left rounded ps-0 pe-0 h-100 overflow-y-hidden">
             <Col className="h-100 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1">
-                <Row className="ms-0 me-0">
-                    <ul className="nav nav-tabs justify-content-center ">{tabItems}</ul>
+                <Row className="ms-0 me-0 mb-1">
+                    <ul className="nav nav-tabs justify-content-center border-primary">
+                        {tabItems}
+                    </ul>
                 </Row>
                 {body}
             </Col>

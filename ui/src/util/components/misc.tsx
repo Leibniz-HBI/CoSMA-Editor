@@ -69,13 +69,15 @@ export function CosmaeCard({
     className?: string
 }) {
     return (
-        <Card className={className}>
-            <Card.Body className="bg-light d-flex flex-column pt-0 ps-0 pe-0">
-                <div className="bg-primary-subtle ps-2 pe-2 pt-2 pb-3 mb-2">
-                    {title !== undefined && <Card.Title>{title}</Card.Title>}
-                    {text !== undefined && <Card.Text>{text}</Card.Text>}
+        <Card className={className + ' bg-light'}>
+            <Card.Body className="bg-light d-flex flex-column pt-0 ps-0 pe-0 mb-1 rounded-top">
+                <div className="bg-primary-subtle ps-2 pe-2 pt-2 pb-3 mb-2 rounded-top">
+                    <div className="border-primary border-3">
+                        {title !== undefined && <Card.Title>{title}</Card.Title>}
+                        {text !== undefined && <Card.Text>{text}</Card.Text>}
+                    </div>
                 </div>
-                {children}
+                <div className="bg-light rounded-bottom">{children}</div>
             </Card.Body>
         </Card>
     )

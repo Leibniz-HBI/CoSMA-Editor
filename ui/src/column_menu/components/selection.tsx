@@ -169,7 +169,7 @@ function NoParentEntry({
     }) => void
 }) {
     const isDragging = useAppSelector(selectIsDragging)
-    let colorClass = 'bg-light'
+    let colorClass = 'bg-secondary'
     if (isDragging) {
         colorClass = 'bg-dark'
     }

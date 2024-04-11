@@ -226,7 +226,7 @@ export function ContributionColumnAssignmentForm({
                 onHide={() => dispatch(setColumnDefinitionFormTab(false))}
                 data-testid="create-column-modal"
                 size="lg"
-                className="overflow-hidden"
+                className="overflow-hidden text-dark"
             >
                 <Modal.Header closeButton>
                     <Modal.Title>Create a new tag</Modal.Title>
