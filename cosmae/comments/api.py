@@ -31,7 +31,7 @@ class GetCommentsResponse(Schema):
 class PostCommentRequest(Schema):
     "Body for posting new comments."
     # pylint: disable=too-few-public-methods
-    comment: str
+    comment: Comment
 
 
 router = Router()
@@ -84,7 +84,7 @@ def post_comment(
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
     try:
-        CommentDb.add_comment(relates_to_id_persistent, comment.comment)
+        CommentDb.add_comment(relates_to_id_persistent, comment.comment.content)
         return 200, None
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not write comment")

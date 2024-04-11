@@ -14,7 +14,7 @@ def get_comments(url, id_persistent_list, cookies=None):
 def post_comments(url, id_persistent, comment, cookies=None):
     return requests.post(
         url + f"/cosmae/api/comments/{id_persistent}",
-        json={"comment": comment},
+        json={"comment": {"content": comment}},
         cookies=cookies,
         timeout=900,
     )
