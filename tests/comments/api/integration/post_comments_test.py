@@ -1,6 +1,7 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name, unused-argument
 import tests.comments.api.integration.requests as req
 import tests.comments.common as c
+import tests.user.common as cu
 from cosmae.comments.models_django import Comment
 
 
@@ -24,7 +25,6 @@ def test_post_comment(auth_server):
         server.url, c.id_persistent_comment, c.comment_test_0_0, cookies=cookies
     )
     assert rsp.status_code == 200
-    assert (
-        Comment.objects.all().get().content  # pylint: disable=no-member
-        == c.comment_test_0_0
-    )
+    comment = Comment.objects.all().get()  # pylint: disable=no-member
+    assert comment.content == c.comment_test_0_0
+    assert comment.author.username == cu.test_username

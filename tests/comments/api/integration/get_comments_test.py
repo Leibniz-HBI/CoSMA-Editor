@@ -1,6 +1,7 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name, unused-argument
 import tests.comments.api.integration.requests as req
 import tests.comments.common as c
+from tests.user import common as cu
 
 
 def test_not_authorized(auth_server):
@@ -26,3 +27,9 @@ def test_gets_comments(auth_server, comment_0_0, comment_0_1, comment_1_0, comme
     assert len(comments_by_id) == 2
     for comments in comments_by_id.values():
         assert len(({comment["content"] for comment in comments})) == 2
+        for comment in comments:
+            assert (comment["author"]) == {
+                "username": cu.test_username,
+                "permission_group": "CONTRIBUTOR",
+                "id_persistent": cu.test_uuid,
+            }

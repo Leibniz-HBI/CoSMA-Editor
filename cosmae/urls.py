@@ -1,10 +1,14 @@
 """Registry for CoSMA-Editor urls."""
 
+from datetime import datetime
+
 from django.contrib import admin
 from django.contrib.auth import authenticate, login
 from django.urls import path
 from ninja import NinjaAPI, Schema
 from ninja.constants import NOT_SET
+from ninja.renderers import JSONRenderer
+from ninja.responses import NinjaJSONEncoder
 
 from cosmae.comments.api import router as comment_router
 from cosmae.contribution.api import router as contribution_router
@@ -15,7 +19,23 @@ from cosmae.tag.api.router import router as tag_router
 from cosmae.user.api import router as user_router
 from cosmae.util.auth import cosmae_auth
 
-ninja_api = NinjaAPI(csrf=False)
+
+class JsonEncoderWithDatetime(NinjaJSONEncoder):
+    "JSON encoder for ninja API with custom datetime formatting."
+
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.strftime("%Y-%m-%d %H:%M:%S %z")
+        return super().default(o)
+
+
+class JsonRendererWithDateTime(JSONRenderer):
+    "JSON render that uses encoder with custom date time formatting."
+    # pylint: disable=too-few-public-methods
+    encoder_class = JsonEncoderWithDatetime
+
+
+ninja_api = NinjaAPI(csrf=False, renderer=JsonRendererWithDateTime())
 ninja_api.add_router("user", user_router, auth=NOT_SET)
 ninja_api.add_router("persons", person_router, auth=cosmae_auth)
 ninja_api.add_router("tags", tag_router, auth=cosmae_auth)
