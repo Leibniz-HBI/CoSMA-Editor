@@ -3,7 +3,7 @@
 
 def format_datetime(datetime):
     "Helper function for formatting dates like django+ninja"
-    return datetime.isoformat() + "Z"
+    return datetime.strftime("%Y-%m-%d %H:%M:%S %z")
 
 
 def version_sort_key(dictionary):
