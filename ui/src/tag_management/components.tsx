@@ -45,8 +45,12 @@ export function TagManagementPage() {
                 <Row className="pb-2"></Row>
                 <CosmaeCard
                     className="h-50 d-flex flex-column overflow-hidden"
-                    text="You were petitioned to accept the ownership for the
-                                following tags:"
+                    header={
+                        <span>
+                            You were petitioned to accept the ownership for the
+                            following tags:
+                        </span>
+                    }
                 >
                     <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
                         <ListGroup>
@@ -64,7 +68,11 @@ export function TagManagementPage() {
                 <Row className="pt-2 pb-4"></Row>
                 <CosmaeCard
                     className="h-50 d-flex flex-column overflow-hidden"
-                    text="You requested a new owner for the following tag definitions:"
+                    header={
+                        <span>
+                            You requested a new owner for the following tag definitions:
+                        </span>
+                    }
                 >
                     <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
                         <ListGroup>

@@ -58,13 +58,11 @@ export function ChoiceButton({
 }
 
 export function CosmaeCard({
-    title,
-    text,
+    header,
     children,
     className = ''
 }: {
-    title?: string
-    text?: string
+    header?: ReactNode
     children: ReactNode
     className?: string
 }) {
@@ -73,8 +71,7 @@ export function CosmaeCard({
             <Card.Body className="bg-light d-flex flex-column pt-0 ps-0 pe-0 mb-1 rounded-top">
                 <div className="bg-primary-subtle ps-2 pe-2 pt-2 pb-3 mb-2 rounded-top">
                     <div className="border-primary border-3">
-                        {title !== undefined && <Card.Title>{title}</Card.Title>}
-                        {text !== undefined && <Card.Text>{text}</Card.Text>}
+                        {header !== undefined && header}
                     </div>
                 </div>
                 <div className="bg-light rounded-bottom">{children}</div>

@@ -46,7 +46,9 @@ export function ReviewList() {
                 <Row className="mb-4 h-50" key="merge-request-assigned-list">
                     <Col>
                         <CosmaeCard
-                            title="Tag Definition Merge Requests Assigned to You"
+                            header={
+                                <h5>Tag Definition Merge Requests Assigned to You</h5>
+                            }
                             className="h-100 d-flex flex-column overflow-hidden"
                         >
                             <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
@@ -66,7 +68,9 @@ export function ReviewList() {
                 <Row className="h-50" key="merge-request-created-list">
                     <Col>
                         <CosmaeCard
-                            title="Tag Definition Merge Requests Opened by You"
+                            header={
+                                <h5>Tag Definition Merge Requests Opened by You</h5>
+                            }
                             className="h-100 d-flex flex-column overflow-hidden"
                         >
                             <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
@@ -88,7 +92,7 @@ export function ReviewList() {
                 permissionGroup === UserPermissionGroup.COMMISSIONER) && (
                 <Col className="h-100 overflow-hidden d-flex flex-column  pb-3" xs={5}>
                     <CosmaeCard
-                        title="Entity Merge Requests"
+                        header={<h5>Entity Merge Requests</h5>}
                         className="h-100 d-flex flex-column overflow-hidden"
                     >
                         <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
