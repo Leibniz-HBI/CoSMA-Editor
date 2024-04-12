@@ -17,14 +17,18 @@ export function CommentHistoryAndForm({ idPersistent }: { idPersistent: string }
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idPersistent])
     return (
-        <Col className="ms-4 me-3 overflow-y-auto scroll-gutter ">
-            <Row>
-                <CommentsHistory idPersistent={idPersistent} />
-            </Row>
-            <Row>
-                <CommentForm idPersistent={idPersistent} />
-            </Row>
-        </Col>
+        <Row>
+            <Col xs={0} md={2} />
+            <Col className="ms-4 me-3 overflow-y-auto scroll-gutter">
+                <Row>
+                    <CommentsHistory idPersistent={idPersistent} />
+                </Row>
+                <Row>
+                    <CommentForm idPersistent={idPersistent} />
+                </Row>
+            </Col>
+            <Col xs={0} md={2} />
+        </Row>
     )
 }
 
