@@ -16,6 +16,7 @@ import { Provider } from 'react-redux'
 import { CommentHistoryAndForm } from '../components'
 import userEvent from '@testing-library/user-event'
 import { newRemote } from '../../util/state'
+import { UserPermissionGroup, newPublicUserInfo } from '../../user/state'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -69,6 +70,27 @@ const idPersistent = 'id-resource'
 const content = 'comment contents'
 const content1 = 'comment contents 1'
 const content2 = 'comment contents 2'
+const timeString = '1996-04-02 16:54:00 +0300'
+const timeString1 = '1996-04-03 16:54:00 +0300'
+const timeString2 = '1996-04-04 16:54:00 +0300'
+
+const time = new Date(timeString)
+const time1 = new Date(timeString1)
+const time2 = new Date(timeString2)
+
+const username = 'userTest'
+const idUser = 'id-user-test'
+const authorApi = {
+    username: username,
+    id_persistent: idUser,
+    permission_group: 'CONTRIBUTOR'
+}
+
+const author = newPublicUserInfo({
+    idPersistent: idUser,
+    username,
+    permissionGroup: UserPermissionGroup.CONTRIBUTOR
+})
 
 test('success show and edit', async () => {
     const fetchMock = jest.fn()
@@ -77,11 +99,23 @@ test('success show and edit', async () => {
             200,
             {
                 comments_by_id_persistent: {
-                    [idPersistent]: [{ content: content }, { content: content1 }]
+                    [idPersistent]: [
+                        { content: content, author: authorApi, timestamp: timeString },
+                        { content: content1, author: authorApi, timestamp: timeString1 }
+                    ]
                 }
             }
         ],
-        [200, {}]
+        [
+            200,
+            {
+                comment: {
+                    content: content2,
+                    author: authorApi,
+                    timestamp: timeString2
+                }
+            }
+        ]
     ])
     const { store } = renderWithProviders(
         <CommentHistoryAndForm idPersistent={idPersistent} />,
@@ -91,9 +125,11 @@ test('success show and edit', async () => {
         screen.findByText(content)
         screen.findByText(content1)
     })
+    const comment = { content: content, author, timestamp: time }
+    const comment1 = { content: content1, author, timestamp: time1 }
     expect(store.getState().comments).toEqual({
         commentsByIdPersistent: {
-            [idPersistent]: newRemote([{ content: content }, { content: content1 }])
+            [idPersistent]: newRemote([comment, comment1])
         },
         isSubmitting: false
     })
@@ -114,7 +150,9 @@ test('success show and edit', async () => {
                 {
                     method: 'POST',
                     credentials: 'include',
-                    body: JSON.stringify({ comment: { content: content2 } })
+                    body: JSON.stringify({
+                        comment: { content: content2 }
+                    })
                 }
             ]
         ])
@@ -122,9 +160,9 @@ test('success show and edit', async () => {
     expect(store.getState().comments).toEqual({
         commentsByIdPersistent: {
             [idPersistent]: newRemote([
-                { content: content },
-                { content: content1 },
-                { content: content2 }
+                comment,
+                comment1,
+                { content: content2, author, timestamp: time2 }
             ])
         },
         isSubmitting: false

@@ -46,7 +46,21 @@ export function CommentElement({ comment }: { comment: Comment }) {
     return (
         <Row>
             <Col className="ms-2 me-2 mb-2 mt-1">
-                <CosmaeCard>
+                <CosmaeCard
+                    header={
+                        <Row className="justify-content-between">
+                            <Col xs={3}>
+                                <span>Author: </span>
+                                <span className="fw-semibold">
+                                    {comment.author.username}
+                                </span>
+                            </Col>
+                            <Col xs={3} className="text-end">
+                                <span>{comment.timestamp.toLocaleString()}</span>
+                            </Col>
+                        </Row>
+                    }
+                >
                     <div className="ms-2 me-2">{comment.content}</div>
                 </CosmaeCard>
             </Col>

@@ -1,9 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { newRemote, RemoteInterface } from '../util/state'
+import { PublicUserInfo } from '../user/state'
 
 export interface Comment {
     content: string
+    timestamp: Date
+    author: PublicUserInfo
 }
+
 export interface CommentsRegister {
     commentsByIdPersistent: {
         [key: string]: RemoteInterface<Comment[]>

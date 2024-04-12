@@ -1,4 +1,5 @@
 import { config } from '../config'
+import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { addError } from '../util/notification/slice'
 import { ThunkWithFetch } from '../util/type'
@@ -58,11 +59,16 @@ export function submitComment(
                 credentials: 'include',
                 body: JSON.stringify({ comment: { content } })
             })
+            const json = await rsp.json()
             if (rsp.status == 200) {
-                dispatch(submitCommentSuccess({ idPersistent, comment: { content } }))
+                dispatch(
+                    submitCommentSuccess({
+                        idPersistent,
+                        comment: parseCommentFromApi(json['comment'])
+                    })
+                )
                 return true
             }
-            const json = await rsp.json()
             dispatch(addError(errorMessageFromApi(json)))
             dispatch(submitCommentError())
         } catch (e: unknown) {
@@ -74,5 +80,9 @@ export function submitComment(
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseCommentFromApi(commentJson: any): Comment {
-    return { content: commentJson['content'] }
+    return {
+        content: commentJson['content'],
+        author: parsePublicUserInfoFromJson(commentJson['author']),
+        timestamp: new Date(commentJson['timestamp'])
+    }
 }
