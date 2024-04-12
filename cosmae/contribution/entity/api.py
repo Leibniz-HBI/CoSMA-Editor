@@ -1,6 +1,6 @@
 "API methods for entities of a contribution"
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from django.db import transaction
 from django.db.models import Q
@@ -35,7 +35,7 @@ class ScoredMatchesWithDuplicateAssignment(Schema):
     "API model for combining scored matches with the id of a selected duplicate"
     # pylint: disable=too-few-public-methods
     matches: List[ScoredMatch]
-    assigned_duplicate: Optional[PersonNatural]
+    assigned_duplicate: PersonNatural | None = None
 
 
 class ScoredMatchResponse(Schema):
@@ -53,13 +53,13 @@ class PostSimilarRequest(Schema):
 class PutDuplicateRequest(Schema):
     "API model for requesting similar entities."
     # pylint: disable=too-few-public-methods
-    id_entity_destination_persistent: Optional[str]
+    id_entity_destination_persistent: str | None = None
 
 
 class PutDuplicateResponse(Schema):
     "API Response for put duplicate request"
     # pylint: disable=too-few-public-methods
-    assigned_duplicate: Optional[PersonNatural]
+    assigned_duplicate: PersonNatural | None = None
 
 
 empty_match = ScoredMatchesWithDuplicateAssignment(assigned_duplicate=None, matches=[])
@@ -115,7 +115,7 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
             id_contribution_persistent, user
         ).get()
         if not similar_request.id_entity_persistent_list:
-            return 200, ScoredMatchResponse(matches=[])
+            return 200, ScoredMatchResponse(matches={})
         entity_query_set = Entity.most_recent_queryset().filter(
             id_persistent__in=similar_request.id_entity_persistent_list
         )

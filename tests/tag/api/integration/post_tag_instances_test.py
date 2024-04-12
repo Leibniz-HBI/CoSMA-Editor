@@ -102,7 +102,7 @@ def test_invalid_value(auth_server, float_tag):
     mock = MagicMock()
     mock.side_effect = InvalidTagValueException("id_persistent_test", 2.3, "INT")
     with patch("cosmae.tag.models_django.TagDefinition.check_value", mock):
-        float_tag["value"] = 2
+        float_tag["value"] = "2"
         req = r.post_tag_instance(live_server.url, float_tag, cookies=cookies)
     assert req.status_code == 400
     assert (

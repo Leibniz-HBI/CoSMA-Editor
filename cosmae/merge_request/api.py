@@ -71,12 +71,12 @@ class ConflictResolutionPostRequest(Schema):
     id_tag_definition_origin_version: int
     id_tag_instance_origin_version: int
     id_tag_definition_destination_version: int
-    id_tag_instance_destination_version: Optional[int]
+    id_tag_instance_destination_version: int | None = None
     id_entity_persistent: str
     id_tag_definition_origin_persistent: str
     id_tag_instance_origin_persistent: str
     id_tag_definition_destination_persistent: str
-    id_tag_instance_destination_persistent: Optional[str]
+    id_tag_instance_destination_persistent: str | None = None
     replace: bool
 
 
@@ -84,7 +84,7 @@ class PatchMergeRequestRequest(Schema):
     "Body for changing a merge request"
 
     # pylint: disable=too-few-public-methods
-    disable_origin_on_merge: Optional[bool]
+    disable_origin_on_merge: bool | None = None
 
 
 @router.get(

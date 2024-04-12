@@ -72,7 +72,9 @@ def refresh_get(request):
     auth=NOT_SET,
     response={200: LoginResponse, 500: ApiError, 400: ApiError},
 )
-def register_post(_, registration_info: RegisterRequest):
+def register_post(
+    request, registration_info: RegisterRequest
+):  # pylint: disable=unused-argument
     "API endpoint for registration"
     try:
         permission_group = CosmaeUser.APPLICANT

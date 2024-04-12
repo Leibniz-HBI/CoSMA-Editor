@@ -37,15 +37,15 @@ router = Router()
 class TagDefinitionRequest(Schema):
     # pylint: disable=too-few-public-methods
     "API model for a tag definition in a request."
-    id_persistent: Optional[str]
-    id_parent_persistent: Optional[str]
+    id_persistent: str | None = None
+    id_parent_persistent: str | None = None
     name: str
-    description: Optional[str]
-    version: Optional[int]
+    description: str | None = None
+    version: int | None = None
     type: str
-    owner: Optional[PublicUserInfo]
-    hidden: Optional[bool]
-    disabled: Optional[bool]
+    owner: PublicUserInfo | None = None
+    hidden: bool | None = None
+    disabled: bool | None = None
 
 
 class TagDefinitionRequestList(Schema):

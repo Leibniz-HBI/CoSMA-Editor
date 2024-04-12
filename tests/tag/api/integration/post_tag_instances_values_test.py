@@ -45,7 +45,7 @@ def test_gets_most_recent(auth_server_commissioner, person, child_tag_def):
         {
             "id_entity_persistent": id_entity,
             "id_tag_definition_persistent": id_tag_def,
-            "value": 1,
+            "value": "1",
         },
         cookies=cookies,
     )
@@ -58,7 +58,7 @@ def test_gets_most_recent(auth_server_commissioner, person, child_tag_def):
         {
             "id_entity_persistent": id_entity,
             "id_tag_definition_persistent": id_tag_def,
-            "value": 2,
+            "value": "2",
             "version": version,
             "id_persistent": id_instance,
         },
@@ -104,12 +104,12 @@ def test_gets_most_recent_multi_value(auth_server_commissioner, person, child_ta
             {
                 "id_entity_persistent": id_entity,
                 "id_tag_definition_persistent": id_tag_def,
-                "value": 1,
+                "value": "1",
             },
             {
                 "id_entity_persistent": id_entity,
                 "id_tag_definition_persistent": id_tag_def,
-                "value": 5,
+                "value": "5",
             },
         ],
         cookies=cookies,
@@ -125,7 +125,7 @@ def test_gets_most_recent_multi_value(auth_server_commissioner, person, child_ta
         {
             "id_entity_persistent": id_entity,
             "id_tag_definition_persistent": id_tag_def,
-            "value": 2,
+            "value": "2",
             "version": version,
             "id_persistent": id_instance,
         },

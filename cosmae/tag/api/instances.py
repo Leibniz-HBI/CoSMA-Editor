@@ -1,7 +1,7 @@
 "API methods for tag instances."
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 from uuid import uuid4
 
 from django.db import IntegrityError
@@ -40,9 +40,9 @@ class TagInstancePost(Schema):
     "A single API tag instance for post requests."
     id_entity_persistent: str
     id_tag_definition_persistent: str
-    value: Optional[str]
-    id_persistent: Optional[str]
-    version: Optional[int]
+    value: str | None = None
+    id_persistent: str | None = None
+    version: int | None = None
 
 
 class TagInstancePostList(Schema):
@@ -65,10 +65,10 @@ class TagInstanceForEntitiesPostRequest(Schema):
     # pylint: disable=too-few-public-methods
     id_tag_definition_persistent_list: List[str]
     id_entity_persistent_list: List[str]
-    id_merge_request_persistent: Optional[str]
+    id_merge_request_persistent: str | None = None
     """When a merge request is referenced,
     the values of the origin tag are also returned. when querying for the destination."""
-    id_contribution_persistent: Optional[str]
+    id_contribution_persistent: str | None = None
     """When a contribution is referenced, all merge requests contained are considered.
     I.e., for all merge requests of the contribution,
     when the destination tag is queried values for the origin tag are also returned."""
@@ -192,7 +192,9 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
 
 
 @router.post("chunk", response={200: TagInstancePostList, 400: ApiError, 500: ApiError})
-def post_tag_instance_chunks(_, chunk_req: TagInstancePostChunkRequest):
+def post_tag_instance_chunks(
+    request, chunk_req: TagInstancePostChunkRequest  # pylint: disable=unused-argument
+):
     "API method for retrieving a chunk of tag instances."
     if chunk_req.limit > MAX_TAG_INSTANCE_CHUNK_LIMIT:
         return 400, ApiError(
@@ -221,7 +223,9 @@ def post_tag_instance_chunks(_, chunk_req: TagInstancePostChunkRequest):
         500: ApiError,
     },
 )
-def post_tag_instance_values(_, values_req: TagInstanceValueRequestList):
+def post_tag_instance_values(
+    request, values_req: TagInstanceValueRequestList
+):  # pylint: disable=unused-argument
     "API method for obtaining specific tag instance values."
     if len(values_req.value_requests) > MAX_TAG_INSTANCE_VALUE_LIMIT:
         return 400, ApiError(

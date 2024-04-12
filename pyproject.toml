@@ -9,7 +9,7 @@ packages = [{include = "cosmae"}]
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 Django = "^4.1.3"
-django-ninja = "^0.19.1"
+django-ninja = "^1.1.0"
 django-cors-headers = "^3.13.0"
 backports-zoneinfo = {markers = "python_version < \"3.9\"", version = "^0.2.1"}
 pandas = "^2.0.1"

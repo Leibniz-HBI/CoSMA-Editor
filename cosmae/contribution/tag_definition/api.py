@@ -1,5 +1,5 @@
 "API endpoints for managing tags of new contributions."
-from typing import List, Optional
+from typing import List
 
 from django.db import DatabaseError
 from django.http import HttpRequest
@@ -24,7 +24,7 @@ class TagDefinitionContribution(Schema):
     # pylint: disable=too-few-public-methods
     name: str
     id_persistent: str
-    id_existing_persistent: Optional[str]
+    id_existing_persistent: str | None = None
     index_in_file: int
     discard: bool
 
@@ -38,8 +38,8 @@ class TagDefinitionContributionResponseList(Schema):
 class TagDefinitionPatchRequest(Schema):
     "Request for updating a contribution tag definition"
     # pylint: disable=too-few-public-methods
-    id_existing_persistent: Optional[str]
-    discard: Optional[bool]
+    id_existing_persistent: str | None = None
+    discard: bool | None = None
 
 
 @router.get(
@@ -122,7 +122,7 @@ def patch_tag_definition(
             candidate_definition = TagDefContributionDb.get_by_id_persistent(
                 id_persistent, contribution
             )
-            patch_dict = patch_data.dict(exclude_unset=True)
+            patch_dict = patch_data.model_dump(exclude_unset=True)
             id_existing_persistent = patch_dict.get("id_existing_persistent")
             if id_existing_persistent is not None:
                 if id_existing_persistent not in allowed_additional_fields:

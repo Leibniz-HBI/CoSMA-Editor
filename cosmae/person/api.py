@@ -19,7 +19,7 @@ from cosmae.exception import (
 )
 from cosmae.tag.api.definitions import TagDefinitionResponse
 from cosmae.tag.api.models_conversion import tag_definition_db_dict_to_api
-from cosmae.util import CosmaeUser
+from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 from cosmae.util.django import save_many_atomic
 
@@ -30,13 +30,13 @@ class PersonNatural(Schema):
     # pylint: disable=too-few-public-methods
     """API model for a natural person."""
 
-    display_txt: Optional[str]
-    version: Optional[int]
+    display_txt: str | None = None
+    version: int | None = None
     """The version of the person that the change is made on.
     If null on POST, a new person is created."""
-    id_persistent: Optional[str]
-    disabled: Optional[bool]
-    display_txt_details: Optional[Union[str, TagDefinitionResponse]]
+    id_persistent: str | None = None
+    disabled: bool | None = None
+    display_txt_details: Union[str, TagDefinitionResponse] | None = None
 
 
 class PersonNaturalList(Schema):
@@ -91,7 +91,7 @@ def persons_post(
         return 401, ApiError(msg="Not authenticated")
     if user.permission_group in {CosmaeUser.APPLICANT, CosmaeUser.READER}:
         return 403, ApiError(msg="Insufficient Permissions")
-    now = datetime.utcnow()
+    now = timestamp()
     try:
         person_dbs = [person_api_to_db(person, now, user) for person in persons.persons]
     except ValidationException as valid_x:
@@ -122,7 +122,9 @@ def persons_post(
     "chunk",
     response={200: PersonNaturalList, 400: ApiError, 500: ApiError},
 )
-def persons_chunks_post(_, req_data: ChunkRequest):
+def persons_chunks_post(
+    request: HttpRequest, req_data: ChunkRequest  # pylint: disable=unused-argument
+):
     """Get a chunk of persons.
     Note:
         The persons are ordered by the order of initial creation."""

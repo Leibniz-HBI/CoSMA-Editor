@@ -1,5 +1,5 @@
 "API models for contributions."
-from typing import List, Optional
+from typing import List
 
 from ninja import Schema
 
@@ -36,17 +36,17 @@ class ContributionCandidate(Schema):
     has_header: bool
     state: str
     author: str
-    error_msg: Optional[str]
-    error_details: Optional[str]
-    match_tag_definition_list: Optional[List[TagDefinitionResponse]]
+    error_msg: str | None = None
+    error_details: str | None = None
+    match_tag_definition_list: List[TagDefinitionResponse] | None = None
 
 
 class ContributionCandidatePatchRequest(Schema):
     # pylint: disable=too-few-public-methods
     "API model for contribution candidate patch requests"
-    name: Optional[str]
-    description: Optional[str]
-    has_header: Optional[bool]
+    name: str | None = None
+    description: str | None = None
+    has_header: bool | None = None
 
 
 class ContributionChunkResponse(Schema):
