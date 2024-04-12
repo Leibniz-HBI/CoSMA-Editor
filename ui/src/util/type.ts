@@ -12,7 +12,7 @@ export type JsonValue =
 export type SetFieldValue = (field: string, value: any, sholdValidate?: boolean) => void
 
 export type HandleChange = {
-    (e: ChangeEvent): void
+    (e: ChangeEvent<HTMLInputElement>): void
     <T = string | ChangeEvent>(field: T): T extends ChangeEvent
         ? void
         : (e: string | ChangeEvent) => void

@@ -35,9 +35,39 @@ import {
     selectTagMergeRequestConflictsByCategory
 } from './selectors'
 import { ArrowLeftCircle } from 'react-bootstrap-icons'
+import { TabView } from '../../util/components/tabs'
+import { CommentHistoryAndForm } from '../../comments/components'
 
-export function MergeRequestConflictResolutionView() {
+export function MergeRequestConflictView() {
     const idMergeRequestPersistent = useLoaderData() as string
+    return (
+        <TabView
+            tabList={[
+                {
+                    name: 'Discuss',
+                    component: (
+                        <CommentHistoryAndForm
+                            idPersistent={idMergeRequestPersistent}
+                        />
+                    )
+                },
+                {
+                    name: 'Resolve',
+                    component: (
+                        <MergeRequestConflictResolutionView
+                            idMergeRequestPersistent={idMergeRequestPersistent}
+                        />
+                    )
+                }
+            ]}
+        />
+    )
+}
+export function MergeRequestConflictResolutionView({
+    idMergeRequestPersistent
+}: {
+    idMergeRequestPersistent: string
+}) {
     //eslint-disable-next-line react-hooks/exhaustive-deps
     const dispatch = useAppDispatch()
     const conflictsByCategory = useAppSelector(selectTagMergeRequestConflictsByCategory)

@@ -12,6 +12,7 @@ import { entityMergeRequestsReducer } from './merge_request/entity/slice'
 import { displayTxtManagementReducer } from './management/display_txt/slice'
 import { tagMergeRequestsReducer } from './merge_request/slice'
 import { tagMergeRequestConflictsReducer } from './merge_request/conflicts/slice'
+import { commentsReducer } from './comments/slice'
 
 const rootReducer = combineReducers({
     notification: notificationReducer,
@@ -26,7 +27,8 @@ const rootReducer = combineReducers({
     tagMergeRequests: tagMergeRequestsReducer,
     tagMergeRequestConflicts: tagMergeRequestConflictsReducer,
     entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
-    displayTxtManagement: displayTxtManagementReducer
+    displayTxtManagement: displayTxtManagementReducer,
+    comments: commentsReducer
 })
 
 export function setupStore(preloadedState?: PreloadedState<RootState>) {

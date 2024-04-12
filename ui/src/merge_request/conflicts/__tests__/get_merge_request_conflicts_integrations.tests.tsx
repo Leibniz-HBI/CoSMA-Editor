@@ -33,15 +33,7 @@ import {
 import { tagMergeRequestConflictsReducer } from '../slice'
 import { newEntity } from '../../../table/state'
 import { MergeRequestStep, newMergeRequest } from '../../state'
-import { error } from 'node:console'
 
-jest.mock('react-router-dom', () => {
-    const mockNavigate = jest.fn()
-    return {
-        useNavigate: jest.fn().mockReturnValue(mockNavigate),
-        useLoaderData: jest.fn().mockReturnValue('id-merge-request')
-    }
-})
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         notification: NotificationManager
@@ -242,7 +234,7 @@ describe('get tests', () => {
         const fetchMock = jest.fn()
         initialResponseSequence(fetchMock)
         const { container, store } = renderWithProviders(
-            <MergeRequestConflictResolutionView />,
+            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
         await waitFor(() => {
@@ -266,7 +258,7 @@ describe('get tests', () => {
         const testError = 'Could not get conflicts.'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { container, store } = renderWithProviders(
-            <MergeRequestConflictResolutionView />,
+            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
         await waitFor(() => {
@@ -297,7 +289,7 @@ describe('resolve conflicts', () => {
             [200, {}]
         ])
         const { container, store } = renderWithProviders(
-            <MergeRequestConflictResolutionView />,
+            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request-persistent" />,
             fetchMock
         )
         await waitFor(() => {
@@ -355,11 +347,11 @@ describe('resolve conflicts', () => {
         }
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/conflicts',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/resolve',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
                 {
                     credentials: 'include',
                     method: 'POST',
@@ -367,7 +359,7 @@ describe('resolve conflicts', () => {
                 }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/resolve',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
                 {
                     credentials: 'include',
                     method: 'POST',
@@ -382,7 +374,7 @@ describe('resolve conflicts', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { container, store } = renderWithProviders(
-            <MergeRequestConflictResolutionView />,
+            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
         await waitFor(() => {
@@ -417,7 +409,7 @@ describe('submit', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
-            <MergeRequestConflictResolutionView />,
+            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
         await waitFor(() => {
@@ -458,7 +450,7 @@ describe('submit', () => {
         const testError = 'Could not start merge'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
-            <MergeRequestConflictResolutionView />,
+            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
         await waitFor(() => {
@@ -499,7 +491,7 @@ describe('toggle disable origin on merge', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
-            <MergeRequestConflictResolutionView />,
+            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
         await waitFor(() => {
@@ -532,7 +524,7 @@ describe('toggle disable origin on merge', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
-            <MergeRequestConflictResolutionView />,
+            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
         await waitFor(() => {

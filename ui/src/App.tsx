@@ -18,7 +18,7 @@ import { config } from './config'
 import { ContributionStep } from './contribution/state'
 import { exceptionMessage } from './util/exception'
 import { ReviewList } from './merge_request/components'
-import { MergeRequestConflictResolutionView } from './merge_request/conflicts/components'
+import { MergeRequestConflictView } from './merge_request/conflicts/components'
 import { UserPermissionGroup } from './user/state'
 import {
     HelpButton,
@@ -139,7 +139,7 @@ const router = createBrowserRouter([
             },
             {
                 path: 'review/tags/:idPersistent',
-                element: <MergeRequestConflictResolutionView />,
+                element: <MergeRequestConflictView />,
                 loader: ({ params }) => params.idPersistent ?? ''
             },
             {
