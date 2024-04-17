@@ -1,6 +1,6 @@
 "API methods for entity merge requests"
 
-from typing import List, Optional
+from typing import List
 from uuid import uuid4
 
 from django.db import DatabaseError, transaction
@@ -35,7 +35,7 @@ class TagDefinition(Schema):
     # pylint: disable=too-few-public-methods
     name_path: List[str]
     id_persistent: str
-    id_parent_persistent: Optional[str]
+    id_parent_persistent: str | None = None
     version: int
     curated: bool
 
@@ -73,8 +73,8 @@ class EntityMergeRequestConflict(Schema):
     # pylint: disable=too-few-public-methods
     tag_definition: TagDefinition
     tag_instance_origin: TagInstance
-    tag_instance_destination: Optional[TagInstance]
-    replace: Optional[bool]
+    tag_instance_destination: TagInstance | None = None
+    replace: bool | None = None
 
 
 class GetEntityMergeRequestConflictsResponse(Schema):
@@ -95,12 +95,12 @@ class EntityConflictResolutionPostRequest(Schema):
     id_entity_origin_version: int
     id_tag_instance_origin_version: int
     id_entity_destination_version: int
-    id_tag_instance_destination_version: Optional[int]
+    id_tag_instance_destination_version: int | None = None
     id_tag_definition_persistent: str
     id_entity_origin_persistent: str
     id_tag_instance_origin_persistent: str
     id_entity_destination_persistent: str
-    id_tag_instance_destination_persistent: Optional[str]
+    id_tag_instance_destination_persistent: str | None = None
     replace: bool
 
 

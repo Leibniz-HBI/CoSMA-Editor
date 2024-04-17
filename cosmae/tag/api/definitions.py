@@ -1,7 +1,7 @@
 "API endpoints for tag definitions."
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 from uuid import uuid4
 
 from django.db import DatabaseError, IntegrityError, transaction
@@ -66,7 +66,7 @@ class PostGetChildrenRequest(Schema):
     "API model for getting tag definitions by parent_id_persistent"
 
     # pylint: disable=too-few-public-methods
-    id_parent_persistent: Optional[str]
+    id_parent_persistent: str | None = None
 
 
 class CurationPostRequest(Schema):

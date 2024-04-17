@@ -1,5 +1,5 @@
 "Models for tag API"
-from typing import List, Optional
+from typing import List
 
 from ninja import Schema
 
@@ -9,14 +9,14 @@ from cosmae.user.models_api.public import PublicUserInfo
 class TagDefinitionResponse(Schema):
     "API model for a tag definition as a response object."
     # pylint: disable=too-few-public-methods
-    id_persistent: Optional[str]
-    id_parent_persistent: Optional[str]
+    id_persistent: str | None = None
+    id_parent_persistent: str | None = None
     name: str
-    description: Optional[str]
+    description: str | None = None
     name_path: List[str]
     version: int
     type: str
-    owner: Optional[PublicUserInfo]
+    owner: PublicUserInfo | None = None
     curated: bool
     hidden: bool
     disabled: bool

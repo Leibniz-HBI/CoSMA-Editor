@@ -1,7 +1,7 @@
 "API methods for merge requests."
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from django.db import DatabaseError, transaction
 from django.http import HttpRequest
@@ -34,7 +34,7 @@ class MergeRequest(Schema):
     destination: TagDefinitionResponse
     origin: TagDefinitionResponse
     created_at: datetime
-    assigned_to: Optional[PublicUserInfo]
+    assigned_to: PublicUserInfo | None = None
     state: str
     disable_origin_on_merge: bool
 
@@ -44,8 +44,8 @@ class MergeRequestConflict(Schema):
     "API model for merge request conflicts."
     entity: PersonNatural
     tag_instance_origin: TagInstance
-    tag_instance_destination: Optional[TagInstance]
-    replace: Optional[bool]
+    tag_instance_destination: TagInstance | None = None
+    replace: bool | None = None
 
 
 class MergeRequestConflictResponse(Schema):
