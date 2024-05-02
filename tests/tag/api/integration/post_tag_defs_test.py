@@ -34,10 +34,10 @@ def test_concurrent_modification(auth_server, root_tag_def):
     req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
     assert req.status_code == 200
     created = req.json()["tag_definitions"][0]
-    created["type"] = "FLOAT"
+    created["name"] = "changed first"
     req = r.post_tag_def(live_server.url, created, cookies=cookies)
     assert req.status_code == 200
-    created["type"] = "INNER"
+    created["name"] = "changed second"
     req = r.post_tag_def(live_server.url, created, cookies=cookies)
     assert req.status_code == 500
     assert req.json()["msg"] == (
@@ -62,8 +62,8 @@ def test_no_modification_is_returned(auth_server, root_tag_def):
 def test_exists(auth_server, root_tag_def):
     live_server, cookies = auth_server
     mock = MagicMock()
-    mock.return_value = "same_id"
-    with patch("cosmae.tag.api.definitions.uuid4"):
+    mock.return_value = "7dc7030c-35bd-49d7-9150-07e6f97c4b05"
+    with patch("cosmae.tag.api.definitions.uuid4", mock):
         req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
         assert req.status_code == 200
         req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
@@ -148,8 +148,8 @@ def test_change_type(auth_server, root_tag_def):
     new_tag_def["version"] = version
     new_tag_def["type"] = "FLOAT"
     req = r.post_tag_def(live_server.url, new_tag_def, cookies=cookies)
-    assert req.status_code == 200
-    assert req.json()["tag_definitions"][0]["type"] == "FLOAT"
+    assert req.status_code == 400
+    assert req.json()["msg"] == "Tried to change unmodifiable field type."
 
 
 def test_no_parent(auth_server, child_tag_def):

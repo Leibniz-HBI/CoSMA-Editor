@@ -4,16 +4,16 @@ from datetime import datetime, timezone
 id_persistent_entity_duplicate_test = "f43e8697-713c-40cc-ac3e-d8f63fd87c08"
 display_txt_test_entity_duplicate = "test entity d"  # similar to test entity [0,1]
 time_edit_test_duplicate = datetime(2022, 4, 23, tzinfo=timezone.utc)
-id_tag_def_test = "id-tag-def-test"
+id_tag_def_test = "a33991a8-4581-46d2-b9bd-ef6d1d71cc87"
 name_tag_def_test = "tag def for entity-replace test"
 time_edit_tag_def_test = datetime(2020, 7, 3, tzinfo=timezone.utc)
-id_tag_def_test1 = "id-tag-def-test1"
+id_tag_def_test1 = "2117de68-e451-4a5b-935f-37fcf626bfff"
 name_tag_def_test1 = "tag def for entity-replace test1"
 time_edit_tag_def_test1 = datetime(2020, 7, 4, tzinfo=timezone.utc)
-id_instance_replace_test = "tag-instance-test"
-id_instance_replace_test1 = "tag-instance-test1"
-id_instance_existing_test = "tag-existing-test"
-id_instance_existing_test1 = "tag-existing-test1"
+id_instance_replace_test = "09b39d13-eae5-4bd8-ba82-7951aa0dda6e"
+id_instance_replace_test1 = "d1868cef-5cb3-45d8-b9b8-3181f881a6a7"
+id_instance_existing_test = "7dc10eb3-d916-43c5-a58d-c3cd83407d61"
+id_instance_existing_test1 = "c183948f-2f9b-4005-9855-dee2ad7b1562"
 time_edit_tag_instance_test = datetime(1990, 5, 7, tzinfo=timezone.utc)
 
 time_edit_deduplication = datetime(2021, 1, 1, tzinfo=timezone.utc)

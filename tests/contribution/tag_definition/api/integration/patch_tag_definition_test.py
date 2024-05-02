@@ -197,7 +197,7 @@ def test_patch_id_unknown_special_tag(auth_server):
     assert rsp.json()["msg"] == "Existing tag definition does not exist."
 
 
-def test_patch_id_existing(auth_server):
+def test_patch_id_existing(auth_server, user):
     server, cookies = auth_server
     id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(
         server, cookies
@@ -208,6 +208,8 @@ def test_patch_id_existing(auth_server):
         type=TagDefinition.INNER,
         id_persistent=new_id_existing,
         time_edit=datetime.now(),
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
     rsp = req.patch_tag_definition(
         server.url,

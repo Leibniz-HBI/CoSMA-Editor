@@ -83,7 +83,7 @@ def test_no_modification_is_returned(auth_server, float_tag):
 def test_exists(auth_server, float_tag):
     live_server, cookies = auth_server
     mock = MagicMock()
-    mock.return_value = "same_id"
+    mock.return_value = "67b707e7-2bb0-44fe-8070-b78857b31d1c"
     with patch("cosmae.tag.api.instances.uuid4", mock):
         req = r.post_tag_instance(live_server.url, float_tag, cookies=cookies)
         assert req.status_code == 200

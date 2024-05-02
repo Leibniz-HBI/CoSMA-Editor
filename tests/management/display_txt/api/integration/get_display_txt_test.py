@@ -57,7 +57,7 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     "owner": {
                         "username": "test-user",
                         "id_persistent": cu.test_uuid,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                 },
                 {

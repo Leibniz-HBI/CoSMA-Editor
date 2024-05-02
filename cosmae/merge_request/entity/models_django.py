@@ -151,16 +151,27 @@ class EntityMergeRequest(AbstractMergeRequest):
     ):
         """Get conflicts to merging the origin entity referenced by the merge request
         into the destination entity"""
-        instance_origin_recent_query = TagInstanceHistory.most_recent_queryset().filter(
-            id_entity_persistent=self.id_origin_persistent
+        instance_origin_recent_query = (
+            TagInstance.objects_all()
+            .annotate(
+                tag_definition_disabled=models.Subquery(
+                    TagDefinition.objects_all(include_disabled=True)
+                    .filter(
+                        id_persistent=models.OuterRef("id_tag_definition_persistent")
+                    )
+                    .values("disabled")
+                )
+            )
+            .filter(
+                id_entity_persistent=self.id_origin_persistent,
+                tag_definition_disabled=False,
+            )
         )
         if len(instance_origin_recent_query) == 0:
             return instance_origin_recent_query
 
-        instance_destination_recent_query = (
-            TagInstanceHistory.most_recent_queryset().filter(
-                id_entity_persistent=self.id_destination_persistent
-            )
+        instance_destination_recent_query = TagInstance.objects_all().filter(
+            id_entity_persistent=self.id_destination_persistent
         )
         conflicts_sub_query = instance_destination_recent_query.filter(
             id_tag_definition_persistent=models.OuterRef("id_tag_definition_persistent")
@@ -276,7 +287,8 @@ class EntityConflictResolution(AbstractConflictResolution):
         with_version_info = manager.annotate(
             tag_definition_most_recent=models.Subquery(
                 TagDefinition.objects.filter(  # pylint: disable=no-member
-                    id_persistent=models.OuterRef("tag_definition__id_persistent")
+                    id_persistent=models.OuterRef("tag_definition__id_persistent"),
+                    disabled=False,
                 ).values(
                     json=models.functions.JSONObject(
                         id="id",

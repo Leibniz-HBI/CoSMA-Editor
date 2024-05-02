@@ -117,12 +117,12 @@ def test_recent_change_all(
     conflict_resolution_replace,
 ):
     old_entity = conflict_resolution_replace.entity
-    Entity.change_or_create(
+    Entity.change_or_create_versioned(
         id_persistent=old_entity.id_persistent,
         time_edit=datetime(1912, 4, 7),
         display_txt="edited_entity",
         version=old_entity.id,
-        requester=merge_request_user.created_by,
+        written_by_id_persistent=merge_request_user.created_by.id_persistent,
     )[0].save()
 
     recent = TagConflictResolution.only_recent()

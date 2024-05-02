@@ -108,6 +108,11 @@ class TagMergeRequest(AbstractMergeRequest):
             # pylint:disable-next=consider-using-in
             self.created_by == user
             or self.assigned_to == user
+            or (
+                self.assigned_to is None
+                and user.permission_group
+                in {CosmaeUser.COMMISSIONER, CosmaeUser.CONTRIBUTOR}
+            )
         )
 
     @classmethod

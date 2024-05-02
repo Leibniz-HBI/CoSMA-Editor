@@ -16,30 +16,30 @@ from cosmae.tag.models_django import (
 @pytest.fixture
 def tag_def_history(db, user):
     "Shared tag definition for tests."
-    tag_def, _ = TagDefinitionHistory.change_or_create(
+    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
         id_persistent=c.id_tag_def_persistent_test,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
         name=c.name_tag_def_test,
         time_edit=c.time_edit_test,
         owner_id=user.id,
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     tag_def.save()
     return tag_def
 
 
 @pytest.fixture
-def tag_def_no_owner_history(db, user):
+def tag_def_no_owner_history(db, user_commissioner):
     "Shared tag definition for tests."
-    tag_def, _ = TagDefinitionHistory.change_or_create(
+    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
         id_persistent=c.id_tag_def_persistent_test,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
         name=c.name_tag_def_test,
         time_edit=c.time_edit_test,
         owner_id=None,
-        requester=user,
+        written_by_id_persistent=user_commissioner.id_persistent,
     )
     tag_def.save()
     return tag_def
@@ -52,13 +52,16 @@ def tag_def(tag_def_history):
 
 @pytest.fixture
 def tag_def_user_history(user):
-    tag_def = TagDefinitionHistory(  # pylint: disable=no-member
-        id_persistent=c.id_tag_def_persistent_test_user,
-        type=TagDefinition.FLOAT,
-        id_parent_persistent=None,
-        name=c.name_tag_def_test_user,
-        time_edit=c.time_edit_test,
-        owner=user,
+    tag_def, _ = (
+        TagDefinitionHistory.change_or_create_versioned(  # pylint: disable=no-member
+            id_persistent=c.id_tag_def_persistent_test_user,
+            time_edit=c.time_edit_test,
+            written_by_id_persistent=user.id_persistent,
+            type=TagDefinition.FLOAT,
+            id_parent_persistent=None,
+            name=c.name_tag_def_test_user,
+            owner=user,
+        )
     )
     tag_def.save()
     return tag_def
@@ -75,10 +78,12 @@ def tag_def_user(tag_def_user_history):
 def tag_def_user1(user):
     tag_def = TagDefinitionHistory(  # pylint: disable=no-member
         id_persistent=c.id_tag_def_persistent_test_user1,
+        time_edit=c.time_edit_test,
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
         name=c.name_tag_def_test1,
-        time_edit=c.time_edit_test,
         owner=user,
     )
     tag_def.save()
@@ -86,12 +91,14 @@ def tag_def_user1(user):
 
 
 @pytest.fixture
-def tag_def_parent(db):
-    tag_def = TagDefinitionHistory(
+def tag_def_parent(db, user):
+    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
         id_persistent=c.id_tag_def_parent_persistent_test,
+        time_edit=c.time_edit_test + timedelta(seconds=5),
+        written_by_id_persistent=user.id_persistent,
         type=TagDefinition.FLOAT,
         name=c.name_tag_def_parent_test,
-        time_edit=c.time_edit_test + timedelta(seconds=5),
+        owner=user,
     )
     tag_def.save()
     return tag_def
@@ -100,14 +107,14 @@ def tag_def_parent(db):
 @pytest.fixture
 def tag_def_child_0_history(user):
     "A shared child tag definition for tests"
-    tag_def, _ = TagDefinitionHistory.change_or_create(
+    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
         id_persistent=c.id_tag_def_persistent_child_0,
         type=TagDefinition.FLOAT,
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
         name="test tag definition child 0",
         time_edit=c.time_edit_test + timedelta(seconds=10),
         owner_id=user.id,
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     tag_def.save()
     return tag_def
@@ -123,14 +130,14 @@ def tag_def_child_0(tag_def_child_0_history):
 @pytest.fixture
 def tag_def_child_1_history(user):
     "Another shared child tag definition for tests"
-    tag_def, _ = TagDefinitionHistory.change_or_create(
+    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
         id_persistent=c.id_tag_def_persistent_child_1,
         type=TagDefinition.FLOAT,
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
         name="test tag definition child 1",
         time_edit=c.time_edit_test + timedelta(seconds=10),
         owner_id=user.id,
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     tag_def.save()
     return tag_def
@@ -144,7 +151,7 @@ def tag_def_child_1(tag_def_child_1_history):
 
 
 @pytest.fixture
-def tag_def_curated():
+def tag_def_curated(user):
     "A curated tag definition for tests"
     return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_tag_def_curated_test,
@@ -152,38 +159,48 @@ def tag_def_curated():
         name=c.name_tag_def_curated_test,
         time_edit=c.time_edit_test + timedelta(minutes=4),
         curated=True,
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 
 @pytest.fixture
-def tag_instances_user():
+def tag_instances_user(user, user1):
     tag_inst = TagInstanceHistory(
         id_persistent=c.id_instance_test0,
+        time_edit=c.time_edit_instance_test,
+        written_by=user,
+        approved_by=user.id_persistent,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_0,
         value="value",
-        time_edit=c.time_edit_instance_test,
     )
     tag_inst1 = TagInstanceHistory(
         id_persistent=c.id_instance_test1,
+        time_edit=c.time_edit_instance_test,
+        written_by=user,
+        approved_by=user.id_persistent,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_1,
         value="value 1",
-        time_edit=c.time_edit_instance_test,
     )
     tag_inst2 = TagInstanceHistory(
         id_persistent=c.id_instance_test2,
+        time_edit=c.time_edit_instance_test,
+        written_by=user1,
+        approved_by=user1.id_persistent,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_0,
         value="value 2",
-        time_edit=c.time_edit_instance_test,
     )
     tag_inst3 = TagInstanceHistory(
         id_persistent=c.id_instance_test3,
+        time_edit=c.time_edit_instance_test,
+        written_by=user1.id_persistent,
+        approved_by=user1.id_persistent,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_1,
         value="value 3",
-        time_edit=c.time_edit_instance_test,
     )
     tag_instances = [tag_inst, tag_inst1, tag_inst2, tag_inst3]
     for inst in tag_instances:

@@ -191,6 +191,7 @@ def test_duplicate_assignment(auth_server):
 def test_complete_assignment(auth_server):
     live_server, cookies = auth_server
     id_contribution_persistent = uuid4()
+    user = CosmaeUser.objects.get(username=cu.test_username)
     contribution_candidate = (
         ContributionCandidate.objects.create(  # pylint: disable=no-member
             name="contribution_candidate_test",
@@ -199,7 +200,7 @@ def test_complete_assignment(auth_server):
             has_header=False,
             file_name="test.csv",
             state=ContributionCandidate.COLUMNS_EXTRACTED,
-            created_by=CosmaeUser.objects.get(username=cu.test_username),
+            created_by=user,
         )
     )
     id_tag_definition_persistent = str(uuid4())
@@ -209,6 +210,8 @@ def test_complete_assignment(auth_server):
         type=TagDefinition.INNER,
         id_persistent=id_tag_definition_persistent,
         time_edit=datetime.now(),
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
     TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),

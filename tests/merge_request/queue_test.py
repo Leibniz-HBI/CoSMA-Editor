@@ -86,16 +86,21 @@ def test_fast_forward_no_conflict_same_value(
 
 
 def test_applies_resolutions(
-    merge_request_user, conflict_resolution_keep, conflict_resolution_replace
+    merge_request_user_resolved, conflict_resolution_keep, conflict_resolution_replace
 ):
-    q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
+
+    q.merge_request_resolve_conflicts(
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to.id_persistent,
+    )
     merge_request = TagMergeRequest.by_id_persistent(
-        merge_request_user.id_persistent, merge_request_user.assigned_to
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to,
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user.id_destination_persistent
+            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -103,35 +108,44 @@ def test_applies_resolutions(
     assert instance.value == "value origin 1"
 
 
-def test_applies_resolutions_disable_origin(merge_request_user_disable_origin):
-    q.merge_request_resolve_conflicts(merge_request_user_disable_origin.id_persistent)
+def test_applies_resolutions_disable_origin(merge_request_user_disable_origin_resolved):
+    q.merge_request_resolve_conflicts(
+        merge_request_user_disable_origin_resolved.id_persistent,
+        merge_request_user_disable_origin_resolved.assigned_to.id_persistent,
+    )
     merge_request = TagMergeRequest.by_id_persistent(
-        merge_request_user_disable_origin.id_persistent,
-        merge_request_user_disable_origin.assigned_to,
+        merge_request_user_disable_origin_resolved.id_persistent,
+        merge_request_user_disable_origin_resolved.assigned_to,
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user_disable_origin.id_destination_persistent
+            id_tag_definition_persistent=(
+                merge_request_user_disable_origin_resolved.id_destination_persistent
+            )
         )
     )
     assert len(instances) == 0
     assert TagDefinition.most_recent_by_id(
-        merge_request_user_disable_origin.id_origin_persistent
+        merge_request_user_disable_origin_resolved.id_origin_persistent
     ).disabled
 
 
 def test_incomplete_resolution_stays_open_keep(
-    merge_request_user, conflict_resolution_keep
+    merge_request_user_resolved, conflict_resolution_keep
 ):
-    q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
+    q.merge_request_resolve_conflicts(
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to.id_persistent,
+    )
     merge_request = TagMergeRequest.by_id_persistent(
-        merge_request_user.id_persistent, merge_request_user.assigned_to
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to,
     )
     assert merge_request.state == TagMergeRequest.OPEN
     instances = list(
         TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user.id_destination_persistent
+            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -140,16 +154,20 @@ def test_incomplete_resolution_stays_open_keep(
 
 
 def test_incomplete_resolution_stays_open_replace(
-    merge_request_user, conflict_resolution_replace
+    merge_request_user_resolved, conflict_resolution_replace
 ):
-    q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
+    q.merge_request_resolve_conflicts(
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to.id_persistent,
+    )
     merge_request = TagMergeRequest.by_id_persistent(
-        merge_request_user.id_persistent, merge_request_user.assigned_to
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to,
     )
     assert merge_request.state == TagMergeRequest.OPEN
     instances = list(
         TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user.id_destination_persistent
+            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -158,16 +176,22 @@ def test_incomplete_resolution_stays_open_replace(
 
 
 def test_merges_for_equal_value_replace(
-    merge_request_user, conflict_resolution_replace, instance_destination_same_value
+    merge_request_user_resolved,
+    conflict_resolution_replace,
+    instance_destination_same_value,
 ):
-    q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
+    q.merge_request_resolve_conflicts(
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to.id_persistent,
+    )
     merge_request = TagMergeRequest.by_id_persistent(
-        merge_request_user.id_persistent, merge_request_user.assigned_to
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to,
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user.id_destination_persistent
+            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 2
@@ -177,18 +201,22 @@ def test_merges_for_equal_value_replace(
 
 
 def test_merges_for_equal_value_keep(
-    merge_request_user,
+    merge_request_user_resolved,
     conflict_resolution_keep,
     instance_merge_request_destination_user_same_value1,
 ):
-    q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
+    q.merge_request_resolve_conflicts(
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to.id_persistent,
+    )
     merge_request = TagMergeRequest.by_id_persistent(
-        merge_request_user.id_persistent, merge_request_user.assigned_to
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to,
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user.id_destination_persistent
+            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -197,16 +225,20 @@ def test_merges_for_equal_value_keep(
 
 
 def test_merges_for_equal_value_updated(
-    merge_request_user, instance_destination_updated_same_value1
+    merge_request_user_resolved, instance_destination_updated_same_value1
 ):
-    q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
+    q.merge_request_resolve_conflicts(
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to.id_persistent,
+    )
     merge_request = TagMergeRequest.by_id_persistent(
-        merge_request_user.id_persistent, merge_request_user.assigned_to
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to,
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
         TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user.id_destination_persistent
+            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -215,12 +247,16 @@ def test_merges_for_equal_value_updated(
 
 
 def test_instance_changed(
-    merge_request_user,
+    merge_request_user_resolved,
     conflict_resolution_replace,
     instance_merge_request_origin_user_changed,
 ):
-    q.merge_request_resolve_conflicts(merge_request_user.id_persistent)
+    q.merge_request_resolve_conflicts(
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to.id_persistent,
+    )
     merge_request = TagMergeRequest.by_id_persistent(
-        merge_request_user.id_persistent, merge_request_user.assigned_to
+        merge_request_user_resolved.id_persistent,
+        merge_request_user_resolved.assigned_to,
     )
     assert merge_request.state == TagMergeRequest.OPEN

@@ -11,7 +11,6 @@ from django.db.utils import DatabaseError, OperationalError, ProgrammingError
 
 from cosmae.signals import (
     connect_add_superuser,
-    connect_merge_request_queue_process,
     connect_read_csv_signal,
     connect_tag_definition_queue_process,
 )
@@ -70,7 +69,6 @@ class CosmaeConfig(AppConfig):
         try:
             if not settings.IS_UNITTEST:
                 connect_read_csv_signal()
-                connect_merge_request_queue_process()
                 populate_tag_definition_name_path_cache()
                 connect_tag_definition_queue_process()
         except AppRegistryNotReady:

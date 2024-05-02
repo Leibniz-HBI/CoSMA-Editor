@@ -85,12 +85,12 @@ def test_updated_data(
 ):
     server, cookies = auth_server
     old_instance = conflict_resolution_replace.tag_instance_destination
-    instance, _ = TagInstanceHistory.change_or_create(
+    instance, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=old_instance.id_persistent,
         id_entity_persistent=old_instance.id_entity_persistent,
         id_tag_definition_persistent=old_instance.id_tag_definition_persistent,
         version=old_instance.id,
-        user=merge_request_user.assigned_to,
+        written_by_id_persistent=merge_request_user.assigned_to.id_persistent,
         time_edit=timestamp(),
         value="updated value test",
     )

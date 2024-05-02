@@ -77,6 +77,8 @@ def tag_def(user):
         type=TagDefinition.STRING,
         time_edit=c.time_edit_tag_def_test,
         owner=user,
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 
@@ -89,6 +91,8 @@ def tag_def1(user):
         type=TagDefinition.STRING,
         time_edit=c.time_edit_tag_def_test1,
         owner=user,
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 
@@ -100,6 +104,8 @@ def tag_instances_for_replace(tag_def, tag_def1, entities):
         id_persistent=c.id_instance_replace_test,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
+        written_by=tag_def.owner.id_persistent,
+        approved_by=tag_def.owner.id_persistent,
     )
     inst0 = TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
@@ -108,6 +114,8 @@ def tag_instances_for_replace(tag_def, tag_def1, entities):
         value="b",
         previous_version=inst0,
         time_edit=c.time_edit_tag_instance_test,
+        written_by=tag_def.owner.id_persistent,
+        approved_by=tag_def.owner.id_persistent,
     )
     _inst1 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
@@ -115,6 +123,8 @@ def tag_instances_for_replace(tag_def, tag_def1, entities):
         id_persistent=c.id_instance_replace_test1,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
+        written_by=tag_def.owner.id_persistent,
+        approved_by=tag_def.owner.id_persistent,
     )
 
 
@@ -126,6 +136,8 @@ def tag_instance_existing(tag_def, tag_def1, entities):
         id_persistent=c.id_instance_existing_test,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
+        written_by=tag_def.owner.id_persistent,
+        approved_by=tag_def.owner.id_persistent,
     )
     inst0 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=ce.id_persistent_test_0,
@@ -134,6 +146,8 @@ def tag_instance_existing(tag_def, tag_def1, entities):
         value="b",
         previous_version=inst0,
         time_edit=c.time_edit_tag_instance_test,
+        written_by=tag_def.owner.id_persistent,
+        approved_by=tag_def.owner.id_persistent,
     )
     _inst1 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=ce.id_persistent_test_1,
@@ -141,6 +155,8 @@ def tag_instance_existing(tag_def, tag_def1, entities):
         id_persistent=c.id_instance_existing_test1,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
+        written_by=tag_def1.owner.id_persistent,
+        approved_by=tag_def1.owner.id_persistent,
     )
 
 
@@ -182,49 +198,49 @@ def test_keeps_entity_of_tag_def(user, tag_instances_for_replace):
 
 @pytest.fixture
 def tag_instances(tag_def, tag_def1, entities):
-    tag_inst0, _ = TagInstanceHistory.change_or_create(
+    tag_inst0, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test0,
         time_edit=ce.time_edit_test_0,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
-        user=tag_def.owner,
+        written_by_id_persistent=tag_def.owner.id_persistent,
         value="2.4",
     )
     tag_inst0.save()
-    tag_inst1, _ = TagInstanceHistory.change_or_create(
+    tag_inst1, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test1,
         id_tag_definition_persistent=c.id_tag_def_test,
         id_entity_persistent=ce.id_persistent_test_0,
         time_edit=ce.time_edit_test_0,
-        user=tag_def.owner,
+        written_by_id_persistent=tag_def.owner.id_persistent,
         value="1.7",
     )
     tag_inst1.save()
-    tag_inst2, _ = TagInstanceHistory.change_or_create(
+    tag_inst2, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test2,
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         time_edit=ce.time_edit_test_0,
-        user=tag_def1.owner,
+        written_by_id_persistent=tag_def1.owner.id_persistent,
         value="foo",
     )
     tag_inst2.save()
-    tag_inst2, _ = TagInstanceHistory.change_or_create(
+    tag_inst2, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test2,
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         time_edit=ce.time_edit_test_0,
-        user=tag_def1.owner,
+        written_by_id_persistent=tag_def1.owner.id_persistent,
         value="bar",
         version=tag_inst2.id,
     )
     tag_inst2.save()
-    tag_inst3, _ = TagInstanceHistory.change_or_create(
+    tag_inst3, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test3,
         id_tag_definition_persistent=c.id_tag_def_test1,
         id_entity_persistent=ce.id_persistent_test_1,
         time_edit=ce.time_edit_test_0,
-        user=tag_def1.owner,
+        written_by_id_persistent=tag_def1.owner.id_persistent,
         value="baz",
     )
     tag_inst3.save()
@@ -270,12 +286,20 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "id_tag_definition_persistent": c.id_tag_def_test,
             "id_entity_persistent": ce.id_persistent_test_0,
             "value": "1.7",
+            "hidden": False,
+            "disabled": False,
+            "written_by": contribution_candidate.created_by.id_persistent,
+            "approved_by": None,
         },
         {
             "id_persistent": ct.id_instance_test0,
             "id_entity_persistent": ce.id_persistent_test_1,
             "id_tag_definition_persistent": c.id_tag_def_test,
             "value": "2.4",
+            "hidden": False,
+            "disabled": False,
+            "written_by": contribution_candidate.created_by.id_persistent,
+            "approved_by": None,
         },
     ]
     for_tag = [
@@ -294,12 +318,20 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "id_tag_definition_persistent": c.id_tag_def_test1,
             "id_entity_persistent": ce.id_persistent_test_1,
             "value": "baz",
+            "hidden": False,
+            "disabled": False,
+            "written_by": contribution_candidate.created_by.id_persistent,
+            "approved_by": None,
         },
         {
             "id_persistent": ct.id_instance_test2,
             "id_entity_persistent": ce.id_persistent_test_1,
             "id_tag_definition_persistent": c.id_tag_def_test1,
             "value": "bar",
+            "hidden": False,
+            "disabled": False,
+            "written_by": contribution_candidate.created_by.id_persistent,
+            "approved_by": None,
         },
     ]
 

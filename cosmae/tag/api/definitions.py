@@ -17,6 +17,7 @@ from cosmae.exception import (
     NotAuthenticatedException,
     PermissionException,
     TagDefinitionExistsException,
+    UnmodifiableFieldException,
     ValidationException,
 )
 from cosmae.tag.api.models_api import TagDefinitionResponse
@@ -86,7 +87,7 @@ class CurationPostRequest(Schema):
         500: ApiError,
     },
 )
-def post_tag_definitions(
+def post_tag_definitions(  # pylint: disable=too-many-branches
     request: HttpRequest, tag_definition_list: TagDefinitionRequestList
 ):
     "Add tag definitions."
@@ -112,9 +113,14 @@ def post_tag_definitions(
             f"{exc.tag_name} and id_parent_persistent {exc.id_parent_persistent}. "
             f"Its id_persistent is {exc.id_persistent}."
         )
+    except UnmodifiableFieldException as exc:
+        return 400, ApiError(
+            msg=f"Tried to change unmodifiable field {exc.field_name}."
+        )
     except DbObjectExistsException as exc:
         return 500, ApiError(
-            msg=f"Could not generate id_persistent for tag definition with name {exc.display_txt}."
+            msg="Could not generate id_persistent for tag definition with name "
+            f"{exc.values['name']}."
         )
     except EntityUpdatedException as exc:
         return 500, ApiError(
@@ -188,7 +194,7 @@ def tag_definition_api_to_db(
         # new tag definition.
         additional_values["owner_id"] = requester.id
         persistent_id = str(uuid4())
-    return TagDefinitionHistoryDb.change_or_create(
+    return TagDefinitionHistoryDb.change_or_create_versioned(
         id_persistent=persistent_id,
         id_parent_persistent=tag_definition.id_parent_persistent,
         version=tag_definition.version,
@@ -196,7 +202,7 @@ def tag_definition_api_to_db(
         name=tag_definition.name,
         description=tag_definition.description,
         type=_tag_type_mapping_api_to_db[tag_definition.type],
-        requester=requester,
+        written_by_id_persistent=requester.id_persistent,
         hidden=tag_definition.hidden or False,
         disabled=tag_definition.disabled or False,
         **additional_values,

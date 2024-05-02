@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 from datetime import timedelta
 
 import pytest
@@ -7,21 +7,23 @@ import tests.person.common as cp
 import tests.tag.common as c
 from cosmae.exception import (
     EntityMissingException,
+    PermissionException,
     TagDefinitionDisabledException,
     TagDefinitionMissingException,
-    TagDefinitionPermissionException,
 )
 from cosmae.tag.models_django import TagInstance, TagInstanceHistory
 
 
 @pytest.fixture
-def tag():
+def tag(user):
     return TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
         id_entity_persistent=cp.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
         time_edit=c.time_edit_test,
         value="2.0",
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 
@@ -79,6 +81,8 @@ def test_get_most_recent(tag):
         value="1.0",
         time_edit=c.time_edit_test + timedelta(hours=1),
         previous_version=tag,
+        written_by=tag.written_by,
+        approved_by=tag.approved_by,
     )
     new.save()
     by_id = TagInstance.get_by_id(c.id_tag_persistent_test)
@@ -95,6 +99,8 @@ def test_get_most_recent_by_ids(tag):
         value="1.0",
         time_edit=c.time_edit_test + timedelta(hours=1),
         previous_version=tag,
+        written_by=tag.written_by,
+        approved_by=tag.written_by,
     )
     new.save()
     results = TagInstance.most_recent_by_entity_and_definition_id_query_set(
@@ -104,12 +110,12 @@ def test_get_most_recent_by_ids(tag):
 
 
 @pytest.mark.django_db
-def test_entity_missing(user):
+def test_entity_missing(user, tag_def):
     with pytest.raises(EntityMissingException) as exc:
-        TagInstanceHistory.change_or_create(
+        TagInstanceHistory.change_or_create_versioned(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
-            user=user,
+            written_by_id_persistent=user.id_persistent,
             id_entity_persistent=cp.id_persistent_test,
             id_tag_definition_persistent=c.id_tag_def_persistent_test,
         )
@@ -120,10 +126,10 @@ def test_entity_missing(user):
 def test_tag_def_missing(entity0, user):
     entity0.save()
     with pytest.raises(TagDefinitionMissingException) as exc:
-        TagInstanceHistory.change_or_create(
+        TagInstanceHistory.change_or_create_versioned(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
-            user=user,
+            written_by_id_persistent=user.id_persistent,
             id_entity_persistent=entity0.id_persistent,
             id_tag_definition_persistent=c.id_tag_def_persistent_test,
         )
@@ -134,12 +140,12 @@ def test_tag_def_missing(entity0, user):
 def test_disabled_tag(tag_def_disabled, entity0):
     id_persistent = "7693b6cd-b0da-4207-adc1-e15f367b010a"
     with pytest.raises(TagDefinitionDisabledException):
-        TagInstanceHistory.change_or_create(
+        TagInstanceHistory.change_or_create_versioned(
             id_persistent=id_persistent,
             id_tag_definition_persistent=tag_def_disabled.id_persistent,
             id_entity_persistent=entity0.id_persistent,
             value="some value",
-            user=tag_def_disabled.owner,
+            written_by_id_persistent=tag_def_disabled.owner.id_persistent,
             time_edit=c.time_edit_test,
         )
 
@@ -147,25 +153,25 @@ def test_disabled_tag(tag_def_disabled, entity0):
 @pytest.mark.django_db
 def test_tag_def_no_permission(entity0, tag_def_user, user1):
     entity0.save()
-    with pytest.raises(TagDefinitionPermissionException) as exc:
-        TagInstanceHistory.change_or_create(
+    with pytest.raises(PermissionException) as exc:
+        TagInstanceHistory.change_or_create_versioned(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
-            user=user1,
+            written_by_id_persistent=user1.id_persistent,
             value=2.0,
             id_entity_persistent=entity0.id_persistent,
-            id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
+            id_tag_definition_persistent=tag_def_user.id_persistent,
         )
-    assert exc.value.args[0] == tag_def_user.id_persistent
+    assert exc.value.args[0] == c.id_tag_persistent_test
 
 
 @pytest.mark.django_db
 def test_add_tag_root(entity0, tag_def_user):
     entity0.save()
-    ret, _ = TagInstanceHistory.change_or_create(
+    ret, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=c.id_tag_persistent_test,
         time_edit=c.time_edit_test,
-        user=tag_def_user.owner,
+        written_by_id_persistent=tag_def_user.owner.id_persistent,
         id_entity_persistent=entity0.id_persistent,
         id_tag_definition_persistent=tag_def_user.id_persistent,
         value="2.0",
@@ -199,6 +205,8 @@ def test_chunk_versions(tag_def):
                 time_edit=c.time_edit_test + timedelta(hours=j + 1),
                 value=str(float(j)),
                 previous_version=previous_version,
+                written_by=tag_def.written_by,
+                approved_by=tag_def.written_by,
             )
             tag.save()
             previous_version = tag  # pylint: disable=no-member
@@ -218,6 +226,8 @@ def test_chunk_filter_tag_instance(tag_def):
             id_tag_definition_persistent=tag_def.id_persistent + i * "0",
             time_edit=c.time_edit_test,
             value=str(float(i)),
+            written_by=tag_def.written_by,
+            approved_by=tag_def.written_by,
         )
         tag.save()
     ret = TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, 0, 5)

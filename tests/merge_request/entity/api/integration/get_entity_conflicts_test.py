@@ -154,6 +154,8 @@ def test_conflicts_same_value(
             id_persistent=str(uuid4()),
             value=instance_origin.value,
             time_edit=datetime(1994, 12, 2),
+            written_by=instance_origin.written_by,
+            approved_by=instance_origin.approved_by,
         )
         instance_destination.save()
     server, cookies = auth_server_commissioner

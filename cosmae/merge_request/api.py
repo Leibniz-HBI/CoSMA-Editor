@@ -14,6 +14,7 @@ from cosmae.merge_request.entity.api import (
 )
 from cosmae.merge_request.models_django import TagConflictResolution
 from cosmae.merge_request.models_django import TagMergeRequest as MergeRequestDb
+from cosmae.merge_request.queue import dispatch_resolve_conflicts
 from cosmae.person.api import PersonNatural, person_db_dict_to_api
 from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.tag.api.models_conversion import tag_definition_db_to_api
@@ -288,7 +289,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
             tag_definition_destination = TagDefinitionDb.most_recent_by_id(
                 merge_request.id_destination_persistent
             )
-            if not tag_definition_destination.has_write_access(user):
+            if not tag_definition_destination.has_write_access(user.id_persistent):
                 return 403, ApiError(
                     msg="You do not have write permissions for the destination tag."
                 )
@@ -310,6 +311,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 )
             merge_request.state = MergeRequestDb.RESOLVED
             merge_request.save(update_fields=["state"])
+            dispatch_resolve_conflicts(merge_request, user)
         return 200, None
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")

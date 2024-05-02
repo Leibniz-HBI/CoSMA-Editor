@@ -42,6 +42,10 @@ def test_unknown_entities(auth_server, contribution_candidate):
     }
 
 
+def match_sort_key(dictionary):
+    return dictionary["entity"]["id_persistent"]
+
+
 def test_similar_entities_no_duplicate(auth_server, contribution_candidate, entities):
     live_server, cookies = auth_server
     rsp = r.post_similar(
@@ -58,32 +62,33 @@ def test_similar_entities_no_duplicate(auth_server, contribution_candidate, enti
                 c.id_persistent_entity_duplicate_test: {
                     "matches": [
                         {
-                            "entity": {
-                                "disabled": False,
-                                "display_txt": "test entity 1",
-                                "display_txt_details": "Display Text",
-                                "id_persistent": "id_persistent_test_1",
-                                "version": 2,
-                            },
-                            "id_match_tag_definition_persistent_list": [],
-                            "similarity": 0.9230769230769231,
-                        },
-                        {
                             "similarity": 0.9230769230769231,
                             "id_match_tag_definition_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
                                 "display_txt_details": "Display Text",
                                 "version": 1,
-                                "id_persistent": "id_persistent_test_0",
+                                "id_persistent": ce.id_persistent_test_0,
                                 "disabled": False,
                             },
+                        },
+                        {
+                            "entity": {
+                                "disabled": False,
+                                "display_txt": "test entity 1",
+                                "display_txt_details": "Display Text",
+                                "id_persistent": ce.id_persistent_test_1,
+                                "version": 2,
+                            },
+                            "id_match_tag_definition_persistent_list": [],
+                            "similarity": 0.9230769230769231,
                         },
                     ],
                     "assigned_duplicate": None,
                 }
             }
         },
+        list_sort_key=match_sort_key,
     )
 
 
@@ -105,26 +110,26 @@ def test_similar_entities_with_duplicate(
                 c.id_persistent_entity_duplicate_test: {
                     "matches": [
                         {
-                            "entity": {
-                                "disabled": False,
-                                "display_txt": "test entity 1",
-                                "display_txt_details": "Display Text",
-                                "id_persistent": "id_persistent_test_1",
-                                "version": 2,
-                            },
-                            "id_match_tag_definition_persistent_list": [],
-                            "similarity": 0.9230769230769231,
-                        },
-                        {
                             "similarity": 0.9230769230769231,
                             "id_match_tag_definition_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
                                 "display_txt_details": "Display Text",
                                 "version": 1,
-                                "id_persistent": "id_persistent_test_0",
+                                "id_persistent": ce.id_persistent_test_0,
                                 "disabled": False,
                             },
+                        },
+                        {
+                            "entity": {
+                                "disabled": False,
+                                "display_txt": "test entity 1",
+                                "display_txt_details": "Display Text",
+                                "id_persistent": ce.id_persistent_test_1,
+                                "version": 2,
+                            },
+                            "id_match_tag_definition_persistent_list": [],
+                            "similarity": 0.9230769230769231,
                         },
                     ],
                     "assigned_duplicate": {
@@ -137,6 +142,7 @@ def test_similar_entities_with_duplicate(
                 }
             }
         },
+        list_sort_key=match_sort_key,
     )
 
 
@@ -167,7 +173,7 @@ def test_similar_entities_with_tag_match(
                                 "disabled": False,
                                 "display_txt": "test entity 1",
                                 "display_txt_details": "Display Text",
-                                "id_persistent": "id_persistent_test_1",
+                                "id_persistent": ce.id_persistent_test_1,
                                 "version": 2,
                             },
                             "id_match_tag_definition_persistent_list": [
@@ -182,7 +188,7 @@ def test_similar_entities_with_tag_match(
                                 "display_txt": "test entity 0",
                                 "display_txt_details": "Display Text",
                                 "version": 1,
-                                "id_persistent": "id_persistent_test_0",
+                                "id_persistent": ce.id_persistent_test_0,
                                 "disabled": False,
                             },
                         },

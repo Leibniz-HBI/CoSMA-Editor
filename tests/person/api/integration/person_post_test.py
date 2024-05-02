@@ -92,7 +92,7 @@ def test_no_modification_is_returned(auth_server_commissioner, display_txt_only)
 def test_exists(auth_server_commissioner, display_txt_only):
     live_server, cookies = auth_server_commissioner
     mock = MagicMock()
-    mock.return_value = "same_id"
+    mock.return_value = "a9ae45a3-8cc7-4d8d-bdda-36ca7bb88ab6"
     with patch("cosmae.person.api.uuid4", mock):
         person = display_txt_only.copy()
         req = post_person(live_server.url, person, cookies=cookies)
@@ -101,7 +101,7 @@ def test_exists(auth_server_commissioner, display_txt_only):
         assert req.status_code == 500
         assert req.json()["msg"] == (
             "Could not generate an id for person with "
-            f"display_txt {test_display_txt_0}."
+            f"display_txt {display_txt_only['display_txt']}."
         )
 
 

@@ -41,7 +41,7 @@ class RegisterRequest(Schema):
     "API model for register requests."
     username: str = Field(None, min_length=2, max_length=150)
     names_personal: str = Field(None, min_length=2, max_length=150)
-    names_family: str = Field(None, min_length=2, max_length=150)
+    names_family: str | None = Field(None, min_length=2, max_length=150)
     email: str = Field(None, min_length=2, max_length=150)
     password: str = Field(None, min_length=8, max_length=50)
 

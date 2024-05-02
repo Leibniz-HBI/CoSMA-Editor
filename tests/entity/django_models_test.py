@@ -10,17 +10,18 @@ from cosmae.exception import DbObjectExistsException, EntityUpdatedException
 
 
 @pytest.fixture
-def updated_entity0(entity0):
-    return Entity(
+def updated_entity0(entity0, user):
+    return Entity.change_or_create_versioned(
         id_persistent=c.id_persistent_test_0,
         time_edit=c.time_edit_test_1,
-        previous_version=entity0,
-    )
+        written_by_id_persistent=user.id_persistent,
+        version=entity0.id,
+        display_txt="changed display text",
+    )[0]
 
 
 @pytest.mark.django_db
 def test_get_most_recent(entity0, updated_entity0):
-    entity0.save()
     updated_entity0.previous_version = entity0
     updated_entity0.save()
     most_recent = Entity.most_recent_by_id(c.id_persistent_test_0)
@@ -30,12 +31,12 @@ def test_get_most_recent(entity0, updated_entity0):
 
 @pytest.mark.django_db
 def test_creation(user):
-    created, do_write = Entity.change_or_create(
+    created, do_write = Entity.change_or_create_versioned(
         id_persistent=c.id_persistent_test_0,
         display_txt="new_txt",
         time_edit=c.time_edit_test_1,
         version=None,
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     assert do_write
     assert created.previous_version is None
@@ -46,12 +47,12 @@ def test_creation(user):
 @pytest.mark.django_db
 def test_update(entity0, user):
     entity0.save()
-    updated, do_write = Entity.change_or_create(
+    updated, do_write = Entity.change_or_create_versioned(
         id_persistent=entity0.id_persistent,
         display_txt="new_txt",
         time_edit=c.time_edit_test_1,
         version=entity0.id,
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     assert do_write
     assert updated.previous_version == entity0
@@ -62,12 +63,12 @@ def test_update(entity0, user):
 @pytest.mark.django_db
 def test_no_update_on_same(entity0, user):
     entity0.save()
-    updated, do_write = Entity.change_or_create(
+    updated, do_write = Entity.change_or_create_versioned(
         id_persistent=entity0.id_persistent,
         display_txt=entity0.display_txt,
         time_edit=c.time_edit_test_1,
         version=entity0.id,
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     assert not do_write
     assert entity0 == updated
@@ -77,11 +78,11 @@ def test_no_update_on_same(entity0, user):
 def test_no_update_without_version(entity0, user):
     entity0.save()
     with pytest.raises(DbObjectExistsException):
-        Entity.change_or_create(
+        Entity.change_or_create_versioned(
             id_persistent=entity0.id_persistent,
             display_txt="new_txt",
             time_edit=c.time_edit_test_1,
-            requester=user,
+            written_by_id_persistent=user.id_persistent,
         )
 
 
@@ -90,23 +91,25 @@ def test_no_update_on_older_version(entity0, updated_entity0, user):
     entity0.save()
     updated_entity0.save()
     with pytest.raises(EntityUpdatedException):
-        Entity.change_or_create(
+        Entity.change_or_create_versioned(
             id_persistent=entity0.id_persistent,
             display_txt="new_txt",
             time_edit=c.time_edit_test_1,
             version=entity0.id,
-            requester=user,
+            written_by_id_persistent=user.id_persistent,
         )
 
 
 @pytest.mark.django_db
-def test_chunk_correctly(entity0, updated_entity0):
+def test_chunk_correctly(entity0, updated_entity0, user):
     entity0.save()
     updated_entity0.save()
     entities = [updated_entity0]
     for i in range(10):
-        entity = Entity(
-            id_persistent=f"id_persistent_test{i+10}", time_edit=c.time_edit_test_0
+        entity, _ = Entity.change_or_create_versioned(
+            id_persistent=f"id_persistent_test{i+10}",
+            time_edit=c.time_edit_test_0,
+            written_by_id_persistent=user.id_persistent,
         )
         entity.save()
         entities.append(entity)
@@ -159,12 +162,12 @@ def test_keeps_contribution_candidate(entity0, user):
     entity0.contribution_candidate = contribution
     entity0.save()
 
-    changed, do_write = Entity.change_or_create(
+    changed, do_write = Entity.change_or_create_versioned(
         id_persistent=entity0.id_persistent,
         time_edit=datetime.utcnow(),
         version=entity0.id,
         display_txt="entity for contribution test",
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     assert (
         str(changed.contribution_candidate.id_persistent) == contribution.id_persistent

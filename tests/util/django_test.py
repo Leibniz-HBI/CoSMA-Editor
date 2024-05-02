@@ -9,15 +9,24 @@ from cosmae.util import django as du
 
 
 @pytest.mark.django_db
-def test_store_multiple():
-    entity_test_0 = Entity(
-        id_persistent="test_id_0", display_txt="foo", time_edit=datetime(2022, 11, 14)
+def test_store_multiple(user):
+    entity_test_0, _ = Entity.change_or_create_versioned(
+        id_persistent="test_id_0",
+        display_txt="foo",
+        time_edit=datetime(2022, 11, 14),
+        written_by_id_persistent=user.id_persistent,
     )
-    entity_test_1 = Entity(
-        id_persistent="test_id_1", display_txt="foo", time_edit=datetime(2022, 11, 14)
+    entity_test_1, _ = Entity.change_or_create_versioned(
+        id_persistent="test_id_1",
+        display_txt="foo",
+        time_edit=datetime(2022, 11, 14),
+        written_by_id_persistent=user.id_persistent,
     )
-    entity_test_2 = Entity(
-        id_persistent="test_id_2", display_txt="foo", time_edit=datetime(2022, 11, 14)
+    entity_test_2, _ = Entity.change_or_create_versioned(
+        id_persistent="test_id_2",
+        display_txt="foo",
+        time_edit=datetime(2022, 11, 14),
+        written_by_id_persistent=user.id_persistent,
     )
 
     entities_test = [entity_test_0, entity_test_1, entity_test_2]

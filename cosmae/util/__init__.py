@@ -16,7 +16,7 @@ class CosmaeUser(AbstractUser):
     # pylint: disable=too-few-public-methods
     "User Model for CoSMA-Editor"
     email = models.EmailField(unique=True)
-    id_persistent = models.UUIDField(unique=True)
+    id_persistent = models.CharField(unique=True, max_length=36)
     tag_definitions = models.JSONField(default=list)
     APPLICANT = "APLC"
     READER = "READ"

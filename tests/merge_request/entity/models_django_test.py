@@ -345,13 +345,13 @@ def test_change_all(
     conflict_resolution_replace,
 ):
     old_tag_def = conflict_resolution_replace.tag_definition
-    TagDefinitionHistory.change_or_create(
+    TagDefinitionHistory.change_or_create_versioned(
         id_persistent=old_tag_def.id_persistent,
         time_edit=datetime(1912, 4, 7),
         name="edited tag definition",
         version=old_tag_def.id,
         owner_id=old_tag_def.owner.id,
-        requester=old_tag_def.owner,
+        written_by_id_persistent=old_tag_def.owner.id_persistent,
     )[0].save()
 
     recent = EntityConflictResolution.only_recent()

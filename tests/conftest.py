@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 from unittest.mock import MagicMock, patch
 from uuid import UUID
 
@@ -19,10 +19,11 @@ from cosmae.util import CosmaeUser
 
 
 @pytest.fixture
-def entity0():
-    entity = Entity(
-        id_persistent=ce.id_persistent_test_0,
-        time_edit=ce.time_edit_test_0,
+def entity0(user):
+    entity, _ = Entity.change_or_create_versioned(
+        ce.id_persistent_test_0,
+        ce.time_edit_test_0,
+        user.id_persistent,
         display_txt=ce.display_txt_test0,
     )
     entity.save()
@@ -30,9 +31,11 @@ def entity0():
 
 
 @pytest.fixture()
-def entity1():
+def entity1(user1):
     entity = Entity(
         id_persistent=ce.id_persistent_test_1,
+        written_by=user1.id_persistent,
+        approved_by=user1.id_persistent,
         time_edit=ce.time_edit_test_1,
         display_txt=ce.display_txt_test1,
     )
@@ -41,21 +44,22 @@ def entity1():
 
 
 @pytest.fixture
-def entity1_changed(entity1):
-    Entity.change_or_create(
-        id_persistent=entity1.id_persistent,
-        time_edit=ce.time_edit_test_1_changed,
-        display_txt="edited_entity",
+def entity1_changed(user1, entity1):
+    Entity.change_or_create_versioned(
+        entity1.id_persistent,
+        ce.time_edit_test_1_changed,
+        user1.id_persistent,
         version=entity1.id,
-        requester=None,
+        display_txt="edited_entity",
     )[0].save()
 
 
 @pytest.fixture()
-def entity2():
-    entity = Entity(
-        id_persistent=ce.id_persistent_test_2,
-        time_edit=ce.time_edit_test_2,
+def entity2(user1):
+    entity, _ = Entity.change_or_create_versioned(
+        ce.id_persistent_test_2,
+        ce.time_edit_test_2,
+        user1,
         display_txt=ce.display_txt_test2,
     )
     entity.save()
@@ -71,6 +75,8 @@ def tag_def(user):
         type=TagDefinition.STRING,
         owner=user,
         curated=False,
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 
@@ -84,6 +90,8 @@ def tag_def_disabled(user):
         owner=user,
         curated=False,
         disabled=True,
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 
@@ -96,11 +104,13 @@ def tag_def1(user1):
         type=TagDefinition.STRING,
         owner=user1,
         curated=False,
+        written_by=user1.id_persistent,
+        approved_by=user1.id_persistent,
     )
 
 
 @pytest.fixture()
-def tag_def_curated():
+def tag_def_curated(user):
     return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         id_persistent=ct.id_tag_def_curated_test,
         name=ct.name_tag_def_curated_test,
@@ -108,26 +118,14 @@ def tag_def_curated():
         type=TagDefinition.STRING,
         owner=None,
         curated=True,
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 
 @pytest.fixture
-def auth_server(live_server):
-    id_user_persistent = cu.test_uuid
-    uuidMock = MagicMock(return_value=UUID(id_user_persistent))
-    with patch("cosmae.user.api.uuid4", uuidMock):
-        rsp = post_register(
-            live_server.url,
-            {
-                "username": cu.test_username,
-                "password": cu.test_password,
-                "email": cu.test_email,
-                "names_personal": cu.test_names_personal,
-            },
-        )
-
-    user = CosmaeUser.objects.filter(id_persistent=id_user_persistent).get()
-    user.permission_group = CosmaeUser.CONTRIBUTOR
+def auth_server(live_server, user):
+    user = CosmaeUser.objects.filter(id_persistent=cu.test_uuid).get()
     user.save()
     rsp = post_login(
         live_server.url, {"name": cu.test_username, "password": cu.test_password}
@@ -136,20 +134,9 @@ def auth_server(live_server):
 
 
 @pytest.fixture()
-def auth_server1(auth_server):
+def auth_server1(auth_server, user1):
     live_server, cookies_user0 = auth_server
     url = live_server.url
-    uuidMock = MagicMock(return_value=UUID(cu.test_uuid1))
-    with patch("cosmae.user.api.uuid4", uuidMock):
-        rsp = post_register(
-            url,
-            {
-                "username": cu.test_username1,
-                "password": cu.test_password1,
-                "email": cu.test_email1,
-                "names_personal": cu.test_names_personal1,
-            },
-        )
     rsp = post_login(url, {"name": cu.test_username1, "password": cu.test_password1})
     return live_server, cookies_user0, rsp.cookies
 
@@ -180,22 +167,7 @@ def auth_server_applicant(live_server):
 
 
 @pytest.fixture
-def auth_server_commissioner(live_server):
-    user_id_persistent = UUID(cu.test_uuid_commissioner)
-    uuidMock = MagicMock(return_value=user_id_persistent)
-    with patch("cosmae.user.api.uuid4", uuidMock):
-        rsp = post_register(
-            live_server.url,
-            {
-                "username": cu.test_username_commissioner,
-                "password": cu.test_password_commissioner,
-                "email": cu.test_email_commissioner,
-                "names_personal": cu.test_names_personal_commissioner,
-            },
-        )
-    user = CosmaeUser.objects.filter(id_persistent=user_id_persistent).get()
-    user.permission_group = CosmaeUser.COMMISSIONER
-    user.save()
+def auth_server_commissioner(live_server, user_commissioner):
     rsp = post_login(
         live_server.url,
         {
@@ -215,6 +187,7 @@ def user(db):  # pylint: disable=unused-argument
             email=cu.test_email,
             first_name=cu.test_names_personal,
             id_persistent=cu.test_uuid,
+            permission_group=CosmaeUser.CONTRIBUTOR,
         )
         return user
     except IntegrityError:

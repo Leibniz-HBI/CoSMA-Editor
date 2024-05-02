@@ -1,6 +1,7 @@
 "Queue methods for merge requests."
 
 import logging
+from typing import Optional
 from uuid import uuid4
 
 import django_rq
@@ -15,22 +16,29 @@ from cosmae.tag.models_django import (
     TagInstance,
     TagInstanceHistory,
 )
-from cosmae.util import timestamp
+from cosmae.util import CosmaeUser, timestamp
 
 
-def disable_origin(merge_request: TagMergeRequest, time_edit):
+def disable_origin(
+    merge_request: TagMergeRequest,
+    id_written_by_persistent: str,
+    id_approved_by_persistent: Optional[str],
+    time_edit,
+):
     "If configured: disable the origin tag of a merge request."
     if merge_request.disable_origin_on_merge:
         tag_definition = TagDefinition.most_recent_by_id(
             merge_request.id_origin_persistent
         )
-        disabled, _ = TagDefinitionHistory.change_or_create(
+        disabled, _ = TagDefinitionHistory.change_or_create_versioned(
             tag_definition.id_persistent,
             time_edit,
-            tag_definition.name,
-            merge_request.created_by,
-            tag_definition.id_parent_persistent,
-            tag_definition.id,
+            # This is the disabling write it was approved and written by the approver
+            written_by_id_persistent=id_written_by_persistent,
+            approved_by_id_persistent=id_approved_by_persistent,
+            name=tag_definition.name,
+            id_parent_persistent=tag_definition.id_parent_persistent,
+            version=tag_definition.id,
             owner=tag_definition.owner,
             type=tag_definition.type,
             curated=tag_definition.curated,
@@ -54,8 +62,11 @@ def merge_request_fast_forward(id_merge_request_persistent):
             tag_definition_destination = TagDefinition.most_recent_by_id(
                 merge_request.id_destination_persistent
             )
-            if not tag_definition_destination.has_write_access(
-                merge_request.created_by
+            if (
+                tag_definition_destination.curated
+                or not tag_definition_destination.has_write_access(
+                    merge_request.created_by.id_persistent
+                )
             ):
                 return
             tag_instances_destination = TagInstance.by_tag_chunked(
@@ -69,19 +80,27 @@ def merge_request_fast_forward(id_merge_request_persistent):
                     )
                 )
                 for tag_instance in tag_instance_query:
-                    tag_instance, _do_write = TagInstanceHistory.change_or_create(
-                        id_persistent=str(uuid4()),
-                        id_entity_persistent=tag_instance.id_entity_persistent,
-                        id_tag_definition_persistent=merge_request.id_destination_persistent,
-                        value=tag_instance.value,
-                        user=merge_request.created_by,
-                        version=None,
-                        time_edit=time_merge,
+                    tag_instance, _do_write = (
+                        TagInstanceHistory.change_or_create_versioned(
+                            id_persistent=str(uuid4()),
+                            # TODO correct written by? needs approved by? pylint: disable=fixme
+                            written_by_id_persistent=merge_request.created_by.id_persistent,
+                            time_edit=time_merge,
+                            id_entity_persistent=tag_instance.id_entity_persistent,
+                            id_tag_definition_persistent=merge_request.id_destination_persistent,
+                            value=tag_instance.value,
+                            version=None,
+                        )
                     )
                     tag_instance.save()
                 merge_request.state = TagMergeRequest.MERGED
                 merge_request.save()
-                disable_origin(merge_request, time_merge)
+                disable_origin(
+                    merge_request,
+                    merge_request.created_by.id_persistent,
+                    None,
+                    time_merge,
+                )
                 return
             merge_request.state = merge_request.CONFLICTS
             merge_request.save(update_fields=["state"])
@@ -93,15 +112,25 @@ def merge_request_fast_forward(id_merge_request_persistent):
             merge_request.save()
 
 
-def merge_request_resolve_conflicts(id_merge_request_persistent):
+class NotResolvedException(Exception):
+    "Raised when resolving is tried for unresolved merge requests."
+
+
+def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
+    id_merge_request_persistent, id_approved_by_persistent
+):
     "Merges a merge request while incorporating conflict resolutions."
     merge_request_query = TagMergeRequest.objects.filter(  # pylint: disable=no-member
         id_persistent=id_merge_request_persistent
     )
+    approved_by_query = CosmaeUser.by_id_persistent_query_set(id_approved_by_persistent)
     try:
         with transaction.atomic():
             try:
                 merge_request = merge_request_query.get()
+                if not merge_request.state == TagMergeRequest.RESOLVED:
+                    raise NotResolvedException("Tag Merge request is not resolved.")
+                approved_by = approved_by_query.get()
             except OperationalError:
                 return
             time_merge = timestamp()
@@ -137,12 +166,13 @@ def merge_request_resolve_conflicts(id_merge_request_persistent):
                         tag_instance_reference = resolution.tag_instance_destination
                         id_persistent = tag_instance_reference.id_persistent
                         version = tag_instance_reference.id
-                    TagInstanceHistory.change_or_create(
+                    TagInstanceHistory.change_or_create_versioned(
                         id_persistent=id_persistent,
                         time_edit=time_merge,
+                        written_by_id_persistent=resolution.tag_instance_origin.written_by,
+                        approved_by_id_persistent=approved_by.id_persistent,
                         id_entity_persistent=resolution.tag_instance_origin.id_entity_persistent,
                         id_tag_definition_persistent=tag_definition_destination.id_persistent,
-                        user=merge_request.assigned_to,
                         version=version,
                         value=resolution.tag_instance_origin.value,
                     )[0].save()
@@ -154,7 +184,12 @@ def merge_request_resolve_conflicts(id_merge_request_persistent):
 
             merge_request.state = merge_request.MERGED
             merge_request.save()
-            disable_origin(merge_request, time_merge)
+            disable_origin(
+                merge_request,
+                merge_request.created_by.id_persistent,
+                approved_by.id_persistent,
+                time_merge,
+            )
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
@@ -163,15 +198,10 @@ def merge_request_resolve_conflicts(id_merge_request_persistent):
             merge_request.save()
 
 
-def dispatch_merge_request_queue_process(
-    sender,
-    instance,
-    created,
-    update_fields,
-    **kwargs  # pylint: disable=unused-argument
-):
-    "Dispatches queue methods for merge requests."
-    if not (update_fields and "state" in update_fields):
-        return
-    if instance.state == TagMergeRequest.RESOLVED:
-        django_rq.enqueue(merge_request_resolve_conflicts, str(instance.id_persistent))
+def dispatch_resolve_conflicts(merge_request: TagMergeRequest, approved_by: CosmaeUser):
+    "Dispatch method for resolving conflicts to queue"
+    django_rq.enqueue(
+        merge_request_resolve_conflicts,
+        str(merge_request.id_persistent),
+        str(approved_by.id_persistent),
+    )

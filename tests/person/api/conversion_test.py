@@ -27,10 +27,11 @@ def test_conversion_api_to_db_without_id(user):
 
 @pytest.mark.django_db
 def test_conversion_api_to_db_with_id(user):
-    prev = EntityDb(
-        display_txt=c.display_txt_test,
+    prev, _ = EntityDb.change_or_create_versioned(
         id_persistent=c.id_persistent_test,
         time_edit=c.time_edit_test,
+        written_by_id_persistent=user.id_persistent,
+        display_txt=c.display_txt_test,
     )
     prev.save()
     person_api = api.PersonNatural(

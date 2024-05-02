@@ -96,11 +96,11 @@ def persons_post(
         person_dbs = [person_api_to_db(person, now, user) for person in persons.persons]
     except ValidationException as valid_x:
         return 400, ApiError(msg=str(valid_x))
-    except DbObjectExistsException as exists_x:
+    except DbObjectExistsException as exc:
         return 500, ApiError(
             msg=(
                 "Could not generate an id for person "
-                f"with display_txt {exists_x.display_txt}."
+                f"with display_txt {exc.values['display_txt']}."
             )
         )
     except EntityUpdatedException as updated_x:
@@ -182,11 +182,11 @@ def person_api_to_db(
                 "has version but no persistent_id."
             )
         persistent_id = str(uuid4())
-    return EntityDb.change_or_create(
+    return EntityDb.change_or_create_versioned(
         display_txt=person.display_txt,
         time_edit=time_edit,
         id_persistent=persistent_id,
-        requester=requester,
+        written_by_id_persistent=requester.id_persistent,
         version=person.version,
         disabled=person.disabled or False,
     )

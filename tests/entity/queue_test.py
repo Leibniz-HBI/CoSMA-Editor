@@ -37,10 +37,10 @@ def test_with_display_txt(entity0):
 
 @pytest.fixture
 def entity_without_display_txt(db, user):
-    entity, _ = Entity.change_or_create(
+    entity, _ = Entity.change_or_create_versioned(
         id_persistent=id_persistent_entity_no_display_txt,
         time_edit=time_edit_entity_no_display_txt,
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     entity.save()
     return entity
@@ -59,13 +59,13 @@ def test_without_display_txt_and_no_tag_def_order(entity_without_display_txt):
 
 @pytest.fixture
 def instance_tag_def_1(entity_without_display_txt, tag_def1):
-    instance, _ = TagInstanceHistory.change_or_create(
+    instance, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=id_persistent_instance_tag_def_1,
         time_edit=time_edit_instance_tag_def_1,
         id_entity_persistent=entity_without_display_txt.id_persistent,
         id_tag_definition_persistent=tag_def1.id_persistent,
         value=value_instance_tag_def_1,
-        user=tag_def1.owner,
+        written_by_id_persistent=tag_def1.owner.id_persistent,
     )
     instance.save()
     return instance
@@ -141,12 +141,12 @@ def contribution_instance_without_display_txt(
         file_name="file.csv",
         state=ContributionCandidate.VALUES_EXTRACTED,
     )
-    entity, _ = Entity.change_or_create(
+    entity, _ = Entity.change_or_create_versioned(
         entity_without_display_txt.id_persistent,
-        time_edit_entity_contribution_no_display_txt,
+        time_edit=time_edit_entity_contribution_no_display_txt,
         version=entity_without_display_txt.id,
         contribution_candidate_id=contribution.id_persistent,
-        requester=user,
+        written_by_id_persistent=user.id_persistent,
     )
     entity.save()
     TagMergeRequest.objects.create(  # pylint: disable=no-member
@@ -203,7 +203,7 @@ def test_db_to_dict(tag_def):
             "owner": {
                 "username": "test-user",
                 "id_persistent": tag_def.owner.id_persistent,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "curated": False,
             "hidden": False,

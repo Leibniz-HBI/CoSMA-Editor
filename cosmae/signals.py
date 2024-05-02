@@ -1,4 +1,5 @@
 "Collection of methods for attaching signals to models."
+
 from uuid import uuid4
 
 from django.apps import apps
@@ -16,19 +17,6 @@ def connect_read_csv_signal():
         dispatch_read_csv_head,
         sender=ContributionCandidate,
         dispatch_uid="cosmae.start_tag_extraction",
-    )
-
-
-def connect_merge_request_queue_process():
-    "Connect the signal for processing merge requests."
-    # pylint: disable=import-outside-toplevel
-    from cosmae.merge_request.models_django import TagMergeRequest
-    from cosmae.merge_request.queue import dispatch_merge_request_queue_process
-
-    post_save.connect(
-        dispatch_merge_request_queue_process,
-        sender=TagMergeRequest,
-        dispatch_uid="cosmae_merge_request_queue",
     )
 
 

@@ -6,8 +6,9 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     "Migration for enabling postgres fuzzy string match"
+
     dependencies = [
-        ("cosmae", "0027_tagdefinition_hidden"),
+        ("cosmae", "0004_tag_most_recent_views"),
     ]
 
     operations = [CreateExtension("fuzzystrmatch")]

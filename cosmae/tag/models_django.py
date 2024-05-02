@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import List, Optional, Union
+from typing import List, Optional, Type, TypeVar
 
 from django.db import models
 from django.db.models.aggregates import Max
 
 from cosmae.entity.models_django import Entity
 from cosmae.exception import (
-    DbObjectExistsException,
     EntityMissingException,
     ForbiddenException,
     InvalidTagValueException,
@@ -19,14 +17,12 @@ from cosmae.exception import (
     TagDefinitionDisabledException,
     TagDefinitionExistsException,
     TagDefinitionMissingException,
-    TagDefinitionPermissionException,
-    TagInstanceExistsException,
 )
 from cosmae.util import CosmaeUser
-from cosmae.util.django import change_or_create_versioned
+from cosmae.versioned.models_django import HistoryMixin, Versioned
 
 
-class TagDefinitionAbstract(models.Model):
+class TagDefinitionAbstract(Versioned):
     "Abstract Django ORM model for tag definitions."
 
     INNER = "INR"
@@ -35,24 +31,13 @@ class TagDefinitionAbstract(models.Model):
     TYPE_CHOICES = [(INNER, "inner"), (FLOAT, "float"), (STRING, "string")]
     name = models.TextField()
     description = models.TextField(blank=True, null=True)
-    id_persistent = models.TextField()
     id_parent_persistent = models.TextField(null=True, blank=True)
     type = models.CharField(max_length=3, choices=TYPE_CHOICES, default=INNER)
     time_edit = models.DateTimeField()
-    previous_version = models.ForeignKey(
-        "self", blank=True, null=True, on_delete=models.CASCADE, unique=True
-    )
     owner = models.ForeignKey(
         "CosmaeUser", null=True, blank=True, on_delete=models.SET_NULL
     )
     curated = models.BooleanField(default=False)
-    hidden = models.BooleanField(default=False)
-    """Flag for not showing the tag definition.
-    This is currently set for tag definitions for new merge requests.
-    """
-    disabled = models.BooleanField(default=False)
-    """Flag for indicating soft delete.
-    This is necessary to ensure that old versions are kept in the history."""
 
     class Meta:
         "Meta class for abstract tag definition django model"
@@ -60,20 +45,28 @@ class TagDefinitionAbstract(models.Model):
         # pylint: disable=too-few-public-methods
         abstract = True
 
-    def is_owner(self, user: CosmaeUser):
+    def is_owner(self, user_id_persistent: str):
         "Check wether a user owns the tag definition."
-        return self.owner == user or (
+        return (  # pylint: disable=no-member
             self.owner is None
-            and user.permission_group in {CosmaeUser.COMMISSIONER, CosmaeUser.EDITOR}
+            and CosmaeUser.objects.filter(id_persistent=user_id_persistent)
+            .get()
+            .permission_group
+            in {CosmaeUser.COMMISSIONER, CosmaeUser.EDITOR}
+        ) or (
+            self.owner is not None
+            and str(self.owner.id_persistent) == user_id_persistent
         )
 
-    def has_write_access(self, user: CosmaeUser):
+    def has_write_access(self, user_id_persistent: str):
         "Check wether a user can write to the tag definition."
-        return self.is_owner(user)
+        return self.is_owner(user_id_persistent)
 
 
-class TagDefinitionHistory(TagDefinitionAbstract):
+class TagDefinitionHistory(TagDefinitionAbstract, HistoryMixin):
     "Django ORM model for tag definitions history."
+
+    unmodifiable_fields = {"id_persistent", "type"}
 
     @classmethod
     def most_recent_query_set(
@@ -111,13 +104,14 @@ class TagDefinitionHistory(TagDefinitionAbstract):
 
     def set_curated(self, requester: CosmaeUser, time_edit):
         "Set curated state for a tag definition."
-        return TagDefinitionHistory.change_or_create(
+        return TagDefinitionHistory.change_or_create_versioned(
             self.id_persistent,
             time_edit,
-            name=self.name,
-            requester=requester,
-            id_parent_persistent=self.id_parent_persistent,
+            requester.id_persistent,
+            requester.id_persistent,
             version=self.id,  # pylint: disable=no-member
+            name=self.name,
+            id_parent_persistent=self.id_parent_persistent,
             owner_id=None,
             curated=True,
             skip_write_check=True,
@@ -125,47 +119,32 @@ class TagDefinitionHistory(TagDefinitionAbstract):
 
     def set_owner(self, user: CosmaeUser, requester: CosmaeUser, time_edit):
         "Set curated state for a tag definition."
-        return TagDefinitionHistory.change_or_create(
+        return TagDefinitionHistory.change_or_create_versioned(
             self.id_persistent,
             time_edit,
+            written_by_id_persistent=requester.id_persistent,
+            owner_id=user.id,
             name=self.name,
-            requester=requester,
             id_parent_persistent=self.id_parent_persistent,
             version=self.id,  # pylint: disable=no-member
-            owner_id=user.id,
             curated=False,
         )
 
-    @classmethod
-    def change_or_create(  # pylint: disable=too-many-arguments
-        cls,
-        id_persistent: str,
-        time_edit: datetime,
-        name: str,
-        requester: CosmaeUser,
-        id_parent_persistent: Optional[str] = None,
-        version: Optional[int] = None,
-        **kwargs,
-    ):
-        """Changes a tag definition in the database by adding a new version.
-        Note:
-            The resulting object is not saved.
-        Returns:
-            The new object
-            and a flag indicating wether the object changed from the most recent version.
-        """
-        if id_parent_persistent is not None:
-            if id_parent_persistent == id_persistent:
+    def check_integrity(self):  # pylint: disable=too-many-arguments
+        """Check wether new version keeps constraints."""
+        if self.id_parent_persistent is not None:
+            if self.id_parent_persistent == self.id_persistent:
                 raise NoSelfParentTagException()
             try:
-                TagDefinition.most_recent_by_id(id_parent_persistent)
+                TagDefinition.most_recent_by_id(self.id_parent_persistent)
             except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
-                raise NoParentTagException(id_parent_persistent) from exc
-        if version is None:
+                raise NoParentTagException(self.id_parent_persistent) from exc
+        if self.previous_version is None:
             exists = (
                 TagDefinition.objects.filter(  # pylint: disable=no-member
-                    name=name, id_parent_persistent=id_parent_persistent
+                    name=self.name, id_parent_persistent=self.id_parent_persistent
                 )
+                # annotate successor in history
                 .annotate(
                     next_version=models.Subquery(
                         TagDefinition.objects.filter(  # pylint: disable=no-member
@@ -173,46 +152,31 @@ class TagDefinitionHistory(TagDefinitionAbstract):
                         ).values("id")
                     )
                 )
-                .exclude(id_persistent=id_persistent, next_version__isnull=True)
+                # exclude when same id_persistent and no successor present
+                .exclude(id_persistent=self.id_persistent, next_version__isnull=True)
             )
             if exists:
                 raise TagDefinitionExistsException(
-                    name,
+                    self.name,
                     exists.order_by(models.F("previous_version").desc(nulls_last=True))[
                         0
                     ].id_persistent,
-                    id_parent_persistent,
+                    self.id_parent_persistent,
                 )
-        try:
-            return change_or_create_versioned(
-                cls,
-                id_persistent,
-                requester,
-                version,
-                name=name,
-                time_edit=time_edit,
-                id_parent_persistent=id_parent_persistent,
-                **kwargs,
-            )
-        except DbObjectExistsException as exc:
-            raise DbObjectExistsException(name) from exc
 
     def check_different_before_save(self, other):
-        """Checks structural equality for two tag definitions.
-        Note:
-            * The version fields are not compared as this check is intended to
-               prevent unnecessary writes.
-            * The time_edit fields are not compared as the operation is invalid."""
+        """Checks structural equality for two tag definitions."""
         return (
             other.name != self.name
             or other.id_parent_persistent != self.id_parent_persistent
             or other.type != self.type
             or other.owner != self.owner
             or other.curated != self.curated
-            or other.hidden != self.hidden
-            or other.disabled != self.disabled
             or other.description != self.description
         )
+
+
+_T = TypeVar("_T")
 
 
 class TagDefinition(TagDefinitionAbstract):
@@ -266,7 +230,7 @@ class TagDefinition(TagDefinitionAbstract):
         return self._get_history_entry().set_curated(requester, time_edit)
 
     def set_owner(self, user: CosmaeUser, requester: CosmaeUser, time_edit):
-        "Set curated state for a tag definition."
+        "Set owner for a tag definition."
         return self._get_history_entry().set_owner(user, requester, time_edit)
 
     def check_value(self, val: str):
@@ -287,7 +251,12 @@ class TagDefinition(TagDefinitionAbstract):
         return val
 
     @classmethod
-    def for_user(cls, user: CosmaeUser, include_curated=False):
+    def for_user(
+        cls: Type[_T],
+        user: CosmaeUser,
+        include_curated: bool = False,
+        include_disabled: bool = False,
+    ) -> models.Manager[_T]:
         "Get all tag definitions for a user."
         if include_curated:
             if not user.permission_group in [
@@ -296,9 +265,12 @@ class TagDefinition(TagDefinitionAbstract):
             ]:
                 raise ForbiddenException("Tag Definition", "")
             return cls.objects.filter(  # pylint: disable=no-member
-                models.Q(curated=True) | models.Q(owner=user)
+                (models.Q(curated=True) | models.Q(owner=user))
+                & models.Q(disabled=include_disabled)
             )
-        return cls.objects.filter(owner=user)  # pylint: disable=no-member
+        return cls.objects.filter(  # pylint: disable=no-member
+            owner=user, disabled=include_disabled
+        )
 
     @classmethod
     def curated_query_set(cls):
@@ -306,17 +278,12 @@ class TagDefinition(TagDefinitionAbstract):
         return cls.objects.filter(curated=True)  # pylint: disable=no-member
 
 
-class TagInstanceAbstract(models.Model):
+class TagInstanceAbstract(Versioned):
     "Django ORM model for tag instances."
 
-    id_persistent = models.TextField()
     id_entity_persistent = models.CharField(max_length=36)
     id_tag_definition_persistent = models.TextField()
     value = models.TextField(null=True, blank=True)
-    time_edit = models.DateTimeField()
-    previous_version = models.ForeignKey(
-        "self", blank=True, null=True, on_delete=models.CASCADE, unique=True
-    )
 
     class Meta:
         "Meta class for abstract TagInstance django model"
@@ -339,8 +306,13 @@ class TagInstanceAbstract(models.Model):
         return comparison
 
 
-class TagInstanceHistory(TagInstanceAbstract):
+class TagInstanceHistory(TagInstanceAbstract, HistoryMixin):
     "Provides access to tag instance history"
+
+    unmodifiable_fields = {
+        "id_persistent",
+        "id_tag_definition_persistent",
+    }
 
     @classmethod
     def most_recent_by_id(cls, id_persistent):
@@ -364,62 +336,34 @@ class TagInstanceHistory(TagInstanceAbstract):
             )
         )
 
-    @classmethod
-    def change_or_create(  # pylint: disable=too-many-arguments
-        cls,
-        id_persistent: str,
-        time_edit: datetime,
-        id_entity_persistent: str,
-        id_tag_definition_persistent: str,
-        user: CosmaeUser,
-        value: Optional[Union[int, float, List[str]]] = None,
-        version: Optional[int] = None,
-        **kwargs,
+    def has_write_access(self, id_user_persistent: str):
+        "Check whether a user can write."
+        try:
+            tag_def = TagDefinition.most_recent_by_id(self.id_tag_definition_persistent)
+        except TagDefinition.DoesNotExist:  # pylint: disable=no-member
+            return True
+        return tag_def.has_write_access(id_user_persistent)
+
+    def check_integrity(  # pylint: disable=too-many-arguments
+        self,
     ):
-        """Changes an tag assignment by adding a new version.
-        Note:
-            The resulting object is not saved.
-        Returns:
-            The new object
-            and a flag indicating wether the object changed from the most recent version.
-        """
+        """Check wether the object conforms to implicit assumptions."""
         try:
-            Entity.most_recent_by_id(id_entity_persistent)
+            Entity.most_recent_by_id(self.id_entity_persistent)
         except IndexError as exc:
-            raise EntityMissingException(id_entity_persistent) from exc
+            raise EntityMissingException(self.id_entity_persistent) from exc
         try:
-            tag_def = TagDefinition.most_recent_by_id(id_tag_definition_persistent)
-            if not tag_def.has_write_access(user):
-                raise TagDefinitionPermissionException(tag_def.id_persistent)
+            tag_def = TagDefinition.most_recent_by_id(self.id_tag_definition_persistent)
             if tag_def.disabled:
                 raise TagDefinitionDisabledException(tag_def.id_persistent)
-            value = tag_def.check_value(value)
+            tag_def.check_value(self.value)
         except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
-            raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
-
-        try:
-            return change_or_create_versioned(
-                cls,
-                id_persistent,
-                user,
-                version,
-                id_entity_persistent=id_entity_persistent,
-                id_tag_definition_persistent=id_tag_definition_persistent,
-                value=value,
-                time_edit=time_edit,
-                **kwargs,
-            )
-        except DbObjectExistsException as exc:
-            raise TagInstanceExistsException(
-                id_entity_persistent, id_tag_definition_persistent, value
+            raise TagDefinitionMissingException(
+                self.id_tag_definition_persistent
             ) from exc
 
     def check_different_before_save(self, other):
-        """Checks structural equality for two tag definitions.
-        Note:
-            * The version fields are not compared as this check is intended to
-               prevent unnecessary writes.
-            * The time_edit fields are not compared as the operation is invalid."""
+        """Checks structural equality for two tag definitions."""
         if other.id_entity_persistent != self.id_entity_persistent:
             return True
         if other.id_tag_definition_persistent != self.id_tag_definition_persistent:

@@ -331,12 +331,12 @@ def test_conflict_resolved_tag_def_origin_changed(
     auth_server, merge_request_user, conflict_resolution_replace
 ):
     old_tag_definition = conflict_resolution_replace.tag_definition_origin
-    TagDefinitionHistory.change_or_create(
+    TagDefinitionHistory.change_or_create_versioned(
         id_persistent=old_tag_definition.id_persistent,
         version=old_tag_definition.id,
         name="changed tag definition test",
         time_edit=datetime(1912, 4, 8),
-        requester=merge_request_user.created_by,
+        written_by_id_persistent=merge_request_user.created_by.id_persistent,
         owner_id=merge_request_user.created_by.id,
     )[0].save()
     server, cookies = auth_server
@@ -482,6 +482,8 @@ def test_tag_instance_destination_value_added(
         id_persistent=id_tag_instance_destination,
         value="new value destination test",
         time_edit=time_edit,
+        written_by=destination_tag_def_for_mr.owner,
+        approved_by=destination_tag_def_for_mr.owner,
     )
 
     server, cookies = auth_server

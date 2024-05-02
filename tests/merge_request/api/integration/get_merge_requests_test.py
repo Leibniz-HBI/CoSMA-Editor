@@ -142,7 +142,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
 def test_get_merge_requests_with_hidden(
     auth_server, merge_request_user, merge_request_user1, origin_tag_def_for_mr1
 ):
-    tag_def, _ = TagDefinitionHistory.change_or_create(
+    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
         id_persistent=origin_tag_def_for_mr1.id_persistent,
         id_parent_persistent=origin_tag_def_for_mr1.id_parent_persistent,
         name=origin_tag_def_for_mr1.name,
@@ -151,7 +151,7 @@ def test_get_merge_requests_with_hidden(
         hidden=True,
         version=origin_tag_def_for_mr1.id,
         time_edit=origin_tag_def_for_mr1.time_edit + timedelta(minutes=60),
-        requester=origin_tag_def_for_mr1.owner,
+        written_by_id_persistent=origin_tag_def_for_mr1.owner.id_persistent,
     )
     tag_def.save()
     assert TagDefinition.most_recent_by_id(origin_tag_def_for_mr1.id_persistent).hidden

@@ -72,12 +72,12 @@ def update_tag_instances(tag_instances_with_duplicates, user, time_edit):
         replacement_id_entity_persistent__isnull=False
     )
     updated_tag_instances = [
-        TagInstanceHistory.change_or_create(
+        TagInstanceHistory.change_or_create_versioned(
             id_persistent=tag_instance.id_persistent,
             id_entity_persistent=tag_instance.replacement_id_entity_persistent,
             value=tag_instance.value,
             id_tag_definition_persistent=tag_instance.id_tag_definition_persistent,
-            user=user,
+            written_by_id_persistent=user.id_persistent,
             version=tag_instance.id,
             time_edit=time_edit,
         )[0]

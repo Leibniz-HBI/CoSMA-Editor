@@ -1,10 +1,13 @@
 # pylint: disable=too-few-public-methods
 """Exceptions for CoSMA-Editor"""
+from typing import Dict
+
 from ninja import Schema
 
 
 class ApiError(Schema):
     "A class for basic HTTP errors."
+
     msg: "str"
 
 
@@ -31,8 +34,9 @@ class ValidationException(Exception):
 class DbObjectExistsException(Exception):
     """Indicates that an db object with that persistent id already exists."""
 
-    def __init__(self, display_txt) -> None:
-        self.display_txt = display_txt
+    def __init__(self, id_persistent: str, values: Dict[str, any]) -> None:
+        self.id_persistent = id_persistent
+        self.values = values
 
 
 class TagInstanceExistsException(Exception):
@@ -120,3 +124,10 @@ class TagDefinitionDisabledException(Exception):
 
     def __init__(self, id_persistent):
         self.id_persistent = id_persistent
+
+
+class UnmodifiableFieldException(Exception):
+    "Indicates change to a field that is deemed unmodifiable"
+
+    def __init__(self, field_name):
+        self.field_name = field_name

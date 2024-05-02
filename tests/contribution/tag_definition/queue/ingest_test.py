@@ -46,24 +46,28 @@ def csv_mock_with_empty_lines():
 
 
 @pytest.fixture
-def verified_tag_def(db):
+def verified_tag_def(db, user):
     return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         name="tag definition verified_test",
         id_parent_persistent=None,
         type=TagDefinition.INNER,
         id_persistent=str(uuid4()),
         time_edit=datetime.now(),
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 
 @pytest.fixture
-def party_tag_def(db):
+def party_tag_def(db, user):
     return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         name="tag definition party test",
         id_parent_persistent=None,
         type=TagDefinition.STRING,
         id_persistent=str(uuid4()),
         time_edit=datetime.now(),
+        written_by=user.id_persistent,
+        approved_by=user.id_persistent,
     )
 
 

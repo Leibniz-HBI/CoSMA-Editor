@@ -192,7 +192,7 @@ def post_resolve_conflict(
         tag_definition = TagDefinitionDb.most_recent_by_id(
             resolution_info.id_tag_definition_persistent
         )
-        if not tag_definition.has_write_access(user):
+        if not tag_definition.has_write_access(user.id_persistent):
             return 403, ApiError(msg="You can not write to the tag definition.")
         EntityConflictResolutionDb.objects.filter(  # pylint: disable=no-member
             tag_definition__id_persistent=resolution_info.id_tag_definition_persistent,

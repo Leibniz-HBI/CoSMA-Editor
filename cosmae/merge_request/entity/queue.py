@@ -9,8 +9,8 @@ from django.db import models, transaction
 from cosmae.entity.models_django import Entity
 from cosmae.exception import (
     EntityUpdatedException,
+    PermissionException,
     TagDefinitionExistsException,
-    TagDefinitionPermissionException,
 )
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
@@ -66,6 +66,7 @@ def apply_entity_merge_request(
                             type="type",
                             owner_id="owner__id",
                             id_persistent="id_persistent",
+                            written_by="written_by",
                         )
                     )
                 )
@@ -81,10 +82,12 @@ def apply_entity_merge_request(
                 )
             # disable the destination entity
             origin = Entity.most_recent_by_id(merge_request.id_origin_persistent)
-            disabled, _ = Entity.change_or_create(
+            disabled, _ = Entity.change_or_create_versioned(
                 display_txt=origin.display_txt,
                 id_persistent=origin.id_persistent,
-                requester=user,
+                # this is the write for disabling. This is written by the approver.
+                written_by_id_persistent=user.id_persistent,
+                approved_by_id_persistent=user.id_persistent,
                 version=origin.id,
                 disabled=True,
                 time_edit=time_edit,
@@ -114,28 +117,32 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
     # Create temporary i.e. disabled tag definition
     while True:
         try:
-            tag_definition_new, _do_write = TagDefinitionHistory.change_or_create(
-                id_persistent=uuid4(),
-                name=f"from entity merge {entity_merge_request.id_persistent}_{count}",
-                id_parent_persistent=tag_definition_existing_dict["id_persistent"],
-                type=tag_definition_existing_dict["type"],
-                time_edit=time_edit,
-                owner=user,
-                hidden=True,
-                requester=user,
+            tag_definition_new, _do_write = (
+                TagDefinitionHistory.change_or_create_versioned(
+                    id_persistent=uuid4(),
+                    name=f"from entity merge {entity_merge_request.id_persistent}_{count}",
+                    id_parent_persistent=tag_definition_existing_dict["id_persistent"],
+                    type=tag_definition_existing_dict["type"],
+                    time_edit=time_edit,
+                    owner=user,
+                    hidden=True,
+                    written_by_id_persistent=tag_definition_existing_dict["written_by"],
+                    approved_by_id_persistent=user.id_persistent,
+                )
             )
             tag_definition_new.save()
             break
         except TagDefinitionExistsException:
             count += 1
         # Create Tag Instance for that tag definition
-    tag_instance, _ = TagInstanceHistory.change_or_create(
+    tag_instance, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=uuid4(),
         id_tag_definition_persistent=tag_definition_new.id_persistent,
         id_entity_persistent=id_entity_destination_persistent,
         value=tag_instance_origin.value,
         time_edit=time_edit,
-        user=user,
+        written_by_id_persistent=tag_instance_origin.written_by,
+        approved_by_id_persistent=user.id_persistent,
     )
     tag_instance.save()
     # Create tag definition merge request.
@@ -167,17 +174,18 @@ def apply_resolution(
         id_destination_persistent = tag_instance_destination.id_persistent
         version = tag_instance_destination.id
     try:
-        instance, _do_write = TagInstanceHistory.change_or_create(
+        instance, _do_write = TagInstanceHistory.change_or_create_versioned(
             id_persistent=id_destination_persistent,
             version=version,
             id_entity_persistent=resolution.entity_destination.id_persistent,
             id_tag_definition_persistent=resolution.tag_definition.id_persistent,
             time_edit=time_edit,
-            user=user,
+            written_by_id_persistent=resolution.tag_instance_origin.written_by,
+            approved_by_id_persistent=user.id_persistent,
             value=resolution.tag_instance_origin.value,
         )
         instance.save()
-    except (EntityUpdatedException, TagDefinitionPermissionException):
+    except (EntityUpdatedException, PermissionException):
         create_tag_definition_merge_request_for_unresolved_conflict(
             resolution.merge_request,
             resolution.tag_instance_origin,

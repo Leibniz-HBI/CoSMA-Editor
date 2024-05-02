@@ -11,6 +11,7 @@ from ninja import Router, Schema
 
 from cosmae.exception import (
     ApiError,
+    DbObjectExistsException,
     EntityMissingException,
     EntityUpdatedException,
     InvalidTagValueException,
@@ -18,7 +19,6 @@ from cosmae.exception import (
     TagDefinitionDisabledException,
     TagDefinitionMissingException,
     TagDefinitionPermissionException,
-    TagInstanceExistsException,
     ValidationException,
 )
 from cosmae.merge_request.models_django import TagMergeRequest
@@ -147,12 +147,12 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
         tag_dbs = [tag_instance_api_to_db(tag, user, now) for tag in tag_apis]
     except ValidationException as exc:
         return 400, ApiError(msg=str(exc))
-    except TagInstanceExistsException as exc:
+    except DbObjectExistsException as exc:
         return 500, ApiError(
             msg="Could not generate id_persistent for tag instance with "
-            f"id_entity_persistent {exc.id_entity_persistent}, "
-            f"id_tag_definition_persistent {exc.id_tag_definition_persistent} and "
-            f"value {exc.value}."
+            f"id_entity_persistent {exc.values['id_entity_persistent']}, "
+            f"id_tag_definition_persistent {exc.values['id_tag_definition_persistent']} and "
+            f"value {exc.values['value']}."
         )
     except EntityMissingException as exc:
         return 400, ApiError(
@@ -328,11 +328,11 @@ def tag_instance_api_to_db(tag_api: TagInstancePost, user: CosmaeUser, time: dat
                 f"value {tag_api.value} has version but no id_persistent."
             )
         persistent_id = str(uuid4())
-    return TagInstanceHistoryDb.change_or_create(
+    return TagInstanceHistoryDb.change_or_create_versioned(
         id_persistent=persistent_id,
         id_entity_persistent=tag_api.id_entity_persistent,
         id_tag_definition_persistent=tag_api.id_tag_definition_persistent,
-        user=user,
+        written_by_id_persistent=user.id_persistent,
         value=tag_api.value,
         time_edit=time,
         version=tag_api.version,

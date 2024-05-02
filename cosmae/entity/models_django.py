@@ -1,31 +1,23 @@
 """Models for entities."""
 
-from datetime import datetime
-from typing import Optional
-
 from django.contrib.postgres.indexes import GistIndex
 from django.db import models
 from django.db.models.aggregates import Max
 
-from cosmae.exception import DbObjectExistsException
 from cosmae.util import CosmaeUser
-from cosmae.util.django import change_or_create_versioned
+from cosmae.versioned.models_django import HistoryMixin, Versioned
 
 
-class Entity(models.Model):
+class Entity(Versioned, HistoryMixin):
     """Model for a general entity"""
 
     proxy_name = models.TextField()
     display_txt = models.TextField(blank=True, null=True)
-    time_edit = models.DateTimeField()
-    id_persistent = models.TextField(null=False, blank=False)
-    previous_version = models.ForeignKey(
-        "self", blank=True, null=True, on_delete=models.CASCADE, unique=True
-    )
     contribution_candidate = models.ForeignKey(
         "ContributionCandidate", blank=True, null=True, on_delete=models.CASCADE
     )
-    disabled = models.BooleanField(default=False)
+
+    unmodifiable_fields = {"id_persistent"}
 
     class Meta:
         "Meta class for entity model"
@@ -66,35 +58,13 @@ class Entity(models.Model):
             return most_recent
         return most_recent.filter(disabled=False)
 
+    def has_write_access(self, _user: CosmaeUser):
+        "Check wether a user can change the entity."
+        return True
+
     @classmethod
-    def change_or_create(  # pylint: disable=too-many-arguments
-        cls,
-        id_persistent: str,
-        time_edit: datetime,
-        requester: CosmaeUser,
-        display_txt: Optional[str] = None,
-        version: Optional[int] = None,
-        **kwargs,
-    ):
-        """Changes an entity in the database by adding a new version.
-        Note:
-            The resulting object is not saved.
-        Returns:
-            The new object
-            and a flag indicating wether the object changed from the most recent version.
-        """
-        try:
-            return change_or_create_versioned(
-                cls,
-                id_persistent,
-                requester,
-                version,
-                display_txt=display_txt,
-                time_edit=time_edit,
-                **kwargs,
-            )
-        except DbObjectExistsException as exc:
-            raise DbObjectExistsException(display_txt) from exc
+    def check_integrity(cls):
+        """Check wether the object conforms to implicit assumptions."""
 
     @classmethod
     def most_recent(cls, manager=None, include_disabled=False):
