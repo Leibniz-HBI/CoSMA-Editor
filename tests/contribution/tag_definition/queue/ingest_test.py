@@ -115,7 +115,11 @@ def test_ingest_columns_names_only(
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
     with patch("cosmae.contribution.tag_definition.queue.util.read_csv", csv_mock):
-        ingest_values_from_csv(contribution_other.id_persistent)
+        with patch(
+            "cosmae.contribution.tag_definition.queue.util.find_delimiter",
+            return_value=",",
+        ):
+            ingest_values_from_csv(contribution_other.id_persistent)
     instances = TagInstance.objects.all()  # pylint: disable=no-member
     assert len(instances) == 0
     persons = set(
@@ -165,7 +169,11 @@ def test_ingest_inner(
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
     with patch("cosmae.contribution.tag_definition.queue.util.read_csv", csv_mock):
-        ingest_values_from_csv(contribution_other.id_persistent)
+        with patch(
+            "cosmae.contribution.tag_definition.queue.util.find_delimiter",
+            return_value=",",
+        ):
+            ingest_values_from_csv(contribution_other.id_persistent)
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
@@ -195,7 +203,11 @@ def test_ingest_string(
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
     with patch("cosmae.contribution.tag_definition.queue.util.read_csv", csv_mock):
-        ingest_values_from_csv(contribution_other.id_persistent)
+        with patch(
+            "cosmae.contribution.tag_definition.queue.util.find_delimiter",
+            return_value=",",
+        ):
+            ingest_values_from_csv(contribution_other.id_persistent)
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
@@ -221,7 +233,11 @@ def test_sets_error(party_contribution, party_tag_def):
     mock.side_effect = Exception("error")
     contribution = party_contribution.contribution_candidate
     with patch("cosmae.contribution.tag_definition.queue.util.read_csv", mock):
-        ingest_values_from_csv(contribution.id_persistent)
+        with patch(
+            "cosmae.contribution.tag_definition.queue.util.find_delimiter",
+            return_value=",",
+        ):
+            ingest_values_from_csv(contribution.id_persistent)
     contribution = ContributionCandidate.by_id_persistent(
         contribution.id_persistent, contribution.created_by
     ).get()
@@ -242,7 +258,11 @@ def test_ingest_with_empty(
         "cosmae.contribution.tag_definition.queue.util.read_csv",
         csv_mock_with_empty_lines,
     ):
-        ingest_values_from_csv(contribution_other.id_persistent)
+        with patch(
+            "cosmae.contribution.tag_definition.queue.util.find_delimiter",
+            return_value=",",
+        ):
+            ingest_values_from_csv(contribution_other.id_persistent)
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True

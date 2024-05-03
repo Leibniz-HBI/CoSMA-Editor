@@ -40,6 +40,19 @@ def contribution_other(user1):
 
 
 @pytest.fixture
+def contribution_semicolon(user1):
+    return ContributionCandidate.objects.create(  # pylint: disable=no-member
+        name=c.name_test1,
+        description=c.description_test1,
+        id_persistent=c.id_test1,
+        has_header=True,
+        file_name=c.file_name_test_semicolon,
+        state=ContributionCandidate.UPLOADED,
+        created_by=user1,
+    )
+
+
+@pytest.fixture
 def contribution_error(user):
     return ContributionCandidate.objects.create(  # pylint: disable=no-member
         name=c.name_error_test,

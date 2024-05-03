@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Optional, Set, Tuple
 from uuid import uuid4
 
 from django.db import transaction
@@ -30,21 +30,30 @@ def mk_display_txt_extractor(idx):
     return lambda row_tpl: row_tpl[idx]
 
 
+def is_value_empty(value: Optional[str], empty_strings: Set[str]):
+    "check whether a value is empty"
+    return (
+        value is None
+        or len(value) == 0
+        or value.isspace()
+        or value.lower() in empty_strings
+    )
+
+
 def is_row_empty(
-    display_txt, row_tpl, column_assignment: List[Tuple[int, TagDefinition]]
+    display_txt,
+    row_tpl,
+    column_assignment: List[Tuple[int, TagDefinition]],
+    empty_strings: Set[str],
 ):
     "Check if the entries of a row are empty for a given column assignment."
-    display_txt_str = str(display_txt)
-    if not (
-        display_txt_str == "None" or display_txt_str == "" or display_txt_str.isspace()
-    ):
+    if not is_value_empty(display_txt, empty_strings):
         return False
     for idx, _ in column_assignment:
         val = row_tpl[idx]
         if val is None:
             continue
-        val_string = str(val)
-        if val_string == "" or val_string.isspace():
+        if is_value_empty(val, empty_strings):
             continue
         return False
     return True
@@ -74,6 +83,7 @@ def ingest_values_from_csv(id_contribution_persistent):
             display_txt_idx = None
             column_assignments = []
             tag_definition_pairs = []
+            empty_strings = {"nan"}
             for column_assignment in active_columns:
                 if column_assignment.id_existing_persistent == "display_txt":
                     display_txt_idx = column_assignment.index_in_file
@@ -128,6 +138,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                     display_txt,
                     row_tpl,
                     column_assignments,  # pylint: disable = undefined-loop-variable
+                    empty_strings,
                 ):
                     continue
                 id_entity_persistent = str(uuid4())
@@ -143,7 +154,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                 for idx_in_file, tag_definition in column_assignments:
                     id_tag_instance_persistent = str(uuid4())
                     value = str(row_tpl[int(idx_in_file)])
-                    if value == "nan" or value == "" or value.isspace():
+                    if is_value_empty(value, empty_strings):
                         continue
                     tag_instance, _ = TagInstanceHistory.change_or_create_versioned(
                         id_persistent=id_tag_instance_persistent,

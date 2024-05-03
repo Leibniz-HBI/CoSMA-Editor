@@ -9,6 +9,8 @@ description_test1 = "description for test contribution 1"
 id_test1 = "5e053f5e-21d2-4887-8443-970a887280b0"
 file_name_test1 = "DBOeS_Parlamentarier50.csv"
 
+file_name_test_semicolon = "DBOeS_Parlamentarier50_semicolon.csv"
+
 name_definition_test0 = "test contribution tag definition 0"
 id_persistent_tag_def_test0 = "25600b60-6ead-43fb-aaa5-20e28ffd1ecd"
 name_definition_test1 = "test contribution tag definition 1"

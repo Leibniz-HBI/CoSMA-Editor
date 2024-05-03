@@ -81,6 +81,22 @@ def test_extracts_with_header(contribution_other):
     assert contribution_candidate.state == ContributionCandidate.COLUMNS_EXTRACTED
 
 
+def test_extracts_with_header_semicolon(contribution_semicolon):
+    conf_mock = MagicMock
+    conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/"
+    with patch("cosmae.contribution.tag_definition.queue.util.settings", conf_mock):
+        read_csv_head(contribution_semicolon.id_persistent)
+    tag_defs = TagDefinitionContribution.objects.all()  # pylint: disable=no-member
+    for idx, tag_def in enumerate(tag_defs):
+        assert tag_def.name == _expected_tag_defs[idx]
+    contribution_candidate = (
+        ContributionCandidate.objects.get(  # pylint: disable=no-member
+            id_persistent=contribution_semicolon.id_persistent
+        )
+    )
+    assert contribution_candidate.state == ContributionCandidate.COLUMNS_EXTRACTED
+
+
 def test_sets_error(contribution_other):
     conf_mock = MagicMock
     conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/does_not_exist"
