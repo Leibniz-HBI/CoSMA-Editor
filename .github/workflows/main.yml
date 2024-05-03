@@ -47,7 +47,6 @@ jobs:
           cache-dependency-path: |
             pyproject.toml
             poetry.lock
-      # workaround for 3.8
       - name: Install dependencies
         run: |
           poetry env use ${{ matrix.python-version }}
