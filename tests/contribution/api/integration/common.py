@@ -24,6 +24,7 @@ contribution_test_upload0 = {
     "state": "UPLOADED",
     "error_msg": None,
     "error_details": None,
+    "empty_values": "null,nan,na",
 }
 
 contribution_test_upload1 = {
@@ -34,6 +35,7 @@ contribution_test_upload1 = {
     "state": "UPLOADED",
     "error_msg": None,
     "error_details": None,
+    "empty_values": "null,nan,na",
 }
 
 tag_def_test0 = {

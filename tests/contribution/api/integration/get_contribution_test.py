@@ -108,4 +108,5 @@ def test_get_with_error(auth_server, contribution_error):
         "error_msg": contribution_error.error_msg,
         "error_details": contribution_error.error_trace,
         "match_tag_definition_list": [],
+        "empty_values": "null,nan,na",
     }

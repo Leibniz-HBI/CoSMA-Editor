@@ -43,6 +43,7 @@ class ContributionCandidate(models.Model):
     state = models.CharField(max_length=4, choices=TYPE_CHOICES)
     error_msg = models.TextField(blank=True, null=True)
     error_trace = models.TextField(blank=True, null=True)
+    empty_values = models.TextField(default="null,nan,na")
 
     def set_state(self, state, error_msg=None, exception=None):
         "Set state of the contribution and set or reset a possible error message."

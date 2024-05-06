@@ -256,4 +256,5 @@ def mk_initial_contribution_candidate(
         has_header=contribution_api.has_header,
         created_by=user,
         state=ContributionCandidateDb.UPLOADED,
+        empty_values=contribution_api.empty_values,
     )

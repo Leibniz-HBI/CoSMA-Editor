@@ -32,4 +32,5 @@ def test_model_db_to_api(contribution_user):
         author=cu.test_username,
         has_header=False,
         state="COLUMNS_ASSIGNED",
+        empty_values="null,nan,na",
     )

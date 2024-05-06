@@ -44,4 +44,5 @@ def contribution_db_to_api(
         error_msg=contribution_db.error_msg,
         error_details=contribution_db.error_trace,
         match_tag_definition_list=match_tag_definition_list,
+        empty_values=contribution_db.empty_values,
     )

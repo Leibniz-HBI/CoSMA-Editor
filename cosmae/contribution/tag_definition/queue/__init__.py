@@ -18,7 +18,7 @@ def dispatch_read_csv_head(
     "Queues the task for extracting tags from columns."
     if created or (
         update_fields
-        and "has_header" in update_fields
+        and ("has_header" in update_fields or "empty_values" in update_fields)
         and instance.state == ContributionCandidate.UPLOADED
     ):
         django_rq.enqueue(read_csv_head, str(instance.id_persistent))

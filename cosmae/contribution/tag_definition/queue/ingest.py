@@ -83,7 +83,9 @@ def ingest_values_from_csv(id_contribution_persistent):
             display_txt_idx = None
             column_assignments = []
             tag_definition_pairs = []
-            empty_strings = {"nan"}
+            empty_strings = {
+                empty.lower().strip() for empty in contribution.empty_values.split(",")
+            }
             for column_assignment in active_columns:
                 if column_assignment.id_existing_persistent == "display_txt":
                     display_txt_idx = column_assignment.index_in_file

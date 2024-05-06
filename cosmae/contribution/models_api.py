@@ -12,6 +12,7 @@ class ContributionPostRequest(Schema):
     name: str
     description: str
     has_header: bool
+    empty_values: str | None = "null,nan,na"
 
 
 class ContributionPostResponse(Schema):
@@ -38,6 +39,7 @@ class ContributionCandidate(Schema):
     author: str
     error_msg: str | None = None
     error_details: str | None = None
+    empty_values: str
     match_tag_definition_list: List[TagDefinitionResponse] | None = None
 
 
@@ -47,6 +49,7 @@ class ContributionCandidatePatchRequest(Schema):
     name: str | None = None
     description: str | None = None
     has_header: bool | None = None
+    empty_values: str | None = None
 
 
 class ContributionChunkResponse(Schema):
