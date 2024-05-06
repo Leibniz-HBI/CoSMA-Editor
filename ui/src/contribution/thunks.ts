@@ -98,11 +98,13 @@ export function uploadContribution({
     name,
     description,
     hasHeader,
+    emptyValues,
     file
 }: {
     name: string
     description: string
     hasHeader: boolean
+    emptyValues: string
     file: File
 }): ThunkWithFetch<string | undefined> {
     return async (dispatch, _getState, fetch) => {
@@ -113,6 +115,7 @@ export function uploadContribution({
             form.append('file', file)
             form.append('name', name)
             form.append('description', description)
+            form.append('empty_values', emptyValues)
             form.append('has_header', hasHeader.toString())
             const rsp = await fetch(config.api_path + '/contributions', {
                 method: 'POST',
@@ -142,11 +145,14 @@ export function patchContributionDetails({
     idPersistent,
     name,
     description,
-    hasHeader
+    hasHeader,
+    emptyValues
 }: {
     idPersistent: string
     name?: string
     description?: string
+    emptyValues?: string
+
     hasHeader?: boolean
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch): Promise<void> => {
@@ -161,6 +167,9 @@ export function patchContributionDetails({
             }
             if (hasHeader !== undefined) {
                 body['has_header'] = hasHeader
+            }
+            if (emptyValues !== undefined) {
+                body['empty_values'] = emptyValues
             }
             const rsp = await fetch(
                 config.api_path + '/contributions/' + idPersistent,
@@ -202,6 +211,7 @@ export function parseContributionFromApi(contribution_json: any): Contribution {
         author: contribution_json['author'],
         step: contributionStepApiToUiMap[contribution_json['state']],
         hasHeader: contribution_json['has_header'],
+        emptyValues: contribution_json['empty_values'],
         matchTagDefinitionList: contribution_json['match_tag_definition_list']?.map(
             (tagDefJson: unknown) => parseColumnDefinitionsFromApi(tagDefJson)
         )

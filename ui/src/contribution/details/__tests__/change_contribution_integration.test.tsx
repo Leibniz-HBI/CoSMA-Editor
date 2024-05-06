@@ -44,7 +44,8 @@ export function renderWithProviders(
                         idPersistent: idTest0,
                         author: authorTest,
                         hasHeader: false,
-                        step: ContributionStep.ColumnsExtracted
+                        step: ContributionStep.ColumnsExtracted,
+                        emptyValues: emptyValuesTest
                     })
                 )
             }),
@@ -86,6 +87,7 @@ const nameTest0 = 'contribution test 0'
 const descriptionTest0 = 'a contribution for tests'
 const idTest0 = 'id-test-0'
 const authorTest = 'author test'
+const emptyValuesTest = 'empty,absent'
 
 test('no submit for short input', async () => {
     const fetchMock = jest.fn()
@@ -106,9 +108,10 @@ test('no submit for short input', async () => {
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([])
         const feedbacks = container.getElementsByClassName('invalid-feedback')
-        expect(feedbacks.length).toEqual(2)
+        expect(feedbacks.length).toEqual(3)
         expect(feedbacks[0].textContent).not.toEqual('')
         expect(feedbacks[1].textContent).toEqual('')
+        expect(feedbacks[2].textContent).toEqual('')
     })
 })
 const changedName = 'changed name use in tests'
@@ -123,7 +126,8 @@ test('submit for changed name', async () => {
                 has_header: false,
                 description: descriptionTest0,
                 state: 'COLUMNS_EXTRACTED',
-                author: authorTest
+                author: authorTest,
+                empty_values: emptyValuesTest
             }
         ]
     ])
@@ -153,15 +157,17 @@ test('submit for changed name', async () => {
                     body: JSON.stringify({
                         name: changedName,
                         description: descriptionTest0,
-                        has_header: false
+                        has_header: false,
+                        empty_values: emptyValuesTest
                     })
                 }
             ]
         ])
         const feedbacks = container.getElementsByClassName('invalid-feedback')
-        expect(feedbacks.length).toEqual(2)
+        expect(feedbacks.length).toEqual(3)
         expect(feedbacks[0].textContent).toEqual('')
         expect(feedbacks[1].textContent).toEqual('')
+        expect(feedbacks[2].textContent).toEqual('')
     })
     expect(store.getState()).toEqual({
         contribution: newContributionState({
@@ -172,6 +178,83 @@ test('submit for changed name', async () => {
                     hasHeader: false,
                     step: ContributionStep.ColumnsExtracted,
                     idPersistent: idTest0,
+                    emptyValues: emptyValuesTest,
+                    author: authorTest
+                })
+            )
+        }),
+        notification: { notificationList: [], notificationMap: {} }
+    })
+})
+
+test('submit for changed empty values', async () => {
+    const fetchMock = jest.fn()
+    const changedEmptyValues = 'null,nan,na'
+    addResponseSequence(fetchMock, [
+        [
+            200,
+            {
+                id_persistent: idTest0,
+                name: changedName,
+                has_header: false,
+                description: descriptionTest0,
+                state: 'COLUMNS_EXTRACTED',
+                author: authorTest,
+                empty_values: changedEmptyValues
+            }
+        ]
+    ])
+    const { container, store } = renderWithProviders(
+        <ContributionDetailsStep />,
+        fetchMock
+    )
+    const feedbacks = container.getElementsByClassName('invalid-feedback')
+    for (let i = 0; i < feedbacks.length; ++i) {
+        expect(feedbacks[i].textContent).toEqual('')
+    }
+    expect(
+        store.getState().contribution.selectedContribution.value?.emptyValues
+    ).toEqual(emptyValuesTest)
+    const user = userEvent.setup()
+    await waitFor(async () => {
+        const inputs = screen.getAllByRole('textbox')
+        const button = screen.getByText('Edit')
+        await user.clear(inputs[1])
+        await user.type(inputs[1], changedEmptyValues)
+        await user.click(button)
+    })
+    await waitFor(() => {
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
+                {
+                    credentials: 'include',
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        name: nameTest0,
+                        description: descriptionTest0,
+                        has_header: false,
+                        empty_values: changedEmptyValues
+                    })
+                }
+            ]
+        ])
+        const feedbacks = container.getElementsByClassName('invalid-feedback')
+        expect(feedbacks.length).toEqual(3)
+        expect(feedbacks[0].textContent).toEqual('')
+        expect(feedbacks[1].textContent).toEqual('')
+        expect(feedbacks[2].textContent).toEqual('')
+    })
+    expect(store.getState()).toEqual({
+        contribution: newContributionState({
+            selectedContribution: newRemote(
+                newContribution({
+                    name: changedName,
+                    description: descriptionTest0,
+                    hasHeader: false,
+                    step: ContributionStep.ColumnsExtracted,
+                    idPersistent: idTest0,
+                    emptyValues: changedEmptyValues,
                     author: authorTest
                 })
             )
@@ -191,7 +274,8 @@ test('submit for changed header flag', async () => {
                 has_header: true,
                 description: descriptionTest0,
                 state: 'COLUMNS_EXTRACTED',
-                author: authorTest
+                author: authorTest,
+                empty_values: emptyValuesTest
             }
         ]
     ])
@@ -219,15 +303,17 @@ test('submit for changed header flag', async () => {
                     body: JSON.stringify({
                         name: nameTest0,
                         description: descriptionTest0,
-                        has_header: true
+                        has_header: true,
+                        empty_values: emptyValuesTest
                     })
                 }
             ]
         ])
         const feedbacks = container.getElementsByClassName('invalid-feedback')
-        expect(feedbacks.length).toEqual(2)
+        expect(feedbacks.length).toEqual(3)
         expect(feedbacks[0].textContent).toEqual('')
         expect(feedbacks[1].textContent).toEqual('')
+        expect(feedbacks[2].textContent).toEqual('')
     })
     expect(store.getState()).toEqual({
         contribution: newContributionState({
@@ -238,6 +324,7 @@ test('submit for changed header flag', async () => {
                     hasHeader: true,
                     step: ContributionStep.ColumnsExtracted,
                     idPersistent: idTest0,
+                    emptyValues: emptyValuesTest,
                     author: authorTest
                 })
             )
@@ -281,15 +368,17 @@ test('API error', async () => {
                     body: JSON.stringify({
                         name: nameTest0,
                         description: descriptionTest0,
-                        has_header: true
+                        has_header: true,
+                        empty_values: emptyValuesTest
                     })
                 }
             ]
         ])
         const feedbacks = container.getElementsByClassName('invalid-feedback')
-        expect(feedbacks.length).toEqual(2)
+        expect(feedbacks.length).toEqual(3)
         expect(feedbacks[0].textContent).toEqual('')
         expect(feedbacks[1].textContent).toEqual('')
+        expect(feedbacks[2].textContent).toEqual('')
     })
     expect(store.getState()).toEqual({
         contribution: newContributionState({
@@ -300,6 +389,7 @@ test('API error', async () => {
                     hasHeader: false,
                     step: ContributionStep.ColumnsExtracted,
                     idPersistent: idTest0,
+                    emptyValues: emptyValuesTest,
                     author: authorTest
                 })
             )

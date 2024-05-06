@@ -55,6 +55,7 @@ export function renderWithProviders(
                         description: 'A contribution used in tests',
                         hasHeader: true,
                         step: ContributionStep.ValuesExtracted,
+                        emptyValues: 'null,na',
                         author: 'author-test'
                     })
                 )

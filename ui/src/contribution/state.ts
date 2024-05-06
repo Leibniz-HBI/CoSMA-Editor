@@ -25,6 +25,7 @@ export interface Contribution {
     hasHeader: boolean
     author: string
     matchTagDefinitionList: TagDefinition[]
+    emptyValues: string
 }
 export function newContribution({
     name,
@@ -33,6 +34,7 @@ export function newContribution({
     step,
     hasHeader,
     author,
+    emptyValues,
     matchTagDefinitionList = []
 }: {
     name: string
@@ -41,6 +43,7 @@ export function newContribution({
     step: ContributionStep
     hasHeader: boolean
     author: string
+    emptyValues: string
     matchTagDefinitionList?: TagDefinition[]
 }) {
     return {
@@ -50,6 +53,7 @@ export function newContribution({
         step: step,
         hasHeader: hasHeader,
         author: author,
+        emptyValues,
         matchTagDefinitionList: matchTagDefinitionList
     }
 }

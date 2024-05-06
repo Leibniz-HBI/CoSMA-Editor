@@ -13,10 +13,12 @@ import { patchContributionDetails } from '../thunks'
 export type PatchContributionCallback = ({
     name,
     description,
+    emptyValues,
     hasHeader
 }: {
     name?: string
     description?: string
+    emptyValues?: string
     hasHeader?: boolean
 }) => void
 
@@ -36,12 +38,13 @@ export function ContributionDetailsStep() {
     return (
         <EditForm
             contribution={contribution.value}
-            onSubmit={({ name, description, hasHeader }) => {
+            onSubmit={({ name, description, hasHeader, emptyValues }) => {
                 dispatch(
                     patchContributionDetails({
                         idPersistent,
                         name,
                         description,
+                        emptyValues,
                         hasHeader
                     })
                 )
@@ -53,11 +56,13 @@ export function ContributionDetailsStep() {
 export type EditFormArgs = {
     name: string
     description: string
+    emptyValues: string
     hasHeader: boolean
 }
 const editSchema = yup.object({
     name: yup.string().defined().min(8),
     description: yup.string(),
+    emptyValues: yup.string(),
     hasHeader: yup.boolean()
 })
 
@@ -74,13 +79,15 @@ export function EditForm({
                 onSubmit({
                     name: values.name,
                     description: values.description,
-                    hasHeader: values.hasHeader
+                    hasHeader: values.hasHeader,
+                    emptyValues: values.emptyValues
                 })
             }}
             initialValues={{
                 name: contribution.name,
                 description: contribution.description,
-                hasHeader: contribution.hasHeader
+                hasHeader: contribution.hasHeader,
+                emptyValues: contribution.emptyValues
             }}
             validationSchema={editSchema}
         >
@@ -130,6 +137,16 @@ export function EditFormBody({
                         label="File has header row"
                         checked={values.hasHeader}
                         onChange={handleChange}
+                    />
+                    <FormField
+                        name="emptyValues"
+                        handleChange={handleChange}
+                        type="text"
+                        value={values.emptyValues}
+                        label="EmptyValues"
+                        error={formErrors.emptyValues}
+                        isTouched={touched.emptyValues}
+                        role="textbox"
                     />
                 </Col>
                 <Col>

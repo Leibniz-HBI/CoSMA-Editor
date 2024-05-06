@@ -268,11 +268,13 @@ export type UploadFormArgs = {
     name: string
     description: string
     hasHeader: boolean
+    emptyValues: string
     file?: File
 }
 const uploadSchema = yup.object({
     name: yup.string().ensure().min(8),
     description: yup.string(),
+    emptyValues: yup.string(),
     hasHeader: yup.boolean(),
     file: yup.mixed().nullable().defined()
 })
@@ -289,6 +291,7 @@ export function UploadForm() {
                             name: values.name,
                             description: values.description,
                             hasHeader: values.hasHeader,
+                            emptyValues: values.emptyValues,
                             file: values.file
                         })
                     ).then((idPersistent) => {
@@ -302,6 +305,7 @@ export function UploadForm() {
                 name: '',
                 description: '',
                 hasHeader: false,
+                emptyValues: 'nan,null,na',
                 file: undefined
             }}
             validationSchema={uploadSchema}
@@ -388,6 +392,15 @@ export function UploadFormBody({
                 label="File has header row"
                 value={values.hasHeader.toString()}
                 onChange={handleChange}
+            />
+            <FormField
+                name="emptyValues"
+                handleChange={handleChange}
+                type="text"
+                value={values.emptyValues}
+                label="Empty Values"
+                error={formErrors.emptyValues}
+                isTouched={touched.emptyValues}
             />
             <Row>
                 <Col sm="auto">

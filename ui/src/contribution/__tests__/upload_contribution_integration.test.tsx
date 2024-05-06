@@ -79,7 +79,7 @@ test('empty does not submit', async () => {
     button.click()
     await waitFor(() => {
         const feedbacks = getFeedbacks(container)
-        expect(feedbacks.length).toEqual(3)
+        expect(feedbacks.length).toEqual(4)
         expect(feedbacks[0].textContent).not.toEqual('')
         expect(feedbacks[2].textContent).not.toEqual('')
         expect(fetchMock.mock.calls).toEqual([])
@@ -93,7 +93,7 @@ test('feedback for short name', async () => {
     await submitFormWithValues(container, 'aa')
     await waitFor(() => {
         const feedbacks = container.getElementsByClassName('invalid-feedback')
-        expect(feedbacks.length).toEqual(3)
+        expect(feedbacks.length).toEqual(4)
         expect(feedbacks[0].textContent).not.toEqual('')
         expect(feedbacks[2].textContent).not.toEqual('')
         expect(fetchMock.mock.calls).toEqual([])
@@ -126,6 +126,7 @@ test('submit correct name', async () => {
     checkFormData(fetchMock.mock.calls[0][1].body, {
         name: nameTest,
         description: '',
+        empty_values: 'nan,null,na',
         has_header: 'false'
     })
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([
@@ -156,6 +157,7 @@ test('submit with description and header', async () => {
     checkFormData(fetchMock.mock.calls[0][1].body, {
         name: nameTest,
         description: description,
+        empty_values: 'nan,null,na',
         has_header: 'true'
     })
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([
@@ -186,6 +188,7 @@ test('error', async () => {
     checkFormData(fetchMock.mock.calls[0][1].body, {
         name: nameTest,
         description: '',
+        empty_values: 'nan,null,na',
         has_header: 'false'
     })
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
@@ -212,11 +215,12 @@ async function submitFormWithValues(
     name?: string,
     fileInput?: File,
     description?: string,
-    hasHeader?: boolean
+    hasHeader?: boolean,
+    empty_values?: string
 ) {
     const user = userEvent.setup()
     const inputs = screen.getAllByRole('textbox')
-    expect(inputs.length).toEqual(2)
+    expect(inputs.length).toEqual(3)
     if (name !== undefined) {
         await user.type(inputs[0], name)
     }
@@ -226,6 +230,9 @@ async function submitFormWithValues(
     if (hasHeader) {
         const checkbox = screen.getByRole('checkbox')
         await user.click(checkbox)
+    }
+    if (empty_values !== undefined) {
+        await user.type(inputs[2], empty_values)
     }
     if (fileInput !== undefined) {
         const fileInput = container.getElementsByClassName('form-control')[2]

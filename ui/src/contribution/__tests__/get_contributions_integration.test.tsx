@@ -81,7 +81,8 @@ const contributionResponse0 = {
     id_persistent: idTest0,
     author: authorTest1,
     has_header: false,
-    state: 'UPLOADED'
+    state: 'UPLOADED',
+    empty_values: 'nan,na'
 }
 const nameTest1 = 'contribution test 1'
 const descriptionTest1 = 'another contribution for tests'
@@ -92,7 +93,8 @@ const contributionResponse1 = {
     id_persistent: idTest1,
     has_header: true,
     state: 'VALUES_ASSIGNED',
-    author: authorTest1
+    author: authorTest1,
+    empty_values: 'null,none'
 }
 test('success and open', async () => {
     const fetchMock = jest.fn()
@@ -111,7 +113,8 @@ test('success and open', async () => {
                         description: descriptionTest0,
                         step: ContributionStep.Uploaded,
                         hasHeader: false,
-                        author: authorTest1
+                        author: authorTest1,
+                        emptyValues: 'nan,na'
                     }),
                     newContribution({
                         name: nameTest1,
@@ -119,7 +122,8 @@ test('success and open', async () => {
                         description: descriptionTest1,
                         step: ContributionStep.ValuesAssigned,
                         hasHeader: true,
-                        author: authorTest1
+                        author: authorTest1,
+                        emptyValues: 'null,none'
                     })
                 ])
             }),
