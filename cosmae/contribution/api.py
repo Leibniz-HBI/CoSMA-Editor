@@ -1,4 +1,5 @@
 "API methods for handling contributions."
+
 import os
 from uuid import uuid4
 
@@ -19,8 +20,13 @@ from cosmae.contribution.models_conversion import contribution_db_to_api
 from cosmae.contribution.models_django import (
     ContributionCandidate as ContributionCandidateDb,
 )
+from cosmae.contribution.preview.api import router as preview_router
 from cosmae.contribution.tag_definition.api import router as tag_router
-from cosmae.exception import ApiError, NotAuthenticatedException, ResourceLockedException
+from cosmae.exception import (
+    ApiError,
+    NotAuthenticatedException,
+    ResourceLockedException,
+)
 from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user, cosmae_auth
@@ -29,6 +35,9 @@ router = Router()
 router.add_router("/{id_contribution_persistent}/tags", tag_router, auth=cosmae_auth)
 router.add_router(
     "/{id_contribution_persistent}/entities", entity_router, auth=cosmae_auth
+)
+router.add_router(
+    "/{id_contribution_persistent}/preview", preview_router, auth=cosmae_auth
 )
 
 ALLOWED_CONTENT_TYPES = [

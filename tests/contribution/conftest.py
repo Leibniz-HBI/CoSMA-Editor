@@ -78,6 +78,28 @@ def contribution_tag_def(contribution_user):
 
 
 @pytest.fixture
+def contribution_tag_def_assigned(contribution_user, tag_def):
+    return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
+        name=c.name_definition_test0,
+        id_persistent=c.id_persistent_tag_def_test0,
+        contribution_candidate=contribution_user,
+        index_in_file=9000,
+        id_existing_persistent=tag_def.id_persistent,
+    )
+
+
+@pytest.fixture
+def contribution_tag_def_assigned_display_txt(contribution_user, tag_def):
+    return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
+        name=c.name_definition_test0,
+        id_persistent=c.id_persistent_tag_def_test0,
+        contribution_candidate=contribution_user,
+        index_in_file=9000,
+        id_existing_persistent="display_txt",
+    )
+
+
+@pytest.fixture
 def contribution_tag_def_1(contribution_user):
     return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test1,
