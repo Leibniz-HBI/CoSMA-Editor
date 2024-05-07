@@ -123,6 +123,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
                 ]
             }
         ],
+        [200, { contribution_values: [], destination_values: [] }],
         [200, { tag_definitions: [] }]
     ])
 }
@@ -139,6 +140,7 @@ test('create, select and assign tag definition', async () => {
         type: 'STRING'
     }
     addResponseSequence(fetchMock, [
+        [200, { contribution_values: [], destination_values: [] }],
         [
             200,
             {
@@ -173,7 +175,7 @@ test('create, select and assign tag definition', async () => {
             store.getState().contributionColumnDefinition.selectedColumnDefinition.value
                 ?.idPersistent
         ).toEqual(contributionColumnActiveRsp1.id_persistent)
-        expect(fetchMock.mock.calls.length).toEqual(2)
+        expect(fetchMock.mock.calls.length).toEqual(4)
     })
     const createMenuButton = screen.getByRole('button', { name: /Create new tag/i })
     await user.click(createMenuButton)
@@ -194,7 +196,7 @@ test('create, select and assign tag definition', async () => {
     await user.click(createButton)
     const closeButton = screen.getByRole('button', { name: /close/i })
     await user.click(closeButton)
-    expect(fetchMock.mock.calls.length).toEqual(5)
+    expect(fetchMock.mock.calls.length).toEqual(7)
     const tagDefLabel = await screen.findByText(nameTagDef0)
     const tagDefEntry =
         tagDefLabel.parentElement?.parentElement?.parentElement?.parentElement

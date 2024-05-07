@@ -3,7 +3,8 @@ import {
     ColumnDefinitionContribution,
     ColumnDefinitionsContributionState,
     ColumnsTuple,
-    newColumnDefinitionsContributionState
+    newColumnDefinitionsContributionState,
+    ValuePreview
 } from './state'
 import { newRemote, Remote } from '../../util/state'
 import { findIndexInSorted } from '../../util/sorted'
@@ -127,6 +128,18 @@ export const contributionColumnDefinitionSlice = createSlice({
             state.createTabSelected = false
             state.finalizeColumnAssignment = newRemote(false)
             state.selectedColumnDefinition = newRemote(undefined)
+        },
+        loadPreviewStart(state: ColumnDefinitionsContributionState) {
+            state.preview.isLoading = true
+        },
+        loadPreviewSuccess(
+            state: ColumnDefinitionsContributionState,
+            action: PayloadAction<ValuePreview | undefined>
+        ) {
+            state.preview = newRemote(action.payload)
+        },
+        loadPreviewError(state: ColumnDefinitionsContributionState) {
+            state.preview = newRemote(undefined)
         }
     }
 })
@@ -143,7 +156,10 @@ export const {
     patchColumnDefinitionContributionSuccess,
     patchColumnDefinitionContributionError,
     setColumnDefinitionFormTab,
-    resetColumnDefinitionContribution
+    resetColumnDefinitionContribution,
+    loadPreviewStart,
+    loadPreviewSuccess,
+    loadPreviewError
 } = contributionColumnDefinitionSlice.actions
 
 export default contributionColumnDefinitionSlice.reducer

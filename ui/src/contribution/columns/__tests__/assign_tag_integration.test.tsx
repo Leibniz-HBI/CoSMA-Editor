@@ -122,6 +122,7 @@ test('assign existing', async () => {
                 ]
             }
         ],
+        [200, { contribution_values: [], destination_values: [] }],
         [
             200,
             {
@@ -137,11 +138,13 @@ test('assign existing', async () => {
                 ]
             }
         ],
+        [200, { contribution_values: [], destination_values: [] }],
         [200, { tag_definitions: [] }],
         [
             200,
             { ...contributionColumnActiveRsp1, id_existing_persistent: 'display_txt' }
-        ]
+        ],
+        [200, { contributed_values: [], destination_values: [] }]
     ])
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let title2: HTMLElement | undefined
@@ -172,6 +175,10 @@ test('assign existing', async () => {
             { credentials: 'include' }
         ],
         [
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-0`,
+            { credentials: 'include' }
+        ],
+        [
             'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
             {
                 body: '{}',
@@ -179,6 +186,10 @@ test('assign existing', async () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             }
+        ],
+        [
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-2`,
+            { credentials: 'include' }
         ],
         [
             'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',

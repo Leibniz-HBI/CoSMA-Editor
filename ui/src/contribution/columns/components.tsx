@@ -2,7 +2,11 @@ import { Button, Col, Form, FormCheck, ListGroup, Modal, Row } from 'react-boots
 import { ColumnDefinitionContribution } from './state'
 import { ChangeEvent, useEffect } from 'react'
 import { ColumnSelector, EditModal } from '../../column_menu/components/selection'
-import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
+import {
+    RemoteTriggerButton,
+    CosmaeLoading,
+    CosmaeCard
+} from '../../util/components/misc'
 import { TagDefinition } from '../../column_menu/state'
 import {
     TagCreateForm,
@@ -12,6 +16,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
     finalizeColumnAssignment,
     loadColumnDefinitionsContribution,
+    loadPreview,
     patchColumnDefinitionContribution
 } from './thunks'
 import { AppDispatch } from '../../store'
@@ -20,6 +25,7 @@ import {
     selectColumnDefinitionsContributionTriple,
     selectCreateTabSelected,
     selectFinalizeColumnAssignment,
+    selectPreview,
     selectSelectedColumnDefinition
 } from './selectors'
 import { selectTagSelectionLoading } from '../../column_menu/selectors'
@@ -28,7 +34,7 @@ import { RemoteInterface } from '../../util/state'
 import { selectContribution } from '../selectors'
 import { useNavigate } from 'react-router-dom'
 import { loadContributionDetails } from '../thunks'
-import { useAppSelector } from '../../hooks'
+import { useAppDispatch, useAppSelector } from '../../hooks'
 
 export function ColumnDefinitionStep() {
     const dispatch: AppDispatch = useDispatch()
@@ -220,7 +226,12 @@ export function ContributionColumnAssignmentForm({
                     </Button>
                 </Row>
             </div>
-            <Col xs="6">Preview not implemented yet</Col>
+            <Col xs="6">
+                <PreviewConnector
+                    idContributionPersistent={idContributionPersistent}
+                    idColumnPersistent={columnDefinition.idPersistent}
+                />
+            </Col>
             <Modal
                 show={createTabSelected}
                 onHide={() => dispatch(setColumnDefinitionFormTab(false))}
@@ -366,5 +377,59 @@ function CompleteColumnAssignmentButtonInner({
                 onClick={onClick}
             />
         </div>
+    )
+}
+
+export function PreviewConnector({
+    idContributionPersistent,
+    idColumnPersistent
+}: {
+    idContributionPersistent: string
+    idColumnPersistent: string
+}) {
+    const dispatch = useAppDispatch()
+    useEffect(
+        () => {
+            if (idColumnPersistent !== undefined) {
+                dispatch(loadPreview(idContributionPersistent, idColumnPersistent))
+            }
+        },
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+        [idColumnPersistent, idContributionPersistent]
+    )
+    return <PreviewComponent />
+}
+
+export function PreviewComponent() {
+    const preview = useAppSelector(selectPreview)
+    if (preview.isLoading) {
+        return <CosmaeLoading />
+    }
+    if (preview.value === undefined) {
+        return <div />
+    }
+    return (
+        <Row>
+            <Col xs={6}>
+                <CosmaeCard header="Values Contributed by You">
+                    <PreviewColumn values={preview.value.contributedValues} />
+                </CosmaeCard>
+            </Col>
+            <Col xs={6}>
+                <CosmaeCard header="Values of Existing Tag">
+                    <PreviewColumn values={preview.value.destinationValues} />
+                </CosmaeCard>
+            </Col>
+        </Row>
+    )
+}
+
+export function PreviewColumn({ values }: { values: string[] }) {
+    return (
+        <ul>
+            {values.map((val) => (
+                <li>{val}</li>
+            ))}
+        </ul>
     )
 }

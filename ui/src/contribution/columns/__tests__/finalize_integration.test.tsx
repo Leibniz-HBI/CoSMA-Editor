@@ -133,6 +133,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
                 ]
             }
         ],
+        [200, { contribution_values: [], destination_values: [] }],
         [
             200,
             {
@@ -172,7 +173,7 @@ test('finish success', async () => {
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(2)
+        expect(fetchMock.mock.calls.length).toEqual(3)
         button = screen.getByRole('button', { name: /finalize column assignment/i })
     })
     button?.click()
@@ -211,7 +212,7 @@ test('finish error', async () => {
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(3)
+        expect(fetchMock.mock.calls.length).toEqual(4)
         button = screen.getByRole('button', { name: /finalize column assignment/i })
     })
     button?.click()

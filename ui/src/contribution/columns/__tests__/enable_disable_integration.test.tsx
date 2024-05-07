@@ -202,6 +202,10 @@ describe('beginning', () => {
                 { credentials: 'include' }
             ],
             [
+                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-0`,
+                { credentials: 'include' }
+            ],
+            [
                 'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
                 {
                     body: '{}',
@@ -244,6 +248,7 @@ describe('middle', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [
             [200, { ...contributionColumnActiveRsp2, discard: true }],
+            [200, { contribution_values: [], destination_values: [] }],
             [200, contributionColumnActiveRsp2]
         ])
         const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
@@ -314,6 +319,7 @@ describe('end', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [
             [200, { ...contributionColumnActiveRsp4, discard: true }],
+            [200, { contribution_values: [], destination_values: [] }],
             [200, contributionColumnActiveRsp4]
         ])
         const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
@@ -392,6 +398,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
                 ]
             }
         ],
+        [200, { contribution_values: [], destination_values: [] }],
         [
             200,
             {

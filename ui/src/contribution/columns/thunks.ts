@@ -1,6 +1,10 @@
 import { config } from '../../config'
-import { ColumnDefinitionContribution, newColumnDefinitionContribution } from './state'
-import { exceptionMessage } from '../../util/exception'
+import {
+    ColumnDefinitionContribution,
+    newColumnDefinitionContribution,
+    newValuePreview
+} from './state'
+import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
 import { ThunkWithFetch } from '../../util/type'
 import {
     finalizeColumnAssignmentError,
@@ -9,6 +13,9 @@ import {
     loadColumnDefinitionsContributionError,
     loadColumnDefinitionsContributionStart,
     loadColumnDefinitionsContributionSuccess,
+    loadPreviewError,
+    loadPreviewStart,
+    loadPreviewSuccess,
     patchColumnDefinitionContributionError,
     patchColumnDefinitionContributionStart,
     patchColumnDefinitionContributionSuccess
@@ -141,6 +148,41 @@ export function finalizeColumnAssignment(
         }
         return false
     }
+}
+
+export function loadPreview(
+    idContributionCandidatePersistent: string,
+    idColumnPersistent: string
+): ThunkWithFetch<void> {
+    return async (dispatch, getState, fetch) => {
+        dispatch(loadPreviewStart())
+        try {
+            const rsp = await fetch(
+                config.api_path +
+                    `/contributions/${idContributionCandidatePersistent}/preview/${idColumnPersistent}`,
+                { credentials: 'include' }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                dispatch(loadPreviewSuccess(parsePreviewFromApi(json)))
+            } else {
+                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(loadPreviewError())
+            }
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+            dispatch(loadPreviewError())
+        }
+    }
+}
+
+function parsePreviewFromApi(
+    previewJson: any //eslint-disable-line @typescript-eslint/no-explicit-any
+) {
+    return newValuePreview(
+        previewJson['contribution_values'],
+        previewJson['destination_values']
+    )
 }
 
 export function parseTagDefinitionContribution(

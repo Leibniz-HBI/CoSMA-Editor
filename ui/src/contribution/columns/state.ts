@@ -38,6 +38,21 @@ export function newColumnDefinitionContribution({
     }
 }
 
+export interface ValuePreview {
+    contributedValues: string[]
+    destinationValues: string[]
+}
+
+export function newValuePreview(
+    contributedValues: string[],
+    destinationValues: string[] = []
+) {
+    return {
+        contributedValues,
+        destinationValues
+    }
+}
+
 export type ColumnsTuple = {
     activeDefinitionsList: ColumnDefinitionContribution[]
     discardedDefinitionsList: ColumnDefinitionContribution[]
@@ -48,23 +63,27 @@ export interface ColumnDefinitionsContributionState {
     selectedColumnDefinition: RemoteInterface<ColumnDefinitionContribution | undefined>
     createTabSelected: boolean
     finalizeColumnAssignment: RemoteInterface<boolean>
+    preview: RemoteInterface<ValuePreview | undefined>
 }
 export function newColumnDefinitionsContributionState({
     columns = newRemote(undefined),
     selectedColumnDefinition = newRemote(undefined),
     createTabSelected = false,
-    finalizeColumnAssignment = newRemote(false)
+    finalizeColumnAssignment = newRemote(false),
+    preview = newRemote(undefined)
 }: {
     columns?: RemoteInterface<ColumnsTuple | undefined>
     selectedColumnDefinition?: RemoteInterface<ColumnDefinitionContribution | undefined>
     createTabSelected?: boolean
     existingColumnSelectionEntries?: RemoteInterface<TagSelectionEntry[]>
     finalizeColumnAssignment?: RemoteInterface<boolean>
+    preview?: RemoteInterface<ValuePreview | undefined>
 }): ColumnDefinitionsContributionState {
     return {
         columns: columns,
         selectedColumnDefinition: selectedColumnDefinition,
         createTabSelected: createTabSelected,
-        finalizeColumnAssignment: finalizeColumnAssignment
+        finalizeColumnAssignment: finalizeColumnAssignment,
+        preview: preview
     }
 }

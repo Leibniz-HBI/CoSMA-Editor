@@ -24,3 +24,8 @@ export const selectFinalizeColumnAssignment = createSelector(
     selectColumnDefinitionsContribution,
     (state) => state.finalizeColumnAssignment
 )
+
+export const selectPreview = createSelector(
+    selectColumnDefinitionsContribution,
+    (state) => state.preview
+)
