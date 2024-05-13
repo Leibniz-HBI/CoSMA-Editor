@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from typing import List, Optional, Set, Tuple
+from typing import List, Set, Tuple
 from uuid import uuid4
 
 from django.db import transaction
@@ -30,11 +30,11 @@ def mk_display_txt_extractor(idx):
     return lambda row_tpl: row_tpl[idx]
 
 
-def is_value_empty(value: Optional[str], empty_strings: Set[str]):
+def is_value_empty(value: str, empty_strings: Set[str]):
     "check whether a value is empty"
     return (
-        value is None
-        or len(value) == 0
+        len(value) == 0
+        or value == "None"
         or value.isspace()
         or value.lower() in empty_strings
     )
@@ -47,13 +47,13 @@ def is_row_empty(
     empty_strings: Set[str],
 ):
     "Check if the entries of a row are empty for a given column assignment."
-    if not is_value_empty(display_txt, empty_strings):
+    if not (display_txt is None or is_value_empty(display_txt, empty_strings)):
         return False
     for idx, _ in column_assignment:
         val = row_tpl[idx]
         if val is None:
             continue
-        if is_value_empty(val, empty_strings):
+        if is_value_empty(str(val), empty_strings):
             continue
         return False
     return True
