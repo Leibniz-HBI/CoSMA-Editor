@@ -1,6 +1,5 @@
 import { describe, expect, test } from '@jest/globals'
-import { TagType } from '../../column_menu/state'
-import { newNotification } from '../../util/notification/slice'
+import { TagType, newTagDefinition } from '../../column_menu/state'
 import {
     SetEntityLoadingAction,
     SetEntitiesAction,
@@ -18,7 +17,8 @@ import {
     SubmitValuesEndAction,
     EntityChangeOrCreateSuccessAction,
     EntityChangeOrCreateErrorAction,
-    ShowEntityAddDialogAction
+    ShowEntityAddDialogAction,
+    RemoveColumnByIdPersistentAction
 } from '../actions'
 import { tableReducer } from '../reducer'
 import { ColumnState, TableState, newEntity } from '../state'
@@ -28,22 +28,22 @@ describe('reducer tests', () => {
     const columnIdTest = 'column_id_test'
     const columnNameTest1 = 'test column 1'
     const columnIdTest1 = 'column_id_test_1'
-    const tagDefTest = {
+    const tagDefTest = newTagDefinition({
         namePath: [columnNameTest],
         idPersistent: columnIdTest,
         columnType: TagType.String,
         curated: true,
         hidden: false,
         version: 0
-    }
-    const tagDefTest1 = {
+    })
+    const tagDefTest1 = newTagDefinition({
         namePath: [columnNameTest1],
         idPersistent: columnIdTest1,
         columnType: TagType.Inner,
         curated: false,
         hidden: false,
         version: 0
-    }
+    })
     const columnsTest = [
         new ColumnState({
             tagDefinition: tagDefTest1
@@ -366,6 +366,42 @@ describe('reducer tests', () => {
             const endState = tableReducer(
                 initialState,
                 new RemoveSelectedColumnAction()
+            )
+            expect(endState).toEqual(expectedState)
+        })
+    })
+    describe('remove column by idPersistent', () => {
+        test('present column', () => {
+            const idPersistent = columnsTest[0].tagDefinition.idPersistent
+            const initialState = new TableState({
+                columnStates: columnsTest,
+                columnIndices: new Map([
+                    [columnIdTest1, 0],
+                    [columnIdTest, 1]
+                ])
+            })
+            const expectedState = new TableState({
+                columnStates: [columnsTest[1]],
+                columnIndices: new Map([[columnIdTest, 0]])
+            })
+            const endState = tableReducer(
+                initialState,
+                new RemoveColumnByIdPersistentAction(idPersistent)
+            )
+            expect(endState).toEqual(expectedState)
+        })
+        test('missing column', () => {
+            const initialState = new TableState({
+                columnStates: [columnsTest[1]],
+                columnIndices: new Map([[columnIdTest, 0]])
+            })
+            const expectedState = new TableState({
+                columnStates: [columnsTest[1]],
+                columnIndices: new Map([[columnIdTest, 0]])
+            })
+            const endState = tableReducer(
+                initialState,
+                new RemoveColumnByIdPersistentAction(tagDefTest1.idPersistent)
             )
             expect(endState).toEqual(expectedState)
         })

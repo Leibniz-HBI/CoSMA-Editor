@@ -188,7 +188,6 @@ function initialResponses(fetchMock: jest.Mock) {
         [200, { matches: mkMatches(personList.slice(50)) }]
     ])
 }
-
 test('add tag values.', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
@@ -324,6 +323,32 @@ test('add tag values.', async () => {
                     })
                 ])
             )
+        }
+    })
+})
+test('remove values', async () => {
+    const fetchMock = jest.fn()
+    initialResponses(fetchMock)
+    addValueResponses(fetchMock, idTagDef0, '1')
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    await waitFor(() => {
+        expect(fetchMock.mock.calls.length).toEqual(7)
+    })
+    await addTagDefinitionByName(nameTagDef0)
+    await waitFor(() => {
+        const state = store.getState()
+        expect(state.contributionEntity.tagDefinitions.length).toEqual(1)
+    })
+    await addTagDefinitionByName(nameTagDef0)
+    await waitFor(() => {
+        const state = store.getState()
+        expect(state.contributionEntity.tagDefinitions.length).toEqual(0)
+        expect(state.contributionEntity.tagDefinitionMap).toEqual({})
+        for (const entity of state.contributionEntity.entities.value) {
+            expect(entity.cellContents.length).toEqual(0)
+            for (const match of entity.similarEntities.value) {
+                expect(match.cellContents.length).toEqual(0)
+            }
         }
     })
 })

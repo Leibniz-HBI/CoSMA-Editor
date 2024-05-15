@@ -190,7 +190,11 @@ describe('get hierarchy', () => {
         const fetchMock = jest.fn()
         initialResponseSequence(fetchMock)
         renderWithProviders(
-            <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+            <ColumnMenu
+                columnIndices={new Map()}
+                loadColumnDataCallback={jest.fn()}
+                hideColumnDataCallback={jest.fn()}
+            />,
             fetchMock
         )
         await waitInitialDataLoad()
@@ -240,7 +244,11 @@ describe('get hierarchy', () => {
         const errorMsg = 'Error while loading hierarchy'
         addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
         const { store } = renderWithProviders(
-            <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+            <ColumnMenu
+                columnIndices={new Map()}
+                loadColumnDataCallback={jest.fn()}
+                hideColumnDataCallback={jest.fn()}
+            />,
             fetchMock
         )
         await waitFor(() => {
@@ -289,7 +297,11 @@ describe('create tag definition', () => {
         addResponseSequence(fetchMock, [[200, { tag_definitions: [tagDefinitionRsp] }]])
         initialResponseSequence(fetchMock)
         renderWithProviders(
-            <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+            <ColumnMenu
+                columnIndices={new Map()}
+                loadColumnDataCallback={jest.fn()}
+                hideColumnDataCallback={jest.fn()}
+            />,
             fetchMock
         )
         const user = userEvent.setup()
@@ -320,7 +332,11 @@ describe('create tag definition', () => {
         addResponseSequence(fetchMock, [[200, { tag_definitions: [tagDefinitionRsp] }]])
         initialResponseSequence(fetchMock)
         renderWithProviders(
-            <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+            <ColumnMenu
+                columnIndices={new Map()}
+                loadColumnDataCallback={jest.fn()}
+                hideColumnDataCallback={jest.fn()}
+            />,
             fetchMock
         )
         const user = userEvent.setup()
@@ -361,7 +377,11 @@ describe('create tag definition', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
         const { store } = renderWithProviders(
-            <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+            <ColumnMenu
+                columnIndices={new Map()}
+                loadColumnDataCallback={jest.fn()}
+                hideColumnDataCallback={jest.fn()}
+            />,
             fetchMock
         )
         const user = userEvent.setup()
@@ -380,7 +400,11 @@ test('open edit menu', async () => {
     const fetchMock = jest.fn()
     initialResponseSequence(fetchMock)
     const { store } = renderWithProviders(
-        <ColumnMenu columnIndices={new Map()} loadColumnDataCallback={jest.fn()} />,
+        <ColumnMenu
+            columnIndices={new Map()}
+            loadColumnDataCallback={jest.fn()}
+            hideColumnDataCallback={jest.fn()}
+        />,
         fetchMock
     )
     const user = userEvent.setup()

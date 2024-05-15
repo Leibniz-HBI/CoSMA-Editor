@@ -69,6 +69,14 @@ export class HideHeaderMenuAction {}
  */
 export class RemoveSelectedColumnAction {}
 
+/** Indicate the removal of a column by idPersistent. */
+export class RemoveColumnByIdPersistentAction {
+    idPersistent: string
+    constructor(idPersistent: string) {
+        this.idPersistent = idPersistent
+    }
+}
+
 /**
  * Indicates that the width of a column has changed
  */
@@ -238,3 +246,4 @@ export type TableAction =
     | ShowEntityAddDialogAction
     | ToggleEntityModalAction
     | ToggleShowSearchAction
+    | RemoveColumnByIdPersistentAction

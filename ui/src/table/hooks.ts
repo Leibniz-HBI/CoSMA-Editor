@@ -14,6 +14,7 @@ import {
     ChangeColumnIndexAction,
     HideColumnAddMenuAction,
     HideHeaderMenuAction,
+    RemoveColumnByIdPersistentAction,
     RemoveSelectedColumnAction,
     SetColumnWidthAction,
     SetLoadDataErrorAction,
@@ -149,6 +150,7 @@ export type LocalTableCallbacks = {
     showHeaderMenuCallback: (columnIdx: number, bounds: Rectangle) => void
     hideHeaderMenuCallback: VoidFunction
     removeColumnCallback: VoidFunction
+    hideColumnCallback: (tagDefinition: TagDefinition) => void
     setColumnWidthCallback: (
         column: GridColumn,
         newSize: number,
@@ -339,6 +341,14 @@ export function useRemoteTableData(
                 dispatch(new GetColumnAsyncAction(columnDefinition)).then(() =>
                     reduxDispatch(
                         remoteUserProfileColumnAppend(columnDefinition.idPersistent)
+                    )
+                ),
+            hideColumnCallback: (tagDefinition: TagDefinition) =>
+                dispatch(
+                    new RemoveColumnByIdPersistentAction(tagDefinition.idPersistent)
+                ).then(() =>
+                    reduxDispatch(
+                        remoteUserProfileColumnDelete(tagDefinition.idPersistent)
                     )
                 ),
             showColumnAddMenuCallback: () => dispatch(new ShowColumnAddMenuAction()),

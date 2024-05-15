@@ -14,6 +14,7 @@ import { useAppSelector } from '../../hooks'
 export function ColumnMenu(props: {
     columnIndices: Map<string, number>
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
+    hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
     const isLoading = useSelector(selectTagSelectionLoading)
     const dispatch: AppDispatch = useDispatch()
@@ -30,16 +31,19 @@ export function ColumnMenu(props: {
         <ColumnMenuBody
             columnIndices={props.columnIndices}
             loadColumnDataCallback={props.loadColumnDataCallback}
+            hideColumnDataCallback={props.hideColumnDataCallback}
         />
     )
 }
 
 export function ColumnMenuBody({
     columnIndices,
-    loadColumnDataCallback
+    loadColumnDataCallback,
+    hideColumnDataCallback
 }: {
     columnIndices: Map<string, number>
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
+    hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
     const isLoading = useAppSelector(selectTagSelectionLoading)
 
@@ -54,6 +58,7 @@ export function ColumnMenuBody({
                             <ShowTabBody
                                 columnIndices={columnIndices}
                                 loadColumnDataCallback={loadColumnDataCallback}
+                                hideColumnDataCallback={hideColumnDataCallback}
                             />
                         )
                     },
@@ -113,10 +118,12 @@ export function CreateTabBody({
 
 function ShowTabBody({
     columnIndices,
-    loadColumnDataCallback
+    loadColumnDataCallback,
+    hideColumnDataCallback
 }: {
     columnIndices: Map<string, number>
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
+    hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
     return (
         <ColumnSelector
@@ -126,7 +133,10 @@ function ShowTabBody({
                 )
                 if (isDisplayedInTable) {
                     return (
-                        <span className="icon">
+                        <span
+                            className="icon"
+                            onClick={() => hideColumnDataCallback(columnDefinition)}
+                        >
                             <EyeFill height={20} />
                         </span>
                     )

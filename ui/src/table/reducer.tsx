@@ -26,7 +26,8 @@ import {
     EntityChangeOrCreateSuccessAction,
     EntityChangeOrCreateErrorAction,
     ToggleEntityModalAction,
-    ToggleShowSearchAction
+    ToggleShowSearchAction,
+    RemoveColumnByIdPersistentAction
 } from './actions'
 import { Remote } from '../util/state'
 import { TagDefinition } from '../column_menu/state'
@@ -120,32 +121,13 @@ export function tableReducer(state: TableState, action: TableAction) {
                 selectedTagDefinition: undefined
             })
         }
-        const columnIdx = state.columnIndices.get(
+
+        return removeColumnByIdPersistent(
+            state,
             state.selectedTagDefinition.idPersistent
         )
-        if (columnIdx === undefined) {
-            return new TableState({
-                ...state,
-                selectedColumnHeaderBounds: undefined,
-                selectedTagDefinition: undefined
-            })
-        }
-
-        const columnStates = [
-            ...state.columnStates.slice(undefined, columnIdx),
-            ...state.columnStates.slice(columnIdx + 1, undefined)
-        ]
-        const columnIndices = new Map<string, number>()
-        for (let idx = 0; idx < columnStates.length; ++idx) {
-            columnIndices.set(columnStates[idx].tagDefinition.idPersistent, idx)
-        }
-        return new TableState({
-            ...state,
-            columnStates: columnStates,
-            columnIndices: columnIndices,
-            selectedColumnHeaderBounds: undefined,
-            selectedTagDefinition: undefined
-        })
+    } else if (action instanceof RemoveColumnByIdPersistentAction) {
+        return removeColumnByIdPersistent(state, action.idPersistent)
     } else if (action instanceof SetColumnWidthAction) {
         return new TableState({
             ...state,
@@ -348,6 +330,32 @@ export function tableReducer(state: TableState, action: TableAction) {
         return new TableState({ ...state, showEntityMergingModal: action.show })
     }
     return state
+}
+
+function removeColumnByIdPersistent(state: TableState, idPersistent: string) {
+    const columnIdx = state.columnIndices.get(idPersistent)
+    if (columnIdx === undefined) {
+        return new TableState({
+            ...state,
+            selectedColumnHeaderBounds: undefined,
+            selectedTagDefinition: undefined
+        })
+    }
+    const columnStates = [
+        ...state.columnStates.slice(undefined, columnIdx),
+        ...state.columnStates.slice(columnIdx + 1, undefined)
+    ]
+    const columnIndices = new Map<string, number>()
+    for (let idx = 0; idx < columnStates.length; ++idx) {
+        columnIndices.set(columnStates[idx].tagDefinition.idPersistent, idx)
+    }
+    return new TableState({
+        ...state,
+        columnStates: columnStates,
+        columnIndices: columnIndices,
+        selectedColumnHeaderBounds: undefined,
+        selectedTagDefinition: undefined
+    })
 }
 
 function appendDisplayTextToColumnState(

@@ -137,6 +137,9 @@ export function RemoteDataTable(props: {
                                     loadColumnDataCallback={
                                         localCallbacks.addColumnCallback
                                     }
+                                    hideColumnDataCallback={
+                                        localCallbacks.hideColumnCallback
+                                    }
                                 />
                             </Modal.Body>
                         </Modal>

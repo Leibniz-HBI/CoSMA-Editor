@@ -33,6 +33,7 @@ import {
 import { AppDispatch } from '../../store'
 import {
     incrementSelectedEntityIdx,
+    removeAdditionalTagByIdPersistent,
     setColumnWidth,
     setSelectedEntityIdx,
     toggleTagDefinitionMenu
@@ -221,6 +222,9 @@ function AddTagDefinitionsModal({
             </Modal.Header>
             <Modal.Body className="vh-85 bg-secondary">
                 <ColumnMenuBody
+                    hideColumnDataCallback={(tagDef) => {
+                        dispatch(removeAdditionalTagByIdPersistent(tagDef.idPersistent))
+                    }}
                     loadColumnDataCallback={(tagDef) => {
                         const chunkSize = 50
                         for (

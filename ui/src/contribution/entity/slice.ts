@@ -212,6 +212,25 @@ export const contributionEntitySlice = createSlice({
                 strategy
             )
         },
+        removeAdditionalTagByIdPersistent(
+            state: ContributionEntityState,
+            action: PayloadAction<string>
+        ) {
+            const tagIdx = state.tagDefinitionMap[action.payload]
+            if (tagIdx === undefined) {
+                return
+            }
+            state.tagDefinitions.splice(tagIdx, 1)
+            state.tagDefinitionMap = Object.fromEntries(
+                state.tagDefinitions.map((tagDef, idx) => [tagDef.idPersistent, idx])
+            )
+            for (const entity of state.entities.value) {
+                entity.cellContents.splice(tagIdx, 1)
+                for (const match of entity.similarEntities.value) {
+                    match.cellContents.splice(tagIdx, 1)
+                }
+            }
+        },
         toggleTagDefinitionMenu(state: ContributionEntityState) {
             state.showTagDefinitionMenu = !state.showTagDefinitionMenu
         },
@@ -454,6 +473,7 @@ export const {
     getContributionTagInstancesError,
     getContributionTagInstancesStart,
     getContributionTagInstancesSuccess,
+    removeAdditionalTagByIdPersistent,
     getDuplicatesError,
     getDuplicatesStart,
     getDuplicatesSuccess,
