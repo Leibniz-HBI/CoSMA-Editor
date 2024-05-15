@@ -9,12 +9,13 @@ import {
     refreshSuccess,
     registrationError,
     registrationStart,
+    registrationSuccess,
     userSearchClear,
     userSearchError,
     userSearchStart,
     userSearchSuccess
 } from './slice'
-import { addError } from '../util/notification/slice'
+import { addError, addSuccessVanish } from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
@@ -126,8 +127,8 @@ export function registration({
                 })
             })
             if (rsp.status == 200) {
-                const json = await rsp.json()
-                dispatch(loginSuccess(parseUserInfoFromJson(json)))
+                dispatch(registrationSuccess())
+                dispatch(addSuccessVanish('Registration Successful'))
             } else {
                 const json = await rsp.json()
                 let msg = ''

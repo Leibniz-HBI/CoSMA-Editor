@@ -45,6 +45,10 @@ export const userSlice = createSlice({
         registrationError: (state: UserState) => {
             state.isRegistering = false
         },
+        registrationSuccess(stater: UserState) {
+            stater.isRegistering = false
+            stater.showRegistration = false
+        },
         toggleRegistration: (state: UserState) => {
             state.showRegistration = !state.showRegistration
         },
@@ -95,6 +99,7 @@ export const {
     refreshDenied,
     refreshSuccess,
     registrationStart,
+    registrationSuccess,
     registrationError,
     toggleRegistration,
     logout,

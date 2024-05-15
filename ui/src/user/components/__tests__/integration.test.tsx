@@ -12,6 +12,7 @@ import userEvent from '@testing-library/user-event'
 import { newRemote } from '../../../util/state'
 import {
     NotificationManager,
+    NotificationType,
     notificationReducer
 } from '../../../util/notification/slice'
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -218,9 +219,22 @@ describe('registration', () => {
         )
         await performRegistration(container)
         await waitFor(async () => {
-            screen.getByText('You are logged in')
+            const state = store.getState()
+            expect(state.user).toEqual(newUserState({}))
+            expect(state.notification).toEqual({
+                notificationList: [
+                    {
+                        msg: 'Registration Successful',
+                        type: NotificationType.Success,
+                        id: expect.anything()
+                    }
+                ],
+                notificationMap: expect.anything()
+            })
         })
-        expect(store.getState().user).toEqual({ ...userInfoUi, showRegistration: true })
+        await waitFor(() => {
+            expect(store.getState().notification.notificationList.length).toEqual(1)
+        })
     })
     test('error', async () => {
         const fetchMock = jest.fn()
