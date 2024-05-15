@@ -211,18 +211,24 @@ function mkMatches(
         ])
     )
 }
-function initialResponses(fetchMock: jest.Mock) {
+function initialResponses(
+    fetchMock: jest.Mock,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    personList: any,
+    numIncludedMatches: number
+) {
     addResponseSequence(fetchMock, [
         [200, { persons: personList }],
         [200, { persons: [] }],
         [200, { tag_definitions: [] }],
-        [200, { matches: mkMatches(personList.slice(0, 50)) }]
+        [200, { matches: mkMatches(personList.slice(0, numIncludedMatches)) }]
     ])
 }
 
 test('assign duplicate', async () => {
     const fetchMock = jest.fn()
-    initialResponses(fetchMock), addResponseSequence(fetchMock, [[200, {}]])
+    initialResponses(fetchMock, personList, 50)
+    addResponseSequence(fetchMock, [[200, {}]])
     addResponseSequence(fetchMock, [
         [200, { value_responses: [] }],
         [
@@ -329,4 +335,34 @@ test('assign duplicate', async () => {
             method: 'PUT'
         }
     ])
+})
+test('last match', async () => {
+    const fetchMock = jest.fn()
+    initialResponses(fetchMock, personList.slice(0, 1), 1)
+    addResponseSequence(fetchMock, [
+        [200, {}],
+        [200, { value_responses: [] }],
+        [
+            200,
+            {
+                assigned_duplicate: null
+            }
+        ]
+    ])
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    await waitFor(() => {
+        expect(fetchMock.mock.calls.length).toEqual(4)
+    })
+    screen.getByText(/Please select an entity/i)
+    await waitFor(() => {
+        screen.getByText('entity-0')?.click()
+    })
+    await waitFor(() => {
+        const button = screen.getByRole('button', { name: /Create New Entity/i })
+        button.click()
+    })
+    await waitFor(() => {
+        expect(store.getState().contributionEntity.hitLastMatch).toBeTruthy()
+        screen.getByText('You processed the last entity')
+    })
 })

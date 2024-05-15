@@ -79,6 +79,11 @@ export const selectSelectedEntity = createSelector(
     }
 )
 
+export const selectLastMatchHit = createSelector(
+    selectContributionEntity,
+    (state) => state.hitLastMatch
+)
+
 export const selectTagRowDefs = createSelector(
     selectTagDefinitions,
     ([tagDefList, _tagDefMap]) =>

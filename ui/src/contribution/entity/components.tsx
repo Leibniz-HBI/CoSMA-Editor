@@ -1,6 +1,6 @@
 import { constructColumnTitle, mkCellContentCallback } from './hooks'
 import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
-import { Button, Col, ListGroup, Modal, Row } from 'react-bootstrap'
+import { Button, Col, ListGroup, Modal, ModalBody, Row } from 'react-bootstrap'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { EntityWithDuplicates } from './state'
 import { ColumnMenuBody } from '../../column_menu/components/menu'
@@ -21,7 +21,8 @@ import {
     selectShowTagDefinitionsMenu,
     selectTagDefinitions,
     selectMatchTagDefinitionList,
-    selectTagRowDefs
+    selectTagRowDefs,
+    selectLastMatchHit
 } from './selectors'
 import {
     completeEntityAssignment,
@@ -32,6 +33,7 @@ import {
 } from './thunks'
 import { AppDispatch } from '../../store'
 import {
+    clearHitLastMatch,
     incrementSelectedEntityIdx,
     removeAdditionalTagByIdPersistent,
     setColumnWidth,
@@ -44,6 +46,7 @@ import { IBounds, useLayer } from 'react-laag'
 import { TagDefinition } from '../../column_menu/state'
 import { useNavigate } from 'react-router-dom'
 import { loadContributionDetails } from '../thunks'
+import { useAppDispatch, useAppSelector } from '../../hooks'
 
 export function EntitiesStep() {
     const contributionCandidate = useSelector(selectContribution)
@@ -99,39 +102,42 @@ export function EntitiesStepBody({
         return <CosmaeLoading />
     }
     return (
-        <Row className="h-100 overflow-hidden">
-            <Col xs={3} className="h-100 overflow-hidden d-flex flex-column">
-                <Row className="h-100 overflow-y-scroll">
-                    <EntityConflictList entityConflicts={entities.value} />
-                </Row>
-                <Row className="mt-2 justify-content-center">
-                    <CompleteAssignmentButton
-                        idContributionPersistent={idContributionPersistent}
-                    />
-                </Row>
-            </Col>
-            <Col className="h-100 overflow-hidden d-flex flex-column">
-                <Row>
-                    <Col key="entities-step-hint" className="ms-0">
-                        Please check for duplicate entities. Select the first Row to
-                        indicate that there is no duplicate.
-                    </Col>
-                    <Col sm="auto" key="entities-step-add-tag-button">
-                        <Button onClick={() => dispatch(toggleTagDefinitionMenu())}>
-                            Show Additional Tag Values
-                        </Button>
-                    </Col>
-                </Row>
-                <Row className="h-100 w-100 ms-2 mt-3">
-                    <div id="portal">
-                        <EntityConflictBody
-                            putDuplicateCallback={putDuplicateCallback}
+        <>
+            <Row className="h-100 overflow-hidden">
+                <Col xs={3} className="h-100 overflow-hidden d-flex flex-column">
+                    <Row className="h-100 overflow-y-scroll">
+                        <EntityConflictList entityConflicts={entities.value} />
+                    </Row>
+                    <Row className="mt-2 justify-content-center">
+                        <CompleteAssignmentButton
                             idContributionPersistent={idContributionPersistent}
                         />
-                    </div>
-                </Row>
-            </Col>
-        </Row>
+                    </Row>
+                </Col>
+                <Col className="h-100 overflow-hidden d-flex flex-column">
+                    <Row>
+                        <Col key="entities-step-hint" className="ms-0">
+                            Please check for duplicate entities. Select the first Row to
+                            indicate that there is no duplicate.
+                        </Col>
+                        <Col sm="auto" key="entities-step-add-tag-button">
+                            <Button onClick={() => dispatch(toggleTagDefinitionMenu())}>
+                                Show Additional Tag Values
+                            </Button>
+                        </Col>
+                    </Row>
+                    <Row className="h-100 w-100 ms-2 mt-3">
+                        <div id="portal">
+                            <EntityConflictBody
+                                putDuplicateCallback={putDuplicateCallback}
+                                idContributionPersistent={idContributionPersistent}
+                            />
+                        </div>
+                    </Row>
+                </Col>
+            </Row>
+            <LastMatchModal idContributionPersistent={idContributionPersistent} />
+        </>
     )
 }
 
@@ -269,6 +275,40 @@ function AddTagDefinitionsModal({
         </Modal>
     )
 }
+
+function LastMatchModal({
+    idContributionPersistent
+}: {
+    idContributionPersistent: string
+}) {
+    const lastMatchHit = useAppSelector(selectLastMatchHit)
+    const dispatch = useAppDispatch()
+    return (
+        <Modal show={lastMatchHit}>
+            <ModalBody>
+                <Row className="justify-content-center mb-5 mt-3">
+                    <Col xs="auto">You processed the last entity</Col>
+                </Row>
+                <Row className="justify-content-end">
+                    <Col xs="auto">
+                        <Button
+                            variant="outline-primary"
+                            onClick={() => dispatch(clearHitLastMatch())}
+                        >
+                            Review Matches
+                        </Button>
+                    </Col>
+                    <Col xs="auto">
+                        <CompleteAssignmentButton
+                            idContributionPersistent={idContributionPersistent}
+                        />
+                    </Col>
+                </Row>
+            </ModalBody>
+        </Modal>
+    )
+}
+
 function NoConflictBody() {
     const dispatch = useDispatch()
     return (

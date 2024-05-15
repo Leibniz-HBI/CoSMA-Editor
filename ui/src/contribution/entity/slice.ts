@@ -272,6 +272,7 @@ export const contributionEntitySlice = createSlice({
             const selectedIdx = action.payload
             state.selectedEntityIdx = selectedIdx
             pushMatchWidth(state, selectedIdx)
+            state.hitLastMatch = false
         },
         incrementSelectedEntityIdx(state: ContributionEntityState) {
             for (
@@ -282,9 +283,14 @@ export const contributionEntitySlice = createSlice({
                 if (state.entities.value[idx].similarEntities.value.length > 0) {
                     state.selectedEntityIdx = idx
                     pushMatchWidth(state, idx)
-                    break
+                    state.hitLastMatch = false
+                    return
                 }
             }
+            state.hitLastMatch = true
+        },
+        clearHitLastMatch(state: ContributionEntityState) {
+            state.hitLastMatch = false
         },
         setColumnWidth(
             state: ContributionEntityState,
@@ -483,5 +489,6 @@ export const {
     toggleTagDefinitionMenu,
     setSelectedEntityIdx,
     incrementSelectedEntityIdx,
+    clearHitLastMatch,
     setColumnWidth
 } = contributionEntitySlice.actions
