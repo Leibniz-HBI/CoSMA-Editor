@@ -1,5 +1,5 @@
 "API endpoints for handling user management."
-
+import logging
 from typing import Union
 from urllib.parse import unquote
 from uuid import uuid4
@@ -95,7 +95,10 @@ def register_post(
         user.save()
         return 200, user_db_to_login_response(user)
     except IntegrityError as exc:
-        if str(exc.args[0]).startswith("duplicate"):
+        error_msg = exc.args[0]
+        if str(error_msg).startswith("duplicate"):
+            field_name = error_msg[error_msg.find("(") + 1 : error_msg.find(")")]
+            logging.warning("Value for field %s already in user table.", field_name)
             return 400, ApiError(msg="Username or mail address already in use.")
         return 500, ApiError(msg="Could not create user.")
     except Exception:  # pylint: disable=broad-except
@@ -256,8 +259,7 @@ def get_user_chunk(request: HttpRequest, offset: int, count: int):
         users = CosmaeUser.chunk_query_set(offset, count)
         max_id = -1
         for user in users:
-            if user.id > max_id:
-                max_id = user.id
+            max_id = max(user.id, max_id)
         return 200, LoginResponseList(
             user_list=[user_db_to_login_response(user) for user in users],
             next_offset=max_id + 1,
