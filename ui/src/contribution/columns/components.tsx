@@ -1,6 +1,6 @@
 import { Button, Col, Form, FormCheck, ListGroup, Modal, Row } from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
-import { ChangeEvent, useEffect } from 'react'
+import { useEffect } from 'react'
 import { ColumnSelector, EditModal } from '../../column_menu/components/selection'
 import {
     RemoteTriggerButton,
@@ -258,7 +258,16 @@ export function ExistingColumnForm({
     columnDefinitionContribution: ColumnDefinitionContribution
     idContributionPersistent: string
 }) {
-    const dispatch: AppDispatch = useDispatch()
+    const dispatch = useAppDispatch()
+    function assignColumnCallback(idExistingTagDefPersistent: string) {
+        dispatch(
+            patchColumnDefinitionContribution({
+                idPersistent: columnDefinitionContribution.idPersistent,
+                idContributionPersistent,
+                idExistingPersistent: idExistingTagDefPersistent
+            })
+        )
+    }
     const tagIsLoading = useSelector(selectTagSelectionLoading)
     return (
         <div className="ps-1 pe-1 flex-column d-flex flex-grow-1 overflow-hidden">
@@ -266,27 +275,17 @@ export function ExistingColumnForm({
                 <CosmaeLoading />
             ) : (
                 <ColumnSelector
-                    mkTailElement={(columnDefinitionExisting) => (
-                        <Form.Check
-                            type="radio"
-                            name="idExisting"
-                            value={columnDefinitionExisting?.idPersistent}
-                            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                                dispatch(
-                                    patchColumnDefinitionContribution({
-                                        idPersistent:
-                                            columnDefinitionContribution.idPersistent,
-                                        idContributionPersistent,
-                                        idExistingPersistent: event.target.value
-                                    })
-                                )
-                            }
-                            checked={
-                                columnDefinitionContribution.idExistingPersistent ==
-                                columnDefinitionExisting?.idPersistent
-                            }
-                        />
-                    )}
+                    mkTailElement={(columnDefinitionExisting) => {
+                        return (
+                            <AssignmentStatusButton
+                                columnDefinitionExisting={columnDefinitionExisting}
+                                columnDefinitionContribution={
+                                    columnDefinitionContribution
+                                }
+                                assignColumnCallback={assignColumnCallback}
+                            />
+                        )
+                    }}
                     additionalEntries={[
                         {
                             idPersistent: 'id_persistent',
@@ -300,6 +299,33 @@ export function ExistingColumnForm({
                 />
             )}
         </div>
+    )
+}
+
+function AssignmentStatusButton({
+    columnDefinitionExisting,
+    columnDefinitionContribution,
+    assignColumnCallback
+}: {
+    columnDefinitionExisting: TagDefinition
+    columnDefinitionContribution: ColumnDefinitionContribution
+    assignColumnCallback: (idTagDefinitionExistingPersistent: string) => void
+}) {
+    const paddingClass = 'pt-1 pb-1 ps-2 pe-2'
+    if (
+        columnDefinitionContribution.idExistingPersistent ==
+        columnDefinitionExisting?.idPersistent
+    ) {
+        return <Button className={paddingClass}>Selected</Button>
+    }
+    return (
+        <Button
+            variant="outline-primary"
+            className="pt-1 pb-1 ps-3 pe-3"
+            onClick={() => assignColumnCallback(columnDefinitionExisting.idPersistent)}
+        >
+            <span>Select</span>
+        </Button>
     )
 }
 

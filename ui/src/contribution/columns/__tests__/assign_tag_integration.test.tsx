@@ -5,6 +5,7 @@
 import {
     RenderOptions,
     getByRole,
+    queryByRole,
     render,
     screen,
     waitFor
@@ -161,9 +162,19 @@ test('assign existing', async () => {
     const displayTxtLabel = await screen.findByText('Display Text')
     const displayTxtEntry =
         displayTxtLabel.parentElement?.parentElement?.parentElement?.parentElement
-    const radioButton = getByRole(displayTxtEntry as HTMLElement, 'radio')
+    expect(
+        queryByRole(displayTxtEntry as HTMLElement, 'button', {
+            name: /Selected/i
+        })
+    ).toBeNull()
+    const radioButton = getByRole(displayTxtEntry as HTMLElement, 'button', {
+        name: /Select/i
+    })
     radioButton.click()
     await waitFor(() => {
+        getByRole(displayTxtEntry as HTMLElement, 'button', {
+            name: /Selected/i
+        })
         expect(
             store.getState().contributionColumnDefinition.selectedColumnDefinition.value
                 ?.idExistingPersistent
