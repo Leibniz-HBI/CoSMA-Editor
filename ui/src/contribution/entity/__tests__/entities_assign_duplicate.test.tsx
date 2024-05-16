@@ -50,11 +50,11 @@ function MockTable(props: any) {
                             ).map((idxCol) => {
                                 const cell = props.getCellContent([idxCol, idxRow])
                                 if (cell.kind == 'text') {
-                                    return <Col>cell.displayData</Col>
+                                    return <Col>{cell.displayData}</Col>
                                 } else if (cell.kind == 'custom') {
                                     const replaceInfo = cell.data
                                     const buttonText = replaceInfo.isNew
-                                        ? 'Assign Duplicate'
+                                        ? 'Merge with Existing'
                                         : 'Create New Entity'
                                     const selection: GridSelection = {
                                         current: {
@@ -225,7 +225,7 @@ function initialResponses(
     ])
 }
 
-test('assign duplicate', async () => {
+test('merge with existing', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock, personList, 50)
     addResponseSequence(fetchMock, [[200, {}]])
@@ -267,21 +267,19 @@ test('assign duplicate', async () => {
     screen.getByText(/Please select an entity/i)
     screen.queryByText('entity-1')?.click()
     await waitFor(() => {
-        const buttons = screen.getAllByRole('button', { name: /Assign Duplicate/i })
+        screen.getByText('entity-1 match 0')
+        const buttons = screen.getAllByRole('button', { name: /Merge with Existing/i })
         expect(buttons.length).toEqual(2)
         buttons[0].click()
     })
-    setTimeout(
-        async () =>
-            await waitFor(() => {
-                const buttons2 = screen.getAllByRole('button', {
-                    name: /Assign Duplicate/i
-                })
-                expect(buttons2.length).toEqual(2)
-                buttons2[1].click()
-            }),
-        500
-    )
+    await waitFor(() => {
+        screen.getByText('entity-2 match 1')
+        const buttons2 = screen.getAllByRole('button', {
+            name: /Merge with Existing/i
+        })
+        expect(buttons2.length).toEqual(2)
+        buttons2[1].click()
+    })
     await waitFor(() => {
         const state = store.getState().contributionEntity
         expect(state.entities.value[1].assignedDuplicate).toEqual(
@@ -293,6 +291,9 @@ test('assign duplicate', async () => {
                 disabled: false
             })
         )
+    })
+    await waitFor(() => {
+        const state = store.getState().contributionEntity
         expect(state.entities.value[2].assignedDuplicate).toEqual(
             newRemote({
                 idPersistent: 'id-entity-2-1',
@@ -302,8 +303,8 @@ test('assign duplicate', async () => {
                 disabled: false
             })
         )
-    })
-    expect(fetchMock.mock.calls.at(-4)).toEqual([
+    }, {})
+    expect(fetchMock.mock.calls.at(-3)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-1/duplicate`,
         {
             body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-1-0' }),
@@ -311,7 +312,7 @@ test('assign duplicate', async () => {
             method: 'PUT'
         }
     ])
-    expect(fetchMock.mock.calls.at(-2)).toEqual([
+    expect(fetchMock.mock.calls.at(-1)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-2/duplicate`,
         {
             body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-2-1' }),
@@ -320,6 +321,7 @@ test('assign duplicate', async () => {
         }
     ])
     await waitFor(() => {
+        screen.getByText('entity-3 match 0')
         const button = screen.getByRole('button', { name: /Create New Entity/i })
         button.click()
     })
@@ -327,7 +329,7 @@ test('assign duplicate', async () => {
         const state = store.getState().contributionEntity
         expect(state.entities.value[3].assignedDuplicate).toEqual(newRemote(undefined))
     })
-    expect(fetchMock.mock.calls.at(-2)).toEqual([
+    expect(fetchMock.mock.calls.at(-1)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-3/duplicate`,
         {
             body: JSON.stringify({}),

@@ -96,7 +96,9 @@ export function EntitiesStepBody({
                 idEntityOriginPersistent,
                 idEntityDestinationPersistent
             })
-        ).then(() => dispatch(incrementSelectedEntityIdx()))
+        )
+            .then(() => new Promise((resolve) => setTimeout(resolve, 500)))
+            .then(() => dispatch(incrementSelectedEntityIdx()))
     }
     if (isLoading) {
         return <CosmaeLoading />

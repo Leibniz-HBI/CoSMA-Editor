@@ -99,7 +99,7 @@ To the right of the entity list you find the match view table.
 ### Rows
 * The first row contains buttons to decide whether there is an existing entity in the trustee matching the entity in the contribution or not.
   * Selecting **Create New Entity** will indicate that none of the proposed matches, match the selected entity of your contribution.
-  * By clicking on **Assign Duplicate** you indicate that the selected entity of the contribution matches the existing entity of the column.
+  * By clicking on **Merge with Existing** you indicate that the selected entity of the contribution matches the existing entity of the column.
   * Either choice will advance to the next contributed entity for which matches were found.
 * The second row shows the similarity between _display texts_ of the contributed and existing entities. It is blank for the contributed entity.
 * The third row show how many tags have an exact match for the contributed and existing entities. It is also blank for the contributed entity.

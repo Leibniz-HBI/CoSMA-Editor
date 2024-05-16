@@ -86,7 +86,7 @@ export function putDuplicateAction({
     idContributionPersistent: string
     idEntityOriginPersistent: string
     idEntityDestinationPersistent?: string
-}): ThunkWithFetch<void> {
+}): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(putDuplicateStart(idEntityOriginPersistent))
         try {
@@ -101,8 +101,8 @@ export function putDuplicateAction({
                     })
                 }
             )
+            const json = await rsp.json()
             if (rsp.status == 200) {
-                const json = await rsp.json()
                 const assignedDuplicateJson = json['assigned_duplicate']
                 let assignedDuplicate = undefined
                 if (
@@ -117,16 +117,15 @@ export function putDuplicateAction({
                         details: assignedDuplicate
                     })
                 )
-            } else {
-                const json = await rsp.json()
-                dispatch(
-                    putDuplicateError({
-                        idPersistent: idEntityOriginPersistent,
-                        details: undefined
-                    })
-                )
-                dispatch(addError(json['msg']))
+                return true
             }
+            dispatch(
+                putDuplicateError({
+                    idPersistent: idEntityOriginPersistent,
+                    details: undefined
+                })
+            )
+            dispatch(addError(json['msg']))
         } catch (e: unknown) {
             dispatch(
                 putDuplicateError({
@@ -136,6 +135,7 @@ export function putDuplicateAction({
             )
             dispatch(addError(exceptionMessage(e)))
         }
+        return false
     }
 }
 

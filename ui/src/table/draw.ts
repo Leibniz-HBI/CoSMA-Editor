@@ -117,12 +117,12 @@ export class ReplaceButtonDrawer {
     }
 
     drawReplaceButtonIsNewActive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
-        this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Assign Duplicate')
+        this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Merge with Existing')
         // when drawing fails, using a cache will not recover.
         // this.drawReplaceButtonIsNewActive = mkCanvasCopyFunction(rect, ctx)
     }
     drawReplaceButtonIsNewInactive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
-        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Assign Duplicate')
+        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Merge with Existing')
         // when drawing fails, using a cache will not recover.
         // this.drawReplaceButtonIsNewInactive = mkCanvasCopyFunction(rect, ctx)
     }
