@@ -297,7 +297,7 @@ export function DataTable(props: {
         const columnDefs: GridColumn[] = []
         for (let i = 0; i < columnStates.length; ++i) {
             const columnState = columnStates[i]
-            let title = columnState.name()
+            let title = constructColumnTitle(columnState.tagDefinition.namePath)
             if (columnState.tagDefinition.curated) {
                 title = '☑ ' + title
             }
