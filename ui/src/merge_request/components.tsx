@@ -41,63 +41,75 @@ export function ReviewList() {
         return <CosmaeLoading />
     }
     return (
-        <Row className="justify-content-center h-100">
-            <Col className="h-100 overflow-hidden d-flex flex-column pb-3" xs={6}>
-                <Row className="mb-4 h-50" key="merge-request-assigned-list">
-                    <Col>
+        <Row className="justify-content-center h-100 pb-3">
+            <Col className="h-100 pb-4" xs={6}>
+                <Row
+                    className="mb-4 h-45 overflow-hidden"
+                    key="merge-request-assigned-list"
+                >
+                    <Col className="h-100">
                         <CosmaeCard
                             header={
                                 <h5>Tag Definition Merge Requests Assigned to You</h5>
                             }
-                            className="h-100 d-flex flex-column overflow-hidden"
+                            className="h-100"
                         >
-                            <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
-                                <ListGroup>
-                                    {assigned.map((mergeRequest) => (
-                                        <MergeRequestListItem
-                                            mergeRequest={mergeRequest}
-                                            navigateCallback={navigateCallback}
-                                            key={`${mergeRequest.idPersistent}`}
-                                        />
-                                    ))}
-                                </ListGroup>
-                            </Row>
+                            <Col className="h-100 overflow-hidden d-flex flex-column flex-grow-0">
+                                <Row className="overflow-y-scroll flex-grow-1 ms-2 me-2 mb-3">
+                                    <ListGroup>
+                                        {assigned.map((mergeRequest) => (
+                                            <MergeRequestListItem
+                                                mergeRequest={mergeRequest}
+                                                navigateCallback={navigateCallback}
+                                                key={`${mergeRequest.idPersistent}`}
+                                            />
+                                        ))}
+                                    </ListGroup>
+                                </Row>
+                            </Col>
                         </CosmaeCard>
                     </Col>
                 </Row>
-                <Row className="h-50" key="merge-request-created-list">
-                    <Col>
+                <Row className="h-45" key="merge-request-created-list">
+                    <Col className="h-100">
                         <CosmaeCard
                             header={
                                 <h5>Tag Definition Merge Requests Opened by You</h5>
                             }
-                            className="h-100 d-flex flex-column overflow-hidden"
+                            className="h-100"
                         >
-                            <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
-                                <ListGroup as="ol">
-                                    {created.map((mergeRequest) => (
-                                        <MergeRequestListItem
-                                            mergeRequest={mergeRequest}
-                                            navigateCallback={navigateCallback}
-                                            key={`${mergeRequest.idPersistent}`}
-                                        />
-                                    ))}
-                                </ListGroup>
-                            </Row>
+                            <Col className="h-100 d-flex flex-column overflow-hidden flex-grow-0">
+                                <Row className="overflow-y-scroll flex-grow-1 ms-2 me-2 mb-1">
+                                    <ListGroup as="ol">
+                                        {created.map((mergeRequest) => (
+                                            <MergeRequestListItem
+                                                mergeRequest={mergeRequest}
+                                                navigateCallback={navigateCallback}
+                                                key={`${mergeRequest.idPersistent}`}
+                                            />
+                                        ))}
+                                    </ListGroup>
+                                </Row>
+                            </Col>
                         </CosmaeCard>
                     </Col>
                 </Row>
             </Col>
             {(permissionGroup === UserPermissionGroup.EDITOR ||
                 permissionGroup === UserPermissionGroup.COMMISSIONER) && (
-                <Col className="h-100 overflow-hidden d-flex flex-column  pb-3" xs={5}>
+                <Col
+                    className="h-90 overflow-hidden d-flex flex-column flex-grow-0"
+                    xs={5}
+                >
                     <CosmaeCard
                         header={<h5>Entity Merge Requests</h5>}
-                        className="h-100 d-flex flex-column overflow-hidden"
+                        className="h-100"
                     >
-                        <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
-                            <EntityMergeRequests />
-                        </Row>
+                        <Col className="h-100 d-flex flex-column overflow-hidden">
+                            <Row className="overflow-y-scroll flex-grow-1 ms-2 me-2 mb-3">
+                                <EntityMergeRequests />
+                            </Row>
+                        </Col>
                     </CosmaeCard>
                 </Col>
             )}
