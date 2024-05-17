@@ -29,6 +29,14 @@ jest.mock('react-router-dom', () => {
     loaderMock.mockReturnValue('id-contribution-test')
     return { useLoaderData: loaderMock, useNavigate: jest.fn() }
 })
+jest.mock('react-flip-toolkit', () => {
+    return {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Flipper: (props: any) => <div>{props.children}</div>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Flipped: (props: any) => <div>{props.children}</div>
+    }
+})
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {

@@ -35,6 +35,7 @@ import { selectContribution } from '../selectors'
 import { useNavigate } from 'react-router-dom'
 import { loadContributionDetails } from '../thunks'
 import { useAppDispatch, useAppSelector } from '../../hooks'
+import { Flipped, Flipper } from 'react-flip-toolkit'
 
 export function ColumnDefinitionStep() {
     const dispatch: AppDispatch = useDispatch()
@@ -97,6 +98,8 @@ export function ColumnDefinitionStep() {
     )
 }
 
+const _spring = { stiffness: 500, damping: 60, overShootClamping: false }
+
 function ContributionColumnsList({
     idContributionPersistent
 }: {
@@ -106,22 +109,38 @@ function ContributionColumnsList({
     const selectedColumnDefinition = useAppSelector(selectSelectedColumnDefinition)
     return (
         <ListGroup>
-            {definitions.value?.activeDefinitionsList.map((colDef) => (
-                <ColumnDefinitionStepListItem
-                    columnDefinition={colDef}
-                    selected={colDef == selectedColumnDefinition.value}
-                    idContributionPersistent={idContributionPersistent}
-                    key={colDef.idPersistent}
-                />
-            ))}
-            {definitions.value?.discardedDefinitionsList.map((colDef) => (
-                <ColumnDefinitionStepListItem
-                    columnDefinition={colDef}
-                    selected={colDef == selectedColumnDefinition.value}
-                    idContributionPersistent={idContributionPersistent}
-                    key={colDef.idPersistent + colDef.discard.toString()}
-                />
-            ))}
+            <Flipper flipKey={definitions.value?.activeDefinitionsList}>
+                {definitions.value?.activeDefinitionsList.map((colDef) => (
+                    <Flipped
+                        key={colDef.idPersistent}
+                        flipId={colDef.idPersistent}
+                        spring={_spring}
+                    >
+                        <div>
+                            <ColumnDefinitionStepListItem
+                                columnDefinition={colDef}
+                                selected={colDef == selectedColumnDefinition.value}
+                                idContributionPersistent={idContributionPersistent}
+                            />
+                        </div>
+                    </Flipped>
+                ))}
+                {definitions.value?.discardedDefinitionsList.map((colDef) => (
+                    <Flipped
+                        key={colDef.idPersistent}
+                        flipId={colDef.idPersistent}
+                        spring={_spring}
+                    >
+                        <div>
+                            <ColumnDefinitionStepListItem
+                                columnDefinition={colDef}
+                                selected={colDef == selectedColumnDefinition.value}
+                                idContributionPersistent={idContributionPersistent}
+                            />
+                        </div>
+                    </Flipped>
+                ))}
+            </Flipper>
         </ListGroup>
     )
 }
@@ -268,7 +287,7 @@ export function ExistingColumnForm({
             })
         )
     }
-    const tagIsLoading = useSelector(selectTagSelectionLoading)
+    const tagIsLoading: boolean = useSelector(selectTagSelectionLoading)
     return (
         <div className="ps-1 pe-1 flex-column d-flex flex-grow-1 overflow-hidden">
             {tagIsLoading ? (
@@ -453,8 +472,8 @@ export function PreviewComponent() {
 export function PreviewColumn({ values }: { values: string[] }) {
     return (
         <ul>
-            {values.map((val) => (
-                <li>{val}</li>
+            {values.map((val, idx) => (
+                <li key={idx}>{val}</li>
             ))}
         </ul>
     )
