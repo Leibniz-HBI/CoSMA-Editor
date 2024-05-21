@@ -119,8 +119,8 @@ export function EntitiesStepBody({
                 <Col className="h-100 overflow-hidden d-flex flex-column">
                     <Row>
                         <Col key="entities-step-hint" className="ms-0">
-                            Please check for duplicate entities. Select the first Row to
-                            indicate that there is no duplicate.
+                            Please check for duplicate entities. Select the first Column
+                            to indicate that there is no duplicate.
                         </Col>
                         <Col sm="auto" key="entities-step-add-tag-button">
                             <Button onClick={() => dispatch(toggleTagDefinitionMenu())}>
