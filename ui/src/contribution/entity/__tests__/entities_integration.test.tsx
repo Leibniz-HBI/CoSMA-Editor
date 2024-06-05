@@ -8,8 +8,8 @@ jest.mock('@glideapps/glide-data-grid', () => ({
 }))
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { ContributionEntityState, newContributionEntityState } from '../state'
-import { RemoteInterface, newRemote } from '../../../util/state'
-import { Contribution, ContributionStep, newContribution } from '../../state'
+import { newRemote } from '../../../util/state'
+import { ContributionStep, newContribution } from '../../state'
 import { configureStore } from '@reduxjs/toolkit'
 import { contributionEntitySlice } from '../slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'

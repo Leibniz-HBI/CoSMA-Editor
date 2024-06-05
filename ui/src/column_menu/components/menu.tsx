@@ -12,7 +12,7 @@ import { TabView } from '../../util/components/tabs'
 import { useAppSelector } from '../../hooks'
 
 export function ColumnMenu(props: {
-    columnIndices: Map<string, number>
+    columnIndices: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
     hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
@@ -41,7 +41,7 @@ export function ColumnMenuBody({
     loadColumnDataCallback,
     hideColumnDataCallback
 }: {
-    columnIndices: Map<string, number>
+    columnIndices: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
     hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
@@ -121,16 +121,15 @@ function ShowTabBody({
     loadColumnDataCallback,
     hideColumnDataCallback
 }: {
-    columnIndices: Map<string, number>
+    columnIndices: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
     hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
     return (
         <ColumnSelector
             mkTailElement={(columnDefinition: TagDefinition) => {
-                const isDisplayedInTable = columnIndices.has(
-                    columnDefinition.idPersistent
-                )
+                const isDisplayedInTable =
+                    columnIndices[columnDefinition.idPersistent] !== undefined
                 if (isDisplayedInTable) {
                     return (
                         <span

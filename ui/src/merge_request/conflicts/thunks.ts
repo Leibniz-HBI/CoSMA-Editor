@@ -1,7 +1,7 @@
 import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
 import { TagInstance, newMergeRequestConflict, newTagInstance } from './state'
-import { parseEntityObjectFromJson } from '../../table/async_actions'
+import { parseEntityObjectFromJson } from '../../table/thunks'
 import { Entity } from '../../table/state'
 import { TagDefinition } from '../../column_menu/state'
 import { parseMergeRequestFromJson } from '../thunks'

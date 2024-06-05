@@ -9,7 +9,7 @@ import {
 } from './state'
 import { fetch_chunk_get } from '../../util/fetch'
 import { TagDefinition } from '../../column_menu/state'
-import { parseEntityObjectFromJson } from '../../table/async_actions'
+import { parseEntityObjectFromJson } from '../../table/thunks'
 import { ThunkWithFetch } from '../../util/type'
 import {
     completeEntityAssignmentError,

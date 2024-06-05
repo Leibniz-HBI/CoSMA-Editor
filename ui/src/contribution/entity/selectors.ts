@@ -42,9 +42,9 @@ export const selectMatchTagDefinitionList = createSelector(
 
 export const selectTagDefinitions = createSelector(
     selectContributionEntity,
-    (state): [TagDefinition[], Map<string, number>] => [
+    (state): [TagDefinition[], { [key: string]: number }] => [
         state.tagDefinitions,
-        new Map(Object.entries(state.tagDefinitionMap))
+        state.tagDefinitionMap
     ]
 )
 export const selectEntities = createSelector(

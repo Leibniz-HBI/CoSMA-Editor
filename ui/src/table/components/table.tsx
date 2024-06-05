@@ -3,26 +3,60 @@ import {
     EditableGridCell,
     GridColumn,
     GridMouseEventArgs,
-    Item
+    Item,
+    Rectangle
 } from '@glideapps/glide-data-grid'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Col, Modal, Row } from 'react-bootstrap'
+import { Button, Col, Row } from 'react-bootstrap'
 import { IBounds, useLayer } from 'react-laag'
-import { ColumnMenu } from '../column_menu/components/menu'
-import { ColumnAddButton } from '../column_menu/components/misc'
-import { HeaderMenu } from '../header_menu'
-import { useRemoteTableData, LocalTableCallbacks, TableDataProps } from './hooks'
-import { UserInfo } from '../user/state'
-import { drawCell } from './draw'
-import { ChangeOwnershipModal } from '../tag_management/components'
-import { AddEntityForm } from '../entity/components'
-import { MergeEntitiesButton } from './selection/components'
-import { mkGridSelectionCallback } from './selection/slice'
+import { ColumnAddButton } from '../../column_menu/components/misc'
+import { HeaderMenu } from '../../header_menu'
+import { drawCell } from '../draw'
+import { ChangeOwnershipModal } from '../../tag_management/components'
+import { MergeEntitiesButton } from '../selection/components'
+import { mkGridSelectionCallback } from '../selection/slice'
 import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch } from '../store'
-import { selectTableSelection } from './selection/selectors'
-import { EntityMergeRequestConflictComponent } from '../merge_request/entity/conflicts/components'
-import { constructColumnTitle } from '../contribution/entity/hooks'
+import { AppDispatch } from '../../store'
+import { selectTableSelection } from '../selection/selectors'
+import { constructColumnTitle } from '../../contribution/entity/hooks'
+import { useAppDispatch, useAppSelector } from '../../hooks'
+import {
+    selectColumnHeaderMenu,
+    selectColumnIndices,
+    selectColumnStates,
+    selectEntities,
+    selectFrozenColumns,
+    selectIsLoadingEntities,
+    selectIsSubmittingValues,
+    selectOwnershipChangeTagDefinition,
+    selectSelectedColumnHeaderBounds,
+    selectShowSearch
+} from '../selectors'
+import { selectUserInfo } from '../../user/selectors'
+import {
+    changeColumnIndex,
+    hideHeaderMenu,
+    setColumnWidth,
+    setLoadDataError,
+    showColumnAddMenu,
+    showEntityAdd,
+    showHeaderMenu,
+    tagChangeOwnershipHide,
+    tagDefinitionChange,
+    toggleEntityMergingModal,
+    toggleSearch
+} from '../slice'
+import { addError } from '../../util/notification/slice'
+import {
+    entityChangeOrCreate,
+    getColumnAsync,
+    getTableAsync,
+    submitValuesAsync
+} from '../thunks'
+import { TagDefinition } from '../../column_menu/state'
+import { ColumnState, Entity, csvLinesFromTable } from '../state'
+import { ColumnModal, EntityAddModal, EntityMergingModal } from './modals'
+import { createCellContentCallback } from '../cell'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -44,15 +78,44 @@ export function downloadWorkAround(csvLines: string[]) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function RemoteDataTable(props: {
-    userInfoPromise: () => Promise<UserInfo | undefined>
-}) {
-    const [remoteCallbacks, localCallbacks, syncInfo] = useRemoteTableData(
-        props.userInfoPromise
+export function RemoteDataTable() {
+    const isLoading = useAppSelector(selectIsLoadingEntities)
+    const entities = useAppSelector(selectEntities)
+    const userInfo = useAppSelector(selectUserInfo)
+    const columnIndices = useAppSelector(selectColumnIndices)
+    const columnStates = useAppSelector(selectColumnStates)
+    const tagDefinitionChangeOwnership = useAppSelector(
+        selectOwnershipChangeTagDefinition
     )
+    const dispatch = useAppDispatch()
     useEffect(
         () => {
-            remoteCallbacks.loadTableDataCallback()
+            if (entities !== undefined || isLoading) {
+                return
+            }
+            if (userInfo === undefined) {
+                dispatch(setLoadDataError())
+                dispatch(addError('Please refresh the page and log in'))
+                return
+            }
+            dispatch(getTableAsync()).then(async (success) => {
+                if (!success) {
+                    return
+                }
+                userInfo?.columns.forEach(async (col: TagDefinition) => {
+                    const idPersistent = col.idPersistent
+                    const colStateIdx = columnIndices[idPersistent]
+                    const colState = columnStates[colStateIdx ?? -1]
+                    if (
+                        isLoading ||
+                        colState?.cellContents.isLoading ||
+                        colState?.cellContents.value.length > 0
+                    ) {
+                        return
+                    }
+                    await dispatch(getColumnAsync(col))
+                })
+            })
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []
@@ -65,34 +128,29 @@ export function RemoteDataTable(props: {
                     <Col className="ps-0">
                         <Row className="justify-content-start">
                             <Col xs="auto">
-                                <Button
-                                    onClick={localCallbacks.showEntityAddMenuCallback}
-                                >
+                                <Button onClick={() => dispatch(showEntityAdd())}>
                                     Add Entity
                                 </Button>
                             </Col>
                             <Col className="ps-0">
                                 <MergeEntitiesButton
-                                    entityIdArray={syncInfo.entities}
-                                    mergeRequestCreatedCallback={
-                                        localCallbacks.showEntityMergingModalCallback
+                                    entityIdArray={entities}
+                                    mergeRequestCreatedCallback={() =>
+                                        dispatch(toggleEntityMergingModal(true))
                                     }
                                 />
                             </Col>
                         </Row>
                     </Col>
-                    <Col
-                        xs="auto"
-                        onClick={() =>
-                            localCallbacks.toggleSearchCallback(!syncInfo.showSearch)
-                        }
-                    >
+                    <Col xs="auto" onClick={() => dispatch(toggleSearch(true))}>
                         <Button>Search</Button>
                     </Col>
                     <Col xs="auto" className="pe-0">
                         <Button
                             onClick={() =>
-                                downloadWorkAround(localCallbacks.csvLines())
+                                downloadWorkAround(
+                                    csvLinesFromTable({ entities, columnStates })
+                                )
                             }
                         >
                             Download
@@ -107,75 +165,17 @@ export function RemoteDataTable(props: {
                         className="br-12 ps-0 pe-0 h-100 w-100 overflow-hidden"
                         data-testid="table-container-inner"
                     >
-                        <DataTable
-                            tableProps={syncInfo}
-                            tableCallbacks={{
-                                ...localCallbacks,
-                                // eslint-disable-next-line react-hooks/exhaustive-deps
-                                cellContentCallback: useCallback(
-                                    localCallbacks.cellContentCallback,
-                                    [syncInfo.entities, syncInfo.columnStates]
-                                )
-                            }}
-                            submitValueCallback={remoteCallbacks.submitValueCallback}
+                        <DataTable entities={entities} columnStates={columnStates} />
+                        <ColumnModal columnIndices={columnIndices} />
+                        <EntityAddModal />
+                        <EntityMergingModal />
+                        <ChangeOwnershipModal
+                            tagDefinition={tagDefinitionChangeOwnership}
+                            onClose={() => dispatch(tagChangeOwnershipHide())}
+                            updateTagDefinitionChangeCallback={(tagDefinition) =>
+                                dispatch(tagDefinitionChange(tagDefinition))
+                            }
                         />
-                        <Modal
-                            show={syncInfo.isShowColumnAddMenu}
-                            onHide={localCallbacks.hideColumnAddMenuCallback}
-                            size="xl"
-                            key="column-menu-modal"
-                            className="h-100"
-                        >
-                            <Modal.Header closeButton>
-                                <Modal.Title className="text-dark">
-                                    Show Additional Tag Values
-                                </Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body className="bg-secondary vh-85">
-                                <ColumnMenu
-                                    columnIndices={syncInfo.columnIndices}
-                                    loadColumnDataCallback={
-                                        localCallbacks.addColumnCallback
-                                    }
-                                    hideColumnDataCallback={
-                                        localCallbacks.hideColumnCallback
-                                    }
-                                />
-                            </Modal.Body>
-                        </Modal>
-                        <Modal
-                            show={syncInfo.showEntityAddMenu}
-                            onHide={localCallbacks.hideEntityAddMenuCallback}
-                            size="xl"
-                            key="entity-add-modal"
-                        >
-                            <Modal.Header>
-                                <Modal.Title>Add new Entity</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                <AddEntityForm
-                                    state={syncInfo.entityAddState}
-                                    addEntityCallback={
-                                        remoteCallbacks.addEntityCallback
-                                    }
-                                />
-                            </Modal.Body>
-                        </Modal>
-                        <Modal
-                            show={syncInfo.showEntityMergingModal}
-                            onHide={localCallbacks.hideEntityMergingModalCallback}
-                            size="xl"
-                            // fullscreen={true}
-                            key="entity-merging-modal"
-                        >
-                            <Modal.Body className="display-block vh-95">
-                                <EntityMergeRequestConflictComponent
-                                    loadDataCallback={
-                                        remoteCallbacks.loadTableDataCallback
-                                    }
-                                />
-                            </Modal.Body>
-                        </Modal>
                     </div>
                 </Row>
                 <div id="portal" />
@@ -193,35 +193,85 @@ const zeroBounds = {
     right: 0
 }
 
-export function DataTable(props: {
-    tableProps: TableDataProps
-    tableCallbacks: LocalTableCallbacks
-    submitValueCallback: (cell: Item, newValues: EditableGridCell) => void
+function columnHeaderBounds(selectedColumnHeaderBounds?: Rectangle) {
+    return {
+        left: selectedColumnHeaderBounds?.x ?? 0,
+        top: selectedColumnHeaderBounds?.y ?? 0,
+        width: selectedColumnHeaderBounds?.width ?? 0,
+        height: selectedColumnHeaderBounds?.height ?? 0,
+        right:
+            (selectedColumnHeaderBounds?.x ?? 0) +
+            (selectedColumnHeaderBounds?.width ?? 0),
+        bottom:
+            (selectedColumnHeaderBounds?.y ?? 0) +
+            (selectedColumnHeaderBounds?.height ?? 0)
+    }
+}
+export function DataTable({
+    entities,
+    columnStates
+}: {
+    entities?: Entity[]
+    columnStates: ColumnState[]
 }) {
     const dispatch: AppDispatch = useDispatch()
     const tableSelection = useSelector(selectTableSelection)
-    const {
-        entities,
-        columnStates,
-        frozenColumns,
-        selectedColumnHeaderBounds,
-        isLoading,
-        columnHeaderMenuEntries,
-        tagDefinitionChangeOwnership,
-        showSearch
-    } = props.tableProps
-    const {
-        cellContentCallback,
-        showColumnAddMenuCallback,
-        showHeaderMenuCallback,
-        hideHeaderMenuCallback,
-        setColumnWidthCallback,
-        switchColumnsCallback,
-        columnHeaderBoundsCallback,
-        hideTagDefinitionOwnershipCallback,
-        updateTagDefinitionCallback,
-        toggleSearchCallback
-    } = props.tableCallbacks
+    const frozenColumns = useAppSelector(selectFrozenColumns),
+        selectedColumnHeaderBounds = useAppSelector(selectSelectedColumnHeaderBounds),
+        isLoading = useAppSelector(selectIsLoadingEntities),
+        isSubmittingValues = useAppSelector(selectIsSubmittingValues),
+        columnHeaderMenuEntries = useAppSelector(selectColumnHeaderMenu)(dispatch),
+        showSearch = useAppSelector(selectShowSearch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const cellContentCallback = useCallback(
+            createCellContentCallback({ columnStates }),
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            [entities, columnStates]
+        ),
+        submitValueCallback = (cell: Item, newValue: EditableGridCell) => {
+            if (entities === undefined || isSubmittingValues) {
+                return
+            }
+            const [colIdx, rowIdx] = cell
+            if (colIdx == 0) {
+                const entity = entities[rowIdx]
+                let newValueData: string | undefined = newValue.data?.toString()
+                if (newValueData == '') {
+                    newValueData = undefined
+                }
+                dispatch(
+                    entityChangeOrCreate({
+                        idPersistent: entity.idPersistent,
+                        version: entity.version,
+                        displayTxt: newValueData
+                    })
+                )
+            } else {
+                dispatch(
+                    submitValuesAsync(columnStates[colIdx].tagDefinition.columnType, [
+                        entities[rowIdx].idPersistent,
+                        columnStates[colIdx].tagDefinition.idPersistent,
+                        {
+                            ...columnStates[colIdx].cellContents.value[rowIdx][0],
+                            value: newValue.data?.toString()
+                        }
+                    ])
+                )
+            }
+        },
+        showHeaderMenuCallback = (columnIdx: number, bounds: Rectangle) =>
+            dispatch(showHeaderMenu({ columnIdx, bounds })),
+        hideHeaderMenuCallback = () => dispatch(hideHeaderMenu()),
+        setColumnWidthCallback = (
+            column: GridColumn,
+            newSize: number,
+            colIndex: number,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            newSizeWithGrow: number
+        ) => dispatch(setColumnWidth({ columnIdx: colIndex, width: newSize })),
+        switchColumnsCallback = (startIdx: number, endIdx: number) =>
+            dispatch(changeColumnIndex({ startIdx, endIdx })),
+        toggleSearchCallback = (show: boolean) => dispatch(toggleSearch(show))
     const headerMenuOpen = selectedColumnHeaderBounds !== undefined
     const { layerProps: columnMenuLayerProps, renderLayer: columnMenuRenderLayer } =
         useLayer({
@@ -230,7 +280,7 @@ export function DataTable(props: {
             placement: 'bottom-end',
             onOutsideClick: hideHeaderMenuCallback,
             trigger: {
-                getBounds: columnHeaderBoundsCallback
+                getBounds: () => columnHeaderBounds(selectedColumnHeaderBounds)
             }
         })
     const [tooltip, setTooltip] = useState<
@@ -321,7 +371,9 @@ export function DataTable(props: {
                     freezeColumns={frozenColumns}
                     rightElement={
                         <ColumnAddButton>
-                            <button onClick={showColumnAddMenuCallback}>+</button>
+                            <button onClick={() => dispatch(showColumnAddMenu())}>
+                                +
+                            </button>
                         </ColumnAddButton>
                     }
                     rightElementProps={{
@@ -331,7 +383,7 @@ export function DataTable(props: {
                     onHeaderMenuClick={showHeaderMenuCallback}
                     onColumnResize={setColumnWidthCallback}
                     onColumnMoved={switchColumnsCallback}
-                    onCellEdited={props.submitValueCallback}
+                    onCellEdited={submitValueCallback}
                     rowMarkers="checkbox-visible"
                     gridSelection={tableSelection}
                     onGridSelectionChange={mkGridSelectionCallback(dispatch)}
@@ -365,11 +417,6 @@ export function DataTable(props: {
                             {tooltip.val}
                         </div>
                     )}
-                <ChangeOwnershipModal
-                    tagDefinition={tagDefinitionChangeOwnership}
-                    onClose={hideTagDefinitionOwnershipCallback}
-                    updateTagDefinitionChangeCallback={updateTagDefinitionCallback}
-                />
             </>
         )
     }

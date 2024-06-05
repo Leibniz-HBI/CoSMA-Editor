@@ -1,5 +1,5 @@
 import { config } from '../../config'
-import { parseEntityObjectFromJson } from '../../table/async_actions'
+import { parseEntityObjectFromJson } from '../../table/thunks'
 import { parsePublicUserInfoFromJson } from '../../user/thunks'
 import { ThunkWithFetch } from '../../util/type'
 import {

@@ -1,73 +1,61 @@
-import { Dispatch } from 'react'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
-import {
-    TableAction,
-    SetEntityLoadingAction,
-    SetLoadDataErrorAction,
-    SetEntitiesAction,
-    AppendColumnAction,
-    SetColumnLoadingAction,
-    Edit,
-    SubmitValuesStartAction,
-    SubmitValuesEndAction,
-    SubmitValuesErrorAction,
-    CurateTagDefinitionStartAction,
-    CurateTagDefinitionErrorAction,
-    CurateTagDefinitionSuccessAction,
-    EntityChangeOrCreateStartAction,
-    EntityChangeOrCreateSuccessAction,
-    EntityChangeOrCreateErrorAction
-} from './actions'
-import { AsyncAction } from '../util/async_action'
 import { fetch_chunk } from '../util/fetch'
-import { TagDefinition, TagType, newTagDefinition } from '../column_menu/state'
+import { TagDefinition, TagType } from '../column_menu/state'
 import { CellValue, Entity, newEntity } from './state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { constructColumnTitle } from '../contribution/entity/hooks'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
-import { AppDispatch } from '../store'
+import { ThunkWithFetch } from '../util/type'
+import {
+    Edit,
+    appendColumn,
+    curateTagDefinitionError,
+    curateTagDefinitionStart,
+    entityChangeOrCreateError,
+    entityChangeOrCreateStart,
+    entityChangeOrCreateSuccess,
+    setColumnLoading,
+    setEntities,
+    setEntityLoading,
+    setLoadDataError,
+    submitValuesError,
+    submitValuesStart,
+    submitValuesSuccess,
+    tagDefinitionChange
+} from './slice'
+import { displayTxtColumnId } from './state'
+import { displayTextColumn } from './state'
 
-const displayTxtColumnId = 'display_txt_id'
 /**
  * Async action for fetching table data.
  */
-export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
-    async run(dispatch: Dispatch<TableAction>, reduxDispatch: AppDispatch) {
-        dispatch(new SetEntityLoadingAction())
-        dispatch(
-            new SetColumnLoadingAction(
-                newTagDefinition({
-                    namePath: ['Display Text'],
-                    idPersistent: displayTxtColumnId,
-                    columnType: TagType.String,
-                    curated: true,
-                    version: 0,
-                    hidden: false
-                })
-            )
-        )
+export function getTableAsync(): ThunkWithFetch<boolean> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(setEntityLoading())
+        dispatch(setColumnLoading(displayTextColumn))
         try {
             const entities: Entity[] = []
-            const displayTxts: { [key: string]: CellValue[] } = {}
+            const displayTxtList: { [key: string]: CellValue[] } = {}
             for (let i = 0; ; i += 500) {
                 const rsp = await fetch_chunk({
                     api_path: config.api_path + '/persons/chunk',
                     offset: i,
-                    limit: 500
+                    limit: 500,
+                    fetchMethod: fetch
                 })
                 if (rsp.status == 404) {
-                    new SetEntitiesAction([])
-                    return
+                    dispatch(setEntities([]))
+                    return false
                 } else if (rsp.status !== 200) {
                     const json = await rsp.json()
-                    dispatch(new SetLoadDataErrorAction())
-                    reduxDispatch(
+                    dispatch(setLoadDataError())
+                    dispatch(
                         addError(
                             `Could not load entities chunk ${i}. Reason: "${json['msg']}"`
                         )
                     )
-                    return
+                    return false
                 }
                 const json = await rsp.json()
                 const rowsApi = json['persons']
@@ -75,7 +63,7 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                     for (const entry_json of rowsApi) {
                         const entity = parseEntityObjectFromJson(entry_json)
                         entities.push(entity)
-                        displayTxts[entity.idPersistent] = [
+                        displayTxtList[entity.idPersistent] = [
                             {
                                 value: entity.displayTxt,
                                 idPersistent: entity.idPersistent,
@@ -88,31 +76,27 @@ export class GetTableAsyncAction extends AsyncAction<TableAction, void> {
                     break
                 }
             }
-            dispatch(new SetEntitiesAction(entities))
-            dispatch(new AppendColumnAction(displayTxtColumnId, displayTxts))
+            dispatch(setEntities(entities))
+            dispatch(
+                appendColumn({
+                    idPersistent: displayTxtColumnId,
+                    columnData: displayTxtList
+                })
+            )
+            return true
         } catch (e: unknown) {
-            dispatch(new SetLoadDataErrorAction())
-            reduxDispatch(addError(exceptionMessage(e)))
+            dispatch(setLoadDataError())
+            dispatch(addError(exceptionMessage(e)))
         }
+        return false
     }
 }
 
-export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
-    columnDefinition: TagDefinition
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(column_definition: TagDefinition) {
-        super()
-        this.columnDefinition = column_definition
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async run(
-        dispatch: Dispatch<TableAction>,
-        reduxDispatch: AppDispatch
-    ): Promise<void> {
-        const id_persistent = this.columnDefinition.idPersistent
+export function getColumnAsync(columnDefinition: TagDefinition): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        const id_persistent = columnDefinition.idPersistent
         try {
-            dispatch(new SetColumnLoadingAction(this.columnDefinition))
+            dispatch(setColumnLoading(columnDefinition))
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const column_data: { [key: string]: CellValue[] } = {}
             let offset = 0
@@ -123,13 +107,14 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                     limit: 5000,
                     payload: {
                         id_tag_definition_persistent: id_persistent
-                    }
+                    },
+                    fetchMethod: fetch
                 })
                 if (rsp.status !== 200) {
-                    dispatch(new SetLoadDataErrorAction())
-                    reduxDispatch(
+                    dispatch(setLoadDataError())
+                    dispatch(
                         addError(
-                            `Could not load entities chunk ${i}. Reason: "${
+                            `Could not load instances chunk ${i}. Reason: "${
                                 (await rsp.json())['msg']
                             }"`
                         )
@@ -144,7 +129,7 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                     const valueIdPersistent = tag['id_persistent']
                     const valueVersion = Number.parseInt(tag['version'])
                     const parsedValue = parseValue(
-                        this.columnDefinition.columnType,
+                        columnDefinition.columnType,
                         valueString
                     )
                     const versionedValue = {
@@ -166,25 +151,22 @@ export class GetColumnAsyncAction extends AsyncAction<TableAction, void> {
                         ) + 1
                 }
             }
-            dispatch(new AppendColumnAction(id_persistent, column_data))
+            dispatch(
+                appendColumn({ idPersistent: id_persistent, columnData: column_data })
+            )
         } catch (e: unknown) {
-            dispatch(new SetLoadDataErrorAction())
-            reduxDispatch(addError(exceptionMessage(e)))
+            dispatch(setLoadDataError())
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
 
-export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
+export function submitValuesAsync(
+    columnType: TagType,
     edit: Edit
-    columnType: TagType
-
-    constructor(columnType: TagType, edit: Edit) {
-        super()
-        this.columnType = columnType
-        this.edit = edit
-    }
-    async run(dispatch: Dispatch<TableAction>, reduxDispatch: AppDispatch) {
-        dispatch(new SubmitValuesStartAction())
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(submitValuesStart())
         try {
             const rsp = await fetch(config.api_path + '/tags', {
                 method: 'POST',
@@ -193,11 +175,11 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                 body: JSON.stringify({
                     tag_instances: [
                         {
-                            id_entity_persistent: this.edit[0],
-                            id_tag_definition_persistent: this.edit[1],
-                            value: this.edit[2].value,
-                            id_persistent: this.edit[2].idPersistent,
-                            version: this.edit[2].version
+                            id_entity_persistent: edit[0],
+                            id_tag_definition_persistent: edit[1],
+                            value: edit[2].value,
+                            id_persistent: edit[2].idPersistent,
+                            version: edit[2].version
                         }
                     ]
                 })
@@ -206,14 +188,18 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
             if (rsp.status == 200) {
                 const tagInstance = json['tag_instances'][0]
 
-                dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
+                dispatch(
+                    submitValuesSuccess([extractEdit(edit, columnType, tagInstance)])
+                )
                 return
             }
             if (rsp.status == 409) {
                 const tagInstance = json['tag_instances'][0]
-                dispatch(new SubmitValuesEndAction([this.extractEdit(tagInstance)]))
-                dispatch(new SubmitValuesErrorAction())
-                reduxDispatch(
+                dispatch(
+                    submitValuesSuccess([extractEdit(edit, columnType, tagInstance)])
+                )
+                dispatch(submitValuesError())
+                dispatch(
                     addError(
                         'The data you entered changed in the remote location. ' +
                             'The new values are updated in the table. Please review them.'
@@ -225,64 +211,50 @@ export class SubmitValuesAsyncAction extends AsyncAction<TableAction, void> {
                 const namePath = constructColumnTitle(
                     json['name_path'] ?? json['name'] ?? ['UNKNOWN']
                 )
-                dispatch(new SubmitValuesErrorAction())
-                reduxDispatch(
+                dispatch(submitValuesError())
+                dispatch(
                     addError(
                         `You do not have sufficient permissions to change values for tag ${namePath}`
                     )
                 )
                 return
             }
-            dispatch(new SubmitValuesErrorAction())
-            reduxDispatch(addError(errorMessageFromApi(json)))
+            dispatch(submitValuesError())
+            dispatch(addError(errorMessageFromApi(json)))
         } catch (e: unknown) {
-            dispatch(new SubmitValuesErrorAction())
-            reduxDispatch(addError('Unknown error: ' + exceptionMessage(e)))
+            dispatch(submitValuesError())
+            dispatch(addError('Unknown error: ' + exceptionMessage(e)))
         }
     }
+}
+function extractEdit(
+    edit: Edit,
+    columnType: TagType,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    extractEdit(tagInstance: { [key: string]: any }): Edit {
-        return [
-            this.edit[0],
-            this.edit[1],
-            {
-                value: parseValue(this.columnType, tagInstance['value']),
-                version: tagInstance['version'],
-                idPersistent: tagInstance['id_persistent']
-            }
-        ]
-    }
+    tagInstance: { [key: string]: any }
+): Edit {
+    return [
+        edit[0],
+        edit[1],
+        {
+            value: parseValue(columnType, tagInstance['value']),
+            version: tagInstance['version'],
+            idPersistent: tagInstance['id_persistent']
+        }
+    ]
 }
 
-export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
+export function entityChangeOrCreate({
+    displayTxt,
+    idPersistent = undefined,
+    version = undefined
+}: {
+    displayTxt?: string
     idPersistent?: string
     version?: number
-    displayTxt?: string
-    disabled: boolean
-
-    constructor({
-        displayTxt,
-        idPersistent = undefined,
-        version = undefined,
-        disabled
-    }: {
-        displayTxt?: string
-        idPersistent?: string
-        version?: number
-        disabled: boolean
-    }) {
-        super()
-        this.displayTxt = displayTxt
-        this.idPersistent = idPersistent
-        this.version = version
-        this.disabled = disabled
-    }
-
-    async run(
-        dispatch: Dispatch<TableAction>,
-        reduxDispatch: AppDispatch
-    ): Promise<void> {
-        dispatch(new EntityChangeOrCreateStartAction())
+}): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(entityChangeOrCreateStart())
         try {
             const rsp = await fetch(config.api_path + '/persons', {
                 credentials: 'include',
@@ -290,9 +262,9 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
                 body: JSON.stringify({
                     persons: [
                         {
-                            display_txt: this.displayTxt,
-                            id_persistent: this.idPersistent,
-                            version: this.version
+                            display_txt: displayTxt,
+                            id_persistent: idPersistent,
+                            version: version
                         }
                     ]
                 })
@@ -300,41 +272,28 @@ export class EntityChangeOrCreateAction extends AsyncAction<TableAction, void> {
             const json = await rsp.json()
             if (rsp.status == 200) {
                 const entity = json['persons'][0]
-                dispatch(
-                    new EntityChangeOrCreateSuccessAction(
-                        parseEntityObjectFromJson(entity)
-                    )
-                )
-                if (this.idPersistent === undefined) {
-                    reduxDispatch(addSuccessVanish('Entity created.'))
+                dispatch(entityChangeOrCreateSuccess(parseEntityObjectFromJson(entity)))
+                if (idPersistent === undefined) {
+                    dispatch(addSuccessVanish('Entity created.'))
                 }
             } else {
-                dispatch(new EntityChangeOrCreateErrorAction())
-                reduxDispatch(addError(errorMessageFromApi(json)))
+                dispatch(entityChangeOrCreateError())
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(new EntityChangeOrCreateErrorAction())
-            reduxDispatch(addError(exceptionMessage(e)))
+            dispatch(entityChangeOrCreateError())
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
 
-export class CurateAction extends AsyncAction<TableAction, void> {
-    idTagDefinitionPersistent: string
-
-    constructor(idTagDefinitionPersistent: string) {
-        super()
-        this.idTagDefinitionPersistent = idTagDefinitionPersistent
-    }
-    async run(
-        dispatch: Dispatch<TableAction>,
-        reduxDispatch: AppDispatch
-    ): Promise<void> {
-        dispatch(new CurateTagDefinitionStartAction())
+export function curateAsync(idTagDefinitionPersistent: string): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(curateTagDefinitionStart())
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/tags/definitions/permissions/${this.idTagDefinitionPersistent}/curate`,
+                    `/tags/definitions/permissions/${idTagDefinitionPersistent}/curate`,
                 {
                     credentials: 'include',
                     method: 'POST'
@@ -342,18 +301,14 @@ export class CurateAction extends AsyncAction<TableAction, void> {
             )
             const json = await rsp.json()
             if (rsp.status == 200) {
-                dispatch(
-                    new CurateTagDefinitionSuccessAction(
-                        parseColumnDefinitionsFromApi(json)
-                    )
-                )
+                dispatch(tagDefinitionChange(parseColumnDefinitionsFromApi(json)))
             } else {
-                dispatch(new CurateTagDefinitionErrorAction())
-                reduxDispatch(addError(errorMessageFromApi(json)))
+                dispatch(curateTagDefinitionError())
+                dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(new CurateTagDefinitionErrorAction())
-            reduxDispatch(addError(exceptionMessage(e)))
+            dispatch(curateTagDefinitionError())
+            dispatch(addError(exceptionMessage(e)))
         }
     }
 }
@@ -385,8 +340,7 @@ export function parseEntityObjectFromJson(json: any): Entity {
         disabled: json['disabled']
     })
 }
-
-function parseDisplayTxtDetails(
+export function parseDisplayTxtDetails(
     arg: { [key: string]: unknown } | string
 ): string | TagDefinition {
     if (typeof arg == 'string') {

@@ -10,6 +10,7 @@ import {
     registrationError,
     registrationStart,
     registrationSuccess,
+    removeUserTagDefinition,
     userSearchClear,
     userSearchError,
     userSearchStart,
@@ -223,14 +224,20 @@ export function remoteUserProfileColumnAppend(
         )
     }
 }
-export function remoteUserProfileColumnDelete(
+export function remoteUserProfileColumnDeleteAsync(
     idTagPersistent: string
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        await fetch(config.api_path + `/user/tag_definitions/${idTagPersistent}`, {
-            credentials: 'include',
-            method: 'DELETE'
-        })
+        const rsp = await fetch(
+            config.api_path + `/user/tag_definitions/${idTagPersistent}`,
+            {
+                credentials: 'include',
+                method: 'DELETE'
+            }
+        )
+        if (rsp.status == 200) {
+            dispatch(removeUserTagDefinition(idTagPersistent))
+        }
     }
 }
 export function remoteUserProfileChangeColumIndex(

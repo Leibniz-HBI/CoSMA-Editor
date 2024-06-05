@@ -1,4 +1,8 @@
-import { ColumnHeaderMenuItem } from './table/hooks'
+export interface ColumnHeaderMenuItem {
+    label: string
+    onClick: VoidFunction
+    labelClassName?: string
+}
 
 type HeaderMenuProps = {
     menuEntries: ColumnHeaderMenuItem[]
@@ -14,6 +18,7 @@ export function HeaderMenu(props: HeaderMenuProps) {
                         className="btn-close"
                         onClick={props.closeHeaderMenuCallback}
                         role="button"
+                        aria-label="close header menu"
                     />
                 </div>
                 <ul className="list-group">

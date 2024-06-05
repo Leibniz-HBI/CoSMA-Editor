@@ -80,12 +80,15 @@ export const userSlice = createSlice({
             if (state.userInfo === undefined) {
                 return
             }
-            const idx = state.userInfo.columns.findIndex(
-                (tagDefinition) =>
-                    action.payload.idPersistent == tagDefinition.idPersistent
-            )
-            if (idx > 0) {
+            const idx = findUserColumnIndex(state, action.payload.idPersistent)
+            if (idx >= 0) {
                 state.userInfo.columns[idx] = action.payload
+            }
+        },
+        removeUserTagDefinition(state: UserState, action: PayloadAction<string>) {
+            const idx = findUserColumnIndex(state, action.payload)
+            if (idx >= 0) {
+                state.userInfo?.columns.splice(idx, 1)
             }
         }
     }
@@ -108,7 +111,15 @@ export const {
     userSearchError,
     userSearchErrorClear,
     userSearchClear,
-    updateUserTagDefinition
+    updateUserTagDefinition,
+    removeUserTagDefinition
 } = userSlice.actions
 
 export default userSlice.reducer
+function findUserColumnIndex(state: UserState, idPersistent: string) {
+    return (
+        state.userInfo?.columns.findIndex(
+            (tagDefinition) => tagDefinition.idPersistent == idPersistent
+        ) ?? -1
+    )
+}

@@ -4,14 +4,19 @@ export async function fetch_chunk({
     api_path,
     offset,
     limit,
-    payload = {}
+    payload = {},
+    fetchMethod = fetch
 }: {
     api_path: string
     offset: number
     limit: number
     payload?: { [key: string]: JsonValue }
+    fetchMethod?: (
+        input: RequestInfo | URL,
+        init?: RequestInit | undefined
+    ) => Promise<Response>
 }) {
-    return await fetch(api_path, {
+    return await fetchMethod(api_path, {
         method: 'POST',
         credentials: 'include',
         headers: {

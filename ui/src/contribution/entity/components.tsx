@@ -154,7 +154,7 @@ export function EntityConflictBody({
     ) => void
 }) {
     const selectedEntity = useSelector(selectSelectedEntity)
-    const [tagDefinitionList, tagDefinitionMap] = useSelector(selectTagDefinitions)
+    const [tagDefinitionList, tagDefinitionIndices] = useSelector(selectTagDefinitions)
     const matchTags = useSelector(selectMatchTagDefinitionList)
     const dispatch: AppDispatch = useDispatch()
     useEffect(
@@ -202,7 +202,7 @@ export function EntityConflictBody({
             {body}
             <AddTagDefinitionsModal
                 idContributionPersistent={idContributionPersistent}
-                tagDefinitionMap={tagDefinitionMap}
+                tagDefinitionIndices={tagDefinitionIndices}
             />
         </>
     )
@@ -210,10 +210,10 @@ export function EntityConflictBody({
 
 function AddTagDefinitionsModal({
     idContributionPersistent,
-    tagDefinitionMap
+    tagDefinitionIndices
 }: {
     idContributionPersistent: string
-    tagDefinitionMap: Map<string, number>
+    tagDefinitionIndices: { [key: string]: number }
 }) {
     const dispatch: AppDispatch = useDispatch()
     const showTagDefinitionsMenu = useSelector(selectShowTagDefinitionsMenu)
@@ -271,7 +271,7 @@ function AddTagDefinitionsModal({
                             )
                         }
                     }}
-                    columnIndices={tagDefinitionMap}
+                    columnIndices={tagDefinitionIndices}
                 />
             </Modal.Body>
         </Modal>

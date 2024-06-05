@@ -5,7 +5,7 @@ import '@glideapps/glide-data-grid/dist/index.css'
 import './App.scss'
 import { LoginProvider } from './user/components/provider'
 import { Col, Container, Nav, Navbar, Row } from 'react-bootstrap'
-import { RemoteDataTable } from './table/components'
+import { RemoteDataTable } from './table/components/table'
 import {
     NavLink,
     Outlet,
@@ -28,7 +28,7 @@ import {
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store, { AppDispatch } from './store'
 import { selectUserInfo } from './user/selectors'
-import { logoutThunk, refresh } from './user/thunks'
+import { logoutThunk } from './user/thunks'
 import { TagManagementPage } from './tag_management/components'
 import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
 import { ManagementPage } from './management/components'
@@ -205,12 +205,5 @@ function App() {
 }
 export default App
 function TableConnector() {
-    const dispatch = useDispatch()
-    return (
-        <RemoteDataTable
-            userInfoPromise={() =>
-                refresh({ withDispatch: false })(dispatch, store.getState, fetch)
-            }
-        />
-    )
+    return <RemoteDataTable />
 }

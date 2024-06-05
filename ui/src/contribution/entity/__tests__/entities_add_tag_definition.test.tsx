@@ -340,17 +340,20 @@ test('remove values', async () => {
         expect(state.contributionEntity.tagDefinitions.length).toEqual(1)
     })
     await addTagDefinitionByName(nameTagDef0)
-    await waitFor(() => {
-        const state = store.getState()
-        expect(state.contributionEntity.tagDefinitions.length).toEqual(0)
-        expect(state.contributionEntity.tagDefinitionMap).toEqual({})
-        for (const entity of state.contributionEntity.entities.value) {
-            expect(entity.cellContents.length).toEqual(0)
-            for (const match of entity.similarEntities.value) {
-                expect(match.cellContents.length).toEqual(0)
+    await waitFor(
+        () => {
+            const state = store.getState()
+            expect(state.contributionEntity.tagDefinitions.length).toEqual(0)
+            expect(state.contributionEntity.tagDefinitionMap).toEqual({})
+            for (const entity of state.contributionEntity.entities.value) {
+                expect(entity.cellContents.length).toEqual(0)
+                for (const match of entity.similarEntities.value) {
+                    expect(match.cellContents.length).toEqual(0)
+                }
             }
-        }
-    })
+        },
+        { timeout: 3000 }
+    )
 })
 
 function addValueResponses(

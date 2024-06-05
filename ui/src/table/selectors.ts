@@ -1,0 +1,138 @@
+import { createSelector } from '@reduxjs/toolkit'
+import { AppDispatch, RootState } from '../store'
+import { selectPermissionGroup } from '../user/selectors'
+import { removeSelectedColumn, tagChangeOwnerShipShow } from './slice'
+import { remoteUserProfileColumnDeleteAsync } from '../user/thunks'
+import { UserPermissionGroup } from '../user/state'
+import { curateAsync } from './thunks'
+
+function selectTableState(state: RootState) {
+    return state.table
+}
+const selectColumnState = createSelector(
+    selectTableState,
+    (state) => state.columnStates
+)
+
+export const selectIsLoadingEntities = createSelector(
+    selectTableState,
+    (state) => state.isLoading
+)
+
+export const selectIsLoadingColumn = createSelector(selectColumnState, (state) => {
+    for (const col of state) {
+        if (col.cellContents.isLoading) {
+            return true
+        }
+    }
+    return false
+})
+
+export const selectEntities = createSelector(
+    selectTableState,
+    (state) => state.entities
+)
+
+export const selectColumnStates = createSelector(
+    selectTableState,
+    (state) => state.columnStates
+)
+
+export const selectColumnIndices = createSelector(
+    selectTableState,
+    (state) => state.columnIndices
+)
+
+export const selectShowSearch = createSelector(
+    selectTableState,
+    (state) => state.showSearch
+)
+
+export const selectShowEntityAddMenu = createSelector(
+    selectTableState,
+    (state) => state.showEntityAddDialog
+)
+
+export const selectShowColumnMenu = createSelector(
+    selectTableState,
+    (state) => state.showColumnAddMenu
+)
+
+export const selectEntityAddState = createSelector(
+    selectTableState,
+    (state) => state.entityAddState
+)
+
+export const selectShowEntityMerging = createSelector(
+    selectTableState,
+    (state) => state.showEntityMergingModal
+)
+
+export const selectFrozenColumns = createSelector(
+    selectTableState,
+    (state) => state.frozenColumns
+)
+
+export const selectSelectedColumnHeaderBounds = createSelector(
+    selectTableState,
+    (state) => state.selectedColumnHeaderBounds
+)
+
+export const selectSelectedTagDefinition = createSelector(
+    selectTableState,
+    (state) => state.selectedTagDefinition
+)
+
+export const selectColumnHeaderMenu = createSelector(
+    selectSelectedTagDefinition,
+    selectPermissionGroup,
+    (columnDefinition, permissionGroup) => {
+        return (dispatch: AppDispatch) => {
+            if (columnDefinition === undefined) {
+                return []
+            }
+            const ret = [
+                {
+                    label: 'Hide Column',
+                    labelClassName: 'danger text-danger',
+                    onClick: () => {
+                        dispatch(removeSelectedColumn())
+                        dispatch(
+                            remoteUserProfileColumnDeleteAsync(
+                                columnDefinition.idPersistent
+                            )
+                        )
+                    }
+                },
+                {
+                    label: 'Change Owner',
+                    labelClassName: '',
+                    onClick: () => dispatch(tagChangeOwnerShipShow(columnDefinition))
+                }
+            ]
+            if (
+                permissionGroup == UserPermissionGroup.EDITOR ||
+                permissionGroup == UserPermissionGroup.COMMISSIONER
+            ) {
+                ret.push({
+                    label: 'Curate Tag Definition',
+                    labelClassName: '',
+                    onClick: () => {
+                        dispatch(curateAsync(columnDefinition.idPersistent))
+                    }
+                })
+            }
+            return ret
+        }
+    }
+)
+
+export const selectOwnershipChangeTagDefinition = createSelector(
+    selectTableState,
+    (state) => state.ownershipChangeTagDefinition
+)
+
+export const selectIsSubmittingValues = createSelector(
+    selectTableState,
+    (state) => state.isSubmittingValues
+)

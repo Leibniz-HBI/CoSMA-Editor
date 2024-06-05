@@ -2,13 +2,13 @@ import { ChangeEvent, useState } from 'react'
 import { Col, Row } from 'react-bootstrap'
 import { FormField } from '../util/form'
 import { RemoteTriggerButton } from '../util/components/misc'
-import { Remote } from '../util/state'
+import { RemoteInterface } from '../util/state'
 
 export function AddEntityForm({
     state,
     addEntityCallback
 }: {
-    state: Remote<boolean>
+    state: RemoteInterface<boolean>
     addEntityCallback: (displayTxt: string) => void
 }) {
     const [entityDisplayTxt, setEntityDisplayTxt] = useState('')

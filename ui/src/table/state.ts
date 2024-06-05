@@ -1,13 +1,13 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
-import { TagDefinition, TagType } from '../column_menu/state'
-import { Remote } from '../util/state'
+import { TagDefinition, TagType, newTagDefinition } from '../column_menu/state'
+import { RemoteInterface, newRemote } from '../util/state'
 
-export class TableState {
+export interface TableState {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     columnStates: ColumnState[]
-    columnIndices: Map<string, number>
+    columnIndices: { [key: string]: number }
     entities?: Entity[]
-    entityIndices: Map<string, number>
+    entityIndices: { [key: string]: number }
     isLoading?: boolean
     showColumnAddMenu: boolean
     selectedTagDefinition?: TagDefinition
@@ -16,121 +16,76 @@ export class TableState {
     isSubmittingValues: boolean
     ownershipChangeTagDefinition?: TagDefinition
     showEntityAddDialog: boolean
-    entityAddState: Remote<boolean>
+    entityAddState: RemoteInterface<boolean>
     showEntityMergingModal: boolean
     showSearch: boolean
+}
 
-    constructor({
-        columnStates: columnStates = [],
-        columnIndices: columnIndices = new Map<string, number>(),
-        entities = undefined,
-        entityIndices = undefined,
-        isLoading = undefined,
-        showColumnAddMenu = false,
-        selectedTagDefinition = undefined,
-        selectedColumnHeaderBounds = undefined,
-        frozenColumns = 0,
-        isSubmittingValues = false,
-        ownershipChangeTagDefinition = undefined,
-        showEntityAddDialog = false,
-        entityAddState = new Remote(false),
-        showEntityMergingModal = false,
-        showSearch = false
-    }: {
-        columnStates?: ColumnState[]
-        columnIndices?: Map<string, number>
-        entities?: Entity[]
-        entityIndices?: Map<string, number>
-        isLoading?: boolean
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        rowObjects?: { [key: string]: any }[]
-        showColumnAddMenu?: boolean
-        selectedTagDefinition?: TagDefinition
-        selectedColumnHeaderBounds?: Rectangle
-        frozenColumns?: number
-        isSubmittingValues?: boolean
-        ownershipChangeTagDefinition?: TagDefinition
-        showEntityAddDialog?: boolean
-        entityAddState?: Remote<boolean>
-        showEntityMergingModal?: boolean
-        showSearch?: boolean
-    }) {
-        this.columnIndices = columnIndices
-        this.columnStates = columnStates
-        this.entities = entities
-        if (entities === undefined) {
-            this.entityIndices = new Map([])
+export function newTableState({
+    columnStates: columnStates = [],
+    columnIndices: columnIndices = {},
+    entities = undefined,
+    entityIndices = undefined,
+    isLoading = undefined,
+    showColumnAddMenu = false,
+    selectedTagDefinition = undefined,
+    selectedColumnHeaderBounds = undefined,
+    frozenColumns = 0,
+    isSubmittingValues = false,
+    ownershipChangeTagDefinition = undefined,
+    showEntityAddDialog = false,
+    entityAddState = newRemote(false),
+    showEntityMergingModal = false,
+    showSearch = false
+}: {
+    columnStates?: ColumnState[]
+    columnIndices?: { [key: string]: number }
+    entities?: Entity[]
+    entityIndices?: { [key: string]: number }
+    isLoading?: boolean
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rowObjects?: { [key: string]: any }[]
+    showColumnAddMenu?: boolean
+    selectedTagDefinition?: TagDefinition
+    selectedColumnHeaderBounds?: Rectangle
+    frozenColumns?: number
+    isSubmittingValues?: boolean
+    ownershipChangeTagDefinition?: TagDefinition
+    showEntityAddDialog?: boolean
+    entityAddState?: RemoteInterface<boolean>
+    showEntityMergingModal?: boolean
+    showSearch?: boolean
+}): TableState {
+    let newEntityIndices: { [key: string]: number } = {}
+    if (entities !== undefined) {
+        if (entityIndices === undefined || entityIndices.size != entities.length) {
+            entities.forEach((entity, idx) => {
+                newEntityIndices[entity.idPersistent] = idx
+            })
         } else {
-            if (entityIndices === undefined || entityIndices.size != entities.length) {
-                this.entityIndices = new Map(
-                    entities.map((entity, idx) => [entity.idPersistent, idx])
-                )
-            } else {
-                this.entityIndices = entityIndices
-            }
+            newEntityIndices = entityIndices
         }
-        this.isLoading = isLoading
-        this.showColumnAddMenu = showColumnAddMenu
-        this.selectedTagDefinition = selectedTagDefinition
-        this.selectedColumnHeaderBounds = selectedColumnHeaderBounds
-        this.frozenColumns = frozenColumns
-        this.isSubmittingValues = isSubmittingValues
-        this.ownershipChangeTagDefinition = ownershipChangeTagDefinition
-        this.showEntityAddDialog = showEntityAddDialog
-        this.entityAddState = entityAddState
-        this.showEntityMergingModal = showEntityMergingModal
-        this.showSearch = showSearch
     }
-
-    isLoadingColumn(): boolean {
-        for (const col of this.columnStates) {
-            if (col.cellContents.isLoading) {
-                return true
-            }
-        }
-        return false
-    }
-    csvLines(): string[] {
-        const entities = this.entities
-        if (entities === undefined || entities.length == 0) {
-            return []
-        }
-        const lines = []
-        const header =
-            '"id_entity_persistent","display_txt",' +
-            this.columnStates
-                .slice(1)
-                .map((colState) => '"' + colState.name() + '"')
-                .join(',')
-        if (header.endsWith(',')) {
-            lines.push(header.slice(0, header.length - 1) + '\n')
-        } else {
-            lines.push(header + '\n')
-        }
-
-        for (let rowIdx = 0; rowIdx < entities.length; ++rowIdx) {
-            const value =
-                '"' +
-                entities[rowIdx] +
-                '",' +
-                this.columnStates
-                    .map(
-                        (colState) =>
-                            '"' +
-                            (colState.cellContents.value[
-                                rowIdx
-                            ][0]?.value?.toString() ?? '') +
-                            '"'
-                    )
-                    .join(',') +
-                '\n'
-            lines.push(value)
-        }
-        return lines
+    return {
+        columnIndices: columnIndices,
+        columnStates: columnStates,
+        entities: entities,
+        entityIndices: newEntityIndices,
+        isLoading: isLoading,
+        showColumnAddMenu: showColumnAddMenu,
+        selectedTagDefinition: selectedTagDefinition,
+        selectedColumnHeaderBounds: selectedColumnHeaderBounds,
+        frozenColumns: frozenColumns,
+        isSubmittingValues: isSubmittingValues,
+        ownershipChangeTagDefinition: ownershipChangeTagDefinition,
+        showEntityAddDialog: showEntityAddDialog,
+        entityAddState: entityAddState,
+        showEntityMergingModal: showEntityMergingModal,
+        showSearch: showSearch
     }
 }
 
-export type CellValue = {
+export interface CellValue {
     isExisting?: boolean
     isRequested?: boolean
     value: boolean | string | number | undefined
@@ -138,38 +93,76 @@ export type CellValue = {
     version: number
 }
 
-export class ColumnState {
+export interface ColumnState {
     tagDefinition: TagDefinition
-    cellContents: Remote<CellValue[][]>
+    cellContents: RemoteInterface<CellValue[][]>
     width: number
-
-    constructor({
-        tagDefinition = {
-            idPersistent: '',
-            namePath: [],
-            columnType: TagType.String,
-            curated: false,
-            version: 0,
-            hidden: false,
-            disabled: false
-        },
-        cellContents = new Remote([]),
-        width = 200
-    }: {
-        tagDefinition: TagDefinition
-        cellContents?: Remote<CellValue[][]>
-        width?: number
-    }) {
-        this.tagDefinition = tagDefinition
-        this.cellContents = cellContents
-        this.width = width
-    }
-
-    name(): string {
-        return this.tagDefinition.namePath[this.tagDefinition.namePath.length - 1]
-    }
+}
+export function newColumnState({
+    tagDefinition = {
+        idPersistent: '',
+        namePath: [],
+        columnType: TagType.String,
+        curated: false,
+        version: 0,
+        hidden: false,
+        disabled: false
+    },
+    cellContents = newRemote([]),
+    width = 200
+}: {
+    tagDefinition: TagDefinition
+    cellContents?: RemoteInterface<CellValue[][]>
+    width?: number
+}): ColumnState {
+    return { tagDefinition: tagDefinition, cellContents: cellContents, width: width }
 }
 
+function columnNameFromState(colState: ColumnState): string {
+    return colState.tagDefinition.namePath[colState.tagDefinition.namePath.length - 1]
+}
+export function csvLinesFromTable({
+    entities,
+    columnStates
+}: {
+    entities?: Entity[]
+    columnStates: ColumnState[]
+}): string[] {
+    if (entities === undefined || entities.length == 0) {
+        return []
+    }
+    const lines = []
+    const header =
+        '"id_entity_persistent","display_txt",' +
+        columnStates
+            .slice(1)
+            .map((colState) => '"' + columnNameFromState(colState) + '"')
+            .join(',')
+    if (header.endsWith(',')) {
+        lines.push(header.slice(0, header.length - 1) + '\n')
+    } else {
+        lines.push(header + '\n')
+    }
+
+    for (let rowIdx = 0; rowIdx < entities.length; ++rowIdx) {
+        const value =
+            '"' +
+            entities[rowIdx].idPersistent +
+            '",' +
+            columnStates
+                .map(
+                    (colState) =>
+                        '"' +
+                        (colState.cellContents.value[rowIdx][0]?.value?.toString() ??
+                            '') +
+                        '"'
+                )
+                .join(',') +
+            '\n'
+        lines.push(value)
+    }
+    return lines
+}
 export class TableStateCsvIterator implements Iterator<string | undefined> {
     tableState: TableState
     rowIdx: number
@@ -190,7 +183,7 @@ export class TableStateCsvIterator implements Iterator<string | undefined> {
                 value:
                     '"id_entity_persistent","display_txt",' +
                     this.tableState.columnStates
-                        .map((colState) => '"' + colState.name() + '"')
+                        .map((colState) => '"' + columnNameFromState(colState) + '"')
                         .join(',') +
                     '\n'
             }
@@ -247,3 +240,12 @@ export function newEntity({
         disabled: disabled
     }
 }
+export const displayTxtColumnId = 'display_txt_id'
+export const displayTextColumn = newTagDefinition({
+    namePath: ['Display Text'],
+    idPersistent: displayTxtColumnId,
+    columnType: TagType.String,
+    curated: true,
+    version: 0,
+    hidden: false
+})

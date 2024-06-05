@@ -1,5 +1,5 @@
 import { TagDefinition } from '../column_menu/state'
-import { Remote, RemoteInterface } from '../util/state'
+import { Remote, RemoteInterface, newRemote } from '../util/state'
 
 export enum UserPermissionGroup {
     APPLICANT = 'Applicant',
@@ -79,14 +79,14 @@ export function newUserState({
     isLoggingIn = false,
     isRegistering = false,
     isRefreshing = false,
-    userSearchResults = new Remote([])
+    userSearchResults = newRemote([])
 }: {
     userInfo?: UserInfo
     showRegistration?: boolean
     isLoggingIn?: boolean
     isRegistering?: boolean
     isRefreshing?: boolean
-    userSearchResults?: Remote<(PublicUserInfo | UserInfo)[]>
+    userSearchResults?: RemoteInterface<(PublicUserInfo | UserInfo)[]>
 }): UserState {
     return {
         userInfo,

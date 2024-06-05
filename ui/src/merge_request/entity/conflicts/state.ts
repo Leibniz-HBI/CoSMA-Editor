@@ -1,4 +1,4 @@
-import { RemoteInterface } from '../../../util/state'
+import { RemoteInterface, newRemote } from '../../../util/state'
 import { TagInstance } from '../../conflicts/state'
 import { EntityMergeRequest } from '../state'
 
@@ -50,4 +50,20 @@ export interface EntityMergeRequestConflictsState {
     newlyCreated: boolean
     reverseOriginDestination: RemoteInterface<string | undefined>
     merge: RemoteInterface<string | undefined>
+}
+
+export function newEntityMergeRequestConflictsState({
+    conflicts = newRemote(undefined),
+    mergeRequest = newRemote(undefined),
+    newlyCreated = false,
+    reverseOriginDestination = newRemote(undefined),
+    merge = newRemote(undefined)
+}: {
+    conflicts?: RemoteInterface<EntityMergeRequestConflicts | undefined>
+    mergeRequest?: RemoteInterface<EntityMergeRequest | undefined>
+    newlyCreated?: boolean
+    reverseOriginDestination?: RemoteInterface<string | undefined>
+    merge?: RemoteInterface<string | undefined>
+}): EntityMergeRequestConflictsState {
+    return { conflicts, mergeRequest, newlyCreated, reverseOriginDestination, merge }
 }
