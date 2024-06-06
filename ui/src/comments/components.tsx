@@ -1,17 +1,20 @@
 import { Button, Col, ListGroup, Row } from 'react-bootstrap'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { CosmaeLoading, CosmaeCard } from '../util/components/misc'
-import { selectComments, selectCommentsIsLoading } from './selectors'
+import { selectComments } from './selectors'
 import { Comment } from './slice'
 import { FormField } from '../util/form'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { loadCommentsThunk, submitComment } from './thunks'
+import { RemoteInterface } from '../util/state'
 
 export function CommentHistoryAndForm({ idPersistent }: { idPersistent: string }) {
-    const isLoadingComments = useAppSelector(selectCommentsIsLoading(idPersistent))
+    const comments = useAppSelector(selectComments(idPersistent))
     const dispatch = useAppDispatch()
+    const submitCommentCallback = (commentTxt: string) =>
+        dispatch(submitComment(idPersistent, commentTxt))
     useEffect(() => {
-        if (!isLoadingComments) {
+        if (comments === undefined || !comments.isLoading) {
             dispatch(loadCommentsThunk([idPersistent]))
         }
         //eslint-disable-next-line react-hooks/exhaustive-deps
@@ -21,10 +24,10 @@ export function CommentHistoryAndForm({ idPersistent }: { idPersistent: string }
             <Col xs={0} md={2} />
             <Col className="ms-4 me-3 overflow-y-auto scroll-gutter">
                 <Row>
-                    <CommentsHistory idPersistent={idPersistent} />
+                    <CommentsHistory comments={comments} />
                 </Row>
                 <Row>
-                    <CommentForm idPersistent={idPersistent} />
+                    <CommentForm submitComment={submitCommentCallback} />
                 </Row>
             </Col>
             <Col xs={0} md={2} />
@@ -32,8 +35,11 @@ export function CommentHistoryAndForm({ idPersistent }: { idPersistent: string }
     )
 }
 
-export function CommentsHistory({ idPersistent }: { idPersistent: string }) {
-    const comments = useAppSelector(selectComments(idPersistent))
+export function CommentsHistory({
+    comments
+}: {
+    comments: RemoteInterface<Comment[]>
+}) {
     if (comments === undefined || comments.isLoading) {
         return <CosmaeLoading />
     }
@@ -72,8 +78,11 @@ export function CommentElement({ comment }: { comment: Comment }) {
     )
 }
 
-export function CommentForm({ idPersistent }: { idPersistent: string }) {
-    const dispatch = useAppDispatch()
+export function CommentForm({
+    submitComment
+}: {
+    submitComment: (commentTxt: string) => Promise<boolean>
+}) {
     const [commentContent, setCommentContents] = useState('')
     return (
         <Col className="ps-2 pe-3">
@@ -91,13 +100,11 @@ export function CommentForm({ idPersistent }: { idPersistent: string }) {
                 <Col xs="auto">
                     <Button
                         onClick={() => {
-                            dispatch(submitComment(idPersistent, commentContent)).then(
-                                (result) => {
-                                    if (result) {
-                                        setCommentContents('')
-                                    }
+                            submitComment(commentContent).then((result) => {
+                                if (result) {
+                                    setCommentContents('')
                                 }
-                            )
+                            })
                         }}
                     >
                         Submit
