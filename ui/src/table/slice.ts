@@ -5,11 +5,13 @@ import {
     TableState,
     displayTextColumn,
     newColumnState,
-    newTableState
+    newTableState,
+    reasonColumn
 } from './state'
 import { newRemote } from '../util/state'
 import { TagDefinition } from '../column_menu/state'
 import { Rectangle } from '@glideapps/glide-data-grid'
+import { version } from 'os'
 
 const initialState = newTableState({})
 
@@ -33,18 +35,23 @@ const tableSlice = createSlice({
             state: TableState,
             action: PayloadAction<{
                 idPersistent: string
-                columnData: { [key: string]: CellValue[] }
+                columnData?: { [key: string]: CellValue[] }
             }>
         ) {
             const colIdx = state.columnIndices[action.payload.idPersistent]
+            const columnData = action.payload.columnData
             if (colIdx !== undefined) {
-                state.columnStates[colIdx].cellContents = newRemote(
-                    state.entities?.map((entity) =>
-                        entity.idPersistent in action.payload.columnData
-                            ? action.payload.columnData[entity.idPersistent]
-                            : []
-                    ) ?? []
-                )
+                if (columnData === undefined) {
+                    state.columnStates[colIdx].cellContents = newRemote([])
+                } else {
+                    state.columnStates[colIdx].cellContents = newRemote(
+                        state.entities?.map((entity) =>
+                            entity.idPersistent in columnData
+                                ? columnData[entity.idPersistent]
+                                : []
+                        ) ?? []
+                    )
+                }
             }
         },
         setColumnLoading(state: TableState, action: PayloadAction<TagDefinition>) {
@@ -88,6 +95,18 @@ const tableSlice = createSlice({
                     state.selectedTagDefinition.idPersistent
                 )
             }
+        },
+        toggleEntityReason(state: TableState, action: PayloadAction<boolean>) {
+            if (action.payload) {
+                const columnState = newColumnState({
+                    tagDefinition: reasonColumn,
+                    cellContents: newRemote([])
+                })
+                state.columnStates.splice(1, 0, columnState)
+            } else {
+                state.columnStates.splice(1, 1)
+            }
+            state.showEntityReasons = action.payload
         },
         removeColumnByIdPersistent(state: TableState, action: PayloadAction<string>) {
             removeColumnByIdPersistentHelper(state, action.payload)
@@ -180,13 +199,11 @@ const tableSlice = createSlice({
             const entity = action.payload
             if (state.entities === undefined) {
                 state.entities = [entity]
-                appendDisplayTextToColumnStates(state, entity)
                 state.entityIndices[entity.idPersistent] = 0
             } else {
                 const idx = state.entityIndices[entity.idPersistent]
                 if (idx === undefined) {
                     state.entities.push(action.payload)
-                    appendDisplayTextToColumnStates(state, entity)
                     state.entityIndices[entity.idPersistent] = state.entities.length
                 } else {
                     state.entities[idx] = entity
@@ -239,23 +256,6 @@ function updateTagDefinition(state: TableState, tagDefinition: TagDefinition) {
     }
 }
 
-function appendDisplayTextToColumnStates(state: TableState, entity: Entity) {
-    if (state.columnStates.length == 0) {
-        state.columnStates = [newColumnState({ tagDefinition: displayTextColumn })]
-        state.columnIndices = { displayTxtColumnId: 0 }
-    }
-    state.columnStates[0].cellContents.value.push([
-        {
-            value: entity.displayTxt,
-            idPersistent: entity.idPersistent,
-            version: entity.version
-        }
-    ])
-    for (let idx = 1; idx < state.columnStates.length; ++idx) {
-        state.columnStates[idx].cellContents.value.push([])
-    }
-}
-
 export const {
     appendColumn,
     changeColumnIndex,
@@ -284,5 +284,6 @@ export const {
     tagChangeOwnershipHide,
     tagDefinitionChange,
     toggleEntityMergingModal,
+    toggleEntityReason,
     toggleSearch
 } = tableSlice.actions

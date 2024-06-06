@@ -73,12 +73,38 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
 const loadingInstance = new LoadingType()
 
 export function createCellContentCallback({
-    columnStates
+    entities,
+    columnStates,
+    showEntityReasons
 }: {
+    entities?: Entity[]
     columnStates: ColumnState[]
+    showEntityReasons: boolean
 }): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
+        const entity = entities?.at(row_idx)
+        if (entities === undefined || entity === undefined) {
+            return emptyCell
+        }
+        if (col_idx == 0) {
+            return mkCell(TagType.String, [
+                {
+                    idPersistent: entity.idPersistent,
+                    value: entity.displayTxt,
+                    version: entity.version
+                }
+            ])
+        }
+        if (showEntityReasons && col_idx == 1) {
+            return mkCell(TagType.String, [
+                {
+                    idPersistent: entity.idPersistent,
+                    value: entity.reasonTxt,
+                    version: entity.version
+                }
+            ])
+        }
         const col = columnStates[col_idx]
         if (col === undefined) {
             return emptyCell

@@ -18,6 +18,7 @@ export interface TableState {
     showEntityAddDialog: boolean
     entityAddState: RemoteInterface<boolean>
     showEntityMergingModal: boolean
+    showEntityReasons: boolean
     showSearch: boolean
 }
 
@@ -36,6 +37,7 @@ export function newTableState({
     showEntityAddDialog = false,
     entityAddState = newRemote(false),
     showEntityMergingModal = false,
+    showEntityReasons = false,
     showSearch = false
 }: {
     columnStates?: ColumnState[]
@@ -54,6 +56,7 @@ export function newTableState({
     showEntityAddDialog?: boolean
     entityAddState?: RemoteInterface<boolean>
     showEntityMergingModal?: boolean
+    showEntityReasons?: boolean
     showSearch?: boolean
 }): TableState {
     let newEntityIndices: { [key: string]: number } = {}
@@ -81,6 +84,7 @@ export function newTableState({
         showEntityAddDialog: showEntityAddDialog,
         entityAddState: entityAddState,
         showEntityMergingModal: showEntityMergingModal,
+        showEntityReasons: showEntityReasons,
         showSearch: showSearch
     }
 }
@@ -211,39 +215,54 @@ export class TableStateCsvIterator implements Iterator<string | undefined> {
         }
     }
 }
+
 export interface Entity {
     idPersistent: string
     displayTxt?: string
     version: number
     disabled: boolean
+    reasonTxt: string | undefined
     displayTxtDetails: string | TagDefinition
 }
 
 export function newEntity({
     idPersistent,
     displayTxt,
-    displayTxtDetails = 'Display Text',
     version,
-    disabled
+    disabled,
+    reasonTxt = undefined,
+    displayTxtDetails = 'Display Text'
 }: {
     idPersistent: string
     displayTxt?: string
-    displayTxtDetails?: string | TagDefinition
     version: number
     disabled: boolean
+    reasonTxt?: string | undefined
+    displayTxtDetails?: string | TagDefinition
 }) {
     return {
         idPersistent: idPersistent,
         displayTxt: displayTxt,
-        displayTxtDetails: displayTxtDetails,
         version: version,
-        disabled: disabled
+        disabled: disabled,
+        reasonTxt: reasonTxt,
+        displayTxtDetails: displayTxtDetails
     }
 }
 export const displayTxtColumnId = 'display_txt_id'
 export const displayTextColumn = newTagDefinition({
     namePath: ['Display Text'],
     idPersistent: displayTxtColumnId,
+    columnType: TagType.String,
+    curated: true,
+    version: 0,
+    hidden: false
+})
+
+export const reasonColumnId = 'entity_reason'
+export const reasonColumn = newTagDefinition({
+    namePath: ['Entity Reason'],
+    idPersistent: reasonColumnId,
     columnType: TagType.String,
     curated: true,
     version: 0,

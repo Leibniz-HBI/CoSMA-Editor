@@ -1,7 +1,13 @@
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { fetch_chunk } from '../util/fetch'
 import { TagDefinition, TagType } from '../column_menu/state'
-import { CellValue, Entity, newEntity } from './state'
+import {
+    CellValue,
+    Entity,
+    displayTextColumn,
+    displayTxtColumnId,
+    newEntity
+} from './state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { constructColumnTitle } from '../contribution/entity/hooks'
@@ -24,8 +30,6 @@ import {
     submitValuesSuccess,
     tagDefinitionChange
 } from './slice'
-import { displayTxtColumnId } from './state'
-import { displayTextColumn } from './state'
 
 /**
  * Async action for fetching table data.
@@ -36,7 +40,6 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
         dispatch(setColumnLoading(displayTextColumn))
         try {
             const entities: Entity[] = []
-            const displayTxtList: { [key: string]: CellValue[] } = {}
             for (let i = 0; ; i += 500) {
                 const rsp = await fetch_chunk({
                     api_path: config.api_path + '/persons/chunk',
@@ -63,13 +66,6 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
                     for (const entry_json of rowsApi) {
                         const entity = parseEntityObjectFromJson(entry_json)
                         entities.push(entity)
-                        displayTxtList[entity.idPersistent] = [
-                            {
-                                value: entity.displayTxt,
-                                idPersistent: entity.idPersistent,
-                                version: entity.version
-                            }
-                        ]
                     }
                 }
                 if (rowsApi.length < 500) {
@@ -80,7 +76,7 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
             dispatch(
                 appendColumn({
                     idPersistent: displayTxtColumnId,
-                    columnData: displayTxtList
+                    columnData: undefined
                 })
             )
             return true
@@ -337,7 +333,8 @@ export function parseEntityObjectFromJson(json: any): Entity {
         displayTxt: json['display_txt'],
         displayTxtDetails: parseDisplayTxtDetails(json['display_txt_details']),
         version: Number.parseInt(json['version']),
-        disabled: json['disabled']
+        disabled: json['disabled'],
+        reasonTxt: json['reason_txt']
     })
 }
 export function parseDisplayTxtDetails(

@@ -114,9 +114,6 @@ test('success new entity', async () => {
                 displayTxtDetails: 'display_txt_detail'
             })
         ])
-        expect(state.table.columnStates[0].cellContents.value).toEqual([
-            [{ value: displayTxt0, idPersistent: idPersistent0, version: version0 }]
-        ])
     })
     expect(fetchMock.mock.calls).toEqual([
         [

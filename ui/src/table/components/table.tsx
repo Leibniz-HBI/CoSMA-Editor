@@ -7,13 +7,13 @@ import {
     Rectangle
 } from '@glideapps/glide-data-grid'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Col, Row } from 'react-bootstrap'
+import { Col, Row } from 'react-bootstrap'
 import { IBounds, useLayer } from 'react-laag'
 import { ColumnAddButton } from '../../column_menu/components/misc'
 import { HeaderMenu } from '../../header_menu'
 import { drawCell } from '../draw'
 import { ChangeOwnershipModal } from '../../tag_management/components'
-import { MergeEntitiesButton } from '../selection/components'
+import { MergeEntitiesButton, ReasonToggleButton } from './buttons'
 import { mkGridSelectionCallback } from '../selection/slice'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '../../store'
@@ -30,6 +30,7 @@ import {
     selectIsSubmittingValues,
     selectOwnershipChangeTagDefinition,
     selectSelectedColumnHeaderBounds,
+    selectShowEntityReasons,
     selectShowSearch
 } from '../selectors'
 import { selectUserInfo } from '../../user/selectors'
@@ -39,7 +40,6 @@ import {
     setColumnWidth,
     setLoadDataError,
     showColumnAddMenu,
-    showEntityAdd,
     showHeaderMenu,
     tagChangeOwnershipHide,
     tagDefinitionChange,
@@ -54,9 +54,12 @@ import {
     submitValuesAsync
 } from '../thunks'
 import { TagDefinition } from '../../column_menu/state'
-import { ColumnState, Entity, csvLinesFromTable } from '../state'
+import { ColumnState, Entity } from '../state'
 import { ColumnModal, EntityAddModal, EntityMergingModal } from './modals'
 import { createCellContentCallback } from '../cell'
+import { AddEntityButton } from './buttons'
+import { SearchButton } from './buttons'
+import { DownloadButton } from './buttons'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -128,11 +131,9 @@ export function RemoteDataTable() {
                     <Col className="ps-0">
                         <Row className="justify-content-start">
                             <Col xs="auto">
-                                <Button onClick={() => dispatch(showEntityAdd())}>
-                                    Add Entity
-                                </Button>
+                                <AddEntityButton dispatch={dispatch} />
                             </Col>
-                            <Col className="ps-0">
+                            <Col className="ps-0" xs="auto">
                                 <MergeEntitiesButton
                                     entityIdArray={entities}
                                     mergeRequestCreatedCallback={() =>
@@ -140,21 +141,19 @@ export function RemoteDataTable() {
                                     }
                                 />
                             </Col>
+                            <Col xs="auto" className="pt-2">
+                                <ReasonToggleButton dispatch={dispatch} />
+                            </Col>
                         </Row>
                     </Col>
-                    <Col xs="auto" onClick={() => dispatch(toggleSearch(true))}>
-                        <Button>Search</Button>
+                    <Col xs="auto">
+                        <SearchButton dispatch={dispatch} />
                     </Col>
                     <Col xs="auto" className="pe-0">
-                        <Button
-                            onClick={() =>
-                                downloadWorkAround(
-                                    csvLinesFromTable({ entities, columnStates })
-                                )
-                            }
-                        >
-                            Download
-                        </Button>
+                        <DownloadButton
+                            entities={entities}
+                            columnStates={columnStates}
+                        />
                     </Col>
                 </Row>
                 <Row
@@ -221,18 +220,22 @@ export function DataTable({
         isLoading = useAppSelector(selectIsLoadingEntities),
         isSubmittingValues = useAppSelector(selectIsSubmittingValues),
         columnHeaderMenuEntries = useAppSelector(selectColumnHeaderMenu)(dispatch),
-        showSearch = useAppSelector(selectShowSearch)
+        showSearch = useAppSelector(selectShowSearch),
+        showEntityReasons = useAppSelector(selectShowEntityReasons)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const cellContentCallback = useCallback(
-            createCellContentCallback({ columnStates }),
+            createCellContentCallback({ entities, columnStates, showEntityReasons }),
             // eslint-disable-next-line react-hooks/exhaustive-deps
-            [entities, columnStates]
+            [entities, columnStates, showEntityReasons]
         ),
         submitValueCallback = (cell: Item, newValue: EditableGridCell) => {
             if (entities === undefined || isSubmittingValues) {
                 return
             }
             const [colIdx, rowIdx] = cell
+            if (showEntityReasons && colIdx == 1) {
+                return
+            }
             if (colIdx == 0) {
                 const entity = entities[rowIdx]
                 let newValueData: string | undefined = newValue.data?.toString()
@@ -355,7 +358,7 @@ export function DataTable({
                 id: columnState.tagDefinition.idPersistent,
                 title,
                 width: columnState.width,
-                hasMenu: i >= frozenColumns
+                hasMenu: false
             })
         }
 

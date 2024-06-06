@@ -136,3 +136,8 @@ export const selectIsSubmittingValues = createSelector(
     selectTableState,
     (state) => state.isSubmittingValues
 )
+
+export const selectShowEntityReasons = createSelector(
+    selectTableState,
+    (state) => state.showEntityReasons
+)
