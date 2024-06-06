@@ -1,5 +1,9 @@
 """Models for entities."""
 
+from __future__ import annotations
+
+from typing import Optional
+
 from django.contrib.postgres.indexes import GistIndex
 from django.db import models
 from django.db.models.aggregates import Max
@@ -34,12 +38,16 @@ class Entity(Versioned, HistoryMixin):
         ]
 
     @classmethod
+    def most_recent_by_id_queryset(cls, id_persistent):
+        """Return a query set containing only the most recent version of an entity."""
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_persistent
+        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+
+    @classmethod
     def most_recent_by_id(cls, id_persistent):
         """Return the most recent version of an entity."""
-        # pylint: disable=no-member
-        return cls.objects.filter(id_persistent=id_persistent).order_by(
-            models.F("previous_version").desc(nulls_last=True)
-        )[0]
+        return cls.most_recent_by_id_queryset(id_persistent).get()
 
     @classmethod
     def most_recent_queryset(cls, manager=None, include_disabled=False):
@@ -113,4 +121,64 @@ class Entity(Versioned, HistoryMixin):
             or other.disabled != self.disabled
             or other.contribution_candidate_id
             != self.contribution_candidate_id  # pylint: disable=no-member
+        )
+
+
+class EntityReason(models.Model):
+    """Django ORM model for reasons why an entity exists in the database."""
+
+    id_entity_persistent = models.CharField(max_length=36)
+    text = models.TextField()
+    timestamp = models.DateTimeField()
+    id_persistent = models.CharField(max_length=36, primary_key=True)
+    author = models.ForeignKey(
+        "cosmae.CosmaeUser", null=True, blank=True, on_delete=models.SET_NULL
+    )
+
+    @classmethod
+    def for_id_entity_persistent_unordered(cls, id_entity_persistent):
+        "Get all reasons for an entity unordered"
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_entity_persistent=id_entity_persistent
+        )
+
+    @classmethod
+    def for_id_entity_persistent_asc(cls, id_entity_persistent):
+        "Get all reasons for an entity ordered ascending by date."
+        return cls.for_id_entity_persistent_unordered(id_entity_persistent).order_by(
+            models.F("timestamp").asc()
+        )
+
+    @classmethod
+    def for_id_entity_persistent_desc(cls, id_entity_persistent):
+        "Get all reasons for an entity ordered ascending by date."
+        return cls.for_id_entity_persistent_unordered(id_entity_persistent).order_by(
+            models.F("timestamp").desc()
+        )
+
+    @classmethod
+    def add(cls, id_persistent, id_entity_persistent, text, timestamp, author):
+        # pylint: disable=too-many-arguments
+        "Add a new entity reason."
+        cls.objects.create(  # pylint: disable=no-member
+            id_persistent=id_persistent,
+            id_entity_persistent=id_entity_persistent,
+            text=text,
+            timestamp=timestamp,
+            author=author,
+        )
+
+    @classmethod
+    def annotate_reason(cls, entities: Optional[models.BaseManager[Entity]]):
+        "Annotate the most recent reason for being in the db to a query set of entities."
+        if entities is None:
+            entities = cls.objects  # pylint: disable=no-member
+        return entities.annotate(
+            reason_txt=models.Subquery(
+                cls.objects.filter(  # pylint: disable=no-member
+                    id_entity_persistent=models.OuterRef("id_persistent")
+                )
+                .order_by(models.F("timestamp").desc())[:1]
+                .values("text")
+            )
         )

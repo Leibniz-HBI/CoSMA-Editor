@@ -1,4 +1,5 @@
 "API methods for entities of a contribution"
+
 import logging
 from typing import Dict, List
 
@@ -10,7 +11,7 @@ from ninja import Router, Schema
 from cosmae.contribution.entity.match_entities import find_matches
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityReason
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.person.api import (
     PersonNatural,
@@ -25,6 +26,7 @@ router = Router()
 
 class ScoredMatch(Schema):
     "API model for combining an entity with a similarity score"
+
     # pylint: disable=too-few-public-methods
     similarity: float
     id_match_tag_definition_persistent_list: List[str]
@@ -33,6 +35,7 @@ class ScoredMatch(Schema):
 
 class ScoredMatchesWithDuplicateAssignment(Schema):
     "API model for combining scored matches with the id of a selected duplicate"
+
     # pylint: disable=too-few-public-methods
     matches: List[ScoredMatch]
     assigned_duplicate: PersonNatural | None = None
@@ -40,24 +43,28 @@ class ScoredMatchesWithDuplicateAssignment(Schema):
 
 class ScoredMatchResponse(Schema):
     "API model for multiple scored matches"
+
     # pylint: disable=too-few-public-methods
     matches: Dict[str, ScoredMatchesWithDuplicateAssignment]
 
 
 class PostSimilarRequest(Schema):
     "API model for requesting similar entities."
+
     # pylint: disable=too-few-public-methods
     id_entity_persistent_list: List[str]
 
 
 class PutDuplicateRequest(Schema):
     "API model for requesting similar entities."
+
     # pylint: disable=too-few-public-methods
     id_entity_destination_persistent: str | None = None
 
 
 class PutDuplicateResponse(Schema):
     "API Response for put duplicate request"
+
     # pylint: disable=too-few-public-methods
     assigned_duplicate: PersonNatural | None = None
 
@@ -83,7 +90,9 @@ def get_entities(request: HttpRequest, start: int, offset: int):
         candidate = ContributionCandidate.by_id_persistent(
             id_contribution_persistent, user
         ).get()
-        entities_db = candidate.get_entities_chunked(start, offset)
+        entities_db = EntityReason.annotate_reason(
+            candidate.get_entities_chunked(start, offset)
+        )
         return 200, PersonNaturalList(
             persons=[person_db_to_api(person) for person in entities_db]
         )
@@ -175,7 +184,9 @@ def put_duplicate_assignment(
         if origin.contribution_candidate != candidate:
             return 400, ApiError(msg="Origin Entity does not belong to contribution.")
         if id_entity_destination_persistent:
-            destination = Entity.most_recent_by_id(id_entity_destination_persistent)
+            destination = EntityReason.annotate_reason(
+                Entity.most_recent_by_id_queryset(id_entity_destination_persistent)
+            ).get()
             assigned_duplicate = person_db_to_api(destination)
         else:
             assigned_duplicate = None
@@ -192,7 +203,7 @@ def put_duplicate_assignment(
                 )
             return 200, PutDuplicateResponse(assigned_duplicate=assigned_duplicate)
 
-    except IndexError:
+    except Entity.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="One of the entities does not exist.")
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")

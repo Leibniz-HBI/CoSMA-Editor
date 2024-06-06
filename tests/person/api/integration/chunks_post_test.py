@@ -21,6 +21,7 @@ def test_can_slice(auth_server_commissioner):
             "names_personal": "test personal",
             "names_family": "test family",
             "display_txt": f"{i}",
+            "reason_txt": "reason",
         }
         for i in range(20)
     ]
@@ -40,6 +41,7 @@ def test_can_slice_with_hidden(auth_server_commissioner):
             "names_personal": "test personal",
             "names_family": "test family",
             "display_txt": f"{i}",
+            "reason_txt": "reason",
         }
         for i in range(20)
     ]
@@ -92,3 +94,9 @@ def test_bad_db(auth_server):
 def test_not_signed_in(live_server):
     rsp = post_chunk(live_server.url, 0, 2, cookies=None)
     assert rsp.status_code == 401
+
+
+def test_insufficient_permissions(auth_server_applicant):
+    live_server, cookies = auth_server_applicant
+    rsp = post_chunk(live_server.url, 0, 2, cookies=cookies)
+    assert rsp.status_code == 403

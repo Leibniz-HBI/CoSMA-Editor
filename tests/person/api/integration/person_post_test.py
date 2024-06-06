@@ -9,35 +9,37 @@ from cosmae.entity.models_django import Entity
 
 test_display_txt_0 = "test display text 0"
 test_id_persistent_0 = "test_id_0"
+test_reason = "reason used in test"
 
 
 @pytest.fixture
-def display_txt_only():
+def display_txt_and_reason():
     return {
         "display_txt": test_display_txt_0,
+        "reason_txt": test_reason,
     }
 
 
-def test_no_cookies(auth_server, display_txt_only):
+def test_no_cookies(auth_server, display_txt_and_reason):
     live_server, _ = auth_server
-    person = display_txt_only.copy()
+    person = display_txt_and_reason.copy()
     person["id_persistent"] = test_id_persistent_0
     req = post_person(live_server.url, person)
     assert req.status_code == 401
 
 
-def test_insufficient_permissions(auth_server_applicant, display_txt_only):
+def test_insufficient_permissions(auth_server_applicant, display_txt_and_reason):
     live_server, cookies = auth_server_applicant
-    person = display_txt_only.copy()
+    person = display_txt_and_reason.copy()
     person["id_persistent"] = test_id_persistent_0
     req = post_person(live_server.url, person, cookies=cookies)
     assert req.status_code == 403
     assert req.json()["msg"] == "Insufficient Permissions"
 
 
-def test_id_no_version(auth_server_commissioner, display_txt_only):
+def test_id_no_version(auth_server_commissioner, display_txt_and_reason):
     live_server, cookies = auth_server_commissioner
-    person = display_txt_only.copy()
+    person = display_txt_and_reason.copy()
     person["id_persistent"] = test_id_persistent_0
     req = post_person(live_server.url, person, cookies=cookies)
     assert req.status_code == 400
@@ -47,9 +49,9 @@ def test_id_no_version(auth_server_commissioner, display_txt_only):
     )
 
 
-def test_no_id_version(auth_server_commissioner, display_txt_only):
+def test_no_id_version(auth_server_commissioner, display_txt_and_reason):
     live_server, cookies = auth_server_commissioner
-    person = display_txt_only.copy()
+    person = display_txt_and_reason.copy()
     person["version"] = 5
     req = post_person(live_server.url, person, cookies=cookies)
     assert req.status_code == 400
@@ -59,9 +61,9 @@ def test_no_id_version(auth_server_commissioner, display_txt_only):
     )
 
 
-def test_concurrent_modification(auth_server_commissioner, display_txt_only):
+def test_concurrent_modification(auth_server_commissioner, display_txt_and_reason):
     live_server, cookies = auth_server_commissioner
-    person = display_txt_only.copy()
+    person = display_txt_and_reason.copy()
     req = post_person(live_server.url, person, cookies=cookies)
     assert req.status_code == 200
     created = req.json()["persons"][0]
@@ -77,9 +79,9 @@ def test_concurrent_modification(auth_server_commissioner, display_txt_only):
     )
 
 
-def test_no_modification_is_returned(auth_server_commissioner, display_txt_only):
+def test_no_modification_is_returned(auth_server_commissioner, display_txt_and_reason):
     live_server, cookies = auth_server_commissioner
-    req = post_person(live_server.url, display_txt_only, cookies=cookies)
+    req = post_person(live_server.url, display_txt_and_reason, cookies=cookies)
     assert req.status_code == 200
     created = req.json()["persons"][0]
     req = post_person(live_server.url, created, cookies=cookies)
@@ -89,45 +91,47 @@ def test_no_modification_is_returned(auth_server_commissioner, display_txt_only)
     assert persons[0] == created
 
 
-def test_exists(auth_server_commissioner, display_txt_only):
+def test_exists(auth_server_commissioner, display_txt_and_reason):
     live_server, cookies = auth_server_commissioner
     mock = MagicMock()
     mock.return_value = "a9ae45a3-8cc7-4d8d-bdda-36ca7bb88ab6"
     with patch("cosmae.person.api.uuid4", mock):
-        person = display_txt_only.copy()
+        person = display_txt_and_reason.copy()
         req = post_person(live_server.url, person, cookies=cookies)
         assert req.status_code == 200
         req = post_person(live_server.url, person, cookies=cookies)
         assert req.status_code == 500
         assert req.json()["msg"] == (
             "Could not generate an id for person with "
-            f"display_txt {display_txt_only['display_txt']}."
+            f"display_txt {display_txt_and_reason['display_txt']}."
         )
 
 
-def test_bad_db(auth_server_commissioner, display_txt_only):
+def test_bad_db(auth_server_commissioner, display_txt_and_reason):
     live_server, cookies = auth_server_commissioner
     mock = MagicMock()
     mock.side_effect = IntegrityError()
     with patch("cosmae.entity.models_django.Entity.save", mock):
-        req = post_person(live_server.url, display_txt_only, cookies=cookies)
+        req = post_person(live_server.url, display_txt_and_reason, cookies=cookies)
     assert req.status_code == 500
     assert req.json()["msg"] == "Provided data not consistent with database."
 
 
-def test_not_signed_in(live_server, display_txt_only):
-    req = post_person(live_server.url, display_txt_only, cookies=None)
+def test_not_signed_in(live_server, display_txt_and_reason):
+    req = post_person(live_server.url, display_txt_and_reason, cookies=None)
     assert req.status_code == 401
 
 
-def test_multiple(auth_server_commissioner, display_txt_only):
+def test_multiple(auth_server_commissioner, display_txt_and_reason):
     live_server, cookies = auth_server_commissioner
     count_before = len(Entity.most_recent(Entity.objects))  # pylint: disable=no-member
-    req = post_person(live_server.url, display_txt_only, cookies=cookies)
+    req = post_person(live_server.url, display_txt_and_reason, cookies=cookies)
     created = req.json()["persons"][0]
     new_display_txt = "new test display_text"
     created["display_txt"] = new_display_txt
-    req = post_persons(live_server.url, [created, display_txt_only], cookies=cookies)
+    req = post_persons(
+        live_server.url, [created, display_txt_and_reason], cookies=cookies
+    )
     assert req.status_code == 200
     persons = req.json()["persons"]
     assert len(persons) == 2
@@ -144,7 +148,7 @@ def test_multiple(auth_server_commissioner, display_txt_only):
 
 def test_no_display_txt(auth_server_commissioner):
     server, cookies = auth_server_commissioner
-    rsp = post_person(server.url, {}, cookies=cookies)
+    rsp = post_person(server.url, {"reason_txt": test_reason}, cookies=cookies)
     assert rsp.status_code == 200
     json = rsp.json()
     persons = json["persons"]
@@ -156,3 +160,31 @@ def test_no_display_txt(auth_server_commissioner):
     entity = Entity.most_recent_by_id(id_persistent)
     assert entity.id_persistent == id_persistent
     assert entity.display_txt is None
+
+
+def test_no_reason_create(auth_server_commissioner):
+    server, cookies = auth_server_commissioner
+    rsp = post_person(server.url, {}, cookies=cookies)
+    assert rsp.status_code == 400
+
+
+def test_no_reason_change(auth_server_commissioner):
+    server, cookies = auth_server_commissioner
+    rsp = post_person(server.url, {"reason_txt": test_reason}, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    created = rsp.json()["persons"][0]
+    changed_display_txt = "new test display txt"
+    created["display_txt"] = changed_display_txt
+    created.pop("reason_txt")
+    rsp = post_person(server.url, created, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    persons = json["persons"]
+    assert len(persons) == 1
+    person = persons[0]
+    id_persistent = person["id_persistent"]
+    assert person["display_txt"] == changed_display_txt
+    assert person["display_txt_details"] == "Display Text"
+    entity = Entity.most_recent_by_id(id_persistent)
+    assert entity.id_persistent == id_persistent

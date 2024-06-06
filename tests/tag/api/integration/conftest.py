@@ -29,4 +29,5 @@ def person():
     return {
         "display_txt": "entity test",
         "names_personal": "name test",
+        "reason_txt": "Entity reason for test",
     }

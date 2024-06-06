@@ -4,11 +4,12 @@ from datetime import datetime
 from typing import List, Optional, Union
 from uuid import uuid4
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
 from cosmae.entity.models_django import Entity as EntityDb
+from cosmae.entity.models_django import EntityReason as EntityReasonDb
 from cosmae.entity.queue import get_display_txt_info
 from cosmae.exception import (
     ApiError,
@@ -19,9 +20,9 @@ from cosmae.exception import (
 )
 from cosmae.tag.api.definitions import TagDefinitionResponse
 from cosmae.tag.api.models_conversion import tag_definition_db_dict_to_api
+from cosmae.user.models_conversion import PublicUserInfo
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
-from cosmae.util.django import save_many_atomic
 
 router = Router()
 
@@ -39,11 +40,41 @@ class PersonNatural(Schema):
     display_txt_details: Union[str, TagDefinitionResponse] | None = None
 
 
+class EntityReasonResponse(Schema):
+    # pylint: disable=too-few-public-methods
+    "Reason for an entity being in the DB."
+    text: str
+    author: PublicUserInfo
+    timestamp: datetime
+
+
+class EntityReasonAddRequest(Schema):
+    # pylint: disable=too-few-public-methods
+    "Request body for adding a new entity reason"
+    text: str
+
+
+class PersonNaturalWithReason(PersonNatural):
+    "API Model for an entity with reason"
+
+    # pylint: disable=too-few-public-methods
+    reason_txt: str | None = None
+
+
 class PersonNaturalList(Schema):
     # pylint: disable=too-few-public-methods
     """API Model for multiple natural persons."""
 
     persons: List[PersonNatural]
+
+
+class PersonNaturalWithReasonList(Schema):
+    # pylint: disable=too-few-public-methods
+    """API Model for multiple natural persons
+    with reason for being in the db,
+    used for responses"""
+
+    persons: List[PersonNaturalWithReason]
 
 
 class PersonsGetRequest(Schema):
@@ -71,7 +102,7 @@ class ChunkRequest(Schema):
 @router.post(
     "",
     response={
-        200: PersonNaturalList,
+        200: PersonNaturalWithReasonList,
         400: ApiError,
         401: ApiError,
         500: ApiError,
@@ -79,7 +110,7 @@ class ChunkRequest(Schema):
     },
 )
 def persons_post(
-    request: HttpRequest, persons: PersonNaturalList
+    request: HttpRequest, persons: PersonNaturalWithReasonList
 ):  # pylint: disable=too-many-return-statements
     """Add a person to the DB.
     Returns:
@@ -110,17 +141,28 @@ def persons_post(
         )
 
     try:
-        save_many_atomic(person for person, do_write in person_dbs if do_write)
+        with transaction.atomic():
+            for person, do_write, reason, write_reason in person_dbs:
+                person.reason_txt = reason.text
+                if do_write:
+                    person.save()
+                if write_reason:
+                    reason.save()
     except IntegrityError:
         return 500, ApiError(msg="Provided data not consistent with database.")
-    return 200, PersonNaturalList(
-        persons=[person_db_to_api(person) for person, _ in person_dbs]
+    return 200, PersonNaturalWithReasonList(
+        persons=[person_db_to_api(person) for person, _, _, _ in person_dbs]
     )
 
 
 @router.post(
     "chunk",
-    response={200: PersonNaturalList, 400: ApiError, 500: ApiError},
+    response={
+        200: PersonNaturalWithReasonList,
+        400: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
 )
 def persons_chunks_post(
     request: HttpRequest, req_data: ChunkRequest  # pylint: disable=unused-argument
@@ -131,10 +173,15 @@ def persons_chunks_post(
     chunk_limit = 1000
     if req_data.limit > chunk_limit:
         return 400, ApiError(msg=f"Please specify limit smaller than {chunk_limit}.")
+    user = check_user(request)
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions")
     try:
-        person_dbs = EntityDb.get_most_recent_chunked(req_data.offset, req_data.limit)
+        person_dbs = EntityReasonDb.annotate_reason(
+            EntityDb.get_most_recent_chunked(req_data.offset, req_data.limit)
+        )
         person_apis = [person_db_to_api(person) for person in person_dbs]
-        return 200, PersonNaturalList(persons=person_apis)
+        return 200, PersonNaturalWithReasonList(persons=person_apis)
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
 
@@ -181,8 +228,12 @@ def person_api_to_db(
                 f"Person with display_txt {person.display_txt} "
                 "has version but no persistent_id."
             )
+        if person.reason_txt is None:
+            raise ValidationException(
+                f"No reason given for entity with display_txt {person.display_txt}"
+            )
         persistent_id = str(uuid4())
-    return EntityDb.change_or_create_versioned(
+    entity_db, save_entity = EntityDb.change_or_create_versioned(
         display_txt=person.display_txt,
         time_edit=time_edit,
         id_persistent=persistent_id,
@@ -190,6 +241,24 @@ def person_api_to_db(
         version=person.version,
         disabled=person.disabled or False,
     )
+    if person.reason_txt is None:
+        try:
+            reason = EntityReasonDb.for_id_entity_persistent_desc(persistent_id)[
+                :1
+            ].get()
+        except EntityReasonDb.DoesNotExist:  # pylint: disable=no-member
+            reason = None
+        save_reason = False
+    else:
+        reason = EntityReasonDb(
+            id_persistent=uuid4(),
+            id_entity_persistent=persistent_id,
+            text=person.reason_txt,
+            timestamp=time_edit,
+            author=requester,
+        )
+        save_reason = True
+    return entity_db, save_entity, reason, save_reason
 
 
 def person_db_to_api(person: EntityDb) -> PersonNatural:
@@ -199,12 +268,13 @@ def person_db_to_api(person: EntityDb) -> PersonNatural:
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
     if isinstance(display_txt_info, dict):
         display_txt_info = tag_definition_db_dict_to_api(display_txt_info)
-    return PersonNatural(
+    return PersonNaturalWithReason(
         display_txt=display_txt,
         version=person.id,
         id_persistent=id_persistent,
         disabled=person.disabled,
         display_txt_details=display_txt_info,
+        reason_txt=person.reason_txt,
     )
 
 

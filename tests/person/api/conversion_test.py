@@ -13,16 +13,20 @@ from cosmae.person import api
 
 @pytest.mark.django_db
 def test_conversion_api_to_db_without_id(user):
-    person_api = api.PersonNatural(
+    person_api = api.PersonNaturalWithReason(
         display_txt=c.display_txt_test,
         version=None,
+        reason_txt=c.reason,
     )
     with patch("cosmae.person.api.uuid4") as uuid_mock:
         uuid_mock.return_value = c.id_persistent_test
-        person_db, _ = api.person_api_to_db(person_api, c.time_edit_test, user)
+        person_db, _, reason, _ = api.person_api_to_db(
+            person_api, c.time_edit_test, user
+        )
     assert person_db.display_txt == c.display_txt_test
     assert person_db.previous_version is None
     assert person_db.id_persistent == c.id_persistent_test
+    assert reason.text == c.reason
 
 
 @pytest.mark.django_db
@@ -34,15 +38,16 @@ def test_conversion_api_to_db_with_id(user):
         display_txt=c.display_txt_test,
     )
     prev.save()
-    person_api = api.PersonNatural(
+    person_api = api.PersonNaturalWithReason(
         display_txt=c.display_txt_test + " changed",
         version=prev.id,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
     )
-    person_db, _ = api.person_api_to_db(person_api, c.time_edit_test, user)
+    person_db, _, reason, _ = api.person_api_to_db(person_api, c.time_edit_test, user)
     assert person_db.display_txt == c.display_txt_test + " changed"
     assert person_db.id_persistent == c.id_persistent_test
     assert person_db.previous_version_id == prev.id  # pylint: disable=no-member
+    assert reason is None
 
 
 def test_conversion_api_to_db_with_id_no_version(user):
@@ -71,7 +76,8 @@ def test_conversion_db_to_api_no_cache():
         time_edit=c.time_edit_test,
         id=5,
     )
-    person_api_expected = api.PersonNatural(
+    person_db.reason_txt = None
+    person_api_expected = api.PersonNaturalWithReason(
         display_txt=c.display_txt_test,
         display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
@@ -95,7 +101,8 @@ def test_conversion_db_to_api_display_txt_in_cache():
         time_edit=c.time_edit_test,
         id=5,
     )
-    person_api_expected = api.PersonNatural(
+    person_db.reason_txt = None
+    person_api_expected = api.PersonNaturalWithReason(
         display_txt=c.display_txt_test,
         display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
@@ -117,7 +124,8 @@ def test_conversion_db_to_api_id_persistent_in_cache_but_display_txt():
         time_edit=c.time_edit_test,
         id=5,
     )
-    person_api_expected = api.PersonNatural(
+    person_db.reason_txt = None
+    person_api_expected = api.PersonNaturalWithReason(
         display_txt=c.display_txt_test,
         display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
@@ -139,7 +147,8 @@ def test_conversion_db_to_api_UNKNOWN_in_cache_no_display_txt():
         time_edit=c.time_edit_test,
         id=5,
     )
-    person_api_expected = api.PersonNatural(
+    person_db.reason_txt = None
+    person_api_expected = api.PersonNaturalWithReason(
         display_txt=c.id_persistent_test,
         display_txt_details="id_persistent",
         version=5,  # pylint: disable=no-member
@@ -176,7 +185,8 @@ def test_conversion_db_to_api_tag_def_in_cache():
         time_edit=c.time_edit_test,
         id=5,
     )
-    person_api_expected = api.PersonNatural(
+    person_db.reason_txt = None
+    person_api_expected = api.PersonNaturalWithReason(
         display_txt=cache_display_txt,
         display_txt_details={
             "id_persistent": ct.id_tag_def_persistent_test,

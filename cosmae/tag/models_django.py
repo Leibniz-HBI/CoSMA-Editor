@@ -350,7 +350,7 @@ class TagInstanceHistory(TagInstanceAbstract, HistoryMixin):
         """Check wether the object conforms to implicit assumptions."""
         try:
             Entity.most_recent_by_id(self.id_entity_persistent)
-        except IndexError as exc:
+        except Entity.DoesNotExist as exc:  # pylint: disable=no-member
             raise EntityMissingException(self.id_entity_persistent) from exc
         try:
             tag_def = TagDefinition.most_recent_by_id(self.id_tag_definition_persistent)
