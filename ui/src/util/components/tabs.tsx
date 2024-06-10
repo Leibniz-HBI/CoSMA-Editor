@@ -50,13 +50,13 @@ export function TabView({
     }
     return (
         <div className="text-left rounded ps-0 pe-0 h-100 overflow-y-hidden">
-            <Col className="h-100 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1">
-                <Row className="ms-0 me-0 mb-1">
-                    <ul className="nav nav-tabs justify-content-center border-primary">
+            <Col className="h-100 d-flex flex-column overflow-hidden">
+                <Row className="ms-0 me-0 mb-1 flex-grow-0 flex-shrink-0">
+                    <ul className="nav nav-tabs justify-content-center border-primary flex-grow-0 flex-shrink-0">
                         {tabItems}
                     </ul>
                 </Row>
-                {body}
+                <Row className="h-90">{body}</Row>
             </Col>
         </div>
     )

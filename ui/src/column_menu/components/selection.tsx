@@ -146,7 +146,7 @@ export function EditModal() {
             show={editTagDefinition.value !== undefined}
             size="xl"
             onHide={closeEditCallback}
-            className="h-100"
+            className="h-100 overflow-hidden"
         >
             <Modal.Header closeButton={true}>
                 <div className="modal-title h4">Edit Tag Definition</div>

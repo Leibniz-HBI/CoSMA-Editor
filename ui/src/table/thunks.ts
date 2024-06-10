@@ -21,15 +21,22 @@ import {
     entityChangeOrCreateError,
     entityChangeOrCreateStart,
     entityChangeOrCreateSuccess,
+    loadEntityReasonHistoryError,
+    loadEntityReasonHistoryStart,
+    loadEntityReasonHistorySuccess,
     setColumnLoading,
     setEntities,
     setEntityLoading,
     setLoadDataError,
+    submitEntityReasonError,
+    submitEntityReasonStart,
+    submitEntityReasonSuccess,
     submitValuesError,
     submitValuesStart,
     submitValuesSuccess,
     tagDefinitionChange
 } from './slice'
+import { parseCommentFromApi } from '../comments/thunks'
 
 /**
  * Async action for fetching table data.
@@ -243,10 +250,12 @@ function extractEdit(
 export function entityChangeOrCreate({
     displayTxt,
     idPersistent = undefined,
+    reasonTxt = undefined,
     version = undefined
 }: {
     displayTxt?: string
     idPersistent?: string
+    reasonTxt?: string
     version?: number
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
@@ -259,6 +268,7 @@ export function entityChangeOrCreate({
                     persons: [
                         {
                             display_txt: displayTxt,
+                            reason_txt: reasonTxt,
                             id_persistent: idPersistent,
                             version: version
                         }
@@ -306,6 +316,64 @@ export function curateAsync(idTagDefinitionPersistent: string): ThunkWithFetch<v
             dispatch(curateTagDefinitionError())
             dispatch(addError(exceptionMessage(e)))
         }
+    }
+}
+
+export function loadEntityReasonHistoryThunk(
+    idEntityPersistent: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(loadEntityReasonHistoryStart())
+        try {
+            const rsp = await fetch(
+                config.api_path + `/persons/${idEntityPersistent}/reasons`,
+                { credentials: 'include' }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const reasons = json['reasons'].map((reason: unknown) =>
+                    parseCommentFromApi(reason)
+                )
+                dispatch(loadEntityReasonHistorySuccess(reasons))
+            } else {
+                dispatch(loadEntityReasonHistoryError())
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(loadEntityReasonHistoryError())
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+
+export function submitEntityReasonThunk(
+    idEntityPersistent: string,
+    reason: string
+): ThunkWithFetch<boolean> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(submitEntityReasonStart())
+        try {
+            const rsp = await fetch(
+                config.api_path + `/persons/${idEntityPersistent}/reasons`,
+                {
+                    credentials: 'include',
+                    method: 'PUT',
+                    body: JSON.stringify({ reason_txt: reason })
+                }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const comment = parseCommentFromApi(json['reason'])
+                dispatch(submitEntityReasonSuccess({ idEntityPersistent, comment }))
+                return true
+            } else {
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+        }
+        dispatch(submitEntityReasonError())
+        return false
     }
 }
 

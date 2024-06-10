@@ -40,6 +40,7 @@ import {
     setColumnWidth,
     setLoadDataError,
     showColumnAddMenu,
+    showEntityReasonHistory,
     showHeaderMenu,
     tagChangeOwnershipHide,
     tagDefinitionChange,
@@ -55,7 +56,12 @@ import {
 } from '../thunks'
 import { TagDefinition } from '../../column_menu/state'
 import { ColumnState, Entity } from '../state'
-import { ColumnModal, EntityAddModal, EntityMergingModal } from './modals'
+import {
+    ColumnModal,
+    EntityAddModal,
+    EntityMergingModal,
+    EntityReasonModal
+} from './modals'
 import { createCellContentCallback } from '../cell'
 import { AddEntityButton } from './buttons'
 import { SearchButton } from './buttons'
@@ -175,6 +181,7 @@ export function RemoteDataTable() {
                                 dispatch(tagDefinitionChange(tagDefinition))
                             }
                         />
+                        <EntityReasonModal />
                     </div>
                 </Row>
                 <div id="portal" />
@@ -300,6 +307,14 @@ export function DataTable({
             }
         }
     )
+    const onCellActivated = (cell: Item) => {
+        const [colIdx, rowIdx] = cell
+        if (showEntityReasons && colIdx == 1) {
+            dispatch(
+                showEntityReasonHistory(entities?.at(rowIdx)?.idPersistent ?? undefined)
+            )
+        }
+    }
 
     const timeoutRef = useRef(0)
 
@@ -387,6 +402,7 @@ export function DataTable({
                     onColumnResize={setColumnWidthCallback}
                     onColumnMoved={switchColumnsCallback}
                     onCellEdited={submitValueCallback}
+                    onCellActivated={onCellActivated}
                     rowMarkers="checkbox-visible"
                     gridSelection={tableSelection}
                     onGridSelectionChange={mkGridSelectionCallback(dispatch)}

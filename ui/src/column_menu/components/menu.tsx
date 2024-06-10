@@ -86,7 +86,7 @@ export function CreateTabBody({
     existingTagDefinition?: TagDefinition
 }) {
     return (
-        <div className="ps-2 pe-2 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1">
+        <div className="ps-3 pe-3 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1 h-100">
             <TagCreateForm existingTagDefinition={existingTagDefinition}>
                 {(columnTypeCreateFormProps: ColumnTypeCreateFormProps) => (
                     <ColumnSelector
@@ -126,30 +126,32 @@ function ShowTabBody({
     hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
     return (
-        <ColumnSelector
-            mkTailElement={(columnDefinition: TagDefinition) => {
-                const isDisplayedInTable =
-                    columnIndices[columnDefinition.idPersistent] !== undefined
-                if (isDisplayedInTable) {
-                    return (
-                        <span
-                            className="icon"
-                            onClick={() => hideColumnDataCallback(columnDefinition)}
-                        >
-                            <EyeFill height={20} />
-                        </span>
-                    )
-                } else {
-                    return (
-                        <span
-                            className="icon"
-                            onClick={() => loadColumnDataCallback(columnDefinition)}
-                        >
-                            <Eye height={20} />
-                        </span>
-                    )
-                }
-            }}
-        />
+        <div className="ps-2 pe-2 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1 h-100">
+            <ColumnSelector
+                mkTailElement={(columnDefinition: TagDefinition) => {
+                    const isDisplayedInTable =
+                        columnIndices[columnDefinition.idPersistent] !== undefined
+                    if (isDisplayedInTable) {
+                        return (
+                            <span
+                                className="icon"
+                                onClick={() => hideColumnDataCallback(columnDefinition)}
+                            >
+                                <EyeFill height={20} />
+                            </span>
+                        )
+                    } else {
+                        return (
+                            <span
+                                className="icon"
+                                onClick={() => loadColumnDataCallback(columnDefinition)}
+                            >
+                                <Eye height={20} />
+                            </span>
+                        )
+                    }
+                }}
+            />
+        </div>
     )
 }

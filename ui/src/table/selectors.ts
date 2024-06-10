@@ -141,3 +141,13 @@ export const selectShowEntityReasons = createSelector(
     selectTableState,
     (state) => state.showEntityReasons
 )
+
+export const selectEntityReasonHistoryForIdPersistent = createSelector(
+    selectTableState,
+    (state) => state.showEntityReasonHistoryForIdPersistent
+)
+
+export const selectEntityReasonHistory = createSelector(
+    selectTableState,
+    (state) => state.entityReasonHistory
+)

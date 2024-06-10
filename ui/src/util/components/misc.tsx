@@ -31,6 +31,30 @@ export function RemoteTriggerButton({
         </Button>
     )
 }
+export function RemoteSubmitButton({
+    isLoading,
+    label
+}: {
+    label: string
+    isLoading: boolean
+}) {
+    if (isLoading) {
+        return (
+            <Placeholder.Button variant="primary" animation="wave">
+                <span>{label}</span>
+            </Placeholder.Button>
+        )
+    }
+    return (
+        <Button
+            variant="outline-primary"
+            type="submit"
+            data-testid="complete-column-assignment-button"
+        >
+            <span>{label}</span>
+        </Button>
+    )
+}
 
 export function ChoiceButton({
     label,

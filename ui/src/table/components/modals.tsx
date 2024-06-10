@@ -1,20 +1,30 @@
-import { Modal } from 'react-bootstrap'
+import { Col, Modal, ModalBody, Row } from 'react-bootstrap'
 
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import { EntityMergeRequestConflictComponent } from '../../merge_request/entity/conflicts/components'
 import {
     selectEntityAddState,
+    selectEntityReasonHistory,
+    selectEntityReasonHistoryForIdPersistent,
     selectShowColumnMenu,
     selectShowEntityAddMenu,
     selectShowEntityMerging
 } from '../selectors'
 import {
+    clearEntityReasonHistory,
     hideColumnAddMenu,
     hideEntityAdd,
+    hideEntityReasonHistory,
     removeColumnByIdPersistent,
     toggleEntityMergingModal
 } from '../slice'
-import { entityChangeOrCreate, getColumnAsync, getTableAsync } from '../thunks'
+import {
+    entityChangeOrCreate,
+    getColumnAsync,
+    getTableAsync,
+    loadEntityReasonHistoryThunk,
+    submitEntityReasonThunk
+} from '../thunks'
 import { AddEntityForm } from '../../entity/components'
 import { ColumnMenu } from '../../column_menu/components/menu'
 import { TagDefinition } from '../../column_menu/state'
@@ -22,6 +32,8 @@ import {
     remoteUserProfileColumnAppend,
     remoteUserProfileColumnDeleteAsync
 } from '../../user/thunks'
+import { useEffect } from 'react'
+import { CommentForm, CommentsHistory } from '../../comments/components'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -62,8 +74,10 @@ export function EntityAddModal() {
             <Modal.Body>
                 <AddEntityForm
                     state={entityAddState}
-                    addEntityCallback={(displayTxt) =>
-                        dispatch(entityChangeOrCreate({ displayTxt }))
+                    addEntityCallback={(displayTxt, reason) =>
+                        dispatch(
+                            entityChangeOrCreate({ displayTxt, reasonTxt: reason })
+                        )
                     }
                 />
             </Modal.Body>
@@ -84,7 +98,7 @@ export function ColumnModal({
             onHide={() => dispatch(hideColumnAddMenu())}
             size="xl"
             key="column-menu-modal"
-            className="h-100"
+            className="h-100 overflow-hidden"
         >
             <Modal.Header closeButton>
                 <Modal.Title className="text-dark">
@@ -119,5 +133,55 @@ export function ColumnModal({
                 />
             </Modal.Body>
         </Modal>
+    )
+}
+
+export function EntityReasonModal() {
+    const remoteIdPersistent = useAppSelector(selectEntityReasonHistoryForIdPersistent)
+    const idPersistent = remoteIdPersistent.value
+    const dispatch = useAppDispatch()
+    return (
+        <Modal
+            show={idPersistent !== undefined}
+            className="overflow-hidden"
+            onHide={() => dispatch(hideEntityReasonHistory())}
+            size="xl"
+        >
+            <Modal.Header closeButton>
+                <Modal.Title>Entity Reason History</Modal.Title>
+            </Modal.Header>
+            <ModalBody className="vh-85 overflow-hide">
+                {idPersistent !== undefined && (
+                    <EntityReasonBody idPersistent={idPersistent} />
+                )}
+            </ModalBody>
+        </Modal>
+    )
+}
+export function EntityReasonBody({ idPersistent }: { idPersistent: string }) {
+    const comments = useAppSelector(selectEntityReasonHistory)
+    const dispatch = useAppDispatch()
+    const submitCommentCallback = (commentTxt: string) =>
+        dispatch(submitEntityReasonThunk(idPersistent, commentTxt))
+    useEffect(() => {
+        if (comments === undefined || !comments.isLoading) {
+            dispatch(loadEntityReasonHistoryThunk(idPersistent))
+        }
+        return () => {
+            dispatch(clearEntityReasonHistory())
+        }
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [idPersistent])
+    return (
+        <Row className="h-100 overflow-y-hide">
+            <Col className="h-100 ms-4 me-3 overflow-y-hidden d-flex flex-column">
+                <Row className="flex-grow-1 scroll-gutter overflow-y-scroll mb-4">
+                    <CommentsHistory comments={comments} />
+                </Row>
+                <Row className="flex-grow-0 flex-shrink-1">
+                    <CommentForm submitComment={submitCommentCallback} />
+                </Row>
+            </Col>
+        </Row>
     )
 }

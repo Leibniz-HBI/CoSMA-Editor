@@ -1,6 +1,7 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { TagDefinition, TagType, newTagDefinition } from '../column_menu/state'
 import { RemoteInterface, newRemote } from '../util/state'
+import { Comment } from '../comments/slice'
 
 export interface TableState {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,6 +20,8 @@ export interface TableState {
     entityAddState: RemoteInterface<boolean>
     showEntityMergingModal: boolean
     showEntityReasons: boolean
+    showEntityReasonHistoryForIdPersistent: RemoteInterface<string | undefined>
+    entityReasonHistory: RemoteInterface<Comment[]>
     showSearch: boolean
 }
 
@@ -38,6 +41,8 @@ export function newTableState({
     entityAddState = newRemote(false),
     showEntityMergingModal = false,
     showEntityReasons = false,
+    showEntityReasonHistoryForIdPersistent = newRemote(undefined),
+    entityReasonHistory = newRemote([]),
     showSearch = false
 }: {
     columnStates?: ColumnState[]
@@ -57,6 +62,8 @@ export function newTableState({
     entityAddState?: RemoteInterface<boolean>
     showEntityMergingModal?: boolean
     showEntityReasons?: boolean
+    showEntityReasonHistoryForIdPersistent?: RemoteInterface<string | undefined>
+    entityReasonHistory?: RemoteInterface<Comment[]>
     showSearch?: boolean
 }): TableState {
     let newEntityIndices: { [key: string]: number } = {}
@@ -85,6 +92,8 @@ export function newTableState({
         entityAddState: entityAddState,
         showEntityMergingModal: showEntityMergingModal,
         showEntityReasons: showEntityReasons,
+        showEntityReasonHistoryForIdPersistent: showEntityReasonHistoryForIdPersistent,
+        entityReasonHistory: entityReasonHistory,
         showSearch: showSearch
     }
 }

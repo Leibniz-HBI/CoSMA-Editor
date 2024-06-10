@@ -20,13 +20,13 @@ export function CommentHistoryAndForm({ idPersistent }: { idPersistent: string }
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idPersistent])
     return (
-        <Row>
+        <Row className="h-90 overflow-hidden pb-4">
             <Col xs={0} md={2} />
-            <Col className="ms-4 me-3 overflow-y-auto scroll-gutter">
+            <Col className="h-100 ms-4 me-3 overflow-y-auto scroll-gutter d-flex flex-column">
                 <Row>
                     <CommentsHistory comments={comments} />
                 </Row>
-                <Row>
+                <Row className="flex-shrink-0 flex-grow-0">
                     <CommentForm submitComment={submitCommentCallback} />
                 </Row>
             </Col>
@@ -45,8 +45,8 @@ export function CommentsHistory({
     }
     return (
         <ListGroup>
-            {comments.value.map((comment) => (
-                <CommentElement comment={comment} />
+            {comments.value.map((comment, idx) => (
+                <CommentElement comment={comment} key={idx} />
             ))}
         </ListGroup>
     )

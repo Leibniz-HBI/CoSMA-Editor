@@ -33,7 +33,8 @@ import { Provider } from 'react-redux'
 import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { EntityAddModal } from '../modals'
-import userEvent from '@testing-library/user-event'
+import userEvent, { UserEvent } from '@testing-library/user-event'
+import { act } from 'react-dom/test-utils'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -77,32 +78,14 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
 const idPersistent0 = 'test-id-0'
 const version0 = 0
 const displayTxt0 = 'test display txt 0'
+const reason0 = 'Tremendously terrific shit poster.'
 
 test('success new entity', async () => {
     const fetchMock = jest.fn()
-    addResponseSequence(fetchMock, [
-        [
-            200,
-            {
-                persons: [
-                    {
-                        id_persistent: idPersistent0,
-                        display_txt: displayTxt0,
-                        display_txt_details: 'display_txt_detail',
-                        version: version0,
-                        disabled: false
-                    }
-                ]
-            }
-        ]
-    ])
+    addEntityResponse(fetchMock, displayTxt0, reason0)
     const { store } = renderWithProviders(<EntityAddModal />, fetchMock)
     const user = userEvent.setup()
-    await waitFor(() => {
-        const textBox = screen.getByRole('textbox')
-        const button = screen.getByRole('button', { name: 'Add Entity' })
-        user.type(textBox, displayTxt0).then(() => user.click(button))
-    })
+    await fillEntityForm(user, displayTxt0, reason0)
     await waitFor(() => {
         const state = store.getState()
         expect(state.table.entities).toEqual([
@@ -111,6 +94,7 @@ test('success new entity', async () => {
                 idPersistent: idPersistent0,
                 version: version0,
                 disabled: false,
+                reasonTxt: reason0,
                 displayTxtDetails: 'display_txt_detail'
             })
         ])
@@ -120,7 +104,41 @@ test('success new entity', async () => {
             'http://127.0.0.1:8000/cosmae/api/persons',
             {
                 credentials: 'include',
-                body: JSON.stringify({ persons: [{ display_txt: displayTxt0 }] }),
+                body: JSON.stringify({
+                    persons: [{ display_txt: displayTxt0, reason_txt: reason0 }]
+                }),
+                method: 'POST'
+            }
+        ]
+    ])
+})
+test('success new entity no display text', async () => {
+    const fetchMock = jest.fn()
+    addEntityResponse(fetchMock, displayTxt0, reason0)
+    const { store } = renderWithProviders(<EntityAddModal />, fetchMock)
+    const user = userEvent.setup()
+    await fillEntityForm(user, undefined, reason0)
+    await waitFor(() => {
+        const state = store.getState()
+        expect(state.table.entities).toEqual([
+            newEntity({
+                displayTxt: displayTxt0,
+                idPersistent: idPersistent0,
+                version: version0,
+                disabled: false,
+                reasonTxt: reason0,
+                displayTxtDetails: 'display_txt_detail'
+            })
+        ])
+    })
+    expect(fetchMock.mock.calls).toEqual([
+        [
+            'http://127.0.0.1:8000/cosmae/api/persons',
+            {
+                credentials: 'include',
+                body: JSON.stringify({
+                    persons: [{ reason_txt: reason0 }]
+                }),
                 method: 'POST'
             }
         ]
@@ -134,6 +152,48 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         user: UserState
     }
+}
+
+function addEntityResponse(fetchMock: jest.Mock, displayTxt: string, reason: string) {
+    addResponseSequence(fetchMock, [
+        [
+            200,
+            {
+                persons: [
+                    {
+                        id_persistent: idPersistent0,
+                        display_txt: displayTxt,
+                        display_txt_details: 'display_txt_detail',
+                        reason_txt: reason,
+                        version: version0,
+                        disabled: false
+                    }
+                ]
+            }
+        ]
+    ])
+}
+
+async function fillEntityForm(
+    user: UserEvent,
+    displayTxt: string | undefined,
+    reason: string
+) {
+    await waitFor(
+        async () => {
+            const textBoxes = screen.getAllByRole('textbox')
+            expect(textBoxes.length).toEqual(2)
+            const button = screen.getByRole('button', { name: 'Add Entity' })
+            await act(async () => {
+                if (displayTxt !== undefined) {
+                    await user.type(textBoxes[0], displayTxt ?? ' ')
+                }
+                await user.type(textBoxes[1], reason)
+                await user.click(button)
+            })
+        },
+        { timeout: 4000 }
+    )
 }
 
 export function renderWithProviders(

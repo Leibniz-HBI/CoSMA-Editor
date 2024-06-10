@@ -1,36 +1,91 @@
-import { ChangeEvent, useState } from 'react'
-import { Col, Row } from 'react-bootstrap'
+import { ChangeEventHandler, FormEvent } from 'react'
+import { Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../util/form'
-import { RemoteTriggerButton } from '../util/components/misc'
+import { RemoteSubmitButton } from '../util/components/misc'
 import { RemoteInterface } from '../util/state'
+import { Formik, FormikErrors, FormikTouched } from 'formik'
+import * as yup from 'yup'
+
+const schema = yup.object({
+    displayTxt: yup.string().trim(),
+    reason: yup.string().required().min(8).trim()
+})
+
+interface AddEntityArgs {
+    displayTxt: string
+    reason: string
+}
 
 export function AddEntityForm({
     state,
     addEntityCallback
 }: {
     state: RemoteInterface<boolean>
-    addEntityCallback: (displayTxt: string) => void
+    addEntityCallback: (displayTxt: string | undefined, reason: string) => void
 }) {
-    const [entityDisplayTxt, setEntityDisplayTxt] = useState('')
     return (
-        <Col>
-            <FormField
-                name="new-entity-display-txt"
-                label="Entity Display Text"
-                value={entityDisplayTxt}
-                handleChange={(e: ChangeEvent) =>
-                    setEntityDisplayTxt((e.target as HTMLInputElement).value)
-                }
-            />
-            <Row className="justify-content-end">
-                <Col xs="auto">
-                    <RemoteTriggerButton
-                        label="Add Entity"
-                        onClick={() => addEntityCallback(entityDisplayTxt)}
-                        isLoading={state.isLoading}
-                    />
-                </Col>
-            </Row>
-        </Col>
+        <Formik
+            initialValues={{ displayTxt: '', reason: '' }}
+            onSubmit={({ displayTxt, reason }) => {
+                addEntityCallback(displayTxt == '' ? undefined : displayTxt, reason)
+            }}
+            validationSchema={schema}
+        >
+            {({ values, errors, handleChange, handleSubmit, touched }) => (
+                <AddEntityFormBody
+                    values={values}
+                    errors={errors}
+                    touched={touched}
+                    handleChange={handleChange}
+                    handleSubmit={handleSubmit}
+                    isLoading={state.isLoading}
+                />
+            )}
+        </Formik>
+    )
+}
+export function AddEntityFormBody({
+    values,
+    errors,
+    touched,
+    handleSubmit,
+    handleChange,
+    isLoading
+}: {
+    values: AddEntityArgs
+    errors: FormikErrors<AddEntityArgs>
+    touched: FormikTouched<AddEntityArgs>
+    handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
+    handleChange: ChangeEventHandler
+    isLoading: boolean
+}) {
+    return (
+        <Form noValidate onSubmit={handleSubmit}>
+            <Col>
+                <FormField
+                    name="displayTxt"
+                    label="Entity Display Text"
+                    value={values.displayTxt}
+                    handleChange={handleChange}
+                    error={errors.displayTxt}
+                    isTouched={touched.displayTxt}
+                />
+                <FormField
+                    name="reason"
+                    label="Reason for Adding Entity"
+                    value={values.reason}
+                    handleChange={handleChange}
+                    error={errors.reason}
+                    isTouched={touched.reason}
+                    as="textarea"
+                    className="min-h-200px"
+                />
+                <Row className="justify-content-end">
+                    <Col xs="auto">
+                        <RemoteSubmitButton label="Add Entity" isLoading={isLoading} />
+                    </Col>
+                </Row>
+            </Col>
+        </Form>
     )
 }

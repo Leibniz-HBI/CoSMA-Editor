@@ -15,6 +15,7 @@ import {
     NotificationType,
     notificationReducer
 } from '../../../util/notification/slice'
+import { act } from 'react-dom/test-utils'
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: { user: UserState; notification: NotificationManager }
 }
@@ -97,11 +98,13 @@ describe('login', () => {
         const textInput = screen.getByRole('textbox')
         const passwordInput = screen.getByLabelText('Password')
         const buttons = container.getElementsByTagName('button')
-        await user.type(textInput, 'username')
-        await user.type(passwordInput, 'password')
-        const loginButton = buttons[1]
-        expect(loginButton.textContent).toEqual('Login')
-        await user.click(loginButton)
+        await act(async () => {
+            await user.type(textInput, 'username')
+            await user.type(passwordInput, 'password')
+            const loginButton = buttons[1]
+            expect(loginButton.textContent).toEqual('Login')
+            await user.click(loginButton)
+        })
     }
     test('login on successful refresh', async () => {
         const fetchMock = jest.fn()
@@ -141,7 +144,7 @@ describe('login', () => {
             <LoginProvider body={<span>You are logged in</span>}></LoginProvider>,
             fetchMock
         )
-        performLogin(container)
+        await performLogin(container)
         await waitFor(() => {
             expect(screen.queryByText('You are logged in')).toBeNull()
         })

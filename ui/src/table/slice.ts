@@ -3,7 +3,6 @@ import {
     CellValue,
     Entity,
     TableState,
-    displayTextColumn,
     newColumnState,
     newTableState,
     reasonColumn
@@ -11,7 +10,7 @@ import {
 import { newRemote } from '../util/state'
 import { TagDefinition } from '../column_menu/state'
 import { Rectangle } from '@glideapps/glide-data-grid'
-import { version } from 'os'
+import { Comment } from '../comments/slice'
 
 const initialState = newTableState({})
 
@@ -222,6 +221,49 @@ const tableSlice = createSlice({
         },
         toggleEntityMergingModal(state: TableState, action: PayloadAction<boolean>) {
             state.showEntityMergingModal = action.payload
+        },
+        clearEntityReasonHistory(state: TableState) {
+            state.entityReasonHistory = newRemote([])
+        },
+        showEntityReasonHistory(
+            state: TableState,
+            action: PayloadAction<string | undefined>
+        ) {
+            state.showEntityReasonHistoryForIdPersistent = newRemote(action.payload)
+        },
+        hideEntityReasonHistory(state: TableState) {
+            state.showEntityReasonHistoryForIdPersistent = newRemote(undefined)
+        },
+        loadEntityReasonHistoryStart(state: TableState) {
+            state.entityReasonHistory = newRemote([], true)
+        },
+        loadEntityReasonHistorySuccess(
+            state: TableState,
+            action: PayloadAction<Comment[]>
+        ) {
+            state.entityReasonHistory = newRemote(action.payload)
+        },
+        loadEntityReasonHistoryError(state: TableState) {
+            state.entityReasonHistory.isLoading = false
+        },
+        submitEntityReasonStart(state: TableState) {
+            state.showEntityReasonHistoryForIdPersistent.isLoading = true
+        },
+        submitEntityReasonSuccess(
+            state: TableState,
+            action: PayloadAction<{ idEntityPersistent: string; comment: Comment }>
+        ) {
+            state.entityReasonHistory.value.push(action.payload.comment)
+            const idx = state.entityIndices[action.payload.idEntityPersistent]
+            if (idx !== undefined && state.entities !== undefined) {
+                const entity = state.entities[idx]
+                if (entity !== undefined) {
+                    entity.reasonTxt = action.payload.comment.content
+                }
+            }
+        },
+        submitEntityReasonError(state: TableState) {
+            state.showEntityReasonHistoryForIdPersistent.isLoading = false
         }
     }
 })
@@ -285,5 +327,14 @@ export const {
     tagDefinitionChange,
     toggleEntityMergingModal,
     toggleEntityReason,
-    toggleSearch
+    toggleSearch,
+    clearEntityReasonHistory,
+    loadEntityReasonHistoryStart,
+    loadEntityReasonHistorySuccess,
+    loadEntityReasonHistoryError,
+    showEntityReasonHistory,
+    hideEntityReasonHistory,
+    submitEntityReasonStart,
+    submitEntityReasonError,
+    submitEntityReasonSuccess
 } = tableSlice.actions
