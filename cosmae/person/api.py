@@ -8,6 +8,7 @@ from django.db import IntegrityError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.comments.api import Comment
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityReason as EntityReasonDb
 from cosmae.entity.queue import get_display_txt_info
@@ -20,7 +21,7 @@ from cosmae.exception import (
 )
 from cosmae.tag.api.definitions import TagDefinitionResponse
 from cosmae.tag.api.models_conversion import tag_definition_db_dict_to_api
-from cosmae.user.models_conversion import PublicUserInfo
+from cosmae.user.models_conversion import user_db_to_public_user_info
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
@@ -40,12 +41,24 @@ class PersonNatural(Schema):
     display_txt_details: Union[str, TagDefinitionResponse] | None = None
 
 
-class EntityReasonResponse(Schema):
+class ReasonList(Schema):
     # pylint: disable=too-few-public-methods
-    "Reason for an entity being in the DB."
-    text: str
-    author: PublicUserInfo
-    timestamp: datetime
+    """API model for multiple entity reasons"""
+    reasons: List[Comment]
+
+
+class ReasonPostRequest(Schema):
+    "API model for posting entity reasons"
+
+    # pylint: disable=too-few-public-methods
+    reason_txt: str
+
+
+class ReasonPostResponse(Schema):
+    "API model for entity reason in response"
+
+    # pylint: disable=too-few-public-methods
+    reason: Comment
 
 
 class EntityReasonAddRequest(Schema):
@@ -211,6 +224,60 @@ def merge_entities(
     return 400, ApiError
 
 
+@router.get(
+    "{id_entity_persistent}/reasons",
+    response={200: ReasonList, 401: ApiError, 403: ApiError, 500: ApiError},
+)
+def get_reasons(request: HttpRequest, id_entity_persistent):
+    "Get reasons for an entity being in the database"
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions")
+    try:
+        reasons = EntityReasonDb.for_id_entity_persistent_asc(id_entity_persistent)
+        return 200, ReasonList(reasons=[reason_db_to_api(reason) for reason in reasons])
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get Reasons.")
+
+
+@router.put(
+    "{id_entity_persistent}/reasons",
+    response={
+        200: ReasonPostResponse,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def put_reason(request: HttpRequest, id_entity_persistent, reason: ReasonPostRequest):
+    """Add a reason for an entity being in the db"""
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions")
+    try:
+        EntityDb.most_recent_by_id(id_entity_persistent)
+        time_written = timestamp()
+        reason_created = EntityReasonDb.add(
+            id_persistent=uuid4(),
+            id_entity_persistent=id_entity_persistent,
+            text=reason.reason_txt,
+            timestamp=time_written,
+            author=user,
+        )
+        return 200, ReasonPostResponse(reason=reason_db_to_api(reason_created))
+    except EntityDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Entity does not exist")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get Reasons.")
+
+
 def person_api_to_db(
     person: PersonNatural, time_edit: datetime, requester: CosmaeUser
 ) -> EntityDb:
@@ -293,4 +360,13 @@ def person_db_dict_to_api(person: Optional[dict]) -> Optional[PersonNatural]:
         id_persistent=id_persistent,
         disabled=person["disabled"],
         display_txt_details=display_txt_info,
+    )
+
+
+def reason_db_to_api(reason: EntityReasonDb) -> Comment:
+    "Transform a reason from database to APi representation"
+    return Comment(
+        content=reason.text,
+        author=user_db_to_public_user_info(reason.author),
+        timestamp=reason.timestamp,
     )

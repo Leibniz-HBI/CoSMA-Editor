@@ -160,7 +160,7 @@ class EntityReason(models.Model):
     def add(cls, id_persistent, id_entity_persistent, text, timestamp, author):
         # pylint: disable=too-many-arguments
         "Add a new entity reason."
-        cls.objects.create(  # pylint: disable=no-member
+        return cls.objects.create(  # pylint: disable=no-member
             id_persistent=id_persistent,
             id_entity_persistent=id_entity_persistent,
             text=text,
