@@ -63,11 +63,17 @@ export const tableSelectionSlice = createSlice({
                 }
                 state.cols = []
             }
+        },
+        clearSelection(state: TableSelectionState) {
+            state.cols = []
+            state.rows = []
+            state.current = undefined
+            state.rowSelectionOrder = []
         }
     }
 })
 
-export const { toggleRowSelection, toggleSingleCellSelection } =
+export const { toggleRowSelection, toggleSingleCellSelection, clearSelection } =
     tableSelectionSlice.actions
 
 export function mkGridSelectionCallback(dispatch: AppDispatch) {

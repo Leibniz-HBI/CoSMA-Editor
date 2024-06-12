@@ -36,6 +36,7 @@ import {
 import { useEffect } from 'react'
 import { CommentForm, CommentsHistory } from '../../comments/components'
 import { justificationColumnId } from '../state'
+import { clearSelection } from '../selection/slice'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -136,13 +137,14 @@ export function ColumnModal({
                             remoteUserProfileColumnDeleteAsync(
                                 columnDefinition.idPersistent
                             )
-                        ).then(() =>
+                        ).then(() => {
+                            dispatch(clearSelection())
                             dispatch(
                                 removeColumnByIdPersistent(
                                     columnDefinition.idPersistent
                                 )
                             )
-                        )
+                        })
                     }
                 />
             </Modal.Body>

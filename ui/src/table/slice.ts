@@ -105,6 +105,7 @@ const tableSlice = createSlice({
                 cellContents: newRemote([])
             })
             state.columnStates.splice(1, 0, columnState)
+            generateColumnStateIndices(state)
             state.showEntityJustifications = true
         },
         removeColumnByIdPersistent(state: TableState, action: PayloadAction<string>) {
@@ -272,22 +273,21 @@ const tableSlice = createSlice({
 
 export const tableReducer = tableSlice.reducer
 
+function generateColumnStateIndices(state: TableState) {
+    state.columnIndices = Object.fromEntries(
+        state.columnStates.map((state, idx) => [state.tagDefinition.idPersistent, idx])
+    )
+}
+
 function removeColumnByIdPersistentHelper(state: TableState, idPersistent: string) {
     if (idPersistent == justificationColumnId && state.showEntityJustifications) {
-        state.columnStates.splice(1, 1)
         state.showEntityJustifications = false
-        return
     }
     const columnIdx = state.columnIndices[idPersistent]
     if (columnIdx !== undefined) {
         state.columnStates.splice(columnIdx, 1)
-        state.columnIndices = Object.fromEntries(
-            state.columnStates.map((columnState, idx) => [
-                columnState.tagDefinition.idPersistent,
-                idx
-            ])
-        )
     }
+    generateColumnStateIndices(state)
     clearSelectedColumn(state)
 }
 function clearSelectedColumn(state: TableState) {
