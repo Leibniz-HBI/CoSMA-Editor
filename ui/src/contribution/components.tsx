@@ -92,8 +92,28 @@ export function ContributionList() {
 }
 
 export function ContributionStepper({ selectedIdx }: { selectedIdx: number }) {
-    const navigate = useNavigate()
     const idContributionPersistent = useLoaderData() as string
+    const dispatch = useAppDispatch()
+    useEffect(() => {
+        return () => {
+            dispatch(resetSelectedContribution())
+        }
+    })
+    return (
+        <ContributionStepperDisplay
+            idContributionPersistent={idContributionPersistent}
+            selectedIdx={selectedIdx}
+        />
+    )
+}
+function ContributionStepperDisplay({
+    selectedIdx,
+    idContributionPersistent
+}: {
+    selectedIdx: number
+    idContributionPersistent: string
+}) {
+    const navigate = useNavigate()
     const contribution = useAppSelector(selectContribution)
     const reloadDelay = useAppSelector(selectReloadDelay)
     const dispatch = useAppDispatch()

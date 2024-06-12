@@ -13,7 +13,7 @@ import { ColumnAddButton } from '../../column_menu/components/misc'
 import { HeaderMenu } from '../../header_menu'
 import { drawCell } from '../draw'
 import { ChangeOwnershipModal } from '../../tag_management/components'
-import { MergeEntitiesButton, ReasonToggleButton } from './buttons'
+import { MergeEntitiesButton } from './buttons'
 import { mkGridSelectionCallback } from '../selection/slice'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '../../store'
@@ -30,7 +30,7 @@ import {
     selectIsSubmittingValues,
     selectOwnershipChangeTagDefinition,
     selectSelectedColumnHeaderBounds,
-    selectShowEntityReasons,
+    selectShowEntityJustifications,
     selectShowSearch
 } from '../selectors'
 import { selectUserInfo } from '../../user/selectors'
@@ -40,7 +40,7 @@ import {
     setColumnWidth,
     setLoadDataError,
     showColumnAddMenu,
-    showEntityReasonHistory,
+    showEntityJustificationHistory,
     showHeaderMenu,
     tagChangeOwnershipHide,
     tagDefinitionChange,
@@ -60,7 +60,7 @@ import {
     ColumnModal,
     EntityAddModal,
     EntityMergingModal,
-    EntityReasonModal
+    EntityJustificationModal
 } from './modals'
 import { createCellContentCallback } from '../cell'
 import { AddEntityButton } from './buttons'
@@ -147,9 +147,6 @@ export function RemoteDataTable() {
                                     }
                                 />
                             </Col>
-                            <Col xs="auto" className="pt-2">
-                                <ReasonToggleButton dispatch={dispatch} />
-                            </Col>
                         </Row>
                     </Col>
                     <Col xs="auto">
@@ -181,7 +178,7 @@ export function RemoteDataTable() {
                                 dispatch(tagDefinitionChange(tagDefinition))
                             }
                         />
-                        <EntityReasonModal />
+                        <EntityJustificationModal />
                     </div>
                 </Row>
                 <div id="portal" />
@@ -228,19 +225,23 @@ export function DataTable({
         isSubmittingValues = useAppSelector(selectIsSubmittingValues),
         columnHeaderMenuEntries = useAppSelector(selectColumnHeaderMenu)(dispatch),
         showSearch = useAppSelector(selectShowSearch),
-        showEntityReasons = useAppSelector(selectShowEntityReasons)
+        showEntityJustifications = useAppSelector(selectShowEntityJustifications)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const cellContentCallback = useCallback(
-            createCellContentCallback({ entities, columnStates, showEntityReasons }),
+            createCellContentCallback({
+                entities,
+                columnStates,
+                showEntityJustifications: showEntityJustifications
+            }),
             // eslint-disable-next-line react-hooks/exhaustive-deps
-            [entities, columnStates, showEntityReasons]
+            [entities, columnStates, showEntityJustifications]
         ),
         submitValueCallback = (cell: Item, newValue: EditableGridCell) => {
             if (entities === undefined || isSubmittingValues) {
                 return
             }
             const [colIdx, rowIdx] = cell
-            if (showEntityReasons && colIdx == 1) {
+            if (showEntityJustifications && colIdx == 1) {
                 return
             }
             if (colIdx == 0) {
@@ -309,9 +310,11 @@ export function DataTable({
     )
     const onCellActivated = (cell: Item) => {
         const [colIdx, rowIdx] = cell
-        if (showEntityReasons && colIdx == 1) {
+        if (showEntityJustifications && colIdx == 1) {
             dispatch(
-                showEntityReasonHistory(entities?.at(rowIdx)?.idPersistent ?? undefined)
+                showEntityJustificationHistory(
+                    entities?.at(rowIdx)?.idPersistent ?? undefined
+                )
             )
         }
     }
@@ -373,7 +376,7 @@ export function DataTable({
                 id: columnState.tagDefinition.idPersistent,
                 title,
                 width: columnState.width,
-                hasMenu: false
+                hasMenu: i > 0
             })
         }
 

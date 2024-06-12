@@ -78,14 +78,14 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
 const idPersistent0 = 'test-id-0'
 const version0 = 0
 const displayTxt0 = 'test display txt 0'
-const reason0 = 'Tremendously terrific shit poster.'
+const justification0 = 'Tremendously terrific shit poster.'
 
 test('success new entity', async () => {
     const fetchMock = jest.fn()
-    addEntityResponse(fetchMock, displayTxt0, reason0)
+    addEntityResponse(fetchMock, displayTxt0, justification0)
     const { store } = renderWithProviders(<EntityAddModal />, fetchMock)
     const user = userEvent.setup()
-    await fillEntityForm(user, displayTxt0, reason0)
+    await fillEntityForm(user, displayTxt0, justification0)
     await waitFor(() => {
         const state = store.getState()
         expect(state.table.entities).toEqual([
@@ -94,7 +94,7 @@ test('success new entity', async () => {
                 idPersistent: idPersistent0,
                 version: version0,
                 disabled: false,
-                reasonTxt: reason0,
+                justificationTxt: justification0,
                 displayTxtDetails: 'display_txt_detail'
             })
         ])
@@ -105,7 +105,9 @@ test('success new entity', async () => {
             {
                 credentials: 'include',
                 body: JSON.stringify({
-                    persons: [{ display_txt: displayTxt0, reason_txt: reason0 }]
+                    persons: [
+                        { display_txt: displayTxt0, justification_txt: justification0 }
+                    ]
                 }),
                 method: 'POST'
             }
@@ -114,10 +116,10 @@ test('success new entity', async () => {
 })
 test('success new entity no display text', async () => {
     const fetchMock = jest.fn()
-    addEntityResponse(fetchMock, displayTxt0, reason0)
+    addEntityResponse(fetchMock, displayTxt0, justification0)
     const { store } = renderWithProviders(<EntityAddModal />, fetchMock)
     const user = userEvent.setup()
-    await fillEntityForm(user, undefined, reason0)
+    await fillEntityForm(user, undefined, justification0)
     await waitFor(() => {
         const state = store.getState()
         expect(state.table.entities).toEqual([
@@ -126,7 +128,7 @@ test('success new entity no display text', async () => {
                 idPersistent: idPersistent0,
                 version: version0,
                 disabled: false,
-                reasonTxt: reason0,
+                justificationTxt: justification0,
                 displayTxtDetails: 'display_txt_detail'
             })
         ])
@@ -137,7 +139,7 @@ test('success new entity no display text', async () => {
             {
                 credentials: 'include',
                 body: JSON.stringify({
-                    persons: [{ reason_txt: reason0 }]
+                    persons: [{ justification_txt: justification0 }]
                 }),
                 method: 'POST'
             }
@@ -154,7 +156,11 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     }
 }
 
-function addEntityResponse(fetchMock: jest.Mock, displayTxt: string, reason: string) {
+function addEntityResponse(
+    fetchMock: jest.Mock,
+    displayTxt: string,
+    justification: string
+) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -164,7 +170,7 @@ function addEntityResponse(fetchMock: jest.Mock, displayTxt: string, reason: str
                         id_persistent: idPersistent0,
                         display_txt: displayTxt,
                         display_txt_details: 'display_txt_detail',
-                        reason_txt: reason,
+                        justification_txt: justification,
                         version: version0,
                         disabled: false
                     }
@@ -177,7 +183,7 @@ function addEntityResponse(fetchMock: jest.Mock, displayTxt: string, reason: str
 async function fillEntityForm(
     user: UserEvent,
     displayTxt: string | undefined,
-    reason: string
+    justification: string
 ) {
     await waitFor(
         async () => {
@@ -188,7 +194,7 @@ async function fillEntityForm(
                 if (displayTxt !== undefined) {
                     await user.type(textBoxes[0], displayTxt ?? ' ')
                 }
-                await user.type(textBoxes[1], reason)
+                await user.type(textBoxes[1], justification)
                 await user.click(button)
             })
         },

@@ -19,9 +19,9 @@ export interface TableState {
     showEntityAddDialog: boolean
     entityAddState: RemoteInterface<boolean>
     showEntityMergingModal: boolean
-    showEntityReasons: boolean
-    showEntityReasonHistoryForIdPersistent: RemoteInterface<string | undefined>
-    entityReasonHistory: RemoteInterface<Comment[]>
+    showEntityJustifications: boolean
+    showEntityJustificationHistoryForIdPersistent: RemoteInterface<string | undefined>
+    entityJustificationHistory: RemoteInterface<Comment[]>
     showSearch: boolean
 }
 
@@ -40,9 +40,9 @@ export function newTableState({
     showEntityAddDialog = false,
     entityAddState = newRemote(false),
     showEntityMergingModal = false,
-    showEntityReasons = false,
-    showEntityReasonHistoryForIdPersistent = newRemote(undefined),
-    entityReasonHistory = newRemote([]),
+    showEntityJustifications = false,
+    showEntityJustificationHistoryForIdPersistent = newRemote(undefined),
+    entityJustificationHistory = newRemote([]),
     showSearch = false
 }: {
     columnStates?: ColumnState[]
@@ -61,9 +61,9 @@ export function newTableState({
     showEntityAddDialog?: boolean
     entityAddState?: RemoteInterface<boolean>
     showEntityMergingModal?: boolean
-    showEntityReasons?: boolean
-    showEntityReasonHistoryForIdPersistent?: RemoteInterface<string | undefined>
-    entityReasonHistory?: RemoteInterface<Comment[]>
+    showEntityJustifications?: boolean
+    showEntityJustificationHistoryForIdPersistent?: RemoteInterface<string | undefined>
+    entityJustificationHistory?: RemoteInterface<Comment[]>
     showSearch?: boolean
 }): TableState {
     let newEntityIndices: { [key: string]: number } = {}
@@ -91,9 +91,10 @@ export function newTableState({
         showEntityAddDialog: showEntityAddDialog,
         entityAddState: entityAddState,
         showEntityMergingModal: showEntityMergingModal,
-        showEntityReasons: showEntityReasons,
-        showEntityReasonHistoryForIdPersistent: showEntityReasonHistoryForIdPersistent,
-        entityReasonHistory: entityReasonHistory,
+        showEntityJustifications: showEntityJustifications,
+        showEntityJustificationHistoryForIdPersistent:
+            showEntityJustificationHistoryForIdPersistent,
+        entityJustificationHistory: entityJustificationHistory,
         showSearch: showSearch
     }
 }
@@ -230,7 +231,7 @@ export interface Entity {
     displayTxt?: string
     version: number
     disabled: boolean
-    reasonTxt: string | undefined
+    justificationTxt: string | undefined
     displayTxtDetails: string | TagDefinition
 }
 
@@ -239,14 +240,14 @@ export function newEntity({
     displayTxt,
     version,
     disabled,
-    reasonTxt = undefined,
+    justificationTxt = undefined,
     displayTxtDetails = 'Display Text'
 }: {
     idPersistent: string
     displayTxt?: string
     version: number
     disabled: boolean
-    reasonTxt?: string | undefined
+    justificationTxt?: string | undefined
     displayTxtDetails?: string | TagDefinition
 }) {
     return {
@@ -254,7 +255,7 @@ export function newEntity({
         displayTxt: displayTxt,
         version: version,
         disabled: disabled,
-        reasonTxt: reasonTxt,
+        justificationTxt: justificationTxt,
         displayTxtDetails: displayTxtDetails
     }
 }
@@ -268,10 +269,10 @@ export const displayTextColumn = newTagDefinition({
     hidden: false
 })
 
-export const reasonColumnId = 'entity_reason'
-export const reasonColumn = newTagDefinition({
-    namePath: ['Entity Reason'],
-    idPersistent: reasonColumnId,
+export const justificationColumnId = 'entity_justification'
+export const justificationColumn = newTagDefinition({
+    namePath: ['Justification'],
+    idPersistent: justificationColumnId,
     columnType: TagType.String,
     curated: true,
     version: 0,

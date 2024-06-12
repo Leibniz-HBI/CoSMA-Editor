@@ -12,7 +12,13 @@ jest.mock('@glideapps/glide-data-grid', () => {
     }
 })
 import { Col, Row } from 'react-bootstrap'
-import { TagDefinition, TagType, newTagDefinition } from '../../../column_menu/state'
+import {
+    TagDefinition,
+    TagSelectionState,
+    TagType,
+    newTagDefinition,
+    newTagSelectionState
+} from '../../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
@@ -38,36 +44,46 @@ import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { act } from 'react-dom/test-utils'
+import { tagSelectionSlice } from '../../../column_menu/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
     return (
         <div className="mock">
             <Col>
-                {Array.from({ length: props.rows }, (_, idx: number) => idx).map(
-                    (idxRow) => (
-                        <Row>
-                            {Array.from(
-                                { length: props.columns.length },
-                                (_, idx: number) => idx
-                            ).map((idxCol) => {
-                                const cell = props.getCellContent([idxCol, idxRow])
-                                if (cell.kind == 'text') {
-                                    return (
-                                        <Col
-                                            onClick={() =>
-                                                props.onCellActivated([idxCol, idxRow])
-                                            }
-                                        >
-                                            {cell.displayData}
-                                        </Col>
-                                    )
-                                }
-                                return <Col></Col>
-                            })}
-                        </Row>
-                    )
-                )}
+                <Row>{props.rightElement}</Row>
+                <Row>
+                    <Col>
+                        {Array.from(
+                            { length: props.rows },
+                            (_, idx: number) => idx
+                        ).map((idxRow) => (
+                            <Row>
+                                {Array.from(
+                                    { length: props.columns.length },
+                                    (_, idx: number) => idx
+                                ).map((idxCol) => {
+                                    const cell = props.getCellContent([idxCol, idxRow])
+                                    if (cell.kind == 'text') {
+                                        return (
+                                            <Col
+                                                onClick={() =>
+                                                    props.onCellActivated([
+                                                        idxCol,
+                                                        idxRow
+                                                    ])
+                                                }
+                                            >
+                                                {cell.displayData}
+                                            </Col>
+                                        )
+                                    }
+                                    return <Col></Col>
+                                })}
+                            </Row>
+                        ))}
+                    </Col>
+                </Row>
             </Col>
         </div>
     )
@@ -86,32 +102,28 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
         )
     }
 }
-test('show reasons, open modal and hide again', async () => {
+test('show justifications, open modal and hide again', async () => {
     const fetchMock = jest.fn()
     addEntitiesAndInstancesResponse(fetchMock)
-    addReasonHistoryResponse(fetchMock)
+    addJustificationHistoryResponse(fetchMock)
     renderWithProviders(<RemoteDataTable />, fetchMock)
-    await openModalForEntity0(modalHeading)
+    await openModalForEntity0()
     await closeModal()
+    await toggleJustifications()
     await waitFor(() => {
-        expect(screen.queryByText(modalHeading)).toBeNull()
-        const toggle = screen.getByRole('checkbox')
-        toggle.click()
-    })
-    await waitFor(() => {
-        expect(screen.queryByText(reason0)).toBeNull()
+        expect(screen.queryByText(justification)).toBeNull()
     })
 })
-test('add reason', async () => {
+test('add justification', async () => {
     const fetchMock = jest.fn()
     addEntitiesAndInstancesResponse(fetchMock)
-    addReasonHistoryResponse(fetchMock)
+    addJustificationHistoryResponse(fetchMock)
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                reason: {
-                    content: reasonChanged,
+                justification: {
+                    content: justificationChanged,
                     author: userApi,
                     timestamp: '2005-03-19 09:37:51 +0000'
                 }
@@ -119,25 +131,25 @@ test('add reason', async () => {
         ]
     ])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
-    await openModalForEntity0(modalHeading)
     const user = userEvent.setup()
-    await fillReasonForm(user)
+    await openModalForEntity0()
+    await fillJustificationForm(user)
     await waitFor(() => {
         const input = screen.getByRole('textbox')
         expect(input.textContent).toEqual('')
-        screen.getByText(reason0)
+        screen.getByText(justification)
         // once in table, once in modal
-        expect(screen.getAllByText(reasonChanged).length).toEqual(2)
+        expect(screen.getAllByText(justificationChanged).length).toEqual(2)
     })
     await closeModal()
     await waitFor(() => {
         expect(screen.queryByText(modalHeading)).toBeNull()
-        expect(screen.queryByText(reason0)).toBeNull()
-        screen.queryByText(reasonChanged)
+        expect(screen.queryByText(justification)).toBeNull()
+        screen.queryByText(justificationChanged)
     })
     const state = store.getState()
     expect(state.notification.notificationList).toEqual([])
-    expect(state.table.entities?.at(0)?.reasonTxt).toEqual(reasonChanged)
+    expect(state.table.entities?.at(0)?.justificationTxt).toEqual(justificationChanged)
     expect(fetchMock.mock.calls).toEqual([
         [
             'http://127.0.0.1:8000/cosmae/api/persons/chunk',
@@ -162,58 +174,38 @@ test('add reason', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/persons/${idPersistent0}/reasons`,
+            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: '{}'
+            }
+        ],
+        [
+            `http://127.0.0.1:8000/cosmae/api/persons/${idPersistent0}/justifications`,
             {
                 credentials: 'include'
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/persons/${idPersistent0}/reasons`,
+            `http://127.0.0.1:8000/cosmae/api/persons/${idPersistent0}/justifications`,
             {
                 credentials: 'include',
                 method: 'PUT',
-                body: JSON.stringify({ reason_txt: reasonChanged })
+                body: JSON.stringify({ justification_txt: justificationChanged })
             }
         ]
     ])
 })
-test('get reason error', async () => {
+test('get justification error', async () => {
     const fetchMock = jest.fn()
-    const errorMsg = 'error getting reason history'
+    const errorMsg = 'error getting justification history'
     addEntitiesAndInstancesResponse(fetchMock)
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
-    await openModalForEntity0(modalHeading)
+    await openModalForEntity0()
     await waitFor(() => {
-        expect(store.getState().notification).toEqual(
-            newNotificationManager({
-                notificationList: [
-                    newNotification({
-                        msg: errorMsg,
-                        type: NotificationType.Error,
-                        id: expect.anything()
-                    })
-                ],
-                notificationMap: expect.anything()
-            })
-        )
-    })
-    expect(fetchMock.mock.calls.length).toEqual(3)
-})
-test('add reason error', async () => {
-    const fetchMock = jest.fn()
-    const errorMsg = 'error submitting reason'
-    addEntitiesAndInstancesResponse(fetchMock)
-    addReasonHistoryResponse(fetchMock)
-    addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
-    await openModalForEntity0(modalHeading)
-    const user = userEvent.setup()
-    await fillReasonForm(user)
-    await waitFor(() => {
-        const input = screen.getByRole('textbox')
-        expect(input.textContent).toEqual(reasonChanged)
-        expect(screen.getAllByText(reasonChanged).length).toEqual(1)
         expect(store.getState().notification).toEqual(
             newNotificationManager({
                 notificationList: [
@@ -229,6 +221,35 @@ test('add reason error', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(4)
 })
+test('add justification error', async () => {
+    const fetchMock = jest.fn()
+    const errorMsg = 'error submitting justification'
+    addEntitiesAndInstancesResponse(fetchMock)
+    addJustificationHistoryResponse(fetchMock)
+    addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const user = userEvent.setup()
+    await openModalForEntity0()
+    await fillJustificationForm(user)
+    await waitFor(() => {
+        const input = screen.getByRole('textbox')
+        expect(input.textContent).toEqual(justificationChanged)
+        expect(screen.getAllByText(justificationChanged).length).toEqual(1)
+        expect(store.getState().notification).toEqual(
+            newNotificationManager({
+                notificationList: [
+                    newNotification({
+                        msg: errorMsg,
+                        type: NotificationType.Error,
+                        id: expect.anything()
+                    })
+                ],
+                notificationMap: expect.anything()
+            })
+        )
+    })
+    expect(fetchMock.mock.calls.length).toEqual(5)
+})
 
 const idPersistent0 = 'test-id-0'
 const idPersistent1 = 'test-id-1'
@@ -236,17 +257,17 @@ const version0 = 0
 const version1 = 1
 const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
-const reason0 = 'very prolific shit poster'
-const reason1 = 'tremendously prolific shit poster'
-const reasonChanged = 'shit poster in chief'
-const modalHeading = 'Entity Reason History'
+const justification = 'very prolific shit poster'
+const justification1 = 'tremendously prolific shit poster'
+const justificationChanged = 'shit poster in chief'
+const modalHeading = 'Entity Justification History'
 const test_person_rsp_0 = {
     display_txt: displayTxt0,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent0,
     version: version0,
     disabled: false,
-    reason_txt: reason0
+    justification_txt: justification
 }
 const test_person_rsp_1 = {
     display_txt: displayTxt1,
@@ -254,7 +275,7 @@ const test_person_rsp_1 = {
     id_persistent: idPersistent1,
     version: version1,
     disabled: false,
-    reason_txt: reason1
+    justification_txt: justification1
 }
 const columnNameTest = 'column name test'
 const idTagDefPersistent = 'column_id_test'
@@ -265,14 +286,32 @@ const userTest = newPublicUserInfo({
     username: nameUserTest,
     permissionGroup: UserPermissionGroup.CONTRIBUTOR
 })
-async function fillReasonForm(user: UserEvent) {
+async function toggleJustifications() {
+    await waitFor(() => {
+        expect(screen.queryByText(modalHeading)).toBeNull()
+        const button = screen.getByLabelText('show additional tags')
+        ;(button?.childNodes[0] as HTMLInputElement)?.click()
+    })
+    await waitFor(() => {
+        const tagDefLabel = screen.getByText('Justification')
+        const tagListItem =
+            tagDefLabel.parentElement?.parentElement?.parentElement?.parentElement
+        const tagButton = tagListItem?.children[1]
+        expect(tagButton?.className).toEqual('icon')
+        ;(tagButton as HTMLElement)?.click()
+
+        screen.getByRole('button', { name: /close/i }).click()
+    })
+}
+
+async function fillJustificationForm(user: UserEvent) {
     await waitFor(
         async () => {
             const input = screen.getByRole('textbox')
             const button = screen.getByRole('button', { name: 'Submit' })
             await act(async () => {
                 await user.click(input)
-                await user.keyboard(reasonChanged)
+                await user.keyboard(justificationChanged)
                 await user.click(button)
             })
         },
@@ -281,11 +320,14 @@ async function fillReasonForm(user: UserEvent) {
 }
 
 async function closeModal() {
-    await waitFor(() => {
-        screen.getByText(modalHeading)
-        const close = screen.getByRole('button', { name: /close/i })
-        close.click()
-    })
+    await waitFor(
+        () => {
+            screen.getByText(modalHeading)
+            const close = screen.getByRole('button', { name: /close/i })
+            close.click()
+        },
+        { timeout: 2000 }
+    )
 }
 const userApi = {
     username: nameUserTest,
@@ -293,14 +335,14 @@ const userApi = {
     id_persistent: idUserTest
 }
 
-function addReasonHistoryResponse(fetchMock: jest.Mock) {
+function addJustificationHistoryResponse(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                reasons: [
+                justifications: [
                     {
-                        content: reason0,
+                        content: justification,
                         author: userApi,
                         timestamp: '2005-03-18 09:57:51 +0000'
                     }
@@ -310,16 +352,15 @@ function addReasonHistoryResponse(fetchMock: jest.Mock) {
     ])
 }
 
-async function openModalForEntity0(modalHeading: string) {
+async function openModalForEntity0() {
     await waitFor(() => {
         screen.getByText(displayTxt0)
         expect(screen.queryByText(modalHeading)).toBeNull()
-        expect(screen.queryByText(reason0)).toBeNull()
-        const toggle = screen.getByRole('checkbox')
-        toggle.click()
+        expect(screen.queryByText(justification)).toBeNull()
     })
+    await toggleJustifications()
     await waitFor(() => {
-        const text = screen.getByText(reason0)
+        const text = screen.getByText(justification)
         text.click()
     })
 }
@@ -327,7 +368,8 @@ async function openModalForEntity0(modalHeading: string) {
 function addEntitiesAndInstancesResponse(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
         [200, { persons: [test_person_rsp_0, test_person_rsp_1] }],
-        [200, { tag_instances: [] }]
+        [200, { tag_instances: [] }],
+        [200, { tag_definitions: [] }]
     ])
 }
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -335,6 +377,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
+        tagSelection: TagSelectionState
         user: UserState
     }
 }
@@ -358,6 +401,7 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
+            tagSelection: newTagSelectionState({}),
             user: newUserState({
                 userInfo: newUserInfo({
                     ...userTest,
@@ -374,6 +418,7 @@ export function renderWithProviders(
         reducer: {
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
+            tagSelection: tagSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer
         },

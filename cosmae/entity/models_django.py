@@ -124,8 +124,8 @@ class Entity(Versioned, HistoryMixin):
         )
 
 
-class EntityReason(models.Model):
-    """Django ORM model for reasons why an entity exists in the database."""
+class EntityJustification(models.Model):
+    """Django ORM model for justifications why an entity exists in the database."""
 
     id_entity_persistent = models.CharField(max_length=36)
     text = models.TextField()
@@ -137,21 +137,21 @@ class EntityReason(models.Model):
 
     @classmethod
     def for_id_entity_persistent_unordered(cls, id_entity_persistent):
-        "Get all reasons for an entity unordered"
+        "Get all justifications for an entity unordered"
         return cls.objects.filter(  # pylint: disable=no-member
             id_entity_persistent=id_entity_persistent
         )
 
     @classmethod
     def for_id_entity_persistent_asc(cls, id_entity_persistent):
-        "Get all reasons for an entity ordered ascending by date."
+        "Get all justifications for an entity ordered ascending by date."
         return cls.for_id_entity_persistent_unordered(id_entity_persistent).order_by(
             models.F("timestamp").asc()
         )
 
     @classmethod
     def for_id_entity_persistent_desc(cls, id_entity_persistent):
-        "Get all reasons for an entity ordered ascending by date."
+        "Get all justifications for an entity ordered ascending by date."
         return cls.for_id_entity_persistent_unordered(id_entity_persistent).order_by(
             models.F("timestamp").desc()
         )
@@ -159,7 +159,7 @@ class EntityReason(models.Model):
     @classmethod
     def add(cls, id_persistent, id_entity_persistent, text, timestamp, author):
         # pylint: disable=too-many-arguments
-        "Add a new entity reason."
+        "Add a new entity justification."
         return cls.objects.create(  # pylint: disable=no-member
             id_persistent=id_persistent,
             id_entity_persistent=id_entity_persistent,
@@ -169,12 +169,12 @@ class EntityReason(models.Model):
         )
 
     @classmethod
-    def annotate_reason(cls, entities: Optional[models.BaseManager[Entity]]):
-        "Annotate the most recent reason for being in the db to a query set of entities."
+    def annotate_justification(cls, entities: Optional[models.BaseManager[Entity]]):
+        "Annotate the most recent justification for being in the db to a query set of entities."
         if entities is None:
             entities = cls.objects  # pylint: disable=no-member
         return entities.annotate(
-            reason_txt=models.Subquery(
+            justification_txt=models.Subquery(
                 cls.objects.filter(  # pylint: disable=no-member
                     id_entity_persistent=models.OuterRef("id_persistent")
                 )

@@ -10,7 +10,7 @@ from ninja import Router, Schema
 
 from cosmae.comments.api import Comment
 from cosmae.entity.models_django import Entity as EntityDb
-from cosmae.entity.models_django import EntityReason as EntityReasonDb
+from cosmae.entity.models_django import EntityJustification as EntityJustificationDb
 from cosmae.entity.queue import get_display_txt_info
 from cosmae.exception import (
     ApiError,
@@ -41,37 +41,37 @@ class PersonNatural(Schema):
     display_txt_details: Union[str, TagDefinitionResponse] | None = None
 
 
-class ReasonList(Schema):
+class JustificationList(Schema):
     # pylint: disable=too-few-public-methods
-    """API model for multiple entity reasons"""
-    reasons: List[Comment]
+    """API model for multiple entity justifications"""
+    justifications: List[Comment]
 
 
-class ReasonPostRequest(Schema):
-    "API model for posting entity reasons"
-
-    # pylint: disable=too-few-public-methods
-    reason_txt: str
-
-
-class ReasonPostResponse(Schema):
-    "API model for entity reason in response"
+class JustificationPostRequest(Schema):
+    "API model for posting entity justifications"
 
     # pylint: disable=too-few-public-methods
-    reason: Comment
+    justification_txt: str
 
 
-class EntityReasonAddRequest(Schema):
+class JustificationPostResponse(Schema):
+    "API model for entity justification in response"
+
     # pylint: disable=too-few-public-methods
-    "Request body for adding a new entity reason"
+    justification: Comment
+
+
+class EntityJustificationAddRequest(Schema):
+    # pylint: disable=too-few-public-methods
+    "Request body for adding a new entity justification"
     text: str
 
 
-class PersonNaturalWithReason(PersonNatural):
-    "API Model for an entity with reason"
+class PersonNaturalWithJustification(PersonNatural):
+    "API Model for an entity with justification"
 
     # pylint: disable=too-few-public-methods
-    reason_txt: str | None = None
+    justification_txt: str | None = None
 
 
 class PersonNaturalList(Schema):
@@ -81,13 +81,13 @@ class PersonNaturalList(Schema):
     persons: List[PersonNatural]
 
 
-class PersonNaturalWithReasonList(Schema):
+class PersonNaturalWithJustificationList(Schema):
     # pylint: disable=too-few-public-methods
     """API Model for multiple natural persons
-    with reason for being in the db,
+    with justification for being in the db,
     used for responses"""
 
-    persons: List[PersonNaturalWithReason]
+    persons: List[PersonNaturalWithJustification]
 
 
 class PersonsGetRequest(Schema):
@@ -115,7 +115,7 @@ class ChunkRequest(Schema):
 @router.post(
     "",
     response={
-        200: PersonNaturalWithReasonList,
+        200: PersonNaturalWithJustificationList,
         400: ApiError,
         401: ApiError,
         500: ApiError,
@@ -123,7 +123,7 @@ class ChunkRequest(Schema):
     },
 )
 def persons_post(
-    request: HttpRequest, persons: PersonNaturalWithReasonList
+    request: HttpRequest, persons: PersonNaturalWithJustificationList
 ):  # pylint: disable=too-many-return-statements
     """Add a person to the DB.
     Returns:
@@ -155,15 +155,15 @@ def persons_post(
 
     try:
         with transaction.atomic():
-            for person, do_write, reason, write_reason in person_dbs:
-                person.reason_txt = reason.text
+            for person, do_write, justification, write_justification in person_dbs:
+                person.justification_txt = justification.text
                 if do_write:
                     person.save()
-                if write_reason:
-                    reason.save()
+                if write_justification:
+                    justification.save()
     except IntegrityError:
         return 500, ApiError(msg="Provided data not consistent with database.")
-    return 200, PersonNaturalWithReasonList(
+    return 200, PersonNaturalWithJustificationList(
         persons=[person_db_to_api(person) for person, _, _, _ in person_dbs]
     )
 
@@ -171,7 +171,7 @@ def persons_post(
 @router.post(
     "chunk",
     response={
-        200: PersonNaturalWithReasonList,
+        200: PersonNaturalWithJustificationList,
         400: ApiError,
         403: ApiError,
         500: ApiError,
@@ -190,11 +190,11 @@ def persons_chunks_post(
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions")
     try:
-        person_dbs = EntityReasonDb.annotate_reason(
+        person_dbs = EntityJustificationDb.annotate_justification(
             EntityDb.get_most_recent_chunked(req_data.offset, req_data.limit)
         )
         person_apis = [person_db_to_api(person) for person in person_dbs]
-        return 200, PersonNaturalWithReasonList(persons=person_apis)
+        return 200, PersonNaturalWithJustificationList(persons=person_apis)
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
 
@@ -225,11 +225,11 @@ def merge_entities(
 
 
 @router.get(
-    "{id_entity_persistent}/reasons",
-    response={200: ReasonList, 401: ApiError, 403: ApiError, 500: ApiError},
+    "{id_entity_persistent}/justifications",
+    response={200: JustificationList, 401: ApiError, 403: ApiError, 500: ApiError},
 )
-def get_reasons(request: HttpRequest, id_entity_persistent):
-    "Get reasons for an entity being in the database"
+def get_justifications(request: HttpRequest, id_entity_persistent):
+    "Get justifications for an entity being in the database"
     try:
         user = check_user(request)
     except NotAuthenticatedException:
@@ -237,24 +237,33 @@ def get_reasons(request: HttpRequest, id_entity_persistent):
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions")
     try:
-        reasons = EntityReasonDb.for_id_entity_persistent_asc(id_entity_persistent)
-        return 200, ReasonList(reasons=[reason_db_to_api(reason) for reason in reasons])
+        justifications = EntityJustificationDb.for_id_entity_persistent_asc(
+            id_entity_persistent
+        )
+        return 200, JustificationList(
+            justifications=[
+                justification_db_to_api(justification)
+                for justification in justifications
+            ]
+        )
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get Reasons.")
+        return 500, ApiError(msg="Could not get Justifications.")
 
 
 @router.put(
-    "{id_entity_persistent}/reasons",
+    "{id_entity_persistent}/justifications",
     response={
-        200: ReasonPostResponse,
+        200: JustificationPostResponse,
         401: ApiError,
         403: ApiError,
         404: ApiError,
         500: ApiError,
     },
 )
-def put_reason(request: HttpRequest, id_entity_persistent, reason: ReasonPostRequest):
-    """Add a reason for an entity being in the db"""
+def put_justification(
+    request: HttpRequest, id_entity_persistent, justification: JustificationPostRequest
+):
+    """Add a justification for an entity being in the db"""
     try:
         user = check_user(request)
     except NotAuthenticatedException:
@@ -264,18 +273,20 @@ def put_reason(request: HttpRequest, id_entity_persistent, reason: ReasonPostReq
     try:
         EntityDb.most_recent_by_id(id_entity_persistent)
         time_written = timestamp()
-        reason_created = EntityReasonDb.add(
+        justification_created = EntityJustificationDb.add(
             id_persistent=uuid4(),
             id_entity_persistent=id_entity_persistent,
-            text=reason.reason_txt,
+            text=justification.justification_txt,
             timestamp=time_written,
             author=user,
         )
-        return 200, ReasonPostResponse(reason=reason_db_to_api(reason_created))
+        return 200, JustificationPostResponse(
+            justification=justification_db_to_api(justification_created)
+        )
     except EntityDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Entity does not exist")
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get Reasons.")
+        return 500, ApiError(msg="Could not get Justifications.")
 
 
 def person_api_to_db(
@@ -295,9 +306,9 @@ def person_api_to_db(
                 f"Person with display_txt {person.display_txt} "
                 "has version but no persistent_id."
             )
-        if person.reason_txt is None:
+        if person.justification_txt is None:
             raise ValidationException(
-                f"No reason given for entity with display_txt {person.display_txt}"
+                f"No justification given for entity with display_txt {person.display_txt}"
             )
         persistent_id = str(uuid4())
     entity_db, save_entity = EntityDb.change_or_create_versioned(
@@ -308,24 +319,24 @@ def person_api_to_db(
         version=person.version,
         disabled=person.disabled or False,
     )
-    if person.reason_txt is None:
+    if person.justification_txt is None:
         try:
-            reason = EntityReasonDb.for_id_entity_persistent_desc(persistent_id)[
-                :1
-            ].get()
-        except EntityReasonDb.DoesNotExist:  # pylint: disable=no-member
-            reason = None
-        save_reason = False
+            justification = EntityJustificationDb.for_id_entity_persistent_desc(
+                persistent_id
+            )[:1].get()
+        except EntityJustificationDb.DoesNotExist:  # pylint: disable=no-member
+            justification = None
+        save_justification = False
     else:
-        reason = EntityReasonDb(
+        justification = EntityJustificationDb(
             id_persistent=uuid4(),
             id_entity_persistent=persistent_id,
-            text=person.reason_txt,
+            text=person.justification_txt,
             timestamp=time_edit,
             author=requester,
         )
-        save_reason = True
-    return entity_db, save_entity, reason, save_reason
+        save_justification = True
+    return entity_db, save_entity, justification, save_justification
 
 
 def person_db_to_api(person: EntityDb) -> PersonNatural:
@@ -335,13 +346,13 @@ def person_db_to_api(person: EntityDb) -> PersonNatural:
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
     if isinstance(display_txt_info, dict):
         display_txt_info = tag_definition_db_dict_to_api(display_txt_info)
-    return PersonNaturalWithReason(
+    return PersonNaturalWithJustification(
         display_txt=display_txt,
         version=person.id,
         id_persistent=id_persistent,
         disabled=person.disabled,
         display_txt_details=display_txt_info,
-        reason_txt=person.reason_txt,
+        justification_txt=person.justification_txt,
     )
 
 
@@ -363,10 +374,10 @@ def person_db_dict_to_api(person: Optional[dict]) -> Optional[PersonNatural]:
     )
 
 
-def reason_db_to_api(reason: EntityReasonDb) -> Comment:
-    "Transform a reason from database to APi representation"
+def justification_db_to_api(justification: EntityJustificationDb) -> Comment:
+    "Transform a justification from database to APi representation"
     return Comment(
-        content=reason.text,
-        author=user_db_to_public_user_info(reason.author),
-        timestamp=reason.timestamp,
+        content=justification.text,
+        author=user_db_to_public_user_info(justification.author),
+        timestamp=justification.timestamp,
     )

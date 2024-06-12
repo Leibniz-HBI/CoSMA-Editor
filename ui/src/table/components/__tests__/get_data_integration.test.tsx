@@ -84,15 +84,15 @@ const version0 = 0
 const version1 = 1
 const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
-const reason0 = 'very prolific shit poster'
-const reason1 = 'tremendously prolific shit poster'
+const justification0 = 'very prolific shit poster'
+const justification1 = 'tremendously prolific shit poster'
 const test_person_rsp_0 = {
     display_txt: displayTxt0,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent0,
     version: version0,
     disabled: false,
-    reason_txt: reason0
+    justification_txt: justification0
 }
 const test_person_rsp_1 = {
     display_txt: 'test display txt 1',
@@ -100,7 +100,7 @@ const test_person_rsp_1 = {
     id_persistent: idPersistent1,
     version: version1,
     disabled: false,
-    reason_txt: reason1
+    justification_txt: justification1
 }
 
 const entities_test = [
@@ -110,7 +110,7 @@ const entities_test = [
         displayTxtDetails: 'display_txt_detail',
         version: version0,
         disabled: false,
-        reasonTxt: reason0
+        justificationTxt: justification0
     }),
     newEntity({
         idPersistent: idPersistent1,
@@ -118,7 +118,7 @@ const entities_test = [
         displayTxtDetails: 'display_txt_detail',
         version: version1,
         disabled: false,
-        reasonTxt: reason1
+        justificationTxt: justification1
     })
 ]
 const columnNameTest = 'column name test'
@@ -362,36 +362,6 @@ test('get instances error', async () => {
     expect(fetchMock.mock.calls.length).toEqual(2)
 })
 
-test('show reasons', async () => {
-    const fetchMock = jest.fn()
-    addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
-    await waitFor(() => {
-        screen.getByText(displayTxt0)
-        screen.getByText(displayTxt1)
-        screen.getByText(value0)
-        screen.getByText(value1)
-    })
-    const reason = screen.queryByText(reason0)
-    expect(reason).toBeNull()
-    await waitFor(() => {
-        const toggle = screen.getByRole('checkbox')
-        toggle.click()
-    })
-    await waitFor(() => {
-        screen.getByText(reason0)
-        screen.getByText(reason1)
-        expect(store.getState().table.showEntityReasons).toBeTruthy()
-        const toggle = screen.getByRole('checkbox')
-        toggle.click()
-    })
-    await waitFor(() => {
-        expect(screen.queryByText(reason0)).toBeFalsy()
-        expect(screen.queryByText(reason1)).toBeFalsy()
-        expect(store.getState().table.showEntityReasons).toBeFalsy()
-    })
-})
 const displayTxtColumnState = newColumnState({
     tagDefinition: displayTextTagDef,
     cellContents: newRemote([])

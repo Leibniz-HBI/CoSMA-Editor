@@ -11,7 +11,7 @@ from ninja import Router, Schema
 from cosmae.contribution.entity.match_entities import find_matches
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity, EntityReason
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.person.api import (
     PersonNatural,
@@ -90,7 +90,7 @@ def get_entities(request: HttpRequest, start: int, offset: int):
         candidate = ContributionCandidate.by_id_persistent(
             id_contribution_persistent, user
         ).get()
-        entities_db = EntityReason.annotate_reason(
+        entities_db = EntityJustification.annotate_justification(
             candidate.get_entities_chunked(start, offset)
         )
         return 200, PersonNaturalList(
@@ -184,7 +184,7 @@ def put_duplicate_assignment(
         if origin.contribution_candidate != candidate:
             return 400, ApiError(msg="Origin Entity does not belong to contribution.")
         if id_entity_destination_persistent:
-            destination = EntityReason.annotate_reason(
+            destination = EntityJustification.annotate_justification(
                 Entity.most_recent_by_id_queryset(id_entity_destination_persistent)
             ).get()
             assigned_duplicate = person_db_to_api(destination)

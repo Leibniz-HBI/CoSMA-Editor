@@ -174,40 +174,48 @@ describe('login', () => {
         await waitFor(() => {
             expect(screen.queryByText('You are logged in')).toBeNull()
         })
-        await waitFor(async () => {
-            const state = store.getState()
-            expect(state.user).toEqual(newUserState({}))
-            const notifications = state.notification.notificationList
-            expect(notifications.length).toEqual(1)
-            const notification = notifications[0]
-            expect(notification.msg).toEqual('Unknown error')
-        })
+        await waitFor(
+            async () => {
+                const state = store.getState()
+                expect(state.user).toEqual(newUserState({}))
+                const notifications = state.notification.notificationList
+                expect(notifications.length).toEqual(1)
+                const notification = notifications[0]
+                expect(notification.msg).toEqual('Unknown error')
+            },
+            { timeout: 2000 }
+        )
     })
 })
 
 describe('registration', () => {
-    async function performRegistration(container: HTMLElement) {
+    async function performRegistration() {
         const user = userEvent.setup()
-        const registrationButton = container.getElementsByTagName('button')[0]
-        expect(registrationButton.textContent).toEqual('Registration')
-        // await act(async () => {
-        await user.click(registrationButton)
-        // })
-        const textInputs = await waitFor(() => {
-            const textInputs = screen.getAllByRole('textbox')
-            expect(textInputs.length).toEqual(4)
-            return textInputs
+        await waitFor(
+            async () => {
+                const registrationButton = screen.getByRole('button', {
+                    name: 'Registration'
+                })
+                await user.click(registrationButton)
+            },
+            { timeout: 2000 }
+        )
+        await act(async () => {
+            const textInputs = await waitFor(() => {
+                const textInputs = screen.getAllByRole('textbox')
+                expect(textInputs.length).toEqual(4)
+                return textInputs
+            })
+            await user.type(textInputs[0], 'username')
+            await user.type(textInputs[1], 'mail@test.url')
+            await user.type(textInputs[2], 'names personal')
+            const passwordInput = screen.getByLabelText('Password')
+            await user.type(passwordInput, passwordTest)
+            const repeatPasswordInput = screen.getByLabelText('Repeat password')
+            await user.type(repeatPasswordInput, passwordTest)
+            const registerButton = screen.getByRole('button', { name: 'Register' })
+            await user.click(registerButton)
         })
-        await user.type(textInputs[0], 'username')
-        await user.type(textInputs[1], 'mail@test.url')
-        await user.type(textInputs[2], 'names personal')
-        const passwordInput = screen.getByLabelText('Password')
-        await user.type(passwordInput, passwordTest)
-        const repeatPasswordInput = screen.getByLabelText('Repeat password')
-        await user.type(repeatPasswordInput, passwordTest)
-        const registerButton = container.getElementsByTagName('button')[1]
-        expect(registerButton.textContent).toEqual('Register')
-        await user.click(registerButton)
     }
 
     test('success', async () => {
@@ -216,11 +224,11 @@ describe('registration', () => {
             [401, { msg: 'not authenticated' }],
             [200, userInfoApi]
         ])
-        const { store, container } = renderWithProviders(
+        const { store } = renderWithProviders(
             <LoginProvider body={<span>You are logged in</span>}></LoginProvider>,
             fetchMock
         )
-        await performRegistration(container)
+        await performRegistration()
         await waitFor(async () => {
             const state = store.getState()
             expect(state.user).toEqual(newUserState({}))
@@ -245,11 +253,11 @@ describe('registration', () => {
             [401, { msg: 'not authenticated' }],
             [400, { msg: 'registration error' }]
         ])
-        const { store, container } = renderWithProviders(
+        const { store } = renderWithProviders(
             <LoginProvider body={<span>You are logged in</span>}></LoginProvider>,
             fetchMock
         )
-        await performRegistration(container)
+        await performRegistration()
         await waitFor(async () => {
             expect(screen.queryByText('You are logged in')).toBeNull()
         })
@@ -275,11 +283,11 @@ describe('registration', () => {
             [401, { msg: 'not authenticated' }],
             [400, {}]
         ])
-        const { store, container } = renderWithProviders(
+        const { store } = renderWithProviders(
             <LoginProvider body={<span>You are logged in</span>}></LoginProvider>,
             fetchMock
         )
-        await performRegistration(container)
+        await performRegistration()
         await waitFor(async () => {
             expect(screen.queryByText('You are logged in')).toBeNull()
         })

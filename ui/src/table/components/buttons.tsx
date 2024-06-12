@@ -1,6 +1,6 @@
-import { Button, FormCheck } from 'react-bootstrap'
+import { Button } from 'react-bootstrap'
 import { AppDispatch } from '../../store'
-import { showEntityAdd, toggleEntityReason, toggleSearch } from '../slice'
+import { showEntityAdd, toggleSearch } from '../slice'
 
 import { OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
@@ -11,8 +11,6 @@ import { ColumnState, Entity, csvLinesFromTable } from '../state'
 import { toggleRowSelection } from '../selection/slice'
 import { selectRowSelectionOrder } from '../selection/selectors'
 import { downloadWorkAround } from './table'
-import { useAppSelector } from '../../hooks'
-import { selectShowEntityReasons } from '../selectors'
 
 export function AddEntityButton({ dispatch }: { dispatch: AppDispatch }) {
     return <Button onClick={() => dispatch(showEntityAdd())}>Add Entity</Button>
@@ -87,33 +85,5 @@ export function DownloadButton({
         >
             Download
         </Button>
-    )
-}
-
-export function ReasonToggleButton({ dispatch }: { dispatch: AppDispatch }) {
-    const showEntityReasons = useAppSelector(selectShowEntityReasons)
-    return (
-        <OverlayTrigger
-            placement="right"
-            delay={{ show: 250, hide: 400 }}
-            overlay={
-                <Tooltip id="button-tooltip-3">
-                    Toggle display of reasons why entities exist in database
-                </Tooltip>
-            }
-        >
-            {/* Empty div to allow tooltip showing   */}
-            <span>
-                <FormCheck
-                    type="switch"
-                    checked={showEntityReasons}
-                    onChange={(evt) => {
-                        evt.stopPropagation()
-                        dispatch(toggleEntityReason(!showEntityReasons))
-                    }}
-                    label="Show Reasons"
-                />
-            </span>
-        </OverlayTrigger>
     )
 }

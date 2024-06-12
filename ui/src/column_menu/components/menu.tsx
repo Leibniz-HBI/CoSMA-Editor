@@ -11,8 +11,16 @@ import { AppDispatch } from '../../store'
 import { TabView } from '../../util/components/tabs'
 import { useAppSelector } from '../../hooks'
 
-export function ColumnMenu(props: {
+export function ColumnMenu({
+    columnIndices,
+    additionalEntries = [],
+    additionalIndices = {},
+    loadColumnDataCallback,
+    hideColumnDataCallback
+}: {
     columnIndices: { [key: string]: number }
+    additionalEntries?: { idPersistent: string; name: string }[]
+    additionalIndices?: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
     hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
@@ -29,19 +37,25 @@ export function ColumnMenu(props: {
     )
     return (
         <ColumnMenuBody
-            columnIndices={props.columnIndices}
-            loadColumnDataCallback={props.loadColumnDataCallback}
-            hideColumnDataCallback={props.hideColumnDataCallback}
+            columnIndices={columnIndices}
+            loadColumnDataCallback={loadColumnDataCallback}
+            hideColumnDataCallback={hideColumnDataCallback}
+            additionalEntries={additionalEntries}
+            additionalIndices={additionalIndices}
         />
     )
 }
 
 export function ColumnMenuBody({
     columnIndices,
+    additionalEntries = [],
+    additionalIndices = {},
     loadColumnDataCallback,
     hideColumnDataCallback
 }: {
     columnIndices: { [key: string]: number }
+    additionalEntries?: { idPersistent: string; name: string }[]
+    additionalIndices?: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
     hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
@@ -56,9 +70,11 @@ export function ColumnMenuBody({
                         name: 'Load',
                         component: (
                             <ShowTabBody
+                                additionalIndices={additionalIndices}
                                 columnIndices={columnIndices}
                                 loadColumnDataCallback={loadColumnDataCallback}
                                 hideColumnDataCallback={hideColumnDataCallback}
+                                additionalEntries={additionalEntries}
                             />
                         )
                     },
@@ -118,19 +134,25 @@ export function CreateTabBody({
 
 function ShowTabBody({
     columnIndices,
+    additionalEntries,
+    additionalIndices,
     loadColumnDataCallback,
     hideColumnDataCallback
 }: {
     columnIndices: { [key: string]: number }
+    additionalEntries: { idPersistent: string; name: string }[]
+    additionalIndices: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: TagDefinition) => void
     hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
     return (
         <div className="ps-2 pe-2 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1 h-100">
             <ColumnSelector
+                additionalEntries={additionalEntries}
                 mkTailElement={(columnDefinition: TagDefinition) => {
                     const isDisplayedInTable =
-                        columnIndices[columnDefinition.idPersistent] !== undefined
+                        columnIndices[columnDefinition.idPersistent] !== undefined ||
+                        additionalIndices[columnDefinition.idPersistent] !== undefined
                     if (isDisplayedInTable) {
                         return (
                             <span

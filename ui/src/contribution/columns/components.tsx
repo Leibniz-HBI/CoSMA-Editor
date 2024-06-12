@@ -39,11 +39,11 @@ import { Flipped, Flipper } from 'react-flip-toolkit'
 
 export function ColumnDefinitionStep() {
     const dispatch: AppDispatch = useDispatch()
-    const definitions = useSelector(selectColumnDefinitionsContributionTriple)
-    const selectedColumnDefinition = useSelector(selectSelectedColumnDefinition)
-    const createTabSelected = useSelector(selectCreateTabSelected)
-    const isLoadingTags = useSelector(selectTagSelectionLoading)
-    const contributionCandidate = useSelector(selectContribution)
+    const definitions = useAppSelector(selectColumnDefinitionsContributionTriple)
+    const selectedColumnDefinition = useAppSelector(selectSelectedColumnDefinition)
+    const createTabSelected = useAppSelector(selectCreateTabSelected)
+    const isLoadingTags = useAppSelector(selectTagSelectionLoading)
+    const contributionCandidate = useAppSelector(selectContribution)
     useEffect(() => {
         if (contributionCandidate.value != undefined && !definitions.isLoading) {
             dispatch(
@@ -249,6 +249,7 @@ export function ContributionColumnAssignmentForm({
                 <PreviewConnector
                     idContributionPersistent={idContributionPersistent}
                     idColumnPersistent={columnDefinition.idPersistent}
+                    idExistingPersistent={columnDefinition.idExistingPersistent}
                 />
             </Col>
             <Modal
@@ -427,20 +428,25 @@ function CompleteColumnAssignmentButtonInner({
 
 export function PreviewConnector({
     idContributionPersistent,
-    idColumnPersistent
+    idColumnPersistent,
+    idExistingPersistent
 }: {
     idContributionPersistent: string
     idColumnPersistent: string
+    idExistingPersistent: string | undefined
 }) {
     const dispatch = useAppDispatch()
     useEffect(
         () => {
-            if (idColumnPersistent !== undefined) {
+            if (
+                idColumnPersistent !== undefined &&
+                idExistingPersistent !== undefined
+            ) {
                 dispatch(loadPreview(idContributionPersistent, idColumnPersistent))
             }
         },
         //eslint-disable-next-line react-hooks/exhaustive-deps
-        [idColumnPersistent, idContributionPersistent]
+        [idColumnPersistent, idContributionPersistent, idExistingPersistent]
     )
     return <PreviewComponent />
 }

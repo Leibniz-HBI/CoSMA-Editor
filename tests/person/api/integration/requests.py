@@ -26,23 +26,23 @@ def post_chunk(url, offset, limit, cookies=None):
     )
 
 
-def put_reason(url, id_entity_persistent, text, cookies=None):
+def put_justification(url, id_entity_persistent, text, cookies=None):
     return requests.put(
         urljoin(
             url,
-            f"cosmae/api/persons/{id_entity_persistent}/reasons",
+            f"cosmae/api/persons/{id_entity_persistent}/justifications",
         ),
-        json={"reason_txt": text},
+        json={"justification_txt": text},
         cookies=cookies,
         timeout=9,
     )
 
 
-def get_reason(url, id_entity_persistent, cookies=None):
+def get_justification(url, id_entity_persistent, cookies=None):
     return requests.get(
         urljoin(
             url,
-            f"cosmae/api/persons/{id_entity_persistent}/reasons",
+            f"cosmae/api/persons/{id_entity_persistent}/justifications",
         ),
         cookies=cookies,
         timeout=9,

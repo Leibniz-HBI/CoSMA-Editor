@@ -21,7 +21,7 @@ def test_can_slice(auth_server_commissioner):
             "names_personal": "test personal",
             "names_family": "test family",
             "display_txt": f"{i}",
-            "reason_txt": "reason",
+            "justification_txt": "justification",
         }
         for i in range(20)
     ]
@@ -41,7 +41,7 @@ def test_can_slice_with_hidden(auth_server_commissioner):
             "names_personal": "test personal",
             "names_family": "test family",
             "display_txt": f"{i}",
-            "reason_txt": "reason",
+            "justification_txt": "justification",
         }
         for i in range(20)
     ]

@@ -75,11 +75,11 @@ const loadingInstance = new LoadingType()
 export function createCellContentCallback({
     entities,
     columnStates,
-    showEntityReasons
+    showEntityJustifications
 }: {
     entities?: Entity[]
     columnStates: ColumnState[]
-    showEntityReasons: boolean
+    showEntityJustifications: boolean
 }): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
@@ -96,11 +96,11 @@ export function createCellContentCallback({
                 }
             ])
         }
-        if (showEntityReasons && col_idx == 1) {
+        if (showEntityJustifications && col_idx == 1) {
             return mkCell(TagType.String, [
                 {
                     idPersistent: entity.idPersistent,
-                    value: entity.reasonTxt,
+                    value: entity.justificationTxt,
                     version: entity.version
                 }
             ])

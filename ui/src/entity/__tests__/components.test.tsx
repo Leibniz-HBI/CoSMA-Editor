@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { AddEntityForm } from '../components'
 import { Remote } from '../../util/state'
 import userEvent from '@testing-library/user-event'
@@ -23,10 +23,10 @@ describe('Add entity form', () => {
         await userEvent.click(textBoxes[0])
         await userEvent.keyboard('display')
         await userEvent.click(textBoxes[1])
-        const reason = 'reason for entity'
-        await userEvent.keyboard(reason)
+        const justification = 'justification for entity'
+        await userEvent.keyboard(justification)
         const button = screen.getByRole('button')
         await userEvent.click(button)
-        expect(addEntityCallback.mock.calls).toEqual([['display', reason]])
+        expect(addEntityCallback.mock.calls).toEqual([['display', justification]])
     })
 })

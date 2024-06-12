@@ -4,17 +4,18 @@ import { useAppDispatch, useAppSelector } from '../../hooks'
 import { EntityMergeRequestConflictComponent } from '../../merge_request/entity/conflicts/components'
 import {
     selectEntityAddState,
-    selectEntityReasonHistory,
-    selectEntityReasonHistoryForIdPersistent,
+    selectEntityJustificationHistory,
+    selectEntityJustificationHistoryForIdPersistent,
     selectShowColumnMenu,
     selectShowEntityAddMenu,
-    selectShowEntityMerging
+    selectShowEntityMerging,
+    selectShowEntityJustifications
 } from '../selectors'
 import {
-    clearEntityReasonHistory,
+    clearEntityJustificationHistory,
     hideColumnAddMenu,
     hideEntityAdd,
-    hideEntityReasonHistory,
+    hideEntityJustificationHistory,
     removeColumnByIdPersistent,
     toggleEntityMergingModal
 } from '../slice'
@@ -22,8 +23,8 @@ import {
     entityChangeOrCreate,
     getColumnAsync,
     getTableAsync,
-    loadEntityReasonHistoryThunk,
-    submitEntityReasonThunk
+    loadEntityJustificationHistoryThunk,
+    submitEntityJustificationThunk
 } from '../thunks'
 import { AddEntityForm } from '../../entity/components'
 import { ColumnMenu } from '../../column_menu/components/menu'
@@ -34,6 +35,7 @@ import {
 } from '../../user/thunks'
 import { useEffect } from 'react'
 import { CommentForm, CommentsHistory } from '../../comments/components'
+import { justificationColumnId } from '../state'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -74,9 +76,12 @@ export function EntityAddModal() {
             <Modal.Body>
                 <AddEntityForm
                     state={entityAddState}
-                    addEntityCallback={(displayTxt, reason) =>
+                    addEntityCallback={(displayTxt, justification) =>
                         dispatch(
-                            entityChangeOrCreate({ displayTxt, reasonTxt: reason })
+                            entityChangeOrCreate({
+                                displayTxt,
+                                justificationTxt: justification
+                            })
                         )
                     }
                 />
@@ -91,7 +96,12 @@ export function ColumnModal({
     columnIndices: { [key: string]: number }
 }) {
     const dispatch = useAppDispatch()
+    const justificationsShown = useAppSelector(selectShowEntityJustifications)
     const showColumnMenu = useAppSelector(selectShowColumnMenu)
+    const additionalIndices: { [key: string]: number } = {}
+    if (justificationsShown) {
+        additionalIndices[justificationColumnId] = 1
+    }
     return (
         <Modal
             show={showColumnMenu}
@@ -107,6 +117,10 @@ export function ColumnModal({
             </Modal.Header>
             <Modal.Body className="bg-secondary vh-85">
                 <ColumnMenu
+                    additionalEntries={[
+                        { idPersistent: justificationColumnId, name: 'Justification' }
+                    ]}
+                    additionalIndices={additionalIndices}
                     columnIndices={columnIndices}
                     loadColumnDataCallback={(columnDefinition: TagDefinition) =>
                         dispatch(getColumnAsync(columnDefinition)).then(() =>
@@ -136,39 +150,41 @@ export function ColumnModal({
     )
 }
 
-export function EntityReasonModal() {
-    const remoteIdPersistent = useAppSelector(selectEntityReasonHistoryForIdPersistent)
+export function EntityJustificationModal() {
+    const remoteIdPersistent = useAppSelector(
+        selectEntityJustificationHistoryForIdPersistent
+    )
     const idPersistent = remoteIdPersistent.value
     const dispatch = useAppDispatch()
     return (
         <Modal
             show={idPersistent !== undefined}
             className="overflow-hidden"
-            onHide={() => dispatch(hideEntityReasonHistory())}
+            onHide={() => dispatch(hideEntityJustificationHistory())}
             size="xl"
         >
             <Modal.Header closeButton>
-                <Modal.Title>Entity Reason History</Modal.Title>
+                <Modal.Title>Entity Justification History</Modal.Title>
             </Modal.Header>
             <ModalBody className="vh-85 overflow-hide">
                 {idPersistent !== undefined && (
-                    <EntityReasonBody idPersistent={idPersistent} />
+                    <EntityJustificationBody idPersistent={idPersistent} />
                 )}
             </ModalBody>
         </Modal>
     )
 }
-export function EntityReasonBody({ idPersistent }: { idPersistent: string }) {
-    const comments = useAppSelector(selectEntityReasonHistory)
+export function EntityJustificationBody({ idPersistent }: { idPersistent: string }) {
+    const comments = useAppSelector(selectEntityJustificationHistory)
     const dispatch = useAppDispatch()
     const submitCommentCallback = (commentTxt: string) =>
-        dispatch(submitEntityReasonThunk(idPersistent, commentTxt))
+        dispatch(submitEntityJustificationThunk(idPersistent, commentTxt))
     useEffect(() => {
         if (comments === undefined || !comments.isLoading) {
-            dispatch(loadEntityReasonHistoryThunk(idPersistent))
+            dispatch(loadEntityJustificationHistoryThunk(idPersistent))
         }
         return () => {
-            dispatch(clearEntityReasonHistory())
+            dispatch(clearEntityJustificationHistory())
         }
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idPersistent])

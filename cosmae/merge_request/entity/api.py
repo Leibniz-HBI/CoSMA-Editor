@@ -9,7 +9,7 @@ from django_rq import enqueue
 from ninja import Router, Schema
 
 from cosmae.entity.models_django import Entity as EntityDb
-from cosmae.entity.models_django import EntityReason
+from cosmae.entity.models_django import EntityJustification
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution as EntityConflictResolutionDb,
@@ -504,10 +504,10 @@ def get(request: HttpRequest, id_merge_request_persistent):
 def entity_merge_request_db_to_api(merge_request: EntityMergeRequestDb):
     "Convert basic information of an entity merge request from DB to API representation."
     try:
-        origin = EntityReason.annotate_reason(
+        origin = EntityJustification.annotate_justification(
             EntityDb.most_recent_by_id_queryset(merge_request.id_origin_persistent)
         )
-        destination = EntityReason.annotate_reason(
+        destination = EntityJustification.annotate_justification(
             EntityDb.most_recent_by_id_queryset(merge_request.id_destination_persistent)
         )
     except IndexError:

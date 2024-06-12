@@ -8,12 +8,12 @@ import * as yup from 'yup'
 
 const schema = yup.object({
     displayTxt: yup.string().trim(),
-    reason: yup.string().required().min(8).trim()
+    justification: yup.string().required().min(8).trim()
 })
 
 interface AddEntityArgs {
     displayTxt: string
-    reason: string
+    justification: string
 }
 
 export function AddEntityForm({
@@ -21,13 +21,16 @@ export function AddEntityForm({
     addEntityCallback
 }: {
     state: RemoteInterface<boolean>
-    addEntityCallback: (displayTxt: string | undefined, reason: string) => void
+    addEntityCallback: (displayTxt: string | undefined, justification: string) => void
 }) {
     return (
         <Formik
-            initialValues={{ displayTxt: '', reason: '' }}
-            onSubmit={({ displayTxt, reason }) => {
-                addEntityCallback(displayTxt == '' ? undefined : displayTxt, reason)
+            initialValues={{ displayTxt: '', justification: '' }}
+            onSubmit={({ displayTxt, justification }) => {
+                addEntityCallback(
+                    displayTxt == '' ? undefined : displayTxt,
+                    justification
+                )
             }}
             validationSchema={schema}
         >
@@ -71,12 +74,12 @@ export function AddEntityFormBody({
                     isTouched={touched.displayTxt}
                 />
                 <FormField
-                    name="reason"
-                    label="Reason for Adding Entity"
-                    value={values.reason}
+                    name="justification"
+                    label="justification for Adding Entity"
+                    value={values.justification}
                     handleChange={handleChange}
-                    error={errors.reason}
-                    isTouched={touched.reason}
+                    error={errors.justification}
+                    isTouched={touched.justification}
                     as="textarea"
                     className="min-h-200px"
                 />

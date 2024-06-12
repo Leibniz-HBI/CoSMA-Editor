@@ -5,7 +5,8 @@ import {
     TableState,
     newColumnState,
     newTableState,
-    reasonColumn
+    justificationColumn,
+    justificationColumnId
 } from './state'
 import { newRemote } from '../util/state'
 import { TagDefinition } from '../column_menu/state'
@@ -95,17 +96,16 @@ const tableSlice = createSlice({
                 )
             }
         },
-        toggleEntityReason(state: TableState, action: PayloadAction<boolean>) {
-            if (action.payload) {
-                const columnState = newColumnState({
-                    tagDefinition: reasonColumn,
-                    cellContents: newRemote([])
-                })
-                state.columnStates.splice(1, 0, columnState)
-            } else {
-                state.columnStates.splice(1, 1)
+        showEntityJustification(state: TableState) {
+            if (state.showEntityJustifications) {
+                return
             }
-            state.showEntityReasons = action.payload
+            const columnState = newColumnState({
+                tagDefinition: justificationColumn,
+                cellContents: newRemote([])
+            })
+            state.columnStates.splice(1, 0, columnState)
+            state.showEntityJustifications = true
         },
         removeColumnByIdPersistent(state: TableState, action: PayloadAction<string>) {
             removeColumnByIdPersistentHelper(state, action.payload)
@@ -222,48 +222,50 @@ const tableSlice = createSlice({
         toggleEntityMergingModal(state: TableState, action: PayloadAction<boolean>) {
             state.showEntityMergingModal = action.payload
         },
-        clearEntityReasonHistory(state: TableState) {
-            state.entityReasonHistory = newRemote([])
+        clearEntityJustificationHistory(state: TableState) {
+            state.entityJustificationHistory = newRemote([])
         },
-        showEntityReasonHistory(
+        showEntityJustificationHistory(
             state: TableState,
             action: PayloadAction<string | undefined>
         ) {
-            state.showEntityReasonHistoryForIdPersistent = newRemote(action.payload)
+            state.showEntityJustificationHistoryForIdPersistent = newRemote(
+                action.payload
+            )
         },
-        hideEntityReasonHistory(state: TableState) {
-            state.showEntityReasonHistoryForIdPersistent = newRemote(undefined)
+        hideEntityJustificationHistory(state: TableState) {
+            state.showEntityJustificationHistoryForIdPersistent = newRemote(undefined)
         },
-        loadEntityReasonHistoryStart(state: TableState) {
-            state.entityReasonHistory = newRemote([], true)
+        loadEntityJustificationHistoryStart(state: TableState) {
+            state.entityJustificationHistory = newRemote([], true)
         },
-        loadEntityReasonHistorySuccess(
+        loadEntityJustificationHistorySuccess(
             state: TableState,
             action: PayloadAction<Comment[]>
         ) {
-            state.entityReasonHistory = newRemote(action.payload)
+            state.entityJustificationHistory = newRemote(action.payload)
         },
-        loadEntityReasonHistoryError(state: TableState) {
-            state.entityReasonHistory.isLoading = false
+        loadEntityJustificationHistoryError(state: TableState) {
+            state.entityJustificationHistory.isLoading = false
         },
-        submitEntityReasonStart(state: TableState) {
-            state.showEntityReasonHistoryForIdPersistent.isLoading = true
+        submitEntityJustificationStart(state: TableState) {
+            state.showEntityJustificationHistoryForIdPersistent.isLoading = true
         },
-        submitEntityReasonSuccess(
+        submitEntityJustificationSuccess(
             state: TableState,
             action: PayloadAction<{ idEntityPersistent: string; comment: Comment }>
         ) {
-            state.entityReasonHistory.value.push(action.payload.comment)
+            state.entityJustificationHistory.value.push(action.payload.comment)
             const idx = state.entityIndices[action.payload.idEntityPersistent]
             if (idx !== undefined && state.entities !== undefined) {
                 const entity = state.entities[idx]
                 if (entity !== undefined) {
-                    entity.reasonTxt = action.payload.comment.content
+                    entity.justificationTxt = action.payload.comment.content
                 }
             }
         },
-        submitEntityReasonError(state: TableState) {
-            state.showEntityReasonHistoryForIdPersistent.isLoading = false
+        submitEntityJustificationError(state: TableState) {
+            state.showEntityJustificationHistoryForIdPersistent.isLoading = false
         }
     }
 })
@@ -271,6 +273,11 @@ const tableSlice = createSlice({
 export const tableReducer = tableSlice.reducer
 
 function removeColumnByIdPersistentHelper(state: TableState, idPersistent: string) {
+    if (idPersistent == justificationColumnId && state.showEntityJustifications) {
+        state.columnStates.splice(1, 1)
+        state.showEntityJustifications = false
+        return
+    }
     const columnIdx = state.columnIndices[idPersistent]
     if (columnIdx !== undefined) {
         state.columnStates.splice(columnIdx, 1)
@@ -326,15 +333,15 @@ export const {
     tagChangeOwnershipHide,
     tagDefinitionChange,
     toggleEntityMergingModal,
-    toggleEntityReason,
+    showEntityJustification,
     toggleSearch,
-    clearEntityReasonHistory,
-    loadEntityReasonHistoryStart,
-    loadEntityReasonHistorySuccess,
-    loadEntityReasonHistoryError,
-    showEntityReasonHistory,
-    hideEntityReasonHistory,
-    submitEntityReasonStart,
-    submitEntityReasonError,
-    submitEntityReasonSuccess
+    clearEntityJustificationHistory,
+    loadEntityJustificationHistoryStart,
+    loadEntityJustificationHistorySuccess,
+    loadEntityJustificationHistoryError,
+    showEntityJustificationHistory,
+    hideEntityJustificationHistory,
+    submitEntityJustificationStart,
+    submitEntityJustificationError,
+    submitEntityJustificationSuccess
 } = tableSlice.actions

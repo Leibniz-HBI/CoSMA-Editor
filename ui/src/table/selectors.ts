@@ -5,6 +5,7 @@ import { removeSelectedColumn, tagChangeOwnerShipShow } from './slice'
 import { remoteUserProfileColumnDeleteAsync } from '../user/thunks'
 import { UserPermissionGroup } from '../user/state'
 import { curateAsync } from './thunks'
+import { justificationColumnId } from './state'
 
 function selectTableState(state: RootState) {
     return state.table
@@ -103,13 +104,16 @@ export const selectColumnHeaderMenu = createSelector(
                             )
                         )
                     }
-                },
-                {
-                    label: 'Change Owner',
-                    labelClassName: '',
-                    onClick: () => dispatch(tagChangeOwnerShipShow(columnDefinition))
                 }
             ]
+            if (columnDefinition.idPersistent == justificationColumnId) {
+                return ret
+            }
+            ret.push({
+                label: 'Change Owner',
+                labelClassName: '',
+                onClick: () => dispatch(tagChangeOwnerShipShow(columnDefinition))
+            })
             if (
                 permissionGroup == UserPermissionGroup.EDITOR ||
                 permissionGroup == UserPermissionGroup.COMMISSIONER
@@ -137,17 +141,17 @@ export const selectIsSubmittingValues = createSelector(
     (state) => state.isSubmittingValues
 )
 
-export const selectShowEntityReasons = createSelector(
+export const selectShowEntityJustifications = createSelector(
     selectTableState,
-    (state) => state.showEntityReasons
+    (state) => state.showEntityJustifications
 )
 
-export const selectEntityReasonHistoryForIdPersistent = createSelector(
+export const selectEntityJustificationHistoryForIdPersistent = createSelector(
     selectTableState,
-    (state) => state.showEntityReasonHistoryForIdPersistent
+    (state) => state.showEntityJustificationHistoryForIdPersistent
 )
 
-export const selectEntityReasonHistory = createSelector(
+export const selectEntityJustificationHistory = createSelector(
     selectTableState,
-    (state) => state.entityReasonHistory
+    (state) => state.entityJustificationHistory
 )

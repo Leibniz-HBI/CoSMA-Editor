@@ -22,6 +22,7 @@ import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { justificationColumnId } from '../table/state'
 
 export function login(userName: string, password: string): ThunkWithFetch<void> {
     return async (dispatch: AppDispatch, _getState, fetch) => {
@@ -214,7 +215,10 @@ export function userSearch(searchTerm: string): ThunkWithFetch<void> {
 export function remoteUserProfileColumnAppend(
     idTagPersistent: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (_dispatch, _getState, fetch) => {
+        if (idTagPersistent == justificationColumnId) {
+            return
+        }
         await fetch(
             config.api_path + `/user/tag_definitions/append/${idTagPersistent}`,
             {
@@ -228,6 +232,9 @@ export function remoteUserProfileColumnDeleteAsync(
     idTagPersistent: string
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
+        if (idTagPersistent == justificationColumnId) {
+            return
+        }
         const rsp = await fetch(
             config.api_path + `/user/tag_definitions/${idTagPersistent}`,
             {

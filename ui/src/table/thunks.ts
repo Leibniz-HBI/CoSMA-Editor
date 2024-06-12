@@ -6,7 +6,8 @@ import {
     Entity,
     displayTextColumn,
     displayTxtColumnId,
-    newEntity
+    newEntity,
+    justificationColumnId
 } from './state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
@@ -21,16 +22,17 @@ import {
     entityChangeOrCreateError,
     entityChangeOrCreateStart,
     entityChangeOrCreateSuccess,
-    loadEntityReasonHistoryError,
-    loadEntityReasonHistoryStart,
-    loadEntityReasonHistorySuccess,
+    loadEntityJustificationHistoryError,
+    loadEntityJustificationHistoryStart,
+    loadEntityJustificationHistorySuccess,
     setColumnLoading,
     setEntities,
     setEntityLoading,
     setLoadDataError,
-    submitEntityReasonError,
-    submitEntityReasonStart,
-    submitEntityReasonSuccess,
+    showEntityJustification,
+    submitEntityJustificationError,
+    submitEntityJustificationStart,
+    submitEntityJustificationSuccess,
     submitValuesError,
     submitValuesStart,
     submitValuesSuccess,
@@ -98,6 +100,10 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
 export function getColumnAsync(columnDefinition: TagDefinition): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         const id_persistent = columnDefinition.idPersistent
+        if (id_persistent == justificationColumnId) {
+            dispatch(showEntityJustification())
+            return
+        }
         try {
             dispatch(setColumnLoading(columnDefinition))
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -250,12 +256,12 @@ function extractEdit(
 export function entityChangeOrCreate({
     displayTxt,
     idPersistent = undefined,
-    reasonTxt = undefined,
+    justificationTxt = undefined,
     version = undefined
 }: {
     displayTxt?: string
     idPersistent?: string
-    reasonTxt?: string
+    justificationTxt?: string
     version?: number
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
@@ -268,7 +274,7 @@ export function entityChangeOrCreate({
                     persons: [
                         {
                             display_txt: displayTxt,
-                            reason_txt: reasonTxt,
+                            justification_txt: justificationTxt,
                             id_persistent: idPersistent,
                             version: version
                         }
@@ -319,52 +325,54 @@ export function curateAsync(idTagDefinitionPersistent: string): ThunkWithFetch<v
     }
 }
 
-export function loadEntityReasonHistoryThunk(
+export function loadEntityJustificationHistoryThunk(
     idEntityPersistent: string
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(loadEntityReasonHistoryStart())
+        dispatch(loadEntityJustificationHistoryStart())
         try {
             const rsp = await fetch(
-                config.api_path + `/persons/${idEntityPersistent}/reasons`,
+                config.api_path + `/persons/${idEntityPersistent}/justifications`,
                 { credentials: 'include' }
             )
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const reasons = json['reasons'].map((reason: unknown) =>
-                    parseCommentFromApi(reason)
+                const justifications = json['justifications'].map(
+                    (justification: unknown) => parseCommentFromApi(justification)
                 )
-                dispatch(loadEntityReasonHistorySuccess(reasons))
+                dispatch(loadEntityJustificationHistorySuccess(justifications))
             } else {
-                dispatch(loadEntityReasonHistoryError())
+                dispatch(loadEntityJustificationHistoryError())
                 dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(loadEntityReasonHistoryError())
+            dispatch(loadEntityJustificationHistoryError())
             dispatch(addError(exceptionMessage(e)))
         }
     }
 }
 
-export function submitEntityReasonThunk(
+export function submitEntityJustificationThunk(
     idEntityPersistent: string,
-    reason: string
+    justification: string
 ): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(submitEntityReasonStart())
+        dispatch(submitEntityJustificationStart())
         try {
             const rsp = await fetch(
-                config.api_path + `/persons/${idEntityPersistent}/reasons`,
+                config.api_path + `/persons/${idEntityPersistent}/justifications`,
                 {
                     credentials: 'include',
                     method: 'PUT',
-                    body: JSON.stringify({ reason_txt: reason })
+                    body: JSON.stringify({ justification_txt: justification })
                 }
             )
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const comment = parseCommentFromApi(json['reason'])
-                dispatch(submitEntityReasonSuccess({ idEntityPersistent, comment }))
+                const comment = parseCommentFromApi(json['justification'])
+                dispatch(
+                    submitEntityJustificationSuccess({ idEntityPersistent, comment })
+                )
                 return true
             } else {
                 dispatch(addError(errorMessageFromApi(json)))
@@ -372,7 +380,7 @@ export function submitEntityReasonThunk(
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
         }
-        dispatch(submitEntityReasonError())
+        dispatch(submitEntityJustificationError())
         return false
     }
 }
@@ -402,7 +410,7 @@ export function parseEntityObjectFromJson(json: any): Entity {
         displayTxtDetails: parseDisplayTxtDetails(json['display_txt_details']),
         version: Number.parseInt(json['version']),
         disabled: json['disabled'],
-        reasonTxt: json['reason_txt']
+        justificationTxt: json['justification_txt']
     })
 }
 export function parseDisplayTxtDetails(
