@@ -91,6 +91,7 @@ export function RemoteDataTable() {
     const isLoading = useAppSelector(selectIsLoadingEntities)
     const entities = useAppSelector(selectEntities)
     const userInfo = useAppSelector(selectUserInfo)
+    const showJustifications = useAppSelector(selectShowEntityJustifications)
     const columnIndices = useAppSelector(selectColumnIndices)
     const columnStates = useAppSelector(selectColumnStates)
     const tagDefinitionChangeOwnership = useAppSelector(
@@ -156,6 +157,7 @@ export function RemoteDataTable() {
                         <DownloadButton
                             entities={entities}
                             columnStates={columnStates}
+                            showJustifications={showJustifications}
                         />
                     </Col>
                 </Row>

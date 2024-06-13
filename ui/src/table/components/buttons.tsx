@@ -72,15 +72,19 @@ export function SearchButton({ dispatch }: { dispatch: AppDispatch }) {
 }
 export function DownloadButton({
     entities,
-    columnStates
+    columnStates,
+    showJustifications
 }: {
     entities: Entity[] | undefined
     columnStates: ColumnState[]
+    showJustifications: boolean
 }) {
     return (
         <Button
             onClick={() =>
-                downloadWorkAround(csvLinesFromTable({ entities, columnStates }))
+                downloadWorkAround(
+                    csvLinesFromTable({ entities, columnStates, showJustifications })
+                )
             }
         >
             Download

@@ -137,19 +137,25 @@ function columnNameFromState(colState: ColumnState): string {
 }
 export function csvLinesFromTable({
     entities,
-    columnStates
+    columnStates,
+    showJustifications
 }: {
     entities?: Entity[]
     columnStates: ColumnState[]
+    showJustifications: boolean
 }): string[] {
     if (entities === undefined || entities.length == 0) {
         return []
     }
+    let columnStartIdx = 1
+    if (showJustifications) {
+        columnStartIdx += 1
+    }
     const lines = []
     const header =
-        '"id_entity_persistent","display_txt",' +
+        '"id_entity_persistent","display_txt","justification",' +
         columnStates
-            .slice(1)
+            .slice(columnStartIdx)
             .map((colState) => '"' + columnNameFromState(colState) + '"')
             .join(',')
     if (header.endsWith(',')) {
@@ -162,8 +168,15 @@ export function csvLinesFromTable({
         const value =
             '"' +
             entities[rowIdx].idPersistent +
+            '","' +
+            (entities[rowIdx].displayTxtDetails == 'Display Text'
+                ? entities[rowIdx].displayTxt
+                : '') +
+            '","' +
+            (entities[rowIdx].justificationTxt ?? '') +
             '",' +
             columnStates
+                .slice(columnStartIdx)
                 .map(
                     (colState) =>
                         '"' +
@@ -176,54 +189,6 @@ export function csvLinesFromTable({
         lines.push(value)
     }
     return lines
-}
-export class TableStateCsvIterator implements Iterator<string | undefined> {
-    tableState: TableState
-    rowIdx: number
-
-    constructor(tableState: TableState) {
-        this.tableState = tableState
-        this.rowIdx = -1
-    }
-
-    next(): IteratorResult<string | undefined> {
-        const entities = this.tableState.entities
-        if (entities === undefined || this.rowIdx > entities.length)
-            return { done: true, value: undefined }
-        if (this.rowIdx < 0) {
-            this.rowIdx += 1
-            return {
-                done: entities.length == 0,
-                value:
-                    '"id_entity_persistent","display_txt",' +
-                    this.tableState.columnStates
-                        .map((colState) => '"' + columnNameFromState(colState) + '"')
-                        .join(',') +
-                    '\n'
-            }
-        } else {
-            const value =
-                '"' +
-                entities[this.rowIdx] +
-                '",' +
-                this.tableState.columnStates
-                    .map(
-                        (colState) =>
-                            '"' +
-                            (colState.cellContents.value[
-                                this.rowIdx
-                            ][0].value?.toString() ?? '') +
-                            '"'
-                    )
-                    .join(',') +
-                '\n'
-            this.rowIdx += 1
-            return {
-                done: this.rowIdx >= entities.length,
-                value
-            }
-        }
-    }
 }
 
 export interface Entity {
