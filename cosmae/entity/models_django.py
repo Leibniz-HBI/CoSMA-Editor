@@ -135,6 +135,18 @@ class EntityJustification(models.Model):
         "cosmae.CosmaeUser", null=True, blank=True, on_delete=models.SET_NULL
     )
 
+    class Meta:
+        "Meta class for entity model"
+        # pylint: disable=too-few-public-methods
+        indexes = [
+            # Possible alternative gin index with `opclasses=["gin_trgrm_ops"],
+            # Would mean faster retrieval but increased size and update time.
+            # Needs to add extension via migration.
+            GistIndex(
+                fields=["text"],
+            ),
+        ]
+
     @classmethod
     def for_id_entity_persistent_unordered(cls, id_entity_persistent):
         "Get all justifications for an entity unordered"
@@ -160,12 +172,22 @@ class EntityJustification(models.Model):
     def add(cls, id_persistent, id_entity_persistent, text, timestamp, author):
         # pylint: disable=too-many-arguments
         "Add a new entity justification."
-        return cls.objects.create(  # pylint: disable=no-member
-            id_persistent=id_persistent,
-            id_entity_persistent=id_entity_persistent,
-            text=text,
-            timestamp=timestamp,
-            author=author,
+        existing_queryset = cls.objects.filter(  # pylint: disable=no-member
+            text__search=text
+        )
+        if len(existing_queryset) > 0:
+            existing = existing_queryset[0]
+            if existing.text == text:
+                return existing, False
+        return (
+            cls.objects.create(  # pylint: disable=no-member
+                id_persistent=id_persistent,
+                id_entity_persistent=id_entity_persistent,
+                text=text,
+                timestamp=timestamp,
+                author=author,
+            ),
+            True,
         )
 
     @classmethod

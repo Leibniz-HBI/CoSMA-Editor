@@ -5,7 +5,7 @@ import pytest
 from django.db import IntegrityError
 
 from tests.person.api.integration.requests import post_person, post_persons
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 
 test_display_txt_0 = "test display text 0"
 test_id_persistent_0 = "test_id_0"
@@ -198,3 +198,66 @@ def test_no_justification_change(auth_server_commissioner):
     assert person["display_txt_details"] == "Display Text"
     entity = Entity.most_recent_by_id(id_persistent)
     assert entity.id_persistent == id_persistent
+
+
+def test_same_justification_change(auth_server_commissioner):
+    server, cookies = auth_server_commissioner
+    rsp = post_person(
+        server.url, {"justification_txt": test_justification}, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    created = rsp.json()["persons"][0]
+    changed_display_txt = "new test display txt"
+    created["display_txt"] = changed_display_txt
+    rsp = post_person(server.url, created, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    persons = json["persons"]
+    assert len(persons) == 1
+    person = persons[0]
+    id_persistent = person["id_persistent"]
+    assert person["display_txt"] == changed_display_txt
+    assert person["display_txt_details"] == "Display Text"
+    entity = Entity.most_recent_by_id(id_persistent)
+    assert entity.id_persistent == id_persistent
+    assert (
+        len(
+            EntityJustification.objects.filter(  # pylint: disable=no-member
+                id_entity_persistent=created["id_persistent"]
+            )
+        )
+        == 1
+    )
+
+
+def test_different_justification_change(auth_server_commissioner):
+    server, cookies = auth_server_commissioner
+    rsp = post_person(
+        server.url, {"justification_txt": test_justification}, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    created = rsp.json()["persons"][0]
+    changed_display_txt = "new test display txt"
+    created["display_txt"] = changed_display_txt
+    created["justification_txt"] = "a changed justification"
+    rsp = post_person(server.url, created, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    persons = json["persons"]
+    assert len(persons) == 1
+    person = persons[0]
+    id_persistent = person["id_persistent"]
+    assert person["display_txt"] == changed_display_txt
+    assert person["display_txt_details"] == "Display Text"
+    entity = Entity.most_recent_by_id(id_persistent)
+    assert entity.id_persistent == id_persistent
+    assert (
+        len(
+            EntityJustification.objects.filter(  # pylint: disable=no-member
+                id_entity_persistent=created["id_persistent"]
+            )
+        )
+        == 2
+    )

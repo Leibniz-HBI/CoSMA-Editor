@@ -20,7 +20,7 @@ def test_conversion_api_to_db_without_id(user):
     )
     with patch("cosmae.person.api.uuid4") as uuid_mock:
         uuid_mock.return_value = c.id_persistent_test
-        person_db, _, justification, _ = api.person_api_to_db(
+        person_db, _, justification = api.person_api_to_db(
             person_api, c.time_edit_test, user
         )
     assert person_db.display_txt == c.display_txt_test
@@ -43,7 +43,7 @@ def test_conversion_api_to_db_with_id(user):
         version=prev.id,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
     )
-    person_db, _, justification, _ = api.person_api_to_db(
+    person_db, _, justification = api.person_api_to_db(
         person_api, c.time_edit_test, user
     )
     assert person_db.display_txt == c.display_txt_test + " changed"

@@ -155,16 +155,14 @@ def persons_post(
 
     try:
         with transaction.atomic():
-            for person, do_write, justification, write_justification in person_dbs:
+            for person, do_write, justification in person_dbs:
                 person.justification_txt = justification.text
                 if do_write:
                     person.save()
-                if write_justification:
-                    justification.save()
     except IntegrityError:
         return 500, ApiError(msg="Provided data not consistent with database.")
     return 200, PersonNaturalWithJustificationList(
-        persons=[person_db_to_api(person) for person, _, _, _ in person_dbs]
+        persons=[person_db_to_api(person) for person, _, _, in person_dbs]
     )
 
 
@@ -254,6 +252,7 @@ def get_justifications(request: HttpRequest, id_entity_persistent):
     "{id_entity_persistent}/justifications",
     response={
         200: JustificationPostResponse,
+        302: JustificationPostResponse,
         401: ApiError,
         403: ApiError,
         404: ApiError,
@@ -273,14 +272,18 @@ def put_justification(
     try:
         EntityDb.most_recent_by_id(id_entity_persistent)
         time_written = timestamp()
-        justification_created = EntityJustificationDb.add(
+        justification_created, justification_is_new = EntityJustificationDb.add(
             id_persistent=uuid4(),
             id_entity_persistent=id_entity_persistent,
             text=justification.justification_txt,
             timestamp=time_written,
             author=user,
         )
-        return 200, JustificationPostResponse(
+        if justification_is_new:
+            status = 200
+        else:
+            status = 302
+        return status, JustificationPostResponse(
             justification=justification_db_to_api(justification_created)
         )
     except EntityDb.DoesNotExist:  # pylint: disable=no-member
@@ -326,17 +329,15 @@ def person_api_to_db(
             )[:1].get()
         except EntityJustificationDb.DoesNotExist:  # pylint: disable=no-member
             justification = None
-        save_justification = False
     else:
-        justification = EntityJustificationDb(
+        justification, _justification_is_new = EntityJustificationDb.add(
             id_persistent=uuid4(),
             id_entity_persistent=persistent_id,
             text=person.justification_txt,
             timestamp=time_edit,
             author=requester,
         )
-        save_justification = True
-    return entity_db, save_entity, justification, save_justification
+    return entity_db, save_entity, justification
 
 
 def person_db_to_api(person: EntityDb) -> PersonNatural:
