@@ -438,10 +438,7 @@ export function PreviewConnector({
     const dispatch = useAppDispatch()
     useEffect(
         () => {
-            if (
-                idColumnPersistent !== undefined &&
-                idExistingPersistent !== undefined
-            ) {
+            if (idColumnPersistent !== undefined) {
                 dispatch(loadPreview(idContributionPersistent, idColumnPersistent))
             }
         },

@@ -153,7 +153,7 @@ test('assign existing', async () => {
             200,
             { ...contributionColumnActiveRsp1, id_existing_persistent: 'display_txt' }
         ],
-        [200, { contributed_values: [], destination_values: [] }]
+        [200, { contribution_values: [], destination_values: [] }]
     ])
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let title2: HTMLElement | undefined
@@ -225,6 +225,12 @@ test('assign existing', async () => {
                 method: 'PATCH',
                 credentials: 'include',
                 body: JSON.stringify({ id_existing_persistent: 'display_txt' })
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/contributions/id-contribution-test/preview/id-active-2',
+            {
+                credentials: 'include'
             }
         ]
     ])

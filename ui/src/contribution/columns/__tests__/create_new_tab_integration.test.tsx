@@ -167,7 +167,8 @@ test('create, select and assign tag definition', async () => {
                 tag_definitions: []
             }
         ],
-        [200, { ...contributionColumnActiveRsp1, id_existing_persistent: idTagDef0 }]
+        [200, { ...contributionColumnActiveRsp1, id_existing_persistent: idTagDef0 }],
+        [200, { contribution_values: [], destination_values: [] }]
     ])
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     const user = userEvent.setup()
@@ -218,12 +219,16 @@ test('create, select and assign tag definition', async () => {
                 ?.idExistingPersistent
         ).toEqual(idTagDef0)
     })
-    expect(fetchMock.mock.calls[fetchMock.mock.calls.length - 1]).toEqual([
+    expect(fetchMock.mock.calls.at(-2)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp1.id_persistent}`,
         {
             method: 'PATCH',
             credentials: 'include',
             body: JSON.stringify({ id_existing_persistent: idTagDef0 })
         }
+    ])
+    expect(fetchMock.mock.calls.at(-1)).toEqual([
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-2`,
+        { credentials: 'include' }
     ])
 }, 10000)
