@@ -254,14 +254,19 @@ const tableSlice = createSlice({
         },
         submitEntityJustificationSuccess(
             state: TableState,
-            action: PayloadAction<{ idEntityPersistent: string; comment: Comment }>
+            action: PayloadAction<
+                { idEntityPersistent: string; comment: Comment } | undefined
+            >
         ) {
-            state.entityJustificationHistory.value.push(action.payload.comment)
-            const idx = state.entityIndices[action.payload.idEntityPersistent]
-            if (idx !== undefined && state.entities !== undefined) {
-                const entity = state.entities[idx]
-                if (entity !== undefined) {
-                    entity.justificationTxt = action.payload.comment.content
+            state.showEntityJustificationHistoryForIdPersistent.isLoading = false
+            if (action.payload !== undefined) {
+                state.entityJustificationHistory.value.push(action.payload.comment)
+                const idx = state.entityIndices[action.payload.idEntityPersistent]
+                if (idx !== undefined && state.entities !== undefined) {
+                    const entity = state.entities[idx]
+                    if (entity !== undefined) {
+                        entity.justificationTxt = action.payload.comment.content
+                    }
                 }
             }
         },

@@ -374,6 +374,10 @@ export function submitEntityJustificationThunk(
                     submitEntityJustificationSuccess({ idEntityPersistent, comment })
                 )
                 return true
+            } else if (rsp.status == 302) {
+                dispatch(addSuccessVanish('A similar justification already exists.'))
+                dispatch(submitEntityJustificationSuccess(undefined))
+                return true
             } else {
                 dispatch(addError(errorMessageFromApi(json)))
             }

@@ -45,6 +45,7 @@ import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { act } from 'react-dom/test-utils'
 import { tagSelectionSlice } from '../../../column_menu/slice'
+import { newRemote } from '../../../util/state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -198,6 +199,39 @@ test('add justification', async () => {
         ]
     ])
 })
+test('add justification found', async () => {
+    const fetchMock = jest.fn()
+    addEntitiesAndInstancesResponse(fetchMock)
+    addJustificationHistoryResponse(fetchMock)
+    addResponseSequence(fetchMock, [[302, {}]])
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const input = userEvent.setup()
+    await openModalForEntity0()
+    await fillJustificationForm(input)
+    await waitFor(() => {
+        const user = screen.getByRole('textbox')
+        expect(user.textContent).toEqual('')
+        expect(screen.queryByText(justificationChanged)).toBeNull()
+        const state = store.getState()
+        expect(state.notification).toEqual(
+            newNotificationManager({
+                notificationList: [
+                    newNotification({
+                        msg: 'A similar justification already exists.',
+                        type: NotificationType.Success,
+                        id: expect.anything()
+                    })
+                ],
+                notificationMap: expect.anything()
+            })
+        )
+        expect(state.table.entityJustificationHistory.value.length).toEqual(1)
+        expect(state.table.showEntityJustificationHistoryForIdPersistent).toEqual(
+            newRemote(idPersistent0)
+        )
+    })
+    expect(fetchMock.mock.calls.length).toEqual(5)
+})
 test('get justification error', async () => {
     const fetchMock = jest.fn()
     const errorMsg = 'error getting justification history'
@@ -334,6 +368,7 @@ const userApi = {
     permission_group: 'CONTRIBUTOR',
     id_persistent: idUserTest
 }
+const timeJustification = '2005-03-18 09:57:51 +0000'
 
 function addJustificationHistoryResponse(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
@@ -344,7 +379,7 @@ function addJustificationHistoryResponse(fetchMock: jest.Mock) {
                     {
                         content: justification,
                         author: userApi,
-                        timestamp: '2005-03-18 09:57:51 +0000'
+                        timestamp: timeJustification
                     }
                 ]
             }

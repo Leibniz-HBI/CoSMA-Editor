@@ -234,7 +234,7 @@ export const displayTextColumn = newTagDefinition({
     hidden: false
 })
 
-export const justificationColumnId = 'entity_justification'
+export const justificationColumnId = 'justification'
 export const justificationColumn = newTagDefinition({
     namePath: ['Justification'],
     idPersistent: justificationColumnId,
