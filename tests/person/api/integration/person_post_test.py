@@ -170,6 +170,12 @@ def test_no_display_txt(auth_server_commissioner):
     assert entity.display_txt is None
 
 
+def test_empty_justification_txt(auth_server_commissioner):
+    server, cookies = auth_server_commissioner
+    rsp = post_person(server.url, {"justification_txt": "\t"}, cookies=cookies)
+    assert rsp.status_code == 400
+
+
 def test_no_justification_create(auth_server_commissioner):
     server, cookies = auth_server_commissioner
     rsp = post_person(server.url, {}, cookies=cookies)

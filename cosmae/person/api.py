@@ -253,6 +253,7 @@ def get_justifications(request: HttpRequest, id_entity_persistent):
     response={
         200: JustificationPostResponse,
         302: JustificationPostResponse,
+        400: ApiError,
         401: ApiError,
         403: ApiError,
         404: ApiError,
@@ -288,6 +289,8 @@ def put_justification(
         )
     except EntityDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Entity does not exist")
+    except EntityJustificationDb.EmptyJustificationException:
+        return 400, ApiError(msg="Empty justification provided")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get Justifications.")
 
@@ -296,6 +299,7 @@ def person_api_to_db(
     person: PersonNatural, time_edit: datetime, requester: CosmaeUser
 ) -> EntityDb:
     """Transform an natural person from API to DB model."""
+    version = person.version
     if person.id_persistent:
         persistent_id = person.id_persistent
         if person.version is None:
@@ -304,7 +308,7 @@ def person_api_to_db(
                 "has no previous version."
             )
     else:
-        if person.version:
+        if version:
             raise ValidationException(
                 f"Person with display_txt {person.display_txt} "
                 "has version but no persistent_id."
@@ -330,13 +334,20 @@ def person_api_to_db(
         except EntityJustificationDb.DoesNotExist:  # pylint: disable=no-member
             justification = None
     else:
-        justification, _justification_is_new = EntityJustificationDb.add(
-            id_persistent=uuid4(),
-            id_entity_persistent=persistent_id,
-            text=person.justification_txt,
-            timestamp=time_edit,
-            author=requester,
-        )
+        try:
+            justification, _justification_is_new = EntityJustificationDb.add(
+                id_persistent=uuid4(),
+                id_entity_persistent=persistent_id,
+                text=person.justification_txt,
+                timestamp=time_edit,
+                author=requester,
+            )
+        except EntityJustificationDb.EmptyJustificationException as exc:
+            if version is None:
+                raise ValidationException(
+                    "Empty justification provided for person "
+                    f"with display txt {person.display_txt}"
+                ) from exc
     return entity_db, save_entity, justification
 
 

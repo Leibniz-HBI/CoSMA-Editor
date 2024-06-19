@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Optional
 
 from django.contrib.postgres.indexes import GistIndex
@@ -147,6 +148,12 @@ class EntityJustification(models.Model):
             ),
         ]
 
+    class EmptyJustificationException(Exception):
+        "Indicates the attempt of adding a justification with no text"
+
+    class NoJustificationException(Exception):
+        "Indicates that there is no justification stored."
+
     @classmethod
     def for_id_entity_persistent_unordered(cls, id_entity_persistent):
         "Get all justifications for an entity unordered"
@@ -169,9 +176,18 @@ class EntityJustification(models.Model):
         )
 
     @classmethod
-    def add(cls, id_persistent, id_entity_persistent, text, timestamp, author):
+    def add(
+        cls,
+        id_persistent: str,
+        id_entity_persistent: str,
+        text: Optional[str],
+        timestamp: datetime,
+        author: CosmaeUser,
+    ):
         # pylint: disable=too-many-arguments
         "Add a new entity justification."
+        if text is None or text.strip() == "":
+            raise cls.EmptyJustificationException()
         existing_queryset = cls.objects.filter(  # pylint: disable=no-member
             text__search=text
         )

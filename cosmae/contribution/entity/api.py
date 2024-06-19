@@ -2,6 +2,7 @@
 
 import logging
 from typing import Dict, List
+from uuid import uuid4
 
 from django.db import transaction
 from django.db.models import Q
@@ -19,6 +20,7 @@ from cosmae.person.api import (
     person_db_dict_to_api,
     person_db_to_api,
 )
+from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
 router = Router()
@@ -60,6 +62,8 @@ class PutDuplicateRequest(Schema):
 
     # pylint: disable=too-few-public-methods
     id_entity_destination_persistent: str | None = None
+    justification_txt: str | None = None
+    keep_justification_for_all: bool | None = None
 
 
 class PutDuplicateResponse(Schema):
@@ -159,11 +163,17 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
 
 @router.put(
     "{id_entity_origin_persistent}/duplicate",
-    response={200: PutDuplicateResponse, 401: ApiError, 404: ApiError, 500: ApiError},
+    response={
+        200: PutDuplicateResponse,
+        400: ApiError,
+        401: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
 )
 def put_duplicate_assignment(
     request: HttpRequest, id_entity_origin_persistent: str, body: PutDuplicateRequest
-):
+):  # pylint: disable=too-many-return-statements
     "API method for assigning duplicates."
     try:
         user = check_user(request)
@@ -190,6 +200,19 @@ def put_duplicate_assignment(
             assigned_duplicate = person_db_to_api(destination)
         else:
             assigned_duplicate = None
+            try:
+                handle_justification_no_duplicate(
+                    candidate,
+                    id_entity_origin_persistent,
+                    body.justification_txt,
+                    body.keep_justification_for_all,
+                    user,
+                )
+            except EntityJustification.EmptyJustificationException:
+                return 400, ApiError(msg="Justification can not be empty.")
+            except EntityJustification.NoJustificationException:
+                return 400, ApiError(msg="Entity justification required.")
+
         with transaction.atomic():
             # Delete existing duplicate
             EntityDuplicate.objects.filter(  # pylint: disable=no-member
@@ -212,6 +235,43 @@ def put_duplicate_assignment(
         return 500, ApiError(
             msg="Could not assign entity duplicates for the contribution."
         )
+
+
+def handle_justification_no_duplicate(
+    candidate: ContributionCandidate,
+    id_entity_origin_persistent: str,
+    justification_txt: str,
+    keep_justification_for_all: bool,
+    user: CosmaeUser,
+):
+    "Handle adding of justification if there is no duplicate assigned."
+    if justification_txt is not None:
+        add_justification(id_entity_origin_persistent, justification_txt, user)
+        if keep_justification_for_all:
+            candidate.justification = justification_txt
+            candidate.save()
+    else:
+        if candidate.justification is None:
+            justification_qs = EntityJustification.for_id_entity_persistent_unordered(
+                id_entity_origin_persistent
+            )
+            if len(justification_qs) == 0:
+                raise EntityJustification.NoJustificationException()
+        else:
+            add_justification(
+                id_entity_origin_persistent, candidate.justification, user
+            )
+
+
+def add_justification(id_entity_origin_persistent, justification, user):
+    "Add an entity justification."
+    EntityJustification.add(
+        id_persistent=uuid4(),
+        id_entity_persistent=id_entity_origin_persistent,
+        text=justification,
+        timestamp=timestamp(),
+        author=user,
+    )
 
 
 def scored_match_db_to_api(match):

@@ -43,6 +43,14 @@ def test_entity_missing(auth_server):
     assert rsp.status_code == 404
 
 
+def test_empty_justification(auth_server, entity0):
+    server, cookies = auth_server
+    rsp = req.put_justification(
+        server.url, c.id_persistent_test_0, " ", cookies=cookies
+    )
+    assert rsp.status_code == 400
+
+
 def test_add_justification(auth_server, entity0):
     server, cookies = auth_server
     rsp = req.put_justification(

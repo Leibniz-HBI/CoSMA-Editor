@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-many-arguments
 import requests
 
 
@@ -36,6 +36,8 @@ def put_duplicate(
     id_contribution_candidate_persistent,
     id_entity_origin_persistent,
     id_entity_destination_persistent,
+    justification=None,
+    keep_justification_for_all=None,
     cookies=None,
 ):
     return requests.put(
@@ -44,7 +46,11 @@ def put_duplicate(
             f"/cosmae/api/contributions/{id_contribution_candidate_persistent}"
             f"/entities/{id_entity_origin_persistent}/duplicate"
         ),
-        json={"id_entity_destination_persistent": id_entity_destination_persistent},
+        json={
+            "id_entity_destination_persistent": id_entity_destination_persistent,
+            "justification_txt": justification,
+            "keep_justification_for_all": keep_justification_for_all,
+        },
         cookies=cookies,
-        timeout=9,
+        timeout=90,
     )
