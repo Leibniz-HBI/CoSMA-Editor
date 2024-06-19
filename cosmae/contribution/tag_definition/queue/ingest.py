@@ -11,7 +11,7 @@ from django.db.utils import OperationalError
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue.util import read_csv_of_candidate
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.exception import TagDefinitionExistsException
 from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import (
@@ -19,6 +19,7 @@ from cosmae.tag.models_django import (
     TagDefinitionHistory,
     TagInstanceHistory,
 )
+from cosmae.util import CosmaeUser
 
 
 def mk_display_txt_extractor(idx):
@@ -28,6 +29,29 @@ def mk_display_txt_extractor(idx):
     if idx is None:
         return lambda _: None
     return lambda row_tpl: row_tpl[idx]
+
+
+def mk_justification_strategy(idx, timestamp: datetime, user: CosmaeUser):
+    """Create a function that handles justifications.
+    Will do nothing if the index is None."""
+    if idx is None:
+        return (
+            lambda id_entity_persistent, row_tpl: None
+        )  # pylint: disable=unused-argument # for common type with actual strategy
+
+    def justification_strategy(id_entity_persistent, row_tpl):
+        try:
+            EntityJustification.add(
+                id_entity_persistent=id_entity_persistent,
+                id_persistent=uuid4(),
+                text=row_tpl[idx],
+                timestamp=timestamp,
+                author=user,
+            )
+        except EntityJustification.EmptyJustificationException:
+            pass
+
+    return justification_strategy
 
 
 def is_value_empty(value: str, empty_strings: Set[str]):
@@ -81,6 +105,7 @@ def ingest_values_from_csv(id_contribution_persistent):
             )
             time_add = datetime.now()
             display_txt_idx = None
+            justification_idx = None
             column_assignments = []
             tag_definition_pairs = []
             empty_strings = {
@@ -89,6 +114,8 @@ def ingest_values_from_csv(id_contribution_persistent):
             for column_assignment in active_columns:
                 if column_assignment.id_existing_persistent == "display_txt":
                     display_txt_idx = column_assignment.index_in_file
+                elif column_assignment.id_existing_persistent == "justification":
+                    justification_idx = column_assignment.index_in_file
                 else:
                     tag_definition_destination = TagDefinition.most_recent_by_id(
                         column_assignment.id_existing_persistent
@@ -101,6 +128,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                     merge_request_name = merge_request_base_name
                     tag_definition_origin = None
                     id_tag_definition_origin_persistent = str(uuid4())
+                    # loop is for fallback in case the tag definition already exists
                     for idx in range(1, 10):
                         try:
                             (
@@ -132,7 +160,11 @@ def ingest_values_from_csv(id_contribution_persistent):
                     tag_definition_pairs.append(
                         (tag_definition_origin, tag_definition_destination)
                     )
+            created_by = contribution.created_by
             display_txt_extractor = mk_display_txt_extractor(display_txt_idx)
+            justification_strategy = mk_justification_strategy(
+                justification_idx, time_add, user=created_by
+            )
             data_frame = read_csv_of_candidate(contribution)
             for row_tpl in data_frame.itertuples(index=False):
                 display_txt = display_txt_extractor(row_tpl)
@@ -147,12 +179,13 @@ def ingest_values_from_csv(id_contribution_persistent):
                 entity, _ = Entity.change_or_create_versioned(
                     id_persistent=id_entity_persistent,
                     time_edit=time_add,
-                    written_by_id_persistent=contribution.created_by.id_persistent,
+                    written_by_id_persistent=created_by.id_persistent,
                     display_txt=display_txt,
                     version=None,
                     contribution_candidate=contribution,
                 )
                 entity.save()
+                justification_strategy(id_entity_persistent, row_tpl)
                 for idx_in_file, tag_definition in column_assignments:
                     id_tag_instance_persistent = str(uuid4())
                     value = str(row_tpl[int(idx_in_file)])
@@ -162,7 +195,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                         id_persistent=id_tag_instance_persistent,
                         id_entity_persistent=id_entity_persistent,
                         id_tag_definition_persistent=tag_definition.id_persistent,
-                        written_by_id_persistent=contribution.created_by.id_persistent,
+                        written_by_id_persistent=created_by.id_persistent,
                         time_edit=time_add,
                         value=value,
                     )

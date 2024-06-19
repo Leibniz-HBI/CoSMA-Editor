@@ -282,6 +282,44 @@ def test_patch_id_existing_display_txt(auth_server):
     assert json == expected_contribution
 
 
+def test_patch_id_existing_justification(auth_server):
+    server, cookies = auth_server
+    id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(
+        server, cookies
+    )
+    rsp = req.patch_tag_definition(
+        server.url,
+        id_candidate_persistent,
+        id_definition_persistent,
+        {"id_existing_persistent": "justification"},
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+    rsp = req.get_tag_definition(server.url, id_candidate_persistent, cookies)
+    expected_contribution = c.contribution_test_upload0.copy()
+    expected_contribution["state"] = "COLUMNS_EXTRACTED"
+    expected_contribution["id_persistent"] = str(id_candidate_persistent)
+    expected_contribution["match_tag_definition_list"] = []
+    assert rsp.status_code == 200
+    assert rsp.json() == {
+        "tag_definitions": [
+            {
+                "name": "tag definition_test",
+                "discard": False,
+                "id_existing_persistent": "justification",
+                "id_persistent": str(id_definition_persistent),
+                "index_in_file": 9000,
+            }
+        ],
+    }
+    rsp = req_contrib.get_contribution(
+        server.url, id_candidate_persistent, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == expected_contribution
+
+
 def test_patch_discard(auth_server):
     server, cookies = auth_server
     id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(

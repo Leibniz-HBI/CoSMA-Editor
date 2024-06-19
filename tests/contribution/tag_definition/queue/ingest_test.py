@@ -10,7 +10,7 @@ from django.db.models import Subquery
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue.ingest import ingest_values_from_csv
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory, TagInstance
 
@@ -93,6 +93,18 @@ def verified_contribution(
         name="column_test",
         id_existing_persistent=verified_tag_def.id_persistent,
         index_in_file=1,
+        discard=False,
+    )[0]
+
+
+@pytest.fixture
+def party_as_justification(contribution_other):
+    return TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+        id_persistent=uuid4(),
+        contribution_candidate=contribution_other,
+        name="justification_test",
+        id_existing_persistent="justification",
+        index_in_file=2,
         discard=False,
     )[0]
 
@@ -281,3 +293,27 @@ def test_ingest_with_empty(
         .state
         == ContributionCandidate.VALUES_EXTRACTED
     )
+
+
+def test_justification(verified_contribution, party_as_justification, csv_mock):
+    justifications = list(
+        EntityJustification.objects.all()  # pylint: disable=no-member
+    )
+    assert len(justifications) == 0
+    with patch(
+        "cosmae.contribution.tag_definition.queue.util.read_csv",
+        csv_mock,
+    ):
+        with patch(
+            "cosmae.contribution.tag_definition.queue.util.find_delimiter",
+            return_value=",",
+        ):
+            ingest_values_from_csv(
+                verified_contribution.contribution_candidate.id_persistent
+            )
+    justifications = list(
+        EntityJustification.objects.all()  # pylint: disable=no-member
+    )
+    assert len(justifications) == 2
+    assert justifications[0].text != justifications[1].text
+    assert {justification.text[:6] for justification in justifications} == {"party_"}

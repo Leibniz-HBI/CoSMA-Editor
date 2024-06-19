@@ -87,7 +87,7 @@ def get_tag_definitions(request: HttpRequest):
         return 500, ApiError(msg="Could not get the requested tag_definitions.")
 
 
-allowed_additional_fields = {"display_txt", "id_persistent"}
+allowed_additional_fields = {"display_txt", "id_persistent", "justification"}
 
 
 @router.patch(
