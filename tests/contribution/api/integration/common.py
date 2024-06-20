@@ -25,6 +25,7 @@ contribution_test_upload0 = {
     "error_msg": None,
     "error_details": None,
     "empty_values": "null,nan,na",
+    "justification_txt": None,
 }
 
 contribution_test_upload1 = {
@@ -36,6 +37,7 @@ contribution_test_upload1 = {
     "error_msg": None,
     "error_details": None,
     "empty_values": "null,nan,na",
+    "justification_txt": None,
 }
 
 tag_def_test0 = {

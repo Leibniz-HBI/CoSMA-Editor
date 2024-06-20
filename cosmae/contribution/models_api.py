@@ -41,6 +41,7 @@ class ContributionCandidate(Schema):
     error_details: str | None = None
     empty_values: str
     match_tag_definition_list: List[TagDefinitionResponse] | None = None
+    justification_txt: str | None = None
 
 
 class ContributionCandidatePatchRequest(Schema):
