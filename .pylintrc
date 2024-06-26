@@ -1,3 +1,5 @@
 [MASTER]
 ignore=manage.py
 ignore-paths=cosmae/migrations
+load-plugins=pylint_django
+django-settings-module=tests.settings
