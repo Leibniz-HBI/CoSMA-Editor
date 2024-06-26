@@ -274,13 +274,20 @@ export const contributionEntitySlice = createSlice({
             pushMatchWidth(state, selectedIdx)
             state.hitLastMatch = false
         },
-        incrementSelectedEntityIdx(state: ContributionEntityState) {
+        incrementSelectedEntityIdx(
+            state: ContributionEntityState,
+            action: PayloadAction<string | undefined>
+        ) {
             for (
                 let idx = (state.selectedEntityIdx ?? -1) + 1;
                 idx < state.entities.value.length;
                 ++idx
             ) {
-                if (state.entities.value[idx].similarEntities.value.length > 0) {
+                if (
+                    state.entities.value[idx].similarEntities.value.length > 0 ||
+                    (action.payload === undefined &&
+                        state.entities.value[idx].justificationTxt === undefined)
+                ) {
                     state.selectedEntityIdx = idx
                     pushMatchWidth(state, idx)
                     state.hitLastMatch = false
@@ -288,6 +295,15 @@ export const contributionEntitySlice = createSlice({
                 }
             }
             state.hitLastMatch = true
+        },
+        openJustificationInput(
+            state: ContributionEntityState,
+            action: PayloadAction<string>
+        ) {
+            state.justificationDialogForEntity = action.payload
+        },
+        closeJustificationInput(state: ContributionEntityState) {
+            state.justificationDialogForEntity = undefined
         },
         clearHitLastMatch(state: ContributionEntityState) {
             state.hitLastMatch = false
@@ -490,5 +506,7 @@ export const {
     setSelectedEntityIdx,
     incrementSelectedEntityIdx,
     clearHitLastMatch,
-    setColumnWidth
+    setColumnWidth,
+    openJustificationInput,
+    closeJustificationInput
 } = contributionEntitySlice.actions

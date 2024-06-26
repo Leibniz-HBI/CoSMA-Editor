@@ -26,6 +26,7 @@ export interface Contribution {
     author: string
     matchTagDefinitionList: TagDefinition[]
     emptyValues: string
+    justification: string | undefined
 }
 export function newContribution({
     name,
@@ -35,7 +36,8 @@ export function newContribution({
     hasHeader,
     author,
     emptyValues,
-    matchTagDefinitionList = []
+    matchTagDefinitionList = [],
+    justification = undefined
 }: {
     name: string
     idPersistent: string
@@ -45,16 +47,18 @@ export function newContribution({
     author: string
     emptyValues: string
     matchTagDefinitionList?: TagDefinition[]
-}) {
+    justification?: string | undefined
+}): Contribution {
     return {
-        name: name,
-        idPersistent: idPersistent,
-        description: description,
-        step: step,
-        hasHeader: hasHeader,
-        author: author,
+        name,
+        idPersistent,
+        description,
+        step,
+        hasHeader,
+        author,
         emptyValues,
-        matchTagDefinitionList: matchTagDefinitionList
+        matchTagDefinitionList,
+        justification
     }
 }
 

@@ -2,7 +2,7 @@ import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
 import { TagDefinition, TagType } from '../../column_menu/state'
 import { GridColumWithType, constructColumnTitle } from './hooks'
-import { selectContribution } from '../selectors'
+import { selectContribution, selectContributionJustification } from '../selectors'
 import { newRemote } from '../../util/state'
 
 export const selectContributionEntity = (state: RootState) => state.contributionEntity
@@ -133,4 +133,9 @@ export const selectEntityColumnDefs = createSelector(
 export const selectCompleteEntityAssignment = createSelector(
     selectContributionEntity,
     (state) => state.completeEntityAssignment
+)
+
+export const selectJustificationForEntityId = createSelector(
+    selectContributionEntity,
+    (state) => state.justificationDialogForEntity
 )

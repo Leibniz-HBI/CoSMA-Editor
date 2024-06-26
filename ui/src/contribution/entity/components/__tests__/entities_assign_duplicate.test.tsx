@@ -12,16 +12,20 @@ jest.mock('@glideapps/glide-data-grid', () => {
     }
 })
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import { ContributionEntityState, newContributionEntityState } from '../state'
-import { newRemote } from '../../../util/state'
+import { ContributionEntityState, newContributionEntityState } from '../../state'
+import { newRemote } from '../../../../util/state'
 import { configureStore } from '@reduxjs/toolkit'
-import { contributionEntitySlice } from '../slice'
-import { ContributionState, contributionSlice, newContributionState } from '../../slice'
+import { contributionEntitySlice } from '../../slice'
+import {
+    ContributionState,
+    contributionSlice,
+    newContributionState
+} from '../../../slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { EntitiesStep } from '../components'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { EntitiesStep } from '../../components'
+import { TagSelectionState, newTagSelectionState } from '../../../../column_menu/state'
+import { tagSelectionSlice } from '../../../../column_menu/slice'
 import { Button, Col, Row } from 'react-bootstrap'
 import {
     CompactSelection,
@@ -29,7 +33,7 @@ import {
     Item,
     Rectangle
 } from '@glideapps/glide-data-grid'
-import { ContributionStep, newContribution } from '../../state'
+import { ContributionStep, newContribution } from '../../../state'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
@@ -102,6 +106,16 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     }
 }
 
+const idContribution = 'id-contribution-test'
+const contribution = newContribution({
+    idPersistent: idContribution,
+    name: 'contribution test',
+    description: 'A contribution used in tests',
+    hasHeader: true,
+    step: ContributionStep.ValuesExtracted,
+    emptyValues: 'null,na',
+    author: 'author-test'
+})
 export function renderWithProviders(
     ui: React.ReactElement,
     fetchMock: jest.Mock,
@@ -109,17 +123,10 @@ export function renderWithProviders(
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
             contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        idPersistent: idContribution,
-                        name: 'contribution test',
-                        description: 'A contribution used in tests',
-                        hasHeader: true,
-                        step: ContributionStep.ValuesExtracted,
-                        emptyValues: 'null,na',
-                        author: 'author-test'
-                    })
-                )
+                selectedContribution: newRemote({
+                    ...contribution,
+                    justification: 'justification'
+                })
             }),
             tagSelection: newTagSelectionState({})
         },
@@ -156,7 +163,6 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
         )
     }
 }
-const idContribution = 'id-contribution-test'
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
@@ -366,5 +372,100 @@ test('last match', async () => {
     await waitFor(() => {
         expect(store.getState().contributionEntity.hitLastMatch).toBeTruthy()
         screen.getByText('You processed the last entity')
+    })
+})
+test('open justification modal', async () => {
+    const fetchMock = jest.fn()
+    initialResponses(fetchMock, personList, 1)
+    addResponseSequence(fetchMock, [
+        [200, {}],
+        [200, { value_responses: [] }],
+        [
+            200,
+            {
+                assigned_duplicate: null
+            }
+        ]
+    ])
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock, {
+        preloadedState: {
+            contribution: newContributionState({
+                selectedContribution: newRemote(contribution)
+            }),
+            contributionEntity: newContributionEntityState({}),
+            tagSelection: newTagSelectionState({})
+        }
+    })
+    await waitFor(() => {
+        expect(fetchMock.mock.calls.length).toEqual(4)
+    })
+    expect(screen.queryByText('Add Justification')).toBeNull()
+    screen.getByText(/Please select an entity/i)
+    await waitFor(() => {
+        screen.getByText('entity-0')?.click()
+    })
+    await waitFor(() => {
+        const button = screen.getByRole('button', { name: /Create New Entity/i })
+        button.click()
+    })
+    await waitFor(() => {
+        screen.getByText('Add Justification')
+    })
+    expect(store.getState().contributionEntity.justificationDialogForEntity).toEqual(
+        'id-entity-0'
+    )
+})
+
+test('does not open modal for entity with justification', async () => {
+    const fetchMock = jest.fn()
+    initialResponses(
+        fetchMock,
+        [
+            {
+                display_txt: 'entity-0',
+                display_txt_details: 'display_txt_detail',
+                version: 0,
+                id_persistent: 'id-entity-0',
+                justification_txt: 'justification'
+            }
+        ],
+        1
+    )
+    addResponseSequence(fetchMock, [
+        [200, {}],
+        [200, { value_responses: [] }],
+        [
+            200,
+            {
+                assigned_duplicate: null
+            }
+        ]
+    ])
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    await waitFor(() => {
+        expect(fetchMock.mock.calls.length).toEqual(4)
+    })
+    expect(screen.queryByText('Add Justification')).toBeNull()
+    screen.getByText(/Please select an entity/i)
+    await waitFor(() => {
+        screen.getByText('entity-0')?.click()
+    })
+    await waitFor(() => {
+        const button = screen.getByRole('button', { name: /Create New Entity/i })
+        button.click()
+    })
+    await waitFor(() => {
+        expect(fetchMock.mock.calls.at(-1)).toEqual([
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-0/duplicate`,
+            {
+                body: JSON.stringify({}),
+                credentials: 'include',
+                method: 'PUT'
+            }
+        ])
+        expect(
+            store.getState().contributionEntity.justificationDialogForEntity
+        ).toBeUndefined()
+        expect(screen.queryByText('Add Justification')).toBeNull()
     })
 })

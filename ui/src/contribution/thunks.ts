@@ -214,7 +214,8 @@ export function parseContributionFromApi(contribution_json: any): Contribution {
         emptyValues: contribution_json['empty_values'],
         matchTagDefinitionList: contribution_json['match_tag_definition_list']?.map(
             (tagDefJson: unknown) => parseColumnDefinitionsFromApi(tagDefJson)
-        )
+        ),
+        justification: contribution_json['justification_txt']
     })
 }
 

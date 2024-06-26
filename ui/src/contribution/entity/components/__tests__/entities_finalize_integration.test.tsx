@@ -7,31 +7,45 @@ jest.mock('@glideapps/glide-data-grid', () => ({
     DataEditor: jest.fn().mockImplementation((props: any) => <MockTable />)
 }))
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import { ContributionEntityState, newContributionEntityState } from '../state'
-import { newRemote } from '../../../util/state'
-import { ContributionStep, newContribution } from '../../state'
+import { ContributionEntityState, newContributionEntityState } from '../../state'
 import { configureStore } from '@reduxjs/toolkit'
-import { contributionEntitySlice } from '../slice'
-import { ContributionState, contributionSlice, newContributionState } from '../../slice'
+import { contributionEntitySlice } from '../../slice'
+import {
+    ContributionState,
+    contributionSlice,
+    newContributionState
+} from '../../../slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { EntitiesStep } from '../components'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { EntitiesStep } from '../../components'
+import { TagSelectionState, newTagSelectionState } from '../../../../column_menu/state'
+import { tagSelectionSlice } from '../../../../column_menu/slice'
 import {
     NotificationManager,
+    NotificationType,
     notificationReducer
-} from '../../../util/notification/slice'
+} from '../../../../util/notification/slice'
+import { useNavigate } from 'react-router-dom'
+import { ContributionStep, newContribution } from '../../../state'
+import { newRemote } from '../../../../util/state'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    const navigateMock = jest.fn()
+    return {
+        useLoaderData: loaderMock,
+        useNavigate: jest.fn().mockReturnValue(navigateMock)
+    }
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
     return <div className="mock"></div>
 }
+
+beforeEach(() => {
+    ;(useNavigate() as jest.Mock).mockClear()
+})
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -72,7 +86,7 @@ export function renderWithProviders(
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
             tagSelection: tagSelectionSlice.reducer,
-            error: notificationReducer
+            notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -98,18 +112,6 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
         )
     }
 }
-const idContribution = 'id-contribution-test'
-const personList = Array.from({ length: 60 }, (_val, idx) => {
-    return {
-        display_txt: `entity-${idx}`,
-        display_txt_details: 'display_txt_detail',
-        version: 0,
-        id_persistent: `id-entity-${idx}`
-    }
-})
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
-
 function mkMatches(
     entities: {
         id_persistent: string
@@ -154,6 +156,18 @@ function mkMatches(
         ])
     )
 }
+
+const idContribution = 'id-contribution-test'
+const personList = Array.from({ length: 60 }, (_val, idx) => {
+    return {
+        display_txt: `entity-${idx}`,
+        display_txt_details: 'display_txt_detail',
+        version: 0,
+        id_persistent: `id-entity-${idx}`
+    }
+})
+const idTagDef0 = 'id-tag-test-0'
+const nameTagDef0 = 'tag def 0'
 function initialResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
         [200, { persons: personList }],
@@ -175,58 +189,81 @@ function initialResponses(fetchMock: jest.Mock) {
         ],
         [200, { tag_definitions: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
-        [200, { value_responses: [] }],
         [200, { matches: mkMatches(personList.slice(50)) }]
     ])
 }
-test('get duplicates', async () => {
+
+test('success', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
-    const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    addResponseSequence(fetchMock, [[200, {}]])
+    addResponseSequence(fetchMock, [
+        [
+            200,
+            {
+                id_persistent: idContribution,
+                name: 'contribution test',
+                description: 'A contribution used in tests',
+                has_header: true,
+                author: 'author-test',
+                state: 'ENTITIES_ASSIGNED'
+            }
+        ]
+    ])
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
-        screen.getByText('entity-1')
-        expect(
-            store.getState().contributionEntity.entities.value[0].similarEntities
-                .isLoading
-        ).toEqual(false)
+        expect(fetchMock.mock.calls.length).toEqual(6)
+    })
+    const button = screen.getByRole('button', { name: /Confirm Assigned Duplicates/i })
+    button.click()
+    await waitFor(() => {
+        const notifications = store.getState().notification.notificationList
+        expect(notifications.length).toEqual(1)
+        const notification = notifications[0]
+        expect(notification.type).toEqual(NotificationType.Success)
+        expect(notification.msg).toEqual('Duplicates successfully assigned.')
     })
     await waitFor(() => {
-        const entitySelectionElement = screen.getByText('entity-1')
-        entitySelectionElement.click()
+        expect(store.getState().contribution.selectedContribution.value?.step).toEqual(
+            ContributionStep.EntitiesAssigned
+        )
     })
-    await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(1)
-        for (let idx = 0; idx < 60; ++idx) {
-            expect(
-                store.getState().contributionEntity.entities.value[idx].similarEntities
-                    .value.length
-            ).toEqual(2)
-        }
-        expect(
-            store
-                .getState()
-                .contributionEntity.entities.value.filter(
-                    (entity) => entity.similarEntities.isLoading == true
-                ).length
-        ).toEqual(0)
-    })
+    expect(fetchMock.mock.calls.at(-2)).toEqual([
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entity_assignment_complete`,
+        { method: 'POST', credentials: 'include' }
+    ])
+    expect(fetchMock.mock.calls.at(-1)).toEqual([
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
+        { credentials: 'include' }
+    ])
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+        [`/contribute/${idContribution}/complete`]
+    ])
 })
-test('select entity', async () => {
+
+test('error', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
-    addResponseSequence(fetchMock, [])
-    const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const errorMsg = 'Could not finalize'
+    addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
-        screen.getByText('Please select an entity')
+        expect(fetchMock.mock.calls.length).toEqual(6)
     })
+    const completeButton = screen.getByRole('button', {
+        name: /Confirm Assigned Duplicates/i
+    })
+    completeButton.click()
     await waitFor(() => {
-        const entitySelectionElement = screen.getByText('entity-1')
-        entitySelectionElement.click()
+        const notifications = store.getState().notification.notificationList
+        expect(notifications.length).toEqual(1)
+        const notification = notifications[0]
+        expect(notification.type).toEqual(NotificationType.Error)
+        expect(notification.msg).toEqual(errorMsg)
     })
-    await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(1)
-    })
-    expect(store.getState().contributionEntity.selectedEntityIdx).toEqual(1)
+    expect(fetchMock.mock.calls.at(-1)).toEqual([
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entity_assignment_complete`,
+        { method: 'POST', credentials: 'include' }
+    ])
+    expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
 })

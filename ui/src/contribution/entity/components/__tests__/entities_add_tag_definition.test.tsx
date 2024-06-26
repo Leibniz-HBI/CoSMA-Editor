@@ -11,17 +11,21 @@ import {
     ContributionEntityState,
     newContributionEntityState,
     newScoredEntity
-} from '../state'
-import { newRemote } from '../../../util/state'
+} from '../../state'
+import { newRemote } from '../../../../util/state'
 import { configureStore } from '@reduxjs/toolkit'
-import { contributionEntitySlice } from '../slice'
-import { ContributionState, contributionSlice, newContributionState } from '../../slice'
+import { contributionEntitySlice } from '../../slice'
+import {
+    ContributionState,
+    contributionSlice,
+    newContributionState
+} from '../../../slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { EntitiesStep } from '../components'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
-import { tagSelectionSlice } from '../../../column_menu/slice'
-import { ContributionStep, newContribution } from '../../state'
+import { EntitiesStep } from '../../components'
+import { TagSelectionState, newTagSelectionState } from '../../../../column_menu/state'
+import { tagSelectionSlice } from '../../../../column_menu/slice'
+import { ContributionStep, newContribution } from '../../../state'
 
 jest.mock('react-router-dom', () => {
     const loaderMock = jest.fn()

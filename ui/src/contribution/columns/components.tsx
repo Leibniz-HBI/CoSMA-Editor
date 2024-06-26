@@ -314,6 +314,10 @@ export function ExistingColumnForm({
                         {
                             idPersistent: 'display_txt',
                             name: 'Display Text'
+                        },
+                        {
+                            idPersistent: 'justification',
+                            name: 'Justification'
                         }
                     ]}
                 />

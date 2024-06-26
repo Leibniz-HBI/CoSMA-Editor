@@ -24,12 +24,14 @@ import {
     getDuplicatesError,
     getDuplicatesStart,
     getDuplicatesSuccess,
+    openJustificationInput,
     putDuplicateError,
     putDuplicateStart,
     putDuplicateSuccess
 } from './slice'
 import { newRemote } from '../../util/state'
 import { addError, addSuccessVanish } from '../../util/notification/slice'
+import { setJustificationOfContribution } from '../slice'
 
 export function getContributionEntitiesAction(
     idContributionPersistent: string
@@ -81,11 +83,15 @@ export function getContributionEntitiesAction(
 export function putDuplicateAction({
     idContributionPersistent,
     idEntityOriginPersistent,
-    idEntityDestinationPersistent
+    idEntityDestinationPersistent,
+    justificationTxt,
+    keepJustificationForAll
 }: {
     idContributionPersistent: string
     idEntityOriginPersistent: string
     idEntityDestinationPersistent?: string
+    justificationTxt?: string
+    keepJustificationForAll?: boolean
 }): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(putDuplicateStart(idEntityOriginPersistent))
@@ -97,7 +103,9 @@ export function putDuplicateAction({
                     method: 'PUT',
                     credentials: 'include',
                     body: JSON.stringify({
-                        id_entity_destination_persistent: idEntityDestinationPersistent
+                        id_entity_destination_persistent: idEntityDestinationPersistent,
+                        justification_txt: justificationTxt,
+                        keep_justification_for_all: keepJustificationForAll
                     })
                 }
             )
@@ -117,7 +125,21 @@ export function putDuplicateAction({
                         details: assignedDuplicate
                     })
                 )
+                if (keepJustificationForAll && justificationTxt !== undefined) {
+                    dispatch(
+                        setJustificationOfContribution({
+                            idContributionPersistent,
+                            justification: justificationTxt
+                        })
+                    )
+                }
                 return true
+            } else if (
+                rsp.status == 400 &&
+                json['msg'] == 'Entity justification required.'
+            ) {
+                dispatch(openJustificationInput(idEntityOriginPersistent))
+                return false
             }
             dispatch(
                 putDuplicateError({

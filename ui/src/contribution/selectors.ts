@@ -29,3 +29,8 @@ export const selectReloadDelay = createSelector(
     selectContributionState,
     (state) => state.reloadDelay
 )
+
+export const selectContributionJustification = createSelector(
+    selectContribution,
+    (state) => state.value?.justification
+)

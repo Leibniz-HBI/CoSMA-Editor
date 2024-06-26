@@ -1,9 +1,8 @@
 import { constructColumnTitle, mkCellContentCallback } from './hooks'
-import { RemoteTriggerButton, CosmaeLoading } from '../../util/components/misc'
-import { Button, Col, ListGroup, Modal, ModalBody, Row } from 'react-bootstrap'
+import { CosmaeLoading } from '../../util/components/misc'
+import { Button, Col, ListGroup, Row } from 'react-bootstrap'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { EntityWithDuplicates } from './state'
-import { ColumnMenuBody } from '../../column_menu/components/menu'
 import {
     DataEditor,
     GridMouseEventArgs,
@@ -13,19 +12,14 @@ import { drawCell } from '../../table/draw'
 import { useDispatch, useSelector } from 'react-redux'
 import {
     selectEntityColumnDefs,
-    selectCompleteEntityAssignment,
-    selectEntities,
     selectEntitiesWithMatches,
     selectIsLoading,
     selectSelectedEntity,
-    selectShowTagDefinitionsMenu,
     selectTagDefinitions,
     selectMatchTagDefinitionList,
-    selectTagRowDefs,
-    selectLastMatchHit
+    selectTagRowDefs
 } from './selectors'
 import {
-    completeEntityAssignment,
     getContributionEntitiesAction,
     getContributionEntityDuplicateCandidatesAction,
     getContributionTagInstances,
@@ -33,20 +27,26 @@ import {
 } from './thunks'
 import { AppDispatch } from '../../store'
 import {
-    clearHitLastMatch,
     incrementSelectedEntityIdx,
-    removeAdditionalTagByIdPersistent,
+    openJustificationInput,
     setColumnWidth,
     setSelectedEntityIdx,
     toggleTagDefinitionMenu
 } from './slice'
-import { selectContribution } from '../selectors'
+import { selectContribution, selectContributionJustification } from '../selectors'
 import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
 import { IBounds, useLayer } from 'react-laag'
 import { TagDefinition } from '../../column_menu/state'
-import { useNavigate } from 'react-router-dom'
-import { loadContributionDetails } from '../thunks'
-import { useAppDispatch, useAppSelector } from '../../hooks'
+import {
+    AddTagDefinitionsModal,
+    JustificationModal,
+    LastMatchModal
+} from './components/modals'
+import {
+    CompleteAssignmentButton,
+    ChangeJustificationButton
+} from './components/buttons'
+import { useAppSelector } from '../../hooks'
 
 export function EntitiesStep() {
     const contributionCandidate = useSelector(selectContribution)
@@ -60,13 +60,26 @@ export function EntitiesStep() {
     )
 }
 
+export type PutDuplicateCallback = ({
+    idEntityOriginPersistent,
+    idEntityDestinationPersistent,
+    justificationTxt,
+    keepJustificationForAll,
+    onSuccess
+}: {
+    idEntityOriginPersistent: string
+    idEntityDestinationPersistent?: string
+    justificationTxt?: string | undefined
+    keepJustificationForAll?: boolean | undefined
+    onSuccess?: VoidFunction | undefined
+}) => Promise<boolean>
+
 export function EntitiesStepBody({
     idContributionPersistent
 }: {
     idContributionPersistent: string
 }) {
     const dispatch: AppDispatch = useDispatch()
-    // const isLoadingTag = useSelector(selectTagSelectionLoading)
     useEffect(() => {
         dispatch(getContributionEntitiesAction(idContributionPersistent))
             .then(async (entities) => {
@@ -84,21 +97,41 @@ export function EntitiesStepBody({
                 )
             })
     }, [dispatch, idContributionPersistent])
+    const contributionJustification = useAppSelector(selectContributionJustification)
     const entities = useSelector(selectEntitiesWithMatches)
     const isLoading = useSelector(selectIsLoading)
-    const putDuplicateCallback = (
-        idEntityOriginPersistent: string,
+    const putDuplicateCallback = async ({
+        idEntityOriginPersistent,
+        idEntityDestinationPersistent,
+        justificationTxt = undefined,
+        keepJustificationForAll = undefined,
+        onSuccess = undefined
+    }: {
+        idEntityOriginPersistent: string
         idEntityDestinationPersistent?: string
-    ) => {
-        dispatch(
+        justificationTxt?: string | undefined
+        keepJustificationForAll?: boolean | undefined
+        onSuccess?: VoidFunction | undefined
+    }) => {
+        const result = await dispatch(
             putDuplicateAction({
                 idContributionPersistent,
                 idEntityOriginPersistent,
-                idEntityDestinationPersistent
+                idEntityDestinationPersistent,
+                justificationTxt,
+                keepJustificationForAll
             })
         )
-            .then(() => new Promise((resolve) => setTimeout(resolve, 500)))
-            .then(() => dispatch(incrementSelectedEntityIdx()))
+        if (result) {
+            if (onSuccess !== undefined) {
+                onSuccess()
+            }
+            await new Promise((resolve) => {
+                setTimeout(resolve, 500)
+            })
+            dispatch(incrementSelectedEntityIdx(contributionJustification))
+        }
+        return result
     }
     if (isLoading) {
         return <CosmaeLoading />
@@ -122,7 +155,10 @@ export function EntitiesStepBody({
                             Please check for duplicate entities. Select the first Column
                             to indicate that there is no duplicate.
                         </Col>
-                        <Col sm="auto" key="entities-step-add-tag-button">
+                        <Col xs="auto" key="change-justification-button">
+                            <ChangeJustificationButton />
+                        </Col>
+                        <Col xs="auto" key="entities-step-add-tag-button">
                             <Button onClick={() => dispatch(toggleTagDefinitionMenu())}>
                                 Show Additional Tag Values
                             </Button>
@@ -148,10 +184,7 @@ export function EntityConflictBody({
     putDuplicateCallback
 }: {
     idContributionPersistent: string
-    putDuplicateCallback: (
-        idEntityOriginPersistent: string,
-        idEntityDestinationPersistent?: string
-    ) => void
+    putDuplicateCallback: PutDuplicateCallback
 }) {
     const selectedEntity = useSelector(selectSelectedEntity)
     const [tagDefinitionList, tagDefinitionIndices] = useSelector(selectTagDefinitions)
@@ -208,116 +241,21 @@ export function EntityConflictBody({
     )
 }
 
-function AddTagDefinitionsModal({
-    idContributionPersistent,
-    tagDefinitionIndices
+function NoConflictBody({
+    contributionJustification
 }: {
-    idContributionPersistent: string
-    tagDefinitionIndices: { [key: string]: number }
+    contributionJustification: string | undefined
 }) {
-    const dispatch: AppDispatch = useDispatch()
-    const showTagDefinitionsMenu = useSelector(selectShowTagDefinitionsMenu)
-    const entities = useSelector(selectEntities)
-    return (
-        <Modal
-            show={showTagDefinitionsMenu}
-            onHide={() => dispatch(toggleTagDefinitionMenu())}
-            data-testid="create-column-modal"
-            key="entities-step-modal"
-        >
-            <Modal.Header closeButton>
-                <Modal.Title>Create a new tag</Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="vh-85 bg-secondary">
-                <ColumnMenuBody
-                    hideColumnDataCallback={(tagDef) => {
-                        dispatch(removeAdditionalTagByIdPersistent(tagDef.idPersistent))
-                    }}
-                    loadColumnDataCallback={(tagDef) => {
-                        const chunkSize = 50
-                        for (
-                            let startIdx = 0;
-                            startIdx < entities.value.length;
-                            startIdx += chunkSize
-                        ) {
-                            if (entities.isLoading) {
-                                return
-                            }
-                            const endIdx = Math.min(
-                                entities.value.length,
-                                startIdx + chunkSize
-                            )
-                            const entitiesSlice = entities.value.slice(startIdx, endIdx)
-                            const entitiesMap: { [key: string]: string[] } = {}
-                            for (const entity of entitiesSlice) {
-                                if (entity.similarEntities.isLoading) {
-                                    return
-                                }
-                                entitiesMap[entity.idPersistent] = [
-                                    entity.idPersistent,
-                                    ...new Set(
-                                        entity.similarEntities.value.map(
-                                            (entity) => entity.idPersistent
-                                        )
-                                    )
-                                ]
-                            }
-                            dispatch(
-                                getContributionTagInstances({
-                                    entitiesGroupMap: entitiesMap,
-                                    tagDefinitionList: [tagDef],
-                                    idContributionPersistent: idContributionPersistent
-                                })
-                            )
-                        }
-                    }}
-                    columnIndices={tagDefinitionIndices}
-                />
-            </Modal.Body>
-        </Modal>
-    )
-}
-
-function LastMatchModal({
-    idContributionPersistent
-}: {
-    idContributionPersistent: string
-}) {
-    const lastMatchHit = useAppSelector(selectLastMatchHit)
-    const dispatch = useAppDispatch()
-    return (
-        <Modal show={lastMatchHit}>
-            <ModalBody>
-                <Row className="justify-content-center mb-5 mt-3">
-                    <Col xs="auto">You processed the last entity</Col>
-                </Row>
-                <Row className="justify-content-end">
-                    <Col xs="auto">
-                        <Button
-                            variant="outline-primary"
-                            onClick={() => dispatch(clearHitLastMatch())}
-                        >
-                            Review Matches
-                        </Button>
-                    </Col>
-                    <Col xs="auto">
-                        <CompleteAssignmentButton
-                            idContributionPersistent={idContributionPersistent}
-                        />
-                    </Col>
-                </Row>
-            </ModalBody>
-        </Modal>
-    )
-}
-
-function NoConflictBody() {
     const dispatch = useDispatch()
     return (
         <Col className="h-100 w-100">
             <Row className="justify-content-center">This entity has no conflicts.</Row>
             <Row className="justify-content-center" xs="auto">
-                <Button onClick={() => dispatch(incrementSelectedEntityIdx())}>
+                <Button
+                    onClick={() =>
+                        dispatch(incrementSelectedEntityIdx(contributionJustification))
+                    }
+                >
                     Next with conflicts
                 </Button>
             </Row>
@@ -341,15 +279,13 @@ export function EntitySimilarityItem({
     numTags
 }: {
     entity: EntityWithDuplicates
-    putDuplicateCallback: (
-        idEntityOriginPersistent: string,
-        idEntityDestinationPersistent?: string
-    ) => void
+    putDuplicateCallback: PutDuplicateCallback
     numMatchTags: number
     numTags: number
 }) {
     const entityColumnDefs = useSelector(selectEntityColumnDefs)
     const tagRowDefs = useSelector(selectTagRowDefs)
+    const contributionJustification = useSelector(selectContributionJustification)
     const matchTagDefinitionList = useSelector(selectMatchTagDefinitionList)
     const { similarEntities, displayTxtDetails: entityDisplayTxtDetails } = entity
     const dispatch = useDispatch()
@@ -414,106 +350,96 @@ export function EntitySimilarityItem({
     if (similarEntities.errorMsg !== undefined) {
         return <CosmaeLoading />
     }
-    if (similarEntities.value.length == 0) {
-        return <NoConflictBody />
+    if (
+        similarEntities.value.length == 0 &&
+        (entity.justificationTxt !== undefined ||
+            contributionJustification !== undefined)
+    ) {
+        return <NoConflictBody contributionJustification={contributionJustification} />
     }
     return (
-        <div className="h-100 w-100 mb-2 ms-3 me-3" data-testid="table-container-outer">
-            <div
-                className="br-12 ps-0 pe-0 h-100 w-100 overflow-hidden"
-                data-testid="table-container-inner"
-            >
-                <DataEditor
-                    drawCell={drawCell}
-                    rows={4 + numTags}
-                    getCellContent={mkCellContentCallback(
-                        entity,
-                        tagRowDefs,
-                        numMatchTags,
-                        matchTagDefinitionList
-                    )}
-                    freezeColumns={2}
-                    columns={entityColumnDefs}
-                    rowSelect="none"
-                    height="100%"
-                    width="100%"
-                    columnSelect="none"
-                    rangeSelect="cell"
-                    onColumnResize={(_col, size, idx) =>
-                        dispatch(setColumnWidth({ idx, width: size }))
-                    }
-                    onGridSelectionChange={(selection: GridSelection) => {
-                        const current = selection.current
-                        if (current !== undefined) {
-                            //Select range
-                            const [colIdx, rowIdx] = current.cell
-                            if (rowIdx != 0) {
-                                return
-                            }
-                            if (colIdx === undefined || colIdx < 2) {
-                                putDuplicateCallback(entity.idPersistent, undefined)
-                            } else {
-                                putDuplicateCallback(
-                                    entity.idPersistent,
-                                    entity.similarEntities.value[colIdx - 2]
-                                        .idPersistent
-                                )
-                            }
-                        }
-                    }}
-                    onItemHovered={onItemHovered}
-                />
-                {tooltip != undefined &&
-                    tooltipRenderLayer(
-                        <div
-                            {...tooltipLayerProps}
-                            style={{
-                                ...tooltipLayerProps.style,
-                                padding: '8px 12px',
-                                color: 'white',
-                                font: '500 13px Inter',
-                                backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                                borderRadius: 9
-                            }}
-                        >
-                            {tooltip.val}
-                        </div>
-                    )}
-            </div>
-        </div>
-    )
-}
-
-export function CompleteAssignmentButton({
-    idContributionPersistent
-}: {
-    idContributionPersistent: string
-}) {
-    const completeEntityAssignmentState = useSelector(selectCompleteEntityAssignment)
-    const dispatch: AppDispatch = useDispatch()
-    const navigate = useNavigate()
-    return (
         <>
-            <Col sm="auto" key="entities-step-complete-button">
-                <RemoteTriggerButton
-                    label="Confirm Assigned Duplicates"
-                    isLoading={completeEntityAssignmentState.isLoading}
-                    onClick={() =>
-                        dispatch(
-                            completeEntityAssignment(idContributionPersistent)
-                        ).then((success) => {
-                            if (success) {
-                                dispatch(
-                                    loadContributionDetails(idContributionPersistent)
-                                )
-                                navigate(
-                                    `/contribute/${idContributionPersistent}/complete`
-                                )
+            <div
+                className="h-100 w-100 mb-2 ms-3 me-3"
+                data-testid="table-container-outer"
+            >
+                <div
+                    className="br-12 ps-0 pe-0 h-100 w-100 overflow-hidden"
+                    data-testid="table-container-inner"
+                >
+                    <DataEditor
+                        drawCell={drawCell}
+                        rows={4 + numTags}
+                        getCellContent={mkCellContentCallback(
+                            entity,
+                            tagRowDefs,
+                            numMatchTags,
+                            matchTagDefinitionList
+                        )}
+                        freezeColumns={2}
+                        columns={entityColumnDefs}
+                        rowSelect="none"
+                        height="100%"
+                        width="100%"
+                        columnSelect="none"
+                        rangeSelect="cell"
+                        onColumnResize={(_col, size, idx) =>
+                            dispatch(setColumnWidth({ idx, width: size }))
+                        }
+                        onGridSelectionChange={(selection: GridSelection) => {
+                            const current = selection.current
+                            if (current !== undefined) {
+                                //Select range
+                                const [colIdx, rowIdx] = current.cell
+                                if (rowIdx != 0 || colIdx == 0) {
+                                    return
+                                }
+                                if (colIdx === undefined || colIdx < 2) {
+                                    if (
+                                        entity.justificationTxt === undefined &&
+                                        contributionJustification === undefined
+                                    ) {
+                                        dispatch(
+                                            openJustificationInput(entity.idPersistent)
+                                        )
+                                    } else {
+                                        putDuplicateCallback({
+                                            idEntityOriginPersistent:
+                                                entity.idPersistent,
+                                            idEntityDestinationPersistent: undefined
+                                        })
+                                    }
+                                } else {
+                                    putDuplicateCallback({
+                                        idEntityOriginPersistent: entity.idPersistent,
+                                        idEntityDestinationPersistent:
+                                            entity.similarEntities.value[colIdx - 2]
+                                                .idPersistent
+                                    })
+                                }
                             }
-                        })
-                    }
-                />
-            </Col>
+                        }}
+                        onItemHovered={onItemHovered}
+                    />
+                    {tooltip != undefined &&
+                        tooltipRenderLayer(
+                            <div
+                                {...tooltipLayerProps}
+                                style={{
+                                    ...tooltipLayerProps.style,
+                                    padding: '8px 12px',
+                                    color: 'white',
+                                    font: '500 13px Inter',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                                    borderRadius: 9
+                                }}
+                            >
+                                {tooltip.val}
+                            </div>
+                        )}
+                </div>
+            </div>
+            <JustificationModal putDuplicateCallback={putDuplicateCallback} />
         </>
     )
 }

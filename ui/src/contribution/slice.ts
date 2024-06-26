@@ -91,6 +91,22 @@ export const contributionSlice = createSlice({
             }
             state.patchSelectedContribution = false
         },
+        setJustificationOfContribution(
+            state: ContributionState,
+            action: PayloadAction<{
+                idContributionPersistent: string
+                justification: string
+            }>
+        ) {
+            if (
+                state.selectedContribution.value !== undefined &&
+                state.selectedContribution.value?.idPersistent !==
+                    action.payload.idContributionPersistent
+            ) {
+                state.selectedContribution.value.justification =
+                    action.payload.justification
+            }
+        },
         resetDelay(state: ContributionState) {
             state.reloadDelay = initialCountdownValue
         },
@@ -116,5 +132,6 @@ export const {
     patchSelectedContributionEnd,
     decrementDelay,
     resetDelay,
-    resetSelectedContribution
+    resetSelectedContribution,
+    setJustificationOfContribution
 } = contributionSlice.actions

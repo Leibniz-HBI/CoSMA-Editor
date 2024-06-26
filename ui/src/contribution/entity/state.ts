@@ -40,34 +40,35 @@ export function newScoredEntity({
     }
 }
 
-export interface EntityWithDuplicates {
-    idPersistent: string
-    displayTxt?: string
-    displayTxtDetails: TagDefinition | string
-    version: number
+export interface EntityWithDuplicates extends Entity {
     similarEntities: RemoteInterface<ScoredEntity[]>
     assignedDuplicate: RemoteInterface<Entity | undefined>
     cellContents: RemoteInterface<CellValue[]>[]
     entityMap: { [key: string]: number }
+    justificationTxt: string | undefined
 }
 export function newEntityWithDuplicates({
     idPersistent,
     displayTxt,
     displayTxtDetails = undefined,
     version,
+    disabled = false,
     similarEntities,
     assignedDuplicate = newRemote(undefined),
     cellContents = [newRemote([])],
-    entityMap = undefined
+    entityMap = undefined,
+    justificationTxt = undefined
 }: {
     idPersistent: string
     displayTxt?: string
     displayTxtDetails?: string | TagDefinition
     version: number
+    disabled?: boolean
     similarEntities: RemoteInterface<ScoredEntity[]>
     assignedDuplicate?: RemoteInterface<undefined | Entity>
     cellContents?: RemoteInterface<CellValue[]>[]
     entityMap?: { [key: string]: number }
+    justificationTxt?: string | undefined
 }): EntityWithDuplicates {
     let newEntityMap: { [key: string]: number }
     if (entityMap === undefined || entityMap.size != similarEntities.value.length) {
@@ -83,10 +84,12 @@ export function newEntityWithDuplicates({
         displayTxt: displayTxt,
         displayTxtDetails: displayTxtDetails ?? idPersistent,
         version,
+        disabled,
         similarEntities: similarEntities,
         assignedDuplicate: assignedDuplicate,
         cellContents: cellContents,
-        entityMap: newEntityMap
+        entityMap: newEntityMap,
+        justificationTxt
     }
 }
 
@@ -117,6 +120,7 @@ export interface ContributionEntityState {
     selectedEntityIdx?: number
     hitLastMatch: boolean
     matchWidths: number[]
+    justificationDialogForEntity: string | undefined
 }
 export function newContributionEntityState({
     entities = newRemote([]),
@@ -127,7 +131,8 @@ export function newContributionEntityState({
     showTagDefinitionMenu = false,
     selectedEntityIdx = undefined,
     hitLastMatch = false,
-    matchWidths = [200, 200]
+    matchWidths = [200, 200],
+    justificationDialogForEntity = undefined
 }: {
     entities?: RemoteInterface<EntityWithDuplicates[]>
     entityMap?: { [key: string]: number }
@@ -138,6 +143,7 @@ export function newContributionEntityState({
     selectedEntityIdx?: number
     hitLastMatch?: boolean
     matchWidths?: number[]
+    justificationDialogForEntity?: string | undefined
 }): ContributionEntityState {
     let newEntityMap: { [key: string]: number },
         newTagDefinitionMap: { [key: string]: number }
@@ -169,6 +175,7 @@ export function newContributionEntityState({
         tagDefinitionMap: newTagDefinitionMap,
         selectedEntityIdx: selectedEntityIdx,
         hitLastMatch: hitLastMatch,
-        matchWidths: matchWidths
+        matchWidths: matchWidths,
+        justificationDialogForEntity
     }
 }
