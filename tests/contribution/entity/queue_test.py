@@ -27,6 +27,19 @@ def entity_match(contribution_candidate):
     )
 
 
+@pytest.fixture()
+def contribution_with_justification(user):
+
+    return ContributionCandidate.objects.create(  # pylint: disable=no-member
+        state=ContributionCandidate.ENTITIES_ASSIGNED,
+        name="contribution with justification",
+        id_persistent="1b75363f-bf94-432f-96af-2293aa53ab8b",
+        has_header=True,
+        created_by=user,
+        justification="justification",
+    )
+
+
 @pytest.mark.django_db
 def test_annotate_duplicates(entities, entity_match):
     with_replacement_info = q.annotate_with_replacement_info(
@@ -46,27 +59,57 @@ def test_annotate_duplicates(entities, entity_match):
 
 
 @pytest.mark.django_db
-def test_deletes_replaced(entity_duplicate, entity_match):
+def test_deletes_replaced(
+    entity_duplicate, entity_match, contribution_with_justification
+):
     assert len(Entity.objects.all()) == 1  # pylint: disable = no-member
     with_replacement_info = q.annotate_with_replacement_info(
         Entity.objects.all(),  # pylint: disable=no-member
         EntityDuplicate.objects.all(),  # pylint: disable=no-member
         "id_persistent",
     )
-    q.update_entities(with_replacement_info)
+    q.update_entities(
+        with_replacement_info,
+        contribution_with_justification,
+        c.time_edit_deduplication,
+    )
     assert len(Entity.objects.all()) == 0  # pylint: disable = no-member
 
 
 @pytest.mark.django_db
-def test_removes_contribution_candidate_from_others(entity_duplicate):
+def test_removes_contribution_candidate_from_others(
+    entity_duplicate, contribution_with_justification
+):
     with_replacement_info = q.annotate_with_replacement_info(
         Entity.objects.all(),  # pylint: disable=no-member
         EntityDuplicate.objects.all(),  # pylint: disable=no-member
         "id_persistent",
     )
-    q.update_entities(with_replacement_info)
+    q.update_entities(
+        with_replacement_info,
+        contribution_with_justification,
+        c.time_edit_deduplication,
+    )
     entity = Entity.objects.all().get()  # pylint: disable = no-member
     assert entity.contribution_candidate is None
+
+
+@pytest.mark.django_db
+def test_exception_for_entity_update_without_justification(
+    entity_duplicate, entity_match, contribution_candidate
+):
+    assert len(Entity.objects.all()) == 1  # pylint: disable = no-member
+    with_replacement_info = q.annotate_with_replacement_info(
+        Entity.objects.all(),  # pylint: disable=no-member
+        EntityDuplicate.objects.all(),  # pylint: disable=no-member
+        "id_persistent",
+    )
+    with pytest.raises(q.MissingJustificationException):
+        q.update_entities(
+            with_replacement_info,
+            contribution_candidate,
+            c.time_edit_deduplication,
+        )
 
 
 @pytest.fixture

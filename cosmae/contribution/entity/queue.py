@@ -1,18 +1,27 @@
 "Queue methods for removing duplicates of a contribution candidate."
+
 import logging
+from uuid import uuid4
 
 import django_rq
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import OuterRef, Subquery
 from django.db.utils import OperationalError
 
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.entity.queue import update_display_txt_cache
 from cosmae.merge_request.queue import merge_request_fast_forward
 from cosmae.tag.models_django import TagInstance, TagInstanceHistory
 from cosmae.util import timestamp
+
+
+class MissingJustificationException(Exception):
+    "Exception indicating that no justification was provided."
+
+    def __init__(self, *args: object) -> None:
+        super().__init__("Justification missing for at least one entity.", *args)
 
 
 def eliminate_duplicates(id_contribution_persistent):
@@ -48,7 +57,7 @@ def eliminate_duplicates(id_contribution_persistent):
             duplicates,
             "id_persistent",
         )
-        update_entities(replaced_entities_with_duplicates)
+        update_entities(replaced_entities_with_duplicates, contribution, time_edit)
         for merge_request in contribution.tagmergerequest_set.all():
             django_rq.enqueue(merge_request_fast_forward, merge_request.id_persistent)
         contribution.set_state(ContributionCandidate.MERGED)
@@ -101,7 +110,9 @@ def annotate_with_replacement_info(manager, replacements, id_entity_field_name):
     )
 
 
-def update_entities(entities_with_replacement_info):
+def update_entities(
+    entities_with_replacement_info, contribution: ContributionCandidate, time_edit
+):
     """Update entities according to replacement info:
     Replaced entities will be deleted and
     others will be made full entities by removing the contribution_candidate."""
@@ -109,6 +120,26 @@ def update_entities(entities_with_replacement_info):
     entities_with_replacement_info.filter(
         replacement_id_entity_persistent__isnull=False
     ).delete()
-    entities_with_replacement_info.filter(
+    new_entities = entities_with_replacement_info.filter(
         replacement_id_entity_persistent__isnull=True
-    ).update(contribution_candidate=None)
+    )
+    missing_justification = new_entities.annotate(
+        justification=models.Subquery(
+            EntityJustification.objects.filter(  # pylint: disable=no-member
+                id_entity_persistent=models.OuterRef("id_persistent")
+            ).values("text")
+        )
+    ).filter(justification__isnull=True)
+    if len(missing_justification) >= 0:
+        if contribution.justification is None:
+            raise MissingJustificationException()
+        for entity in missing_justification:
+            EntityJustification.add(
+                id_persistent=uuid4(),
+                id_entity_persistent=entity.id_persistent,
+                text=contribution.justification,
+                author=contribution.created_by,
+                timestamp=time_edit,
+            )
+
+    new_entities.update(contribution_candidate=None)
