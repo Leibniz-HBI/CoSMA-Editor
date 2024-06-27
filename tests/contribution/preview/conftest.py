@@ -27,6 +27,26 @@ def instances_contribution(contribution_tag_def):
 
 
 @pytest.fixture
+def instances_contribution_assigned_justification(
+    contribution_tag_def_assigned_justification,
+):
+    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+        value=c.value_contribution,
+        id_entity_persistent=ce.id_persistent_test_0,
+        tag_definition=contribution_tag_def_assigned_justification,
+        line_idx=500,
+        discard=False,
+    )
+    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+        value=c.value_contribution_1,
+        id_entity_persistent=ce.id_persistent_test_1,
+        tag_definition=contribution_tag_def_assigned_justification,
+        line_idx=505,
+        discard=False,
+    )
+
+
+@pytest.fixture
 def instances_contribution_assigned_display_txt(
     contribution_tag_def_assigned_display_txt,
 ):

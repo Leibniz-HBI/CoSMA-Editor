@@ -11,3 +11,11 @@ display_txt_test1 = "test entity 1"
 time_edit_test_2 = datetime(2022, 11, 17, tzinfo=timezone.utc)
 id_persistent_test_2 = "7a3fa99f-e832-49dd-9024-c03271687eee"
 display_txt_test2 = "test entity 2"
+
+id_justification_0 = "2fc3d5aa-bce5-45ae-963b-e5cced15f4a8"
+justification_0 = "tremendous shit poster"
+time_justification_0 = datetime(2022, 11, 15, 12, tzinfo=timezone.utc)
+
+id_justification_1 = "2ee0fee1-7559-4e80-9a17-52be3414cebb"
+justification_1 = "shit poster in chief"
+time_justification_1 = datetime(2022, 11, 16, 12, tzinfo=timezone.utc)

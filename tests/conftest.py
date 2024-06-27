@@ -11,7 +11,7 @@ from tests.entity import common as ce
 from tests.tag import common as ct
 from tests.user import common as cu
 from tests.user.api.integration.requests import post_login, post_register
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
 from cosmae.management.models_django import ConfigValue
 from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
@@ -64,6 +64,28 @@ def entity2(user1):
     )
     entity.save()
     return entity
+
+
+@pytest.fixture()
+def justification0(user):
+    EntityJustification.add(
+        ce.id_justification_0,
+        ce.id_persistent_test_0,
+        ce.justification_0,
+        ce.time_justification_0,
+        user,
+    )
+
+
+@pytest.fixture()
+def justification1(user1):
+    EntityJustification.add(
+        ce.id_justification_1,
+        ce.id_persistent_test_1,
+        ce.justification_1,
+        ce.time_justification_1,
+        user1,
+    )
 
 
 @pytest.fixture()

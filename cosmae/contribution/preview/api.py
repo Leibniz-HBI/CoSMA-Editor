@@ -1,4 +1,5 @@
 "API methods for showing assignment previews."
+
 from typing import List, Optional
 
 from django.http import HttpRequest
@@ -9,7 +10,7 @@ from cosmae.contribution.tag_definition.models_django import (
     TagDefinitionContribution,
     TagInstanceContribution,
 )
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.tag.models_django import TagDefinition, TagInstance
 from cosmae.util.auth import check_user
@@ -19,6 +20,7 @@ router = Router()
 
 class Preview(Schema):
     "API model for preview"
+
     # pylint: disable=too-few-public-methods
     contribution_values: List[str]
     destination_values: Optional[List[str]]
@@ -66,6 +68,10 @@ def get_preview(
                     manager=Entity.objects_all().filter(display_txt__isnull=False),
                 )
             ]
+        elif id_tag_definition_persistent == "justification":
+            destination_values = list(
+                EntityJustification.objects.all()[:10].values_list("text", flat=True)
+            )
         else:
             destination_values = [
                 value.value
