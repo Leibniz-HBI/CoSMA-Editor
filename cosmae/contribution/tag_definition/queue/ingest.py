@@ -50,6 +50,8 @@ def mk_justification_strategy(idx, timestamp: datetime, user: CosmaeUser):
             )
         except EntityJustification.EmptyJustificationException:
             pass
+        except AttributeError:
+            pass
 
     return justification_strategy
 
