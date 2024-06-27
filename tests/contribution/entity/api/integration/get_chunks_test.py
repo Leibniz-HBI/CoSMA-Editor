@@ -43,6 +43,7 @@ def test_get_chunk(auth_server, contribution_candidate, entities):
                     "display_txt": c.display_txt_test_entity_duplicate,
                     "display_txt_details": "Display Text",
                     "disabled": False,
+                    "justification_txt": None,
                 }
             ]
         },

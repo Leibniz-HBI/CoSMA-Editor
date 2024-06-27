@@ -16,7 +16,7 @@ from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.person.api import (
     PersonNatural,
-    PersonNaturalList,
+    PersonNaturalWithJustificationList,
     person_db_dict_to_api,
     person_db_to_api,
 )
@@ -78,7 +78,12 @@ empty_match = ScoredMatchesWithDuplicateAssignment(assigned_duplicate=None, matc
 
 @router.get(
     "chunk/{start}/{offset}",
-    response={200: PersonNaturalList, 401: ApiError, 404: ApiError, 500: ApiError},
+    response={
+        200: PersonNaturalWithJustificationList,
+        401: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
 )
 def get_entities(request: HttpRequest, start: int, offset: int):
     "API method for getting entities of a contribution candidate."
@@ -97,7 +102,7 @@ def get_entities(request: HttpRequest, start: int, offset: int):
         entities_db = EntityJustification.annotate_justification(
             candidate.get_entities_chunked(start, offset)
         )
-        return 200, PersonNaturalList(
+        return 200, PersonNaturalWithJustificationList(
             persons=[person_db_to_api(person) for person in entities_db]
         )
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
