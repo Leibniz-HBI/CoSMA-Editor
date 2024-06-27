@@ -128,11 +128,15 @@ class ContributionCandidate(models.Model):
         active = TagDefinitionContribution.objects.filter(  # pylint: disable=no-member
             contribution_candidate=self, discard=False
         )
-        invalid = active.exclude(id_existing_persistent="display_txt").exclude(
-            id_existing_persistent__in=Subquery(
-                TagDefinition.objects.filter(  # pylint: disable=no-member
-                    hidden=False
-                ).values("id_persistent")
+        invalid = (
+            active.exclude(id_existing_persistent="display_txt")
+            .exclude(id_existing_persistent="justification")
+            .exclude(
+                id_existing_persistent__in=Subquery(
+                    TagDefinition.objects.filter(  # pylint: disable=no-member
+                        hidden=False
+                    ).values("id_persistent")
+                )
             )
         )
         if len(invalid) > 0:
