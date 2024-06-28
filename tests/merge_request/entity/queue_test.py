@@ -3,7 +3,7 @@
 from django.db import models
 
 from tests.merge_request.entity import common as c
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.merge_request.entity.models_django import EntityMergeRequest
 from cosmae.merge_request.entity.queue import apply_entity_merge_request
 from cosmae.merge_request.models_django import TagMergeRequest
@@ -84,6 +84,36 @@ def test_applies_resolutions(conflict_resolution_replace, user1):
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
     assert len(TagDefinition.query_set(include_hidden=True)) == 5
     assert len(TagDefinition.query_set()) == 3
+
+
+def test_copies_justification(conflict_resolution_replace, user1):
+    merge_request = conflict_resolution_replace.merge_request
+    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.save()
+    time = c.time_merge_request
+    EntityJustification.add(
+        "c2e4a59f-036b-4153-b543-e464912ddf1f",
+        merge_request.id_origin_persistent,
+        "justification",
+        time,
+        merge_request.created_by,
+    )
+    EntityJustification.add(
+        "31f580af-a975-4612-b203-3aacfb2b04dc",
+        merge_request.id_origin_persistent,
+        "another justification",
+        time,
+        merge_request.created_by,
+    )
+    apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
+    assert (
+        len(
+            EntityJustification.for_id_entity_persistent_unordered(
+                merge_request.id_destination_persistent
+            )
+        )
+        == 2
+    )
 
 
 def test_creates_tag_merge_request_for_updated(

@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from django.db import models, transaction
 
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.exception import (
     EntityUpdatedException,
     PermissionException,
@@ -93,6 +93,10 @@ def apply_entity_merge_request(
                 time_edit=time_edit,
             )
             disabled.save()
+            EntityJustification.copy(
+                merge_request.id_origin_persistent,
+                merge_request.id_destination_persistent,
+            )
             merge_request.state = EntityMergeRequest.MERGED
             merge_request.save()
 
