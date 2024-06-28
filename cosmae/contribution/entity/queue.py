@@ -117,9 +117,14 @@ def update_entities(
     Replaced entities will be deleted and
     others will be made full entities by removing the contribution_candidate."""
     # In the future the entities may just be disabled.
-    entities_with_replacement_info.filter(
+    for_deletion = entities_with_replacement_info.filter(
         replacement_id_entity_persistent__isnull=False
-    ).delete()
+    )
+    for entity in for_deletion:
+        EntityJustification.copy(
+            entity.id_persistent, entity.replacement_id_entity_persistent
+        )
+    for_deletion.delete()
     new_entities = entities_with_replacement_info.filter(
         replacement_id_entity_persistent__isnull=True
     )

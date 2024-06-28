@@ -9,7 +9,7 @@ import tests.tag.common as ct
 import cosmae.contribution.entity.queue as q
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.tag.models_django import (
     TagDefinition,
     TagDefinitionHistory,
@@ -77,6 +77,47 @@ def test_deletes_replaced(
 
 
 @pytest.mark.django_db
+def test_copies_justifications(
+    entity_duplicate, entity_match, contribution_with_justification
+):
+    time = c.time_edit_deduplication
+    EntityJustification.add(
+        "60c667cf-166d-466d-b106-825f9a7ec91d",
+        entity_match.id_origin_persistent,
+        "justification",
+        time,
+        contribution_with_justification.created_by,
+    )
+    EntityJustification.add(
+        "b8eb133c-4a52-4ddf-bdef-b1df05cfcb4f",
+        entity_match.id_origin_persistent,
+        "another justification",
+        time,
+        contribution_with_justification.created_by,
+    )
+    assert len(Entity.objects.all()) == 1  # pylint: disable = no-member
+    with_replacement_info = q.annotate_with_replacement_info(
+        Entity.objects.all(),  # pylint: disable=no-member
+        EntityDuplicate.objects.all(),  # pylint: disable=no-member
+        "id_persistent",
+    )
+    q.update_entities(
+        with_replacement_info,
+        contribution_with_justification,
+        c.time_edit_deduplication,
+    )
+    assert len(Entity.objects.all()) == 0  # pylint: disable = no-member
+    assert (
+        len(
+            EntityJustification.for_id_entity_persistent_unordered(
+                entity_match.id_destination_persistent
+            )
+        )
+        == 2
+    )
+
+
+@pytest.mark.django_db
 def test_removes_contribution_candidate_from_others(
     entity_duplicate, contribution_with_justification
 ):
@@ -92,6 +133,12 @@ def test_removes_contribution_candidate_from_others(
     )
     entity = Entity.objects.all().get()  # pylint: disable = no-member
     assert entity.contribution_candidate is None
+    assert (
+        EntityJustification.objects.filter(id_entity_persistent=entity.id_persistent)
+        .get()
+        .text
+        == contribution_with_justification.justification
+    )
 
 
 @pytest.mark.django_db

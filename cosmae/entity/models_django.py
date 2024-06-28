@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
+from uuid import uuid4
 
 from django.contrib.postgres.indexes import GistIndex
 from django.db import models
@@ -189,7 +190,7 @@ class EntityJustification(models.Model):
         if text is None or text.strip() == "":
             raise cls.EmptyJustificationException()
         existing_queryset = cls.objects.filter(  # pylint: disable=no-member
-            text__search=text
+            id_entity_persistent=id_entity_persistent, text__search=text
         )
         if len(existing_queryset) > 0:
             existing = existing_queryset[0]
@@ -220,3 +221,22 @@ class EntityJustification(models.Model):
                 .values("text")
             )
         )
+
+    @classmethod
+    def copy(
+        cls,
+        origin_id_persistent: str,
+        destination_id_persistent: str,
+    ):
+        "Copy all justifications for a source entity to a destination entity."
+        justifications = EntityJustification.for_id_entity_persistent_unordered(
+            origin_id_persistent
+        )
+        for justification in justifications:
+            cls.add(
+                uuid4(),
+                destination_id_persistent,
+                justification.text,
+                justification.timestamp,
+                justification.author,
+            )
