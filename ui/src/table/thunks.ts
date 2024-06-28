@@ -410,11 +410,11 @@ export function parseValue(
 export function parseEntityObjectFromJson(json: any): Entity {
     return newEntity({
         idPersistent: json['id_persistent'],
-        displayTxt: json['display_txt'],
+        displayTxt: json['display_txt'] ?? undefined,
         displayTxtDetails: parseDisplayTxtDetails(json['display_txt_details']),
         version: Number.parseInt(json['version']),
         disabled: json['disabled'],
-        justificationTxt: json['justification_txt']
+        justificationTxt: json['justification_txt'] ?? undefined
     })
 }
 export function parseDisplayTxtDetails(

@@ -17,7 +17,8 @@ import {
     selectSelectedEntity,
     selectTagDefinitions,
     selectMatchTagDefinitionList,
-    selectTagRowDefs
+    selectTagRowDefs,
+    selectJustificationForSelectedEntity
 } from './selectors'
 import {
     getContributionEntitiesAction,
@@ -242,9 +243,11 @@ export function EntityConflictBody({
 }
 
 function NoConflictBody({
-    contributionJustification
+    contributionJustification,
+    entity
 }: {
     contributionJustification: string | undefined
+    entity: EntityWithDuplicates
 }) {
     const dispatch = useDispatch()
     return (
@@ -355,7 +358,15 @@ export function EntitySimilarityItem({
         (entity.justificationTxt !== undefined ||
             contributionJustification !== undefined)
     ) {
-        return <NoConflictBody contributionJustification={contributionJustification} />
+        return (
+            <>
+                <NoConflictBody
+                    contributionJustification={contributionJustification}
+                    entity={entity}
+                />
+                <JustificationModal putDuplicateCallback={putDuplicateCallback} />
+            </>
+        )
     }
     return (
         <>

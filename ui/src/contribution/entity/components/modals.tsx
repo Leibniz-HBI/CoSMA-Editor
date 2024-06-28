@@ -7,7 +7,8 @@ import {
     selectLastMatchHit,
     selectJustificationForEntityId,
     selectShowTagDefinitionsMenu,
-    selectEntities
+    selectEntities,
+    selectJustificationForSelectedEntity
 } from '../selectors'
 
 import {
@@ -28,71 +29,98 @@ export function JustificationModal({
     putDuplicateCallback: PutDuplicateCallback
 }) {
     const contributionJustification = useAppSelector(selectContributionJustification)
-    const justificationForId = useAppSelector(selectJustificationForEntityId)
-    const [justification, setJustification] = useState('')
-    const [keepJustification, setKeepJustification] = useState(
-        contributionJustification !== undefined
+    const showForId = useAppSelector(selectJustificationForEntityId)
+    const justificationForSelectedEntity = useAppSelector(
+        selectJustificationForSelectedEntity
     )
     const dispatch = useAppDispatch()
-    const show = justificationForId !== undefined
+    const show = showForId !== undefined
     const closeModalCallback = () => dispatch(closeJustificationInput())
-    let button = <></>
-    if (show) {
-        button = (
-            <Button
-                onClick={() =>
-                    putDuplicateCallback({
-                        idEntityOriginPersistent: justificationForId,
-                        idEntityDestinationPersistent: undefined,
-                        justificationTxt: justification,
-                        keepJustificationForAll: keepJustification,
-                        onSuccess: closeModalCallback
-                    })
-                }
-            >
-                Submit
-            </Button>
-        )
-    }
     return (
         <Modal show={show} onHide={closeModalCallback}>
             <Modal.Header closeButton={true}>Add Justification</Modal.Header>
             <Modal.Body>
                 {show && (
-                    <Col className="ms-2">
-                        <Row className="ms-0 mb-2">
-                            Please add a justification for adding the entity.
-                        </Row>
-                        <Row>
-                            <FormField
-                                value={justification}
-                                as="textarea"
-                                name="justification"
-                                label="Justification"
-                                handleChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setJustification(e.target.value)
-                                }
-                                className="min-h-200px ps-4"
-                            />
-                        </Row>
-                        <Row className="justify-content-end align-items-center">
-                            <Col xs="auto">
-                                <FormCheck
-                                    label="Use justification for all entities"
-                                    checked={keepJustification}
-                                    onChange={(_e: ChangeEvent<HTMLInputElement>) =>
-                                        setKeepJustification(!keepJustification)
-                                    }
-                                />
-                            </Col>
-                            <Col xs="auto">{button}</Col>
-                        </Row>
-                    </Col>
+                    <JustificationModalBody
+                        idEntityPersistent={showForId}
+                        entityJustification={justificationForSelectedEntity}
+                        contributionJustification={contributionJustification}
+                        putDuplicateCallback={putDuplicateCallback}
+                        closeModalCallback={closeModalCallback}
+                    />
                 )}
             </Modal.Body>
         </Modal>
     )
 }
+
+function JustificationModalBody({
+    idEntityPersistent,
+    entityJustification,
+    contributionJustification,
+    putDuplicateCallback,
+    closeModalCallback
+}: {
+    idEntityPersistent: string
+    entityJustification: string | undefined
+    contributionJustification: string | undefined
+    putDuplicateCallback: PutDuplicateCallback
+    closeModalCallback: VoidFunction
+}) {
+    const [justification, setJustification] = useState(
+        entityJustification ?? contributionJustification ?? ''
+    )
+    const [keepJustification, setKeepJustification] = useState(
+        entityJustification === undefined && contributionJustification !== undefined
+    )
+    const button = (
+        <Button
+            onClick={() =>
+                putDuplicateCallback({
+                    idEntityOriginPersistent: idEntityPersistent,
+                    idEntityDestinationPersistent: undefined,
+                    justificationTxt: justification,
+                    keepJustificationForAll: keepJustification,
+                    onSuccess: closeModalCallback
+                })
+            }
+        >
+            Submit
+        </Button>
+    )
+    return (
+        <Col className="ms-2">
+            <Row className="ms-0 mb-2">
+                Please add a justification for adding the entity.
+            </Row>
+            <Row>
+                <FormField
+                    value={justification}
+                    as="textarea"
+                    name="justification"
+                    label="Justification"
+                    handleChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setJustification(e.target.value)
+                    }
+                    className="min-h-200px ps-4"
+                />
+            </Row>
+            <Row className="justify-content-end align-items-center">
+                <Col xs="auto">
+                    <FormCheck
+                        label="Use justification for all entities"
+                        checked={keepJustification}
+                        onChange={(_e: ChangeEvent<HTMLInputElement>) =>
+                            setKeepJustification(!keepJustification)
+                        }
+                    />
+                </Col>
+                <Col xs="auto">{button}</Col>
+            </Row>
+        </Col>
+    )
+}
+
 export function LastMatchModal({
     idContributionPersistent
 }: {
