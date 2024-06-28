@@ -25,7 +25,7 @@ from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagInstance as TagInstanceDb
 from cosmae.tag.models_django import TagInstanceAbstract as TagInstanceAbstractDb
 from cosmae.tag.models_django import TagInstanceHistory as TagInstanceHistoryDb
-from cosmae.util import CosmaeUser
+from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 from cosmae.util.django import save_many_atomic
 
@@ -142,7 +142,7 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
     tag_apis = tag_list.tag_instances
-    now = datetime.utcnow()
+    now = timestamp()
     try:
         tag_dbs = [tag_instance_api_to_db(tag, user, now) for tag in tag_apis]
     except ValidationException as exc:

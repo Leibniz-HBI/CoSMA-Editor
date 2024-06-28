@@ -1,5 +1,5 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
-from datetime import datetime
+from datetime import datetime, timezone
 
 from cosmae.entity.models_django import Entity
 from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
@@ -119,7 +119,7 @@ def test_recent_change_all(
     old_entity = conflict_resolution_replace.entity
     Entity.change_or_create_versioned(
         id_persistent=old_entity.id_persistent,
-        time_edit=datetime(1912, 4, 7),
+        time_edit=datetime(1912, 4, 7, tzinfo=timezone.utc),
         display_txt="edited_entity",
         version=old_entity.id,
         written_by_id_persistent=merge_request_user.created_by.id_persistent,

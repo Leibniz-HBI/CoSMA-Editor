@@ -24,9 +24,9 @@ id_instance_test0 = "efee09fd-cee7-402f-8e8e-6ca790352e41"
 id_instance_test1 = "3f7f1a90-cf62-4b73-8dee-8982bd422edf"
 id_instance_test2 = "602364a9-1e75-4c93-833d-1c4fa0296f04"
 id_instance_test3 = "96323b9c-3b11-488e-bf74-3006c0083c3a"
-time_edit_instance_test = datetime(2021, 3, 8)
+time_edit_instance_test = datetime(2021, 3, 8, tzinfo=timezone.utc)
 id_merge_request = "8561750e-856f-44ad-a660-137caf9487a7"
-time_created_merge_request = datetime(2021, 3, 9)
+time_created_merge_request = datetime(2021, 3, 9, tzinfo=timezone.utc)
 id_contribution = "9e022465-600e-4870-8224-e647ae550575"
 
 id_ownership_request_test = "1a3e5449-bd68-4d47-a8b8-b53135bb91ad"

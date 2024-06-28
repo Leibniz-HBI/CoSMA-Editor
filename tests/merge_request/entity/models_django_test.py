@@ -1,5 +1,5 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
-from datetime import datetime
+from datetime import datetime, timezone
 
 from cosmae.merge_request.entity.models_django import EntityConflictResolution
 from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
@@ -347,7 +347,7 @@ def test_change_all(
     old_tag_def = conflict_resolution_replace.tag_definition
     TagDefinitionHistory.change_or_create_versioned(
         id_persistent=old_tag_def.id_persistent,
-        time_edit=datetime(1912, 4, 7),
+        time_edit=datetime(1912, 4, 7, tzinfo=timezone.utc),
         name="edited tag definition",
         version=old_tag_def.id,
         owner_id=old_tag_def.owner.id,

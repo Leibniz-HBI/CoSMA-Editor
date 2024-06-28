@@ -1,5 +1,5 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements,duplicate-code
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -153,7 +153,7 @@ def test_conflicts_same_value(
             id_tag_definition_persistent=instance_origin.id_tag_definition_persistent,
             id_persistent=str(uuid4()),
             value=instance_origin.value,
-            time_edit=datetime(1994, 12, 2),
+            time_edit=datetime(1994, 12, 2, tzinfo=timezone.utc),
             written_by=instance_origin.written_by,
             approved_by=instance_origin.approved_by,
         )

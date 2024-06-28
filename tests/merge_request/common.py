@@ -41,10 +41,10 @@ value_origin = "value origin"
 value_origin1 = "value origin 1"
 value_destination = "value destination"
 value_destination1 = "value destination 1"
-time_instance_origin = datetime(1957, 2, 8)
-time_instance_origin1 = datetime(1957, 2, 9)
-time_instance_origin1_changed = datetime(1957, 2, 10)
-time_instance_destination = datetime(1957, 3, 8)
-time_instance_destination_changed = datetime(1957, 3, 9)
-time_instance_destination1 = datetime(1957, 3, 10)
-time_instance_destination_same_value = datetime(1958, 2, 14)
+time_instance_origin = datetime(1957, 2, 8, tzinfo=tz.utc)
+time_instance_origin1 = datetime(1957, 2, 9, tzinfo=tz.utc)
+time_instance_origin1_changed = datetime(1957, 2, 10, tzinfo=tz.utc)
+time_instance_destination = datetime(1957, 3, 8, tzinfo=tz.utc)
+time_instance_destination_changed = datetime(1957, 3, 9, tzinfo=tz.utc)
+time_instance_destination1 = datetime(1957, 3, 10, tzinfo=tz.utc)
+time_instance_destination_same_value = datetime(1958, 2, 14, tzinfo=tz.utc)

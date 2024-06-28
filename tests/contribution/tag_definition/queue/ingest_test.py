@@ -1,5 +1,4 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,disable=unused-argument
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -13,6 +12,7 @@ from cosmae.contribution.tag_definition.queue.ingest import ingest_values_from_c
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory, TagInstance
+from cosmae.util import timestamp
 
 csv_cols = {
     "names": ["name_0", "name_1"],
@@ -52,7 +52,7 @@ def verified_tag_def(db, user):
         id_parent_persistent=None,
         type=TagDefinition.INNER,
         id_persistent=str(uuid4()),
-        time_edit=datetime.now(),
+        time_edit=timestamp(),
         written_by=user.id_persistent,
         approved_by=user.id_persistent,
     )
@@ -65,7 +65,7 @@ def party_tag_def(db, user):
         id_parent_persistent=None,
         type=TagDefinition.STRING,
         id_persistent=str(uuid4()),
-        time_edit=datetime.now(),
+        time_edit=timestamp(),
         written_by=user.id_persistent,
         approved_by=user.id_persistent,
     )

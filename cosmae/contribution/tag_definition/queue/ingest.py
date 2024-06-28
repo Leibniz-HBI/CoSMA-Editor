@@ -19,7 +19,7 @@ from cosmae.tag.models_django import (
     TagDefinitionHistory,
     TagInstanceHistory,
 )
-from cosmae.util import CosmaeUser
+from cosmae.util import CosmaeUser, timestamp
 
 
 def mk_display_txt_extractor(idx):
@@ -31,7 +31,7 @@ def mk_display_txt_extractor(idx):
     return lambda row_tpl: row_tpl[idx]
 
 
-def mk_justification_strategy(idx, timestamp: datetime, user: CosmaeUser):
+def mk_justification_strategy(idx, time_edit: datetime, user: CosmaeUser):
     """Create a function that handles justifications.
     Will do nothing if the index is None."""
     if idx is None:
@@ -45,7 +45,7 @@ def mk_justification_strategy(idx, timestamp: datetime, user: CosmaeUser):
                 id_entity_persistent=id_entity_persistent,
                 id_persistent=uuid4(),
                 text=row_tpl[idx],
-                timestamp=timestamp,
+                timestamp=time_edit,
                 author=user,
             )
         except EntityJustification.EmptyJustificationException:
@@ -105,7 +105,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                     contribution_candidate=contribution, discard=False
                 )
             )
-            time_add = datetime.now()
+            time_add = timestamp()
             display_txt_idx = None
             justification_idx = None
             column_assignments = []

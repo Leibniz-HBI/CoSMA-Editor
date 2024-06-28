@@ -1,5 +1,5 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from django.db import IntegrityError
@@ -13,19 +13,19 @@ def test_store_multiple(user):
     entity_test_0, _ = Entity.change_or_create_versioned(
         id_persistent="test_id_0",
         display_txt="foo",
-        time_edit=datetime(2022, 11, 14),
+        time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
         written_by_id_persistent=user.id_persistent,
     )
     entity_test_1, _ = Entity.change_or_create_versioned(
         id_persistent="test_id_1",
         display_txt="foo",
-        time_edit=datetime(2022, 11, 14),
+        time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
         written_by_id_persistent=user.id_persistent,
     )
     entity_test_2, _ = Entity.change_or_create_versioned(
         id_persistent="test_id_2",
         display_txt="foo",
-        time_edit=datetime(2022, 11, 14),
+        time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
         written_by_id_persistent=user.id_persistent,
     )
 
@@ -38,18 +38,20 @@ def test_store_multiple(user):
 def test_does_rollback():
 
     entity_test_0 = Entity(
-        id_persistent="test_id_0", display_txt="foo", time_edit=datetime(2022, 11, 14)
+        id_persistent="test_id_0",
+        display_txt="foo",
+        time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
     )
     entity_test_1 = Entity(
         id_persistent="test_id_1",
         display_txt="foo",
-        time_edit=datetime(2022, 11, 14),
+        time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
         previous_version=entity_test_0,
     )
     entity_test_2 = Entity(
         id_persistent="test_id_2",
         display_txt="foo",
-        time_edit=datetime(2022, 11, 14),
+        time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
         previous_version=entity_test_0,
     )
 

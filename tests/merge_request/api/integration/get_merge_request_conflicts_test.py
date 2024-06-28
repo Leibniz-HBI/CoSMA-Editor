@@ -1,5 +1,5 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -159,7 +159,7 @@ def test_conflicts_same_value(
             id_tag_definition_persistent=destination_tag_def_for_mr.id_persistent,
             id_persistent=str(uuid4()),
             value=instance_origin.value,
-            time_edit=datetime(1994, 12, 2),
+            time_edit=datetime(1994, 12, 2, tzinfo=timezone.utc),
         )
         instance_destination.save()
     server, cookies = auth_server
@@ -335,7 +335,7 @@ def test_conflict_resolved_tag_def_origin_changed(
         id_persistent=old_tag_definition.id_persistent,
         version=old_tag_definition.id,
         name="changed tag definition test",
-        time_edit=datetime(1912, 4, 8),
+        time_edit=datetime(1912, 4, 8, tzinfo=timezone.utc),
         written_by_id_persistent=merge_request_user.created_by.id_persistent,
         owner_id=merge_request_user.created_by.id,
     )[0].save()
@@ -475,7 +475,7 @@ def test_tag_instance_destination_value_added(
         replace=True,
     )
     id_tag_instance_destination = str(uuid4())
-    time_edit = datetime(1873, 2, 4)
+    time_edit = datetime(1873, 2, 4, tzinfo=timezone.utc)
     TagInstanceHistory.objects.create(  # pylint: disable=no-member
         id_tag_definition_persistent=destination_tag_def_for_mr.id_persistent,
         id_entity_persistent=entity1.id_persistent,
