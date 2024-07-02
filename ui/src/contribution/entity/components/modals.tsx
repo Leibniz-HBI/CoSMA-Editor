@@ -1,14 +1,14 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { Button, Col, FormCheck, Modal, Row } from 'react-bootstrap'
 import { useAppDispatch, useAppSelector } from '../../../hooks'
 import { FormField } from '../../../util/form'
 import { PutDuplicateCallback } from '../components'
 import {
     selectLastMatchHit,
-    selectJustificationForEntityId,
     selectShowTagDefinitionsMenu,
     selectEntities,
-    selectJustificationForSelectedEntity
+    selectSelectedEntity,
+    selectShowJustificationInput
 } from '../selectors'
 
 import {
@@ -22,6 +22,7 @@ import { selectContributionJustification } from '../../selectors'
 import { CompleteAssignmentButton } from './buttons'
 import { ColumnMenuBody } from '../../../column_menu/components/menu'
 import { getContributionTagInstances } from '../thunks'
+import { EntityWithDuplicates } from '../state'
 
 export function JustificationModal({
     putDuplicateCallback
@@ -29,21 +30,17 @@ export function JustificationModal({
     putDuplicateCallback: PutDuplicateCallback
 }) {
     const contributionJustification = useAppSelector(selectContributionJustification)
-    const showForId = useAppSelector(selectJustificationForEntityId)
-    const justificationForSelectedEntity = useAppSelector(
-        selectJustificationForSelectedEntity
-    )
+    const show = useAppSelector(selectShowJustificationInput)
+    const selectedEntity = useAppSelector(selectSelectedEntity)
     const dispatch = useAppDispatch()
-    const show = showForId !== undefined
     const closeModalCallback = () => dispatch(closeJustificationInput())
     return (
         <Modal show={show} onHide={closeModalCallback}>
             <Modal.Header closeButton={true}>Add Justification</Modal.Header>
             <Modal.Body>
-                {show && (
+                {show && selectedEntity !== undefined && (
                     <JustificationModalBody
-                        idEntityPersistent={showForId}
-                        entityJustification={justificationForSelectedEntity}
+                        entity={selectedEntity}
                         contributionJustification={contributionJustification}
                         putDuplicateCallback={putDuplicateCallback}
                         closeModalCallback={closeModalCallback}
@@ -55,30 +52,28 @@ export function JustificationModal({
 }
 
 function JustificationModalBody({
-    idEntityPersistent,
-    entityJustification,
+    entity,
     contributionJustification,
     putDuplicateCallback,
     closeModalCallback
 }: {
-    idEntityPersistent: string
-    entityJustification: string | undefined
+    entity: EntityWithDuplicates
     contributionJustification: string | undefined
     putDuplicateCallback: PutDuplicateCallback
     closeModalCallback: VoidFunction
 }) {
+    const entityJustification = entity.justificationTxt
     const [justification, setJustification] = useState(
         entityJustification ?? contributionJustification ?? ''
     )
-    const [keepJustification, setKeepJustification] = useState(
-        entityJustification === undefined && contributionJustification !== undefined
-    )
+    const [keepJustification, setKeepJustification] = useState(false)
     const button = (
         <Button
             onClick={() =>
                 putDuplicateCallback({
-                    idEntityOriginPersistent: idEntityPersistent,
-                    idEntityDestinationPersistent: undefined,
+                    idEntityOriginPersistent: entity.idPersistent,
+                    idEntityDestinationPersistent:
+                        entity.assignedDuplicate.value?.idPersistent,
                     justificationTxt: justification,
                     keepJustificationForAll: keepJustification,
                     onSuccess: closeModalCallback

@@ -134,7 +134,7 @@ export function mkCellContentCallback(
                 } else {
                     replaceInfo = new AssignType(
                         true,
-                        entityGroup.similarEntities.value[col_idx - 2].idPersistent ==
+                        entityGroup.similarEntities.value[col_idx - 2]?.idPersistent ==
                             entityGroup.assignedDuplicate.value?.idPersistent
                     )
                 }

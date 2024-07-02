@@ -3,12 +3,12 @@
  */
 import { render, screen } from '@testing-library/react'
 import { AddEntityForm } from '../components'
-import { Remote } from '../../util/state'
+import { newRemote } from '../../util/state'
 import userEvent from '@testing-library/user-event'
 
 describe('Add entity form', () => {
     test('renders correctly', async () => {
-        const state = new Remote(false)
+        const state = newRemote(false)
         render(<AddEntityForm state={state} addEntityCallback={jest.fn()} />)
         const inputs = screen.getAllByRole('textbox')
         expect(inputs.length).toEqual(2)
@@ -16,7 +16,7 @@ describe('Add entity form', () => {
         expect(button.textContent).toEqual('Add Entity')
     })
     test('can submit', async () => {
-        const state = new Remote(false)
+        const state = newRemote(false)
         const addEntityCallback = jest.fn()
         render(<AddEntityForm state={state} addEntityCallback={addEntityCallback} />)
         const textBoxes = screen.getAllByRole('textbox')

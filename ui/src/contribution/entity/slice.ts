@@ -296,14 +296,11 @@ export const contributionEntitySlice = createSlice({
             }
             state.hitLastMatch = true
         },
-        openJustificationInput(
-            state: ContributionEntityState,
-            action: PayloadAction<string>
-        ) {
-            state.justificationDialogForEntity = action.payload
+        openJustificationInput(state: ContributionEntityState) {
+            state.showJustificationDialog = true
         },
         closeJustificationInput(state: ContributionEntityState) {
-            state.justificationDialogForEntity = undefined
+            state.showJustificationDialog = false
         },
         clearHitLastMatch(state: ContributionEntityState) {
             state.hitLastMatch = false
@@ -313,6 +310,10 @@ export const contributionEntitySlice = createSlice({
             action: PayloadAction<{ idx: number; width: number }>
         ) {
             state.matchWidths[action.payload.idx] = action.payload.width
+        },
+        clearContributionEntityState(state: ContributionEntityState) {
+            state.selectedEntityIdx = undefined
+            state.hitLastMatch = false
         }
     }
 })
@@ -508,5 +509,6 @@ export const {
     clearHitLastMatch,
     setColumnWidth,
     openJustificationInput,
-    closeJustificationInput
+    closeJustificationInput,
+    clearContributionEntityState
 } = contributionEntitySlice.actions

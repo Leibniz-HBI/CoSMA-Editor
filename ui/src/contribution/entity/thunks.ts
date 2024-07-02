@@ -138,7 +138,7 @@ export function putDuplicateAction({
                 rsp.status == 400 &&
                 json['msg'] == 'Entity justification required.'
             ) {
-                dispatch(openJustificationInput(idEntityOriginPersistent))
+                dispatch(openJustificationInput())
                 return false
             }
             dispatch(

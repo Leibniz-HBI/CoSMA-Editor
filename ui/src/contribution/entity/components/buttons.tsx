@@ -7,7 +7,7 @@ import { loadContributionDetails } from '../../thunks'
 import { selectCompleteEntityAssignment, selectSelectedEntity } from '../selectors'
 import { completeEntityAssignment } from '../thunks'
 import { useAppDispatch, useAppSelector } from '../../../hooks'
-import { openJustificationInput } from '../slice'
+import { clearContributionEntityState, openJustificationInput } from '../slice'
 
 export function CompleteAssignmentButton({
     idContributionPersistent
@@ -31,6 +31,7 @@ export function CompleteAssignmentButton({
                                 dispatch(
                                     loadContributionDetails(idContributionPersistent)
                                 )
+                                dispatch(clearContributionEntityState())
                                 navigate(
                                     `/contribute/${idContributionPersistent}/complete`
                                 )
@@ -50,11 +51,7 @@ export function ChangeJustificationButton() {
         return <></>
     }
     return (
-        <Button
-            onClick={() =>
-                dispatch(openJustificationInput(selectedEntity.idPersistent))
-            }
-        >
+        <Button onClick={() => dispatch(openJustificationInput())}>
             Edit Justification
         </Button>
     )

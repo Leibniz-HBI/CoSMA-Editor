@@ -135,9 +135,9 @@ export const selectCompleteEntityAssignment = createSelector(
     (state) => state.completeEntityAssignment
 )
 
-export const selectJustificationForEntityId = createSelector(
+export const selectShowJustificationInput = createSelector(
     selectContributionEntity,
-    (state) => state.justificationDialogForEntity
+    (state) => state.showJustificationDialog
 )
 
 export const selectJustificationForSelectedEntity = createSelector(

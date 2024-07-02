@@ -17,8 +17,7 @@ import {
     selectSelectedEntity,
     selectTagDefinitions,
     selectMatchTagDefinitionList,
-    selectTagRowDefs,
-    selectJustificationForSelectedEntity
+    selectTagRowDefs
 } from './selectors'
 import {
     getContributionEntitiesAction,
@@ -243,11 +242,9 @@ export function EntityConflictBody({
 }
 
 function NoConflictBody({
-    contributionJustification,
-    entity
+    contributionJustification
 }: {
     contributionJustification: string | undefined
-    entity: EntityWithDuplicates
 }) {
     const dispatch = useDispatch()
     return (
@@ -360,10 +357,7 @@ export function EntitySimilarityItem({
     ) {
         return (
             <>
-                <NoConflictBody
-                    contributionJustification={contributionJustification}
-                    entity={entity}
-                />
+                <NoConflictBody contributionJustification={contributionJustification} />
                 <JustificationModal putDuplicateCallback={putDuplicateCallback} />
             </>
         )
@@ -410,9 +404,7 @@ export function EntitySimilarityItem({
                                         entity.justificationTxt === undefined &&
                                         contributionJustification === undefined
                                     ) {
-                                        dispatch(
-                                            openJustificationInput(entity.idPersistent)
-                                        )
+                                        dispatch(openJustificationInput())
                                     } else {
                                         putDuplicateCallback({
                                             idEntityOriginPersistent:

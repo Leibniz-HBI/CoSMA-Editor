@@ -120,7 +120,7 @@ export interface ContributionEntityState {
     selectedEntityIdx?: number
     hitLastMatch: boolean
     matchWidths: number[]
-    justificationDialogForEntity: string | undefined
+    showJustificationDialog: boolean
 }
 export function newContributionEntityState({
     entities = newRemote([]),
@@ -132,7 +132,7 @@ export function newContributionEntityState({
     selectedEntityIdx = undefined,
     hitLastMatch = false,
     matchWidths = [200, 200],
-    justificationDialogForEntity = undefined
+    showJustificationDialog = false
 }: {
     entities?: RemoteInterface<EntityWithDuplicates[]>
     entityMap?: { [key: string]: number }
@@ -143,7 +143,7 @@ export function newContributionEntityState({
     selectedEntityIdx?: number
     hitLastMatch?: boolean
     matchWidths?: number[]
-    justificationDialogForEntity?: string | undefined
+    showJustificationDialog?: boolean
 }): ContributionEntityState {
     let newEntityMap: { [key: string]: number },
         newTagDefinitionMap: { [key: string]: number }
@@ -176,6 +176,6 @@ export function newContributionEntityState({
         selectedEntityIdx: selectedEntityIdx,
         hitLastMatch: hitLastMatch,
         matchWidths: matchWidths,
-        justificationDialogForEntity
+        showJustificationDialog: showJustificationDialog
     }
 }
