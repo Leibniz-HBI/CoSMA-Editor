@@ -203,6 +203,14 @@ def put_duplicate_assignment(
                 Entity.most_recent_by_id_queryset(id_entity_destination_persistent)
             ).get()
             assigned_duplicate = person_db_to_api(destination)
+            if body.justification_txt is not None:
+                add_justification(
+                    candidate,
+                    id_entity_origin_persistent,
+                    body.justification_txt,
+                    user,
+                    body.keep_justification_for_all,
+                )
         else:
             assigned_duplicate = None
             try:
@@ -251,10 +259,13 @@ def handle_justification_no_duplicate(
 ):
     "Handle adding of justification if there is no duplicate assigned."
     if justification_txt is not None:
-        add_justification(id_entity_origin_persistent, justification_txt, user)
-        if keep_justification_for_all:
-            candidate.justification = justification_txt
-            candidate.save()
+        add_justification(
+            candidate,
+            id_entity_origin_persistent,
+            justification_txt,
+            user,
+            keep_justification_for_all,
+        )
     else:
         if candidate.justification is None:
             justification_qs = EntityJustification.for_id_entity_persistent_unordered(
@@ -264,11 +275,21 @@ def handle_justification_no_duplicate(
                 raise EntityJustification.NoJustificationException()
         else:
             add_justification(
-                id_entity_origin_persistent, candidate.justification, user
+                candidate,
+                id_entity_origin_persistent,
+                candidate.justification,
+                user,
+                keep_justification_for_all,
             )
 
 
-def add_justification(id_entity_origin_persistent, justification, user):
+def add_justification(
+    candidate,
+    id_entity_origin_persistent,
+    justification,
+    user,
+    keep_justification_for_all,
+):
     "Add an entity justification."
     EntityJustification.add(
         id_persistent=uuid4(),
@@ -277,6 +298,9 @@ def add_justification(id_entity_origin_persistent, justification, user):
         timestamp=timestamp(),
         author=user,
     )
+    if keep_justification_for_all:
+        candidate.justification = justification
+        candidate.save()
 
 
 def scored_match_db_to_api(match):
