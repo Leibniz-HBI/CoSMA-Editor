@@ -99,9 +99,8 @@ export const contributionSlice = createSlice({
             }>
         ) {
             if (
-                state.selectedContribution.value !== undefined &&
-                state.selectedContribution.value?.idPersistent !==
-                    action.payload.idContributionPersistent
+                state.selectedContribution.value?.idPersistent ===
+                action.payload.idContributionPersistent
             ) {
                 state.selectedContribution.value.justification =
                     action.payload.justification
