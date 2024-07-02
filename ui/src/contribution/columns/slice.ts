@@ -6,7 +6,7 @@ import {
     newColumnDefinitionsContributionState,
     ValuePreview
 } from './state'
-import { newRemote, Remote } from '../../util/state'
+import { newRemote } from '../../util/state'
 import { findIndexInSorted } from '../../util/sorted'
 
 const initialState: ColumnDefinitionsContributionState =
@@ -108,7 +108,7 @@ export const contributionColumnDefinitionSlice = createSlice({
             state.finalizeColumnAssignment = newRemote(false, true)
         },
         finalizeColumnAssignmentSuccess(state: ColumnDefinitionsContributionState) {
-            state.finalizeColumnAssignment = new Remote(true)
+            state.finalizeColumnAssignment = newRemote(true)
         },
         finalizeColumnAssignmentError(state: ColumnDefinitionsContributionState) {
             state.finalizeColumnAssignment.isLoading = false

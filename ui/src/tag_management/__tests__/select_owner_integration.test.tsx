@@ -113,7 +113,7 @@ describe('Ownership search', () => {
     })
     const stateWithUserSearchResults = {
         user: newUserState({
-            userSearchResults: new Remote([userInfoTest, userInfoTest1])
+            userSearchResults: newRemote([userInfoTest, userInfoTest1])
         }),
         tagManagement: {
             ownershipRequests: newRemote({ petitioned: [], received: [] }),

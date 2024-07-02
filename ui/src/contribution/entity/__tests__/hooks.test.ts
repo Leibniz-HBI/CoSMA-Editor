@@ -1,6 +1,6 @@
 import { GridCellKind } from '@glideapps/glide-data-grid'
 import { TagType, newTagDefinition } from '../../../column_menu/state'
-import { Remote } from '../../../util/state'
+import { Remote, newRemote } from '../../../util/state'
 import { mkCellContentCallback } from '../hooks'
 import { newEntityWithDuplicates, newScoredEntity } from '../state'
 import { AssignType } from '../../../table/draw'
@@ -15,11 +15,11 @@ describe('cell contents callback', () => {
         displayTxt: 'group entity test',
         version: 0,
         cellContents: [
-            new Remote([
+            newRemote([
                 { value: 'value group', idPersistent: 'id-instance-test', version: 0 }
             ])
         ],
-        similarEntities: new Remote([
+        similarEntities: newRemote([
             newScoredEntity({
                 idPersistent: 'id-similar-test',
                 displayTxt: 'similar entity test',
@@ -27,7 +27,7 @@ describe('cell contents callback', () => {
                 version: 10,
                 similarity: 0.9,
                 cellContents: [
-                    new Remote([
+                    newRemote([
                         {
                             value: 'value similar',
                             idPersistent: 'id-instance-test',
@@ -44,7 +44,7 @@ describe('cell contents callback', () => {
                 idMatchTagDefinitionPersistentList: [idTagDefinition],
                 similarity: 0.8,
                 cellContents: [
-                    new Remote([
+                    newRemote([
                         {
                             value: 'value similar 1',
                             idPersistent: 'id-instance-test',

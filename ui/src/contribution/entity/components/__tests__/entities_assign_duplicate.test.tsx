@@ -411,9 +411,7 @@ test('open justification modal', async () => {
     await waitFor(() => {
         screen.getByText('Add Justification')
     })
-    expect(store.getState().contributionEntity.justificationDialogForEntity).toEqual(
-        'id-entity-0'
-    )
+    expect(store.getState().contributionEntity.showJustificationDialog).toEqual(true)
 })
 
 test('does not open modal for entity with justification', async () => {
@@ -463,9 +461,7 @@ test('does not open modal for entity with justification', async () => {
                 method: 'PUT'
             }
         ])
-        expect(
-            store.getState().contributionEntity.justificationDialogForEntity
-        ).toBeUndefined()
+        expect(store.getState().contributionEntity.showJustificationDialog).toBeFalsy()
         expect(screen.queryByText('Add Justification')).toBeNull()
     })
 })
