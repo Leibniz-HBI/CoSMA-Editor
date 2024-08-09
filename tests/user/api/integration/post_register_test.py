@@ -61,6 +61,12 @@ def test_same_names(auth_server):
         "tag_definition_list": [],
         "id_persistent": str(uuid),
         "permission_group": "APPLICANT",
+        "edit_session": {
+            "id_persistent": str(uuid),
+            "name": "Default Edit Session",
+            "owner": {"type_participant": "INTERNAL", "id_participant": str(uuid)},
+            "participant_list": [],
+        },
     }
 
 

@@ -1,9 +1,11 @@
 "API models for login and registration."
+
 from typing import List, Union
 
 from ninja import Schema
 from pydantic import Field
 
+from cosmae.edit_session.api import EditSession
 from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.user.models_api.public import PublicUserInfo
 
@@ -28,6 +30,7 @@ class LoginResponse(Schema):
     email: str
     tag_definition_list: List[TagDefinitionResponse]
     permission_group: str
+    edit_session: EditSession
 
 
 class LoginResponseList(Schema):
@@ -39,6 +42,7 @@ class LoginResponseList(Schema):
 
 class RegisterRequest(Schema):
     "API model for register requests."
+
     username: str = Field(None, min_length=2, max_length=150)
     names_personal: str = Field(None, min_length=2, max_length=150)
     names_family: str | None = Field(None, min_length=2, max_length=150)
@@ -53,6 +57,7 @@ class RegisterRequest(Schema):
 
 class SearchResponse(Schema):
     "API model for user search results response"
+
     # pylint: disable=too-few-public-methods
     results: Union[List[LoginResponse], List[PublicUserInfo]]
     contains_complete_info: bool

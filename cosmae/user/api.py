@@ -1,4 +1,5 @@
 "API endpoints for handling user management."
+
 import logging
 from typing import Union
 from urllib.parse import unquote
@@ -7,11 +8,13 @@ from uuid import uuid4
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import AnonymousUser, Group
-from django.db import DatabaseError, IntegrityError
+from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 from ninja.constants import NOT_SET
 
+from cosmae.edit_session.api import EditSession, edit_session_db_to_api
+from cosmae.edit_session.models_django import EditSession as EditSessionDb
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.tag.api.models_conversion import tag_definition_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
@@ -34,6 +37,12 @@ class PutGroupRequest(Schema):
     # pylint: disable=too-few-public-methods
     "API model for body of request setting the permission group of a user."
     permission_group: str
+
+
+class SetEditSessionRequest(Schema):
+    # pylint: disable=too-few-public-methods
+    "Request body for setting the current edit session."
+    id_edit_session_persistent: str
 
 
 router = Router()
@@ -81,18 +90,26 @@ def register_post(
         if not (settings.DEBUG or settings.IS_UNITTEST):
             if len(CosmaeUser.objects.exclude(is_superuser=True)) == 0:
                 permission_group = CosmaeUser.COMMISSIONER
-        user = CosmaeUser.objects.create_user(
-            username=registration_info.username,
-            email=registration_info.email,
-            password=registration_info.password,
-            first_name=registration_info.names_personal,
-            id_persistent=uuid4(),
-            permission_group=permission_group,
-        )
-        if user.last_name and user.last_name != "":
-            user.last_name = registration_info.names_family
-        user.groups.set([Group.objects.get(name=str(CosmaeGroup.APPLICANT))])
-        user.save()
+        id_user = uuid4()
+        with transaction.atomic():
+            session = EditSessionDb.objects.create(
+                id_persistent=str(uuid4()),
+                id_owner_persistent=str(id_user),
+                name="Default Edit Session",
+            )
+            user = CosmaeUser.objects.create_user(
+                username=registration_info.username,
+                email=registration_info.email,
+                password=registration_info.password,
+                first_name=registration_info.names_personal,
+                id_persistent=id_user,
+                permission_group=permission_group,
+                edit_session=session,
+            )
+            if user.last_name and user.last_name != "":
+                user.last_name = registration_info.names_family
+            user.groups.set([Group.objects.get(name=str(CosmaeGroup.APPLICANT))])
+            user.save()
         return 200, user_db_to_login_response(user)
     except IntegrityError as exc:
         error_msg = exc.args[0]
@@ -103,6 +120,39 @@ def register_post(
         return 500, ApiError(msg="Could not create user.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not create user.")
+
+
+@router.post(
+    "/edit_session",
+    response={
+        200: EditSession,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def set_edit_session(request: HttpRequest, body: SetEditSessionRequest):
+    "API method for setting the current edit session of a user."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions")
+    try:
+        session = EditSessionDb.objects.filter(
+            id_persistent=body.id_edit_session_persistent
+        ).get()
+        if session.id_owner_persistent != user.id_persistent:
+            return 403, ApiError(msg="You do not own this session.")
+        user.set_current_edit_session(session)
+        return 200, edit_session_db_to_api(session)
+    except EditSessionDb.DoesNotExist:
+        return 404, ApiError(msg="Session does not exist.")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not set edit session")
 
 
 @router.post(
@@ -321,4 +371,5 @@ def user_db_to_login_response(user: CosmaeUser):
         email=user.email,
         tag_definition_list=tag_definitions,
         permission_group=permission_group_db_to_api[user.permission_group],
+        edit_session=edit_session_db_to_api(user.edit_session),
     )

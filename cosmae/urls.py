@@ -12,6 +12,7 @@ from ninja.responses import NinjaJSONEncoder
 
 from cosmae.comments.api import router as comment_router
 from cosmae.contribution.api import router as contribution_router
+from cosmae.edit_session.api import router as edit_session_router
 from cosmae.management import router as management_router
 from cosmae.merge_request.router import router
 from cosmae.person.api import router as person_router
@@ -43,6 +44,7 @@ ninja_api.add_router("contributions", contribution_router, auth=cosmae_auth)
 ninja_api.add_router("merge_requests", router, auth=cosmae_auth)
 ninja_api.add_router("manage", management_router, auth=cosmae_auth)
 ninja_api.add_router("comments", comment_router, auth=cosmae_auth)
+ninja_api.add_router("edit_sessions", edit_session_router, auth=cosmae_auth)
 
 
 class LoginRequest(Schema):

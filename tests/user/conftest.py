@@ -1,7 +1,9 @@
 # pylint: disable=missing-module-docstring,missing-function-docstring,no-member,redefined-outer-name
 import pytest
 
+import tests.edit_session.common as cs
 import tests.user.common as c
+from cosmae.edit_session.models_django import EditSession
 from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
 
 
@@ -72,3 +74,12 @@ def user_with_tag_defs(
     ]
     user.save()
     return user
+
+
+@pytest.fixture()
+def other_session(user):
+    return EditSession.create(
+        id_persistent=cs.id_session_user_changed,
+        name=cs.name_session_user_changed,
+        user=user,
+    )

@@ -33,6 +33,9 @@ class CosmaeUser(AbstractUser):
     permission_group = models.TextField(
         choices=PERMISSION_GROUP_CHOICES, default=APPLICANT, max_length=4
     )
+    edit_session = models.ForeignKey(
+        "editsession", null=True, on_delete=models.RESTRICT
+    )
 
     @classmethod
     def search_username(cls, search_term: str):
@@ -88,6 +91,11 @@ class CosmaeUser(AbstractUser):
     def has_elevated_rights(self):
         "Method for checking if a user has elevated rights."
         return self.permission_group in {CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER}
+
+    def set_current_edit_session(self, edit_session):
+        "Set the current edit session for a user."
+        self.edit_session = edit_session
+        self.save()
 
 
 def timestamp():

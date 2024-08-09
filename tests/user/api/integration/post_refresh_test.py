@@ -1,4 +1,5 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,duplicate-code
+import tests.edit_session.common as cs
 import tests.user.common as c
 from tests.user.api.integration.requests import get_refresh
 
@@ -21,4 +22,16 @@ def test_logged_in(auth_server):
         "tag_definition_list": [],
         "id_persistent": c.test_uuid,
         "permission_group": "CONTRIBUTOR",
+        "edit_session": {
+            "id_persistent": cs.id_session_user,
+            "name": cs.name_session_user,
+            "owner": {"type_participant": "INTERNAL", "id_participant": c.test_uuid},
+            "participant_list": [
+                {
+                    "id_participant": c.test_uuid,
+                    "type_participant": "INTERNAL",
+                    "name_participant": c.test_username,
+                }
+            ],
+        },
     }

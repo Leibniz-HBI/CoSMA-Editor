@@ -7,10 +7,12 @@ from django.conf import settings
 from django.db import IntegrityError
 from pytest_redis import factories
 
+from tests.edit_session import common as cs
 from tests.entity import common as ce
 from tests.tag import common as ct
 from tests.user import common as cu
 from tests.user.api.integration.requests import post_login, post_register
+from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
 from cosmae.management.models_django import ConfigValue
@@ -202,6 +204,11 @@ def auth_server_commissioner(live_server, user_commissioner):
 
 @pytest.fixture
 def user(db):  # pylint: disable=unused-argument
+    session = EditSession.objects.create(
+        id_persistent=cs.id_session_user,
+        id_owner_persistent=cu.test_uuid,
+        name=cs.name_session_user,
+    )
     try:
         user = CosmaeUser.objects.create_user(
             username=cu.test_username,
@@ -210,6 +217,13 @@ def user(db):  # pylint: disable=unused-argument
             first_name=cu.test_names_personal,
             id_persistent=cu.test_uuid,
             permission_group=CosmaeUser.CONTRIBUTOR,
+            edit_session=session,
+        )
+        EditSessionParticipant.add(
+            id_session_persistent=session.id_persistent,
+            type_participant=EditSessionParticipant.INTERNAL,
+            id_participant=user.id_persistent,
+            name_participant=user.username,
         )
         return user
     except IntegrityError:
@@ -219,12 +233,24 @@ def user(db):  # pylint: disable=unused-argument
 @pytest.fixture
 def user1(db):  # pylint: disable=unused-argument
     try:
+        session = EditSession.objects.create(
+            id_persistent=cs.id_session_user1,
+            id_owner_persistent=cu.test_uuid1,
+            name=cs.name_session_user1,
+        )
         user = CosmaeUser.objects.create_user(
             username=cu.test_username1,
             password=cu.test_password1,
             email=cu.test_email1,
             first_name=cu.test_names_personal1,
             id_persistent=cu.test_uuid1,
+            edit_session=session,
+        )
+        EditSessionParticipant.add(
+            id_session_persistent=session.id_persistent,
+            type_participant=EditSessionParticipant.INTERNAL,
+            id_participant=user.id_persistent,
+            name_participant=user.username,
         )
         return user
     except IntegrityError:
@@ -234,6 +260,11 @@ def user1(db):  # pylint: disable=unused-argument
 @pytest.fixture
 def user_commissioner(db):  # pylint: disable=unused-argument
     try:
+        session = EditSession.objects.create(
+            id_persistent=cs.id_session_commissioner,
+            id_owner_persistent=cu.test_uuid_commissioner,
+            name=cs.name_session_commissioner,
+        )
         user = CosmaeUser.objects.create_user(
             username=cu.test_username_commissioner,
             password=cu.test_password_commissioner,
@@ -241,6 +272,13 @@ def user_commissioner(db):  # pylint: disable=unused-argument
             first_name=cu.test_names_personal_commissioner,
             id_persistent=cu.test_uuid_commissioner,
             permission_group=CosmaeUser.COMMISSIONER,
+            edit_session=session,
+        )
+        EditSessionParticipant.add(
+            id_session_persistent=session.id_persistent,
+            type_participant=EditSessionParticipant.INTERNAL,
+            id_participant=user.id_persistent,
+            name_participant=user.username,
         )
         return user
     except IntegrityError:
@@ -252,6 +290,11 @@ def user_commissioner(db):  # pylint: disable=unused-argument
 @pytest.fixture
 def user_editor(db):  # pylint: disable=unused-argument
     try:
+        session = EditSession.objects.create(
+            id_persistent=cs.id_session_editor,
+            id_owner_persistent=cu.test_uuid_editor,
+            name=cs.name_session_editor,
+        )
         user = CosmaeUser.objects.create_user(
             username=cu.test_username_editor,
             password=cu.test_password_editor,
@@ -259,6 +302,13 @@ def user_editor(db):  # pylint: disable=unused-argument
             first_name=cu.test_names_personal_editor,
             id_persistent=cu.test_uuid_editor,
             permission_group=CosmaeUser.EDITOR,
+            edit_session=session,
+        )
+        EditSessionParticipant.add(
+            id_session_persistent=session.id_persistent,
+            type_participant=EditSessionParticipant.INTERNAL,
+            id_participant=user.id_persistent,
+            name_participant=user.username,
         )
         return user
     except IntegrityError:
@@ -269,11 +319,17 @@ def user_editor(db):  # pylint: disable=unused-argument
 
 @pytest.fixture
 def super_user(db):  # pylint: disable=unused-argument
+    session = EditSession.objects.create(
+        id_persistent=cs.id_session_super,
+        id_owner_persistent=cu.test_uuid_super,
+        name=cs.name_session_super,
+    )
     super_user = CosmaeUser.objects.create_superuser(
         email=cu.test_email_super,
         username=cu.test_username_super,
         password=cu.test_password,
         id_persistent=cu.test_uuid_super,
+        edit_session=session,
     )
     return super_user
 

@@ -92,6 +92,7 @@ def test_without_display_txt_but_relevant_tag_instance(
                 "permission_group": "APPLICANT",
                 "id_persistent": user1.id_persistent,
             },
+            "description": None,
             "curated": False,
             "hidden": False,
             "disabled": False,
@@ -182,6 +183,7 @@ def test_contribution(contribution_instance_without_display_txt, display_txt_ord
                 "id_persistent": cu.test_uuid1,
                 "permission_group": "APPLICANT",
             },
+            "description": None,
             "curated": False,
             "hidden": False,
             "disabled": False,
@@ -208,6 +210,7 @@ def test_db_to_dict(tag_def):
             "curated": False,
             "hidden": False,
             "disabled": True,
+            "description": None,
         },
         version_key="id",
     )

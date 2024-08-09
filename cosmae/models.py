@@ -8,6 +8,7 @@ from cosmae.contribution.tag_definition.models_django import (
     TagDefinitionContribution,
     TagInstanceContribution,
 )
+from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.management.models_django import ConfigValue
 from cosmae.merge_request.entity.models_django import (

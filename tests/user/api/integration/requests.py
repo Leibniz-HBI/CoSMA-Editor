@@ -64,3 +64,12 @@ def put_permission_group(url, id_user_persistent, permission_group, cookies=None
         cookies=cookies,
         timeout=900,
     )
+
+
+def post_edit_session(url, id_edit_session_persistent, cookies=None):
+    return requests.post(
+        url + "/cosmae/api/user/edit_session",
+        json={"id_edit_session_persistent": id_edit_session_persistent},
+        cookies=cookies,
+        timeout=900,
+    )

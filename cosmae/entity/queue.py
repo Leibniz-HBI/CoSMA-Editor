@@ -79,6 +79,7 @@ def tag_def_db_to_dict(tag_definition):
         "type": tag_definition.type,
         "owner": user_db_to_public_user_info_dict(tag_definition.owner),
         "curated": tag_definition.curated,
+        "description": tag_definition.description,
         "hidden": tag_definition.hidden,
         "disabled": tag_definition.disabled,
     }
