@@ -117,110 +117,133 @@ function ColumnTypeCreateFormBody(props: {
     children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }): JSX.Element {
     return (
-        <Form
-            noValidate
-            onSubmit={props.handleSubmit}
-            className="h-100 d-flex flex-column flex-grow-1 flex-shrink-1 mt-3"
-        >
-            <Row>
-                <Col>
-                    <FormField
-                        name="name"
-                        handleChange={props.handleChange}
-                        type="text"
-                        value={props.formValues.name}
-                        label="Name"
-                        error={props.formErrors.name}
-                        isTouched={props.touchedValues.name}
-                    />
-                </Col>
-            </Row>
-            <Row className="justify-content-between mb-2">
-                <Col xs={2}>
-                    {props.touchedValues.columnType && !!props.formErrors.columnType ? (
-                        <span className="invalid-feedback">Choose a type:</span>
-                    ) : (
-                        <span className="fs-6">Choose a type:</span>
-                    )}
-                </Col>
-                <Col xs={10}>
-                    <Row className="justify-content-center d-flex flex-wrap ms-4">
-                        <Col>
-                            <Form.Check
-                                inline
-                                type="radio"
-                                name="columnType"
-                                label="boolean"
-                                value={TagType.Inner}
-                                checked={props.formValues.columnType === TagType.Inner}
-                                onChange={props.handleChange}
-                                disabled={props.alreadyExists}
-                                isInvalid={
-                                    props.touchedValues.columnType &&
-                                    !!props.formErrors.columnType
-                                }
-                            />
-                        </Col>
-                        <Col>
-                            <Form.Check
-                                inline
-                                type="radio"
-                                label="string"
-                                name="columnType"
-                                value={TagType.String}
-                                checked={props.formValues.columnType === TagType.String}
-                                onChange={props.handleChange}
-                                disabled={props.alreadyExists}
-                                isInvalid={
-                                    props.touchedValues.columnType &&
-                                    !!props.formErrors.columnType
-                                }
-                            />
-                        </Col>
-                        <Col>
-                            <Form.Check
-                                inline
-                                type="radio"
-                                name="columnType"
-                                label="number"
-                                value={TagType.Float}
-                                checked={props.formValues.columnType === TagType.Float}
-                                onChange={props.handleChange}
-                                disabled={props.alreadyExists}
-                                isInvalid={
-                                    props.touchedValues.columnType &&
-                                    !!props.formErrors.columnType
-                                }
+        <Form noValidate onSubmit={props.handleSubmit} className="mt-3 d-contents">
+            <div className=" d-contents">
+                <Col className="d-contents">
+                    <Row className="overflow-hidden flex-shrink-0 flex-grow-0 ms-1 me-1">
+                        <Col className="align-self-center">
+                            <Row>
+                                <Col>
+                                    <FormField
+                                        name="name"
+                                        handleChange={props.handleChange}
+                                        type="text"
+                                        value={props.formValues.name}
+                                        label="Name"
+                                        error={props.formErrors.name}
+                                        isTouched={props.touchedValues.name}
+                                    />
+                                </Col>
+                            </Row>
+                            <Row className="mb-3">
+                                <Col xs={4} className="align-self-center">
+                                    {props.touchedValues.columnType &&
+                                    !!props.formErrors.columnType ? (
+                                        <span className="invalid-feedback">
+                                            Choose a type:
+                                        </span>
+                                    ) : (
+                                        <span className="fs-6">Choose a type:</span>
+                                    )}
+                                </Col>
+                                <Col xs={8} className="align-self-center">
+                                    <Row className="justify-content-center d-flex flex-nowrap">
+                                        <Col>
+                                            <Form.Check
+                                                inline
+                                                type="radio"
+                                                name="columnType"
+                                                label="boolean"
+                                                value={TagType.Inner}
+                                                checked={
+                                                    props.formValues.columnType ===
+                                                    TagType.Inner
+                                                }
+                                                onChange={props.handleChange}
+                                                disabled={props.alreadyExists}
+                                                isInvalid={
+                                                    props.touchedValues.columnType &&
+                                                    !!props.formErrors.columnType
+                                                }
+                                            />
+                                        </Col>
+                                        <Col>
+                                            <Form.Check
+                                                inline
+                                                type="radio"
+                                                label="string"
+                                                name="columnType"
+                                                value={TagType.String}
+                                                checked={
+                                                    props.formValues.columnType ===
+                                                    TagType.String
+                                                }
+                                                onChange={props.handleChange}
+                                                disabled={props.alreadyExists}
+                                                isInvalid={
+                                                    props.touchedValues.columnType &&
+                                                    !!props.formErrors.columnType
+                                                }
+                                            />
+                                        </Col>
+                                        <Col>
+                                            <Form.Check
+                                                inline
+                                                type="radio"
+                                                name="columnType"
+                                                label="number"
+                                                value={TagType.Float}
+                                                checked={
+                                                    props.formValues.columnType ===
+                                                    TagType.Float
+                                                }
+                                                onChange={props.handleChange}
+                                                disabled={props.alreadyExists}
+                                                isInvalid={
+                                                    props.touchedValues.columnType &&
+                                                    !!props.formErrors.columnType
+                                                }
+                                            />
+                                        </Col>
+                                    </Row>
+                                </Col>
+                            </Row>
+                            <FormField
+                                name="description"
+                                handleChange={props.handleChange}
+                                type="text"
+                                value={props.formValues.description}
+                                label="description"
+                                error={props.formErrors.description}
+                                isTouched={props.touchedValues.description}
+                                as="textarea"
+                                className="min-h-100px"
                             />
                         </Col>
                     </Row>
                 </Col>
-            </Row>
-            <FormField
-                name="description"
-                handleChange={props.handleChange}
-                type="text"
-                value={props.formValues.description}
-                label="description"
-                error={props.formErrors.description}
-                isTouched={props.touchedValues.description}
-                as="textarea"
-                className="min-h-100px"
-            />
-            <Row className="ms-1">
-                <span className="fst-italic fw-bold ps-0">
-                    Select parent from below
-                </span>
-            </Row>
-            <div className="overflow-hidden d-flex flex-column">
-                {props.children({
-                    setParent: props.setParent,
-                    selectedParent: props.formValues.parent,
-                    errors: props.formErrors
-                })}
+
+                <Col className="d-contents">
+                    <Row className="ms-1 flex-grow-0 flex-shrink-0">
+                        <span className="fst-italic fw-bold">
+                            Select parent from below
+                        </span>
+                    </Row>
+                    <div className="overflow-hidden d-contents">
+                        {props.children({
+                            setParent: props.setParent,
+                            selectedParent: props.formValues.parent,
+                            errors: props.formErrors
+                        })}
+                    </div>
+                </Col>
             </div>
-            <Row className="ms-0 me-0">
-                <Button type="submit">{props.alreadyExists ? 'Save' : 'Create'}</Button>
+            <Row className="pt-2 pb-1 ms-0 me-0 flex-grow-0 flex-shrink-0 justify-content-end">
+                <Col xs="auto">
+                    <Button type="submit">
+                        {props.alreadyExists ? 'Save' : 'Create'}
+                    </Button>
+                </Col>
             </Row>
         </Form>
     )

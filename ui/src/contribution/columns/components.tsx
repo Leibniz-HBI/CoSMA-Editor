@@ -245,7 +245,7 @@ export function ContributionColumnAssignmentForm({
                     </Button>
                 </Row>
             </div>
-            <Col xs="6">
+            <Col xs="6" className="h-90 mb-4">
                 <PreviewConnector
                     idContributionPersistent={idContributionPersistent}
                     idColumnPersistent={columnDefinition.idPersistent}
@@ -257,12 +257,13 @@ export function ContributionColumnAssignmentForm({
                 onHide={() => dispatch(setColumnDefinitionFormTab(false))}
                 data-testid="create-column-modal"
                 size="lg"
-                className="overflow-hidden text-dark"
+                className="overflow-hidden"
+                contentClassName="vh-95 d-flex flex-column bg-secondary flex-sm-wrap flex-md-nowrap"
             >
-                <Modal.Header closeButton>
+                <Modal.Header closeButton className="overflow-hidden text-dark">
                     <Modal.Title>Create a new tag</Modal.Title>
                 </Modal.Header>
-                <Modal.Body className="bg-light vh-85">
+                <Modal.Body className="bg-secondary d-contents">
                     <NewColumnModalBody />
                 </Modal.Body>
             </Modal>
@@ -461,14 +462,22 @@ export function PreviewComponent() {
         return <div />
     }
     return (
-        <Row>
-            <Col xs={6}>
-                <CosmaeCard header="Values Contributed by You">
+        <Row className="h-90 mb-4">
+            <Col xs={6} className="h-100">
+                <CosmaeCard
+                    className="h-100"
+                    header="Values Contributed by You"
+                    bodyClassName="h-100 d-flex flex-column"
+                >
                     <PreviewColumn values={preview.value.contributedValues} />
                 </CosmaeCard>
             </Col>
-            <Col xs={6}>
-                <CosmaeCard header="Values of Existing Tag">
+            <Col xs={6} className="h-100">
+                <CosmaeCard
+                    className="h-100"
+                    header="Values of Existing Tag"
+                    bodyClassName="h-100 d-flex flex-column"
+                >
                     <PreviewColumn values={preview.value.destinationValues} />
                 </CosmaeCard>
             </Col>
@@ -478,10 +487,12 @@ export function PreviewComponent() {
 
 export function PreviewColumn({ values }: { values: string[] }) {
     return (
-        <ul>
-            {values.map((val, idx) => (
-                <li key={idx}>{val}</li>
-            ))}
-        </ul>
+        <div className="overflow-y-scroll scroll-gutter flex-grow-1 flex-shrink-1">
+            <ul className="">
+                {values.map((val, idx) => (
+                    <li key={idx}>{val}</li>
+                ))}
+            </ul>
+        </div>
     )
 }

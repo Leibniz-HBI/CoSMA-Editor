@@ -39,7 +39,7 @@ export function CosmaeRoot() {
     const dispatch: AppDispatch = useDispatch()
     return (
         <>
-            <Row className="flex-grow-1 m-0 h-100">
+            <Row className="m-0 h-100">
                 <Col className="ps-0 pe-0 h-100">
                     <div className="cosmae-page-container">
                         <Navbar expand="lg" className="bg-primary flex-shrink-0 mb-3">
@@ -86,7 +86,7 @@ export function CosmaeRoot() {
                                 </Navbar.Collapse>
                             </Container>
                         </Navbar>
-                        <div className="cosmae-page-body flex-grow-1 flex-basis-0 flex-fill">
+                        <div className="d-contents">
                             <Outlet />
                         </div>
                     </div>

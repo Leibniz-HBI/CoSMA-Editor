@@ -41,26 +41,28 @@ import { CommentHistoryAndForm } from '../../comments/components'
 export function MergeRequestConflictView() {
     const idMergeRequestPersistent = useLoaderData() as string
     return (
-        <TabView
-            tabList={[
-                {
-                    name: 'Discuss',
-                    component: (
-                        <CommentHistoryAndForm
-                            idPersistent={idMergeRequestPersistent}
-                        />
-                    )
-                },
-                {
-                    name: 'Resolve',
-                    component: (
-                        <MergeRequestConflictResolutionView
-                            idMergeRequestPersistent={idMergeRequestPersistent}
-                        />
-                    )
-                }
-            ]}
-        />
+        <div className="d-contents">
+            <TabView
+                tabList={[
+                    {
+                        name: 'Discuss',
+                        component: (
+                            <CommentHistoryAndForm
+                                idPersistent={idMergeRequestPersistent}
+                            />
+                        )
+                    },
+                    {
+                        name: 'Resolve',
+                        component: (
+                            <MergeRequestConflictResolutionView
+                                idMergeRequestPersistent={idMergeRequestPersistent}
+                            />
+                        )
+                    }
+                ]}
+            />
+        </div>
     )
 }
 export function MergeRequestConflictResolutionView({
@@ -113,63 +115,62 @@ export function MergeRequestConflictResolutionView({
         return CosmaeLoading()
     }
     return (
-        <Row className="h-100">
-            <Col className="h-100 overflow-hidden d-flex flex-column ps-5 pe-5">
-                <Row key="merge-button-row">
-                    <Col xs="auto">
-                        <RemoteTriggerButton
-                            label="Apply Resolutions to Destination"
-                            onClick={() =>
-                                dispatch(startMerge(idMergeRequestPersistent))
-                            }
-                            isLoading={startMergeValue.value}
-                        />
-                    </Col>
-                    <Col>
-                        <MergeRequestListItemBody
-                            mergeRequest={conflictsByCategoryValue.mergeRequest}
-                        />
-                    </Col>
-                    <OverlayTrigger
-                        overlay={
-                            <Tooltip id="disable-origin-on-merge-tooltip">
-                                <span>
-                                    When this toggle is enabled, the origin tag
-                                    definition, marked with
-                                </span>
-                                <span> </span>
-                                <span>
-                                    <ArrowLeftCircle />
-                                </span>
-                                <span> </span>
-                                <span>
-                                    will be disabled. I.e., the tag definition will not
-                                    appear anymore in the the tag definition explorer
-                                    but is still kept in the history.
-                                </span>
-                            </Tooltip>
-                        }
-                        placement="left"
-                    >
-                        <Col>
-                            <DisableOriginOnMergeToggle
-                                idMergeRequestPersistent={
-                                    conflictsByCategoryValue.mergeRequest.idPersistent
-                                }
-                            />
-                        </Col>
-                    </OverlayTrigger>
-                </Row>
-                <Row>
-                    <MergeRequestConflictProgressBar
-                        resolvedCount={resolvedCount}
-                        conflictsCount={conflictsCount}
+        <Col className="overflow-hidden d-contents">
+            <Row key="merge-button-row" className="ms-2 me-2 flex-grow-0 flex-shrink-1">
+                <Col xs="auto">
+                    <RemoteTriggerButton
+                        label="Apply Resolutions to Destination"
+                        onClick={() => dispatch(startMerge(idMergeRequestPersistent))}
+                        isLoading={startMergeValue.value}
                     />
-                </Row>
-                <Row
-                    className="mt-2 h-100 overflow-y-scroll flex-basis-0 flex-grow-1"
-                    key="conflicts-row"
+                </Col>
+                <Col>
+                    <MergeRequestListItemBody
+                        mergeRequest={conflictsByCategoryValue.mergeRequest}
+                    />
+                </Col>
+                <OverlayTrigger
+                    overlay={
+                        <Tooltip id="disable-origin-on-merge-tooltip">
+                            <span>
+                                When this toggle is enabled, the origin tag definition,
+                                marked with
+                            </span>
+                            <span> </span>
+                            <span>
+                                <ArrowLeftCircle />
+                            </span>
+                            <span> </span>
+                            <span>
+                                will be disabled. I.e., the tag definition will not
+                                appear anymore in the the tag definition explorer but is
+                                still kept in the history.
+                            </span>
+                        </Tooltip>
+                    }
+                    placement="left"
                 >
+                    <Col>
+                        <DisableOriginOnMergeToggle
+                            idMergeRequestPersistent={
+                                conflictsByCategoryValue.mergeRequest.idPersistent
+                            }
+                        />
+                    </Col>
+                </OverlayTrigger>
+            </Row>
+            <Row className="ms-2 me-2 flex-grow-0 flex-shrink-0">
+                <MergeRequestConflictProgressBar
+                    resolvedCount={resolvedCount}
+                    conflictsCount={conflictsCount}
+                />
+            </Row>
+            <Row
+                className="ms-4 me-4 mt-2 overflow-y-auto flex-shrink-1 flex-grow-1 scroll-gutter"
+                key="conflicts-row"
+            >
+                <Col xs={0} md={2} />
+                <Col>
                     <Accordion defaultActiveKey={['0', '1']} alwaysOpen={true}>
                         {conflictsByCategoryValue.updated.length > 0 && (
                             <Accordion.Item eventKey="0">
@@ -221,9 +222,10 @@ export function MergeRequestConflictResolutionView({
                             </Accordion.Body>
                         </Accordion.Item>
                     </Accordion>
-                </Row>
-            </Col>
-        </Row>
+                </Col>
+                <Col xs={0} md={2} />
+            </Row>
+        </Col>
     )
 }
 

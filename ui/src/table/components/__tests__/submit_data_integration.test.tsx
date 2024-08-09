@@ -38,9 +38,18 @@ import { RemoteDataTable } from '../table'
 import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { FormField } from '../../../util/form'
+import {
+    EditSessionParticipantType,
+    EditSessionState,
+    newEditSession,
+    newEditSessionParticipant,
+    newEditSessionState
+} from '../../../session/state'
 import { GridCellKind, Item } from '@glideapps/glide-data-grid'
 import userEvent from '@testing-library/user-event'
 import { debounce } from 'debounce'
+import { newRemote } from '../../../util/state'
+import { editSessionReducer } from '../../../session/slice'
 
 const debounced = debounce(
     (changeCallback: (item: Item, value: string) => void, item: Item, value: string) =>
@@ -409,22 +418,6 @@ const test_person_rsp_1 = {
     disabled: false
 }
 
-const entities_test = [
-    newEntity({
-        idPersistent: idPersistent0,
-        displayTxt: 'test display txt 0',
-        displayTxtDetails: 'display_txt_detail',
-        version: 0,
-        disabled: false
-    }),
-    newEntity({
-        idPersistent: idPersistent1,
-        displayTxt: 'test display txt 1',
-        displayTxtDetails: 'display_txt_detail',
-        version: 1,
-        disabled: false
-    })
-]
 const columnNameTest = 'column name test'
 const idTagDefPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
@@ -500,6 +493,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         table: TableState
         tableSelection: TableSelectionState
         user: UserState
+        editSession: EditSessionState
     }
 }
 
@@ -518,6 +512,21 @@ export function renderWithProviders(
                     namesPersonal: 'names personal',
                     columns: [tagDefTest]
                 })
+            }),
+            editSession: newEditSessionState({
+                currentEditSession: newRemote(
+                    newEditSession({
+                        idPersistent: 'id-session-test',
+                        name: 'edit session for tests',
+                        owner: newEditSessionParticipant({
+                            type: EditSessionParticipantType.internal,
+                            name: 'edit session owner test',
+                            id: idUserTest
+                        }),
+                        participantList: [],
+                        participantMap: {}
+                    })
+                )
             })
         },
         ...renderOptions
@@ -528,7 +537,8 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
-            user: userSlice.reducer
+            user: userSlice.reducer,
+            editSession: editSessionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

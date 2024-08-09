@@ -102,7 +102,7 @@ export function CreateTabBody({
     existingTagDefinition?: TagDefinition
 }) {
     return (
-        <div className="ps-3 pe-3 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1 h-100">
+        <div className="d-contents overflow-hidden">
             <TagCreateForm existingTagDefinition={existingTagDefinition}>
                 {(columnTypeCreateFormProps: ColumnTypeCreateFormProps) => (
                     <ColumnSelector
@@ -146,7 +146,7 @@ function ShowTabBody({
     hideColumnDataCallback: (columnDefinition: TagDefinition) => void
 }) {
     return (
-        <div className="ps-2 pe-2 d-flex flex-column overflow-hidden flex-grow-1 flex-shrink-1 h-100">
+        <div className="ps-2 pe-2 d-contents overflow-hidden">
             <ColumnSelector
                 additionalEntries={additionalEntries}
                 mkTailElement={(columnDefinition: TagDefinition) => {

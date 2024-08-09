@@ -37,6 +37,7 @@ import { useEffect } from 'react'
 import { CommentForm, CommentsHistory } from '../../comments/components'
 import { justificationColumnId } from '../state'
 import { clearSelection } from '../selection/slice'
+import { ColumnSelector } from '../../column_menu/components/selection'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -109,14 +110,15 @@ export function ColumnModal({
             onHide={() => dispatch(hideColumnAddMenu())}
             size="xl"
             key="column-menu-modal"
-            className="h-100 overflow-hidden"
+            className="overflow-hidden"
+            contentClassName="vh-95 d-flex flex-column bg-secondary flex-sm-wrap flex-md-nowrap"
         >
-            <Modal.Header closeButton>
+            <Modal.Header closeButton className="flex-grow-0 flex-shrink-0 bg-white">
                 <Modal.Title className="text-dark">
                     Show Additional Tag Values
                 </Modal.Title>
             </Modal.Header>
-            <Modal.Body className="bg-secondary vh-85">
+            <Modal.Body className="bg-secondary d-contents">
                 <ColumnMenu
                     additionalEntries={[
                         { idPersistent: justificationColumnId, name: 'Justification' }

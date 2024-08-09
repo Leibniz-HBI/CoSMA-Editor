@@ -66,6 +66,7 @@ import { createCellContentCallback } from '../cell'
 import { AddEntityButton } from './buttons'
 import { SearchButton } from './buttons'
 import { DownloadButton } from './buttons'
+import { EditSessionButton } from '../../session/components'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -150,10 +151,16 @@ export function RemoteDataTable() {
                             </Col>
                         </Row>
                     </Col>
+                    <Col xs="auto" className="pe-0">
+                        <EditSessionButton
+                            popoverPlacement="bottom"
+                            tooltipPlacement="left"
+                        />
+                    </Col>
                     <Col xs="auto">
                         <SearchButton dispatch={dispatch} />
                     </Col>
-                    <Col xs="auto" className="pe-0">
+                    <Col xs="auto">
                         <DownloadButton
                             entities={entities}
                             columnStates={columnStates}

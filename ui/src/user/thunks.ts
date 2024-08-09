@@ -23,6 +23,8 @@ import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
 import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { justificationColumnId } from '../table/state'
+import { setCurrentEditSession } from '../session/slice'
+import { parseEditSessionFromApi } from '../session/thunks'
 
 export function login(userName: string, password: string): ThunkWithFetch<void> {
     return async (dispatch: AppDispatch, _getState, fetch) => {
@@ -45,6 +47,11 @@ export function login(userName: string, password: string): ThunkWithFetch<void> 
                     dispatch(addError(errorMessageFromApi(json)))
                 } else {
                     dispatch(loginSuccess(parseUserInfoFromJson(json)))
+                    dispatch(
+                        setCurrentEditSession(
+                            parseEditSessionFromApi(json['edit_session'])
+                        )
+                    )
                 }
             } else {
                 const json = await rsp.json()
@@ -85,6 +92,11 @@ export function refresh({
                 const userInfo = parseUserInfoFromJson(json)
                 if (withDispatch) {
                     dispatch(refreshSuccess(userInfo))
+                    dispatch(
+                        setCurrentEditSession(
+                            parseEditSessionFromApi(json['edit_session'])
+                        )
+                    )
                 }
                 return userInfo
             } else {
@@ -94,6 +106,29 @@ export function refresh({
             dispatch(refreshDenied())
         }
         return undefined
+    }
+}
+
+export function setCurrentEditSessionThunk(
+    id_edit_session_persistent: string
+): ThunkWithFetch<boolean> {
+    return async (dispatch, _getState, fetch) => {
+        try {
+            const rsp = await fetch(config.api_path + '/user/edit_session', {
+                credentials: 'include',
+                method: 'POST',
+                body: JSON.stringify({ id_edit_session_persistent })
+            })
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                dispatch(setCurrentEditSession(parseEditSessionFromApi(json)))
+                return true
+            }
+            dispatch(addError(errorMessageFromApi(json)))
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+        }
+        return false
     }
 }
 

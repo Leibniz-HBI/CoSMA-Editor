@@ -15,9 +15,22 @@ import {
     NotificationType,
     notificationReducer
 } from '../../../util/notification/slice'
+import {
+    EditSessionParticipantType,
+    EditSessionState,
+    newEditSession,
+    newEditSessionParticipant,
+    newEditSessionState
+} from '../../../session/state'
 import { act } from 'react-dom/test-utils'
+import { selectIdCurrentEditSessionPersistent } from '../../../session/selectors'
+import { editSessionReducer } from '../../../session/slice'
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: { user: UserState; notification: NotificationManager }
+    preloadedState?: {
+        user: UserState
+        notification: NotificationManager
+        editSession: EditSessionState
+    }
 }
 
 const idErrorTest = 'id-error-test'
@@ -33,13 +46,18 @@ export function renderWithProviders(
     {
         preloadedState = {
             user: newUserState({}),
-            notification: { notificationList: [], notificationMap: {} }
+            notification: { notificationList: [], notificationMap: {} },
+            editSession: newEditSessionState({})
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
 ) {
     const store = configureStore({
-        reducer: { user: userReducer, notification: notificationReducer },
+        reducer: {
+            user: userReducer,
+            notification: notificationReducer,
+            editSession: editSessionReducer
+        },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
         preloadedState
@@ -72,6 +90,8 @@ const passwordTest = 'pA$sw0rd-1234'
 const namesPersonalTest = 'names personal test'
 const testError = 'test error message'
 const idPersistentTest = 'id-user-test'
+const idEditSession = 'id-session-test'
+const nameEditSession = 'edit session for tests'
 const userInfoApi = {
     username: userNameTest,
     names_personal: namesPersonalTest,
@@ -79,7 +99,17 @@ const userInfoApi = {
     names_family: '',
     tag_definition_list: [],
     id_persistent: idPersistentTest,
-    permission_group: 'CONTRIBUTOR'
+    permission_group: 'CONTRIBUTOR',
+    edit_session: {
+        id_persistent: idEditSession,
+        name: nameEditSession,
+        owner: {
+            id_participant: idPersistentTest,
+            name_participant: userNameTest,
+            type_participant: 'INTERNAL'
+        },
+        participant_list: []
+    }
 }
 const userInfoUi = newUserState({
     userInfo: {
@@ -117,6 +147,23 @@ describe('login', () => {
             expect(await screen.getByText('You are logged in')).toBeDefined()
         })
         expect(store.getState().user).toEqual(userInfoUi)
+        expect(store.getState().editSession).toEqual(
+            newEditSessionState({
+                currentEditSession: newRemote(
+                    newEditSession({
+                        idPersistent: idEditSession,
+                        name: nameEditSession,
+                        owner: newEditSessionParticipant({
+                            type: EditSessionParticipantType.internal,
+                            name: userNameTest,
+                            id: idPersistentTest
+                        }),
+                        participantList: [],
+                        participantMap: {}
+                    })
+                )
+            })
+        )
     })
     test('successful login', async () => {
         const fetchMock = jest.fn()

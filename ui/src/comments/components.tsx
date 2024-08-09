@@ -20,15 +20,15 @@ export function CommentHistoryAndForm({ idPersistent }: { idPersistent: string }
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idPersistent])
     return (
-        <Row className="h-90 overflow-hidden pb-4">
+        <Row className="ms-4 me-3 overflow-y-auto scroll-gutter flex-grow-1 flex-shrink-1">
             <Col xs={0} md={2} />
-            <Col className="h-100 ms-4 me-3 overflow-y-auto scroll-gutter d-flex flex-column">
-                <Row>
+            <Col>
+                <div>
                     <CommentsHistory comments={comments} />
-                </Row>
-                <Row className="flex-shrink-0 flex-grow-0">
+                </div>
+                <div>
                     <CommentForm submitComment={submitCommentCallback} />
-                </Row>
+                </div>
             </Col>
             <Col xs={0} md={2} />
         </Row>
@@ -70,8 +70,9 @@ export function CommentElement({ comment }: { comment: Comment }) {
                             </Col>
                         </Row>
                     }
+                    bodyClassName="d-flex"
                 >
-                    <div className="ms-2 me-2">{comment.content}</div>
+                    <div className="ps-2 pe-2 bg-light">{comment.content}</div>
                 </CosmaeCard>
             </Col>
         </Row>

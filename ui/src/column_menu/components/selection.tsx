@@ -105,35 +105,35 @@ export function ColumnSelector({
     //     )
     // }
     return (
-        <>
-            <Col className="overflow-y-hidden pb-3 d-flex flex-column scroll-gutter">
-                {/* <Row className="row mt-2 flex-grow-0 flex-shrink-0">
+        <Col className="overflow-y-hidden pb-3 d-contents">
+            {/* <Row className="row mt-2 flex-grow-0 flex-shrink-0">
                 <Col>
                     <Form.FloatingLabel label="Search">
                         <Form.Control type="text" name="name" placeholder="Search" />
                     </Form.FloatingLabel>
                 </Col>
             </Row> */}
+            <Row className="flex-grow-0 flex-shrink-0">
                 <NoParentEntry changeParentCallback={changeParentCallback} />
-                <Row className="overflow-y-scroll flex-grow-1 flex-shrink-1 pe-2">
-                    <ListGroup className="pe-0 mb-1">
-                        {mkListItems({
-                            tagSelectionEntries,
-                            level: 0,
-                            path: [],
-                            mkTailElement,
-                            toggleExpansionCallback,
-                            startEditCallback: setEditTagDefinitionCallback,
-                            additionalEntries,
-                            changeParentCallback,
-                            dragTagDefinitionStartCallback,
-                            dragTagDefinitionEndCallback,
-                            allowEdit
-                        })}
-                    </ListGroup>
-                </Row>
-            </Col>
-        </>
+            </Row>
+            <Row className="overflow-y-auto flex-grow-1 flex-shrink-1 ms-2 me-1 scroll-gutter">
+                <ListGroup>
+                    {mkListItems({
+                        tagSelectionEntries,
+                        level: 0,
+                        path: [],
+                        mkTailElement,
+                        toggleExpansionCallback,
+                        startEditCallback: setEditTagDefinitionCallback,
+                        additionalEntries,
+                        changeParentCallback,
+                        dragTagDefinitionStartCallback,
+                        dragTagDefinitionEndCallback,
+                        allowEdit
+                    })}
+                </ListGroup>
+            </Row>
+        </Col>
     )
 }
 
@@ -146,12 +146,13 @@ export function EditModal() {
             show={editTagDefinition.value !== undefined}
             size="xl"
             onHide={closeEditCallback}
-            className="h-100 overflow-hidden"
+            className="overflow-hidden"
+            contentClassName="vh-95 d-flex flex-column bg-secondary flex-sm-wrap flex-md-nowrap"
         >
-            <Modal.Header closeButton={true}>
+            <Modal.Header closeButton className="flex-grow-0 flex-shrink-0 bg-white">
                 <div className="modal-title h4">Edit Tag Definition</div>
             </Modal.Header>
-            <Modal.Body className="bg-light vh-85 z-3000">
+            <Modal.Body className="bg-secondary d-contents">
                 {<CreateTabBody existingTagDefinition={editTagDefinition.value} />}
             </Modal.Body>
         </Modal>

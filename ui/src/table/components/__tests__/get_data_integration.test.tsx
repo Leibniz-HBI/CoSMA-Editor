@@ -37,6 +37,14 @@ import { RemoteDataTable } from '../table'
 import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { newRemote } from '../../../util/state'
+import {
+    EditSessionParticipantType,
+    EditSessionState,
+    newEditSession,
+    newEditSessionParticipant,
+    newEditSessionState
+} from '../../../session/state'
+import { editSessionReducer } from '../../../session/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -439,6 +447,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         table: TableState
         tableSelection: TableSelectionState
         user: UserState
+        editSession: EditSessionState
     }
 }
 
@@ -457,6 +466,21 @@ export function renderWithProviders(
                     namesPersonal: 'names personal',
                     columns: [tagDefTest]
                 })
+            }),
+            editSession: newEditSessionState({
+                currentEditSession: newRemote(
+                    newEditSession({
+                        idPersistent: 'id-session-test',
+                        name: 'edit session for tests',
+                        owner: newEditSessionParticipant({
+                            type: EditSessionParticipantType.internal,
+                            name: 'edit session owner test',
+                            id: idUserTest
+                        }),
+                        participantList: [],
+                        participantMap: {}
+                    })
+                )
             })
         },
         ...renderOptions
@@ -467,7 +491,8 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
-            user: userSlice.reducer
+            user: userSlice.reducer,
+            editSession: editSessionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

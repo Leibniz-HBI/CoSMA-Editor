@@ -52,6 +52,14 @@ import {
     newEntityMergeRequestConflictsState
 } from '../../../merge_request/entity/conflicts/state'
 import { entityMergeRequestConflictSlice } from '../../../merge_request/entity/conflicts/slice'
+import {
+    EditSessionParticipantType,
+    EditSessionState,
+    newEditSession,
+    newEditSessionParticipant,
+    newEditSessionState
+} from '../../../session/state'
+import { editSessionReducer } from '../../../session/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -81,6 +89,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tagSelection: TagSelectionState
         entityMergeRequests: EntityMergeRequestState
         entityMergeRequestConflicts: EntityMergeRequestConflictsState
+        editSession: EditSessionState
     }
 }
 
@@ -102,6 +111,21 @@ export function renderWithProviders(
                     namesPersonal: 'names personal',
                     columns: [tagDefTest]
                 })
+            }),
+            editSession: newEditSessionState({
+                currentEditSession: newRemote(
+                    newEditSession({
+                        idPersistent: 'id-session-test',
+                        name: 'edit session for tests',
+                        owner: newEditSessionParticipant({
+                            type: EditSessionParticipantType.internal,
+                            name: 'edit session owner test',
+                            id: idUserTest
+                        }),
+                        participantList: [],
+                        participantMap: {}
+                    })
+                )
             })
         },
         ...renderOptions
@@ -115,7 +139,8 @@ export function renderWithProviders(
             user: userSlice.reducer,
             tagSelection: tagSelectionSlice.reducer,
             entityMergeRequests: entityMergeRequestsReducer,
-            entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer
+            entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
+            editSession: editSessionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
