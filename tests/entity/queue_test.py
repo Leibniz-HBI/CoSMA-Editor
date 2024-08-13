@@ -40,7 +40,7 @@ def entity_without_display_txt(db, user):
     entity, _ = Entity.change_or_create_versioned(
         id_persistent=id_persistent_entity_no_display_txt,
         time_edit=time_edit_entity_no_display_txt,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     entity.save()
     return entity
@@ -65,7 +65,7 @@ def instance_tag_def_1(entity_without_display_txt, tag_def1):
         id_entity_persistent=entity_without_display_txt.id_persistent,
         id_tag_definition_persistent=tag_def1.id_persistent,
         value=value_instance_tag_def_1,
-        written_by_id_persistent=tag_def1.owner.id_persistent,
+        written_by_session=tag_def1.owner.edit_session,
     )
     instance.save()
     return instance
@@ -147,7 +147,7 @@ def contribution_instance_without_display_txt(
         time_edit=time_edit_entity_contribution_no_display_txt,
         version=entity_without_display_txt.id,
         contribution_candidate_id=contribution.id_persistent,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     entity.save()
     TagMergeRequest.objects.create(  # pylint: disable=no-member

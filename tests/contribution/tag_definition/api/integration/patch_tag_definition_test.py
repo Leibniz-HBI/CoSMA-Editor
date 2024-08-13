@@ -208,7 +208,7 @@ def test_patch_id_existing(auth_server, user):
         type=TagDefinition.INNER,
         id_persistent=new_id_existing,
         time_edit=datetime.now(),
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
     rsp = req.patch_tag_definition(

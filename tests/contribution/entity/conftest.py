@@ -17,7 +17,7 @@ def entity_duplicate(contribution_candidate):
         display_txt=c.display_txt_test_entity_duplicate,
         time_edit=c.time_edit_test_duplicate,
         contribution_candidate=contribution_candidate,
-        written_by=contribution_candidate.created_by.id_persistent,
+        written_by_session=contribution_candidate.created_by.edit_session,
         approved_by=contribution_candidate.created_by.id_persistent,
     )
     entity_duplicate.save()
@@ -61,7 +61,7 @@ def tag_instances_match(tag_def_curated, tag_def1):
             id_tag_definition_persistent=tag_def_curated.id_persistent,
             time_edit=c.time_edit_tag_instance_match_destination,
             value=value,
-            written_by=tag_def1.owner.id_persistent,
+            written_by_session=tag_def1.owner.edit_session,
             approved_by=tag_def1.owner.id_persistent,
         )
     )
@@ -72,7 +72,7 @@ def tag_instances_match(tag_def_curated, tag_def1):
             id_tag_definition_persistent=tag_def1.id_persistent,
             time_edit=c.time_edit_tag_instance_match_origin,
             value=value,
-            written_by=tag_def1.owner.id_persistent,
+            written_by_session=tag_def1.owner.edit_session,
             approved_by=tag_def1.owner.id_persistent,
         )
     )

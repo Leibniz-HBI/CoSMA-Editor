@@ -332,7 +332,7 @@ def tag_instance_api_to_db(tag_api: TagInstancePost, user: CosmaeUser, time: dat
         id_persistent=persistent_id,
         id_entity_persistent=tag_api.id_entity_persistent,
         id_tag_definition_persistent=tag_api.id_tag_definition_persistent,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
         value=tag_api.value,
         time_edit=time,
         version=tag_api.version,

@@ -1,9 +1,11 @@
 "Abstract ORM for versioned resources"
+
 from datetime import datetime
 from typing import Optional
 
 from django.db import models
 
+from cosmae.edit_session.models_django import EditSession
 from cosmae.exception import (
     DbObjectExistsException,
     EntityUpdatedException,
@@ -14,11 +16,14 @@ from cosmae.exception import (
 
 class Versioned(models.Model):
     "Abstract ORM for versioned models"
+
     id_persistent = models.CharField(max_length=36)
     previous_version = models.ForeignKey(
         "self", blank=True, null=True, on_delete=models.PROTECT, unique=True
     )
-    written_by = models.CharField(max_length=36)
+    written_by_session = models.ForeignKey(
+        "editsession", null=True, related_name="edits+", on_delete=models.PROTECT
+    )
     approved_by = models.CharField(max_length=36, null=True)
     time_edit = models.DateTimeField()
     hidden = models.BooleanField(default=False)
@@ -40,6 +45,7 @@ class Versioned(models.Model):
 
     class Meta:
         "Meta class for versioned ORM"
+
         # pylint: disable=too-few-public-methods
         abstract = True
 
@@ -66,7 +72,7 @@ class HistoryMixin:
         cls,
         id_persistent: str,
         time_edit: datetime,
-        written_by_id_persistent: str,
+        written_by_session: EditSession,
         approved_by_id_persistent: Optional[str] = None,
         version: Optional[int] = None,
         skip_write_check: bool = False,
@@ -111,7 +117,7 @@ class HistoryMixin:
             new_values["previous_version_id"] = most_recent.id
         new_values["time_edit"] = time_edit
         new_values["approved_by"] = approved_by_id_persistent
-        new_values["written_by"] = written_by_id_persistent
+        new_values["written_by_session_id"] = written_by_session.id_persistent
         new = cls(
             # special handling for relation to previous version necessary
             **new_values,
@@ -121,7 +127,7 @@ class HistoryMixin:
             if for_write_check is None:
                 for_write_check = new
             can_write = for_write_check.has_write_access(
-                written_by_id_persistent
+                written_by_session.id_owner_persistent
             ) or for_write_check.has_write_access(approved_by_id_persistent)
             if not can_write:
                 raise PermissionException(id_persistent)

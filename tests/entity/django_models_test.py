@@ -1,5 +1,4 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
-from datetime import datetime
 
 import pytest
 
@@ -7,6 +6,7 @@ import tests.entity.common as c
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity
 from cosmae.exception import DbObjectExistsException, EntityUpdatedException
+from cosmae.util import timestamp
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def updated_entity0(entity0, user):
     return Entity.change_or_create_versioned(
         id_persistent=c.id_persistent_test_0,
         time_edit=c.time_edit_test_1,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
         version=entity0.id,
         display_txt="changed display text",
     )[0]
@@ -36,7 +36,7 @@ def test_creation(user):
         display_txt="new_txt",
         time_edit=c.time_edit_test_1,
         version=None,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     assert do_write
     assert created.previous_version is None
@@ -52,7 +52,7 @@ def test_update(entity0, user):
         display_txt="new_txt",
         time_edit=c.time_edit_test_1,
         version=entity0.id,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     assert do_write
     assert updated.previous_version == entity0
@@ -68,7 +68,7 @@ def test_no_update_on_same(entity0, user):
         display_txt=entity0.display_txt,
         time_edit=c.time_edit_test_1,
         version=entity0.id,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     assert not do_write
     assert entity0 == updated
@@ -82,7 +82,7 @@ def test_no_update_without_version(entity0, user):
             id_persistent=entity0.id_persistent,
             display_txt="new_txt",
             time_edit=c.time_edit_test_1,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
         )
 
 
@@ -96,7 +96,7 @@ def test_no_update_on_older_version(entity0, updated_entity0, user):
             display_txt="new_txt",
             time_edit=c.time_edit_test_1,
             version=entity0.id,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
         )
 
 
@@ -109,7 +109,7 @@ def test_chunk_correctly(entity0, updated_entity0, user):
         entity, _ = Entity.change_or_create_versioned(
             id_persistent=f"id_persistent_test{i+10}",
             time_edit=c.time_edit_test_0,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
         )
         entity.save()
         entities.append(entity)
@@ -164,10 +164,10 @@ def test_keeps_contribution_candidate(entity0, user):
 
     changed, do_write = Entity.change_or_create_versioned(
         id_persistent=entity0.id_persistent,
-        time_edit=datetime.utcnow(),
+        time_edit=timestamp(),
         version=entity0.id,
         display_txt="entity for contribution test",
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     assert (
         str(changed.contribution_candidate.id_persistent) == contribution.id_persistent

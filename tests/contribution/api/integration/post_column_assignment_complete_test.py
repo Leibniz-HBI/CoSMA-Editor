@@ -210,7 +210,7 @@ def test_complete_assignment(auth_server):
         type=TagDefinition.INNER,
         id_persistent=id_tag_definition_persistent,
         time_edit=datetime.now(),
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
     TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member

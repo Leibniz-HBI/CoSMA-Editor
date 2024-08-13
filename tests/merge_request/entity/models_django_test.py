@@ -351,7 +351,7 @@ def test_change_all(
         name="edited tag definition",
         version=old_tag_def.id,
         owner_id=old_tag_def.owner.id,
-        written_by_id_persistent=old_tag_def.owner.id_persistent,
+        written_by_session=old_tag_def.owner.edit_session,
     )[0].save()
 
     recent = EntityConflictResolution.only_recent()

@@ -25,7 +25,7 @@ def entity0(user):
     entity, _ = Entity.change_or_create_versioned(
         ce.id_persistent_test_0,
         ce.time_edit_test_0,
-        user.id_persistent,
+        user.edit_session,
         display_txt=ce.display_txt_test0,
     )
     entity.save()
@@ -36,7 +36,7 @@ def entity0(user):
 def entity1(user1):
     entity = Entity(
         id_persistent=ce.id_persistent_test_1,
-        written_by=user1.id_persistent,
+        written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
         time_edit=ce.time_edit_test_1,
         display_txt=ce.display_txt_test1,
@@ -50,7 +50,7 @@ def entity1_changed(user1, entity1):
     Entity.change_or_create_versioned(
         entity1.id_persistent,
         ce.time_edit_test_1_changed,
-        user1.id_persistent,
+        user1.edit_session,
         version=entity1.id,
         display_txt="edited_entity",
     )[0].save()
@@ -61,7 +61,7 @@ def entity2(user1):
     entity, _ = Entity.change_or_create_versioned(
         ce.id_persistent_test_2,
         ce.time_edit_test_2,
-        user1,
+        user1.edit_session,
         display_txt=ce.display_txt_test2,
     )
     entity.save()
@@ -99,7 +99,7 @@ def tag_def(user):
         type=TagDefinition.STRING,
         owner=user,
         curated=False,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
@@ -114,7 +114,7 @@ def tag_def_disabled(user):
         owner=user,
         curated=False,
         disabled=True,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
@@ -128,7 +128,7 @@ def tag_def1(user1):
         type=TagDefinition.STRING,
         owner=user1,
         curated=False,
-        written_by=user1.id_persistent,
+        written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
     )
 
@@ -142,7 +142,7 @@ def tag_def_curated(user):
         type=TagDefinition.STRING,
         owner=None,
         curated=True,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 

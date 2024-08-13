@@ -86,7 +86,7 @@ def update_tag_instances(tag_instances_with_duplicates, user, time_edit):
             id_entity_persistent=tag_instance.replacement_id_entity_persistent,
             value=tag_instance.value,
             id_tag_definition_persistent=tag_instance.id_tag_definition_persistent,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
             version=tag_instance.id,
             time_edit=time_edit,
         )[0]

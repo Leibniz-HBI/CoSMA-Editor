@@ -22,7 +22,7 @@ def tag(user):
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
         time_edit=c.time_edit_test,
         value="2.0",
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
@@ -81,7 +81,7 @@ def test_get_most_recent(tag):
         value="1.0",
         time_edit=c.time_edit_test + timedelta(hours=1),
         previous_version=tag,
-        written_by=tag.written_by,
+        written_by_session=tag.written_by_session,
         approved_by=tag.approved_by,
     )
     new.save()
@@ -99,8 +99,8 @@ def test_get_most_recent_by_ids(tag):
         value="1.0",
         time_edit=c.time_edit_test + timedelta(hours=1),
         previous_version=tag,
-        written_by=tag.written_by,
-        approved_by=tag.written_by,
+        written_by_session=tag.written_by_session,
+        approved_by=None,
     )
     new.save()
     results = TagInstance.most_recent_by_entity_and_definition_id_query_set(
@@ -115,7 +115,7 @@ def test_entity_missing(user, tag_def):
         TagInstanceHistory.change_or_create_versioned(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
             id_entity_persistent=cp.id_persistent_test,
             id_tag_definition_persistent=c.id_tag_def_persistent_test,
         )
@@ -129,7 +129,7 @@ def test_tag_def_missing(entity0, user):
         TagInstanceHistory.change_or_create_versioned(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
             id_entity_persistent=entity0.id_persistent,
             id_tag_definition_persistent=c.id_tag_def_persistent_test,
         )
@@ -145,7 +145,7 @@ def test_disabled_tag(tag_def_disabled, entity0):
             id_tag_definition_persistent=tag_def_disabled.id_persistent,
             id_entity_persistent=entity0.id_persistent,
             value="some value",
-            written_by_id_persistent=tag_def_disabled.owner.id_persistent,
+            written_by_session=tag_def_disabled.owner.edit_session,
             time_edit=c.time_edit_test,
         )
 
@@ -157,7 +157,7 @@ def test_tag_def_no_permission(entity0, tag_def_user, user1):
         TagInstanceHistory.change_or_create_versioned(
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
-            written_by_id_persistent=user1.id_persistent,
+            written_by_session=user1.edit_session,
             value=2.0,
             id_entity_persistent=entity0.id_persistent,
             id_tag_definition_persistent=tag_def_user.id_persistent,
@@ -171,7 +171,7 @@ def test_add_tag_root(entity0, tag_def_user):
     ret, _ = TagInstanceHistory.change_or_create_versioned(
         id_persistent=c.id_tag_persistent_test,
         time_edit=c.time_edit_test,
-        written_by_id_persistent=tag_def_user.owner.id_persistent,
+        written_by_session=tag_def_user.owner.edit_session,
         id_entity_persistent=entity0.id_persistent,
         id_tag_definition_persistent=tag_def_user.id_persistent,
         value="2.0",
@@ -205,8 +205,8 @@ def test_chunk_versions(tag_def):
                 time_edit=c.time_edit_test + timedelta(hours=j + 1),
                 value=str(float(j)),
                 previous_version=previous_version,
-                written_by=tag_def.written_by,
-                approved_by=tag_def.written_by,
+                written_by_session=tag_def.written_by_session,
+                approved_by=tag_def.approved_by,
             )
             tag.save()
             previous_version = tag  # pylint: disable=no-member
@@ -226,8 +226,8 @@ def test_chunk_filter_tag_instance(tag_def):
             id_tag_definition_persistent=tag_def.id_persistent + i * "0",
             time_edit=c.time_edit_test,
             value=str(float(i)),
-            written_by=tag_def.written_by,
-            approved_by=tag_def.written_by,
+            written_by_session=tag_def.written_by_session,
+            approved_by=None,
         )
         tag.save()
     ret = TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, 0, 5)

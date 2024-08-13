@@ -34,7 +34,7 @@ def test_conversion_api_to_db_with_id(user):
     prev, _ = EntityDb.change_or_create_versioned(
         id_persistent=c.id_persistent_test,
         time_edit=c.time_edit_test,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
         display_txt=c.display_txt_test,
     )
     prev.save()

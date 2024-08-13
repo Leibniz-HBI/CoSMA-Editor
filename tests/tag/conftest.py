@@ -23,7 +23,7 @@ def tag_def_history(db, user):
         name=c.name_tag_def_test,
         time_edit=c.time_edit_test,
         owner_id=user.id,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     tag_def.save()
     return tag_def
@@ -39,7 +39,7 @@ def tag_def_no_owner_history(db, user_commissioner):
         name=c.name_tag_def_test,
         time_edit=c.time_edit_test,
         owner_id=None,
-        written_by_id_persistent=user_commissioner.id_persistent,
+        written_by_session=user_commissioner.edit_session,
     )
     tag_def.save()
     return tag_def
@@ -56,7 +56,7 @@ def tag_def_user_history(user):
         TagDefinitionHistory.change_or_create_versioned(  # pylint: disable=no-member
             id_persistent=c.id_tag_def_persistent_test_user,
             time_edit=c.time_edit_test,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
             type=TagDefinition.FLOAT,
             id_parent_persistent=None,
             name=c.name_tag_def_test_user,
@@ -79,7 +79,7 @@ def tag_def_user1(user):
     tag_def = TagDefinitionHistory(  # pylint: disable=no-member
         id_persistent=c.id_tag_def_persistent_test_user1,
         time_edit=c.time_edit_test,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
         type=TagDefinition.FLOAT,
         id_parent_persistent=None,
@@ -95,7 +95,7 @@ def tag_def_parent(db, user):
     tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
         id_persistent=c.id_tag_def_parent_persistent_test,
         time_edit=c.time_edit_test + timedelta(seconds=5),
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
         type=TagDefinition.FLOAT,
         name=c.name_tag_def_parent_test,
         owner=user,
@@ -114,7 +114,7 @@ def tag_def_child_0_history(user):
         name="test tag definition child 0",
         time_edit=c.time_edit_test + timedelta(seconds=10),
         owner_id=user.id,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     tag_def.save()
     return tag_def
@@ -137,7 +137,7 @@ def tag_def_child_1_history(user):
         name="test tag definition child 1",
         time_edit=c.time_edit_test + timedelta(seconds=10),
         owner_id=user.id,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     tag_def.save()
     return tag_def
@@ -159,7 +159,7 @@ def tag_def_curated(user):
         name=c.name_tag_def_curated_test,
         time_edit=c.time_edit_test + timedelta(minutes=4),
         curated=True,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
@@ -169,7 +169,7 @@ def tag_instances_user(user, user1):
     tag_inst = TagInstanceHistory(
         id_persistent=c.id_instance_test0,
         time_edit=c.time_edit_instance_test,
-        written_by=user,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_0,
@@ -178,7 +178,7 @@ def tag_instances_user(user, user1):
     tag_inst1 = TagInstanceHistory(
         id_persistent=c.id_instance_test1,
         time_edit=c.time_edit_instance_test,
-        written_by=user,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_1,
@@ -187,7 +187,7 @@ def tag_instances_user(user, user1):
     tag_inst2 = TagInstanceHistory(
         id_persistent=c.id_instance_test2,
         time_edit=c.time_edit_instance_test,
-        written_by=user1,
+        written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_0,
@@ -196,7 +196,7 @@ def tag_instances_user(user, user1):
     tag_inst3 = TagInstanceHistory(
         id_persistent=c.id_instance_test3,
         time_edit=c.time_edit_instance_test,
-        written_by=user1.id_persistent,
+        written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
         id_tag_definition_persistent=c.id_tag_def_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_1,

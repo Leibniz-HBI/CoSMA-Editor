@@ -107,7 +107,7 @@ class TagDefinitionHistory(TagDefinitionAbstract, HistoryMixin):
         return TagDefinitionHistory.change_or_create_versioned(
             self.id_persistent,
             time_edit,
-            requester.id_persistent,
+            requester.edit_session,
             requester.id_persistent,
             version=self.id,  # pylint: disable=no-member
             name=self.name,
@@ -122,7 +122,7 @@ class TagDefinitionHistory(TagDefinitionAbstract, HistoryMixin):
         return TagDefinitionHistory.change_or_create_versioned(
             self.id_persistent,
             time_edit,
-            written_by_id_persistent=requester.id_persistent,
+            written_by_session=requester.edit_session,
             owner_id=user.id,
             name=self.name,
             id_parent_persistent=self.id_parent_persistent,

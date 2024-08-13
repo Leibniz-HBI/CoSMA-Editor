@@ -202,7 +202,7 @@ def tag_definition_api_to_db(
         name=tag_definition.name,
         description=tag_definition.description,
         type=_tag_type_mapping_api_to_db[tag_definition.type],
-        written_by_id_persistent=requester.id_persistent,
+        written_by_session=requester.edit_session,
         hidden=tag_definition.hidden or False,
         disabled=tag_definition.disabled or False,
         **additional_values,

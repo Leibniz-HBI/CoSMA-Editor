@@ -14,7 +14,7 @@ def tag_def_user_profile(user):
         id_persistent=c.id_tag_def_persistent,
         time_edit=c.time_edit_tag_def,
         type=TagDefinition.STRING,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
@@ -26,7 +26,7 @@ def tag_def_user_profile1(user):
         id_persistent=c.id_tag_def_persistent1,
         time_edit=c.time_edit_tag_def1,
         type=TagDefinition.STRING,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
@@ -38,7 +38,7 @@ def tag_def_user_profile2(user):
         id_persistent=c.id_tag_def_persistent2,
         time_edit=c.time_edit_tag_def2,
         type=TagDefinition.STRING,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
@@ -50,7 +50,7 @@ def tag_def_user_profile3(user):
         id_persistent=c.id_tag_def_persistent3,
         time_edit=c.time_edit_tag_def3,
         type=TagDefinition.STRING,
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 

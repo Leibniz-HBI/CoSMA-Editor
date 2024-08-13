@@ -20,7 +20,7 @@ def destination_tag_def_for_mr(db, user):
         type=TagDefinition.STRING,
         time_edit=c.time_tag_def_destination,
         owner=user,
-        written_by=user,
+        written_by_session=user.edit_session,
         approved_by=user,
     )
 
@@ -32,7 +32,7 @@ def destination_tag_def_for_mr_changed(destination_tag_def_for_mr):
         version=destination_tag_def_for_mr.id,
         name="changed tag definition test",
         time_edit=c.time_tag_def_destination_changed,
-        written_by_id_persistent=destination_tag_def_for_mr.owner.id_persistent,
+        written_by_session=destination_tag_def_for_mr.owner.edit_session,
     )
     tag_def.save()
     return tag_def
@@ -46,7 +46,7 @@ def destination_tag_def_for_mr_user1(db, user1):
         type=TagDefinition.STRING,
         time_edit=c.time_tag_def_destination,
         owner=user1,
-        written_by=user1.id_persistent,
+        written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
     )
 
@@ -59,7 +59,7 @@ def origin_tag_def_for_mr(db, user1):
         type=TagDefinition.STRING,
         time_edit=c.time_tag_def_origin,
         owner=user1,
-        written_by=user1.id_persistent,
+        written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
     )
 
@@ -71,7 +71,7 @@ def origin_tag_def_for_mr_changed(origin_tag_def_for_mr):
         version=origin_tag_def_for_mr.id,
         name="changed tag definition test",
         time_edit=c.time_tag_def_origin_changed,
-        written_by_id_persistent=origin_tag_def_for_mr.owner.id_persistent,
+        written_by_session=origin_tag_def_for_mr.owner.edit_session,
     )
     tag_def.save()
     return tag_def
@@ -175,7 +175,7 @@ def destination_tag_def_for_mr1(db, user1):
         type=TagDefinitionHistory.STRING,
         time_edit=c.time_tag_def_destination1,
         owner=user1,
-        written_by=user1,
+        written_by_session=user1.edit_session,
         approved_by=user1,
     )
 
@@ -188,7 +188,7 @@ def origin_tag_def_for_mr1(db, user):
         type=TagDefinition.STRING,
         time_edit=c.time_tag_def_origin1,
         owner=user,
-        written_by=user,
+        written_by_session=user.edit_session,
         approved_by=user,
     )
 
@@ -242,7 +242,7 @@ def instances_merge_request_origin_user(merge_request_user, entity0, entity1):
         value=c.value_origin,
         id_persistent=c.id_instance_origin,
         time_edit=c.time_instance_origin,
-        written_by=merge_request_user.created_by,
+        written_by_session=merge_request_user.created_by.edit_session,
         approved_by=merge_request_user.created_by,
     )
     tag_instance1 = TagInstanceHistory.objects.create(  # pylint: disable=no-member
@@ -251,7 +251,7 @@ def instances_merge_request_origin_user(merge_request_user, entity0, entity1):
         value=c.value_origin1,
         id_persistent=c.id_instance_origin1,
         time_edit=c.time_instance_origin1,
-        written_by=merge_request_user.created_by,
+        written_by_session=merge_request_user.created_by.edit_session,
         approved_by=merge_request_user.created_by,
     )
     return [tag_instance, tag_instance1]
@@ -267,7 +267,7 @@ def instance_merge_request_origin_user_changed(
         id_tag_definition_persistent=old_tag_instance.id_tag_definition_persistent,
         id_persistent=old_tag_instance.id_persistent,
         version=old_tag_instance.id,
-        written_by_id_persistent=user1.id_persistent,
+        written_by_session=user1.edit_session,
         value=9001,
         time_edit=c.time_instance_origin1_changed,
     )
@@ -284,7 +284,7 @@ def instance_merge_request_destination_user_no_conflict(merge_request_user, enti
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
-        written_by=merge_request_user.assigned_to.id_persistent,
+        written_by_session=merge_request_user.assigned_to.edit_session,
         approved_by=merge_request_user.assigned_to.id_persistent,
     )
 
@@ -298,7 +298,7 @@ def instance_merge_request_destination_user_conflict(merge_request_user, entity1
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
-        written_by=merge_request_user.assigned_to.id_persistent,
+        written_by_session=merge_request_user.assigned_to.edit_session,
         approved_by=merge_request_user.assigned_to.id_persistent,
     )
 
@@ -315,7 +315,7 @@ def instance_merge_request_destination_user_conflict_changed(
         ),
         id_persistent=instance_merge_request_destination_user_conflict.id_persistent,
         version=instance_merge_request_destination_user_conflict.id,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
         value=9001,
         time_edit=c.time_instance_destination_changed,
     )
@@ -334,7 +334,7 @@ def instance_merge_request_destination_user_conflict_fast_forward(
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
-        written_by=merge_request_user_fast_forward.assigned_to,
+        written_by_session=merge_request_user_fast_forward.assigned_to.edit_session,
         approved_by=merge_request_user_fast_forward.assigned_to,
     )
 
@@ -350,7 +350,7 @@ def instance_merge_request_destination_user_no_conflict_fast_forward(
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
-        written_by=merge_request_user_fast_forward.assigned_to,
+        written_by_session=merge_request_user_fast_forward.assigned_to.edit_session,
         approved_by=merge_request_user_fast_forward.assigned_to,
     )
 
@@ -364,7 +364,7 @@ def instance_merge_request_destination_user_same_value1(merge_request_user, enti
         id_persistent=c.id_instance_destination,
         value=c.value_origin1,
         time_edit=c.time_instance_destination,
-        written_by=merge_request_user.assigned_to,
+        written_by_session=merge_request_user.assigned_to.edit_session,
         approved_by=merge_request_user.assigned_to,
     )
 
@@ -437,7 +437,7 @@ def instance_destination_same_value(merge_request_user):
         id_tag_definition_persistent=merge_request_user.id_destination_persistent,
         value=c.value_origin,
         time_edit=c.time_instance_destination_same_value,
-        written_by=merge_request_user.assigned_to,
+        written_by_session=merge_request_user.assigned_to.edit_session,
         approved_by=merge_request_user.assigned_to,
     )
 
@@ -454,7 +454,7 @@ def instance_destination_updated_same_value1(
             id_entity_persistent=old_instance.id_entity_persistent,
             id_tag_definition_persistent=old_instance.id_tag_definition_persistent,
             value=c.value_origin1,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
             time_edit=c.time_instance_destination_same_value,
             version=old_instance.id,
         )

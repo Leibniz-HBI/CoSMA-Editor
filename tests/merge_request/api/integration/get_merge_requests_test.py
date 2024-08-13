@@ -151,7 +151,7 @@ def test_get_merge_requests_with_hidden(
         hidden=True,
         version=origin_tag_def_for_mr1.id,
         time_edit=origin_tag_def_for_mr1.time_edit + timedelta(minutes=60),
-        written_by_id_persistent=origin_tag_def_for_mr1.owner.id_persistent,
+        written_by_session=origin_tag_def_for_mr1.owner.edit_session,
     )
     tag_def.save()
     assert TagDefinition.most_recent_by_id(origin_tag_def_for_mr1.id_persistent).hidden

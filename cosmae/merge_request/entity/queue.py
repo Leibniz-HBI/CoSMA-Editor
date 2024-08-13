@@ -66,7 +66,6 @@ def apply_entity_merge_request(
                             type="type",
                             owner_id="owner__id",
                             id_persistent="id_persistent",
-                            written_by="written_by",
                         )
                     )
                 )
@@ -86,7 +85,7 @@ def apply_entity_merge_request(
                 display_txt=origin.display_txt,
                 id_persistent=origin.id_persistent,
                 # this is the write for disabling. This is written by the approver.
-                written_by_id_persistent=user.id_persistent,
+                written_by_session=user.edit_session,
                 approved_by_id_persistent=user.id_persistent,
                 version=origin.id,
                 disabled=True,
@@ -130,7 +129,7 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
                     time_edit=time_edit,
                     owner=user,
                     hidden=True,
-                    written_by_id_persistent=tag_definition_existing_dict["written_by"],
+                    written_by_session=user.edit_session,
                     approved_by_id_persistent=user.id_persistent,
                 )
             )
@@ -145,7 +144,7 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
         id_entity_persistent=id_entity_destination_persistent,
         value=tag_instance_origin.value,
         time_edit=time_edit,
-        written_by_id_persistent=tag_instance_origin.written_by,
+        written_by_session=tag_instance_origin.written_by_session,
         approved_by_id_persistent=user.id_persistent,
     )
     tag_instance.save()
@@ -184,7 +183,7 @@ def apply_resolution(
             id_entity_persistent=resolution.entity_destination.id_persistent,
             id_tag_definition_persistent=resolution.tag_definition.id_persistent,
             time_edit=time_edit,
-            written_by_id_persistent=resolution.tag_instance_origin.written_by,
+            written_by_session=resolution.tag_instance_origin.written_by_session,
             approved_by_id_persistent=user.id_persistent,
             value=resolution.tag_instance_origin.value,
         )

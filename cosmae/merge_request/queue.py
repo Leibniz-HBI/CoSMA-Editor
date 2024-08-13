@@ -8,6 +8,7 @@ import django_rq
 from django.db import models, transaction
 from django.db.utils import OperationalError
 
+from cosmae.edit_session.models_django import EditSession
 from cosmae.exception import EntityUpdatedException
 from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
 from cosmae.tag.models_django import (
@@ -21,7 +22,7 @@ from cosmae.util import CosmaeUser, timestamp
 
 def disable_origin(
     merge_request: TagMergeRequest,
-    id_written_by_persistent: str,
+    written_by_session: EditSession,
     id_approved_by_persistent: Optional[str],
     time_edit,
 ):
@@ -34,7 +35,7 @@ def disable_origin(
             tag_definition.id_persistent,
             time_edit,
             # This is the disabling write it was approved and written by the approver
-            written_by_id_persistent=id_written_by_persistent,
+            written_by_session=written_by_session,
             approved_by_id_persistent=id_approved_by_persistent,
             name=tag_definition.name,
             id_parent_persistent=tag_definition.id_parent_persistent,
@@ -84,7 +85,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                         TagInstanceHistory.change_or_create_versioned(
                             id_persistent=str(uuid4()),
                             # TODO correct written by? needs approved by? pylint: disable=fixme
-                            written_by_id_persistent=merge_request.created_by.id_persistent,
+                            written_by_session=merge_request.created_by.edit_session,
                             time_edit=time_merge,
                             id_entity_persistent=tag_instance.id_entity_persistent,
                             id_tag_definition_persistent=merge_request.id_destination_persistent,
@@ -97,7 +98,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                 merge_request.save()
                 disable_origin(
                     merge_request,
-                    merge_request.created_by.id_persistent,
+                    merge_request.created_by.edit_session,
                     None,
                     time_merge,
                 )
@@ -169,7 +170,7 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
                     TagInstanceHistory.change_or_create_versioned(
                         id_persistent=id_persistent,
                         time_edit=time_merge,
-                        written_by_id_persistent=resolution.tag_instance_origin.written_by,
+                        written_by_session=resolution.tag_instance_origin.written_by_session,
                         approved_by_id_persistent=approved_by.id_persistent,
                         id_entity_persistent=resolution.tag_instance_origin.id_entity_persistent,
                         id_tag_definition_persistent=tag_definition_destination.id_persistent,
@@ -186,7 +187,7 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             merge_request.save()
             disable_origin(
                 merge_request,
-                merge_request.created_by.id_persistent,
+                merge_request.created_by.edit_session,
                 approved_by.id_persistent,
                 time_merge,
             )

@@ -90,7 +90,7 @@ def test_updated_data(
         id_entity_persistent=old_instance.id_entity_persistent,
         id_tag_definition_persistent=old_instance.id_tag_definition_persistent,
         version=old_instance.id,
-        written_by_id_persistent=merge_request_user.assigned_to.id_persistent,
+        written_by_session=merge_request_user.assigned_to.edit_session,
         time_edit=timestamp(),
         value="updated value test",
     )

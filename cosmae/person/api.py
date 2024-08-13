@@ -322,7 +322,7 @@ def person_api_to_db(
         display_txt=person.display_txt,
         time_edit=time_edit,
         id_persistent=persistent_id,
-        written_by_id_persistent=requester.id_persistent,
+        written_by_session=requester.edit_session,
         version=person.version,
         disabled=person.disabled or False,
     )

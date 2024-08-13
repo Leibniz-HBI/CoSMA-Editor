@@ -14,19 +14,19 @@ def test_store_multiple(user):
         id_persistent="test_id_0",
         display_txt="foo",
         time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     entity_test_1, _ = Entity.change_or_create_versioned(
         id_persistent="test_id_1",
         display_txt="foo",
         time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
     entity_test_2, _ = Entity.change_or_create_versioned(
         id_persistent="test_id_2",
         display_txt="foo",
         time_edit=datetime(2022, 11, 14, tzinfo=timezone.utc),
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
     )
 
     entities_test = [entity_test_0, entity_test_1, entity_test_2]

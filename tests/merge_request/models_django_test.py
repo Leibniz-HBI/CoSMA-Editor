@@ -122,7 +122,7 @@ def test_recent_change_all(
         time_edit=datetime(1912, 4, 7, tzinfo=timezone.utc),
         display_txt="edited_entity",
         version=old_entity.id,
-        written_by_id_persistent=merge_request_user.created_by.id_persistent,
+        written_by_session=merge_request_user.created_by.edit_session,
     )[0].save()
 
     recent = TagConflictResolution.only_recent()

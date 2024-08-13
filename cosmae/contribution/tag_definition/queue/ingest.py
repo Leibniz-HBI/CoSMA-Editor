@@ -139,7 +139,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                             ) = TagDefinitionHistory.change_or_create_versioned(
                                 id_persistent=id_tag_definition_origin_persistent,
                                 name=merge_request_name,
-                                written_by_id_persistent=contribution.created_by.id_persistent,
+                                written_by_session=contribution.created_by.edit_session,
                                 id_parent_persistent=tag_definition_destination.id_persistent,
                                 type=tag_definition_destination.type,
                                 time_edit=time_add,
@@ -181,7 +181,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                 entity, _ = Entity.change_or_create_versioned(
                     id_persistent=id_entity_persistent,
                     time_edit=time_add,
-                    written_by_id_persistent=created_by.id_persistent,
+                    written_by_session=created_by.edit_session,
                     display_txt=display_txt,
                     version=None,
                     contribution_candidate=contribution,
@@ -197,7 +197,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                         id_persistent=id_tag_instance_persistent,
                         id_entity_persistent=id_entity_persistent,
                         id_tag_definition_persistent=tag_definition.id_persistent,
-                        written_by_id_persistent=created_by.id_persistent,
+                        written_by_session=created_by.edit_session,
                         time_edit=time_add,
                         value=value,
                     )

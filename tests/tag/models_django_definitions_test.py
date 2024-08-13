@@ -79,7 +79,7 @@ def test_missing_parent(user):
     with pytest.raises(NoParentTagException) as exc:
         TagDefinitionHistory.change_or_create_versioned(
             c.id_tag_def_persistent_test,
-            written_by_id_persistent=user.id_persistent,
+            written_by_session=user.edit_session,
             time_edit=c.time_edit_test,
             name=c.name_tag_def_test,
             id_parent_persistent=c.id_tag_def_parent_persistent_test,
@@ -95,7 +95,7 @@ def test_valid_parent_same_name(tag_def_history):
     tag_def_history.save()
     ret, _ = TagDefinitionHistory.change_or_create_versioned(
         c.id_tag_def_persistent_test,
-        written_by_id_persistent=tag_def_history.owner.id_persistent,
+        written_by_session=tag_def_history.owner.edit_session,
         time_edit=c.time_edit_test,
         name=c.name_tag_def_test,
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
@@ -111,7 +111,7 @@ def test_tag_exists_root(tag_def, user):
         TagDefinitionHistory.change_or_create_versioned(
             None,
             c.time_edit_test,
-            user.id_persistent,
+            user.edit_session,
             name=c.name_tag_def_test,
             owner=user,
         )
@@ -125,7 +125,7 @@ def test_tag_exists_child(tag_def_parent, user):
     old, _ = TagDefinitionHistory.change_or_create_versioned(
         c.id_tag_def_persistent_test,
         c.time_edit_test,
-        user.id_persistent,
+        user.edit_session,
         name=c.name_tag_def_test,
         id_parent_persistent=c.id_tag_def_parent_persistent_test,
         owner=user,
@@ -136,7 +136,7 @@ def test_tag_exists_child(tag_def_parent, user):
         TagDefinitionHistory.change_or_create_versioned(
             "other_tag_def_id_test",
             c.time_edit_test,
-            user.id_persistent,
+            user.edit_session,
             name=c.name_tag_def_test,
             id_parent_persistent=c.id_tag_def_parent_persistent_test,
             owner=user,
@@ -228,7 +228,7 @@ def test_children_updated(tag_def_parent, tag_def_child_0, tag_def_child_1):
             name=tag_def_child_0.name + "modified",
             time_edit=tag_def_child_0.time_edit + timedelta(seconds=10),
             version=tag_def_child_0.id,
-            written_by_id_persistent=str(tag_def_child_0.owner.id_persistent),
+            written_by_session=tag_def_child_0.owner.edit_session,
         )
     )
     tag_def_child_0_updated_history.save()
@@ -266,7 +266,7 @@ def test_most_recent_for_user(tag_def_user):
         name="new_name",
         owner_id=tag_def_user.owner.id,
         version=tag_def_user.id,
-        written_by_id_persistent=str(tag_def_user.owner.id_persistent),
+        written_by_session=tag_def_user.owner.edit_session,
     )
     tag_def_edited.save()
     ret = TagDefinition.for_user(tag_def_user.owner).get()
@@ -281,7 +281,7 @@ def test_can_create_hidden(user):
         time_edit=timestamp(),
         name="new_name",
         hidden=True,
-        written_by_id_persistent=user.id_persistent,
+        written_by_session=user.edit_session,
         owner=user,
     )
     tag_def.save()

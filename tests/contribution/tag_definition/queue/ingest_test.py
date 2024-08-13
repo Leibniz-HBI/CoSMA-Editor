@@ -53,7 +53,7 @@ def verified_tag_def(db, user):
         type=TagDefinition.INNER,
         id_persistent=str(uuid4()),
         time_edit=timestamp(),
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
@@ -66,7 +66,7 @@ def party_tag_def(db, user):
         type=TagDefinition.STRING,
         id_persistent=str(uuid4()),
         time_edit=timestamp(),
-        written_by=user.id_persistent,
+        written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
 
