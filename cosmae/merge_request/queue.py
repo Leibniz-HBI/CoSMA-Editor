@@ -174,6 +174,7 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
                         approved_by_id_persistent=approved_by.id_persistent,
                         id_entity_persistent=resolution.tag_instance_origin.id_entity_persistent,
                         id_tag_definition_persistent=tag_definition_destination.id_persistent,
+                        merged_from=resolution.tag_instance_origin.id_persistent,
                         version=version,
                         value=resolution.tag_instance_origin.value,
                     )[0].save()

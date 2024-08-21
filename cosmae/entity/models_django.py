@@ -22,6 +22,7 @@ class Entity(Versioned, HistoryMixin):
     contribution_candidate = models.ForeignKey(
         "ContributionCandidate", blank=True, null=True, on_delete=models.CASCADE
     )
+    merged_from = models.CharField(max_length=36, null=True)
 
     unmodifiable_fields = {"id_persistent"}
 
@@ -123,6 +124,7 @@ class Entity(Versioned, HistoryMixin):
             or other.disabled != self.disabled
             or other.contribution_candidate_id
             != self.contribution_candidate_id  # pylint: disable=no-member
+            or self.merged_from != other.merged_from
         )
 
 

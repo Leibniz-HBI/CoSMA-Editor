@@ -380,6 +380,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "disabled": False,
             "written_by_session_id": contribution_candidate.created_by.edit_session.id_persistent,
             "approved_by": None,
+            "merged_from": None,
         },
         {
             "id_persistent": ct.id_instance_test0,
@@ -390,6 +391,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "disabled": False,
             "written_by_session_id": contribution_candidate.created_by.edit_session.id_persistent,
             "approved_by": None,
+            "merged_from": None,
         },
     ]
     for_tag = [
@@ -412,6 +414,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "disabled": False,
             "written_by_session_id": contribution_candidate.created_by.edit_session.id_persistent,
             "approved_by": None,
+            "merged_from": None,
         },
         {
             "id_persistent": ct.id_instance_test2,
@@ -422,6 +425,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "disabled": False,
             "written_by_session_id": contribution_candidate.created_by.edit_session.id_persistent,
             "approved_by": None,
+            "merged_from": None,
         },
     ]
 

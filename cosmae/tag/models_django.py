@@ -284,6 +284,7 @@ class TagInstanceAbstract(Versioned):
     id_entity_persistent = models.CharField(max_length=36)
     id_tag_definition_persistent = models.TextField()
     value = models.TextField(null=True, blank=True)
+    merged_from = models.CharField(max_length=36, null=True)
 
     class Meta:
         "Meta class for abstract TagInstance django model"
@@ -364,13 +365,12 @@ class TagInstanceHistory(TagInstanceAbstract, HistoryMixin):
 
     def check_different_before_save(self, other):
         """Checks structural equality for two tag definitions."""
-        if other.id_entity_persistent != self.id_entity_persistent:
-            return True
-        if other.id_tag_definition_persistent != self.id_tag_definition_persistent:
-            return True
-        if other.value != self.value:
-            return True
-        return False
+        return (
+            other.id_entity_persistent != self.id_entity_persistent
+            or other.id_tag_definition_persistent != self.id_tag_definition_persistent
+            or other.value != self.value
+            or other.merged_from != self.merged_from
+        )
 
 
 class TagInstance(TagInstanceAbstract):

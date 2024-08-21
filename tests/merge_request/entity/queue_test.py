@@ -78,6 +78,7 @@ def test_applies_resolutions(conflict_resolution_replace, user1):
     merge_request.save()
     apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
     most_recent = Entity.most_recent().get()
+    assert most_recent.merged_from == c.id_entity_origin_persistent
     assert most_recent.display_txt == c.display_txt_entity_destination
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 2

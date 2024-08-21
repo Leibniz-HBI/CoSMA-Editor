@@ -96,6 +96,18 @@ def apply_entity_merge_request(
                 merge_request.id_origin_persistent,
                 merge_request.id_destination_persistent,
             )
+            destination = Entity.most_recent_by_id(
+                merge_request.id_destination_persistent
+            )
+            merged, _ = Entity.change_or_create_versioned(
+                id_persistent=destination.id_persistent,
+                written_by_session=user.edit_session,
+                approved_by_id_persistent=user.id_persistent,
+                version=destination.id,
+                merged_from=origin.id_persistent,
+                time_edit=time_edit,
+            )
+            merged.save()
             merge_request.state = EntityMergeRequest.MERGED
             merge_request.save()
 
