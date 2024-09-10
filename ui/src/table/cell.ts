@@ -1,7 +1,7 @@
 import { CustomCell, GridCell, GridCellKind, Item } from '@glideapps/glide-data-grid'
 import { TagType } from '../column_menu/state'
 import { CellValue, ColumnState, Entity } from './state'
-import { LoadingType } from './draw'
+import { LoadingCellProps } from './draw'
 
 const emptyCell = {
     kind: 'text' as GridCellKind,
@@ -70,8 +70,6 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
     } as GridCell
 }
 
-const loadingInstance = new LoadingType()
-
 export function createCellContentCallback({
     entities,
     columnStates,
@@ -113,9 +111,8 @@ export function createCellContentCallback({
             return {
                 kind: 'custom' as GridCellKind,
                 allowOverlay: true,
-                style: 'faded',
-                data: loadingInstance
-            } as CustomCell<LoadingType>
+                data: { kind: 'custom-loading-cell', rowIdx: row_idx, colIdx: col_idx }
+            } as CustomCell<LoadingCellProps>
         }
         return mkCell(col.tagDefinition.columnType, col.cellContents.value[row_idx])
     }

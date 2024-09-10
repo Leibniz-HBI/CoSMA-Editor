@@ -1,3 +1,4 @@
+import { boolean } from 'yup'
 import { PublicUserInfo } from '../user/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
@@ -57,34 +58,36 @@ export function newTagDefinition({
     }
 }
 
-export interface TagSelectionEntry {
-    columnDefinition: TagDefinition
+export interface TagHierarchyNode {
+    idTagDefinitionPersistent: string
+    name: string
     isExpanded: boolean
-    isLoading: boolean
-    children: TagSelectionEntry[]
+    children: TagHierarchyNode[]
 }
-export function newTagSelectionEntry({
-    columnDefinition,
+export function newTagHierarchyNode({
+    idTagDefinitionPersistent,
+    name,
     isExpanded = false,
-    isLoading = false,
     children = []
 }: {
-    columnDefinition: TagDefinition
+    idTagDefinitionPersistent: string
+    name: string
     isExpanded?: boolean
-    isLoading?: boolean
-    children?: TagSelectionEntry[]
+    children?: TagHierarchyNode[]
 }) {
     return {
-        columnDefinition: columnDefinition,
-        isExpanded: isExpanded,
-        isLoading: isLoading,
-        children: children
+        idTagDefinitionPersistent,
+        name,
+        isExpanded,
+        children
     }
 }
 
 export interface TagSelectionState {
-    navigationEntries: TagSelectionEntry[]
-    searchEntries: TagSelectionEntry[]
+    navigationEntries: TagHierarchyNode[]
+    tagDefinitionsByIdPersistent: {
+        [key: string]: RemoteInterface<TagDefinition | undefined>
+    }
     isLoading: boolean
     isSearching: boolean
     isSubmittingDefinition: boolean
@@ -92,29 +95,31 @@ export interface TagSelectionState {
     isDragging: boolean
 }
 export function newTagSelectionState({
-    navigationEntries: columnSelectionEntries = [],
-    searchEntries: searchSelectionEntries = [],
+    navigationEntries = [],
+    tagDefinitionsByIdPersistent = {},
     isLoading = false,
     isSearching = false,
     isSubmittingDefinition = false,
     editTagDefinition = newRemote(undefined),
     isDragging = false
 }: {
-    navigationEntries?: TagSelectionEntry[]
-    searchEntries?: TagSelectionEntry[]
+    navigationEntries?: TagHierarchyNode[]
+    tagDefinitionsByIdPersistent?: {
+        [key: string]: RemoteInterface<TagDefinition | undefined>
+    }
     isLoading?: boolean
     isSearching?: boolean
     isSubmittingDefinition?: boolean
     editTagDefinition?: RemoteInterface<TagDefinition | undefined>
-    draggedSelectionEntry?: TagSelectionEntry
+    draggedSelectionEntry?: TagHierarchyNode
     isDragging?: boolean
 }): TagSelectionState {
     return {
-        navigationEntries: columnSelectionEntries,
-        searchEntries: searchSelectionEntries,
-        isLoading: isLoading,
-        isSearching: isSearching,
-        isSubmittingDefinition: isSubmittingDefinition,
+        navigationEntries,
+        tagDefinitionsByIdPersistent,
+        isLoading,
+        isSearching,
+        isSubmittingDefinition,
         editTagDefinition,
         isDragging
     }

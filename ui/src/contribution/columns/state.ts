@@ -1,4 +1,4 @@
-import { TagSelectionEntry, TagType } from '../../column_menu/state'
+import { TagHierarchyNode, TagType } from '../../column_menu/state'
 import { RemoteInterface, newRemote } from '../../util/state'
 
 export interface ColumnDefinitionContribution {
@@ -75,7 +75,7 @@ export function newColumnDefinitionsContributionState({
     columns?: RemoteInterface<ColumnsTuple | undefined>
     selectedColumnDefinition?: RemoteInterface<ColumnDefinitionContribution | undefined>
     createTabSelected?: boolean
-    existingColumnSelectionEntries?: RemoteInterface<TagSelectionEntry[]>
+    existingColumnSelectionEntries?: RemoteInterface<TagHierarchyNode[]>
     finalizeColumnAssignment?: RemoteInterface<boolean>
     preview?: RemoteInterface<ValuePreview | undefined>
 }): ColumnDefinitionsContributionState {

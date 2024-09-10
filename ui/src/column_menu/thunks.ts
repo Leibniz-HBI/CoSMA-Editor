@@ -1,6 +1,6 @@
 import { addError } from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
-import { TagDefinition, TagSelectionEntry, TagType, newTagDefinition } from './state'
+import { TagDefinition, TagType, newTagDefinition } from './state'
 import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
 import {
@@ -27,7 +27,7 @@ export function loadTagDefinitionHierarchy({
     namePath?: string[]
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(loadTagHierarchyStart(indexPath))
+        dispatch(loadTagHierarchyStart(idParentPersistent))
         const tagDefinitions: TagDefinition[] = []
         try {
             const rsp = await fetch(config.api_path + '/tags/definitions/children', {
@@ -159,27 +159,21 @@ export function submitTagDefinition({
     }
 }
 export function changeTagDefinitionParent({
-    tagSelectionEntry,
-    idParentPersistent,
-    newPath,
-    oldPath
+    tagDefinition,
+    idParentNewPersistent
 }: {
-    tagSelectionEntry: TagSelectionEntry
-    idParentPersistent: string
-    newPath: number[]
-    oldPath: number[]
+    tagDefinition: TagDefinition
+    idParentNewPersistent: string | undefined
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        let idParentPersistentRequest: string | undefined = idParentPersistent
-        if (idParentPersistentRequest === '') {
-            idParentPersistentRequest = undefined
-        }
+        const idParentOldPersistent = tagDefinition.idParentPersistent
+        const idParentRequestPersistent =
+            idParentNewPersistent == '' ? undefined : idParentNewPersistent
         try {
-            const tagDefinition = tagSelectionEntry.columnDefinition
             const payload = {
                 id_persistent: tagDefinition.idPersistent,
                 name: tagDefinition.namePath.at(-1),
-                id_parent_persistent: idParentPersistentRequest,
+                id_parent_persistent: idParentRequestPersistent,
                 type: tagTypeMapAppToApi.get(tagDefinition.columnType),
                 version: tagDefinition.version
             }
@@ -191,15 +185,12 @@ export function changeTagDefinitionParent({
             if (rsp.status == 200) {
                 const json = await rsp.json()
                 const tagDefinitionJson = json['tag_definitions'][0]
-                const tagDefinition = parseColumnDefinitionsFromApi(tagDefinitionJson)
+                const tagDefinitionRsp =
+                    parseColumnDefinitionsFromApi(tagDefinitionJson)
                 dispatch(
                     changeParentSuccess({
-                        newPath,
-                        oldPath,
-                        tagSelectionEntry: {
-                            ...tagSelectionEntry,
-                            columnDefinition: tagDefinition
-                        }
+                        tagDefinition: tagDefinitionRsp,
+                        idParentOldPersistent
                     })
                 )
             } else {

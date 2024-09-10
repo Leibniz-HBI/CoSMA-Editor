@@ -310,7 +310,7 @@ describe('create tag definition', () => {
         await user.click(button)
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         await waitFor(() => {
-            expect(fetchMock.mock.calls.length).toEqual(17)
+            expect(fetchMock.mock.calls.length).toEqual(9)
             expect(fetchMock.mock.calls[8]).toEqual([
                 'http://127.0.0.1:8000/cosmae/api/tags/definitions',
                 {
@@ -350,7 +350,7 @@ describe('create tag definition', () => {
         await user.click(createButton)
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         await waitFor(() => {
-            expect(fetchMock.mock.calls.length).toEqual(17)
+            expect(fetchMock.mock.calls.length).toEqual(9)
             expect(fetchMock.mock.calls[8]).toEqual([
                 'http://127.0.0.1:8000/cosmae/api/tags/definitions',
                 {

@@ -1,13 +1,12 @@
 import {
     CustomCell,
+    CustomRenderer,
     GridCell,
     GridCellKind,
     ImageWindowLoader,
     Rectangle,
     Theme
 } from '@glideapps/glide-data-grid'
-
-export class LoadingType {}
 
 export class AssignType {
     isNew: boolean
@@ -18,60 +17,68 @@ export class AssignType {
     }
 }
 
-export function drawCell(args: {
-    cell: GridCell
-    col: number
-    ctx: CanvasRenderingContext2D
-    highlighted: boolean
-    hoverAmount: number
-    hoverX: number | undefined
-    hoverY: number | undefined
-    imageLoader: ImageWindowLoader
-    rect: Rectangle
-    requestAnimationFrame: () => void
-    row: number
-    theme: Theme
-}) {
-    const { cell, rect, ctx, row, col, requestAnimationFrame } = args
+export function drawCell(
+    args: {
+        cell: GridCell
+        col: number
+        ctx: CanvasRenderingContext2D
+        highlighted: boolean
+        hoverAmount: number
+        hoverX: number | undefined
+        hoverY: number | undefined
+        imageLoader: ImageWindowLoader
+        rect: Rectangle
+        row: number
+        theme: Theme
+    },
+    drawContent: VoidFunction
+) {
+    const { cell, rect, ctx } = args
     if (cell.kind == ('custom' as GridCellKind)) {
         const customCell = cell as CustomCell
-        if (customCell.data instanceof LoadingType) {
-            drawLoadingCell({
-                rowIdx: row,
-                colIdx: col,
-                ctx,
-                rect,
-                requestAnimationFrame
-            })
-        } else if (customCell.data instanceof AssignType) {
+        if (customCell.data instanceof AssignType) {
             replaceButtonDrawer.drawReplaceButtonCell(ctx, rect, customCell.data)
         }
-        return true
     }
-    return false
+    drawContent()
 }
 
-export function drawLoadingCell({
-    rowIdx,
-    colIdx,
-    ctx,
-    rect,
-    requestAnimationFrame
-}: {
+export interface LoadingCellProps {
+    readonly kind: 'custom-loading-cell'
     rowIdx: number
     colIdx: number
-    ctx: CanvasRenderingContext2D
-    rect: Rectangle
-    requestAnimationFrame: () => void
-}) {
-    const time = Date.now()
-    const time_milliseconds = (time + 200 * rowIdx + 200 * colIdx) % 1000
-    const alpha = 2 / 15 + (4 / 15) * (time_milliseconds / 999)
-    const { x, y, width, height } = rect
-    ctx.fillStyle = `rgba(0,0,0,${alpha})`
-    ctx.fillRect(x, y, width, height)
-    ctx.fillStyle = '#ff0000'
-    requestAnimationFrame()
+}
+export type LoadingCell = CustomCell<LoadingCellProps>
+
+export const loadingCellRenderer: CustomRenderer<LoadingCell> = {
+    kind: 'custom' as GridCellKind.Custom,
+    isMatch: (cell: CustomCell): cell is LoadingCell => {
+        console.log(cell.data)
+        return (cell.data as LoadingCellProps).kind === 'custom-loading-cell'
+    },
+    provideEditor: () => undefined,
+    draw: (
+        args: {
+            ctx: CanvasRenderingContext2D
+            rect: Rectangle
+            requestAnimationFrame: VoidFunction
+        },
+        cell: LoadingCell
+    ) => {
+        console.log('loadingCell render')
+        const time = Date.now()
+        const { ctx, rect, requestAnimationFrame } = args
+        const cellData = cell.data
+        const rowIdx = cellData.rowIdx
+        const colIdx = cellData.colIdx
+        const time_milliseconds = (time + 200 * rowIdx + 200 * colIdx) % 1000
+        const alpha = 2 / 15 + (4 / 15) * (time_milliseconds / 999)
+        const { x, y, width, height } = rect
+        ctx.fillStyle = `rgba(0,0,0,${alpha})`
+        ctx.fillRect(x, y, width, height)
+        ctx.fillStyle = '#ff0000'
+        requestAnimationFrame()
+    }
 }
 
 export class ReplaceButtonDrawer {

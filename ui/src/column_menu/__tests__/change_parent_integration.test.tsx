@@ -14,7 +14,7 @@ import {
     TagSelectionState,
     TagType,
     newTagDefinition,
-    newTagSelectionEntry,
+    newTagHierarchyNode,
     newTagSelectionState
 } from '../state'
 import { configureStore } from '@reduxjs/toolkit'
@@ -29,6 +29,7 @@ import {
     notificationReducer
 } from '../../util/notification/slice'
 import { ColumnSelector } from '../components/selection'
+import { newRemote } from '../../util/state'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -68,14 +69,20 @@ export function renderWithProviders(
         preloadedState = {
             tagSelection: newTagSelectionState({
                 navigationEntries: [
-                    newTagSelectionEntry({
-                        columnDefinition: tagDefTest
+                    newTagHierarchyNode({
+                        name: nameTagDef,
+                        idTagDefinitionPersistent: idTagDef
                     }),
-                    newTagSelectionEntry({
-                        columnDefinition: tagDefTest1,
+                    newTagHierarchyNode({
+                        idTagDefinitionPersistent: idTagDef1,
+                        name: nameTagDef1,
                         isExpanded: true
                     })
-                ]
+                ],
+                tagDefinitionsByIdPersistent: {
+                    [idTagDef]: newRemote(tagDefTest),
+                    [idTagDef1]: newRemote(tagDefTest1)
+                }
             }),
             notification: newNotificationManager({})
         },
@@ -143,7 +150,7 @@ test('success', async () => {
             {
                 tag_definitions: [
                     {
-                        name_path: [nameTagDef],
+                        name_path: [nameTagDef1, nameTagDef],
                         id_persistent: idTagDef,
                         id_parent_persistent: idTagDef1,
                         type: 'STRING',
@@ -159,7 +166,7 @@ test('success', async () => {
             {
                 tag_definitions: [
                     {
-                        name_path: [nameTagDef1, nameTagDef],
+                        name_path: [nameTagDef],
                         id_persistent: idTagDef,
                         id_parent_persistent: undefined,
                         type: 'STRING',
@@ -180,21 +187,27 @@ test('success', async () => {
         expect(store.getState()).toEqual({
             tagSelection: newTagSelectionState({
                 navigationEntries: [
-                    newTagSelectionEntry({
-                        columnDefinition: tagDefTest1,
+                    newTagHierarchyNode({
+                        idTagDefinitionPersistent: idTagDef1,
+                        name: nameTagDef1,
                         isExpanded: true,
                         children: [
-                            newTagSelectionEntry({
-                                columnDefinition: {
-                                    ...tagDefTest,
-                                    namePath: [nameTagDef1, nameTagDef],
-                                    idParentPersistent: idTagDef1,
-                                    version: newVersion
-                                }
+                            newTagHierarchyNode({
+                                name: nameTagDef,
+                                idTagDefinitionPersistent: idTagDef
                             })
                         ]
                     })
-                ]
+                ],
+                tagDefinitionsByIdPersistent: {
+                    [idTagDef]: newRemote({
+                        ...tagDefTest,
+                        namePath: [nameTagDef1, nameTagDef],
+                        idParentPersistent: idTagDef1,
+                        version: newVersion
+                    }),
+                    [idTagDef1]: newRemote(tagDefTest1)
+                }
             }),
             notification: newNotificationManager({})
         })
@@ -204,17 +217,24 @@ test('success', async () => {
         expect(store.getState()).toEqual({
             tagSelection: newTagSelectionState({
                 navigationEntries: [
-                    newTagSelectionEntry({
-                        columnDefinition: tagDefTest1,
+                    newTagHierarchyNode({
+                        idTagDefinitionPersistent: idTagDef1,
+                        name: nameTagDef1,
                         isExpanded: true
                     }),
-                    newTagSelectionEntry({
-                        columnDefinition: {
-                            ...tagDefTest,
-                            version: newVersion1
-                        }
+                    newTagHierarchyNode({
+                        name: nameTagDef,
+                        idTagDefinitionPersistent: idTagDef
                     })
-                ]
+                ],
+                tagDefinitionsByIdPersistent: {
+                    [idTagDef]: newRemote({
+                        ...tagDefTest,
+                        namePath: [nameTagDef],
+                        version: newVersion1
+                    }),
+                    [idTagDef1]: newRemote(tagDefTest1)
+                }
             }),
             notification: newNotificationManager({})
         })
@@ -271,12 +291,20 @@ test('error', async () => {
         expect(store.getState()).toEqual({
             tagSelection: newTagSelectionState({
                 navigationEntries: [
-                    newTagSelectionEntry({ columnDefinition: tagDefTest }),
-                    newTagSelectionEntry({
-                        columnDefinition: tagDefTest1,
+                    newTagHierarchyNode({
+                        name: nameTagDef,
+                        idTagDefinitionPersistent: idTagDef
+                    }),
+                    newTagHierarchyNode({
+                        idTagDefinitionPersistent: idTagDef1,
+                        name: nameTagDef1,
                         isExpanded: true
                     })
-                ]
+                ],
+                tagDefinitionsByIdPersistent: {
+                    [idTagDef]: newRemote(tagDefTest),
+                    [idTagDef1]: newRemote(tagDefTest1)
+                }
             }),
             notification: newNotificationManager({
                 notificationList: [

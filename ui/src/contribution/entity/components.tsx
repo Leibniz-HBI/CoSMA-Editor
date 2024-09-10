@@ -8,7 +8,7 @@ import {
     GridMouseEventArgs,
     GridSelection
 } from '@glideapps/glide-data-grid'
-import { drawCell } from '../../table/draw'
+import { drawCell, loadingCellRenderer } from '../../table/draw'
 import { useDispatch, useSelector } from 'react-redux'
 import {
     selectEntityColumnDefs,
@@ -373,6 +373,7 @@ export function EntitySimilarityItem({
                     data-testid="table-container-inner"
                 >
                     <DataEditor
+                        customRenderers={[loadingCellRenderer]}
                         drawCell={drawCell}
                         rows={4 + numTags}
                         getCellContent={mkCellContentCallback(
