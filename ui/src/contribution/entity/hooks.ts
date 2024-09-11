@@ -1,5 +1,4 @@
 import {
-    CustomCell,
     GridCell,
     GridCellKind,
     GridColumn,
@@ -10,7 +9,7 @@ import {
 import { TagDefinition, TagType } from '../../column_menu/state'
 import { EntityWithDuplicates } from './state'
 import { CellValue } from '../../table/state'
-import { AssignType } from '../../table/draw'
+import { newReplaceButtonCellData, ReplaceButtonCell } from '../../table/draw'
 import { RemoteInterface } from '../../util/state'
 
 export type GridColumWithType = GridColumn & { columnType: TagType }
@@ -127,12 +126,12 @@ export function mkCellContentCallback(
                         displayData: ''
                     } as GridCell
                 } else if (col_idx == 1) {
-                    replaceInfo = new AssignType(
+                    replaceInfo = newReplaceButtonCellData(
                         false,
                         entityGroup.assignedDuplicate.value?.idPersistent == undefined
                     )
                 } else {
-                    replaceInfo = new AssignType(
+                    replaceInfo = newReplaceButtonCellData(
                         true,
                         entityGroup.similarEntities.value[col_idx - 2]?.idPersistent ==
                             entityGroup.assignedDuplicate.value?.idPersistent
@@ -141,7 +140,7 @@ export function mkCellContentCallback(
                 return {
                     kind: 'custom' as GridCellKind,
                     data: replaceInfo
-                } as CustomCell<AssignType>
+                } as ReplaceButtonCell
             } else if (row_idx == 1) {
                 // row with similarities
                 if (col_idx > 1) {

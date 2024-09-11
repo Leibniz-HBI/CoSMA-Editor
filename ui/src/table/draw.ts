@@ -1,76 +1,49 @@
 import {
     CustomCell,
     CustomRenderer,
-    GridCell,
     GridCellKind,
-    ImageWindowLoader,
-    Rectangle,
-    Theme
+    Rectangle
 } from '@glideapps/glide-data-grid'
 
-export class AssignType {
-    isNew: boolean
+export function newReplaceButtonCellData(
+    isNew: boolean,
     active: boolean
-    constructor(isNew: boolean, active: boolean) {
-        this.isNew = isNew
-        this.active = active
+): ReplaceButtonCellProps {
+    return {
+        isNew,
+        active,
+        kind: 'replace-button-cell'
     }
 }
 
-export function drawCell(
-    args: {
-        cell: GridCell
-        col: number
-        ctx: CanvasRenderingContext2D
-        highlighted: boolean
-        hoverAmount: number
-        hoverX: number | undefined
-        hoverY: number | undefined
-        imageLoader: ImageWindowLoader
-        rect: Rectangle
-        row: number
-        theme: Theme
-    },
-    drawContent: VoidFunction
-) {
-    const { cell, rect, ctx } = args
-    if (cell.kind == ('custom' as GridCellKind)) {
-        const customCell = cell as CustomCell
-        if (customCell.data instanceof AssignType) {
-            replaceButtonDrawer.drawReplaceButtonCell(ctx, rect, customCell.data)
-        }
-    }
-    drawContent()
-}
-
-export interface LoadingCellProps {
+interface LoadingCellProps {
     readonly kind: 'custom-loading-cell'
     rowIdx: number
     colIdx: number
 }
+
 export type LoadingCell = CustomCell<LoadingCellProps>
 
 export const loadingCellRenderer: CustomRenderer<LoadingCell> = {
-    kind: 'custom' as GridCellKind.Custom,
-    isMatch: (cell: CustomCell): cell is LoadingCell => {
-        console.log(cell.data)
-        return (cell.data as LoadingCellProps).kind === 'custom-loading-cell'
-    },
-    provideEditor: () => undefined,
+    kind: GridCellKind.Custom,
+    isMatch: (cell: CustomCell): cell is LoadingCell =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (cell.data as any).kind === 'custom-loading-cell',
+
     draw: (
-        args: {
+        {
+            ctx,
+            rect,
+            requestAnimationFrame
+        }: {
             ctx: CanvasRenderingContext2D
             rect: Rectangle
             requestAnimationFrame: VoidFunction
         },
         cell: LoadingCell
     ) => {
-        console.log('loadingCell render')
+        const { colIdx, rowIdx } = cell.data
         const time = Date.now()
-        const { ctx, rect, requestAnimationFrame } = args
-        const cellData = cell.data
-        const rowIdx = cellData.rowIdx
-        const colIdx = cellData.colIdx
         const time_milliseconds = (time + 200 * rowIdx + 200 * colIdx) % 1000
         const alpha = 2 / 15 + (4 / 15) * (time_milliseconds / 999)
         const { x, y, width, height } = rect
@@ -78,14 +51,36 @@ export const loadingCellRenderer: CustomRenderer<LoadingCell> = {
         ctx.fillRect(x, y, width, height)
         ctx.fillStyle = '#ff0000'
         requestAnimationFrame()
-    }
+    },
+    provideEditor: () => undefined
+}
+interface ReplaceButtonCellProps {
+    readonly kind: 'replace-button-cell'
+    active: boolean
+    isNew: boolean
+}
+
+export type ReplaceButtonCell = CustomCell<ReplaceButtonCellProps>
+
+export const ReplaceButtonCellRenderer: CustomRenderer<ReplaceButtonCell> = {
+    kind: GridCellKind.Custom,
+    isMatch: (cell: CustomCell): cell is ReplaceButtonCell =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (cell.data as any).kind === 'replace-button-cell',
+    draw: (
+        { ctx, rect }: { ctx: CanvasRenderingContext2D; rect: Rectangle },
+        cell: ReplaceButtonCell
+    ) => {
+        replaceButtonDrawer.drawReplaceButtonCell(ctx, rect, cell.data)
+    },
+    provideEditor: () => undefined
 }
 
 export class ReplaceButtonDrawer {
     drawReplaceButtonCell(
         ctx: CanvasRenderingContext2D,
         rect: Rectangle,
-        data: AssignType
+        data: ReplaceButtonCellProps
     ) {
         if (data.isNew) {
             if (data.active) {

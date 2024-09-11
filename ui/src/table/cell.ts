@@ -1,7 +1,14 @@
-import { CustomCell, GridCell, GridCellKind, Item } from '@glideapps/glide-data-grid'
+import { GridCell, GridCellKind, Item } from '@glideapps/glide-data-grid'
 import { TagType } from '../column_menu/state'
-import { CellValue, ColumnState, Entity } from './state'
-import { LoadingCellProps } from './draw'
+import {
+    CellValue,
+    ColumnState,
+    displayTxtColumnIdx,
+    Entity,
+    entityDetailsColumnIdx,
+    optionalEntityJustificationColumnIdx
+} from './state'
+import { LoadingCell } from './draw'
 
 const emptyCell = {
     kind: 'text' as GridCellKind,
@@ -85,7 +92,16 @@ export function createCellContentCallback({
         if (entities === undefined || entity === undefined) {
             return emptyCell
         }
-        if (col_idx == 0) {
+        if (col_idx == entityDetailsColumnIdx) {
+            return {
+                data: 'i',
+                displayData: '🛈',
+                kind: GridCellKind.Text,
+                allowOverlay: false,
+                contentAlign: 'center'
+            }
+        }
+        if (col_idx == displayTxtColumnIdx) {
             return mkCell(TagType.String, [
                 {
                     idPersistent: entity.idPersistent,
@@ -94,7 +110,10 @@ export function createCellContentCallback({
                 }
             ])
         }
-        if (showEntityJustifications && col_idx == 1) {
+        if (
+            showEntityJustifications &&
+            col_idx == optionalEntityJustificationColumnIdx
+        ) {
             return mkCell(TagType.String, [
                 {
                     idPersistent: entity.idPersistent,
@@ -112,7 +131,7 @@ export function createCellContentCallback({
                 kind: 'custom' as GridCellKind,
                 allowOverlay: true,
                 data: { kind: 'custom-loading-cell', rowIdx: row_idx, colIdx: col_idx }
-            } as CustomCell<LoadingCellProps>
+            } as LoadingCell
         }
         return mkCell(col.tagDefinition.columnType, col.cellContents.value[row_idx])
     }

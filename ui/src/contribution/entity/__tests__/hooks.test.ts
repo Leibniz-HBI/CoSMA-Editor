@@ -1,9 +1,9 @@
 import { GridCellKind } from '@glideapps/glide-data-grid'
 import { TagType, newTagDefinition } from '../../../column_menu/state'
-import { Remote, newRemote } from '../../../util/state'
+import { newRemote } from '../../../util/state'
 import { mkCellContentCallback } from '../hooks'
 import { newEntityWithDuplicates, newScoredEntity } from '../state'
-import { AssignType } from '../../../table/draw'
+import { newReplaceButtonCellData } from '../../../table/draw'
 
 jest.mock('../../../util/state', () => {
     return { ...jest.requireActual('../../../util/state'), useThunkReducer: jest.fn() }
@@ -117,7 +117,7 @@ describe('cell contents callback', () => {
         const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1, [])
         expect(cellCallback([1, 0])).toEqual({
             kind: 'custom' as GridCellKind,
-            data: new AssignType(false, true)
+            data: newReplaceButtonCellData(false, true)
         })
 
         expect(cellCallback([1, 1])).toEqual({
@@ -163,7 +163,7 @@ describe('cell contents callback', () => {
         ])
         expect(cellCallback([2, 0])).toEqual({
             kind: 'custom' as GridCellKind,
-            data: new AssignType(true, false)
+            data: newReplaceButtonCellData(true, false)
         })
         expect(cellCallback([2, 1])).toEqual({
             kind: 'text' as GridCellKind,
@@ -202,7 +202,7 @@ describe('cell contents callback', () => {
         })
         expect(cellCallback([3, 0])).toEqual({
             kind: 'custom' as GridCellKind,
-            data: new AssignType(true, false)
+            data: newReplaceButtonCellData(true, false)
         })
         expect(cellCallback([3, 1])).toEqual({
             kind: 'text' as GridCellKind,

@@ -1,12 +1,32 @@
+import { AxiosError } from 'axios'
 import { JsonValue } from './type'
 
 export function exceptionMessage(e: unknown): string {
     if (typeof e === 'string') {
         return e.toUpperCase()
-    } else if (e instanceof Error) {
+    }
+    if (e instanceof AxiosError) {
+        if (e.response) {
+            return errorMessageFromApi(e.response.data)
+        }
+        if (e.request) {
+            const request = e.request
+            let path = ''
+            let method = ''
+            if (request instanceof XMLHttpRequest) {
+                path = request.responseURL
+                method = 'reach'
+            } else {
+                path = request.path
+                method = request.method
+            }
+            return `Could not ${method} ${path}`
+        }
+    }
+    if (e instanceof Error) {
         return e.message
     }
-    return 'Unknown Error Occured'
+    return 'Unknown Error Occurred'
 }
 
 export type UnprocessableEntity = {

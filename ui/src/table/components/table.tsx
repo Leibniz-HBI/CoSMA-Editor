@@ -11,7 +11,7 @@ import { Col, Row } from 'react-bootstrap'
 import { IBounds, useLayer } from 'react-laag'
 import { ColumnAddButton } from '../../column_menu/components/misc'
 import { HeaderMenu } from '../../header_menu'
-import { drawCell } from '../draw'
+import { loadingCellRenderer } from '../draw'
 import { ChangeOwnershipModal } from '../../tag_management/components'
 import { MergeEntitiesButton } from './buttons'
 import { mkGridSelectionCallback } from '../selection/slice'
@@ -67,6 +67,7 @@ import { AddEntityButton } from './buttons'
 import { SearchButton } from './buttons'
 import { DownloadButton } from './buttons'
 import { EditSessionButton } from '../../session/components'
+import { EntityDetailsModal } from '../../entity/components'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -188,6 +189,7 @@ export function RemoteDataTable() {
                             }
                         />
                         <EntityJustificationModal />
+                        <EntityDetailsModal />
                     </div>
                 </Row>
                 <div id="portal" />
@@ -392,7 +394,7 @@ export function DataTable({
         return (
             <>
                 <DataEditor
-                    drawCell={drawCell}
+                    customRenderers={[loadingCellRenderer]}
                     rows={entities.length}
                     columns={columnDefs}
                     getCellContent={cellContentCallback}
@@ -415,7 +417,7 @@ export function DataTable({
                     onColumnMoved={switchColumnsCallback}
                     onCellEdited={submitValueCallback}
                     onCellActivated={onCellActivated}
-                    rowMarkers="checkbox-visible"
+                    rowMarkers={{ kind: 'checkbox-visible', checkboxStyle: 'circle' }}
                     gridSelection={tableSelection}
                     onGridSelectionChange={mkGridSelectionCallback(dispatch)}
                     onItemHovered={onItemHovered}
