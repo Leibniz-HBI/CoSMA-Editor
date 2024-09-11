@@ -273,6 +273,22 @@ class TagDefinition(TagDefinitionAbstract):
         )
 
     @classmethod
+    def chunk_for_user(  # pylint: disable=too-many-arguments
+        cls,
+        user: CosmaeUser,
+        include_curated: bool = False,
+        include_disabled: bool = False,
+        start_index: int = 0,
+        limit: int = 500,
+    ):
+        """Get a chunk of tag definitions"""
+        return (
+            cls.for_user(user, include_curated, include_disabled)
+            .filter(id_gte=start_index)
+            .order_by("id")[:limit]
+        )
+
+    @classmethod
     def curated_query_set(cls):
         "Get most recent curated tag definition"
         return cls.objects.filter(curated=True)  # pylint: disable=no-member
@@ -424,6 +440,11 @@ class TagInstance(TagInstanceAbstract):
             id_entity_persistent=id_entity_persistent,
             id_tag_definition_persistent=id_tag_definition_persistent,
         ).order_by("id")
+
+    @classmethod
+    def for_entity_queryset(cls, id_entity_persistent: str, _user: CosmaeUser):
+        "Get all instances for a given entity."
+        return cls.objects.filter(id_entity_persistent=id_entity_persistent)
 
     @classmethod
     def annotate_entity(cls, manager: Optional[models.BaseManager[TagInstance]]):

@@ -204,7 +204,7 @@ def auth_server_commissioner(live_server, user_commissioner):
 
 @pytest.fixture
 def user(db):  # pylint: disable=unused-argument
-    session = EditSession.objects.create(
+    session, _ = EditSession.objects.get_or_create(
         id_persistent=cs.id_session_user,
         id_owner_persistent=cu.test_uuid,
         name=cs.name_session_user,

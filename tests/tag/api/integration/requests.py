@@ -106,6 +106,14 @@ def post_tag_instances_for_entities(
     )
 
 
+def get_instances_for_entity(url, id_entity_persistent, cookies=None):
+    return requests.get(
+        url + "/cosmae/api/tags/entity?id_entity_persistent=" + id_entity_persistent,
+        cookies=cookies,
+        timeout=900,
+    )
+
+
 def post_curation(url, id_tag_definition_persistent, cookies=None):
     return requests.post(
         url

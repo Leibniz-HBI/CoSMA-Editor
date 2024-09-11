@@ -311,6 +311,32 @@ def post_tag_instances_for_entities(
         )
 
 
+@router.get(
+    "entity",
+    response={
+        200: TagInstancePostList,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
+)
+def get_for_entity(request: HttpRequest, id_entity_persistent: str):
+    "API method for retrieving all instances for a specific entity."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions.")
+    try:
+        instances_db = TagInstanceDb.for_entity_queryset(id_entity_persistent, user)
+        instances_api = [tag_instance_db_to_api(instance) for instance in instances_db]
+        return 200, TagInstancePostList(tag_instances=instances_api)
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get instances")
+
+
 def tag_instance_api_to_db(tag_api: TagInstancePost, user: CosmaeUser, time: datetime):
     "Convert a tag instance from API to database representation."
     if tag_api.id_persistent:
