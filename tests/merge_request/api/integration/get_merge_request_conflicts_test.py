@@ -65,7 +65,7 @@ def test_conflicts_no_resolution(
             "created_by": {
                 "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -81,7 +81,7 @@ def test_conflicts_no_resolution(
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,
@@ -180,7 +180,7 @@ def test_conflicts_same_value(
             "created_by": {
                 "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -196,7 +196,7 @@ def test_conflicts_same_value(
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,
@@ -248,7 +248,7 @@ def test_conflict_resolved(
             "created_by": {
                 "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -264,7 +264,7 @@ def test_conflict_resolved(
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,
@@ -357,7 +357,7 @@ def test_conflict_resolved_tag_def_origin_changed(
             "created_by": {
                 "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -373,7 +373,7 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,
@@ -503,7 +503,7 @@ def test_tag_instance_destination_value_added(
             "created_by": {
                 "username": cu.test_username1,
                 "id_persistent": cu.test_uuid1,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
             "created_at": format_datetime(c.time_merge_request),
@@ -519,7 +519,7 @@ def test_tag_instance_destination_value_added(
                 "owner": {
                     "username": "test-user1",
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "curated": False,
                 "hidden": False,

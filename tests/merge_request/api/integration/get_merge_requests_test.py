@@ -45,7 +45,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                 "assigned_to": {
                     "username": cu.test_username1,
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
@@ -59,7 +59,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "curated": False,
                     "hidden": False,
@@ -93,7 +93,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                 "created_by": {
                     "username": cu.test_username1,
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "assigned_to": {
                     "username": cu.test_username,
@@ -128,7 +128,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "curated": False,
                     "hidden": False,
@@ -174,7 +174,7 @@ def test_get_merge_requests_with_hidden(
                 "assigned_to": {
                     "username": cu.test_username1,
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
@@ -189,7 +189,7 @@ def test_get_merge_requests_with_hidden(
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "hidden": False,
                     "disabled": False,
@@ -222,7 +222,7 @@ def test_get_merge_requests_with_hidden(
                 "created_by": {
                     "username": cu.test_username1,
                     "id_persistent": cu.test_uuid1,
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "assigned_to": {
                     "username": cu.test_username,
@@ -257,7 +257,7 @@ def test_get_merge_requests_with_hidden(
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "curated": False,
                     "hidden": False,
@@ -286,7 +286,7 @@ def test_includes_curated(
                 "created_by": {
                     "username": "test-user1",
                     "id_persistent": "2e858c5e-60cf-4ce5-946f-6b4559a21211",
-                    "permission_group": "APPLICANT",
+                    "permission_group": "CONTRIBUTOR",
                 },
                 "assigned_to": None,
                 "created_at": format_datetime(c.time_merge_request_curated),
@@ -312,7 +312,7 @@ def test_includes_curated(
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "type": "STRING",
                     "description": None,

@@ -49,7 +49,7 @@ def assert_versioned(
         assert isinstance(expected, list)
         assert len(actual) == len(expected)
 
-        if list_sort_key is None:
+        if list_sort_key is None or isinstance(expected, str):
             actual_sorted = actual
             expected_sorted = expected
         else:

@@ -249,6 +249,7 @@ def user1(db):  # pylint: disable=unused-argument
             first_name=cu.test_names_personal1,
             id_persistent=cu.test_uuid1,
             edit_session=session,
+            permission_group=CosmaeUser.CONTRIBUTOR,
         )
         EditSessionParticipant.add(
             id_session_persistent=session.id_persistent,

@@ -78,7 +78,7 @@ def test_get_request(
                     "receiver": {
                         "username": cu.test_username1,
                         "id_persistent": cu.test_uuid1,
-                        "permission_group": "APPLICANT",
+                        "permission_group": "CONTRIBUTOR",
                     },
                     "tag_definition": {
                         "id_persistent": c.id_tag_def_persistent_test_user,

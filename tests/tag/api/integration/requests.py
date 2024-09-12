@@ -148,3 +148,12 @@ def delete_ownership(url, id_request_persistent, cookies=None):
         cookies=cookies,
         timeout=900,
     )
+
+
+def post_details(url, id_persistent_list, cookies=None):
+    return requests.post(
+        url + "/cosmae/api/tags/definitions/details",
+        json={"id_persistent_list": id_persistent_list},
+        cookies=cookies,
+        timeout=900,
+    )

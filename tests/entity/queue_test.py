@@ -89,7 +89,7 @@ def test_without_display_txt_but_relevant_tag_instance(
             "type": "STR",
             "owner": {
                 "username": "test-user1",
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
                 "id_persistent": user1.id_persistent,
             },
             "description": None,
@@ -181,7 +181,7 @@ def test_contribution(contribution_instance_without_display_txt, display_txt_ord
             "owner": {
                 "username": "test-user1",
                 "id_persistent": cu.test_uuid1,
-                "permission_group": "APPLICANT",
+                "permission_group": "CONTRIBUTOR",
             },
             "description": None,
             "curated": False,

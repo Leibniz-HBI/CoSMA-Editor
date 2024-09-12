@@ -78,6 +78,12 @@ class CurationPostRequest(Schema):
     is_curated: bool
 
 
+class TagDefinitionDetailsRequest(Schema):
+    "Request for getting details on tag definition"
+    # pylint: disable=too-few-public-methods
+    id_persistent_list: List[str]
+
+
 @router.post(
     "",
     response={
@@ -150,12 +156,56 @@ def post_tag_definitions(  # pylint: disable=too-many-branches
     )
 
 
-@router.post("/children", response={200: TagDefinitionResponseList, 500: ApiError})
+@router.post(
+    "/details",
+    response={
+        200: TagDefinitionResponseList,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+    },
+)
+def post_details(request: HttpRequest, body: TagDefinitionDetailsRequest):
+    "Get details on tag definitions."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions.")
+    try:
+        if len(body.id_persistent_list) > 1000:
+            return 400, ApiError(msg="Requested too many tag definition.")
+        tag_definitions_db = TagDefinitionDb.objects.filter(
+            id_persistent__in=body.id_persistent_list
+        )
+        tag_definitions_api = [
+            tag_definition_db_to_api(tag_def) for tag_def in tag_definitions_db
+        ]
+        return 200, TagDefinitionResponseList(tag_definitions=tag_definitions_api)
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get tag definitions.")
+
+
+@router.post(
+    "/children",
+    response={
+        200: TagDefinitionResponseList,
+        401: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
+)
 def post_get_tag_definition_children(
     request: HttpRequest, post_children_request: PostGetChildrenRequest
 ):
     "Get tag definitions by id_parent_persistent."
-    user = check_user(request)
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions.")
     try:
         child_definitions_db = list(
             TagDefinitionDb.children_query_set(

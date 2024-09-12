@@ -5,6 +5,28 @@ from django.db import DatabaseError
 
 from tests.tag.api.integration import requests as r
 from tests.utils import assert_versioned, sort_versioned
+from cosmae.exception import NotAuthenticatedException
+
+
+def test_no_cookies(auth_server):
+    server, _ = auth_server
+    req = r.post_tag_def_children(server.url, None)
+    assert req.status_code == 401
+
+
+def test_unauthenticated(auth_server):
+    server, cookies = auth_server
+    mock = MagicMock()
+    mock.side_effect = NotAuthenticatedException()
+    with patch("cosmae.tag.api.definitions.check_user", mock):
+        req = r.post_tag_def_children(server.url, None, cookies=cookies)
+    assert req.status_code == 401
+
+
+def test_applicant(auth_server_applicant):
+    server, cookies = auth_server_applicant
+    req = r.post_tag_def_children(server.url, None, cookies=cookies)
+    assert req.status_code == 403
 
 
 def test_empty_db(auth_server):
@@ -145,8 +167,3 @@ def test_bad_db(auth_server):
         req = r.post_tag_def_children(live_server.url, None, cookies=cookies)
     assert req.status_code == 500
     assert req.json()["msg"] == "Database Error."
-
-
-def test_not_signed_in(live_server):
-    req = r.post_tag_def_children(live_server.url, None)
-    assert req.status_code == 401
