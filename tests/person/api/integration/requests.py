@@ -47,3 +47,11 @@ def get_justification(url, id_entity_persistent, cookies=None):
         cookies=cookies,
         timeout=9,
     )
+
+
+def get_entity_details(url, id_entity_persistent, cookies=None):
+    return requests.get(
+        url + "/cosmae/api/persons/details?id_persistent=" + id_entity_persistent,
+        cookies=cookies,
+        timeout=900,
+    )

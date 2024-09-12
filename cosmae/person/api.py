@@ -20,7 +20,12 @@ from cosmae.exception import (
     ValidationException,
 )
 from cosmae.tag.api.definitions import TagDefinitionResponse
-from cosmae.tag.api.models_conversion import tag_definition_db_dict_to_api
+from cosmae.tag.api.models_api import TagInstancePost
+from cosmae.tag.api.models_conversion import (
+    tag_definition_db_dict_to_api,
+    tag_instance_db_to_api,
+)
+from cosmae.tag.models_django import TagInstance as TagInstanceDb
 from cosmae.user.models_conversion import user_db_to_public_user_info
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
@@ -112,6 +117,13 @@ class ChunkRequest(Schema):
     limit: int
 
 
+class EntityDetailsResponse(Schema):
+    # pylint: disable=too-few-public-methods
+    """API Response combining an entity with its tag instances."""
+    entity: PersonNatural
+    tag_instance_list: List[TagInstancePost]
+
+
 @router.post(
     "",
     response={
@@ -195,6 +207,40 @@ def persons_chunks_post(
         return 200, PersonNaturalWithJustificationList(persons=person_apis)
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
+
+
+@router.get(
+    "details",
+    response={
+        200: EntityDetailsResponse,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def get_details(request: HttpRequest, id_persistent: str):
+    "API method for retrieving all instances for a specific entity."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions.")
+    try:
+        entity = EntityJustificationDb.annotate_justification(
+            EntityDb.objects.filter(id_persistent=id_persistent)
+        ).get()
+        instances_db = TagInstanceDb.for_entity_queryset(id_persistent, user)
+        instances_api = [tag_instance_db_to_api(instance) for instance in instances_db]
+        return 200, EntityDetailsResponse(
+            entity=person_db_to_api(entity), tag_instance_list=instances_api
+        )
+    except EntityDb.DoesNotExist:
+        return 404, ApiError(msg="Entity does not exist")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get instances")
 
 
 @router.post(

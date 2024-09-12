@@ -3,13 +3,11 @@ from datetime import timedelta
 
 import pytest
 
-import tests.entity.common as ce
 import tests.tag.common as c
 from cosmae.tag.models_django import (
     OwnershipRequest,
     TagDefinition,
     TagDefinitionHistory,
-    TagInstanceHistory,
 )
 
 
@@ -162,50 +160,6 @@ def tag_def_curated(user):
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
-
-
-@pytest.fixture
-def tag_instances_user(user, user1):
-    tag_inst = TagInstanceHistory(
-        id_persistent=c.id_instance_test0,
-        time_edit=c.time_edit_instance_test,
-        written_by_session=user.edit_session,
-        approved_by=user.id_persistent,
-        id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
-        id_entity_persistent=ce.id_persistent_test_0,
-        value="value",
-    )
-    tag_inst1 = TagInstanceHistory(
-        id_persistent=c.id_instance_test1,
-        time_edit=c.time_edit_instance_test,
-        written_by_session=user.edit_session,
-        approved_by=user.id_persistent,
-        id_tag_definition_persistent=c.id_tag_def_persistent_test_user,
-        id_entity_persistent=ce.id_persistent_test_1,
-        value="value 1",
-    )
-    tag_inst2 = TagInstanceHistory(
-        id_persistent=c.id_instance_test2,
-        time_edit=c.time_edit_instance_test,
-        written_by_session=user1.edit_session,
-        approved_by=user1.id_persistent,
-        id_tag_definition_persistent=c.id_tag_def_persistent_test_user1,
-        id_entity_persistent=ce.id_persistent_test_0,
-        value="value 2",
-    )
-    tag_inst3 = TagInstanceHistory(
-        id_persistent=c.id_instance_test3,
-        time_edit=c.time_edit_instance_test,
-        written_by_session=user1.edit_session,
-        approved_by=user1.id_persistent,
-        id_tag_definition_persistent=c.id_tag_def_persistent_test_user1,
-        id_entity_persistent=ce.id_persistent_test_1,
-        value="value 3",
-    )
-    tag_instances = [tag_inst, tag_inst1, tag_inst2, tag_inst3]
-    for inst in tag_instances:
-        inst.save()
-    return tag_instances
 
 
 @pytest.fixture

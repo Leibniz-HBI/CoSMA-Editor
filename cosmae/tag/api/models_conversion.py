@@ -1,6 +1,8 @@
 "Model conversions for tags."
-from cosmae.tag.api.models_api import TagDefinitionResponse
+
+from cosmae.tag.api.models_api import TagDefinitionResponse, TagInstancePost
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
+from cosmae.tag.models_django import TagInstanceAbstract as TagInstanceAbstractDb
 from cosmae.tag.queue import (
     get_tag_definition_name_path,
     get_tag_definition_name_path_from_parts,
@@ -72,3 +74,14 @@ _tag_type_mapping_api_to_db = {
     "FLOAT": TagDefinitionDb.FLOAT,
     "STRING": TagDefinitionDb.STRING,
 }
+
+
+def tag_instance_db_to_api(tag_db: TagInstanceAbstractDb) -> TagInstancePost:
+    "Convert tag instances from database to API representation."
+    return TagInstancePost(
+        id_persistent=tag_db.id_persistent,
+        id_entity_persistent=tag_db.id_entity_persistent,
+        id_tag_definition_persistent=tag_db.id_tag_definition_persistent,
+        value=tag_db.value,
+        version=tag_db.id,
+    )

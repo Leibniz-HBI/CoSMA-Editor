@@ -22,6 +22,8 @@ from cosmae.exception import (
     ValidationException,
 )
 from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.tag.api.models_api import TagInstancePost
+from cosmae.tag.api.models_conversion import tag_instance_db_to_api
 from cosmae.tag.models_django import TagInstance as TagInstanceDb
 from cosmae.tag.models_django import TagInstanceAbstract as TagInstanceAbstractDb
 from cosmae.tag.models_django import TagInstanceHistory as TagInstanceHistoryDb
@@ -33,16 +35,6 @@ router = Router()
 
 MAX_TAG_INSTANCE_CHUNK_LIMIT = 10000
 MAX_TAG_INSTANCE_VALUE_LIMIT = 50000
-
-
-class TagInstancePost(Schema):
-    # pylint: disable=too-few-public-methods
-    "A single API tag instance for post requests."
-    id_entity_persistent: str
-    id_tag_definition_persistent: str
-    value: str | None = None
-    id_persistent: str | None = None
-    version: int | None = None
 
 
 class TagInstancePostList(Schema):
@@ -311,32 +303,6 @@ def post_tag_instances_for_entities(
         )
 
 
-@router.get(
-    "entity",
-    response={
-        200: TagInstancePostList,
-        400: ApiError,
-        401: ApiError,
-        403: ApiError,
-        500: ApiError,
-    },
-)
-def get_for_entity(request: HttpRequest, id_entity_persistent: str):
-    "API method for retrieving all instances for a specific entity."
-    try:
-        user = check_user(request)
-    except NotAuthenticatedException:
-        return 401, ApiError(msg="Not authenticated")
-    if user.permission_group == CosmaeUser.APPLICANT:
-        return 403, ApiError(msg="Insufficient permissions.")
-    try:
-        instances_db = TagInstanceDb.for_entity_queryset(id_entity_persistent, user)
-        instances_api = [tag_instance_db_to_api(instance) for instance in instances_db]
-        return 200, TagInstancePostList(tag_instances=instances_api)
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get instances")
-
-
 def tag_instance_api_to_db(tag_api: TagInstancePost, user: CosmaeUser, time: datetime):
     "Convert a tag instance from API to database representation."
     if tag_api.id_persistent:
@@ -362,17 +328,6 @@ def tag_instance_api_to_db(tag_api: TagInstancePost, user: CosmaeUser, time: dat
         value=tag_api.value,
         time_edit=time,
         version=tag_api.version,
-    )
-
-
-def tag_instance_db_to_api(tag_db: TagInstanceAbstractDb) -> TagInstancePost:
-    "Convert tag instances from database to API representation."
-    return TagInstancePost(
-        id_persistent=tag_db.id_persistent,
-        id_entity_persistent=tag_db.id_entity_persistent,
-        id_tag_definition_persistent=tag_db.id_tag_definition_persistent,
-        value=tag_db.value,
-        version=tag_db.id,
     )
 
 

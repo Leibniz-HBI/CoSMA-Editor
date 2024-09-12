@@ -16,7 +16,11 @@ from cosmae.edit_session.models_django import EditSession, EditSessionParticipan
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
 from cosmae.management.models_django import ConfigValue
-from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
+from cosmae.tag.models_django import (
+    TagDefinition,
+    TagDefinitionHistory,
+    TagInstanceHistory,
+)
 from cosmae.util import CosmaeUser
 
 
@@ -332,6 +336,50 @@ def super_user(db):  # pylint: disable=unused-argument
         edit_session=session,
     )
     return super_user
+
+
+@pytest.fixture
+def tag_instances_user(user, user1):
+    tag_inst = TagInstanceHistory(
+        id_persistent=ct.id_instance_test0,
+        time_edit=ct.time_edit_instance_test,
+        written_by_session=user.edit_session,
+        approved_by=user.id_persistent,
+        id_tag_definition_persistent=ct.id_tag_def_persistent_test_user,
+        id_entity_persistent=ce.id_persistent_test_0,
+        value="value",
+    )
+    tag_inst1 = TagInstanceHistory(
+        id_persistent=ct.id_instance_test1,
+        time_edit=ct.time_edit_instance_test,
+        written_by_session=user.edit_session,
+        approved_by=user.id_persistent,
+        id_tag_definition_persistent=ct.id_tag_def_persistent_test_user,
+        id_entity_persistent=ce.id_persistent_test_1,
+        value="value 1",
+    )
+    tag_inst2 = TagInstanceHistory(
+        id_persistent=ct.id_instance_test2,
+        time_edit=ct.time_edit_instance_test,
+        written_by_session=user1.edit_session,
+        approved_by=user1.id_persistent,
+        id_tag_definition_persistent=ct.id_tag_def_persistent_test_user1,
+        id_entity_persistent=ce.id_persistent_test_0,
+        value="value 2",
+    )
+    tag_inst3 = TagInstanceHistory(
+        id_persistent=ct.id_instance_test3,
+        time_edit=ct.time_edit_instance_test,
+        written_by_session=user1.edit_session,
+        approved_by=user1.id_persistent,
+        id_tag_definition_persistent=ct.id_tag_def_persistent_test_user1,
+        id_entity_persistent=ce.id_persistent_test_1,
+        value="value 3",
+    )
+    tag_instances = [tag_inst, tag_inst1, tag_inst2, tag_inst3]
+    for inst in tag_instances:
+        inst.save()
+    return tag_instances
 
 
 redis_port = settings.RQ_QUEUES["default"]["PORT"]

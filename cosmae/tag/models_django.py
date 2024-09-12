@@ -273,22 +273,6 @@ class TagDefinition(TagDefinitionAbstract):
         )
 
     @classmethod
-    def chunk_for_user(  # pylint: disable=too-many-arguments
-        cls,
-        user: CosmaeUser,
-        include_curated: bool = False,
-        include_disabled: bool = False,
-        start_index: int = 0,
-        limit: int = 500,
-    ):
-        """Get a chunk of tag definitions"""
-        return (
-            cls.for_user(user, include_curated, include_disabled)
-            .filter(id_gte=start_index)
-            .order_by("id")[:limit]
-        )
-
-    @classmethod
     def curated_query_set(cls):
         "Get most recent curated tag definition"
         return cls.objects.filter(curated=True)  # pylint: disable=no-member
