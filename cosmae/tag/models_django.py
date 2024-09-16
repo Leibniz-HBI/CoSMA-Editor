@@ -426,9 +426,17 @@ class TagInstance(TagInstanceAbstract):
         ).order_by("id")
 
     @classmethod
-    def for_entity_queryset(cls, id_entity_persistent: str, _user: CosmaeUser):
+    def for_entity_queryset(
+        cls,
+        id_entity_persistent: str,
+        _user: CosmaeUser,
+        include_disabled: bool = False,
+    ):
         "Get all instances for a given entity."
-        return cls.objects.filter(id_entity_persistent=id_entity_persistent)
+        objects = cls.objects.filter(id_entity_persistent=id_entity_persistent)
+        if include_disabled:
+            return objects
+        return objects.filter(disabled=False)
 
     @classmethod
     def annotate_entity(cls, manager: Optional[models.BaseManager[TagInstance]]):

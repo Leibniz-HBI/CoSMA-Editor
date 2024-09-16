@@ -230,7 +230,7 @@ def get_details(request: HttpRequest, id_persistent: str):
         return 403, ApiError(msg="Insufficient permissions.")
     try:
         entity = EntityJustificationDb.annotate_justification(
-            EntityDb.objects.filter(id_persistent=id_persistent)
+            EntityDb.most_recent_by_id_queryset(id_persistent=id_persistent)
         ).get()
         instances_db = TagInstanceDb.for_entity_queryset(id_persistent, user)
         instances_api = [tag_instance_db_to_api(instance) for instance in instances_db]
