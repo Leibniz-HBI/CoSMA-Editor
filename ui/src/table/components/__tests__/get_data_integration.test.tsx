@@ -20,7 +20,14 @@ import {
     newUserInfo,
     newUserState
 } from '../../../user/state'
-import { TableState, newColumnState, newEntity, newTableState } from '../../state'
+import {
+    TableState,
+    entityDetailsColumn,
+    entityDetailsColumnId,
+    newColumnState,
+    newEntity,
+    newTableState
+} from '../../state'
 import {
     NotificationManager,
     NotificationType,
@@ -45,6 +52,8 @@ import {
     newEditSessionState
 } from '../../../session/state'
 import { editSessionReducer } from '../../../session/slice'
+import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
+import { entityDetailsReducer } from '../../../entity/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -179,8 +188,16 @@ test('get entities success', async () => {
         newTableState({
             entities: entities_test,
             isLoading: false,
-            columnIndices: { display_txt_id: 0, [idTagDefPersistent]: 1 },
-            columnStates: [displayTxtColumnState, tagDefColumnState]
+            columnIndices: {
+                [entityDetailsColumnId]: 0,
+                display_txt_id: 1,
+                [idTagDefPersistent]: 2
+            },
+            columnStates: [
+                entityDetailsColumnState,
+                displayTxtColumnState,
+                tagDefColumnState
+            ]
         })
     )
     expect(fetchMock.mock.calls).toEqual([
@@ -282,9 +299,9 @@ test('get chunked', async () => {
     await waitFor(() => {
         const state = store.getState()
         expect(state.table.entities?.length).toEqual(1001)
-        expect(state.table.columnStates[1].cellContents.value.length).toEqual(1001)
+        expect(state.table.columnStates[2].cellContents.value.length).toEqual(1001)
         for (let idx = 0; idx < 1000; ++idx) {
-            expect(state.table.columnStates[1].cellContents.value[idx]).toEqual([
+            expect(state.table.columnStates[2].cellContents.value[idx]).toEqual([
                 {
                     idPersistent: idValueChunk,
                     version: 8000 + idx * 2 + 2,
@@ -292,7 +309,7 @@ test('get chunked', async () => {
                 }
             ])
         }
-        expect(state.table.columnStates[1].cellContents.value[1000].length).toEqual(0)
+        expect(state.table.columnStates[2].cellContents.value[1000].length).toEqual(0)
     })
     expect(fetchMock.mock.calls.length).toEqual(5)
 })
@@ -319,8 +336,12 @@ test('get entities error', async () => {
         expect(state.table).toEqual(
             newTableState({
                 isLoading: false,
-                columnIndices: { display_txt_id: 0 },
+                columnIndices: { [entityDetailsColumnId]: 0, display_txt_id: 1 },
                 columnStates: [
+                    newColumnState({
+                        tagDefinition: entityDetailsColumn,
+                        cellContents: newRemote([], true)
+                    }),
                     newColumnState({
                         tagDefinition: displayTextTagDef,
                         cellContents: newRemote([], true)
@@ -356,8 +377,13 @@ test('get instances error', async () => {
             newTableState({
                 entities: entities_test,
                 isLoading: false,
-                columnIndices: { display_txt_id: 0, [idTagDefPersistent]: 1 },
+                columnIndices: {
+                    [entityDetailsColumnId]: 0,
+                    display_txt_id: 1,
+                    [idTagDefPersistent]: 2
+                },
                 columnStates: [
+                    entityDetailsColumnState,
                     displayTxtColumnState,
                     newColumnState({
                         tagDefinition: tagDefTest,
@@ -372,6 +398,11 @@ test('get instances error', async () => {
 
 const displayTxtColumnState = newColumnState({
     tagDefinition: displayTextTagDef,
+    cellContents: newRemote([])
+})
+
+const entityDetailsColumnState = newColumnState({
+    tagDefinition: entityDetailsColumn,
     cellContents: newRemote([])
 })
 
@@ -448,6 +479,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         user: UserState
         editSession: EditSessionState
+        entityDetails: EntityDetailsState
     }
 }
 
@@ -467,6 +499,7 @@ export function renderWithProviders(
                     columns: [tagDefTest]
                 })
             }),
+            entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
                 currentEditSession: newRemote(
                     newEditSession({
@@ -492,7 +525,8 @@ export function renderWithProviders(
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer,
-            editSession: editSessionReducer
+            editSession: editSessionReducer,
+            entityDetails: entityDetailsReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

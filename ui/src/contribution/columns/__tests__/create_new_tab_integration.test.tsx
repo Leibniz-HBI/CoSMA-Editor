@@ -209,6 +209,7 @@ test('create, select and assign tag definition', async () => {
     const tagDefLabel = await screen.findByText(nameTagDef0)
     const tagDefEntry =
         tagDefLabel.parentElement?.parentElement?.parentElement?.parentElement
+            ?.parentElement
     const radioButton = getByRole(tagDefEntry as HTMLElement, 'button', {
         name: /select/i
     })

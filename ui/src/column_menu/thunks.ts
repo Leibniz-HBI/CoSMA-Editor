@@ -5,6 +5,9 @@ import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
 import {
     changeParentSuccess,
+    getTagDefinitionDetailsError,
+    getTagDefinitionDetailsStart,
+    getTagDefinitionDetailsSuccess,
     loadTagHierarchyError,
     loadTagHierarchyStart,
     loadTagHierarchySuccess,
@@ -198,6 +201,33 @@ export function changeTagDefinitionParent({
                 dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+export function getTagDefinitionDetailsThunk(
+    idPersistentList: string[]
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(getTagDefinitionDetailsStart(idPersistentList))
+        try {
+            const rsp = await fetch(config.api_path + '/tags/definitions/details', {
+                credentials: 'include',
+                method: 'POST',
+                body: JSON.stringify({ id_persistent_list: idPersistentList })
+            })
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const tagDefinitionList = json['tag_definitions'].map((json: unknown) =>
+                    parseColumnDefinitionsFromApi(json)
+                )
+                dispatch(getTagDefinitionDetailsSuccess(tagDefinitionList))
+            } else {
+                dispatch(getTagDefinitionDetailsError(idPersistentList))
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(getTagDefinitionDetailsError(idPersistentList))
             dispatch(addError(exceptionMessage(e)))
         }
     }

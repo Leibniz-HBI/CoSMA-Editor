@@ -56,7 +56,7 @@ export function renderWithProviders(
             notification: { notificationList: [], notificationMap: {} },
             user: newUserState({
                 userInfo: newUserInfo({
-                    userName: 'logged in user',
+                    username: 'logged in user',
                     idPersistent: 'id-logged-in-user',
                     email: 'user@logged.in',
                     namesPersonal: 'name logged in',
@@ -106,7 +106,7 @@ const nameUser1 = 'name user 1'
 const namePathTagDef = ['name', 'path']
 const idTagDef = 'id-tag'
 const versionTag = 46
-const namePathTagDef1 = ['name', 'path', '1']
+const namePathTagDef1 = ['name', 'path', 'tag 1']
 const idTagDef1 = 'id-tag-1'
 const versionTag1 = 57
 
@@ -183,7 +183,9 @@ test('success', async () => {
     const { store } = renderWithProviders(<ReviewList />, fetchMock)
 
     await waitFor(() => {
-        const items = screen.getAllByText(/-> 1/i)
+        const items = screen.getAllByText(
+            (_, element) => element?.textContent === 'tag 1'
+        )
         expect(items.length).toEqual(2)
         items[0].click()
     })

@@ -54,6 +54,8 @@ import {
     newEditSessionState
 } from '../../../session/state'
 import { editSessionReducer } from '../../../session/slice'
+import { entityDetailsReducer } from '../../../entity/slice'
+import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -338,6 +340,7 @@ async function toggleJustifications() {
         const tagDefLabel = screen.getByText('Justification')
         const tagListItem =
             tagDefLabel.parentElement?.parentElement?.parentElement?.parentElement
+                ?.parentElement
         const tagButton = tagListItem?.children[1]
         expect(tagButton?.className).toEqual('icon')
         ;(tagButton as HTMLElement)?.click()
@@ -422,6 +425,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         tagSelection: TagSelectionState
         user: UserState
+        entityDetails: EntityDetailsState
         editSession: EditSessionState
     }
 }
@@ -454,6 +458,7 @@ export function renderWithProviders(
                     columns: [tagDefTest]
                 })
             }),
+            entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
                 currentEditSession: newRemote(
                     newEditSession({
@@ -480,6 +485,7 @@ export function renderWithProviders(
             tagSelection: tagSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer,
+            entityDetails: entityDetailsReducer,
             editSession: editSessionReducer
         },
         middleware: (getDefaultMiddleware) =>

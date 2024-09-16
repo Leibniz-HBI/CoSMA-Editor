@@ -25,7 +25,7 @@ interface LoadingCellProps {
 export type LoadingCell = CustomCell<LoadingCellProps>
 
 export const loadingCellRenderer: CustomRenderer<LoadingCell> = {
-    kind: GridCellKind.Custom,
+    kind: 'custom' as GridCellKind.Custom,
     isMatch: (cell: CustomCell): cell is LoadingCell =>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (cell.data as any).kind === 'custom-loading-cell',
@@ -63,7 +63,7 @@ interface ReplaceButtonCellProps {
 export type ReplaceButtonCell = CustomCell<ReplaceButtonCellProps>
 
 export const ReplaceButtonCellRenderer: CustomRenderer<ReplaceButtonCell> = {
-    kind: GridCellKind.Custom,
+    kind: 'custom' as GridCellKind.Custom,
     isMatch: (cell: CustomCell): cell is ReplaceButtonCell =>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (cell.data as any).kind === 'replace-button-cell',

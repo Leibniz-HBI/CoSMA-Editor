@@ -50,6 +50,8 @@ import userEvent from '@testing-library/user-event'
 import { debounce } from 'debounce'
 import { newRemote } from '../../../util/state'
 import { editSessionReducer } from '../../../session/slice'
+import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
+import { entityDetailsReducer } from '../../../entity/slice'
 
 const debounced = debounce(
     (changeCallback: (item: Item, value: string) => void, item: Item, value: string) =>
@@ -130,10 +132,10 @@ test('edit display text success', async () => {
     const user = userEvent.setup()
     await waitFor(() => {
         const inputs = screen.getAllByRole('textbox')
-        expect(inputs.length).toEqual(4)
+        expect(inputs.length).toEqual(6)
     })
     const inputs = screen.getAllByRole('textbox')
-    const input = inputs[2] as HTMLInputElement
+    const input = inputs[4] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -179,10 +181,10 @@ test('edit display text error', async () => {
     const user = userEvent.setup()
     await waitFor(() => {
         const inputs = screen.getAllByRole('textbox')
-        expect(inputs.length).toEqual(4)
+        expect(inputs.length).toEqual(6)
     })
     const inputs = screen.getAllByRole('textbox')
-    const input = inputs[2] as HTMLInputElement
+    const input = inputs[4] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -237,10 +239,10 @@ test('edit tag value success', async () => {
     const user = userEvent.setup()
     await waitFor(() => {
         const inputs = screen.getAllByRole('textbox')
-        expect(inputs.length).toEqual(4)
+        expect(inputs.length).toEqual(6)
     })
     const inputs = screen.getAllByRole('textbox')
-    const input = inputs[1] as HTMLInputElement
+    const input = inputs[2] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -248,7 +250,7 @@ test('edit tag value success', async () => {
     await waitFor(() => {
         const state = store.getState()
         expect(state.notification).toEqual(newNotificationManager({}))
-        expect(state.table.columnStates[1].cellContents.value?.at(0)).toEqual([
+        expect(state.table.columnStates[2].cellContents.value?.at(0)).toEqual([
             {
                 value: valueChanged,
                 idPersistent: idValue0,
@@ -288,10 +290,10 @@ test('edit tag value api msg error', async () => {
     const user = userEvent.setup()
     await waitFor(() => {
         const inputs = screen.getAllByRole('textbox')
-        expect(inputs.length).toEqual(4)
+        expect(inputs.length).toEqual(6)
     })
     const inputs = screen.getAllByRole('textbox')
-    const input = inputs[1] as HTMLInputElement
+    const input = inputs[2] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -310,7 +312,7 @@ test('edit tag value api msg error', async () => {
                 notificationMap: expect.anything()
             })
         )
-        expect(state.table.columnStates[1].cellContents.value?.at(0)).toEqual([
+        expect(state.table.columnStates[2].cellContents.value?.at(0)).toEqual([
             {
                 value: value0,
                 idPersistent: idValue0,
@@ -347,10 +349,10 @@ test('edit tag value changed in backend', async () => {
     const user = userEvent.setup()
     await waitFor(() => {
         const inputs = screen.getAllByRole('textbox')
-        expect(inputs.length).toEqual(4)
+        expect(inputs.length).toEqual(6)
     })
     const inputs = screen.getAllByRole('textbox')
-    const input = inputs[1] as HTMLInputElement
+    const input = inputs[2] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -371,7 +373,7 @@ test('edit tag value changed in backend', async () => {
                 notificationMap: expect.anything()
             })
         )
-        expect(state.table.columnStates[1].cellContents.value?.at(0)).toEqual([
+        expect(state.table.columnStates[2].cellContents.value?.at(0)).toEqual([
             {
                 value: valueChangedByOther,
                 idPersistent: idValue0,
@@ -494,6 +496,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         user: UserState
         editSession: EditSessionState
+        entityDetails: EntityDetailsState
     }
 }
 
@@ -513,6 +516,7 @@ export function renderWithProviders(
                     columns: [tagDefTest]
                 })
             }),
+            entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
                 currentEditSession: newRemote(
                     newEditSession({
@@ -538,6 +542,7 @@ export function renderWithProviders(
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer,
+            entityDetails: entityDetailsReducer,
             editSession: editSessionReducer
         },
         middleware: (getDefaultMiddleware) =>

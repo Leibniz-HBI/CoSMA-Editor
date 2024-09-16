@@ -6,7 +6,8 @@ import {
     newColumnState,
     newTableState,
     justificationColumn,
-    justificationColumnId
+    justificationColumnId,
+    optionalEntityJustificationColumnIdx
 } from './state'
 import { newRemote } from '../util/state'
 import { TagDefinition } from '../column_menu/state'
@@ -104,7 +105,11 @@ const tableSlice = createSlice({
                 tagDefinition: justificationColumn,
                 cellContents: newRemote([])
             })
-            state.columnStates.splice(1, 0, columnState)
+            state.columnStates.splice(
+                optionalEntityJustificationColumnIdx,
+                0,
+                columnState
+            )
             generateColumnStateIndices(state)
             state.showEntityJustifications = true
         },

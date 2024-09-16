@@ -16,7 +16,7 @@ import {
 import { EntityMergeRequestConflict } from './state'
 import { EntityMergeRequest } from '../state'
 import { RemoteInterface } from '../../../util/state'
-import { constructColumnTitleSpans } from '../../../column_menu/components/selection'
+import { TagDefinitionNamePath } from '../../../column_menu/components/misc'
 import { ChoiceButton, RemoteTriggerButton } from '../../../util/components/misc'
 import { useEffect } from 'react'
 import { AppDispatch } from '../../../store'
@@ -30,6 +30,7 @@ import {
 } from './thunks'
 import { useLoaderData } from 'react-router-dom'
 import { clearEntityMergeState } from './slice'
+import { TagType } from '../../../column_menu/state'
 
 export function EntityMergeRequestConflictView() {
     const idMergeRequestPersistent = useLoaderData() as string
@@ -290,9 +291,14 @@ export function EntityMergeRequestConflictListItem({
                         Tag Definition:
                     </Col>
                     <Col className="fw-bold text-start">
-                        {constructColumnTitleSpans(
-                            conflict.value.tagDefinition.namePath
-                        )}
+                        <TagDefinitionNamePath
+                            tagDefinition={{
+                                ...conflict.value.tagDefinition,
+                                columnType: TagType.String,
+                                hidden: false,
+                                disabled: false
+                            }}
+                        />
                     </Col>
                 </Row>
                 <Row key="tag-instance-row">

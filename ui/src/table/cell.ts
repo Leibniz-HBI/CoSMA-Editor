@@ -96,7 +96,7 @@ export function createCellContentCallback({
             return {
                 data: 'i',
                 displayData: '🛈',
-                kind: GridCellKind.Text,
+                kind: 'text' as GridCellKind.Text,
                 allowOverlay: false,
                 contentAlign: 'center'
             }

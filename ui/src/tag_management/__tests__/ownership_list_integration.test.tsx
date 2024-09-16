@@ -137,19 +137,20 @@ describe('Ownership Request List', () => {
         addOwnershipRequestsQuery(fetchMock)
         renderWithProviders(<TagManagementPage />, fetchMock)
         await waitFor(() => {
-            const receivedLabel = screen.getByText('-> ' + namePathTest[2])
+            const receivedLabel = screen.getByText(namePathTest[2])
             const receivedEntry =
                 receivedLabel.parentElement?.parentElement?.parentElement?.parentElement
+                    ?.parentElement
             expect(receivedEntry).not.toBeUndefined()
             expect(receivedEntry).not.toBeNull()
             if (receivedEntry !== undefined && receivedEntry !== null) {
                 getByText(receivedEntry, 'Accept')
                 getByText(receivedEntry, usernameTest)
             }
-            const petitionedLabel = screen.getByText('-> ' + namePathTest1[2])
+            const petitionedLabel = screen.getByText(namePathTest1[2])
             const petitionedEntry =
                 petitionedLabel.parentElement?.parentElement?.parentElement
-                    ?.parentElement
+                    ?.parentElement?.parentElement
             expect(petitionedEntry).not.toBeUndefined()
             expect(petitionedEntry).not.toBeNull()
             if (petitionedEntry !== undefined && petitionedEntry !== null) {

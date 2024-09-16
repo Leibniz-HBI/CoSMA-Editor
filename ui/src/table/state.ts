@@ -34,7 +34,7 @@ export function newTableState({
     showColumnAddMenu = false,
     selectedTagDefinition = undefined,
     selectedColumnHeaderBounds = undefined,
-    frozenColumns = 0,
+    frozenColumns = 2,
     isSubmittingValues = false,
     ownershipChangeTagDefinition = undefined,
     showEntityAddDialog = false,
@@ -225,11 +225,25 @@ export function newEntity({
     }
 }
 export const displayTxtColumnId = 'display_txt_id'
+export const entityDetailsColumnId = 'entity_details_is'
+export const displayTxtColumnIdx = 1
+export const entityDetailsColumnIdx = 0
+export const optionalEntityJustificationColumnIdx = 2
+
 export const displayTextColumn = newTagDefinition({
     namePath: ['Display Text'],
     idPersistent: displayTxtColumnId,
     columnType: TagType.String,
     curated: true,
+    version: 0,
+    hidden: false
+})
+
+export const entityDetailsColumn = newTagDefinition({
+    namePath: [''],
+    idPersistent: entityDetailsColumnId,
+    columnType: TagType.String,
+    curated: false,
     version: 0,
     hidden: false
 })

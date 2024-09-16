@@ -1,6 +1,6 @@
 import { Col, ListGroup, Modal, Row, Spinner } from 'react-bootstrap'
 import { TagDefinition } from '../column_menu/state'
-import { constructColumnTitleSpans } from '../column_menu/components/selection'
+import { TagDefinitionNamePath } from '../column_menu/components/misc'
 import { FormField } from '../util/form'
 import { useDispatch, useSelector } from 'react-redux'
 import { userSearch } from '../user/thunks'
@@ -153,9 +153,9 @@ export function TagOwnershipRequestListItemBody({
             <Col>
                 <Row>
                     <Col>
-                        {constructColumnTitleSpans(
-                            request.value.tagDefinition.namePath
-                        )}
+                        <TagDefinitionNamePath
+                            tagDefinition={request.value.tagDefinition}
+                        />
                     </Col>
                 </Row>
                 <Row>
@@ -209,7 +209,7 @@ export function ChangeOwnershipModal({
                             <span>
                                 Change ownership of tag definition with name path
                             </span>
-                            {constructColumnTitleSpans(tagDefinition?.namePath)}
+                            <TagDefinitionNamePath tagDefinition={tagDefinition} />
                         </Row>
                         <Row>
                             <FormField

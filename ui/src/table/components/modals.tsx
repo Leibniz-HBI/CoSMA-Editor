@@ -37,7 +37,6 @@ import { useEffect } from 'react'
 import { CommentForm, CommentsHistory } from '../../comments/components'
 import { justificationColumnId } from '../state'
 import { clearSelection } from '../selection/slice'
-import { ColumnSelector } from '../../column_menu/components/selection'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()

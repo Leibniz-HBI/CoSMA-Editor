@@ -60,6 +60,8 @@ import {
     newEditSessionState
 } from '../../../session/state'
 import { editSessionReducer } from '../../../session/slice'
+import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
+import { entityDetailsReducer } from '../../../entity/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -89,6 +91,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tagSelection: TagSelectionState
         entityMergeRequests: EntityMergeRequestState
         entityMergeRequestConflicts: EntityMergeRequestConflictsState
+        entityDetails: EntityDetailsState
         editSession: EditSessionState
     }
 }
@@ -112,6 +115,7 @@ export function renderWithProviders(
                     columns: [tagDefTest]
                 })
             }),
+            entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
                 currentEditSession: newRemote(
                     newEditSession({
@@ -140,6 +144,7 @@ export function renderWithProviders(
             tagSelection: tagSelectionSlice.reducer,
             entityMergeRequests: entityMergeRequestsReducer,
             entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
+            entityDetails: entityDetailsReducer,
             editSession: editSessionReducer
         },
         middleware: (getDefaultMiddleware) =>

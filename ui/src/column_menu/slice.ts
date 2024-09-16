@@ -165,6 +165,49 @@ export const tagSelectionSlice = createSlice({
         dragTagDefinitionEnd(state: TagSelectionState) {
             state.isDragging = false
         },
+        getTagDefinitionDetailsError(
+            state: TagSelectionState,
+            action: PayloadAction<string[]>
+        ) {
+            for (const idPersistent of action.payload) {
+                const remoteTagDefinition =
+                    state.tagDefinitionsByIdPersistent[idPersistent]
+                if (remoteTagDefinition === undefined) {
+                    state.tagDefinitionsByIdPersistent[idPersistent] = newRemote(
+                        undefined,
+                        false
+                    )
+                } else {
+                    remoteTagDefinition.isLoading = false
+                }
+            }
+        },
+        getTagDefinitionDetailsStart(
+            state: TagSelectionState,
+            action: PayloadAction<string[]>
+        ) {
+            for (const idPersistent of action.payload) {
+                const remoteTagDefinition =
+                    state.tagDefinitionsByIdPersistent[idPersistent]
+                if (remoteTagDefinition === undefined) {
+                    state.tagDefinitionsByIdPersistent[idPersistent] = newRemote(
+                        undefined,
+                        true
+                    )
+                } else {
+                    remoteTagDefinition.isLoading = true
+                }
+            }
+        },
+        getTagDefinitionDetailsSuccess(
+            state: TagSelectionState,
+            action: PayloadAction<TagDefinition[]>
+        ) {
+            for (const tagDefinition of action.payload) {
+                state.tagDefinitionsByIdPersistent[tagDefinition.idPersistent] =
+                    newRemote(tagDefinition)
+            }
+        },
         changeParentSuccess(
             state: TagSelectionState,
             action: PayloadAction<{
@@ -338,5 +381,8 @@ export const {
     editTagDefinitionError,
     changeParentSuccess,
     dragTagDefinitionStart,
-    dragTagDefinitionEnd
+    dragTagDefinitionEnd,
+    getTagDefinitionDetailsError,
+    getTagDefinitionDetailsStart,
+    getTagDefinitionDetailsSuccess
 } = tagSelectionSlice.actions

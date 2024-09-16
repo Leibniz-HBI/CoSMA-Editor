@@ -4,7 +4,7 @@ import { Badge, Col, ListGroup, OverlayTrigger, Row, Tooltip } from 'react-boots
 import { MergeRequest } from './state'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
-import { constructColumnTitleSpans } from '../column_menu/components/selection'
+import { TagDefinitionNamePath } from '../column_menu/components/misc'
 import { AppDispatch } from '../store'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectPermissionGroup } from '../user/selectors'
@@ -153,9 +153,11 @@ export function MergeRequestListItemBody({
                         </Col>
                         <Col className="ps-0">
                             <span className="fw-bold">
-                                {constructColumnTitleSpans(
-                                    mergeRequest.destinationTagDefinition.namePath
-                                )}
+                                <TagDefinitionNamePath
+                                    tagDefinition={
+                                        mergeRequest.destinationTagDefinition
+                                    }
+                                />
                             </span>
                         </Col>
                     </Row>
@@ -173,11 +175,9 @@ export function MergeRequestListItemBody({
                             <ArrowLeftCircle />
                         </Col>
                         <Col className="ps-0">
-                            <span>
-                                {constructColumnTitleSpans(
-                                    mergeRequest.originTagDefinition.namePath
-                                )}
-                            </span>
+                            <TagDefinitionNamePath
+                                tagDefinition={mergeRequest.originTagDefinition}
+                            />
                         </Col>
                     </Row>
                 </OverlayTrigger>

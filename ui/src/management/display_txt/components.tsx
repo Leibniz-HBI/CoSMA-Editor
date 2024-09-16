@@ -7,10 +7,8 @@ import { Col, ListGroup, Row } from 'react-bootstrap'
 import { AppDispatch } from '../../store'
 import { CosmaeLoading } from '../../util/components/misc'
 import { TagDefinition } from '../../column_menu/state'
-import {
-    ColumnSelector,
-    constructColumnTitleSpans
-} from '../../column_menu/components/selection'
+import { ColumnSelector } from '../../column_menu/components/selection'
+import { TagDefinitionNamePath } from '../../column_menu/components/misc'
 import { PlusLg, XLg } from 'react-bootstrap-icons'
 import { useEffect } from 'react'
 import {
@@ -73,7 +71,9 @@ function DisplayTxtOrderItem({
     return (
         <ListGroup.Item>
             <Row className="justify-content-between">
-                <Col>{constructColumnTitleSpans(tagDefinition.namePath)}</Col>
+                <Col>
+                    <TagDefinitionNamePath tagDefinition={tagDefinition} />
+                </Col>
                 <Col
                     xs="auto"
                     className="ms-1 me-1 align-top"

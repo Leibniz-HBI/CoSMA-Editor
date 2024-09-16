@@ -15,6 +15,7 @@ import { tagMergeRequestConflictsReducer } from './merge_request/conflicts/slice
 import { commentsReducer } from './comments/slice'
 import { tableReducer } from './table/slice'
 import { editSessionReducer } from './session/slice'
+import { entityDetailsReducer } from './entity/slice'
 
 const rootReducer = combineReducers({
     notification: notificationReducer,
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
     tagMergeRequests: tagMergeRequestsReducer,
     tagMergeRequestConflicts: tagMergeRequestConflictsReducer,
     entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
+    entityDetails: entityDetailsReducer,
     displayTxtManagement: displayTxtManagementReducer,
     comments: commentsReducer,
     table: tableReducer,

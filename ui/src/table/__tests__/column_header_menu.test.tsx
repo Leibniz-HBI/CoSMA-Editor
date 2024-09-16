@@ -27,7 +27,13 @@ import {
     newNotificationManager,
     notificationReducer
 } from '../../util/notification/slice'
-import { TableState, displayTextColumn, newColumnState, newTableState } from '../state'
+import {
+    TableState,
+    displayTextColumn,
+    entityDetailsColumn,
+    newColumnState,
+    newTableState
+} from '../state'
 import { TableSelectionState, tableSelectionSlice } from '../selection/slice'
 import { userSlice } from '../../user/slice'
 import { Provider } from 'react-redux'
@@ -45,6 +51,8 @@ import {
 } from '../../session/state'
 import { newRemote } from '../../util/state'
 import { editSessionReducer } from '../../session/slice'
+import { EntityDetailsState, newEntityDetailsState } from '../../entity/state'
+import { entityDetailsReducer } from '../../entity/slice'
 
 const rectangle = { x: 0, y: 1, width: 2, height: 4 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -73,7 +81,11 @@ test('renders all menu entries', async () => {
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
+        expect(state.table.columnStates).toEqual([
+            entityDetailsColumnState,
+            displayTxtColumnState,
+            columnState
+        ])
         name.click()
     })
     await waitFor(() => {
@@ -101,13 +113,19 @@ test('no curation for unprivileged user', async () => {
             }),
             table: newTableState({}),
             notification: newNotificationManager({}),
-            tableSelection: { cols: [], rows: [], rowSelectionOrder: [] }
+            tableSelection: { cols: [], rows: [], rowSelectionOrder: [] },
+            editSession: newEditSessionState({}),
+            entityDetails: newEntityDetailsState({})
         }
     })
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
+        expect(state.table.columnStates).toEqual([
+            entityDetailsColumnState,
+            displayTxtColumnState,
+            columnState
+        ])
         name.click()
     })
     await waitFor(() => {
@@ -128,7 +146,11 @@ test('remove column from header menu', async () => {
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
+        expect(state.table.columnStates).toEqual([
+            entityDetailsColumnState,
+            displayTxtColumnState,
+            columnState
+        ])
         name.click()
     })
     await waitFor(() => {
@@ -139,7 +161,10 @@ test('remove column from header menu', async () => {
         const remove = screen.queryByRole('button', { name: 'Hide Column' })
         expect(remove).toBeNull()
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState])
+        expect(state.table.columnStates).toEqual([
+            entityDetailsColumnState,
+            displayTxtColumnState
+        ])
         expect(state.user.userInfo?.columns).toEqual([])
     })
     // TODO check menu entries
@@ -212,6 +237,7 @@ const tagDefTest: TagDefinition = newTagDefinition({
     hidden: false
 })
 const displayTxtColumnState = newColumnState({ tagDefinition: displayTextColumn })
+const entityDetailsColumnState = newColumnState({ tagDefinition: entityDetailsColumn })
 const columnState = newColumnState({ tagDefinition: tagDefTest })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -221,6 +247,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         user: UserState
         editSession: EditSessionState
+        entityDetails: EntityDetailsState
     }
 }
 
@@ -254,7 +281,8 @@ export function renderWithProviders(
                         participantMap: {}
                     })
                 )
-            })
+            }),
+            entityDetails: newEntityDetailsState({})
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -265,7 +293,8 @@ export function renderWithProviders(
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer,
-            editSession: editSessionReducer
+            editSession: editSessionReducer,
+            entityDetails: entityDetailsReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

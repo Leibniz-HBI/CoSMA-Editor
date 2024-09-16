@@ -456,6 +456,7 @@ async function addTagDefinitionByName(nameTagDef: string) {
     })
     const tagListItem =
         tagDefLabel?.parentElement?.parentElement?.parentElement?.parentElement
+            ?.parentElement
     const tagButton = tagListItem?.children[1]
     expect(tagButton?.className).toEqual('icon')
     ;(tagButton as HTMLElement)?.click()

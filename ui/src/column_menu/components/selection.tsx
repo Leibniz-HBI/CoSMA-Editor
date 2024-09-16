@@ -9,13 +9,7 @@ import {
     Tooltip
 } from 'react-bootstrap'
 
-import {
-    DashLg,
-    PatchCheckFill,
-    PencilSquare,
-    PlusLg,
-    RecordFill
-} from 'react-bootstrap-icons'
+import { DashLg, PencilSquare, PlusLg, RecordFill } from 'react-bootstrap-icons'
 import { TagDefinition, TagType, newTagDefinition } from '../state'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import {
@@ -34,31 +28,7 @@ import {
 import { changeTagDefinitionParent } from '../thunks'
 import { CreateTabBody } from './menu'
 import { newRemote } from '../../util/state'
-
-export function constructColumnTitleSpans(namePath: string[]): ReactElement[] {
-    if (namePath === undefined || namePath.length == 0) {
-        return [<span>UNKNOWN</span>]
-    }
-    const pathSpans = [
-        <span className="pre-wrap" key="path-part-0">
-            {namePath[0] + ' '}
-        </span>,
-        <span className="pre-wrap" key="path-part-1">
-            {'-> ... '}
-        </span>,
-        <span className="pre-wrap" key="path-part-2">
-            {'-> ' + namePath[namePath.length - 2] + ' '}
-        </span>,
-        <span className="pre-wrap" key="path-part-3">
-            {'-> ' + namePath[namePath.length - 1] + ' '}
-        </span>
-    ]
-    if (namePath.length < 4) {
-        pathSpans.splice(1, 4 - namePath.length)
-    }
-
-    return pathSpans
-}
+import { TagDefinitionNamePath } from './misc'
 
 export function ColumnSelector({
     mkTailElement,
@@ -264,14 +234,6 @@ export function ColumnExplorerItem({
     if (expandable && toggleExpansionCallback !== undefined) {
         expandCallback = () => toggleExpansionCallback(path, expansionGroup)
     }
-    let curatedIcon = undefined
-    if (tagDefinition.curated) {
-        curatedIcon = (
-            <span className="icon test-primary">
-                <PatchCheckFill />
-            </span>
-        )
-    }
     let editButton = <div />
     if (startEditCallback !== undefined) {
         editButton = <PencilSquare onClick={() => startEditCallback(tagDefinition)} />
@@ -329,8 +291,7 @@ export function ColumnExplorerItem({
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={(event) => event.preventDefault()}
                     >
-                        {constructColumnTitleSpans(tagDefinition.namePath)}
-                        {curatedIcon}
+                        <TagDefinitionNamePath tagDefinition={tagDefinition} />
                     </Col>
                     <Col xs="auto" className="me-2">
                         {editButton}

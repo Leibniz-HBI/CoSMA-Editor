@@ -192,6 +192,7 @@ test('append and remove', async () => {
         const tagDef0Text = screen.getByText(nameTagDef0)
         const listEntry =
             tagDef0Text.parentElement?.parentElement?.parentElement?.parentElement
+                ?.parentElement
         expect(listEntry?.className).toEqual(
             'd-flex flex-row justify-content-between list-group-item'
         )
@@ -201,7 +202,7 @@ test('append and remove', async () => {
     await waitFor(() => {
         const tagDef0Texts = screen.getAllByText(nameTagDef2)
         expect(tagDef0Texts.length).toEqual(2)
-        const listElement = tagDef0Texts[0]?.parentElement?.parentElement
+        const listElement = tagDef0Texts[0]?.parentElement?.parentElement?.parentElement
         expect(listElement?.className).toEqual('justify-content-between row'),
             (
                 listElement?.children[listElement.children.length - 1] as HTMLElement

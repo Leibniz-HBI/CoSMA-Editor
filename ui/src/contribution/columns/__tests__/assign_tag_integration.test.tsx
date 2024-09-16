@@ -170,6 +170,7 @@ test('assign existing', async () => {
     const displayTxtLabel = await screen.findByText('Display Text')
     const displayTxtEntry =
         displayTxtLabel.parentElement?.parentElement?.parentElement?.parentElement
+            ?.parentElement
     expect(
         queryByRole(displayTxtEntry as HTMLElement, 'button', {
             name: /Selected/i

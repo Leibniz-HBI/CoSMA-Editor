@@ -207,11 +207,10 @@ describe('get hierarchy', () => {
             const withLabel2 = screen.getAllByText(nameTagDef2)
             expect(withLabel2.length).toEqual(3)
             expandIcon =
-                withLabel2[2]?.parentElement?.parentElement?.children[0]?.children[1]
+                withLabel2[2]?.parentElement?.parentElement?.parentElement
+                    ?.parentElement?.children[0]?.children[1]
 
-            expect(expandIcon?.children[0]?.children[0]?.getAttribute('d')).toEqual(
-                'M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2'
-            )
+            expect(expandIcon?.children[0].classList.value).toEqual('bi bi-plus-lg')
         })
         ;(expandIcon as HTMLElement | undefined)?.click()
         await waitFor(() => {
@@ -222,11 +221,10 @@ describe('get hierarchy', () => {
             const withLabel2 = screen.getAllByText(nameTagDef2)
             expect(withLabel2.length).toEqual(4)
             collapseIcon =
-                withLabel2[2]?.parentElement?.parentElement?.children[0]?.children[1]
+                withLabel2[2]?.parentElement?.parentElement?.parentElement
+                    ?.parentElement?.children[0]?.children[1]
 
-            expect(collapseIcon?.children[0]?.children[0]?.getAttribute('d')).toEqual(
-                'M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8'
-            )
+            expect(collapseIcon?.children[0].classList.value).toEqual('bi bi-dash-lg')
         })
         ;(collapseIcon as HTMLElement | undefined)?.click()
         await waitFor(() => {
@@ -411,14 +409,9 @@ test('open edit menu', async () => {
     expect(store.getState().tagSelection.editTagDefinition.value).toBeUndefined()
     await waitFor(() => {
         const label = screen.getAllByText(nameTagDef0)[0]
-        const enclosing = label.parentElement?.parentElement
+        const enclosing = label.parentElement?.parentElement?.parentElement
         const svg = enclosing?.children[enclosing.children.length - 1].children[0]
-        expect(svg?.children[0].getAttribute('d')).toEqual(
-            'M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z'
-        )
-        expect(svg?.children[1].getAttribute('d')).toEqual(
-            'M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z'
-        )
+        expect(svg?.classList.value).toEqual('bi bi-pencil-square')
         if (svg !== undefined) {
             user.click(svg)
         }

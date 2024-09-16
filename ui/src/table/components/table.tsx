@@ -55,7 +55,13 @@ import {
     submitValuesAsync
 } from '../thunks'
 import { TagDefinition } from '../../column_menu/state'
-import { ColumnState, Entity } from '../state'
+import {
+    ColumnState,
+    displayTxtColumnIdx,
+    Entity,
+    entityDetailsColumnIdx,
+    optionalEntityJustificationColumnIdx
+} from '../state'
 import {
     ColumnModal,
     EntityAddModal,
@@ -67,6 +73,7 @@ import { AddEntityButton } from './buttons'
 import { SearchButton } from './buttons'
 import { DownloadButton } from './buttons'
 import { EditSessionButton } from '../../session/components'
+import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
 import { EntityDetailsModal } from '../../entity/components'
 
 export function downloadWorkAround(csvLines: string[]) {
@@ -252,10 +259,14 @@ export function DataTable({
                 return
             }
             const [colIdx, rowIdx] = cell
-            if (showEntityJustifications && colIdx == 1) {
+            if (
+                colIdx == entityDetailsColumnIdx ||
+                (showEntityJustifications &&
+                    colIdx == optionalEntityJustificationColumnIdx)
+            ) {
                 return
             }
-            if (colIdx == 0) {
+            if (colIdx == displayTxtColumnIdx) {
                 const entity = entities[rowIdx]
                 let newValueData: string | undefined = newValue.data?.toString()
                 if (newValueData == '') {
@@ -290,7 +301,11 @@ export function DataTable({
             colIndex: number,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             newSizeWithGrow: number
-        ) => dispatch(setColumnWidth({ columnIdx: colIndex, width: newSize })),
+        ) => {
+            if (colIndex > 0) {
+                dispatch(setColumnWidth({ columnIdx: colIndex, width: newSize }))
+            }
+        },
         switchColumnsCallback = (startIdx: number, endIdx: number) =>
             dispatch(changeColumnIndex({ startIdx, endIdx })),
         toggleSearchCallback = (show: boolean) => dispatch(toggleSearch(show))
@@ -321,7 +336,15 @@ export function DataTable({
     )
     const onCellActivated = (cell: Item) => {
         const [colIdx, rowIdx] = cell
-        if (showEntityJustifications && colIdx == 1) {
+        if (colIdx == entityDetailsColumnIdx && entities !== undefined) {
+            dispatch(
+                setShowDetailsForEntityWithIdPersistent(entities[rowIdx].idPersistent)
+            )
+        }
+        if (
+            showEntityJustifications &&
+            colIdx == optionalEntityJustificationColumnIdx
+        ) {
             dispatch(
                 showEntityJustificationHistory(
                     entities?.at(rowIdx)?.idPersistent ?? undefined
@@ -336,7 +359,7 @@ export function DataTable({
         (args: GridMouseEventArgs) => {
             if (
                 args.kind === 'cell' &&
-                args.location[0] == 0 &&
+                args.location[0] == displayTxtColumnIdx &&
                 entities !== undefined
             ) {
                 window.clearTimeout(timeoutRef.current)
@@ -383,11 +406,22 @@ export function DataTable({
             if (columnState.tagDefinition.curated) {
                 title = '☑ ' + title
             }
+            let width = columnState.width,
+                themeOverride = undefined
+            if (i == 0) {
+                width = 15
+                themeOverride = {
+                    borderColor: 'rgba(115, 116, 131, 0.16)',
+                    baseFontStyle: '500 16px',
+                    textDark: '#197374'
+                }
+            }
             columnDefs.push({
                 id: columnState.tagDefinition.idPersistent,
                 title,
-                width: columnState.width,
-                hasMenu: i > 0
+                width,
+                hasMenu: i > 1,
+                themeOverride
             })
         }
 
