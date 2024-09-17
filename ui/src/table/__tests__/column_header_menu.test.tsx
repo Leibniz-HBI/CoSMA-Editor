@@ -82,8 +82,8 @@ test('renders all menu entries', async () => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
         expect(state.table.columnStates).toEqual([
-            entityDetailsColumnState,
             displayTxtColumnState,
+            entityDetailsColumnState,
             columnState
         ])
         name.click()
@@ -122,8 +122,8 @@ test('no curation for unprivileged user', async () => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
         expect(state.table.columnStates).toEqual([
-            entityDetailsColumnState,
             displayTxtColumnState,
+            entityDetailsColumnState,
             columnState
         ])
         name.click()
@@ -147,8 +147,8 @@ test('remove column from header menu', async () => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
         expect(state.table.columnStates).toEqual([
-            entityDetailsColumnState,
             displayTxtColumnState,
+            entityDetailsColumnState,
             columnState
         ])
         name.click()
@@ -162,8 +162,8 @@ test('remove column from header menu', async () => {
         expect(remove).toBeNull()
         const state = store.getState()
         expect(state.table.columnStates).toEqual([
-            entityDetailsColumnState,
-            displayTxtColumnState
+            displayTxtColumnState,
+            entityDetailsColumnState
         ])
         expect(state.user.userInfo?.columns).toEqual([])
     })

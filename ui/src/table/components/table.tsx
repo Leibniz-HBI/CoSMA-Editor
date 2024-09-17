@@ -302,7 +302,7 @@ export function DataTable({
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             newSizeWithGrow: number
         ) => {
-            if (colIndex > 0) {
+            if (colIndex != 1) {
                 dispatch(setColumnWidth({ columnIdx: colIndex, width: newSize }))
             }
         },
@@ -408,7 +408,7 @@ export function DataTable({
             }
             let width = columnState.width,
                 themeOverride = undefined
-            if (i == 0) {
+            if (i == 1) {
                 width = 15
                 themeOverride = {
                     borderColor: 'rgba(115, 116, 131, 0.16)',

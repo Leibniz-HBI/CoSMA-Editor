@@ -48,8 +48,8 @@ import { parseCommentFromApi } from '../comments/thunks'
 export function getTableAsync(): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(setEntityLoading())
-        dispatch(setColumnLoading(entityDetailsColumn))
         dispatch(setColumnLoading(displayTextColumn))
+        dispatch(setColumnLoading(entityDetailsColumn))
         try {
             const entities: Entity[] = []
             for (let i = 0; ; i += 500) {
@@ -87,13 +87,13 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
             dispatch(setEntities(entities))
             dispatch(
                 appendColumn({
-                    idPersistent: entityDetailsColumnId,
+                    idPersistent: displayTxtColumnId,
                     columnData: undefined
                 })
             )
             dispatch(
                 appendColumn({
-                    idPersistent: displayTxtColumnId,
+                    idPersistent: entityDetailsColumnId,
                     columnData: undefined
                 })
             )

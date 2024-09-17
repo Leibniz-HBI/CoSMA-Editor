@@ -135,7 +135,7 @@ test('edit display text success', async () => {
         expect(inputs.length).toEqual(6)
     })
     const inputs = screen.getAllByRole('textbox')
-    const input = inputs[4] as HTMLInputElement
+    const input = inputs[3] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -184,7 +184,7 @@ test('edit display text error', async () => {
         expect(inputs.length).toEqual(6)
     })
     const inputs = screen.getAllByRole('textbox')
-    const input = inputs[4] as HTMLInputElement
+    const input = inputs[3] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)

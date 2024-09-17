@@ -189,13 +189,13 @@ test('get entities success', async () => {
             entities: entities_test,
             isLoading: false,
             columnIndices: {
-                [entityDetailsColumnId]: 0,
-                display_txt_id: 1,
+                display_txt_id: 0,
+                [entityDetailsColumnId]: 1,
                 [idTagDefPersistent]: 2
             },
             columnStates: [
-                entityDetailsColumnState,
                 displayTxtColumnState,
+                entityDetailsColumnState,
                 tagDefColumnState
             ]
         })
@@ -336,14 +336,14 @@ test('get entities error', async () => {
         expect(state.table).toEqual(
             newTableState({
                 isLoading: false,
-                columnIndices: { [entityDetailsColumnId]: 0, display_txt_id: 1 },
+                columnIndices: { display_txt_id: 0, [entityDetailsColumnId]: 1 },
                 columnStates: [
                     newColumnState({
-                        tagDefinition: entityDetailsColumn,
+                        tagDefinition: displayTextTagDef,
                         cellContents: newRemote([], true)
                     }),
                     newColumnState({
-                        tagDefinition: displayTextTagDef,
+                        tagDefinition: entityDetailsColumn,
                         cellContents: newRemote([], true)
                     })
                 ]
@@ -378,13 +378,13 @@ test('get instances error', async () => {
                 entities: entities_test,
                 isLoading: false,
                 columnIndices: {
-                    [entityDetailsColumnId]: 0,
-                    display_txt_id: 1,
+                    display_txt_id: 0,
+                    [entityDetailsColumnId]: 1,
                     [idTagDefPersistent]: 2
                 },
                 columnStates: [
-                    entityDetailsColumnState,
                     displayTxtColumnState,
+                    entityDetailsColumnState,
                     newColumnState({
                         tagDefinition: tagDefTest,
                         cellContents: newRemote([], true)

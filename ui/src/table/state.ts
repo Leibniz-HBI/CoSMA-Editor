@@ -225,9 +225,9 @@ export function newEntity({
     }
 }
 export const displayTxtColumnId = 'display_txt_id'
-export const entityDetailsColumnId = 'entity_details_is'
-export const displayTxtColumnIdx = 1
-export const entityDetailsColumnIdx = 0
+export const entityDetailsColumnId = 'entity_details_id'
+export const displayTxtColumnIdx = 0
+export const entityDetailsColumnIdx = 1
 export const optionalEntityJustificationColumnIdx = 2
 
 export const displayTextColumn = newTagDefinition({
