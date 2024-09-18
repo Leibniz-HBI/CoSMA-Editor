@@ -163,13 +163,16 @@ export function submitTagDefinition({
 }
 export function changeTagDefinitionParent({
     tagDefinition,
-    idParentNewPersistent
+    idParentNewPersistent,
+    oldPathToTagDefinition,
+    pathToNewParent
 }: {
     tagDefinition: TagDefinition
     idParentNewPersistent: string | undefined
+    oldPathToTagDefinition: number[]
+    pathToNewParent: number[]
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        const idParentOldPersistent = tagDefinition.idParentPersistent
         const idParentRequestPersistent =
             idParentNewPersistent == '' ? undefined : idParentNewPersistent
         try {
@@ -193,7 +196,8 @@ export function changeTagDefinitionParent({
                 dispatch(
                     changeParentSuccess({
                         tagDefinition: tagDefinitionRsp,
-                        idParentOldPersistent
+                        oldPathToTagDefinition,
+                        pathToNewParent
                     })
                 )
             } else {
@@ -262,7 +266,7 @@ export function parseColumnDefinitionsFromApi(
     }
     return newTagDefinition({
         idPersistent: tagDefinitionApi['id_persistent'],
-        idParentPersistent: tagDefinitionApi['id_parent_persistent'],
+        idParentPersistent: tagDefinitionApi['id_parent_persistent'] ?? undefined,
         namePath,
         version: tagDefinitionApi['version'],
         curated: tagDefinitionApi['curated'],

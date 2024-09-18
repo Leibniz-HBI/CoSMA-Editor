@@ -211,58 +211,50 @@ export const tagSelectionSlice = createSlice({
         changeParentSuccess(
             state: TagSelectionState,
             action: PayloadAction<{
+                oldPathToTagDefinition: number[]
+                pathToNewParent: number[]
                 tagDefinition: TagDefinition
-                idParentOldPersistent: string | undefined
             }>
         ) {
             const tagDefinitionsByIdPersistent = state.tagDefinitionsByIdPersistent
             if (tagDefinitionsByIdPersistent === undefined) {
-                return
+                throw Error('Tag definitions cache not populated.')
             }
             const tagDefinition = action.payload.tagDefinition
+            const oldPathToTagDefinition = action.payload.oldPathToTagDefinition
             let originHierarchyArray = state.navigationEntries
             let oldNamePathPrefixLength = 0
-            if (action.payload.idParentOldPersistent !== undefined) {
+            if (oldPathToTagDefinition.length > 1) {
                 // get old parent information
-                const oldParentNamePath =
-                    state.tagDefinitionsByIdPersistent[
-                        action.payload.idParentOldPersistent
-                    ]?.value?.namePath
-                if (oldParentNamePath === undefined) {
-                    return
-                }
-                const oldParentHierarchyNode = pickTagHierarchyNodeByNamePath(
+                const oldParentHierarchyNode = pickTagHierarchyNode(
                     state.navigationEntries,
-                    oldParentNamePath
+                    oldPathToTagDefinition.slice(0, -1)
                 )
                 if (oldParentHierarchyNode === undefined) {
-                    return
+                    throw Error('Could not find parent in tag hierarchy.')
                 }
                 originHierarchyArray = oldParentHierarchyNode.children
-                oldNamePathPrefixLength = oldParentNamePath.length
+                oldNamePathPrefixLength = oldPathToTagDefinition.length - 1
             }
-            const tagDefinitionHierarchyNode = pickTagHierarchyNodeByNamePath(
-                originHierarchyArray,
-                tagDefinition.namePath.slice(-1)
-            )
+            const tagDefinitionHierarchyNode =
+                originHierarchyArray[
+                    oldPathToTagDefinition[oldPathToTagDefinition.length - 1]
+                ]
             if (tagDefinitionHierarchyNode === undefined) {
-                return
+                throw new Error('could not find tag hierarchy node')
             }
             let namePath: string[] = []
             let destinationHierarchyArray: TagHierarchyNode[] | undefined =
                 state.navigationEntries
             // get new parent information
             if (tagDefinition.idParentPersistent !== undefined) {
-                const newParentNamePath =
-                    state.tagDefinitionsByIdPersistent[tagDefinition.idParentPersistent]
-                        .value?.namePath
-                if (newParentNamePath === undefined) {
-                    return
-                }
-                const newParentHierarchyNode = pickTagHierarchyNodeByNamePath(
+                const newParentHierarchyNode = pickTagHierarchyNode(
                     state.navigationEntries,
-                    newParentNamePath
+                    action.payload.pathToNewParent
                 )
+                if (newParentHierarchyNode === undefined) {
+                    throw Error('Could not find new parent in tag hierarchy')
+                }
                 destinationHierarchyArray = newParentHierarchyNode?.children
                 namePath =
                     state.tagDefinitionsByIdPersistent[
@@ -270,7 +262,7 @@ export const tagSelectionSlice = createSlice({
                     ]?.value?.namePath ?? namePath
             }
             if (destinationHierarchyArray === undefined) {
-                return
+                throw Error('Could not find destination array for moved tag.')
             }
             updateNamePaths(
                 tagDefinitionHierarchyNode,

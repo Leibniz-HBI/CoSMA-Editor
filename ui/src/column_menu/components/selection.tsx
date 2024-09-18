@@ -47,15 +47,21 @@ export function ColumnSelector({
         : undefined
     const changeParentCallback = ({
         tagDefinition,
-        idParentNewPersistent
+        idParentNewPersistent,
+        oldPathToTagDefinition,
+        pathToNewParent
     }: {
         tagDefinition: TagDefinition
         idParentNewPersistent: string | undefined
+        oldPathToTagDefinition: number[]
+        pathToNewParent: number[]
     }) =>
         dispatch(
             changeTagDefinitionParent({
                 tagDefinition,
-                idParentNewPersistent
+                idParentNewPersistent,
+                oldPathToTagDefinition,
+                pathToNewParent
             })
         )
     const dragTagDefinitionStartCallback = () => dispatch(dragTagDefinitionStart())
@@ -133,6 +139,8 @@ function NoParentEntry({
     changeParentCallback: (props: {
         tagDefinition: TagDefinition
         idParentNewPersistent: string | undefined
+        oldPathToTagDefinition: number[]
+        pathToNewParent: number[]
     }) => void
 }) {
     const isDragging = useAppSelector(selectIsDragging)
@@ -146,7 +154,7 @@ function NoParentEntry({
         <OverlayTrigger
             placement="bottom"
             overlay={<Tooltip>Drop here to set no parent for tag definition</Tooltip>}
-            show={showOverlay}
+            show={showOverlay && isDragging}
         >
             <div
                 data-testid="no-parent-drop-zone"
@@ -161,9 +169,14 @@ function NoParentEntry({
                     const tagDefinition = JSON.parse(
                         event.dataTransfer.getData('tagDefinition')
                     ) as TagDefinition
+                    const oldPathToTagDefinition = JSON.parse(
+                        event.dataTransfer.getData('path')
+                    ) as number[]
                     changeParentCallback({
                         tagDefinition,
-                        idParentNewPersistent: undefined
+                        idParentNewPersistent: undefined,
+                        oldPathToTagDefinition,
+                        pathToNewParent: []
                     })
                 }}
             >
@@ -220,6 +233,8 @@ export function ColumnExplorerItem({
     changeParentCallback?: (props: {
         tagDefinition: TagDefinition
         idParentNewPersistent: string
+        oldPathToTagDefinition: number[]
+        pathToNewParent: number[]
     }) => void
     dragTagDefinitionStartCallback?: VoidFunction
     dragTagDefinitionEndCallback?: VoidFunction
@@ -249,6 +264,7 @@ export function ColumnExplorerItem({
                     'tagDefinition',
                     JSON.stringify(tagDefinition)
                 )
+                event.dataTransfer.setData('path', JSON.stringify(path))
                 dragTagDefinitionStartCallback?.()
             }}
             onDragEnd={(_event) => {
@@ -259,9 +275,14 @@ export function ColumnExplorerItem({
                 const tagDefinitionDropped = JSON.parse(
                     event.dataTransfer.getData('tagDefinition')
                 ) as TagDefinition
+                const oldPathToTagDefinition = JSON.parse(
+                    event.dataTransfer.getData('path')
+                ) as number[]
                 changeParentCallback?.({
                     tagDefinition: tagDefinitionDropped,
-                    idParentNewPersistent: tagDefinition.idPersistent
+                    idParentNewPersistent: tagDefinition.idPersistent,
+                    oldPathToTagDefinition,
+                    pathToNewParent: path
                 })
             }}
         >
@@ -315,6 +336,8 @@ export function mkListItems(args: {
     changeParentCallback: (props: {
         tagDefinition: TagDefinition
         idParentNewPersistent: string | undefined
+        oldPathToTagDefinition: number[]
+        pathToNewParent: number[]
     }) => void
     dragTagDefinitionStartCallback: VoidFunction
     dragTagDefinitionEndCallback: VoidFunction
