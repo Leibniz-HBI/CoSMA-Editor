@@ -7,6 +7,19 @@ export interface EntityDetails {
     tagInstanceList: TagInstance[]
 }
 
+export function newEntityDetails({
+    entity,
+    tagInstanceList = []
+}: {
+    entity: Entity
+    tagInstanceList?: TagInstance[]
+}): EntityDetails {
+    return {
+        entity,
+        tagInstanceList
+    }
+}
+
 export interface EntityDetailsState {
     showEntityDetails: string | undefined
     entityDetails: RemoteInterface<EntityDetails | undefined>

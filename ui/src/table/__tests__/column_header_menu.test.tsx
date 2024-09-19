@@ -27,13 +27,7 @@ import {
     newNotificationManager,
     notificationReducer
 } from '../../util/notification/slice'
-import {
-    TableState,
-    displayTextColumn,
-    entityDetailsColumn,
-    newColumnState,
-    newTableState
-} from '../state'
+import { TableState, displayTextColumn, newColumnState, newTableState } from '../state'
 import { TableSelectionState, tableSelectionSlice } from '../selection/slice'
 import { userSlice } from '../../user/slice'
 import { Provider } from 'react-redux'
@@ -81,11 +75,7 @@ test('renders all menu entries', async () => {
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([
-            displayTxtColumnState,
-            entityDetailsColumnState,
-            columnState
-        ])
+        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
         name.click()
     })
     await waitFor(() => {
@@ -121,11 +111,7 @@ test('no curation for unprivileged user', async () => {
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([
-            displayTxtColumnState,
-            entityDetailsColumnState,
-            columnState
-        ])
+        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
         name.click()
     })
     await waitFor(() => {
@@ -146,11 +132,7 @@ test('remove column from header menu', async () => {
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([
-            displayTxtColumnState,
-            entityDetailsColumnState,
-            columnState
-        ])
+        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
         name.click()
     })
     await waitFor(() => {
@@ -161,10 +143,7 @@ test('remove column from header menu', async () => {
         const remove = screen.queryByRole('button', { name: 'Hide Column' })
         expect(remove).toBeNull()
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([
-            displayTxtColumnState,
-            entityDetailsColumnState
-        ])
+        expect(state.table.columnStates).toEqual([displayTxtColumnState])
         expect(state.user.userInfo?.columns).toEqual([])
     })
     // TODO check menu entries
@@ -237,7 +216,6 @@ const tagDefTest: TagDefinition = newTagDefinition({
     hidden: false
 })
 const displayTxtColumnState = newColumnState({ tagDefinition: displayTextColumn })
-const entityDetailsColumnState = newColumnState({ tagDefinition: entityDetailsColumn })
 const columnState = newColumnState({ tagDefinition: tagDefTest })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {

@@ -36,7 +36,7 @@ html {
 .vh-95 {
     height: 95vh;
 }
-.vh-85{
+.vh-85 {
     height: 85vh;
 }
 
@@ -67,13 +67,12 @@ html {
     height: 45% !important;
 }
 
-
 .h-95 {
-    height: 95% !important
+    height: 95% !important;
 }
 
 .h-90 {
-    height: 90% !important
+    height: 90% !important;
 }
 
 .h-1px {
@@ -95,7 +94,6 @@ html {
 .scroll-gutter {
     scrollbar-gutter: stable;
 }
-
 
 .modal,
 .modal-backdrop {
@@ -135,6 +133,19 @@ html {
 @keyframes shimmer {
     100% {
         mask-position: left;
+    }
+}
+
+.fade-in {
+    animation: fadein 200ms;
+}
+
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 
@@ -254,7 +265,6 @@ div#layers > div > .container {
 .z-toast {
     z-index: 5000;
 }
-
 
 .d-grid {
     display: grid;

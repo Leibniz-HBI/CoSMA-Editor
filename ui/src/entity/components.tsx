@@ -1,5 +1,5 @@
 import { ChangeEventHandler, FormEvent, useEffect } from 'react'
-import { Col, Form, Modal, Row, Spinner } from 'react-bootstrap'
+import { Col, Form, Row, Spinner } from 'react-bootstrap'
 import { FormField } from '../util/form'
 import { RemoteSubmitButton } from '../util/components/misc'
 import { RemoteInterface } from '../util/state'
@@ -7,11 +7,7 @@ import { Formik, FormikErrors, FormikTouched } from 'formik'
 import * as yup from 'yup'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { getEntityDetailsThunk } from './thunks'
-import {
-    selectEntityDetails,
-    selectShowDetailsForEntityWithIdPersistent
-} from './selectors'
-import { setShowDetailsForEntityWithIdPersistent } from './slice'
+import { selectEntityDetails } from './selectors'
 import { useTagDefinition } from '../column_menu/hooks'
 import { TagDefinitionNamePath } from '../column_menu/components/misc'
 import { Entity } from '../table/state'
@@ -100,34 +96,6 @@ export function AddEntityFormBody({
                 </Row>
             </Col>
         </Form>
-    )
-}
-
-export function EntityDetailsModal() {
-    const dispatch = useAppDispatch()
-    const idEntityPersistent = useAppSelector(
-        selectShowDetailsForEntityWithIdPersistent
-    )
-    const showEntityMergingModal = idEntityPersistent !== undefined
-    return (
-        <Modal
-            show={showEntityMergingModal}
-            onHide={() => dispatch(setShowDetailsForEntityWithIdPersistent(undefined))}
-            size="xl"
-            // fullscreen={true}
-            key="entity-merging-modal"
-        >
-            <Modal.Header closeButton={true}>
-                <Modal.Title>Entity Details</Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="display-block vh-95">
-                {showEntityMergingModal ? (
-                    <EntityDetails idEntityPersistent={idEntityPersistent} />
-                ) : (
-                    <div />
-                )}
-            </Modal.Body>
-        </Modal>
     )
 }
 

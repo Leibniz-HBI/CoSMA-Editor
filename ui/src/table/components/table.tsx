@@ -59,7 +59,6 @@ import {
     ColumnState,
     displayTxtColumnIdx,
     Entity,
-    entityDetailsColumnIdx,
     optionalEntityJustificationColumnIdx
 } from '../state'
 import {
@@ -74,7 +73,8 @@ import { SearchButton } from './buttons'
 import { DownloadButton } from './buttons'
 import { EditSessionButton } from '../../session/components'
 import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
-import { EntityDetailsModal } from '../../entity/components'
+import { EntityDetailsModal } from './modals'
+import { InfoCircle } from 'react-bootstrap-icons'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -260,9 +260,8 @@ export function DataTable({
             }
             const [colIdx, rowIdx] = cell
             if (
-                colIdx == entityDetailsColumnIdx ||
-                (showEntityJustifications &&
-                    colIdx == optionalEntityJustificationColumnIdx)
+                showEntityJustifications &&
+                colIdx == optionalEntityJustificationColumnIdx
             ) {
                 return
             }
@@ -301,11 +300,7 @@ export function DataTable({
             colIndex: number,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             newSizeWithGrow: number
-        ) => {
-            if (colIndex != 1) {
-                dispatch(setColumnWidth({ columnIdx: colIndex, width: newSize }))
-            }
-        },
+        ) => dispatch(setColumnWidth({ columnIdx: colIndex, width: newSize })),
         switchColumnsCallback = (startIdx: number, endIdx: number) =>
             dispatch(changeColumnIndex({ startIdx, endIdx })),
         toggleSearchCallback = (show: boolean) => dispatch(toggleSearch(show))
@@ -320,27 +315,36 @@ export function DataTable({
                 getBounds: () => columnHeaderBounds(selectedColumnHeaderBounds)
             }
         })
-    const [tooltip, setTooltip] = useState<
+    const [tooltipEntityDetails, setTooltipEntityDetails] = useState<
+        { val: string; bounds: IBounds } | undefined
+    >()
+    const [tooltipDisplayText, setTooltipDisplayText] = useState<
         { val: string; bounds: IBounds } | undefined
     >()
     const { layerProps: tooltipLayerProps, renderLayer: tooltipRenderLayer } = useLayer(
         {
-            isOpen: tooltip !== undefined,
+            isOpen: tooltipDisplayText !== undefined,
             triggerOffset: 4,
             auto: true,
             container: 'portal',
             trigger: {
-                getBounds: () => tooltip?.bounds ?? zeroBounds
+                getBounds: () => tooltipDisplayText?.bounds ?? zeroBounds
             }
         }
     )
+    const {
+        layerProps: entityDetailsLayerProps,
+        renderLayer: entityDetailsRenderLayer
+    } = useLayer({
+        isOpen: tooltipEntityDetails !== undefined,
+        auto: true,
+        container: 'portal',
+        trigger: {
+            getBounds: () => tooltipEntityDetails?.bounds ?? zeroBounds
+        }
+    })
     const onCellActivated = (cell: Item) => {
         const [colIdx, rowIdx] = cell
-        if (colIdx == entityDetailsColumnIdx && entities !== undefined) {
-            dispatch(
-                setShowDetailsForEntityWithIdPersistent(entities[rowIdx].idPersistent)
-            )
-        }
         if (
             showEntityJustifications &&
             colIdx == optionalEntityJustificationColumnIdx
@@ -353,7 +357,8 @@ export function DataTable({
         }
     }
 
-    const timeoutRef = useRef(0)
+    const timeoutRefDisplayText = useRef(0)
+    const timeoutRefEntityDetails = useRef(0)
 
     const onItemHovered = useCallback(
         (args: GridMouseEventArgs) => {
@@ -362,10 +367,12 @@ export function DataTable({
                 args.location[0] == displayTxtColumnIdx &&
                 entities !== undefined
             ) {
-                window.clearTimeout(timeoutRef.current)
-                setTooltip(undefined)
+                window.clearTimeout(timeoutRefDisplayText.current)
+                window.clearTimeout(timeoutRefEntityDetails.current)
+                const entity = entities[args.location[1]]
+                setTooltipDisplayText(undefined)
                 let tooltipValue = ''
-                const displayTxtDetails = entities[args.location[1]].displayTxtDetails
+                const displayTxtDetails = entity.displayTxtDetails
                 if (displayTxtDetails === undefined) {
                     tooltipValue = 'Unknown display txt source'
                 } else if (typeof displayTxtDetails == 'string') {
@@ -373,8 +380,8 @@ export function DataTable({
                 } else {
                     tooltipValue = constructColumnTitle(displayTxtDetails.namePath)
                 }
-                timeoutRef.current = window.setTimeout(() => {
-                    setTooltip({
+                timeoutRefDisplayText.current = window.setTimeout(() => {
+                    setTooltipDisplayText({
                         val: `Display text source: ${tooltipValue}`,
                         bounds: {
                             // translate to react-laag types
@@ -387,10 +394,26 @@ export function DataTable({
                         }
                     })
                 }, 1000)
+                timeoutRefEntityDetails.current = window.setTimeout(() => {
+                    setTooltipEntityDetails({
+                        val: entity.idPersistent,
+                        bounds: {
+                            // translate to react-laag types
+                            left:
+                                args.bounds.x + args.bounds.width - args.bounds.height,
+                            top: args.bounds.y + args.bounds.height - 5,
+                            width: args.bounds.height + 1,
+                            height: args.bounds.height + 1,
+                            right: args.bounds.x + args.bounds.width + 1,
+                            bottom: args.bounds.y + args.bounds.height - 4
+                        }
+                    })
+                }, 200)
             } else {
-                window.clearTimeout(timeoutRef.current)
-                timeoutRef.current = 0
-                setTooltip(undefined)
+                window.clearTimeout(timeoutRefDisplayText.current)
+                timeoutRefDisplayText.current = 0
+                setTooltipDisplayText(undefined)
+                setTooltipEntityDetails(undefined)
             }
         },
         [entities]
@@ -406,22 +429,11 @@ export function DataTable({
             if (columnState.tagDefinition.curated) {
                 title = '☑ ' + title
             }
-            let width = columnState.width,
-                themeOverride = undefined
-            if (i == 1) {
-                width = 15
-                themeOverride = {
-                    borderColor: 'rgba(115, 116, 131, 0.16)',
-                    baseFontStyle: '500 16px',
-                    textDark: '#197374'
-                }
-            }
             columnDefs.push({
                 id: columnState.tagDefinition.idPersistent,
                 title,
-                width,
-                hasMenu: i > 1,
-                themeOverride
+                width: columnState.width,
+                hasMenu: i > 1
             })
         }
 
@@ -468,7 +480,7 @@ export function DataTable({
                             />
                         </div>
                     )}
-                {tooltip != undefined &&
+                {tooltipDisplayText !== undefined &&
                     tooltipRenderLayer(
                         <div
                             {...tooltipLayerProps}
@@ -481,7 +493,32 @@ export function DataTable({
                                 borderRadius: 9
                             }}
                         >
-                            {tooltip.val}
+                            {tooltipDisplayText.val}
+                        </div>
+                    )}
+                {tooltipEntityDetails !== undefined &&
+                    entityDetailsRenderLayer(
+                        <div
+                            onClick={() =>
+                                dispatch(
+                                    setShowDetailsForEntityWithIdPersistent(
+                                        tooltipEntityDetails.val
+                                    )
+                                )
+                            }
+                            className="fade-in col d-flex flex-column justify-content-center align-items-center rounded-circle align-middle bg-secondary"
+                            {...entityDetailsLayerProps}
+                            style={{
+                                ...entityDetailsLayerProps.style,
+                                color: '#197374',
+                                font: '500 15px',
+                                width: '25px',
+                                height: '25px'
+                            }}
+                            key={tooltipEntityDetails.val}
+                            data-testid="details-trigger"
+                        >
+                            <InfoCircle size="18px" />
                         </div>
                     )}
             </>

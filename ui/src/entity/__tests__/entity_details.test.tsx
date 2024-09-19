@@ -1,174 +1,140 @@
 /**
  * @jest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
-    return {
-        __esmodule: true,
-        DataEditor: jest
-            .fn()
-            .mockImplementation((props: object) => <MockTable {...props} />),
-        CompactSelection: actual.CompactSelection
-    }
-})
-jest.mock('../../../entity/components', () => {
-    return {
-        __esmodule: true,
-        EntityDetails: jest
-            .fn()
-            .mockImplementation((props: { idEntityPersistent: string }) => (
-                <MockEntityDetails {...props} />
-            ))
-    }
-})
-import { Col, Row } from 'react-bootstrap'
 import {
     TagDefinition,
     TagSelectionState,
     TagType,
     newTagDefinition,
     newTagSelectionState
-} from '../../../column_menu/state'
+} from '../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
     newPublicUserInfo,
     newUserInfo,
     newUserState
-} from '../../../user/state'
-import { TableState, newTableState } from '../../state'
+} from '../../user/state'
+import { TableState, newEntity, newTableState } from '../../table/state'
 import {
     NotificationManager,
+    NotificationType,
+    newNotification,
     newNotificationManager,
     notificationReducer
-} from '../../../util/notification/slice'
+} from '../../util/notification/slice'
 import { RenderOptions, waitFor, render, screen } from '@testing-library/react'
-import { tableReducer } from '../../slice'
+import { tableReducer } from '../../table/slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { RemoteDataTable } from '../table'
-import { userSlice } from '../../../user/slice'
-import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
-import { tagSelectionSlice } from '../../../column_menu/slice'
-import { newRemote } from '../../../util/state'
+import { userSlice } from '../../user/slice'
+import { TableSelectionState, tableSelectionSlice } from '../../table/selection/slice'
+import { tagSelectionSlice } from '../../column_menu/slice'
+import { newRemote } from '../../util/state'
 import {
     EditSessionParticipantType,
     EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
-} from '../../../session/state'
-import { editSessionReducer } from '../../../session/slice'
-import { entityDetailsReducer } from '../../../entity/slice'
-import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
-import userEvent from '@testing-library/user-event'
+} from '../../session/state'
+import { editSessionReducer } from '../../session/slice'
+import { entityDetailsReducer } from '../../entity/slice'
+import {
+    EntityDetailsState,
+    newEntityDetails,
+    newEntityDetailsState
+} from '../../entity/state'
+import { EntityDetails } from '../components'
+import { newTagInstance } from '../../contribution/entity/state'
 
-test('open details', async () => {
-    const modalTitleText = `Entity Details`
-    const modalContentText = `Show details for entity with id ${idPersistent1}`
+test('success', async () => {
     const fetchMock = jest.fn()
-    addEntitiesAndInstancesResponse(fetchMock)
     addDetailsResponseSequence(fetchMock)
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
-    const user = userEvent.setup()
-    await waitFor(async () => {
-        const cell = screen.getByText(displayTxt1)
-        await user.hover(cell)
-    })
-    await waitFor(async () => {
-        const trigger = screen.getByTestId('details-trigger')
-        await user.click(trigger)
-    })
-
+    const { store } = renderWithProviders(
+        <EntityDetails idEntityPersistent={idEntityPersistent} />,
+        fetchMock
+    )
     await waitFor(() => {
-        screen.getByText(modalTitleText)
-        screen.getByText(modalContentText)
-        expect(store.getState().entityDetails.showEntityDetails).toEqual(idPersistent1)
-        const closeButton = screen.getByLabelText('Close')
-        closeButton.click()
+        screen.getByText(columnNameTest)
+        screen.getByText(value0)
+        screen.getByText(columnNameTest1)
+        screen.getByText(value1)
     })
+    expect(store.getState().notification).toEqual(newNotificationManager({}))
+    expect(store.getState().entityDetails).toEqual(
+        newEntityDetailsState({
+            showEntityDetails: idEntityPersistent,
+            entityDetails: newRemote(
+                newEntityDetails({
+                    entity: newEntity({
+                        idPersistent: idEntityPersistent,
+                        displayTxt: displayTxt,
+                        version: version,
+                        displayTxtDetails: 'display_txt_detail',
+                        disabled: false,
+                        justificationTxt: justification
+                    }),
+                    tagInstanceList: [
+                        newTagInstance(idEntityPersistent, idTagDefPersistent, {
+                            idPersistent: idInstance,
+                            value: value0,
+                            version: versionInstance0,
+                            isExisting: undefined,
+                            isRequested: true
+                        }),
+                        newTagInstance(idEntityPersistent, idTagDefPersistent1, {
+                            idPersistent: idInstance1,
+                            value: value1,
+                            version: versionInstance1,
+                            isExisting: undefined,
+                            isRequested: true
+                        })
+                    ]
+                })
+            )
+        })
+    )
+})
+test('error', async () => {
+    const fetchMock = jest.fn()
+    const testError = 'Could not load entity details'
+    addResponseSequence(fetchMock, [[500, { msg: testError }]])
+    const { store } = renderWithProviders(
+        <EntityDetails idEntityPersistent={idEntityPersistent} />,
+        fetchMock
+    )
     await waitFor(() => {
-        expect(screen.queryByText(modalTitleText)).toBeNull()
-        expect(screen.queryByText(modalContentText)).toBeNull()
+        const state = store.getState()
+        expect(state.entityDetails).toEqual(
+            newEntityDetailsState({ showEntityDetails: idEntityPersistent })
+        )
+        expect(state.notification).toEqual(
+            newNotificationManager({
+                notificationList: [
+                    newNotification({
+                        msg: testError,
+                        type: NotificationType.Error,
+                        id: expect.anything()
+                    })
+                ],
+                notificationMap: expect.anything()
+            })
+        )
     })
 })
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-function MockTable(props: any) {
-    return (
-        <div className="mock">
-            <Col>
-                <Row>{props.rightElement}</Row>
-                <Row>
-                    <Col>
-                        {Array.from(
-                            { length: props.rows },
-                            (_, idx: number) => idx
-                        ).map((idxRow) => (
-                            <Row>
-                                {Array.from(
-                                    { length: props.columns.length },
-                                    (_, idx: number) => idx
-                                ).map((idxCol) => {
-                                    const cell = props.getCellContent([idxCol, idxRow])
-                                    if (cell.kind == 'text') {
-                                        return (
-                                            <Col
-                                                onMouseEnter={(e) =>
-                                                    props.onItemHovered({
-                                                        kind: 'cell',
-                                                        location: [idxCol, idxRow],
-                                                        bounds: {
-                                                            x: e.clientX,
-                                                            y: e.clientY,
-                                                            width: 50,
-                                                            height: 50
-                                                        }
-                                                    })
-                                                }
-                                            >
-                                                {cell.displayData}
-                                            </Col>
-                                        )
-                                    }
-                                    return <Col></Col>
-                                })}
-                            </Row>
-                        ))}
-                    </Col>
-                </Row>
-            </Col>
-        </div>
-    )
-}
-
-function MockEntityDetails({ idEntityPersistent }: { idEntityPersistent: string }) {
-    return <div>{`Show details for entity with id ${idEntityPersistent}`}</div>
-}
-
-const idPersistent0 = 'test-id-0'
-const idPersistent1 = 'test-id-1'
-const version0 = 0
-const version1 = 1
-const displayTxt0 = 'test display txt 0'
-const displayTxt1 = 'test display txt 1'
+const idEntityPersistent = 'test-id-0'
+const version = 0
+const displayTxt = 'test display txt 0'
 const justification = 'very prolific shit poster'
-const justification1 = 'tremendously prolific shit poster'
-const test_person_rsp_0 = {
-    display_txt: displayTxt0,
+const test_person_rsp = {
+    display_txt: displayTxt,
     display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent0,
-    version: version0,
+    id_persistent: idEntityPersistent,
+    version: version,
     disabled: false,
     justification_txt: justification
-}
-const test_person_rsp_1 = {
-    display_txt: displayTxt1,
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent1,
-    version: version1,
-    disabled: false,
-    justification_txt: justification1
 }
 const columnNameTest = 'column name test'
 const columnNameTest1 = 'column name test 1'
@@ -202,30 +168,24 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
         )
     }
 }
-function addEntitiesAndInstancesResponse(fetchMock: jest.Mock) {
-    addResponseSequence(fetchMock, [
-        [200, { persons: [test_person_rsp_0, test_person_rsp_1] }],
-        [200, { tag_instances: [] }]
-    ])
-}
 
 function addDetailsResponseSequence(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                entity: test_person_rsp_1,
+                entity: test_person_rsp,
                 tag_instance_list: [
                     {
                         id_persistent: idInstance,
-                        id_entity_persistent: idPersistent1,
+                        id_entity_persistent: idEntityPersistent,
                         id_tag_definition_persistent: idTagDefPersistent,
                         value: value0,
                         version: versionInstance0
                     },
                     {
                         id_persistent: idInstance1,
-                        id_entity_persistent: idPersistent1,
+                        id_entity_persistent: idEntityPersistent,
                         id_tag_definition_persistent: idTagDefPersistent1,
                         value: value1,
                         version: versionInstance1
@@ -291,7 +251,9 @@ export function renderWithProviders(
                     columns: [tagDefTest]
                 })
             }),
-            entityDetails: newEntityDetailsState({}),
+            entityDetails: newEntityDetailsState({
+                showEntityDetails: idEntityPersistent
+            }),
             editSession: newEditSessionState({
                 currentEditSession: newRemote(
                     newEditSession({

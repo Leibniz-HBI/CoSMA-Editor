@@ -26,7 +26,7 @@ import {
     loadEntityJustificationHistoryThunk,
     submitEntityJustificationThunk
 } from '../thunks'
-import { AddEntityForm } from '../../entity/components'
+import { AddEntityForm, EntityDetails } from '../../entity/components'
 import { ColumnMenu } from '../../column_menu/components/menu'
 import { TagDefinition } from '../../column_menu/state'
 import {
@@ -37,6 +37,8 @@ import { useEffect } from 'react'
 import { CommentForm, CommentsHistory } from '../../comments/components'
 import { justificationColumnId } from '../state'
 import { clearSelection } from '../selection/slice'
+import { selectShowDetailsForEntityWithIdPersistent } from '../../entity/selectors'
+import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -202,5 +204,32 @@ export function EntityJustificationBody({ idPersistent }: { idPersistent: string
                 </Row>
             </Col>
         </Row>
+    )
+}
+export function EntityDetailsModal() {
+    const dispatch = useAppDispatch()
+    const idEntityPersistent = useAppSelector(
+        selectShowDetailsForEntityWithIdPersistent
+    )
+    const showEntityMergingModal = idEntityPersistent !== undefined
+    return (
+        <Modal
+            show={showEntityMergingModal}
+            onHide={() => dispatch(setShowDetailsForEntityWithIdPersistent(undefined))}
+            size="xl"
+            // fullscreen={true}
+            key="entity-merging-modal"
+        >
+            <Modal.Header closeButton={true}>
+                <Modal.Title>Entity Details</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="display-block vh-95">
+                {showEntityMergingModal ? (
+                    <EntityDetails idEntityPersistent={idEntityPersistent} />
+                ) : (
+                    <div />
+                )}
+            </Modal.Body>
+        </Modal>
     )
 }

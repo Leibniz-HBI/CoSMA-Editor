@@ -7,9 +7,7 @@ import {
     displayTextColumn,
     displayTxtColumnId,
     newEntity,
-    justificationColumnId,
-    entityDetailsColumnId,
-    entityDetailsColumn
+    justificationColumnId
 } from './state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
@@ -49,7 +47,6 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(setEntityLoading())
         dispatch(setColumnLoading(displayTextColumn))
-        dispatch(setColumnLoading(entityDetailsColumn))
         try {
             const entities: Entity[] = []
             for (let i = 0; ; i += 500) {
@@ -88,12 +85,6 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
             dispatch(
                 appendColumn({
                     idPersistent: displayTxtColumnId,
-                    columnData: undefined
-                })
-            )
-            dispatch(
-                appendColumn({
-                    idPersistent: entityDetailsColumnId,
                     columnData: undefined
                 })
             )

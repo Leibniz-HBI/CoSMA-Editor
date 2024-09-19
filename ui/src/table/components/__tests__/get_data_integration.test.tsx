@@ -20,14 +20,7 @@ import {
     newUserInfo,
     newUserState
 } from '../../../user/state'
-import {
-    TableState,
-    entityDetailsColumn,
-    entityDetailsColumnId,
-    newColumnState,
-    newEntity,
-    newTableState
-} from '../../state'
+import { TableState, newColumnState, newEntity, newTableState } from '../../state'
 import {
     NotificationManager,
     NotificationType,
@@ -190,14 +183,9 @@ test('get entities success', async () => {
             isLoading: false,
             columnIndices: {
                 display_txt_id: 0,
-                [entityDetailsColumnId]: 1,
-                [idTagDefPersistent]: 2
+                [idTagDefPersistent]: 1
             },
-            columnStates: [
-                displayTxtColumnState,
-                entityDetailsColumnState,
-                tagDefColumnState
-            ]
+            columnStates: [displayTxtColumnState, tagDefColumnState]
         })
     )
     expect(fetchMock.mock.calls).toEqual([
@@ -298,10 +286,15 @@ test('get chunked', async () => {
 
     await waitFor(() => {
         const state = store.getState()
+        const idxLoadedColumn = 1
         expect(state.table.entities?.length).toEqual(1001)
-        expect(state.table.columnStates[2].cellContents.value.length).toEqual(1001)
+        expect(
+            state.table.columnStates[idxLoadedColumn].cellContents.value.length
+        ).toEqual(1001)
         for (let idx = 0; idx < 1000; ++idx) {
-            expect(state.table.columnStates[2].cellContents.value[idx]).toEqual([
+            expect(
+                state.table.columnStates[idxLoadedColumn].cellContents.value[idx]
+            ).toEqual([
                 {
                     idPersistent: idValueChunk,
                     version: 8000 + idx * 2 + 2,
@@ -309,7 +302,9 @@ test('get chunked', async () => {
                 }
             ])
         }
-        expect(state.table.columnStates[2].cellContents.value[1000].length).toEqual(0)
+        expect(
+            state.table.columnStates[idxLoadedColumn].cellContents.value[1000].length
+        ).toEqual(0)
     })
     expect(fetchMock.mock.calls.length).toEqual(5)
 })
@@ -336,14 +331,10 @@ test('get entities error', async () => {
         expect(state.table).toEqual(
             newTableState({
                 isLoading: false,
-                columnIndices: { display_txt_id: 0, [entityDetailsColumnId]: 1 },
+                columnIndices: { display_txt_id: 0 },
                 columnStates: [
                     newColumnState({
                         tagDefinition: displayTextTagDef,
-                        cellContents: newRemote([], true)
-                    }),
-                    newColumnState({
-                        tagDefinition: entityDetailsColumn,
                         cellContents: newRemote([], true)
                     })
                 ]
@@ -379,12 +370,10 @@ test('get instances error', async () => {
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
-                    [entityDetailsColumnId]: 1,
-                    [idTagDefPersistent]: 2
+                    [idTagDefPersistent]: 1
                 },
                 columnStates: [
                     displayTxtColumnState,
-                    entityDetailsColumnState,
                     newColumnState({
                         tagDefinition: tagDefTest,
                         cellContents: newRemote([], true)
@@ -398,11 +387,6 @@ test('get instances error', async () => {
 
 const displayTxtColumnState = newColumnState({
     tagDefinition: displayTextTagDef,
-    cellContents: newRemote([])
-})
-
-const entityDetailsColumnState = newColumnState({
-    tagDefinition: entityDetailsColumn,
     cellContents: newRemote([])
 })
 

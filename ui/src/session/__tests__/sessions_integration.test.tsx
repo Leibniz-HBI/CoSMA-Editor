@@ -1,13 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import {
-    getByRole,
-    render,
-    RenderOptions,
-    screen,
-    waitFor
-} from '@testing-library/react'
+import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
 import {
     EditSessionParticipantType,
     EditSessionState,
@@ -15,7 +9,7 @@ import {
     newEditSessionParticipant,
     newEditSessionState
 } from '../state'
-import { createEditSessionError, editSessionReducer } from '../slice'
+import { editSessionReducer } from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
 import { PropsWithChildren } from 'react'

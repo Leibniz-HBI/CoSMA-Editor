@@ -5,7 +5,6 @@ import {
     ColumnState,
     displayTxtColumnIdx,
     Entity,
-    entityDetailsColumnIdx,
     optionalEntityJustificationColumnIdx
 } from './state'
 import { LoadingCell } from './draw'
@@ -91,15 +90,6 @@ export function createCellContentCallback({
         const entity = entities?.at(row_idx)
         if (entities === undefined || entity === undefined) {
             return emptyCell
-        }
-        if (col_idx == entityDetailsColumnIdx) {
-            return {
-                data: 'i',
-                displayData: '🛈',
-                kind: 'text' as GridCellKind.Text,
-                allowOverlay: false,
-                contentAlign: 'center'
-            }
         }
         if (col_idx == displayTxtColumnIdx) {
             return mkCell(TagType.String, [
