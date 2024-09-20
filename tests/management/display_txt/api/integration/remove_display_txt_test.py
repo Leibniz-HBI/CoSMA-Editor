@@ -41,7 +41,8 @@ def test_remove_only(auth_server_commissioner, display_txt_order_0):
         server.url, ct.id_tag_def_persistent_test, cookies=cookies
     )
     assert rsp.status_code == 200
-    assert ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY) == []
+    default = "default for test"
+    assert ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY, default=default) == default
 
 
 def test_remove_start(auth_server_commissioner, display_txt_order_0_1_curated):
