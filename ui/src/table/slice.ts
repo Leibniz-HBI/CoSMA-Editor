@@ -205,11 +205,17 @@ const tableSlice = createSlice({
             if (state.entities === undefined) {
                 state.entities = [entity]
                 state.entityIndices[entity.idPersistent] = 0
+                for (const columnState of state.columnStates) {
+                    columnState.cellContents = newRemote([[]])
+                }
             } else {
                 const idx = state.entityIndices[entity.idPersistent]
                 if (idx === undefined) {
-                    state.entities.push(action.payload)
                     state.entityIndices[entity.idPersistent] = state.entities.length
+                    state.entities.push(action.payload)
+                    for (const columnState of state.columnStates) {
+                        columnState.cellContents.value.push([])
+                    }
                 } else {
                     state.entities[idx] = entity
                     state.columnStates[0].cellContents.value[idx] = [
