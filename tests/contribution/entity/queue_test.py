@@ -9,7 +9,7 @@ import tests.tag.common as ct
 import cosmae.contribution.entity.queue as q
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity, EntityJustification
+from cosmae.entity.models_django import Entity, EntityHistory, EntityJustification
 from cosmae.tag.models_django import (
     TagDefinition,
     TagDefinitionHistory,
@@ -43,7 +43,7 @@ def contribution_with_justification(user):
 @pytest.mark.django_db
 def test_annotate_duplicates(entities, entity_match):
     with_replacement_info = q.annotate_with_replacement_info(
-        Entity.objects.all(),  # pylint: disable=no-member
+        EntityHistory.objects.all(),  # pylint: disable=no-member
         EntityDuplicate.objects.all(),  # pylint: disable=no-member
         "id_persistent",
     )
@@ -62,9 +62,9 @@ def test_annotate_duplicates(entities, entity_match):
 def test_deletes_replaced(
     entity_duplicate, entity_match, contribution_with_justification
 ):
-    assert len(Entity.objects.all()) == 1  # pylint: disable = no-member
+    assert len(EntityHistory.objects.all()) == 1  # pylint: disable = no-member
     with_replacement_info = q.annotate_with_replacement_info(
-        Entity.objects.all(),  # pylint: disable=no-member
+        EntityHistory.objects.all(),  # pylint: disable=no-member
         EntityDuplicate.objects.all(),  # pylint: disable=no-member
         "id_persistent",
     )
@@ -73,7 +73,7 @@ def test_deletes_replaced(
         contribution_with_justification,
         c.time_edit_deduplication,
     )
-    assert len(Entity.objects.all()) == 0  # pylint: disable = no-member
+    assert len(EntityHistory.objects.all()) == 0  # pylint: disable = no-member
 
 
 @pytest.mark.django_db
@@ -95,9 +95,9 @@ def test_copies_justifications(
         time,
         contribution_with_justification.created_by,
     )
-    assert len(Entity.objects.all()) == 1  # pylint: disable = no-member
+    assert len(EntityHistory.objects.all()) == 1  # pylint: disable = no-member
     with_replacement_info = q.annotate_with_replacement_info(
-        Entity.objects.all(),  # pylint: disable=no-member
+        EntityHistory.objects.all(),  # pylint: disable=no-member
         EntityDuplicate.objects.all(),  # pylint: disable=no-member
         "id_persistent",
     )
@@ -106,7 +106,7 @@ def test_copies_justifications(
         contribution_with_justification,
         c.time_edit_deduplication,
     )
-    assert len(Entity.objects.all()) == 0  # pylint: disable = no-member
+    assert len(EntityHistory.objects.all()) == 0  # pylint: disable = no-member
     assert (
         len(
             EntityJustification.for_id_entity_persistent_unordered(
@@ -122,7 +122,7 @@ def test_removes_contribution_candidate_from_others(
     entity_duplicate, contribution_with_justification
 ):
     with_replacement_info = q.annotate_with_replacement_info(
-        Entity.objects.all(),  # pylint: disable=no-member
+        EntityHistory.objects.all(),  # pylint: disable=no-member
         EntityDuplicate.objects.all(),  # pylint: disable=no-member
         "id_persistent",
     )
@@ -131,7 +131,7 @@ def test_removes_contribution_candidate_from_others(
         contribution_with_justification,
         c.time_edit_deduplication,
     )
-    entity = Entity.objects.all().get()  # pylint: disable = no-member
+    entity = EntityHistory.objects.all().get()  # pylint: disable = no-member
     assert entity.contribution_candidate is None
     assert (
         EntityJustification.objects.filter(id_entity_persistent=entity.id_persistent)
@@ -145,9 +145,9 @@ def test_removes_contribution_candidate_from_others(
 def test_exception_for_entity_update_without_justification(
     entity_duplicate, entity_match, contribution_candidate
 ):
-    assert len(Entity.objects.all()) == 1  # pylint: disable = no-member
+    assert len(EntityHistory.objects.all()) == 1  # pylint: disable = no-member
     with_replacement_info = q.annotate_with_replacement_info(
-        Entity.objects.all(),  # pylint: disable=no-member
+        EntityHistory.objects.all(),  # pylint: disable=no-member
         EntityDuplicate.objects.all(),  # pylint: disable=no-member
         "id_persistent",
     )

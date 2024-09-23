@@ -6,7 +6,7 @@ from typing import Optional
 
 from django.db import models
 
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.exception import ForbiddenException
 from cosmae.tag.models_django import (
     TagDefinition,
@@ -262,10 +262,10 @@ class EntityConflictResolution(AbstractConflictResolution):
 
     merge_request = models.ForeignKey(EntityMergeRequest, on_delete=models.CASCADE)
     entity_origin = models.ForeignKey(
-        Entity, on_delete=models.CASCADE, related_name="+"
+        EntityHistory, on_delete=models.CASCADE, related_name="+"
     )
     entity_destination = models.ForeignKey(
-        Entity, on_delete=models.CASCADE, related_name="+"
+        EntityHistory, on_delete=models.CASCADE, related_name="+"
     )
     tag_definition = models.ForeignKey(
         TagDefinitionHistory, on_delete=models.CASCADE, related_name="+"
@@ -308,28 +308,28 @@ class EntityConflictResolution(AbstractConflictResolution):
             entity_origin_most_recent=models.Subquery(
                 Entity.objects.filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("entity_origin__id_persistent")
-                )
-                .order_by(models.F("previous_version").desc(nulls_last=True))
-                .values(
+                ).values(
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",
                         display_txt="display_txt",
                     )
-                )[:1]
+                )[
+                    :1
+                ]
             ),
             entity_destination_most_recent=models.Subquery(
                 Entity.objects.filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("entity_destination__id_persistent")
-                )
-                .order_by(models.F("previous_version").desc(nulls_last=True))
-                .values(
+                ).values(
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",
                         display_txt="display_txt",
                     )
-                )[:1]
+                )[
+                    :1
+                ]
             ),
             tag_instance_origin_most_recent=models.Subquery(
                 TagInstance.objects.filter(  # pylint: disable=no-member
@@ -438,9 +438,11 @@ class EntityConflictResolution(AbstractConflictResolution):
         with_entity_origin_version_info = only_with_recent_tag_definitions.annotate(
             id_entity_origin_most_recent=Entity.objects.filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("entity_origin__id_persistent")
-            )
-            .order_by(models.F("previous_version").desc(nulls_last=True))
-            .values("id")[:1]
+            ).values(
+                "id"
+            )[
+                :1
+            ]
         )
         only_with_recent_entity_origins = with_entity_origin_version_info.filter(
             entity_origin__id=models.F("id_entity_origin_most_recent")
@@ -448,9 +450,11 @@ class EntityConflictResolution(AbstractConflictResolution):
         with_entity_destination_version_info = only_with_recent_entity_origins.annotate(
             id_entity_destination_most_recent=Entity.objects.filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("entity_destination__id_persistent")
-            )
-            .order_by(models.F("previous_version").desc(nulls_last=True))
-            .values("id")[:1]
+            ).values(
+                "id"
+            )[
+                :1
+            ]
         )
         only_with_recent_entity_destinations = (
             with_entity_destination_version_info.filter(

@@ -2,7 +2,7 @@
 import pytest
 
 import tests.merge_request.entity.common as c
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import EntityHistory
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,
@@ -12,18 +12,20 @@ from cosmae.tag.models_django import TagDefinitionHistory, TagInstanceHistory
 
 @pytest.fixture
 def origin_entity_for_mr(db, user):
-    return Entity.objects.create(  # pylint: disable=no-member
+    entity, _ = EntityHistory.change_or_create_versioned(  # pylint: disable=no-member
         id_persistent=c.id_entity_origin_persistent,
         display_txt=c.display_txt_entity_origin,
         time_edit=c.time_entity_origin,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
+    entity.save()
+    return entity
 
 
 @pytest.fixture
 def origin_entity_for_mr_changed(origin_entity_for_mr, user):
-    entity, _ = Entity.change_or_create_versioned(
+    entity, _ = EntityHistory.change_or_create_versioned(
         id_persistent=origin_entity_for_mr.id_persistent,
         time_edit=c.time_entity_origin_changed,
         version=origin_entity_for_mr.id,
@@ -36,18 +38,20 @@ def origin_entity_for_mr_changed(origin_entity_for_mr, user):
 
 @pytest.fixture
 def destination_entity_for_mr(db, user):
-    return Entity.objects.create(  # pylint: disable=no-member
+    entity, _ = EntityHistory.change_or_create_versioned(  # pylint: disable=no-member
         id_persistent=c.id_entity_destination_persistent,
         display_txt=c.display_txt_entity_destination,
         time_edit=c.time_entity_destination,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
+    entity.save()
+    return entity
 
 
 @pytest.fixture
 def destination_entity_for_mr_changed(destination_entity_for_mr, user):
-    entity, _ = Entity.change_or_create_versioned(
+    entity, _ = EntityHistory.change_or_create_versioned(
         id_persistent=destination_entity_for_mr.id_persistent,
         version=destination_entity_for_mr.id,
         display_txt="changed entity destination",

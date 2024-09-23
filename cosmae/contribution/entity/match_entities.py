@@ -18,26 +18,13 @@ def find_matches(id_contribution_persistent, id_entity_persistent_list):
 
 
 MATCHES_QUERY_STRING = """
-        with "entity_most_recent" as (
-            select *
-            from (
-                select max("id") max_id
-                from cosmae_entity
-                group by id_persistent
-            ) with_version
-            left join  (
-                select *
-                from cosmae_entity without_version
-            ) enabled_only
-            on "with_version"."max_id"="enabled_only"."id"
-		),
-		"entity_pairs" as (
+        with "entity_pairs" as (
 			select *
 			from(
 				select "id" "existing_id"
                     , "id_persistent" "existing_id_persistent"
                     , "display_txt" "existing_display_txt"
-				from entity_most_recent "entity_existing"
+				from cosmae_entity "entity_existing"
 	        	where not disabled and contribution_candidate_id is null
             ) existing
             cross join (
@@ -48,7 +35,7 @@ MATCHES_QUERY_STRING = """
                     , "previous_version_id" "contribution_previous_version_id"
                     , "contribution_candidate_id" "contribution_contribution_candidate_id"
                     , "time_edit" "contribution_time_edit"
-            	from entity_most_recent "entity_candidate"
+            	from cosmae_entity"entity_candidate"
             	where not disabled
                     and "id_persistent" =  ANY(%(id_entity_persistent_list)s)
             ) contribution
@@ -157,18 +144,18 @@ MATCHES_QUERY_STRING = """
             select "id_origin_persistent"
             	, jsonb_build_object(
             		'id',
-            		"entity_most_recent"."id",
+            		"cosmae_entity"."id",
             		'id_persistent',
             		"cosmae_entityduplicate"."id_destination_persistent",
             		'display_txt',
-            		"entity_most_recent"."display_txt",
+            		"cosmae_entity"."display_txt",
             		'disabled',
-            		"entity_most_recent"."disabled")::json "assigned_duplicate"
+            		"cosmae_entity"."disabled")::json "assigned_duplicate"
             from "cosmae_entityduplicate"
-            left join entity_most_recent
-            on "cosmae_entityduplicate"."id_destination_persistent" = "entity_most_recent"."id_persistent"
+            left join cosmae_entity
+            on "cosmae_entityduplicate"."id_destination_persistent" = "cosmae_entity"."id_persistent"
             where  "cosmae_entityduplicate"."id_origin_persistent" = any(%(id_entity_persistent_list)s)
-                and "entity_most_recent"."max_id" is not null
+                and "cosmae_entity"."max_id" is not null
         )
 		select *
         from(
@@ -179,8 +166,8 @@ MATCHES_QUERY_STRING = """
                 where match_rank <= 5
                 group by "id"
             ) grouped
-            left join entity_most_recent
-            on "grouped"."id"="entity_most_recent"."id"
+            left join cosmae_entity
+            on "grouped"."id"="cosmae_entity"."id"
         ) matches_with_detail
         left join "duplicate_assignments"
         on "matches_with_detail"."id_persistent" = "duplicate_assignments"."id_origin_persistent"
@@ -199,16 +186,16 @@ def add_assigned_duplicates_query(matches_query):
         left join (
             select id_origin_persistent, jsonb_build_object(
                 'id'::text,
-                "entity_most_recent"."id"::int,
+                "cosmae_entity"."id"::int,
                 'id_persistent'::text,
                 "id_origin_persistent",
                 'display_txt'::text,
-                "entity_most_recent"."display_txt") "assigned_duplicate"
+                "cosmae_entity"."display_txt") "assigned_duplicate"
             from (
                 select *
                 from "cosmae_entityduplicate"
-                left join entity_most_recent
-                on "cosmae_entityduplicate"."id_origin_persistent" = "entity_most_recent"."id_persistent"
+                left join cosmae_entity
+                on "cosmae_entityduplicate"."id_origin_persistent" = "cosmae_entity"."id_persistent"
             ) "duplicate_details"
         ) "duplicate_details_json"
         on "scored_matches"."id_persistent" = "cosmae_entityduplicate"."id_origin_persistent"

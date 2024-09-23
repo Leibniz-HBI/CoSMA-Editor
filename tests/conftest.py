@@ -13,7 +13,7 @@ from tests.tag import common as ct
 from tests.user import common as cu
 from tests.user.api.integration.requests import post_login, post_register
 from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
-from cosmae.entity.models_django import Entity, EntityJustification
+from cosmae.entity.models_django import EntityHistory, EntityJustification
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
 from cosmae.management.models_django import ConfigValue
 from cosmae.tag.models_django import (
@@ -26,7 +26,7 @@ from cosmae.util import CosmaeUser
 
 @pytest.fixture
 def entity0(user):
-    entity, _ = Entity.change_or_create_versioned(
+    entity, _ = EntityHistory.change_or_create_versioned(
         ce.id_persistent_test_0,
         ce.time_edit_test_0,
         user.edit_session,
@@ -38,7 +38,7 @@ def entity0(user):
 
 @pytest.fixture()
 def entity1(user1):
-    entity = Entity(
+    entity, _ = EntityHistory.change_or_create_versioned(
         id_persistent=ce.id_persistent_test_1,
         written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
@@ -51,7 +51,7 @@ def entity1(user1):
 
 @pytest.fixture
 def entity1_changed(user1, entity1):
-    Entity.change_or_create_versioned(
+    EntityHistory.change_or_create_versioned(
         entity1.id_persistent,
         ce.time_edit_test_1_changed,
         user1.edit_session,
@@ -62,7 +62,7 @@ def entity1_changed(user1, entity1):
 
 @pytest.fixture()
 def entity2(user1):
-    entity, _ = Entity.change_or_create_versioned(
+    entity, _ = EntityHistory.change_or_create_versioned(
         ce.id_persistent_test_2,
         ce.time_edit_test_2,
         user1.edit_session,

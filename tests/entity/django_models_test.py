@@ -1,17 +1,18 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
 
 import pytest
+from django.forms import model_to_dict
 
 import tests.entity.common as c
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.exception import DbObjectExistsException, EntityUpdatedException
 from cosmae.util import timestamp
 
 
 @pytest.fixture
 def updated_entity0(entity0, user):
-    return Entity.change_or_create_versioned(
+    return EntityHistory.change_or_create_versioned(
         id_persistent=c.id_persistent_test_0,
         time_edit=c.time_edit_test_1,
         written_by_session=user.edit_session,
@@ -21,17 +22,26 @@ def updated_entity0(entity0, user):
 
 
 @pytest.mark.django_db
-def test_get_most_recent(entity0, updated_entity0):
+def test_get_most_recent_history(entity0, updated_entity0):
     updated_entity0.previous_version = entity0
     updated_entity0.save()
-    most_recent = Entity.most_recent_by_id(c.id_persistent_test_0)
+    most_recent = EntityHistory.most_recent_by_id(c.id_persistent_test_0)
     assert most_recent == updated_entity0
     assert most_recent.id != entity0.id
 
 
 @pytest.mark.django_db
+def test_get_most_recent_view(entity0, updated_entity0):
+    updated_entity0.previous_version = entity0
+    updated_entity0.save()
+    most_recent = Entity.most_recent_by_id(c.id_persistent_test_0)
+    assert model_to_dict(most_recent) == model_to_dict(updated_entity0)
+    assert most_recent.id != entity0.id
+
+
+@pytest.mark.django_db
 def test_creation(user):
-    created, do_write = Entity.change_or_create_versioned(
+    created, do_write = EntityHistory.change_or_create_versioned(
         id_persistent=c.id_persistent_test_0,
         display_txt="new_txt",
         time_edit=c.time_edit_test_1,
@@ -47,7 +57,7 @@ def test_creation(user):
 @pytest.mark.django_db
 def test_update(entity0, user):
     entity0.save()
-    updated, do_write = Entity.change_or_create_versioned(
+    updated, do_write = EntityHistory.change_or_create_versioned(
         id_persistent=entity0.id_persistent,
         display_txt="new_txt",
         time_edit=c.time_edit_test_1,
@@ -63,7 +73,7 @@ def test_update(entity0, user):
 @pytest.mark.django_db
 def test_no_update_on_same(entity0, user):
     entity0.save()
-    updated, do_write = Entity.change_or_create_versioned(
+    updated, do_write = EntityHistory.change_or_create_versioned(
         id_persistent=entity0.id_persistent,
         display_txt=entity0.display_txt,
         time_edit=c.time_edit_test_1,
@@ -78,7 +88,7 @@ def test_no_update_on_same(entity0, user):
 def test_no_update_without_version(entity0, user):
     entity0.save()
     with pytest.raises(DbObjectExistsException):
-        Entity.change_or_create_versioned(
+        EntityHistory.change_or_create_versioned(
             id_persistent=entity0.id_persistent,
             display_txt="new_txt",
             time_edit=c.time_edit_test_1,
@@ -91,7 +101,7 @@ def test_no_update_on_older_version(entity0, updated_entity0, user):
     entity0.save()
     updated_entity0.save()
     with pytest.raises(EntityUpdatedException):
-        Entity.change_or_create_versioned(
+        EntityHistory.change_or_create_versioned(
             id_persistent=entity0.id_persistent,
             display_txt="new_txt",
             time_edit=c.time_edit_test_1,
@@ -106,7 +116,7 @@ def test_chunk_correctly(entity0, updated_entity0, user):
     updated_entity0.save()
     entities = [updated_entity0]
     for i in range(10):
-        entity, _ = Entity.change_or_create_versioned(
+        entity, _ = EntityHistory.change_or_create_versioned(
             id_persistent=f"id_persistent_test{i+10}",
             time_edit=c.time_edit_test_0,
             written_by_session=user.edit_session,
@@ -114,13 +124,13 @@ def test_chunk_correctly(entity0, updated_entity0, user):
         entity.save()
         entities.append(entity)
     chunks = [Entity.get_most_recent_chunked(i * 2, 2) for i in range(6)]
-    flat = [x for chunk in chunks for x in chunk if chunk]
-    assert flat == entities
+    flat = [model_to_dict(x) for chunk in chunks for x in chunk if chunk]
+    assert flat == [model_to_dict(entity) for entity in entities]
 
 
 @pytest.mark.django_db
 def test_different_display_txt(entity0):
-    entity1 = Entity(
+    entity1 = EntityHistory(
         id_persistent=entity0.id_persistent,
         time_edit=entity0.time_edit,
         display_txt="test display",
@@ -130,7 +140,7 @@ def test_different_display_txt(entity0):
 
 @pytest.mark.django_db
 def test_different_id_persistent(entity0):
-    entity1 = Entity(
+    entity1 = EntityHistory(
         id_persistent="other id",
         time_edit=entity0.time_edit,
     )
@@ -139,7 +149,7 @@ def test_different_id_persistent(entity0):
 
 @pytest.mark.django_db
 def test_different_version(entity0):
-    entity1 = Entity(
+    entity1 = EntityHistory(
         id_persistent=entity0.id_persistent,
         time_edit=entity0.time_edit,
         previous_version=entity0,
@@ -162,7 +172,7 @@ def test_keeps_contribution_candidate(entity0, user):
     entity0.contribution_candidate = contribution
     entity0.save()
 
-    changed, do_write = Entity.change_or_create_versioned(
+    changed, do_write = EntityHistory.change_or_create_versioned(
         id_persistent=entity0.id_persistent,
         time_edit=timestamp(),
         version=entity0.id,

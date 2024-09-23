@@ -14,10 +14,9 @@ from cosmae.util import CosmaeUser
 from cosmae.versioned.models_django import HistoryMixin, Versioned
 
 
-class Entity(Versioned, HistoryMixin):
-    """Model for a general entity"""
+class EntityAbstract(Versioned):
+    """Abstract Model for a general entity"""
 
-    proxy_name = models.TextField()
     display_txt = models.TextField(blank=True, null=True)
     contribution_candidate = models.ForeignKey(
         "ContributionCandidate", blank=True, null=True, on_delete=models.CASCADE
@@ -27,9 +26,17 @@ class Entity(Versioned, HistoryMixin):
     unmodifiable_fields = {"id_persistent"}
 
     class Meta:
-        "Meta class for entity model"
+        "Meta class for abstract entity django model"
 
-        # pylint: disable=too-few-public-methods
+        abstract = True
+
+
+class EntityHistory(EntityAbstract, HistoryMixin):
+    """Django ORM model for entity history."""
+
+    class Meta:
+        "Meta class for entity history."
+
         indexes = [
             models.Index(fields=["id_persistent"]),
             # Possible alternative gin index with `opclasses=["gin_trgrm_ops"],
@@ -39,18 +46,6 @@ class Entity(Versioned, HistoryMixin):
                 fields=["display_txt"],
             ),
         ]
-
-    @classmethod
-    def most_recent_by_id_queryset(cls, id_persistent):
-        """Return a query set containing only the most recent version of an entity."""
-        return cls.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
-
-    @classmethod
-    def most_recent_by_id(cls, id_persistent):
-        """Return the most recent version of an entity."""
-        return cls.most_recent_by_id_queryset(id_persistent).get()
 
     @classmethod
     def most_recent_queryset(cls, manager=None, include_disabled=False):
@@ -69,46 +64,21 @@ class Entity(Versioned, HistoryMixin):
             return most_recent
         return most_recent.filter(disabled=False)
 
-    def has_write_access(self, _user: CosmaeUser):
-        "Check wether a user can change the entity."
-        return True
-
     @classmethod
     def check_integrity(cls):
         """Check wether the object conforms to implicit assumptions."""
 
     @classmethod
-    def most_recent(cls, manager=None, include_disabled=False):
-        "Get all most recent entities"
-        if manager is None:
-            manager = cls.objects  # pylint: disable=no-member
-        most_recent = manager.filter(
-            id=models.Subquery(
-                manager.filter(id_persistent=models.OuterRef("id_persistent"))
-                .values("id_persistent")
-                .annotate(max_id=Max("id"))
-                .values("max_id")
-            )
-        )
-        if include_disabled:
-            return most_recent
-        return most_recent.filter(disabled=False)
+    def most_recent_by_id_queryset(cls, id_persistent):
+        """Return a query set containing only the most recent version of an entity."""
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_persistent
+        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
 
     @classmethod
-    def get_most_recent_chunked(
-        cls, offset, limit, manager=None, do_not_include_contributed=False
-    ):
-        """Get all entities in chunks"""
-        entities = cls.most_recent(manager)
-        if do_not_include_contributed:
-            entities = entities.filter(
-                contribution_candidates__isnull=do_not_include_contributed
-            )
-        return entities[offset : offset + limit]
-
-    def save(self, *args, **kwargs):
-        self.proxy_name = type(self).__name__.lower()
-        super().save(*args, **kwargs)
+    def most_recent_by_id(cls, id_persistent):
+        """Return the most recent version of an entity."""
+        return cls.most_recent_by_id_queryset(id_persistent).get()
 
     def check_different_before_save(self, other):
         """Checks structural equality for two entities.
@@ -128,6 +98,53 @@ class Entity(Versioned, HistoryMixin):
         )
 
 
+class Entity(EntityAbstract):
+    "Django ORM model for entities"
+
+    class Meta:
+        "Meta class for entity model"
+
+        # pylint: disable=too-few-public-methods
+        managed = False
+
+    @classmethod
+    def most_recent_by_id_queryset(cls, id_persistent):
+        """Return a query set containing only the most recent version of an entity."""
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_persistent
+        )
+
+    @classmethod
+    def most_recent_by_id(cls, id_persistent):
+        """Return the most recent version of an entity."""
+        return cls.most_recent_by_id_queryset(id_persistent).get()
+
+    @classmethod
+    def most_recent_queryset(cls, manager=None, include_disabled=False):
+        "Return most recent versions of all_tag_instances"
+        if manager is None:
+            manager = cls.objects  # pylint: disable=no-member
+        if include_disabled:
+            return manager
+        return manager.filter(disabled=False)
+
+    def has_write_access(self, _user: CosmaeUser):
+        "Check wether a user can change the entity."
+        return True
+
+    @classmethod
+    def get_most_recent_chunked(
+        cls, offset, limit, manager=None, do_not_include_contributed=False
+    ):
+        """Get all entities in chunks"""
+        entities = cls.most_recent_queryset(manager)
+        if do_not_include_contributed:
+            entities = entities.filter(
+                contribution_candidates__isnull=do_not_include_contributed
+            )
+        return entities.order_by("id")[offset : offset + limit]
+
+
 class EntityJustification(models.Model):
     """Django ORM model for justifications why an entity exists in the database."""
 
@@ -141,6 +158,7 @@ class EntityJustification(models.Model):
 
     class Meta:
         "Meta class for entity model"
+
         # pylint: disable=too-few-public-methods
         indexes = [
             # Possible alternative gin index with `opclasses=["gin_trgrm_ops"],

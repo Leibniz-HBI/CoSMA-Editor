@@ -1,4 +1,5 @@
 "Queue methods for entity merge requests"
+
 import logging
 from datetime import datetime
 from typing import Dict
@@ -6,7 +7,7 @@ from uuid import uuid4
 
 from django.db import models, transaction
 
-from cosmae.entity.models_django import Entity, EntityJustification
+from cosmae.entity.models_django import Entity, EntityHistory, EntityJustification
 from cosmae.exception import (
     EntityUpdatedException,
     PermissionException,
@@ -81,7 +82,7 @@ def apply_entity_merge_request(
                 )
             # disable the destination entity
             origin = Entity.most_recent_by_id(merge_request.id_origin_persistent)
-            disabled, _ = Entity.change_or_create_versioned(
+            disabled, _ = EntityHistory.change_or_create_versioned(
                 display_txt=origin.display_txt,
                 id_persistent=origin.id_persistent,
                 # this is the write for disabling. This is written by the approver.
@@ -99,7 +100,7 @@ def apply_entity_merge_request(
             destination = Entity.most_recent_by_id(
                 merge_request.id_destination_persistent
             )
-            merged, _ = Entity.change_or_create_versioned(
+            merged, _ = EntityHistory.change_or_create_versioned(
                 id_persistent=destination.id_persistent,
                 written_by_session=user.edit_session,
                 approved_by_id_persistent=user.id_persistent,

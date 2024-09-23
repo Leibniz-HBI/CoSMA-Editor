@@ -11,7 +11,7 @@ from django.db.utils import OperationalError
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue.util import read_csv_of_candidate
-from cosmae.entity.models_django import Entity, EntityJustification
+from cosmae.entity.models_django import EntityHistory, EntityJustification
 from cosmae.exception import TagDefinitionExistsException
 from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import (
@@ -178,7 +178,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                 ):
                     continue
                 id_entity_persistent = str(uuid4())
-                entity, _ = Entity.change_or_create_versioned(
+                entity, _ = EntityHistory.change_or_create_versioned(
                     id_persistent=id_entity_persistent,
                     time_edit=time_add,
                     written_by_session=created_by.edit_session,

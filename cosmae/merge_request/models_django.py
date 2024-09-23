@@ -7,7 +7,7 @@ from typing import Optional
 from django.db import models
 
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.merge_request.entity.models_django import (
     AbstractConflictResolution,
     AbstractMergeRequest,
@@ -291,7 +291,9 @@ class TagConflictResolution(AbstractConflictResolution):
     "Django ORM model for resolutions to merge request conflicts."
 
     # do not use persistent ids in order to allow change detection.
-    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name="+")
+    entity = models.ForeignKey(
+        EntityHistory, on_delete=models.CASCADE, related_name="+"
+    )
     tag_definition_destination = models.ForeignKey(
         TagDefinitionHistory, on_delete=models.CASCADE, related_name="+"
     )
@@ -318,16 +320,16 @@ class TagConflictResolution(AbstractConflictResolution):
             entity_most_recent=models.Subquery(
                 Entity.objects.filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("entity__id_persistent")
-                )
-                .order_by(models.F("previous_version").desc(nulls_last=True))
-                .values(  # pylint: disable=duplicate-code
+                ).values(  # pylint: disable=duplicate-code
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",
                         display_txt="display_txt",
                         disabled="disabled",
                     )
-                )[:1]
+                )[
+                    :1
+                ]
             ),
             tag_definition_origin_most_recent=models.Subquery(
                 TagDefinition.objects.filter(  # pylint: disable=no-member
@@ -456,9 +458,7 @@ class TagConflictResolution(AbstractConflictResolution):
         with_entity_version_info = manager.annotate(
             id_entity_most_recent=Entity.objects.filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("entity__id_persistent")
-            )
-            .order_by(models.F("previous_version").desc(nulls_last=True))
-            .values("id")[:1]
+            ).values("id")[:1]
         )
         only_with_recent_entities = with_entity_version_info.filter(
             entity__id=models.F("id_entity_most_recent")

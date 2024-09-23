@@ -10,7 +10,7 @@ from django.db.utils import OperationalError
 
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity, EntityJustification
+from cosmae.entity.models_django import EntityHistory, EntityJustification
 from cosmae.entity.queue import update_display_txt_cache
 from cosmae.merge_request.queue import merge_request_fast_forward
 from cosmae.tag.models_django import TagInstance, TagInstanceHistory
@@ -51,7 +51,7 @@ def eliminate_duplicates(id_contribution_persistent):
         )
 
         replaced_entities_with_duplicates = annotate_with_replacement_info(
-            Entity.objects.filter(  # pylint: disable=no-member
+            EntityHistory.objects.filter(  # pylint: disable=no-member
                 contribution_candidate=contribution
             ),
             duplicates,

@@ -5,14 +5,14 @@ import tests.contribution.entity.common as c
 import tests.entity.common as ce
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import EntityHistory
 from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.tag.models_django import TagInstanceHistory
 
 
 @pytest.fixture
 def entity_duplicate(contribution_candidate):
-    entity_duplicate = Entity(
+    entity_duplicate, _ = EntityHistory.change_or_create_versioned(
         id_persistent=c.id_persistent_entity_duplicate_test,
         display_txt=c.display_txt_test_entity_duplicate,
         time_edit=c.time_edit_test_duplicate,

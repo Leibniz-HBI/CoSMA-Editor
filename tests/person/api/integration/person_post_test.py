@@ -115,7 +115,7 @@ def test_bad_db(auth_server_commissioner, display_txt_and_justification):
     live_server, cookies = auth_server_commissioner
     mock = MagicMock()
     mock.side_effect = IntegrityError()
-    with patch("cosmae.entity.models_django.Entity.save", mock):
+    with patch("cosmae.entity.models_django.EntityHistory.save", mock):
         req = post_person(
             live_server.url, display_txt_and_justification, cookies=cookies
         )
@@ -130,7 +130,9 @@ def test_not_signed_in(live_server, display_txt_and_justification):
 
 def test_multiple(auth_server_commissioner, display_txt_and_justification):
     live_server, cookies = auth_server_commissioner
-    count_before = len(Entity.most_recent(Entity.objects))  # pylint: disable=no-member
+    count_before = len(
+        Entity.most_recent_queryset(Entity.objects)
+    )  # pylint: disable=no-member
     req = post_person(live_server.url, display_txt_and_justification, cookies=cookies)
     created = req.json()["persons"][0]
     new_display_txt = "new test display_text"
@@ -146,7 +148,7 @@ def test_multiple(auth_server_commissioner, display_txt_and_justification):
     assert person_0["version"] > created["version"]
     # also check for correct number of persons in DB.
     assert (
-        len(Entity.most_recent(Entity.objects))  # pylint: disable=no-member
+        len(Entity.most_recent_queryset(Entity.objects))  # pylint: disable=no-member
         - count_before
         == 2
     )

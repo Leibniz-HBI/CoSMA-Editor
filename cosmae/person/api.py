@@ -10,6 +10,7 @@ from ninja import Router, Schema
 
 from cosmae.comments.api import Comment
 from cosmae.entity.models_django import Entity as EntityDb
+from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.models_django import EntityJustification as EntityJustificationDb
 from cosmae.entity.queue import get_display_txt_info
 from cosmae.exception import (
@@ -364,7 +365,7 @@ def person_api_to_db(
                 f"No justification given for entity with display_txt {person.display_txt}"
             )
         persistent_id = str(uuid4())
-    entity_db, save_entity = EntityDb.change_or_create_versioned(
+    entity_db, save_entity = EntityHistory.change_or_create_versioned(
         display_txt=person.display_txt,
         time_edit=time_edit,
         id_persistent=persistent_id,

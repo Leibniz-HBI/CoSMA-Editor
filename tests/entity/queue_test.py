@@ -8,7 +8,7 @@ import tests.tag.common as ct
 import tests.user.common as cu
 from tests.utils import assert_versioned
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.queue import (
     entity_display_txt_information_cache,
     tag_def_db_to_dict,
@@ -37,7 +37,7 @@ def test_with_display_txt(entity0):
 
 @pytest.fixture
 def entity_without_display_txt(db, user):
-    entity, _ = Entity.change_or_create_versioned(
+    entity, _ = EntityHistory.change_or_create_versioned(
         id_persistent=id_persistent_entity_no_display_txt,
         time_edit=time_edit_entity_no_display_txt,
         written_by_session=user.edit_session,
@@ -142,7 +142,7 @@ def contribution_instance_without_display_txt(
         file_name="file.csv",
         state=ContributionCandidate.VALUES_EXTRACTED,
     )
-    entity, _ = Entity.change_or_create_versioned(
+    entity, _ = EntityHistory.change_or_create_versioned(
         entity_without_display_txt.id_persistent,
         time_edit=time_edit_entity_contribution_no_display_txt,
         version=entity_without_display_txt.id,

@@ -6,6 +6,7 @@ import pytest
 import tests.tag.common as ct
 from tests.person import common as c
 from cosmae.entity.models_django import Entity as EntityDb
+from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.queue import entity_display_txt_information_cache
 from cosmae.exception import ValidationException
 from cosmae.person import api
@@ -31,7 +32,7 @@ def test_conversion_api_to_db_without_id(user):
 
 @pytest.mark.django_db
 def test_conversion_api_to_db_with_id(user):
-    prev, _ = EntityDb.change_or_create_versioned(
+    prev, _ = EntityHistory.change_or_create_versioned(
         id_persistent=c.id_persistent_test,
         time_edit=c.time_edit_test,
         written_by_session=user.edit_session,
