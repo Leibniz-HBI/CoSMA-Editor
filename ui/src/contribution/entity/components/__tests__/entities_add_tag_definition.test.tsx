@@ -189,27 +189,31 @@ function initialResponses(fetchMock: jest.Mock) {
         [200, { tag_definitions: [] }],
         [200, { tag_definitions: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
-        [200, { matches: mkMatches(personList.slice(50)) }]
+        [200, { matches: mkMatches(personList.slice(50)) }],
+        // empty response because no match tags.
+        [200, { value_responses: [] }]
     ])
 }
-test('add tag values.', async () => {
+test('add tag values', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock)
     addValueResponses(fetchMock, idTagDef0, '1')
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(7)
+        const entity0 = screen.getByText('entity-1')
+        entity0.click()
     })
     await addTagDefinitionByName(nameTagDef0)
     checkTagValueCalls(fetchMock, idTagDef0)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(9)
+        expect(fetchMock.mock.calls.length).toEqual(10)
     })
     addValueResponses(fetchMock, idTagDef1, '2')
     await addTagDefinitionByName(nameTagDef1)
     // check calls for additional values
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(11)
+        expect(fetchMock.mock.calls.length).toEqual(12)
     })
     checkTagValueCalls(fetchMock, idTagDef1)
     // check final values!
@@ -337,6 +341,8 @@ test('remove values', async () => {
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(7)
+        const entity0 = screen.getByText('entity-0')
+        entity0.click()
     })
     await addTagDefinitionByName(nameTagDef0)
     await waitFor(() => {
@@ -371,6 +377,7 @@ function addValueResponses(
             200,
             {
                 value_responses: personList.slice(0, 50).flatMap((entity, idx) => [
+                    // contributed instance
                     {
                         id_entity_persistent: entity.id_persistent,
                         id_tag_definition: idTagDefContribution0,
@@ -380,6 +387,7 @@ function addValueResponses(
                         value: `val-${suffix}-` + idx,
                         id_persistent: `id-val-${suffix}-` + idx
                     },
+                    //existing instance for first match
                     {
                         id_entity_persistent: entity.id_persistent + '-0',
                         id_tag_definition_requested_persistent: idTagDef,
@@ -389,6 +397,7 @@ function addValueResponses(
                         value: `val-${suffix}-0-` + idx,
                         id_persistent: `id-val-${suffix}-0-` + idx
                     },
+                    // existing instance for second match
                     {
                         id_entity_persistent: entity.id_persistent + '-1',
                         id_tag_definition: idTagDef,
@@ -401,6 +410,7 @@ function addValueResponses(
                 ])
             }
         ],
+        // no further values
         [200, { value_responses: [] }]
     ])
 }
@@ -446,10 +456,12 @@ function checkTagValueCalls(fetchMock: jest.Mock<any, any>, idTagDef: string) {
 }
 
 async function addTagDefinitionByName(nameTagDef: string) {
-    const additionalTagButtons = screen.getByRole('button', {
-        name: /show additional tag values/i
+    await waitFor(() => {
+        const additionalTagButtons = screen.getByRole('button', {
+            name: /show additional tag values/i
+        })
+        additionalTagButtons.click()
     })
-    additionalTagButtons.click()
     let tagDefLabel: HTMLElement | undefined
     await waitFor(() => {
         tagDefLabel = screen.getByText(nameTagDef)

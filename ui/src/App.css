@@ -43,6 +43,11 @@ html {
 .vh-65 {
     height: 65vh;
 }
+
+.vh-50 {
+    height: 50vh;
+}
+
 .min-h-200px {
     min-height: 200px !important;
 }
@@ -53,6 +58,10 @@ html {
 
 .w-200px {
     width: 200px !important;
+}
+
+.w-400px {
+    width: 400px !important;
 }
 
 .h-60 {

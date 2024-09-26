@@ -47,6 +47,8 @@ import {
     ChangeJustificationButton
 } from './components/buttons'
 import { useAppSelector } from '../../hooks'
+import { EntitySearch } from '../../entity/components'
+import { addError } from '../../util/notification/slice'
 
 export function EntitiesStep() {
     const contributionCandidate = useSelector(selectContribution)
@@ -150,20 +152,6 @@ export function EntitiesStepBody({
                     </Row>
                 </Col>
                 <Col className="h-100 overflow-hidden d-flex flex-column">
-                    <Row>
-                        <Col key="entities-step-hint" className="ms-0">
-                            Please check for duplicate entities. Select the first Column
-                            to indicate that there is no duplicate.
-                        </Col>
-                        <Col xs="auto" key="change-justification-button">
-                            <ChangeJustificationButton />
-                        </Col>
-                        <Col xs="auto" key="entities-step-add-tag-button">
-                            <Button onClick={() => dispatch(toggleTagDefinitionMenu())}>
-                                Show Additional Tag Values
-                            </Button>
-                        </Col>
-                    </Row>
                     <Row className="h-100 w-100 ms-2 mt-3">
                         <div id="portal">
                             <EntityConflictBody
@@ -215,30 +203,63 @@ export function EntityConflictBody({
         //eslint-disable-next-line react-hooks/exhaustive-deps
         [idContributionPersistent, selectedEntity?.idPersistent, matchTags]
     )
-    let body = <span>Please select an entity</span>
-    if (selectedEntity !== undefined) {
-        if (selectedEntity.similarEntities.isLoading) {
-            return <CosmaeLoading />
-        } else {
-            body = (
-                <EntitySimilarityItem
-                    entity={selectedEntity}
-                    putDuplicateCallback={putDuplicateCallback}
-                    numMatchTags={matchTags.length}
-                    numTags={tagDefinitionList.length}
-                />
-            )
-        }
+    if (selectedEntity === undefined) {
+        return <span>Please select an entity</span>
     }
-    return (
-        <>
-            {body}
-            <AddTagDefinitionsModal
-                idContributionPersistent={idContributionPersistent}
-                tagDefinitionIndices={tagDefinitionIndices}
-            />
-        </>
-    )
+    if (selectedEntity.similarEntities.isLoading) {
+        return <CosmaeLoading />
+    } else {
+        return (
+            <>
+                <Col className="h-100">
+                    <Row className="ps-4 justify-content-between align-middle">
+                        <Col>
+                            <div className="w-400px">
+                                <EntitySearch
+                                    resultsClassName="vh-50 w-400px"
+                                    onSearchResultClicked={(_idPersistent) =>
+                                        dispatch(
+                                            addError(
+                                                'Adding searched entities is not yet implemented'
+                                            )
+                                        )
+                                    }
+                                />
+                            </div>
+                        </Col>
+                        <Col xs="auto">
+                            <Row>
+                                <Col xs="auto" key="change-justification-button">
+                                    <ChangeJustificationButton />
+                                </Col>
+                                <Col xs="auto" key="entities-step-add-tag-button">
+                                    <Button
+                                        onClick={() =>
+                                            dispatch(toggleTagDefinitionMenu())
+                                        }
+                                    >
+                                        Show Additional Tag Values
+                                    </Button>
+                                </Col>
+                            </Row>
+                        </Col>
+                    </Row>
+                    <Row className="h-100">
+                        <EntitySimilarityItem
+                            entity={selectedEntity}
+                            putDuplicateCallback={putDuplicateCallback}
+                            numMatchTags={matchTags.length}
+                            numTags={tagDefinitionList.length}
+                        />
+                    </Row>
+                </Col>
+                <AddTagDefinitionsModal
+                    idContributionPersistent={idContributionPersistent}
+                    tagDefinitionIndices={tagDefinitionIndices}
+                />
+            </>
+        )
+    }
 }
 
 function NoConflictBody({

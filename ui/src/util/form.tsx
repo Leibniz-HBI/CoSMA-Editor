@@ -1,30 +1,33 @@
 import { Form } from 'react-bootstrap'
 import { HandleChange } from './type'
-import { AriaRole, ElementType } from 'react'
+import { AriaRole, ElementType, forwardRef } from 'react'
 
-export function FormField({
-    type = 'text',
-    name,
-    label,
-    value,
-    isTouched,
-    error,
-    handleChange,
-    as = undefined,
-    className = '',
-    role = undefined
-}: {
-    type?: string
-    name: string
-    label: string
-    value: string
-    isTouched?: boolean
-    error?: string
-    handleChange: HandleChange
-    as?: ElementType
-    className?: string
-    role?: AriaRole
-}) {
+export const FormField = forwardRef(function FormField(
+    {
+        type = 'text',
+        name,
+        label,
+        value,
+        isTouched,
+        error,
+        handleChange,
+        as = undefined,
+        className = '',
+        role = undefined
+    }: {
+        type?: string
+        name: string
+        label: string
+        value: string
+        isTouched?: boolean
+        error?: string
+        handleChange: HandleChange
+        as?: ElementType
+        className?: string
+        role?: AriaRole
+    },
+    ref
+) {
     const isInvalid = isTouched && !!error
     const field_id = 'formField-' + name
     return (
@@ -41,6 +44,7 @@ export function FormField({
                 as={as}
                 className={className}
                 role={role}
+                ref={ref}
             />
             <Form.Control.Feedback type="invalid">
                 <span>{error}</span>
@@ -49,4 +53,4 @@ export function FormField({
             <label htmlFor={field_id}>{label}</label>
         </Form.FloatingLabel>
     )
-}
+})

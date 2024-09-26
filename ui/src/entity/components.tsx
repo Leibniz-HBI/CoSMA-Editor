@@ -1,16 +1,29 @@
-import { ChangeEventHandler, FormEvent, useEffect } from 'react'
-import { Col, Form, Row, Spinner } from 'react-bootstrap'
+import {
+    ChangeEvent,
+    ChangeEventHandler,
+    FormEvent,
+    useEffect,
+    useRef,
+    useState
+} from 'react'
+import { Col, Form, ListGroup, Overlay, Row, Spinner } from 'react-bootstrap'
 import { FormField } from '../util/form'
 import { RemoteSubmitButton } from '../util/components/misc'
 import { RemoteInterface } from '../util/state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import * as yup from 'yup'
 import { useAppDispatch, useAppSelector } from '../hooks'
-import { getEntityDetailsThunk } from './thunks'
-import { selectEntityDetails } from './selectors'
+import { getEntityDetailsThunk, getEntitySearchResultsThunk } from './thunks'
+import { selectEntityDetails, selectEntitySearchResultEntries } from './selectors'
 import { useTagDefinition } from '../column_menu/hooks'
-import { TagDefinitionNamePath } from '../column_menu/components/misc'
+import {
+    TagDefinitionNamePath,
+    TagDefinitionNamePathFromId
+} from '../column_menu/components/misc'
 import { Entity } from '../table/state'
+import { AppDispatch } from '../store'
+import { debounce } from 'debounce'
+import { clearEntitySearchResults } from './slice'
 
 const schema = yup.object({
     displayTxt: yup.string().trim(),
@@ -166,4 +179,121 @@ function TagInstanceComponent({
             <Col xs={4}>{value}</Col>
         </Row>
     )
+}
+const debouncedSearchDispatch = debounce(
+    (searchTerm: string, dispatch: AppDispatch) =>
+        dispatch(getEntitySearchResultsThunk(searchTerm)),
+    400
+)
+
+const debouncedSearchDispatchThunk = (searchTerm: string) => (dispatch: AppDispatch) =>
+    debouncedSearchDispatch(searchTerm, dispatch)
+
+export function EntitySearch({
+    onSearchResultClicked,
+    resultsClassName = ''
+}: {
+    onSearchResultClicked: (idEntityPersistent: string) => void
+    resultsClassName?: string
+}) {
+    const [searchString, setSearchString] = useState('')
+    const dispatch = useAppDispatch()
+    useEffect(() => {
+        return () => {
+            dispatch(clearEntitySearchResults())
+        }
+    })
+    const target = useRef(null)
+
+    return (
+        <Col>
+            <FormField
+                label="Search Entity"
+                name="search-entity"
+                value={searchString}
+                handleChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    const searchTerm = e.target.value
+                    setSearchString(searchTerm)
+                    if (searchTerm) {
+                        debouncedSearchDispatchThunk(searchTerm)(dispatch)
+                    } else {
+                        dispatch(clearEntitySearchResults())
+                    }
+                }}
+                ref={target}
+            />
+            <Overlay target={target} show={searchString != ''} placement="bottom-start">
+                {({
+                    placement: _placement,
+                    arrowProps: _arrowProps,
+                    show: _show,
+                    popper: _popper,
+                    hasDoneInitialMeasure: _hasDoneInitialMeasure,
+                    ...props
+                }) => {
+                    return (
+                        <Row
+                            {...props}
+                            style={{
+                                position: 'relative',
+                                paddingTop: '4px',
+                                paddingLeft: '12px',
+                                ...props.style
+                            }}
+                        >
+                            <div className={resultsClassName}>
+                                <div className="h-100 overflow-y-scroll scroll-gutter">
+                                    <EntitySearchResults
+                                        onSearchResultClicked={(idEntityPersistent) => {
+                                            onSearchResultClicked(idEntityPersistent)
+                                            dispatch(clearEntitySearchResults())
+                                            setSearchString('')
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </Row>
+                    )
+                }}
+            </Overlay>
+        </Col>
+    )
+}
+
+export function EntitySearchResults({
+    onSearchResultClicked,
+    className = ''
+}: {
+    onSearchResultClicked: (idEntityPersistent: string) => void
+    className?: string
+}) {
+    const searchResults = useAppSelector(selectEntitySearchResultEntries)
+    let items = [<ListGroup.Item>No entities found</ListGroup.Item>]
+    if (searchResults?.length != 0) {
+        items = searchResults?.map((result, idx) => (
+            <ListGroup.Item
+                key={idx}
+                onClick={() => onSearchResultClicked(result.idEntityPersistent)}
+            >
+                <Col className="ps-2 pe-2">
+                    <Row className="">{result.matchValue}</Row>
+                    <Row className="fw-light">
+                        <Col>
+                            <span>Found by: </span>
+                            {result.idTagDefinitionPersistent !== undefined ? (
+                                <TagDefinitionNamePathFromId
+                                    idTagDefinitionPersistent={
+                                        result.idTagDefinitionPersistent
+                                    }
+                                />
+                            ) : (
+                                <span>Display Text</span>
+                            )}
+                        </Col>
+                    </Row>
+                </Col>
+            </ListGroup.Item>
+        )) ?? [<ListGroup.Item />]
+    }
+    return <ListGroup className={className}>{items}</ListGroup>
 }

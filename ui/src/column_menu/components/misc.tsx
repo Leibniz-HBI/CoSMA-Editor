@@ -1,7 +1,8 @@
 import { ReactElement } from 'react'
 import { TagDefinition } from '../state'
-import { OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { OverlayTrigger, ProgressBar, Tooltip } from 'react-bootstrap'
 import { PatchCheckFill } from 'react-bootstrap-icons'
+import { useTagDefinition } from '../hooks'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function ColumnAddButton(props: any) {
@@ -14,6 +15,21 @@ export function ColumnAddButton(props: any) {
             {props.children}
         </div>
     )
+}
+
+export function TagDefinitionNamePathFromId({
+    idTagDefinitionPersistent
+}: {
+    idTagDefinitionPersistent: string
+}) {
+    const tagDefinition = useTagDefinition(idTagDefinitionPersistent)
+    if (tagDefinition.isLoading) {
+        return <ProgressBar animated={true} />
+    }
+    if (tagDefinition.value === undefined) {
+        return <span></span>
+    }
+    return <TagDefinitionNamePath tagDefinition={tagDefinition.value} />
 }
 
 export function TagDefinitionNamePath({

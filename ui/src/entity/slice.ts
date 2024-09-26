@@ -1,5 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { EntityDetails, EntityDetailsState, newEntityDetailsState } from './state'
+import {
+    EntityDetails,
+    EntityDetailsState,
+    EntitySearchResult,
+    newEntityDetailsState
+} from './state'
 import { newRemote } from '../util/state'
 
 const slice = createSlice({
@@ -23,6 +28,21 @@ const slice = createSlice({
             action: PayloadAction<string | undefined>
         ) {
             state.showEntityDetails = action.payload
+        },
+        clearEntitySearchResults(state: EntityDetailsState) {
+            state.entitySearchResults = newRemote(undefined)
+        },
+        getEntitySearchResultsError(state: EntityDetailsState) {
+            state.entitySearchResults = newRemote(undefined)
+        },
+        getEntitySearchResultsStart(state: EntityDetailsState) {
+            state.entitySearchResults.isLoading = true
+        },
+        getEntitySearchResultsSuccess(
+            state: EntityDetailsState,
+            action: PayloadAction<EntitySearchResult[]>
+        ) {
+            state.entitySearchResults = newRemote(action.payload)
         }
     }
 })
@@ -30,8 +50,12 @@ const slice = createSlice({
 export const entityDetailsReducer = slice.reducer
 
 export const {
+    clearEntitySearchResults,
     getEntityDetailsError,
     getEntityDetailsStart,
     getEntityDetailsSuccess,
+    getEntitySearchResultsError,
+    getEntitySearchResultsStart,
+    getEntitySearchResultsSuccess,
     setShowDetailsForEntityWithIdPersistent
 } = slice.actions

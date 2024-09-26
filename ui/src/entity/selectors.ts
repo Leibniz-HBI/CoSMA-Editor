@@ -14,3 +14,13 @@ export const selectEntityDetails = createSelector(
     selectEntityDetailsState,
     (state) => state.entityDetails
 )
+
+export const selectEntitySearchResults = createSelector(
+    selectEntityDetailsState,
+    (state) => state.entitySearchResults
+)
+
+export const selectEntitySearchResultEntries = createSelector(
+    selectEntitySearchResults,
+    (results) => results.value
+)
