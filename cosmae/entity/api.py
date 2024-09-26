@@ -265,6 +265,36 @@ def get_values(request: HttpRequest, id_persistent: str):
 
 
 @router.get(
+    "",
+    response={
+        200: EntityWithJustification,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def get_details(request: HttpRequest, id_persistent: str):
+    "Get details for an entity"
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions.")
+    try:
+        entity = EntityJustificationDb.annotate_justification(
+            EntityDb.most_recent_by_id_queryset(id_persistent=id_persistent)
+        ).get()
+        return 200, entity_db_to_api(entity)
+    except EntityDb.DoesNotExist:
+        return 404, ApiError(msg="Entity does not exist")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get instances")
+
+
+@router.get(
     "search",
     response={200: EntitySearchResultList, 401: ApiError, 403: ApiError, 500: ApiError},
 )

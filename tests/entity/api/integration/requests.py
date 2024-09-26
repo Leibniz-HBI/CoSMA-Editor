@@ -57,6 +57,14 @@ def get_justification(url, id_entity_persistent, cookies=None):
     )
 
 
+def get_entity_details(url, id_entity_persistent, cookies=None):
+    return requests.get(
+        url + "/cosmae/api/entities?id_persistent=" + id_entity_persistent,
+        cookies=cookies,
+        timeout=900,
+    )
+
+
 def get_entity_values(url, id_entity_persistent, cookies=None):
     return requests.get(
         url + "/cosmae/api/entities/values?id_persistent=" + id_entity_persistent,

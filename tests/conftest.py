@@ -74,24 +74,24 @@ def entity2(user1):
 
 @pytest.fixture()
 def justification0(user):
-    EntityJustification.add(
+    return EntityJustification.add(
         ce.id_justification_0,
         ce.id_persistent_test_0,
         ce.justification_0,
         ce.time_justification_0,
         user,
-    )
+    )[0]
 
 
 @pytest.fixture()
 def justification1(user1):
-    EntityJustification.add(
+    return EntityJustification.add(
         ce.id_justification_1,
         ce.id_persistent_test_1,
         ce.justification_1,
         ce.time_justification_1,
         user1,
-    )
+    )[0]
 
 
 @pytest.fixture()
