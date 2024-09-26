@@ -15,7 +15,8 @@ import {
     newUserInfo,
     newUserState
 } from '../../user/state'
-import { TableState, newEntity, newTableState } from '../../table/state'
+import { TableState, newTableState } from '../../table/state'
+import { newEntity } from '../state'
 import {
     NotificationManager,
     NotificationType,
@@ -96,6 +97,12 @@ test('success', async () => {
             )
         })
     )
+    expect(fetchMock.mock.calls).toEqual([
+        [
+            `http://127.0.0.1:8000/cosmae/api/entities/values?id_persistent=${idEntityPersistent}`,
+            { credentials: 'include' }
+        ]
+    ])
 })
 test('error', async () => {
     const fetchMock = jest.fn()

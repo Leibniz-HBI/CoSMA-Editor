@@ -22,7 +22,7 @@ export function getEntityDetailsThunk(
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/entities/details?id_persistent=${idEntityPersistent}`,
+                    `/entities/values?id_persistent=${idEntityPersistent}`,
                 { credentials: 'include' }
             )
             const json = await rsp.json()

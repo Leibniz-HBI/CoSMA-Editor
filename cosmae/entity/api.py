@@ -231,7 +231,7 @@ def entities_chunks_post(
 
 
 @router.get(
-    "details",
+    "values",
     response={
         200: EntityDetailsResponse,
         400: ApiError,
@@ -241,7 +241,7 @@ def entities_chunks_post(
         500: ApiError,
     },
 )
-def get_details(request: HttpRequest, id_persistent: str):
+def get_values(request: HttpRequest, id_persistent: str):
     "API method for retrieving all instances for a specific entity."
     try:
         user = check_user(request)

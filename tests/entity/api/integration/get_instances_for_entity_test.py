@@ -11,7 +11,7 @@ from cosmae.exception import NotAuthenticatedException
 def test_missing_cookies(auth_server):
     "Check 401 status for missing cookies"
     server, _cookies = auth_server
-    rsp = req.get_entity_details(server.url, ce.id_persistent_test_0)
+    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0)
     assert rsp.status_code == 401
 
 
@@ -22,21 +22,21 @@ def test_unauthenticated(auth_server):
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
     with patch("cosmae.entity.api.check_user", mock):
-        rsp = req.get_entity_details(server.url, ce.id_persistent_test_0, cookies)
+        rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
     assert rsp.status_code == 401
 
 
 def test_applicant(auth_server_applicant):
     "Test permissions for applicants."
     server, cookies = auth_server_applicant
-    rsp = req.get_entity_details(server.url, ce.id_persistent_test_0, cookies)
+    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
     assert rsp.status_code == 403
 
 
 def test_missing_entity(auth_server, tag_instances_user):
     "Test getting instances"
     server, cookies = auth_server
-    rsp = req.get_entity_details(server.url, ce.id_persistent_test_0, cookies)
+    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
     assert rsp.status_code == 404
 
 
@@ -45,7 +45,7 @@ def test_get_instances(
 ):
     "Test getting instances"
     server, cookies = auth_server
-    rsp = req.get_entity_details(server.url, ce.id_persistent_test_0, cookies)
+    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
     instances = json["tag_instance_list"]
