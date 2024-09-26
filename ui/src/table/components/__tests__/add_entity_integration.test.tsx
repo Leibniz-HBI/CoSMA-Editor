@@ -101,11 +101,11 @@ test('success new entity', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/persons',
+            'http://127.0.0.1:8000/cosmae/api/entities',
             {
                 credentials: 'include',
                 body: JSON.stringify({
-                    persons: [
+                    entity_list: [
                         { display_txt: displayTxt0, justification_txt: justification0 }
                     ]
                 }),
@@ -135,11 +135,11 @@ test('success new entity no display text', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/persons',
+            'http://127.0.0.1:8000/cosmae/api/entities',
             {
                 credentials: 'include',
                 body: JSON.stringify({
-                    persons: [{ justification_txt: justification0 }]
+                    entity_list: [{ justification_txt: justification0 }]
                 }),
                 method: 'POST'
             }
@@ -165,7 +165,7 @@ function addEntityResponse(
         [
             200,
             {
-                persons: [
+                entity_list: [
                     {
                         id_persistent: idPersistent0,
                         display_txt: displayTxt,

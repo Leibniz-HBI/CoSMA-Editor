@@ -224,8 +224,8 @@ function initialResponses(
     numIncludedMatches: number
 ) {
     addResponseSequence(fetchMock, [
-        [200, { persons: personList }],
-        [200, { persons: [] }],
+        [200, { entity_list: personList }],
+        [200, { entity_list: [] }],
         [200, { tag_definitions: [] }],
         [200, { matches: mkMatches(personList.slice(0, numIncludedMatches)) }]
     ])

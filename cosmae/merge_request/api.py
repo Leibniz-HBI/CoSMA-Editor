@@ -7,6 +7,7 @@ from django.db import DatabaseError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.entity.api import Entity, entity_db_dict_to_api
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
 from cosmae.merge_request.entity.api import (
     TagInstance,
@@ -15,7 +16,6 @@ from cosmae.merge_request.entity.api import (
 from cosmae.merge_request.models_django import TagConflictResolution
 from cosmae.merge_request.models_django import TagMergeRequest as MergeRequestDb
 from cosmae.merge_request.queue import dispatch_resolve_conflicts
-from cosmae.person.api import PersonNatural, person_db_dict_to_api
 from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.tag.api.models_conversion import tag_definition_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
@@ -43,7 +43,7 @@ class MergeRequest(Schema):
 class MergeRequestConflict(Schema):
     # pylint: disable=too-few-public-methods
     "API model for merge request conflicts."
-    entity: PersonNatural
+    entity: Entity
     tag_instance_origin: TagInstance
     tag_instance_destination: TagInstance | None = None
     replace: bool | None = None
@@ -356,7 +356,7 @@ def annotated_tag_instance_db_to_api(annotated_instance):
             value=tag_instance_destination_db["value"],
         )
     return MergeRequestConflict(
-        entity=person_db_dict_to_api(entity),
+        entity=entity_db_dict_to_api(entity),
         tag_instance_origin=TagInstance(
             id_persistent=annotated_instance.id_persistent,
             version=annotated_instance.id,
@@ -384,7 +384,7 @@ def conflict_with_updated_data_db_to_api(annotated_conflict):
 
     tag_instance_origin = annotated_conflict.tag_instance_origin_most_recent
     return MergeRequestConflict(
-        entity=person_db_dict_to_api(entity),
+        entity=entity_db_dict_to_api(entity),
         tag_instance_origin=TagInstance(
             id_persistent=tag_instance_origin["id_persistent"],
             version=tag_instance_origin["id"],

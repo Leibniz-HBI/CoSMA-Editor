@@ -1,4 +1,4 @@
-"""API for handling natural persons."""
+"""API for handling entities."""
 
 from datetime import datetime
 from typing import List, Optional, Union
@@ -38,7 +38,7 @@ from cosmae.util.auth import check_user
 router = Router()
 
 
-class PersonNatural(Schema):
+class Entity(Schema):
     # pylint: disable=too-few-public-methods
     """API model for a natural person."""
 
@@ -77,46 +77,46 @@ class EntityJustificationAddRequest(Schema):
     text: str
 
 
-class PersonNaturalWithJustification(PersonNatural):
+class EntityWithJustification(Entity):
     "API Model for an entity with justification"
 
     # pylint: disable=too-few-public-methods
     justification_txt: str | None = None
 
 
-class PersonNaturalList(Schema):
+class EntityList(Schema):
     # pylint: disable=too-few-public-methods
-    """API Model for multiple natural persons."""
+    """API Model for multiple natural entities."""
 
-    persons: List[PersonNatural]
+    entity_list: List[Entity]
 
 
-class PersonNaturalWithJustificationList(Schema):
+class EntityWithJustificationList(Schema):
     # pylint: disable=too-few-public-methods
-    """API Model for multiple natural persons
+    """API Model for multiple natural entities
     with justification for being in the db,
     used for responses"""
 
-    persons: List[PersonNaturalWithJustification]
+    entity_list: List[EntityWithJustification]
 
 
-class PersonsGetRequest(Schema):
+class EntityGetRequest(Schema):
     # pylint: disable=too-few-public-methods
-    """Model for return type of posting persons."""
+    """Model for return type of posting entities."""
 
     modified_ids: List[str]
 
 
-class PersonCountResponse(Schema):
+class EntityCountResponse(Schema):
     # pylint: disable=too-few-public-methods
-    """Response for the count person request."""
+    """Response for the count entity request."""
 
     count: int
 
 
 class ChunkRequest(Schema):
     # pylint: disable=too-few-public-methods
-    """Request body for chunks of persons"""
+    """Request body for chunks of entities"""
 
     offset: int
     limit: int
@@ -125,7 +125,7 @@ class ChunkRequest(Schema):
 class EntityDetailsResponse(Schema):
     # pylint: disable=too-few-public-methods
     """API Response combining an entity with its tag instances."""
-    entity: PersonNatural
+    entity: Entity
     tag_instance_list: List[TagInstancePost]
 
 
@@ -146,19 +146,19 @@ class EntitySearchResultList(Schema):
 @router.post(
     "",
     response={
-        200: PersonNaturalWithJustificationList,
+        200: EntityWithJustificationList,
         400: ApiError,
         401: ApiError,
         500: ApiError,
         403: ApiError,
     },
 )
-def persons_post(
-    request: HttpRequest, persons: PersonNaturalWithJustificationList
+def entities_post(
+    request: HttpRequest, entities: EntityWithJustificationList
 ):  # pylint: disable=too-many-return-statements
-    """Add a person to the DB.
+    """Add an entity to the DB.
     Returns:
-        PersonNaturalList: The updated persons.
+        EntityList: The updated entities.
     """
     try:
         user = check_user(request)
@@ -168,50 +168,52 @@ def persons_post(
         return 403, ApiError(msg="Insufficient Permissions")
     now = timestamp()
     try:
-        person_dbs = [person_api_to_db(person, now, user) for person in persons.persons]
+        entity_dbs = [
+            entity_api_to_db(entity, now, user) for entity in entities.entity_list
+        ]
     except ValidationException as valid_x:
         return 400, ApiError(msg=str(valid_x))
     except DbObjectExistsException as exc:
         return 500, ApiError(
             msg=(
-                "Could not generate an id for person "
+                "Could not generate an id for entity "
                 f"with display_txt {exc.values['display_txt']}."
             )
         )
     except EntityUpdatedException as updated_x:
         return 400, ApiError(
             msg="There has been a concurrent modification "
-            f"to the person with id_persistent {updated_x.new_value.id_persistent}."
+            f"to the entity with id_persistent {updated_x.new_value.id_persistent}."
         )
 
     try:
         with transaction.atomic():
-            for person, do_write, justification in person_dbs:
-                person.justification_txt = justification.text
+            for entity, do_write, justification in entity_dbs:
+                entity.justification_txt = justification.text
                 if do_write:
-                    person.save()
+                    entity.save()
     except IntegrityError:
         return 500, ApiError(msg="Provided data not consistent with database.")
-    return 200, PersonNaturalWithJustificationList(
-        persons=[person_db_to_api(person) for person, _, _, in person_dbs]
+    return 200, EntityWithJustificationList(
+        entity_list=[entity_db_to_api(person) for person, _, _, in entity_dbs]
     )
 
 
 @router.post(
     "chunk",
     response={
-        200: PersonNaturalWithJustificationList,
+        200: EntityWithJustificationList,
         400: ApiError,
         403: ApiError,
         500: ApiError,
     },
 )
-def persons_chunks_post(
+def entities_chunks_post(
     request: HttpRequest, req_data: ChunkRequest  # pylint: disable=unused-argument
 ):
-    """Get a chunk of persons.
+    """Get a chunk of entities.
     Note:
-        The persons are ordered by the order of initial creation."""
+        The entities are ordered by the order of initial creation."""
     chunk_limit = 1000
     if req_data.limit > chunk_limit:
         return 400, ApiError(msg=f"Please specify limit smaller than {chunk_limit}.")
@@ -219,11 +221,11 @@ def persons_chunks_post(
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions")
     try:
-        person_dbs = EntityJustificationDb.annotate_justification(
+        entity_dbs = EntityJustificationDb.annotate_justification(
             EntityDb.get_most_recent_chunked(req_data.offset, req_data.limit)
         )
-        person_apis = [person_db_to_api(person) for person in person_dbs]
-        return 200, PersonNaturalWithJustificationList(persons=person_apis)
+        entity_apis = [entity_db_to_api(entity) for entity in entity_dbs]
+        return 200, EntityWithJustificationList(entity_list=entity_apis)
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
 
@@ -254,7 +256,7 @@ def get_details(request: HttpRequest, id_persistent: str):
         instances_db = TagInstanceDb.for_entity_queryset(id_persistent, user)
         instances_api = [tag_instance_db_to_api(instance) for instance in instances_db]
         return 200, EntityDetailsResponse(
-            entity=person_db_to_api(entity), tag_instance_list=instances_api
+            entity=entity_db_to_api(entity), tag_instance_list=instances_api
         )
     except EntityDb.DoesNotExist:
         return 404, ApiError(msg="Entity does not exist")
@@ -298,7 +300,7 @@ def search(request: HttpRequest, term: str):
         union_results = display_txt_results.union(without_known)
         return 200, EntitySearchResultList(
             search_result_list=[
-                person_search_result_db_to_api(person) for person in union_results
+                entity_search_result_db_to_api(entity) for entity in union_results
             ]
         )
     except Exception:  # pylint: disable=broad-except
@@ -403,38 +405,38 @@ def put_justification(
         return 500, ApiError(msg="Could not get Justifications.")
 
 
-def person_api_to_db(
-    person: PersonNatural, time_edit: datetime, requester: CosmaeUser
+def entity_api_to_db(
+    entity: Entity, time_edit: datetime, requester: CosmaeUser
 ) -> EntityDb:
-    """Transform an natural person from API to DB model."""
-    version = person.version
-    if person.id_persistent:
-        persistent_id = person.id_persistent
-        if person.version is None:
+    """Transform an natural entity from API to DB model."""
+    version = entity.version
+    if entity.id_persistent:
+        persistent_id = entity.id_persistent
+        if entity.version is None:
             raise ValidationException(
-                f"person with persistent_id {person.id_persistent} "
+                f"entity with persistent_id {entity.id_persistent} "
                 "has no previous version."
             )
     else:
         if version:
             raise ValidationException(
-                f"Person with display_txt {person.display_txt} "
+                f"Entity with display_txt {entity.display_txt} "
                 "has version but no persistent_id."
             )
-        if person.justification_txt is None:
+        if entity.justification_txt is None:
             raise ValidationException(
-                f"No justification given for entity with display_txt {person.display_txt}"
+                f"No justification given for entity with display_txt {entity.display_txt}"
             )
         persistent_id = str(uuid4())
     entity_db, save_entity = EntityHistory.change_or_create_versioned(
-        display_txt=person.display_txt,
+        display_txt=entity.display_txt,
         time_edit=time_edit,
         id_persistent=persistent_id,
         written_by_session=requester.edit_session,
-        version=person.version,
-        disabled=person.disabled or False,
+        version=entity.version,
+        disabled=entity.disabled or False,
     )
-    if person.justification_txt is None:
+    if entity.justification_txt is None:
         try:
             justification = EntityJustificationDb.for_id_entity_persistent_desc(
                 persistent_id
@@ -446,59 +448,59 @@ def person_api_to_db(
             justification, _justification_is_new = EntityJustificationDb.add(
                 id_persistent=uuid4(),
                 id_entity_persistent=persistent_id,
-                text=person.justification_txt,
+                text=entity.justification_txt,
                 timestamp=time_edit,
                 author=requester,
             )
         except EntityJustificationDb.EmptyJustificationException as exc:
             if version is None:
                 raise ValidationException(
-                    "Empty justification provided for person "
-                    f"with display txt {person.display_txt}"
+                    "Empty justification provided for entity "
+                    f"with display txt {entity.display_txt}"
                 ) from exc
     return entity_db, save_entity, justification
 
 
-def person_db_to_api(person: EntityDb) -> PersonNatural:
-    """Transform a natural person from DB to API representation."""
-    display_txt = person.display_txt
-    id_persistent = person.id_persistent
+def entity_db_to_api(entity: EntityDb) -> Entity:
+    """Transform a natural entity from DB to API representation."""
+    display_txt = entity.display_txt
+    id_persistent = entity.id_persistent
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
     if isinstance(display_txt_info, dict):
         display_txt_info = tag_definition_db_dict_to_api(display_txt_info)
-    return PersonNaturalWithJustification(
+    return EntityWithJustification(
         display_txt=display_txt,
-        version=person.id,
+        version=entity.id,
         id_persistent=id_persistent,
-        disabled=person.disabled,
+        disabled=entity.disabled,
         display_txt_details=display_txt_info,
-        justification_txt=person.justification_txt,
+        justification_txt=entity.justification_txt,
     )
 
 
-def person_db_dict_to_api(person: Optional[dict]) -> Optional[PersonNatural]:
-    "Transform a person natural db dict to an API representation"
-    if person is None:
+def entity_db_dict_to_api(entity: Optional[dict]) -> Optional[Entity]:
+    "Transform a entity natural db dict to an API representation"
+    if entity is None:
         return None
-    id_persistent = person["id_persistent"]
-    display_txt = person["display_txt"]
+    id_persistent = entity["id_persistent"]
+    display_txt = entity["display_txt"]
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
     if isinstance(display_txt_info, dict):
         display_txt_info = tag_definition_db_dict_to_api(display_txt_info)
-    return PersonNatural(
+    return Entity(
         display_txt=display_txt,
-        version=person["id"],
+        version=entity["id"],
         id_persistent=id_persistent,
-        disabled=person["disabled"],
+        disabled=entity["disabled"],
         display_txt_details=display_txt_info,
     )
 
 
-def person_search_result_db_to_api(person: EntityDb) -> EntitySearchResult:
+def entity_search_result_db_to_api(entity: EntityDb) -> EntitySearchResult:
     "Transform an db entity to a search result"
-    id_entity_persistent = person["id_entity_persistent"]
-    id_tag_definition_persistent = person["id_tag_definition_persistent"]
-    matched_value = person["value"]
+    id_entity_persistent = entity["id_entity_persistent"]
+    id_tag_definition_persistent = entity["id_tag_definition_persistent"]
+    matched_value = entity["value"]
     return EntitySearchResult(
         match_value=matched_value,
         id_entity_persistent=id_entity_persistent,

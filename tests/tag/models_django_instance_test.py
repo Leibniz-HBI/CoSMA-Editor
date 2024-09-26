@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-import tests.person.common as cp
+import tests.entity.common as ce
 import tests.tag.common as c
 from cosmae.exception import (
     EntityMissingException,
@@ -18,7 +18,7 @@ from cosmae.tag.models_django import TagInstance, TagInstanceHistory
 def tag(user):
     return TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
-        id_entity_persistent=cp.id_persistent_test,
+        id_entity_persistent=ce.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
         time_edit=c.time_edit_test,
         value="2.0",
@@ -41,7 +41,7 @@ def test_different_entity(tag):
 def test_different_value(tag):
     other = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
-        id_entity_persistent=cp.id_persistent_test,
+        id_entity_persistent=ce.id_persistent_test,
         id_tag_definition_persistent="id_tag_def_persistent1",
         value="2.0",
     )
@@ -52,7 +52,7 @@ def test_different_value(tag):
 def test_different_tag_def(tag):
     other = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
-        id_entity_persistent=cp.id_persistent_test,
+        id_entity_persistent=ce.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
         value="1.0",
     )
@@ -63,7 +63,7 @@ def test_different_tag_def(tag):
 def test_same(tag):
     other = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
-        id_entity_persistent=cp.id_persistent_test,
+        id_entity_persistent=ce.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
         value="2.0",
     )
@@ -76,7 +76,7 @@ def test_get_most_recent(tag):
     tag.save()
     new = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
-        id_entity_persistent=cp.id_persistent_test,
+        id_entity_persistent=ce.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
         value="1.0",
         time_edit=c.time_edit_test + timedelta(hours=1),
@@ -94,7 +94,7 @@ def test_get_most_recent_by_ids(tag):
     tag.save()
     new = TagInstanceHistory(
         id_persistent=c.id_tag_persistent_test,
-        id_entity_persistent=cp.id_persistent_test,
+        id_entity_persistent=ce.id_persistent_test,
         id_tag_definition_persistent=c.id_tag_def_persistent_test,
         value="1.0",
         time_edit=c.time_edit_test + timedelta(hours=1),
@@ -104,7 +104,7 @@ def test_get_most_recent_by_ids(tag):
     )
     new.save()
     results = TagInstance.most_recent_by_entity_and_definition_id_query_set(
-        cp.id_persistent_test, c.id_tag_def_persistent_test
+        ce.id_persistent_test, c.id_tag_def_persistent_test
     )
     assert list(results) == [new]
 
@@ -116,10 +116,10 @@ def test_entity_missing(user, tag_def):
             id_persistent=c.id_tag_persistent_test,
             time_edit=c.time_edit_test,
             written_by_session=user.edit_session,
-            id_entity_persistent=cp.id_persistent_test,
+            id_entity_persistent=ce.id_persistent_test,
             id_tag_definition_persistent=c.id_tag_def_persistent_test,
         )
-    assert exc.value.args[0] == cp.id_persistent_test
+    assert exc.value.args[0] == ce.id_persistent_test
 
 
 @pytest.mark.django_db
@@ -200,7 +200,7 @@ def test_chunk_versions(tag_def):
         for j in range(i % 3 + 1):
             tag = TagInstanceHistory(
                 id_persistent=f"id_tag_test{i}",
-                id_entity_persistent=cp.id_persistent_test,
+                id_entity_persistent=ce.id_persistent_test,
                 id_tag_definition_persistent=tag_def.id_persistent,
                 time_edit=c.time_edit_test + timedelta(hours=j + 1),
                 value=str(float(j)),
@@ -224,7 +224,7 @@ def test_chunk_filter_tag_instance(tag_def):
     for i in range(10):
         tag = TagInstanceHistory(
             id_persistent=f"id_tag_test{i}",
-            id_entity_persistent=cp.id_persistent_test,
+            id_entity_persistent=ce.id_persistent_test,
             id_tag_definition_persistent=tag_def.id_persistent + i * "0",
             time_edit=c.time_edit_test,
             value=str(float(i)),

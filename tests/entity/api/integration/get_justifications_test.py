@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import tests.entity.api.integration.requests as req
 import tests.entity.common as c
-import tests.person.api.integration.requests as req
 from cosmae.entity.models_django import EntityJustification
 from cosmae.exception import NotAuthenticatedException
 
@@ -20,7 +20,7 @@ def test_authentication_error(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
-    with patch("cosmae.person.api.check_user", mock):
+    with patch("cosmae.entity.api.check_user", mock):
         rsp = req.get_justification(server.url, c.id_persistent_test_0, cookies=cookies)
     assert rsp.status_code == 401
 

@@ -161,8 +161,8 @@ const idTagDef1 = 'id-tag-test-1'
 const nameTagDef1 = 'tag def 1'
 function initialResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { persons: personList }],
-        [200, { persons: [] }],
+        [200, { entity_list: personList }],
+        [200, { entity_list: [] }],
         [
             200,
             {

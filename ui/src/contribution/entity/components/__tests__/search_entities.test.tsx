@@ -95,11 +95,11 @@ test('search and click result', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/persons/search?term=f',
+            'http://127.0.0.1:8000/cosmae/api/entities/search?term=f',
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/persons/search?term=foofoo',
+            'http://127.0.0.1:8000/cosmae/api/entities/search?term=foofoo',
             { credentials: 'include' }
         ]
     ])

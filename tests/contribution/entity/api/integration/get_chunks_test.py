@@ -24,7 +24,7 @@ def test_no_entities(auth_server, contribution_candidate):
         live_server.url, contribution_candidate.id_persistent, 0, 2, cookies
     )
     assert rsp.status_code == 200
-    assert rsp.json() == {"persons": []}
+    assert rsp.json() == {"entity_list": []}
 
 
 def test_get_chunk(auth_server, contribution_candidate, entities):
@@ -37,7 +37,7 @@ def test_get_chunk(auth_server, contribution_candidate, entities):
     assert_versioned(
         json,
         {
-            "persons": [
+            "entity_list": [
                 {
                     "id_persistent": c.id_persistent_entity_duplicate_test,
                     "display_txt": c.display_txt_test_entity_duplicate,

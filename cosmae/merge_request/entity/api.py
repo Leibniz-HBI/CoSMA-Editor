@@ -8,6 +8,7 @@ from django.http import HttpRequest
 from django_rq import enqueue
 from ninja import Router, Schema
 
+from cosmae.entity.api import Entity, entity_db_to_api
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityJustification
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
@@ -18,7 +19,6 @@ from cosmae.merge_request.entity.models_django import (
     EntityMergeRequest as EntityMergeRequestDb,
 )
 from cosmae.merge_request.entity.queue import apply_entity_merge_request
-from cosmae.person.api import PersonNatural, person_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.tag.queue import get_tag_definition_name_path_from_parts
 from cosmae.user.models_api.public import PublicUserInfo
@@ -55,8 +55,8 @@ class EntityMergeRequest(Schema):
 
     # pylint: disable=too-few-public-methods
     id_persistent: str
-    origin: PersonNatural
-    destination: PersonNatural
+    origin: Entity
+    destination: Entity
     created_by: PublicUserInfo
     state: str
 
@@ -514,8 +514,8 @@ def entity_merge_request_db_to_api(merge_request: EntityMergeRequestDb):
         return None
     return EntityMergeRequest(
         id_persistent=str(merge_request.id_persistent),
-        origin=person_db_to_api(origin.get()),
-        destination=person_db_to_api(destination.get()),
+        origin=entity_db_to_api(origin.get()),
+        destination=entity_db_to_api(destination.get()),
         created_by=user_db_to_public_user_info(merge_request.created_by),
         state=merge_request_step_db_to_api_map[merge_request.state],
     )

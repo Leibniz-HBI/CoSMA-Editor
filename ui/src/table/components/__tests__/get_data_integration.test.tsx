@@ -96,7 +96,7 @@ const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
 const justification0 = 'very prolific shit poster'
 const justification1 = 'tremendously prolific shit poster'
-const test_person_rsp_0 = {
+const test_entity_rsp_0 = {
     display_txt: displayTxt0,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent0,
@@ -104,7 +104,7 @@ const test_person_rsp_0 = {
     disabled: false,
     justification_txt: justification0
 }
-const test_person_rsp_1 = {
+const test_entity_rsp_1 = {
     display_txt: 'test display txt 1',
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent1,
@@ -190,7 +190,7 @@ test('get entities success', async () => {
     )
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/persons/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -217,25 +217,25 @@ test('get entities success', async () => {
 test('get chunked', async () => {
     const fetchMock = jest.fn()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const persons: any[][] = [[], [], []]
+    const entities: any[][] = [[], [], []]
     for (let j = 0; j < 2; ++j) {
         for (let i = 0; i < 500; ++i) {
-            persons[j].push({
+            entities[j].push({
                 id_persistent: 500 * j + i,
                 display_txt: 'display_text test',
                 display_txt_details: 'display_txt_detail'
             })
         }
     }
-    persons[2].push({
+    entities[2].push({
         id_persistent: 1001,
         display_txt: 'display text test',
         display_txt_details: 'display_txt_detail'
     })
     addResponseSequence(fetchMock, [
-        [200, { persons: persons[0] }],
-        [200, { persons: persons[1] }],
-        [200, { persons: persons[2] }]
+        [200, { entity_list: entities[0] }],
+        [200, { entity_list: entities[1] }],
+        [200, { entity_list: entities[2] }]
     ])
     const idValueChunk = 'test-value-id-0'
     const version = 12
@@ -416,7 +416,7 @@ const tagDefColumnState = newColumnState({
 
 function addEntitiesResponse(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { persons: [test_person_rsp_0, test_person_rsp_1] }]
+        [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }]
     ])
 }
 

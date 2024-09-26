@@ -22,7 +22,7 @@ export function getEntityDetailsThunk(
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/persons/details?id_persistent=${idEntityPersistent}`,
+                    `/entities/details?id_persistent=${idEntityPersistent}`,
                 { credentials: 'include' }
             )
             const json = await rsp.json()
@@ -45,7 +45,7 @@ export function getEntitySearchResultsThunk(searchTerm: string): ThunkWithFetch<
         dispatch(getEntitySearchResultsStart())
         try {
             const rsp = await fetch(
-                config.api_path + `/persons/search?term=${searchTerm}`,
+                config.api_path + `/entities/search?term=${searchTerm}`,
                 { credentials: 'include' }
             )
             const json = await rsp.json()

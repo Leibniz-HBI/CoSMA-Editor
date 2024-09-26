@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from django.db import IntegrityError
 
-from tests.person.api.integration.requests import post_chunk, post_persons
+from tests.entity.api.integration.requests import post_chunk, post_persons
 
 
 def test_empty_chunk(auth_server):
@@ -11,7 +11,7 @@ def test_empty_chunk(auth_server):
     rsp = post_chunk(live_server.url, 0, 20, cookies=cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json["persons"]) == 0
+    assert len(json["entity_list"]) == 0
 
 
 def test_can_slice(auth_server_commissioner):
@@ -28,7 +28,7 @@ def test_can_slice(auth_server_commissioner):
     post_persons(live_server.url, persons, cookies=cookies)
     rsp = post_chunk(live_server.url, 3, 4, cookies=cookies)
     assert rsp.status_code == 200
-    persons = rsp.json()["persons"]
+    persons = rsp.json()["entity_list"]
     assert len(persons) == 4
     for i in range(4):
         assert persons[i]["display_txt"] == f"{i+3}"
@@ -36,7 +36,7 @@ def test_can_slice(auth_server_commissioner):
 
 def test_can_slice_with_hidden(auth_server_commissioner):
     live_server, cookies = auth_server_commissioner
-    persons = [
+    entity_list = [
         {
             "names_personal": "test personal",
             "names_family": "test family",
@@ -45,21 +45,21 @@ def test_can_slice_with_hidden(auth_server_commissioner):
         }
         for i in range(20)
     ]
-    rsp = post_persons(live_server.url, persons, cookies=cookies)
+    rsp = post_persons(live_server.url, entity_list, cookies=cookies)
     assert rsp.status_code == 200
-    person4 = rsp.json()["persons"][4]
+    person4 = rsp.json()["entity_list"][4]
     person4["disabled"] = True
     rsp = post_persons(live_server.url, [person4], cookies=cookies)
     assert rsp.status_code == 200
     rsp = post_chunk(live_server.url, 3, 4, cookies=cookies)
     assert rsp.status_code == 200
-    persons = rsp.json()["persons"]
-    assert [person["display_txt"] for person in persons] == ["3", "5", "6", "7"]
+    entity_list = rsp.json()["entity_list"]
+    assert [entity["display_txt"] for entity in entity_list] == ["3", "5", "6", "7"]
 
 
 def test_non_existent_slice(auth_server):
     live_server, cookies = auth_server
-    persons = [
+    entity_list = [
         {
             "names_personal": "test personal",
             "names_family": "test family",
@@ -67,11 +67,11 @@ def test_non_existent_slice(auth_server):
         }
         for i in range(2)
     ]
-    post_persons(live_server.url, persons)
+    post_persons(live_server.url, entity_list)
     rsp = post_chunk(live_server.url, 3, 4, cookies=cookies)
     assert rsp.status_code == 200
-    persons = rsp.json()["persons"]
-    assert len(persons) == 0
+    entity_list = rsp.json()["entity_list"]
+    assert len(entity_list) == 0
 
 
 def test_request_too_large(auth_server):

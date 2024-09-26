@@ -51,7 +51,7 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
             const entities: Entity[] = []
             for (let i = 0; ; i += 500) {
                 const rsp = await fetch_chunk({
-                    api_path: config.api_path + '/persons/chunk',
+                    api_path: config.api_path + '/entities/chunk',
                     offset: i,
                     limit: 500,
                     fetchMethod: fetch
@@ -70,7 +70,7 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
                     return false
                 }
                 const json = await rsp.json()
-                const rowsApi = json['persons']
+                const rowsApi = json['entity_list']
                 if (rowsApi !== null) {
                     for (const entry_json of rowsApi) {
                         const entity = parseEntityObjectFromJson(entry_json)
@@ -267,11 +267,11 @@ export function entityChangeOrCreate({
     return async (dispatch, _getState, fetch) => {
         dispatch(entityChangeOrCreateStart())
         try {
-            const rsp = await fetch(config.api_path + '/persons', {
+            const rsp = await fetch(config.api_path + '/entities', {
                 credentials: 'include',
                 method: 'POST',
                 body: JSON.stringify({
-                    persons: [
+                    entity_list: [
                         {
                             display_txt: displayTxt,
                             justification_txt: justificationTxt,
@@ -283,7 +283,7 @@ export function entityChangeOrCreate({
             })
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const entity = json['persons'][0]
+                const entity = json['entity_list'][0]
                 dispatch(entityChangeOrCreateSuccess(parseEntityObjectFromJson(entity)))
                 if (idPersistent === undefined) {
                     dispatch(addSuccessVanish('Entity created.'))
@@ -332,7 +332,7 @@ export function loadEntityJustificationHistoryThunk(
         dispatch(loadEntityJustificationHistoryStart())
         try {
             const rsp = await fetch(
-                config.api_path + `/persons/${idEntityPersistent}/justifications`,
+                config.api_path + `/entities/${idEntityPersistent}/justifications`,
                 { credentials: 'include' }
             )
             const json = await rsp.json()
@@ -360,7 +360,7 @@ export function submitEntityJustificationThunk(
         dispatch(submitEntityJustificationStart())
         try {
             const rsp = await fetch(
-                config.api_path + `/persons/${idEntityPersistent}/justifications`,
+                config.api_path + `/entities/${idEntityPersistent}/justifications`,
                 {
                     credentials: 'include',
                     method: 'PUT',

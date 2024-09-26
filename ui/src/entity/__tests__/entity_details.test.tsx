@@ -128,7 +128,7 @@ const idEntityPersistent = 'test-id-0'
 const version = 0
 const displayTxt = 'test display txt 0'
 const justification = 'very prolific shit poster'
-const test_person_rsp = {
+const test_entity_rsp = {
     display_txt: displayTxt,
     display_txt_details: 'display_txt_detail',
     id_persistent: idEntityPersistent,
@@ -174,7 +174,7 @@ function addDetailsResponseSequence(fetchMock: jest.Mock) {
         [
             200,
             {
-                entity: test_person_rsp,
+                entity: test_entity_rsp,
                 tag_instance_list: [
                     {
                         id_persistent: idInstance,

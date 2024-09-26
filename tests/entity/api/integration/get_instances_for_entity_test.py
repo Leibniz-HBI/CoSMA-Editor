@@ -1,8 +1,8 @@
 # pylint: disable=missing-module-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
 from unittest.mock import MagicMock, patch
 
+import tests.entity.api.integration.requests as req
 import tests.entity.common as ce
-import tests.person.api.integration.requests as req
 import tests.tag.common as c
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
@@ -21,7 +21,7 @@ def test_unauthenticated(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
-    with patch("cosmae.person.api.check_user", mock):
+    with patch("cosmae.entity.api.check_user", mock):
         rsp = req.get_entity_details(server.url, ce.id_persistent_test_0, cookies)
     assert rsp.status_code == 401
 

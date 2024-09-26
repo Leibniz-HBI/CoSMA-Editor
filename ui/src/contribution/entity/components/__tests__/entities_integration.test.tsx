@@ -103,7 +103,7 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
     }
 }
 const idContribution = 'id-contribution-test'
-const personList = Array.from({ length: 60 }, (_val, idx) => {
+const entityList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
         display_txt_details: 'display_txt_detail',
@@ -160,8 +160,8 @@ function mkMatches(
 }
 function initialResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { persons: personList }],
-        [200, { persons: [] }],
+        [200, { entity_list: entityList }],
+        [200, { entity_list: [] }],
         [
             200,
             {
@@ -178,9 +178,9 @@ function initialResponses(fetchMock: jest.Mock) {
             }
         ],
         [200, { tag_definitions: [] }],
-        [200, { matches: mkMatches(personList.slice(0, 50)) }],
+        [200, { matches: mkMatches(entityList.slice(0, 50)) }],
         [200, { value_responses: [] }],
-        [200, { matches: mkMatches(personList.slice(50)) }]
+        [200, { matches: mkMatches(entityList.slice(50)) }]
     ])
 }
 test('get duplicates', async () => {

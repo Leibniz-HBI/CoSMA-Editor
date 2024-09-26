@@ -1,8 +1,8 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,duplicate-code
 from unittest.mock import MagicMock, patch
 
+import tests.entity.api.integration.requests as req
 import tests.entity.common as c
-import tests.person.api.integration.requests as req
 import tests.user.common as cu
 from cosmae.entity.models_django import EntityJustification
 from cosmae.exception import NotAuthenticatedException
@@ -20,7 +20,7 @@ def test_authentication_error(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
-    with patch("cosmae.person.api.check_user", mock):
+    with patch("cosmae.entity.api.check_user", mock):
         rsp = req.put_justification(
             server.url, c.id_persistent_test_0, justification_txt, cookies=cookies
         )

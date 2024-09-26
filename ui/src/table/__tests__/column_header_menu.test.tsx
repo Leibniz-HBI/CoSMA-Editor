@@ -189,7 +189,7 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
 }
 
 function addEntitiesResponse(fetchMock: jest.Mock) {
-    addResponseSequence(fetchMock, [[200, { persons: [] }]])
+    addResponseSequence(fetchMock, [[200, { entity_list: [] }]])
 }
 
 function addTagInstanceResponse(fetchMock: jest.Mock) {

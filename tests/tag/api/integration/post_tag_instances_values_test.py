@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 import tests.tag.common as c
-from tests.person.api.integration.requests import post_person
+from tests.entity.api.integration.requests import post_person
 from tests.tag.api.integration.requests import (
     post_tag_def,
     post_tag_instance,
@@ -36,7 +36,7 @@ def test_gets_most_recent(auth_server_commissioner, person, child_tag_def):
     live_server, cookies = auth_server_commissioner
     rsp = post_person(live_server.url, person, cookies=cookies)
     assert rsp.status_code == 200
-    id_entity = rsp.json()["persons"][0]["id_persistent"]
+    id_entity = rsp.json()["entity_list"][0]["id_persistent"]
     rsp = post_tag_def(live_server.url, child_tag_def, cookies=cookies)
     id_tag_def = rsp.json()["tag_definitions"][0]["id_persistent"]
     assert rsp.status_code == 200
@@ -94,7 +94,7 @@ def test_gets_most_recent_multi_value(auth_server_commissioner, person, child_ta
     live_server, cookies = auth_server_commissioner
     rsp = post_person(live_server.url, person, cookies=cookies)
     assert rsp.status_code == 200
-    id_entity = rsp.json()["persons"][0]["id_persistent"]
+    id_entity = rsp.json()["entity_list"][0]["id_persistent"]
     rsp = post_tag_def(live_server.url, child_tag_def, cookies=cookies)
     id_tag_def = rsp.json()["tag_definitions"][0]["id_persistent"]
     assert rsp.status_code == 200

@@ -13,9 +13,9 @@ from ninja.responses import NinjaJSONEncoder
 from cosmae.comments.api import router as comment_router
 from cosmae.contribution.api import router as contribution_router
 from cosmae.edit_session.api import router as edit_session_router
+from cosmae.entity.api import router as person_router
 from cosmae.management import router as management_router
 from cosmae.merge_request.router import router
-from cosmae.person.api import router as person_router
 from cosmae.tag.api.router import router as tag_router
 from cosmae.user.api import router as user_router
 from cosmae.util.auth import cosmae_auth
@@ -32,13 +32,14 @@ class JsonEncoderWithDatetime(NinjaJSONEncoder):
 
 class JsonRendererWithDateTime(JSONRenderer):
     "JSON render that uses encoder with custom date time formatting."
+
     # pylint: disable=too-few-public-methods
     encoder_class = JsonEncoderWithDatetime
 
 
 ninja_api = NinjaAPI(csrf=False, renderer=JsonRendererWithDateTime())
 ninja_api.add_router("user", user_router, auth=NOT_SET)
-ninja_api.add_router("persons", person_router, auth=cosmae_auth)
+ninja_api.add_router("entities", person_router, auth=cosmae_auth)
 ninja_api.add_router("tags", tag_router, auth=cosmae_auth)
 ninja_api.add_router("contributions", contribution_router, auth=cosmae_auth)
 ninja_api.add_router("merge_requests", router, auth=cosmae_auth)

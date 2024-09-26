@@ -163,7 +163,7 @@ test('add justification', async () => {
     expect(state.table.entities?.at(0)?.justificationTxt).toEqual(justificationChanged)
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/persons/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -194,13 +194,13 @@ test('add justification', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/persons/${idPersistent0}/justifications`,
+            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications`,
             {
                 credentials: 'include'
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/persons/${idPersistent0}/justifications`,
+            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications`,
             {
                 credentials: 'include',
                 method: 'PUT',
@@ -305,7 +305,7 @@ const justification = 'very prolific shit poster'
 const justification1 = 'tremendously prolific shit poster'
 const justificationChanged = 'shit poster in chief'
 const modalHeading = 'Entity Justification History'
-const test_person_rsp_0 = {
+const test_entity_rsp_0 = {
     display_txt: displayTxt0,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent0,
@@ -313,7 +313,7 @@ const test_person_rsp_0 = {
     disabled: false,
     justification_txt: justification
 }
-const test_person_rsp_1 = {
+const test_entity_rsp_1 = {
     display_txt: displayTxt1,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent1,
@@ -413,7 +413,7 @@ async function openModalForEntity0() {
 
 function addEntitiesAndInstancesResponse(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { persons: [test_person_rsp_0, test_person_rsp_1] }],
+        [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }],
         [200, { tag_instances: [] }],
         [200, { tag_definitions: [] }]
     ])

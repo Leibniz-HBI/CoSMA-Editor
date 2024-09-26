@@ -12,14 +12,15 @@ from ninja import Router, Schema
 from cosmae.contribution.entity.match_entities import find_matches
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity, EntityJustification
-from cosmae.exception import ApiError, NotAuthenticatedException
-from cosmae.person.api import (
-    PersonNatural,
-    PersonNaturalWithJustificationList,
-    person_db_dict_to_api,
-    person_db_to_api,
+from cosmae.entity.api import (
+    Entity,
+    EntityWithJustificationList,
+    entity_db_dict_to_api,
+    entity_db_to_api,
 )
+from cosmae.entity.models_django import Entity as EntityDb
+from cosmae.entity.models_django import EntityJustification
+from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
@@ -32,7 +33,7 @@ class ScoredMatch(Schema):
     # pylint: disable=too-few-public-methods
     similarity: float
     id_match_tag_definition_persistent_list: List[str]
-    entity: PersonNatural
+    entity: Entity
 
 
 class ScoredMatchesWithDuplicateAssignment(Schema):
@@ -40,7 +41,7 @@ class ScoredMatchesWithDuplicateAssignment(Schema):
 
     # pylint: disable=too-few-public-methods
     matches: List[ScoredMatch]
-    assigned_duplicate: PersonNatural | None = None
+    assigned_duplicate: Entity | None = None
 
 
 class ScoredMatchResponse(Schema):
@@ -70,7 +71,7 @@ class PutDuplicateResponse(Schema):
     "API Response for put duplicate request"
 
     # pylint: disable=too-few-public-methods
-    assigned_duplicate: PersonNatural | None = None
+    assigned_duplicate: Entity | None = None
 
 
 empty_match = ScoredMatchesWithDuplicateAssignment(assigned_duplicate=None, matches=[])
@@ -79,7 +80,7 @@ empty_match = ScoredMatchesWithDuplicateAssignment(assigned_duplicate=None, matc
 @router.get(
     "chunk/{start}/{offset}",
     response={
-        200: PersonNaturalWithJustificationList,
+        200: EntityWithJustificationList,
         401: ApiError,
         404: ApiError,
         500: ApiError,
@@ -102,8 +103,8 @@ def get_entities(request: HttpRequest, start: int, offset: int):
         entities_db = EntityJustification.annotate_justification(
             candidate.get_entities_chunked(start, offset)
         )
-        return 200, PersonNaturalWithJustificationList(
-            persons=[person_db_to_api(person) for person in entities_db]
+        return 200, EntityWithJustificationList(
+            entity_list=[entity_db_to_api(person) for person in entities_db]
         )
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
@@ -134,7 +135,7 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
         ).get()
         if not similar_request.id_entity_persistent_list:
             return 200, ScoredMatchResponse(matches={})
-        entity_query_set = Entity.most_recent_queryset().filter(
+        entity_query_set = EntityDb.most_recent_queryset().filter(
             id_persistent__in=similar_request.id_entity_persistent_list
         )
         if not entity_query_set or entity_query_set.filter(
@@ -148,7 +149,7 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
         )
         scored_matches = {
             entity.id_persistent: ScoredMatchesWithDuplicateAssignment(
-                assigned_duplicate=person_db_dict_to_api(entity.assigned_duplicate),
+                assigned_duplicate=entity_db_dict_to_api(entity.assigned_duplicate),
                 matches=[scored_match_db_to_api(match) for match in entity.matches],
             )
             for entity in matches
@@ -195,14 +196,14 @@ def put_duplicate_assignment(
             id_contribution_persistent, user
         ).get()
         # Check wether entities actually exist
-        origin = Entity.most_recent_by_id(id_entity_origin_persistent)
+        origin = EntityDb.most_recent_by_id(id_entity_origin_persistent)
         if origin.contribution_candidate != candidate:
             return 400, ApiError(msg="Origin Entity does not belong to contribution.")
         if id_entity_destination_persistent:
             destination = EntityJustification.annotate_justification(
-                Entity.most_recent_by_id_queryset(id_entity_destination_persistent)
+                EntityDb.most_recent_by_id_queryset(id_entity_destination_persistent)
             ).get()
-            assigned_duplicate = person_db_to_api(destination)
+            assigned_duplicate = entity_db_to_api(destination)
             if body.justification_txt is not None:
                 add_justification(
                     candidate,
@@ -239,7 +240,7 @@ def put_duplicate_assignment(
                 )
             return 200, PutDuplicateResponse(assigned_duplicate=assigned_duplicate)
 
-    except Entity.DoesNotExist:  # pylint: disable=no-member
+    except EntityDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="One of the entities does not exist.")
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
@@ -310,6 +311,6 @@ def scored_match_db_to_api(match):
         id_match_tag_definition_persistent_list = []
     return ScoredMatch(
         similarity=match["levenshtein_similarity"],
-        entity=person_db_dict_to_api(match),
+        entity=entity_db_dict_to_api(match),
         id_match_tag_definition_persistent_list=id_match_tag_definition_persistent_list,
     )

@@ -1,7 +1,0 @@
-# pylint: disable=invalid-name,missing-module-docstring
-from datetime import datetime, timezone
-
-display_txt_test = "display text test"
-time_edit_test = datetime(2022, 11, 15, tzinfo=timezone.utc)
-id_persistent_test = "id_persistent_test_0"
-justification = "Justification for entity in test"

@@ -116,7 +116,7 @@ test('edit display text success', async () => {
         [
             200,
             {
-                persons: [
+                entity_list: [
                     {
                         id_persistent: idPersistent1,
                         display_txt: valueChanged,
@@ -155,12 +155,12 @@ test('edit display text success', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(3)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/persons',
+        'http://127.0.0.1:8000/cosmae/api/entities',
         {
             credentials: 'include',
             method: 'POST',
             body: JSON.stringify({
-                persons: [
+                entity_list: [
                     {
                         display_txt: valueChanged,
                         id_persistent: idPersistent1,
@@ -405,14 +405,14 @@ const version1 = 1
 const versionChanged = 31234
 const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
-const test_person_rsp_0 = {
+const test_entity_rsp_0 = {
     display_txt: displayTxt0,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent0,
     version: version0,
     disabled: false
 }
-const test_person_rsp_1 = {
+const test_entity_rsp_1 = {
     display_txt: 'test display txt 1',
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent1,
@@ -443,7 +443,7 @@ const tagDefTest: TagDefinition = newTagDefinition({
 })
 function addEntitiesResponse(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { persons: [test_person_rsp_0, test_person_rsp_1] }]
+        [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }]
     ])
 }
 

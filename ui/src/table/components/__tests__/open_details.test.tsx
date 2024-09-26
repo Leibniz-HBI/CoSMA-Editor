@@ -154,7 +154,7 @@ const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
 const justification = 'very prolific shit poster'
 const justification1 = 'tremendously prolific shit poster'
-const test_person_rsp_0 = {
+const test_entity_rsp_0 = {
     display_txt: displayTxt0,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent0,
@@ -162,7 +162,7 @@ const test_person_rsp_0 = {
     disabled: false,
     justification_txt: justification
 }
-const test_person_rsp_1 = {
+const test_entities_rsp_1 = {
     display_txt: displayTxt1,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent1,
@@ -204,7 +204,7 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
 }
 function addEntitiesAndInstancesResponse(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
-        [200, { persons: [test_person_rsp_0, test_person_rsp_1] }],
+        [200, { entity_list: [test_entity_rsp_0, test_entities_rsp_1] }],
         [200, { tag_instances: [] }]
     ])
 }
@@ -214,7 +214,7 @@ function addDetailsResponseSequence(fetchMock: jest.Mock) {
         [
             200,
             {
-                entity: test_person_rsp_1,
+                entity: test_entities_rsp_1,
                 tag_instance_list: [
                     {
                         id_persistent: idInstance,

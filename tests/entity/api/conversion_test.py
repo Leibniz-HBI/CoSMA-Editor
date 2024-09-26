@@ -4,24 +4,24 @@ from unittest.mock import patch
 import pytest
 
 import tests.tag.common as ct
-from tests.person import common as c
+from tests.entity import common as c
+from cosmae.entity import api
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.queue import entity_display_txt_information_cache
 from cosmae.exception import ValidationException
-from cosmae.person import api
 
 
 @pytest.mark.django_db
 def test_conversion_api_to_db_without_id(user):
-    person_api = api.PersonNaturalWithJustification(
+    person_api = api.EntityWithJustification(
         display_txt=c.display_txt_test,
         version=None,
         justification_txt=c.justification,
     )
-    with patch("cosmae.person.api.uuid4") as uuid_mock:
+    with patch("cosmae.entity.api.uuid4") as uuid_mock:
         uuid_mock.return_value = c.id_persistent_test
-        person_db, _, justification = api.person_api_to_db(
+        person_db, _, justification = api.entity_api_to_db(
             person_api, c.time_edit_test, user
         )
     assert person_db.display_txt == c.display_txt_test
@@ -39,12 +39,12 @@ def test_conversion_api_to_db_with_id(user):
         display_txt=c.display_txt_test,
     )
     prev.save()
-    person_api = api.PersonNaturalWithJustification(
+    person_api = api.EntityWithJustification(
         display_txt=c.display_txt_test + " changed",
         version=prev.id,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
     )
-    person_db, _, justification = api.person_api_to_db(
+    person_db, _, justification = api.entity_api_to_db(
         person_api, c.time_edit_test, user
     )
     assert person_db.display_txt == c.display_txt_test + " changed"
@@ -54,21 +54,21 @@ def test_conversion_api_to_db_with_id(user):
 
 
 def test_conversion_api_to_db_with_id_no_version(user):
-    person_api = api.PersonNatural(
+    person_api = api.Entity(
         display_txt=c.display_txt_test,
         id_persistent=c.id_persistent_test,
     )
     with pytest.raises(ValidationException):
-        api.person_api_to_db(person_api, c.time_edit_test, user)
+        api.entity_api_to_db(person_api, c.time_edit_test, user)
 
 
 def test_conversion_api_to_db_no_id_with_version(user):
-    person_api = api.PersonNatural(
+    person_api = api.Entity(
         display_txt=c.display_txt_test,
         version=5,  # pylint: disable=no-member
     )
     with pytest.raises(ValidationException):
-        api.person_api_to_db(person_api, c.time_edit_test, user)
+        api.entity_api_to_db(person_api, c.time_edit_test, user)
 
 
 @pytest.mark.django_db
@@ -80,14 +80,14 @@ def test_conversion_db_to_api_no_cache():
         id=5,
     )
     person_db.justification_txt = None
-    person_api_expected = api.PersonNaturalWithJustification(
+    person_api_expected = api.EntityWithJustification(
         display_txt=c.display_txt_test,
         display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
         disabled=False,
     )
-    person_api = api.person_db_to_api(person_db)
+    person_api = api.entity_db_to_api(person_db)
     assert person_api_expected == person_api
 
 
@@ -105,14 +105,14 @@ def test_conversion_db_to_api_display_txt_in_cache():
         id=5,
     )
     person_db.justification_txt = None
-    person_api_expected = api.PersonNaturalWithJustification(
+    person_api_expected = api.EntityWithJustification(
         display_txt=c.display_txt_test,
         display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
         id_persistent=id_entity_persistent,
         disabled=False,
     )
-    person_api = api.person_db_to_api(person_db)
+    person_api = api.entity_db_to_api(person_db)
     assert person_api_expected == person_api
 
 
@@ -128,14 +128,14 @@ def test_conversion_db_to_api_id_persistent_in_cache_but_display_txt():
         id=5,
     )
     person_db.justification_txt = None
-    person_api_expected = api.PersonNaturalWithJustification(
+    person_api_expected = api.EntityWithJustification(
         display_txt=c.display_txt_test,
         display_txt_details="Display Text",
         version=5,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
         disabled=False,
     )
-    person_api = api.person_db_to_api(person_db)
+    person_api = api.entity_db_to_api(person_db)
     assert person_api_expected == person_api
 
 
@@ -151,14 +151,14 @@ def test_conversion_db_to_api_UNKNOWN_in_cache_no_display_txt():
         id=5,
     )
     person_db.justification_txt = None
-    person_api_expected = api.PersonNaturalWithJustification(
+    person_api_expected = api.EntityWithJustification(
         display_txt=c.id_persistent_test,
         display_txt_details="id_persistent",
         version=5,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
         disabled=False,
     )
-    person_api = api.person_db_to_api(person_db)
+    person_api = api.entity_db_to_api(person_db)
     assert person_api_expected == person_api
 
 
@@ -189,7 +189,7 @@ def test_conversion_db_to_api_tag_def_in_cache():
         id=5,
     )
     person_db.justification_txt = None
-    person_api_expected = api.PersonNaturalWithJustification(
+    person_api_expected = api.EntityWithJustification(
         display_txt=cache_display_txt,
         display_txt_details={
             "id_persistent": ct.id_tag_def_persistent_test,
@@ -208,5 +208,5 @@ def test_conversion_db_to_api_tag_def_in_cache():
         id_persistent=id_entity_persistent,
         disabled=False,
     )
-    person_api = api.person_db_to_api(person_db)
+    person_api = api.entity_db_to_api(person_db)
     assert person_api_expected == person_api

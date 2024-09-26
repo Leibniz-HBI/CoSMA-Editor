@@ -52,7 +52,7 @@ export function getContributionEntitiesAction(
                     })
                     const json = await rsp.json()
                     if (rsp.status == 200) {
-                        const entitiesChunk = json['persons'].map(
+                        const entitiesChunk = json['entity_list'].map(
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             (entityJson: any) =>
                                 newEntityWithDuplicates({
