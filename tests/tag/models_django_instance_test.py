@@ -186,8 +186,8 @@ def test_add_tag_root(entity0, tag_def_user):
 
 @pytest.mark.django_db
 def test_empty_chunk(tag_def):
-    ret = TagInstance.by_tag_chunked(tag_def.id_persistent, 2, 3)
-    assert ret == []
+    ret = TagInstance.by_tag_chunked_queryset(tag_def.id_persistent, 2, 3)
+    assert not list(ret)
 
 
 @pytest.mark.django_db
@@ -212,7 +212,9 @@ def test_chunk_versions(tag_def):
             previous_version = tag  # pylint: disable=no-member
         last_ids.append(tag.id)  # pylint: disable=no-member
         last_values.append(tag.value)
-    ret = TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, last_ids[2], 3)
+    ret = TagInstance.by_tag_chunked_queryset(
+        c.id_tag_def_persistent_test, last_ids[2], 3
+    )
     ret_values = [tag.value for tag in ret]
     assert ret_values == last_values[2 : 2 + 3]
 
@@ -230,12 +232,12 @@ def test_chunk_filter_tag_instance(tag_def):
             approved_by=None,
         )
         tag.save()
-    ret = TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, 0, 5)
+    ret = TagInstance.by_tag_chunked_queryset(c.id_tag_def_persistent_test, 0, 5)
     assert len(ret) == 1
 
 
 @pytest.mark.django_db
 def test_not_existing_tag():
     with pytest.raises(TagDefinitionMissingException) as exc_info:
-        TagInstance.by_tag_chunked(c.id_tag_def_persistent_test, 0, 5)
+        TagInstance.by_tag_chunked_queryset(c.id_tag_def_persistent_test, 0, 5)
     assert exc_info.value.args[0] == c.id_tag_def_persistent_test

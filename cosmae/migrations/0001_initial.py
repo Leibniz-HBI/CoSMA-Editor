@@ -301,7 +301,7 @@ class Migration(migrations.Migration):
                 ("time_edit", models.DateTimeField()),
                 ("hidden", models.BooleanField(default=False)),
                 ("disabled", models.BooleanField(default=False)),
-                ("proxy_name", models.TextField()),
+                ("proxy_name", models.TextField(default="person")),
                 ("display_txt", models.TextField(blank=True, null=True)),
                 (
                     "contribution_candidate",

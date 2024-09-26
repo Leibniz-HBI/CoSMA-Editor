@@ -373,8 +373,33 @@ class TagInstanceHistory(TagInstanceAbstract, HistoryMixin):
         )
 
 
+class TagInstanceQuerySet(models.QuerySet):
+    "Custom queryset for recent tag instances"
+
+    def search(self, search_term: str, id_tag_definitions: None):
+        "Search tag instance values by a term optionally restricted to a set of tag definitions."
+        if id_tag_definitions is not None:
+            restricted = self.filter(
+                id_tag_definition_persistent__in=id_tag_definitions
+            )
+        else:
+            restricted = self
+        without_contributed = restricted.alias(
+            contribution_candidate=models.Subquery(
+                Entity.objects.filter(
+                    id_persistent=models.OuterRef("id_entity_persistent")
+                ).values("contribution_candidate")
+            )
+        ).filter(contribution_candidate__isnull=True)
+        query = models.Q()
+        for term in search_term.split():
+            query = query & models.Q(value__icontains=term)
+        return without_contributed.filter(query)
+
+
 class TagInstance(TagInstanceAbstract):
     "Django ORM class for view representing the most recent tag instances."
+    objects = TagInstanceQuerySet().as_manager()
 
     class Meta:
         "Meta class for TagInstance view to ensure django does not create a table."
@@ -400,7 +425,9 @@ class TagInstance(TagInstanceAbstract):
         ).get()
 
     @classmethod
-    def by_tag_chunked(cls, id_tag_definition_persistent, offset, limit, manager=None):
+    def by_tag_chunked_queryset(
+        cls, id_tag_definition_persistent, offset, limit, manager=None
+    ):
         "Get tag instances for a tag_id in chunks."
         try:
             tag = TagDefinition.most_recent_by_id(id_tag_definition_persistent)
@@ -408,11 +435,9 @@ class TagInstance(TagInstanceAbstract):
             raise TagDefinitionMissingException(id_tag_definition_persistent) from exc
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
-        return list(
-            manager.filter(
-                id_tag_definition_persistent=tag.id_persistent, id__gte=offset
-            ).order_by("id")
-        )[:limit]
+        return manager.filter(
+            id_tag_definition_persistent=tag.id_persistent, id__gte=offset
+        ).order_by("id")[:limit]
 
     @classmethod
     def most_recent_by_entity_and_definition_id_query_set(

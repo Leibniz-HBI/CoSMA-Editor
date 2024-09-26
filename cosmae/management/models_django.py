@@ -11,7 +11,7 @@ class ConfigValue(models.Model):
     "Django ORM model for config values used by cosmae."
 
     key = models.TextField()
-    value = models.JSONField()
+    value = models.TextField()
     idx = models.IntegerField(null=True, default=None)
 
     class Meta:

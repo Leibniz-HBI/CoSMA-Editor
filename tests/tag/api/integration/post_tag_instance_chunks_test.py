@@ -94,7 +94,7 @@ def test_bad_db(auth_server):
     live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
-    with patch("cosmae.tag.models_django.TagInstance.by_tag_chunked", mock):
+    with patch("cosmae.tag.models_django.TagInstance.by_tag_chunked_queryset", mock):
         rsp = post_tag_instance_chunks(
             live_server.url, "test_id_persistent", 0, 2, cookies=cookies
         )

@@ -5,6 +5,8 @@ from typing import List, Optional, Union
 from uuid import uuid4
 
 from django.db import IntegrityError, transaction
+from django.db.models import F, TextField, Value
+from django.db.models.functions import Cast
 from django.http import HttpRequest
 from ninja import Router, Schema
 
@@ -20,6 +22,8 @@ from cosmae.exception import (
     NotAuthenticatedException,
     ValidationException,
 )
+from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
+from cosmae.management.models_django import ConfigValue
 from cosmae.tag.api.definitions import TagDefinitionResponse
 from cosmae.tag.api.models_api import TagInstancePost
 from cosmae.tag.api.models_conversion import (
@@ -123,6 +127,20 @@ class EntityDetailsResponse(Schema):
     """API Response combining an entity with its tag instances."""
     entity: PersonNatural
     tag_instance_list: List[TagInstancePost]
+
+
+class EntitySearchResult(Schema):
+    # pylint: disable=too-few-public-methods
+    """API response for a single search result."""
+    match_value: str
+    id_entity_persistent: str
+    id_tag_definition_persistent: Optional[str]
+
+
+class EntitySearchResultList(Schema):
+    # pylint: disable=too-few-public-methods
+    """API response for multiple search results"""
+    search_result_list: List[EntitySearchResult]
 
 
 @router.post(
@@ -242,6 +260,49 @@ def get_details(request: HttpRequest, id_persistent: str):
         return 404, ApiError(msg="Entity does not exist")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get instances")
+
+
+@router.get(
+    "search",
+    response={200: EntitySearchResultList, 401: ApiError, 403: ApiError, 500: ApiError},
+)
+def search(request: HttpRequest, term: str):
+    "Search for an entity"
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient privileges.")
+    try:
+        display_txt_results = (
+            EntityDb.objects.filter(contribution_candidate__isnull=True)
+            .search(term)
+            .values(
+                id_entity_persistent=F("id_persistent"),
+                id_tag_definition_persistent=Value(None, TextField()),
+                value=F("display_txt"),
+            )
+        )
+        tag_value_results = TagInstanceDb.objects.search(
+            term,
+            id_tag_definitions=ConfigValue.objects.filter(
+                key=DISPLAY_TXT_ORDER_CONFIG_KEY
+            )
+            .annotate(text_value=Cast("value", TextField()))
+            .values("text_value"),
+        ).values("id_entity_persistent", "id_tag_definition_persistent", "value")
+        without_known = tag_value_results.exclude(
+            id_entity_persistent__in=display_txt_results.values("id_entity_persistent")
+        )
+        union_results = display_txt_results.union(without_known)
+        return 200, EntitySearchResultList(
+            search_result_list=[
+                person_search_result_db_to_api(person) for person in union_results
+            ]
+        )
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not search entities.")
 
 
 @router.post(
@@ -430,6 +491,18 @@ def person_db_dict_to_api(person: Optional[dict]) -> Optional[PersonNatural]:
         id_persistent=id_persistent,
         disabled=person["disabled"],
         display_txt_details=display_txt_info,
+    )
+
+
+def person_search_result_db_to_api(person: EntityDb) -> EntitySearchResult:
+    "Transform an db entity to a search result"
+    id_entity_persistent = person["id_entity_persistent"]
+    id_tag_definition_persistent = person["id_tag_definition_persistent"]
+    matched_value = person["value"]
+    return EntitySearchResult(
+        match_value=matched_value,
+        id_entity_persistent=id_entity_persistent,
+        id_tag_definition_persistent=id_tag_definition_persistent,
     )
 
 

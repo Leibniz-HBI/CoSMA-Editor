@@ -361,7 +361,8 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
     # There have been two edits
     assert 7 == len(TagInstanceHistory.objects.all())  # pylint: disable=no-member
     for_tag = [
-        tag.__dict__ for tag in TagInstance.by_tag_chunked(c.id_tag_def_test, 0, 20)
+        tag.__dict__
+        for tag in TagInstance.by_tag_chunked_queryset(c.id_tag_def_test, 0, 20)
     ]
     assert for_tag[0]["previous_version_id"] is None
     assert for_tag[1]["previous_version_id"] is not None
@@ -395,7 +396,8 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
         },
     ]
     for_tag = [
-        tag.__dict__ for tag in TagInstance.by_tag_chunked(c.id_tag_def_test1, 0, 20)
+        tag.__dict__
+        for tag in TagInstance.by_tag_chunked_queryset(c.id_tag_def_test1, 0, 20)
     ]
     assert for_tag[0]["previous_version_id"] is None
     assert for_tag[1]["previous_version_id"] is not None

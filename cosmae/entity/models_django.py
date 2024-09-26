@@ -31,75 +31,31 @@ class EntityAbstract(Versioned):
         abstract = True
 
 
-class EntityHistory(EntityAbstract, HistoryMixin):
-    """Django ORM model for entity history."""
+class EntityQueryset(models.QuerySet):
+    "Custom queryset for recent entities"
 
-    class Meta:
-        "Meta class for entity history."
+    def search(self, search_term: str):
+        "search for entities by display text."
+        query = models.Q()
+        for term in search_term.split():
+            query = query & models.Q(display_txt__icontains=term)
+        return self.filter(query)
 
-        indexes = [
-            models.Index(fields=["id_persistent"]),
-            # Possible alternative gin index with `opclasses=["gin_trgrm_ops"],
-            # Would mean faster retrieval but increased size and update time.
-            # Needs to add extension via migration.
-            GistIndex(
-                fields=["display_txt"],
-            ),
-        ]
-
-    @classmethod
-    def most_recent_queryset(cls, manager=None, include_disabled=False):
-        "Return most recent versions of all_tag_instances"
-        if manager is None:
-            manager = cls.objects  # pylint: disable=no-member
-        most_recent = manager.filter(
-            id=models.Subquery(
-                manager.filter(id_persistent=models.OuterRef("id_persistent"))
-                .values("id_persistent")
-                .annotate(max_id=Max("id"))
-                .values("max_id")
+    def chunk(self, offset: int, limit=int, do_not_include_contributed=True):
+        "Get a portion of entities"
+        manager = self
+        if do_not_include_contributed:
+            manager = self.filter(
+                contribution_candidates__isnull=do_not_include_contributed
             )
-        )
-        if include_disabled:
-            return most_recent
-        return most_recent.filter(disabled=False)
 
-    @classmethod
-    def check_integrity(cls):
-        """Check wether the object conforms to implicit assumptions."""
-
-    @classmethod
-    def most_recent_by_id_queryset(cls, id_persistent):
-        """Return a query set containing only the most recent version of an entity."""
-        return cls.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
-
-    @classmethod
-    def most_recent_by_id(cls, id_persistent):
-        """Return the most recent version of an entity."""
-        return cls.most_recent_by_id_queryset(id_persistent).get()
-
-    def check_different_before_save(self, other):
-        """Checks structural equality for two entities.
-        Note:
-            * The version fields are not compared as this check is intended to
-               prevent unnecessary writes.
-            * The proxy_type fields are not compared as they are only set
-              before writing to the DB.
-            * The time_edit fields are not compared as the operation is invalid."""
-        return (
-            other.id_persistent != self.id_persistent
-            or other.display_txt != self.display_txt
-            or other.disabled != self.disabled
-            or other.contribution_candidate_id
-            != self.contribution_candidate_id  # pylint: disable=no-member
-            or self.merged_from != other.merged_from
-        )
+        return manager.filter(id__gte=offset).order_by("id")[:limit]
 
 
 class Entity(EntityAbstract):
     "Django ORM model for entities"
+
+    objects = EntityQueryset.as_manager()
 
     class Meta:
         "Meta class for entity model"
@@ -260,3 +216,64 @@ class EntityJustification(models.Model):
                 justification.timestamp,
                 justification.author,
             )
+
+
+class EntityHistory(EntityAbstract, HistoryMixin):
+    """Django ORM model for entity history."""
+
+    class Meta:
+        "Meta class for entity history."
+
+        indexes = [
+            models.Index(fields=["id_persistent"]),
+        ]
+
+    @classmethod
+    def most_recent_queryset(cls, manager=None, include_disabled=False):
+        "Return most recent versions of all_tag_instances"
+        if manager is None:
+            manager = cls.objects  # pylint: disable=no-member
+        most_recent = manager.filter(
+            id=models.Subquery(
+                manager.filter(id_persistent=models.OuterRef("id_persistent"))
+                .values("id_persistent")
+                .annotate(max_id=Max("id"))
+                .values("max_id")
+            )
+        )
+        if include_disabled:
+            return most_recent
+        return most_recent.filter(disabled=False)
+
+    @classmethod
+    def check_integrity(cls):
+        """Check wether the object conforms to implicit assumptions."""
+
+    @classmethod
+    def most_recent_by_id_queryset(cls, id_persistent):
+        """Return a query set containing only the most recent version of an entity."""
+        return cls.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_persistent
+        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+
+    @classmethod
+    def most_recent_by_id(cls, id_persistent):
+        """Return the most recent version of an entity."""
+        return cls.most_recent_by_id_queryset(id_persistent).get()
+
+    def check_different_before_save(self, other):
+        """Checks structural equality for two entities.
+        Note:
+            * The version fields are not compared as this check is intended to
+               prevent unnecessary writes.
+            * The proxy_type fields are not compared as they are only set
+              before writing to the DB.
+            * The time_edit fields are not compared as the operation is invalid."""
+        return (
+            other.id_persistent != self.id_persistent
+            or other.display_txt != self.display_txt
+            or other.disabled != self.disabled
+            or other.contribution_candidate_id
+            != self.contribution_candidate_id  # pylint: disable=no-member
+            or self.merged_from != other.merged_from
+        )

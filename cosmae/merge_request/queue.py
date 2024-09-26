@@ -70,7 +70,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                 )
             ):
                 return
-            tag_instances_destination = TagInstance.by_tag_chunked(
+            tag_instances_destination = TagInstance.by_tag_chunked_queryset(
                 merge_request.id_destination_persistent, 0, 1
             )
             time_merge = timestamp()

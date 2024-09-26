@@ -75,7 +75,7 @@ def get_preview(
         else:
             destination_values = [
                 value.value
-                for value in TagInstance.by_tag_chunked(
+                for value in TagInstance.by_tag_chunked_queryset(
                     id_tag_definition_persistent, 0, 10
                 )
             ]

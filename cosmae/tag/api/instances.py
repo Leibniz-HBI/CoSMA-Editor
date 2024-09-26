@@ -193,7 +193,7 @@ def post_tag_instance_chunks(
             msg=f"Please specify limit smaller than {MAX_TAG_INSTANCE_CHUNK_LIMIT}."
         )
     try:
-        instance_dbs = TagInstanceDb.by_tag_chunked(
+        instance_dbs = TagInstanceDb.by_tag_chunked_queryset(
             chunk_req.id_tag_definition_persistent, chunk_req.offset, chunk_req.limit
         )
         instance_apis = [tag_instance_db_to_api(tag) for tag in instance_dbs]

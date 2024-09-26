@@ -26,6 +26,14 @@ def post_chunk(url, offset, limit, cookies=None):
     )
 
 
+def get_search(url, search_term, cookies=None):
+    return requests.get(
+        url + f"/cosmae/api/persons/search?term={search_term}",
+        cookies=cookies,
+        timeout=900,
+    )
+
+
 def put_justification(url, id_entity_persistent, text, cookies=None):
     return requests.put(
         urljoin(
