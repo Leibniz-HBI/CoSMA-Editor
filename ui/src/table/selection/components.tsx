@@ -5,7 +5,7 @@ import { AppDispatch } from '../../store'
 import { toggleRowSelection } from './slice'
 import { selectPermissionGroup } from '../../user/selectors'
 import { UserPermissionGroup } from '../../user/state'
-import { Entity } from '../state'
+import { Entity } from '../../entity/state'
 import { putEntityMergeRequest } from '../../merge_request/entity/conflicts/thunks'
 
 export function MergeEntitiesButton({

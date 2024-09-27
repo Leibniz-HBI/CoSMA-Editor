@@ -13,7 +13,7 @@ import { entityMergeRequestsReducer } from '../slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { EntityMergeRequests } from '../components'
-import { newEntity } from '../../../table/state'
+import { newEntity } from '../../../entity/state'
 import { UserPermissionGroup } from '../../../user/state'
 import {
     NotificationManager,

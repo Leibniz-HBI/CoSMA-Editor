@@ -2,6 +2,7 @@ import { Rectangle } from '@glideapps/glide-data-grid'
 import { TagDefinition, TagType, newTagDefinition } from '../column_menu/state'
 import { RemoteInterface, newRemote } from '../util/state'
 import { Comment } from '../comments/slice'
+import { Entity } from '../entity/state'
 
 export interface TableState {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -191,39 +192,6 @@ export function csvLinesFromTable({
     return lines
 }
 
-export interface Entity {
-    idPersistent: string
-    displayTxt?: string
-    version: number
-    disabled: boolean
-    justificationTxt: string | undefined
-    displayTxtDetails: string | TagDefinition
-}
-
-export function newEntity({
-    idPersistent,
-    displayTxt,
-    version,
-    disabled,
-    justificationTxt = undefined,
-    displayTxtDetails = 'Display Text'
-}: {
-    idPersistent: string
-    displayTxt?: string
-    version: number
-    disabled: boolean
-    justificationTxt?: string | undefined
-    displayTxtDetails?: string | TagDefinition
-}) {
-    return {
-        idPersistent: idPersistent,
-        displayTxt: displayTxt,
-        version: version,
-        disabled: disabled,
-        justificationTxt: justificationTxt,
-        displayTxtDetails: displayTxtDetails
-    }
-}
 export const displayTxtColumnId = 'display_txt_id'
 export const displayTxtColumnIdx = 0
 export const optionalEntityJustificationColumnIdx = 1

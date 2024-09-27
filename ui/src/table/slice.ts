@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
     CellValue,
-    Entity,
     TableState,
     newColumnState,
     newTableState,
@@ -9,6 +8,7 @@ import {
     justificationColumnId,
     optionalEntityJustificationColumnIdx
 } from './state'
+import { Entity } from '../entity/state'
 import { newRemote } from '../util/state'
 import { TagDefinition } from '../column_menu/state'
 import { Rectangle } from '@glideapps/glide-data-grid'

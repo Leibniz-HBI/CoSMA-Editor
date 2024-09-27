@@ -58,14 +58,15 @@ import { TagDefinition } from '../../column_menu/state'
 import {
     ColumnState,
     displayTxtColumnIdx,
-    Entity,
     optionalEntityJustificationColumnIdx
 } from '../state'
+import { Entity } from '../../entity/state'
 import {
     ColumnModal,
     EntityAddModal,
     EntityMergingModal,
-    EntityJustificationModal
+    EntityJustificationModal,
+    DisplayTextDetails
 } from './modals'
 import { createCellContentCallback } from '../cell'
 import { AddEntityButton } from './buttons'
@@ -318,17 +319,17 @@ export function DataTable({
     const [tooltipEntityDetails, setTooltipEntityDetails] = useState<
         { val: string; bounds: IBounds } | undefined
     >()
-    const [tooltipDisplayText, setTooltipDisplayText] = useState<
+    const [tooltipDisplayTextDetails, setTooltipDisplayTextDetails] = useState<
         { val: string; bounds: IBounds } | undefined
     >()
     const { layerProps: tooltipLayerProps, renderLayer: tooltipRenderLayer } = useLayer(
         {
-            isOpen: tooltipDisplayText !== undefined,
+            isOpen: tooltipDisplayTextDetails !== undefined,
             triggerOffset: 4,
             auto: true,
             container: 'portal',
             trigger: {
-                getBounds: () => tooltipDisplayText?.bounds ?? zeroBounds
+                getBounds: () => tooltipDisplayTextDetails?.bounds ?? zeroBounds
             }
         }
     )
@@ -370,19 +371,10 @@ export function DataTable({
                 window.clearTimeout(timeoutRefDisplayText.current)
                 window.clearTimeout(timeoutRefEntityDetails.current)
                 const entity = entities[args.location[1]]
-                setTooltipDisplayText(undefined)
-                let tooltipValue = ''
-                const displayTxtDetails = entity.displayTxtDetails
-                if (displayTxtDetails === undefined) {
-                    tooltipValue = 'Unknown display txt source'
-                } else if (typeof displayTxtDetails == 'string') {
-                    tooltipValue = displayTxtDetails
-                } else {
-                    tooltipValue = constructColumnTitle(displayTxtDetails.namePath)
-                }
+                setTooltipDisplayTextDetails(undefined)
                 timeoutRefDisplayText.current = window.setTimeout(() => {
-                    setTooltipDisplayText({
-                        val: `Display text source: ${tooltipValue}`,
+                    setTooltipDisplayTextDetails({
+                        val: entity.idPersistent,
                         bounds: {
                             // translate to react-laag types
                             left: args.bounds.x,
@@ -412,7 +404,7 @@ export function DataTable({
             } else {
                 window.clearTimeout(timeoutRefDisplayText.current)
                 timeoutRefDisplayText.current = 0
-                setTooltipDisplayText(undefined)
+                setTooltipDisplayTextDetails(undefined)
                 setTooltipEntityDetails(undefined)
             }
         },
@@ -480,7 +472,7 @@ export function DataTable({
                             />
                         </div>
                     )}
-                {tooltipDisplayText !== undefined &&
+                {tooltipDisplayTextDetails !== undefined &&
                     tooltipRenderLayer(
                         <div
                             {...tooltipLayerProps}
@@ -493,7 +485,9 @@ export function DataTable({
                                 borderRadius: 9
                             }}
                         >
-                            {tooltipDisplayText.val}
+                            <DisplayTextDetails
+                                idEntityPersistent={tooltipDisplayTextDetails.val}
+                            />
                         </div>
                     )}
                 {tooltipEntityDetails !== undefined &&

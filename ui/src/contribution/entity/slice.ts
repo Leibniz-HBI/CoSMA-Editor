@@ -7,7 +7,8 @@ import {
 } from './state'
 import { TagInstance } from './state'
 import { newRemote, RemoteInterface } from '../../util/state'
-import { CellValue, Entity } from '../../table/state'
+import { CellValue } from '../../table/state'
+import { Entity } from '../../entity/state'
 import { TagDefinition } from '../../column_menu/state'
 
 const initialState: ContributionEntityState = newContributionEntityState({})

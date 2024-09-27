@@ -31,7 +31,7 @@ import {
     newTagInstance
 } from '../state'
 import { tagMergeRequestConflictsReducer } from '../slice'
-import { newEntity } from '../../../table/state'
+import { newEntity } from '../../../entity/state'
 import { MergeRequestStep, newMergeRequest } from '../../state'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {

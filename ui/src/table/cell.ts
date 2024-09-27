@@ -4,9 +4,9 @@ import {
     CellValue,
     ColumnState,
     displayTxtColumnIdx,
-    Entity,
     optionalEntityJustificationColumnIdx
 } from './state'
+import { Entity } from '../entity/state'
 import { LoadingCell } from './draw'
 
 const emptyCell = {

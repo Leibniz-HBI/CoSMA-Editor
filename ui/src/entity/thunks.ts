@@ -5,18 +5,42 @@ import {
     getEntityDetailsError,
     getEntityDetailsStart,
     getEntityDetailsSuccess,
+    getEntityError,
     getEntitySearchResultsError,
     getEntitySearchResultsStart,
-    getEntitySearchResultsSuccess
+    getEntitySearchResultsSuccess,
+    getEntityStart,
+    getEntitySuccess
 } from './slice'
 import { config } from '../config'
 import { parseEntityObjectFromJson } from '../table/thunks'
 import { EntityDetails, EntitySearchResult, newEntitySearchResult } from './state'
 import { parseTagInstanceFromJson } from '../contribution/entity/thunks'
 
-export function getEntityDetailsThunk(
-    idEntityPersistent: string
-): ThunkWithFetch<void> {
+export function getEntityThunk(idEntityPersistent: string): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(getEntityStart(idEntityPersistent))
+        try {
+            const rsp = await fetch(
+                config.api_path + `/entities?id_persistent=${idEntityPersistent}`,
+                { credentials: 'include' }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const details = parseEntityObjectFromJson(json)
+                dispatch(getEntitySuccess(details))
+            } else {
+                dispatch(getEntityError(idEntityPersistent))
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(getEntityError(idEntityPersistent))
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+
+export function getEntityValuesThunk(idEntityPersistent: string): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(getEntityDetailsStart())
         try {

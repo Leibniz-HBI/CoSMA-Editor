@@ -1,4 +1,4 @@
-import { Entity } from '../../table/state'
+import { Entity } from '../../entity/state'
 import { PublicUserInfo } from '../../user/state'
 import { RemoteInterface } from '../../util/state'
 

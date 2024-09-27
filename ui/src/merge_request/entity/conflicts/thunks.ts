@@ -1,6 +1,6 @@
 import { config } from '../../../config'
 import { AppDispatch } from '../../../store'
-import { Entity } from '../../../table/state'
+import { Entity } from '../../../entity/state'
 import { addError, addSuccessVanish } from '../../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../../util/exception'
 import { RemoteInterface, newRemote } from '../../../util/state'

@@ -6,6 +6,7 @@ import {
     newEntityDetailsState
 } from './state'
 import { newRemote } from '../util/state'
+import { Entity } from './state'
 
 const slice = createSlice({
     initialState: newEntityDetailsState({}),
@@ -43,6 +44,28 @@ const slice = createSlice({
             action: PayloadAction<EntitySearchResult[]>
         ) {
             state.entitySearchResults = newRemote(action.payload)
+        },
+        getEntityError(state: EntityDetailsState, action: PayloadAction<string>) {
+            const existing = state.entityByIdPersistentMap[action.payload]
+            if (existing !== undefined) {
+                existing.isLoading = false
+            }
+        },
+        getEntityStart(state: EntityDetailsState, action: PayloadAction<string>) {
+            const existing = state.entityByIdPersistentMap[action.payload]
+            if (existing !== undefined) {
+                existing.isLoading = true
+            } else {
+                state.entityByIdPersistentMap[action.payload] = newRemote(
+                    undefined,
+                    true
+                )
+            }
+        },
+        getEntitySuccess(state: EntityDetailsState, action: PayloadAction<Entity>) {
+            state.entityByIdPersistentMap[action.payload.idPersistent] = newRemote(
+                action.payload
+            )
         }
     }
 })
@@ -54,6 +77,9 @@ export const {
     getEntityDetailsError,
     getEntityDetailsStart,
     getEntityDetailsSuccess,
+    getEntityError,
+    getEntityStart,
+    getEntitySuccess,
     getEntitySearchResultsError,
     getEntitySearchResultsStart,
     getEntitySearchResultsSuccess,

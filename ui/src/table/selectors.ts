@@ -34,6 +34,11 @@ export const selectEntities = createSelector(
     (state) => state.entities
 )
 
+export const selectEntityIndices = createSelector(
+    selectTableState,
+    (state) => state.entityIndices
+)
+
 export const selectColumnStates = createSelector(
     selectTableState,
     (state) => state.columnStates
@@ -155,3 +160,16 @@ export const selectEntityJustificationHistory = createSelector(
     selectTableState,
     (state) => state.entityJustificationHistory
 )
+
+export const makeSelectEntityByIdPersistent = () => {
+    const selector = createSelector(
+        [
+            selectEntities,
+            selectEntityIndices,
+            (_state, idPersistent: string) => idPersistent
+        ],
+        (entities, entityIndices, idPersistent) =>
+            entities?.[entityIndices[idPersistent]]
+    )
+    return selector
+}

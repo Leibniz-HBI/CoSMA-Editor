@@ -24,3 +24,16 @@ export const selectEntitySearchResultEntries = createSelector(
     selectEntitySearchResults,
     (results) => results.value
 )
+
+export const selectEntityByIdPersistentMap = createSelector(
+    selectEntityDetailsState,
+    (state) => state.entityByIdPersistentMap
+)
+
+export const makeSelectAuxiliaryEntityByIdPersistent = () => {
+    const selector = createSelector(
+        [selectEntityByIdPersistentMap, (_state, idPersistent: string) => idPersistent],
+        (state, idPersistent) => state[idPersistent]
+    )
+    return selector
+}

@@ -1,5 +1,5 @@
 import { TagDefinition, TagType, newTagDefinition } from '../../column_menu/state'
-import { newEntity } from '../state'
+import { newEntity } from '../../entity/state'
 import { parseEntityObjectFromJson, parseValue } from '../thunks'
 
 describe('parse Values', () => {

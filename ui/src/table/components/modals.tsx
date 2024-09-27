@@ -39,6 +39,8 @@ import { justificationColumnId } from '../state'
 import { clearSelection } from '../selection/slice'
 import { selectShowDetailsForEntityWithIdPersistent } from '../../entity/selectors'
 import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
+import { useEntity } from '../../entity/hooks'
+import { constructColumnTitle } from '../../contribution/entity/hooks'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -232,4 +234,24 @@ export function EntityDetailsModal() {
             </Modal.Body>
         </Modal>
     )
+}
+
+export function DisplayTextDetails({
+    idEntityPersistent
+}: {
+    idEntityPersistent: string
+}) {
+    const entity = useEntity(idEntityPersistent).value
+    let tooltipValue = 'Unknown entity'
+    if (entity !== undefined) {
+        const displayTxtDetails = entity.displayTxtDetails
+        if (displayTxtDetails === undefined) {
+            tooltipValue = 'Unknown display txt source'
+        } else if (typeof displayTxtDetails == 'string') {
+            tooltipValue = displayTxtDetails
+        } else {
+            tooltipValue = constructColumnTitle(displayTxtDetails.namePath)
+        }
+    }
+    return `Display text source: ${tooltipValue}`
 }

@@ -20,7 +20,8 @@ import {
     newUserInfo,
     newUserState
 } from '../../../user/state'
-import { TableState, newColumnState, newEntity, newTableState } from '../../state'
+import { TableState, newColumnState, newTableState } from '../../state'
+import { newEntity } from '../../../entity/state'
 import {
     NotificationManager,
     NotificationType,

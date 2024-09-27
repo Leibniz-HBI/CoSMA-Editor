@@ -1,4 +1,3 @@
-import { boolean } from 'yup'
 import { PublicUserInfo } from '../user/state'
 import { RemoteInterface, newRemote } from '../util/state'
 

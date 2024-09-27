@@ -1,4 +1,4 @@
-import { Entity } from '../../table/state'
+import { Entity } from '../../entity/state'
 import { RemoteInterface, newRemote } from '../../util/state'
 import { MergeRequest } from '../state'
 

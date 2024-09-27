@@ -1,5 +1,5 @@
 import { TagDefinition } from '../../column_menu/state'
-import { Entity } from '../../table/state'
+import { Entity } from '../../entity/state'
 import { CellValue } from '../../table/state'
 import { RemoteInterface, newRemote } from '../../util/state'
 

@@ -3,12 +3,12 @@ import { fetch_chunk } from '../util/fetch'
 import { TagDefinition, TagType } from '../column_menu/state'
 import {
     CellValue,
-    Entity,
     displayTextColumn,
     displayTxtColumnId,
-    newEntity,
     justificationColumnId
 } from './state'
+import { Entity } from '../entity/state'
+import { newEntity } from '../entity/state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { constructColumnTitle } from '../contribution/entity/hooks'
@@ -419,7 +419,10 @@ export function parseEntityObjectFromJson(json: any): Entity {
 }
 export function parseDisplayTxtDetails(
     arg: { [key: string]: unknown } | string
-): string | TagDefinition {
+): string | TagDefinition | undefined {
+    if (arg === null) {
+        return undefined
+    }
     if (typeof arg == 'string') {
         return arg
     }

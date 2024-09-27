@@ -6,24 +6,33 @@ import {
     useRef,
     useState
 } from 'react'
-import { Col, Form, ListGroup, Overlay, Row, Spinner } from 'react-bootstrap'
+import {
+    Col,
+    Form,
+    ListGroup,
+    Overlay,
+    Placeholder,
+    Row,
+    Spinner
+} from 'react-bootstrap'
 import { FormField } from '../util/form'
 import { RemoteSubmitButton } from '../util/components/misc'
 import { RemoteInterface } from '../util/state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import * as yup from 'yup'
 import { useAppDispatch, useAppSelector } from '../hooks'
-import { getEntityDetailsThunk, getEntitySearchResultsThunk } from './thunks'
+import { getEntityValuesThunk, getEntitySearchResultsThunk } from './thunks'
 import { selectEntityDetails, selectEntitySearchResultEntries } from './selectors'
 import { useTagDefinition } from '../column_menu/hooks'
 import {
     TagDefinitionNamePath,
     TagDefinitionNamePathFromId
 } from '../column_menu/components/misc'
-import { Entity } from '../table/state'
+import { Entity, EntitySearchResult } from './state'
 import { AppDispatch } from '../store'
 import { debounce } from 'debounce'
 import { clearEntitySearchResults } from './slice'
+import { useEntity } from './hooks'
 
 const schema = yup.object({
     displayTxt: yup.string().trim(),
@@ -116,7 +125,7 @@ export function EntityDetails({ idEntityPersistent }: { idEntityPersistent: stri
     const dispatch = useAppDispatch()
     useEffect(
         () => {
-            dispatch(getEntityDetailsThunk(idEntityPersistent))
+            dispatch(getEntityValuesThunk(idEntityPersistent))
         },
         //eslint-disable-next-line react-hooks/exhaustive-deps
         [idEntityPersistent]
@@ -271,29 +280,52 @@ export function EntitySearchResults({
     let items = [<ListGroup.Item>No entities found</ListGroup.Item>]
     if (searchResults?.length != 0) {
         items = searchResults?.map((result, idx) => (
-            <ListGroup.Item
+            <EntitySearchResultItem
+                result={result}
+                onSearchResultClicked={onSearchResultClicked}
                 key={idx}
-                onClick={() => onSearchResultClicked(result.idEntityPersistent)}
-            >
-                <Col className="ps-2 pe-2">
-                    <Row className="">{result.matchValue}</Row>
-                    <Row className="fw-light">
-                        <Col>
-                            <span>Found by: </span>
-                            {result.idTagDefinitionPersistent !== undefined ? (
-                                <TagDefinitionNamePathFromId
-                                    idTagDefinitionPersistent={
-                                        result.idTagDefinitionPersistent
-                                    }
-                                />
-                            ) : (
-                                <span>Display Text</span>
-                            )}
-                        </Col>
-                    </Row>
-                </Col>
-            </ListGroup.Item>
+            />
         )) ?? [<ListGroup.Item />]
     }
     return <ListGroup className={className}>{items}</ListGroup>
+}
+
+export function EntitySearchResultItem({
+    result,
+    onSearchResultClicked
+}: {
+    result: EntitySearchResult
+    onSearchResultClicked: (idEntityPersistent: string) => void
+}) {
+    const entity = useEntity(result.idEntityPersistent)
+    return (
+        <ListGroup.Item
+            onClick={() => onSearchResultClicked(result.idEntityPersistent)}
+        >
+            <Col className="ps-2 pe-2">
+                <Row className="">
+                    {entity.value?.displayTxt ??
+                        (entity.isLoading && entity.value === undefined ? (
+                            <Placeholder>{result.matchValue}</Placeholder>
+                        ) : (
+                            result.matchValue
+                        ))}
+                </Row>
+                <Row className="fw-light">
+                    <Col>
+                        <span>Found by: </span>
+                        {result.idTagDefinitionPersistent !== undefined ? (
+                            <TagDefinitionNamePathFromId
+                                idTagDefinitionPersistent={
+                                    result.idTagDefinitionPersistent
+                                }
+                            />
+                        ) : (
+                            <span>Display Text</span>
+                        )}
+                    </Col>
+                </Row>
+            </Col>
+        </ListGroup.Item>
+    )
 }

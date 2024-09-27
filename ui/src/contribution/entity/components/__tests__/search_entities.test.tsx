@@ -5,6 +5,7 @@
 import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
 import {
     EntityDetailsState,
+    newEntity,
     newEntityDetailsState,
     newEntitySearchResult
 } from '../../../../entity/state'
@@ -22,11 +23,14 @@ import {
 } from '../../../../column_menu/state'
 import { newRemote } from '../../../../util/state'
 import { tagSelectionSlice } from '../../../../column_menu/slice'
+import { newTableState, TableState } from '../../../../table/state'
+import { tableReducer } from '../../../../table/slice'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         entityDetails: EntityDetailsState
         tagSelection: TagSelectionState
+        table: TableState
     }
 }
 
@@ -61,9 +65,9 @@ test('search and click result', async () => {
     const user = userEvent.setup()
     await typeInSearchField(user)
     await waitFor(() => {
-        screen.getByText(resultMatchValue00)
-        screen.getByText(resultMatchValue01)
-        screen.getByText(resultMatchValue02)
+        screen.getByText(displayTxt00)
+        screen.getByText(displayTxt01)
+        screen.getByText(displayTxt02)
     })
     expect(store.getState().entityDetails.entitySearchResults).toEqual(
         newRemote([
@@ -86,8 +90,8 @@ test('search and click result', async () => {
     )
     await typeInSearchField(user)
     await waitFor(() => {
-        screen.getByText(resultMatchValue10)
-        const result = screen.getByText(resultMatchValue11)
+        screen.getByText(displayTxt10)
+        const result = screen.getByText(displayTxt11)
         result.click()
     })
     await waitFor(() => {
@@ -128,6 +132,11 @@ const resultIdTag01 = idTagDef0
 const resultIdTag02 = idTagDef1
 const resultIdTag10 = undefined
 const resultIdTag11 = idTagDef1
+const displayTxt00 = 'Entity 00'
+const displayTxt01 = 'Entity 01'
+const displayTxt02 = 'Entity 02'
+const displayTxt10 = 'Entity 10'
+const displayTxt11 = 'Entity 11'
 
 const tagCommon = {
     idParentPersistent: undefined,
@@ -163,7 +172,50 @@ export function renderWithProviders(
     fetchMock: jest.Mock,
     {
         preloadedState = {
-            entityDetails: newEntityDetailsState({}),
+            entityDetails: newEntityDetailsState({
+                entityByIdPersistentMap: {
+                    [resultId00]: newRemote(
+                        newEntity({
+                            idPersistent: resultId00,
+                            displayTxt: displayTxt00,
+                            version: 100,
+                            disabled: false
+                        })
+                    ),
+                    [resultId01]: newRemote(
+                        newEntity({
+                            idPersistent: resultId01,
+                            displayTxt: displayTxt01,
+                            version: 101,
+                            disabled: false
+                        })
+                    ),
+                    [resultId02]: newRemote(
+                        newEntity({
+                            idPersistent: resultId02,
+                            displayTxt: displayTxt02,
+                            version: 102,
+                            disabled: false
+                        })
+                    ),
+                    [resultId10]: newRemote(
+                        newEntity({
+                            idPersistent: resultId10,
+                            displayTxt: displayTxt10,
+                            version: 10,
+                            disabled: false
+                        })
+                    ),
+                    [resultId11]: newRemote(
+                        newEntity({
+                            idPersistent: resultId11,
+                            displayTxt: displayTxt11,
+                            version: 111,
+                            disabled: false
+                        })
+                    )
+                }
+            }),
             tagSelection: newTagSelectionState({
                 tagDefinitionsByIdPersistent: {
                     [idTagDef0]: newRemote(
@@ -181,7 +233,8 @@ export function renderWithProviders(
                         })
                     )
                 }
-            })
+            }),
+            table: newTableState({})
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -189,7 +242,8 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             entityDetails: entityDetailsReducer,
-            tagSelection: tagSelectionSlice.reducer
+            tagSelection: tagSelectionSlice.reducer,
+            table: tableReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
