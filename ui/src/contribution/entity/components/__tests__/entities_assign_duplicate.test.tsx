@@ -12,7 +12,11 @@ jest.mock('@glideapps/glide-data-grid', () => {
     }
 })
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import { ContributionEntityState, newContributionEntityState } from '../../state'
+import {
+    ContributionEntityState,
+    newContributionEntityState,
+    newScoredEntity
+} from '../../state'
 import { newRemote } from '../../../../util/state'
 import { configureStore } from '@reduxjs/toolkit'
 import { contributionEntitySlice } from '../../slice'
@@ -241,11 +245,15 @@ test('merge with existing', async () => {
             200,
             {
                 assigned_duplicate: {
-                    id_persistent: 'id-entity-1-0',
-                    display_txt: 'entity-1 match 0',
-                    display_txt_details: 'display_txt_detail',
-                    version: 0,
-                    disabled: false
+                    similarity: 0.8,
+                    id_match_tag_definition_persistent_list: [],
+                    entity: {
+                        id_persistent: 'id-entity-1-0',
+                        display_txt: 'entity-1 match 0',
+                        display_txt_details: 'display_txt_detail',
+                        version: 0,
+                        disabled: false
+                    }
                 }
             }
         ],
@@ -254,11 +262,15 @@ test('merge with existing', async () => {
             200,
             {
                 assigned_duplicate: {
-                    id_persistent: 'id-entity-2-1',
-                    display_txt: 'entity-2 match 1',
-                    display_txt_details: 'display_txt_detail',
-                    version: 0,
-                    disabled: false
+                    similarity: 0.9,
+                    id_match_tag_definition_persistent_list: [],
+                    entity: {
+                        id_persistent: 'id-entity-2-1',
+                        display_txt: 'entity-2 match 1',
+                        display_txt_details: 'display_txt_detail',
+                        version: 0,
+                        disabled: false
+                    }
                 }
             }
         ],
@@ -289,25 +301,31 @@ test('merge with existing', async () => {
     await waitFor(() => {
         const state = store.getState().contributionEntity
         expect(state.entities.value[1].assignedDuplicate).toEqual(
-            newRemote({
-                idPersistent: 'id-entity-1-0',
-                displayTxt: 'entity-1 match 0',
-                displayTxtDetails: 'display_txt_detail',
-                version: 0,
-                disabled: false
-            })
+            newRemote(
+                newScoredEntity({
+                    similarity: 0.8,
+                    idMatchTagDefinitionPersistentList: [],
+                    idPersistent: 'id-entity-1-0',
+                    displayTxt: 'entity-1 match 0',
+                    displayTxtDetails: 'display_txt_detail',
+                    version: 0
+                })
+            )
         )
     })
     await waitFor(() => {
         const state = store.getState().contributionEntity
         expect(state.entities.value[2].assignedDuplicate).toEqual(
-            newRemote({
-                idPersistent: 'id-entity-2-1',
-                displayTxt: 'entity-2 match 1',
-                displayTxtDetails: 'display_txt_detail',
-                version: 0,
-                disabled: false
-            })
+            newRemote(
+                newScoredEntity({
+                    similarity: 0.9,
+                    idMatchTagDefinitionPersistentList: [],
+                    idPersistent: 'id-entity-2-1',
+                    displayTxt: 'entity-2 match 1',
+                    displayTxtDetails: 'display_txt_detail',
+                    version: 0
+                })
+            )
         )
     }, {})
     expect(fetchMock.mock.calls.at(-3)).toEqual([
@@ -348,7 +366,6 @@ test('last match', async () => {
     const fetchMock = jest.fn()
     initialResponses(fetchMock, personList.slice(0, 1), 1)
     addResponseSequence(fetchMock, [
-        [200, {}],
         [200, { value_responses: [] }],
         [
             200,
@@ -430,7 +447,6 @@ test('does not open modal for entity with justification', async () => {
         1
     )
     addResponseSequence(fetchMock, [
-        [200, {}],
         [200, { value_responses: [] }],
         [
             200,

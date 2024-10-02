@@ -8,9 +8,9 @@ import {
     newEntity,
     newEntityDetailsState,
     newEntitySearchResult
-} from '../../../../entity/state'
-import { EntitySearch } from '../../../../entity/components'
-import { entityDetailsReducer } from '../../../../entity/slice'
+} from '../state'
+import { EntitySearch } from '../components'
+import { entityDetailsReducer } from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
@@ -20,11 +20,11 @@ import {
     newTagSelectionState,
     TagSelectionState,
     TagType
-} from '../../../../column_menu/state'
-import { newRemote } from '../../../../util/state'
-import { tagSelectionSlice } from '../../../../column_menu/slice'
-import { newTableState, TableState } from '../../../../table/state'
-import { tableReducer } from '../../../../table/slice'
+} from '../../column_menu/state'
+import { newRemote } from '../../util/state'
+import { tagSelectionSlice } from '../../column_menu/slice'
+import { newTableState, TableState } from '../../table/state'
+import { tableReducer } from '../../table/slice'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {

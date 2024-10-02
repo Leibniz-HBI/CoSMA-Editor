@@ -8,7 +8,6 @@ import {
 import { TagInstance } from './state'
 import { newRemote, RemoteInterface } from '../../util/state'
 import { CellValue } from '../../table/state'
-import { Entity } from '../../entity/state'
 import { TagDefinition } from '../../column_menu/state'
 
 const initialState: ContributionEntityState = newContributionEntityState({})
@@ -57,7 +56,7 @@ export const contributionEntitySlice = createSlice({
         putDuplicateSuccess(
             state: ContributionEntityState,
             action: PayloadAction<
-                ContributionEntityDuplicatesPayload<Entity | undefined>
+                ContributionEntityDuplicatesPayload<ScoredEntity | undefined>
             >
         ) {
             const entity = getEntity(state, action.payload.idPersistent)
@@ -88,7 +87,7 @@ export const contributionEntitySlice = createSlice({
             action: PayloadAction<
                 ContributionEntityDuplicatesPayload<{
                     scoredEntities: ScoredEntity[]
-                    assignedEntity?: Entity
+                    assignedEntity?: ScoredEntity
                 }>
             >
         ) {
@@ -126,34 +125,28 @@ export const contributionEntitySlice = createSlice({
                     state.tagDefinitions.push(tagDef)
                     state.tagDefinitionMap[tagDef.idPersistent] =
                         state.tagDefinitions.length - 1
-                }
-            }
-            for (const idx in state.tagDefinitions) {
-                for (const entity of state.entities.value) {
-                    if (entity.cellContents[idx] === undefined) {
-                        entity.cellContents[idx] = newRemote([])
+                    for (const entity of state.entities.value) {
+                        entity.cellContents.push(newRemote([]))
                         for (const candidate of entity.similarEntities.value) {
-                            candidate.cellContents[idx] = newRemote([])
+                            candidate.cellContents.push(newRemote([]))
                         }
                     }
                 }
             }
-            const strategy = (
-                cellContents: RemoteInterface<CellValue[]>,
-                _idEntityGroup: string,
-                _idEntity: string,
-                _idTagDef: string
-            ) => {
-                cellContents.value = []
+            const strategy = ({
+                cellContents
+            }: {
+                cellContents: RemoteInterface<CellValue[]>
+            }) => {
                 cellContents.isLoading = true
             }
-            contributionTagInstanceReducer(
-                state.entities.value,
-                state.entityMap,
-                state.tagDefinitionMap,
-                action.payload,
+            contributionTagInstanceReducer({
+                entities: state.entities.value,
+                entitiesMap: state.entityMap,
+                tagDefinitionMap: state.tagDefinitionMap,
+                action: action.payload,
                 strategy
-            )
+            })
         },
         getContributionTagInstancesSuccess(
             state: ContributionEntityState,
@@ -168,50 +161,54 @@ export const contributionEntitySlice = createSlice({
                 action.payload.details,
                 reverseEntityGroupMap
             )
-            const strategy = (
-                cellContents: RemoteInterface<CellValue[]>,
-                idEntityGroup: string,
-                idEntity: string,
-                idTagDef: string
-            ) => {
+            const strategy = ({
+                cellContents,
+                idEntityGroupPersistent,
+                idEntityMatchPersistent,
+                idTagDefinitionPersistent
+            }: {
+                cellContents: RemoteInterface<CellValue[]>
+                idEntityGroupPersistent: string
+                idEntityMatchPersistent: string
+                idTagDefinitionPersistent: string
+            }) => {
                 cellContents.isLoading = false
                 const instances = entityGroupMap
-                    .get(idEntityGroup)
-                    ?.get(idEntity)
-                    ?.get(idTagDef)
+                    .get(idEntityGroupPersistent)
+                    ?.get(idEntityMatchPersistent)
+                    ?.get(idTagDefinitionPersistent)
                 if (instances !== undefined) {
                     cellContents.value = instances?.map(
                         (instance) => instance.cellValue
                     )
                 }
             }
-            contributionTagInstanceReducer(
-                state.entities.value,
-                state.entityMap,
-                state.tagDefinitionMap,
-                action.payload,
+            contributionTagInstanceReducer({
+                entities: state.entities.value,
+                entitiesMap: state.entityMap,
+                tagDefinitionMap: state.tagDefinitionMap,
+                action: action.payload,
                 strategy
-            )
+            })
         },
         getContributionTagInstancesError(
             state: ContributionEntityState,
             action: PayloadAction<ContributionTagInstancesPayload<void>>
         ) {
-            const strategy = (
-                cellContents: RemoteInterface<CellValue[]>,
-                _idEntityGroup: string,
-                _idEntity: string,
-                _idTagDef: string
-            ) => {
+            const strategy = ({
+                cellContents
+            }: {
+                cellContents: RemoteInterface<CellValue[]>
+            }) => {
                 cellContents.isLoading = false
             }
-            contributionTagInstanceReducer(
-                state.entities.value,
-                state.entityMap,
-                state.tagDefinitionMap,
-                action.payload,
+            contributionTagInstanceReducer({
+                entities: state.entities.value,
+                entitiesMap: state.entityMap,
+                tagDefinitionMap: state.tagDefinitionMap,
+                action: action.payload,
                 strategy
-            )
+            })
         },
         removeAdditionalTagByIdPersistent(
             state: ContributionEntityState,
@@ -256,6 +253,38 @@ export const contributionEntitySlice = createSlice({
             state.entities.isLoading = false
             // still need to set error message here, to not show no conflicts in UI.
             state.entities.errorMsg = 'Could not get contribution entities'
+        },
+        getAdditionalEntityScoreError(_state: ContributionEntityState) {
+            // possibly use in the future for indicator
+        },
+        getAdditionalEntityScoreStart(_state: ContributionEntityState) {
+            // possibly use in the future for indicator
+        },
+        getAdditionalEntityScoreSuccess(
+            state: ContributionEntityState,
+            action: PayloadAction<{ idEntityContribution: string; match: ScoredEntity }>
+        ) {
+            const idx = state.entityMap[action.payload.idEntityContribution]
+            if (idx == undefined) {
+                return
+            }
+            const contributedEntity = state.entities.value[idx]
+            if (contributedEntity === undefined) {
+                return
+            }
+            // set cell contents for additional entity
+            action.payload.match.cellContents = state.tagDefinitions.map((_tag) =>
+                newRemote([])
+            )
+            // insert entity into matches
+            contributedEntity.similarEntities.value.splice(0, 0, action.payload.match)
+            contributedEntity.entityMap = Object.fromEntries(
+                contributedEntity.similarEntities.value.map((entity, idx) => [
+                    entity.idPersistent,
+                    idx
+                ])
+            )
+            state.matchWidths.push(200)
         },
         completeEntityAssignmentStart(state: ContributionEntityState) {
             state.completeEntityAssignment.isLoading = true
@@ -399,90 +428,122 @@ function mkReverseEntityGroupMap(idEntityPersistentGroupMap: {
     return reverseEntityGroupMap
 }
 
-export function contributionTagInstanceReducer(
-    entities: EntityWithDuplicates[],
-    entitiesMap: { [key: string]: number },
-    tagDefinitionMap: { [key: string]: number },
-    action: ContributionTagInstancesPayload<unknown>,
-    strategy: (
-        cellContents: RemoteInterface<CellValue[]>,
-        idEntityGroupPersistent: string,
-        idEntityPersistent: string,
+export function contributionTagInstanceReducer({
+    entities,
+    entitiesMap,
+    tagDefinitionMap,
+    action,
+    strategy
+}: {
+    entities: EntityWithDuplicates[]
+    entitiesMap: { [key: string]: number }
+    tagDefinitionMap: { [key: string]: number }
+    action: ContributionTagInstancesPayload<unknown>
+    strategy: (props: {
+        cellContents: RemoteInterface<CellValue[]>
+        idEntityGroupPersistent: string
+        idEntityMatchPersistent: string
         idTagDefinitionPersistent: string
-    ) => void
-) {
+    }) => void
+}) {
     // use keys of action to get all groups even if there is no data
-    for (const idEntityGroup of Object.keys(action.idEntityPersistentGroupMap)) {
+    for (const idEntityGroupPersistent of Object.keys(
+        action.idEntityPersistentGroupMap
+    )) {
         // but get values from grouped data
-        const idx = entitiesMap[idEntityGroup]
+        const idx = entitiesMap[idEntityGroupPersistent]
         if (idx !== undefined) {
-            contributionTagInstanceEntityReducer(
-                entities[idx],
+            contributionTagInstanceEntityReducer({
+                entity: entities[idx],
                 tagDefinitionMap,
                 action,
-                (cellContent, idEntity, idTagDefinitionPersistent) =>
-                    strategy(
-                        cellContent,
-                        idEntityGroup,
-                        idEntity,
-                        idTagDefinitionPersistent
-                    )
-            )
+                idEntityGroupPersistent,
+                strategy
+            })
         }
     }
 }
-export function contributionTagInstanceEntityReducer(
-    entity: EntityWithDuplicates,
-    tagDefinitionMap: { [key: string]: number },
-    action: ContributionTagInstancesPayload<unknown>,
-    strategy: (
-        cellContents: RemoteInterface<CellValue[]>,
-        idEntityPersistent: string,
+export function contributionTagInstanceEntityReducer({
+    entity,
+    tagDefinitionMap,
+    action,
+    idEntityGroupPersistent,
+    strategy
+}: {
+    entity: EntityWithDuplicates
+    tagDefinitionMap: { [key: string]: number }
+    action: ContributionTagInstancesPayload<unknown>
+    idEntityGroupPersistent: string
+    strategy: (props: {
+        cellContents: RemoteInterface<CellValue[]>
+        idEntityGroupPersistent: string
+        idEntityMatchPersistent: string
         idTagDefinitionPersistent: string
-    ) => void
-) {
+    }) => void
+}) {
     // get all relevant idEntityPersistent for this entity.
     const idEntityGroup = action.idEntityPersistentGroupMap[entity.idPersistent] ?? []
-    for (const idEntity of idEntityGroup) {
-        if (idEntity == entity.idPersistent) {
+    for (const idEntityMatchPersistent of idEntityGroup) {
+        if (idEntityMatchPersistent == entity.idPersistent) {
             //alter the entity itself
-            contributionTagInstanceCellContentReducer(
-                entity.cellContents,
+            contributionTagInstanceCellContentReducer({
+                cellContents: entity.cellContents,
                 tagDefinitionMap,
-                action.tagDefinitionList,
-                (cellContents, idTagDef) => strategy(cellContents, idEntity, idTagDef)
-            )
+                tagDefinitionList: action.tagDefinitionList,
+                idEntityGroupPersistent,
+                idEntityMatchPersistent,
+                strategy
+            })
         } else {
             // alter the similar entities
-            const idx = entity.entityMap[idEntity]
+            const idx = entity.entityMap[idEntityMatchPersistent]
             if (
                 idx === undefined ||
-                idEntity != entity.similarEntities.value[idx].idPersistent
+                idEntityMatchPersistent !=
+                    entity.similarEntities.value[idx].idPersistent
             ) {
                 continue
             }
-            contributionTagInstanceCellContentReducer(
-                entity.similarEntities.value[idx].cellContents,
+            contributionTagInstanceCellContentReducer({
+                cellContents: entity.similarEntities.value[idx].cellContents,
                 tagDefinitionMap,
-                action.tagDefinitionList,
-                (cellContents, idTagDef) => strategy(cellContents, idEntity, idTagDef)
-            )
+                tagDefinitionList: action.tagDefinitionList,
+                idEntityGroupPersistent,
+                idEntityMatchPersistent,
+                strategy
+            })
         }
     }
 }
-export function contributionTagInstanceCellContentReducer(
-    cellContents: RemoteInterface<CellValue[]>[],
-    tagDefinitionMap: { [key: string]: number },
-    tagDefinitionList: TagDefinition[],
-    strategy: (
-        cellContents: RemoteInterface<CellValue[]>,
+export function contributionTagInstanceCellContentReducer({
+    cellContents,
+    tagDefinitionMap,
+    tagDefinitionList,
+    idEntityGroupPersistent,
+    idEntityMatchPersistent,
+    strategy
+}: {
+    cellContents: RemoteInterface<CellValue[]>[]
+    tagDefinitionMap: { [key: string]: number }
+    tagDefinitionList: TagDefinition[]
+    idEntityGroupPersistent: string
+    idEntityMatchPersistent: string
+    strategy: (props: {
+        cellContents: RemoteInterface<CellValue[]>
+        idEntityGroupPersistent: string
+        idEntityMatchPersistent: string
         idTagDefinitionPersistent: string
-    ) => void
-) {
+    }) => void
+}) {
     for (const tagDef of tagDefinitionList) {
         const idx = tagDefinitionMap[tagDef.idPersistent]
         if (idx !== undefined) {
-            strategy(cellContents[idx], tagDef.idPersistent)
+            strategy({
+                cellContents: cellContents[idx],
+                idEntityGroupPersistent,
+                idEntityMatchPersistent,
+                idTagDefinitionPersistent: tagDef.idPersistent
+            })
         }
     }
 }
@@ -504,6 +565,9 @@ export const {
     putDuplicateError,
     putDuplicateStart,
     putDuplicateSuccess,
+    getAdditionalEntityScoreError,
+    getAdditionalEntityScoreStart,
+    getAdditionalEntityScoreSuccess,
     toggleTagDefinitionMenu,
     setSelectedEntityIdx,
     incrementSelectedEntityIdx,

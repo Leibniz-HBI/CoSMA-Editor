@@ -20,6 +20,7 @@ import {
     selectTagRowDefs
 } from './selectors'
 import {
+    getAdditionalEntityScoreThunk,
     getContributionEntitiesAction,
     getContributionEntityDuplicateCandidatesAction,
     getContributionTagInstances,
@@ -48,7 +49,6 @@ import {
 } from './components/buttons'
 import { useAppSelector } from '../../hooks'
 import { EntitySearch } from '../../entity/components'
-import { addError } from '../../util/notification/slice'
 
 export function EntitiesStep() {
     const contributionCandidate = useSelector(selectContribution)
@@ -217,12 +217,36 @@ export function EntityConflictBody({
                             <div className="w-400px">
                                 <EntitySearch
                                     resultsClassName="vh-50 w-400px"
-                                    onSearchResultClicked={(_idPersistent) =>
+                                    onSearchResultClicked={(
+                                        idSearchedEntityPersistent
+                                    ) =>
                                         dispatch(
-                                            addError(
-                                                'Adding searched entities is not yet implemented'
+                                            getAdditionalEntityScoreThunk(
+                                                idContributionPersistent,
+                                                selectedEntity.idPersistent,
+                                                idSearchedEntityPersistent
                                             )
-                                        )
+                                        ).then((result) => {
+                                            if (result) {
+                                                dispatch(
+                                                    getContributionTagInstances({
+                                                        idContributionPersistent:
+                                                            idContributionPersistent,
+                                                        entitiesGroupMap: {
+                                                            [selectedEntity.idPersistent]:
+                                                                [
+                                                                    selectedEntity.idPersistent,
+                                                                    idSearchedEntityPersistent
+                                                                ]
+                                                        },
+                                                        tagDefinitionList: [
+                                                            ...matchTags,
+                                                            ...tagDefinitionList
+                                                        ]
+                                                    })
+                                                )
+                                            }
+                                        })
                                     }
                                 />
                             </div>
@@ -508,7 +532,7 @@ export function EntityConflictListItem({
     onClick: VoidFunction
 }) {
     return (
-        <ListGroup.Item active={active} onClick={onClick}>
+        <ListGroup.Item active={active} onClick={onClick} role="button">
             {entity.displayTxt}
         </ListGroup.Item>
     )

@@ -18,7 +18,7 @@ export function newScoredEntity({
     displayTxtDetails,
     version,
     similarity,
-    cellContents = [newRemote([])],
+    cellContents = [],
     idMatchTagDefinitionPersistentList = []
 }: {
     idPersistent: string
@@ -42,7 +42,7 @@ export function newScoredEntity({
 
 export interface EntityWithDuplicates extends Entity {
     similarEntities: RemoteInterface<ScoredEntity[]>
-    assignedDuplicate: RemoteInterface<Entity | undefined>
+    assignedDuplicate: RemoteInterface<ScoredEntity | undefined>
     cellContents: RemoteInterface<CellValue[]>[]
     entityMap: { [key: string]: number }
     justificationTxt: string | undefined
@@ -55,7 +55,7 @@ export function newEntityWithDuplicates({
     disabled = false,
     similarEntities,
     assignedDuplicate = newRemote(undefined),
-    cellContents = [newRemote([])],
+    cellContents = [],
     entityMap = undefined,
     justificationTxt = undefined
 }: {
@@ -65,7 +65,7 @@ export function newEntityWithDuplicates({
     version: number
     disabled?: boolean
     similarEntities: RemoteInterface<ScoredEntity[]>
-    assignedDuplicate?: RemoteInterface<undefined | Entity>
+    assignedDuplicate?: RemoteInterface<undefined | ScoredEntity>
     cellContents?: RemoteInterface<CellValue[]>[]
     entityMap?: { [key: string]: number }
     justificationTxt?: string | undefined

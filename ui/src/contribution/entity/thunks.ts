@@ -1,5 +1,5 @@
 import { config } from '../../config'
-import { exceptionMessage } from '../../util/exception'
+import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
 import {
     EntityWithDuplicates,
     ScoredEntity,
@@ -15,6 +15,9 @@ import {
     completeEntityAssignmentError,
     completeEntityAssignmentStart,
     completeEntityAssignmentSuccess,
+    getAdditionalEntityScoreError,
+    getAdditionalEntityScoreStart,
+    getAdditionalEntityScoreSuccess,
     getContributionEntitiesError,
     getContributionEntitiesStart,
     getContributionEntitiesSuccess,
@@ -117,7 +120,7 @@ export function putDuplicateAction({
                     assignedDuplicateJson !== null &&
                     assignedDuplicateJson !== undefined
                 ) {
-                    assignedDuplicate = parseEntityObjectFromJson(assignedDuplicateJson)
+                    assignedDuplicate = parseScoredEntityFromJson(assignedDuplicateJson)
                 }
                 dispatch(
                     putDuplicateSuccess({
@@ -201,7 +204,7 @@ export function getContributionEntityDuplicateCandidatesAction({
                             assignedDuplicate !== undefined
                         ) {
                             assignedDuplicate =
-                                parseEntityObjectFromJson(assignedDuplicate)
+                                parseScoredEntityFromJson(assignedDuplicate)
                         } else {
                             assignedDuplicate = undefined
                         }
@@ -357,7 +360,45 @@ export function getContributionTagInstances({
                 })
             )
             dispatch(addError(exceptionMessage(e)))
+            throw e
         }
+    }
+}
+
+export function getAdditionalEntityScoreThunk(
+    idContributionPersistent: string,
+    idEntityContributionPersistent: string,
+    idEntityExistingPersistent: string
+): ThunkWithFetch<boolean> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(getAdditionalEntityScoreStart())
+        try {
+            const rsp = await fetch(
+                config.api_path +
+                    `/contributions/${idContributionPersistent}/entities/score` +
+                    `?id_entity_contribution_persistent=${idEntityContributionPersistent}` +
+                    `&id_entity_existing_persistent=${idEntityExistingPersistent}`,
+                { credentials: 'include' }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const scoredEntity = parseScoredEntityFromJson(json)
+                dispatch(
+                    getAdditionalEntityScoreSuccess({
+                        match: scoredEntity,
+                        idEntityContribution: idEntityContributionPersistent
+                    })
+                )
+                return true
+            } else {
+                dispatch(getAdditionalEntityScoreError())
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(getAdditionalEntityScoreError())
+            dispatch(addError(exceptionMessage(e)))
+        }
+        return false
     }
 }
 

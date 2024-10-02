@@ -144,10 +144,14 @@ function mkMatches(
                 assignedDuplicate:
                     idx % 10 == 0
                         ? {
-                              display_txt: entity.display_txt + ' match 1',
-                              display_txt_details: 'display_txt_detail',
-                              id_persistent: entity.id_persistent + '-1',
-                              version: 0
+                              similarity: idx / 10,
+                              id_match_tag_definition_persistent_list: [],
+                              entity: {
+                                  display_txt: entity.display_txt + ' match 1',
+                                  display_txt_details: 'display_txt_detail',
+                                  id_persistent: entity.id_persistent + '-1',
+                                  version: 0
+                              }
                           }
                         : undefined
             }
