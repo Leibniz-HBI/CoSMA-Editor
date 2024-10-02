@@ -227,15 +227,13 @@ def get_score(
         return 500, ApiError(msg="Could not get entities of the contribution.")
 
 
-def scored_match_from_assigned_duplicate(
-    assigned_duplicate, candidate, origin, destination
-):
+def scored_match_from_assigned_duplicate(assigned_duplicate, candidate, origin):
     "Get similarity scores for an assigned duplicate"
     if assigned_duplicate is not None:
         matches = single_pair_similarity(
             candidate.id_persistent,
             origin.id_persistent,
-            destination.id_persistent,
+            assigned_duplicate.id_persistent,
         )
         scored_match = scored_match_db_to_api(matches[0].matches[0])
     else:
@@ -315,7 +313,7 @@ def put_duplicate_assignment(
                     contribution_candidate=candidate,
                 )
             scored_match = scored_match_from_assigned_duplicate(
-                assigned_duplicate, candidate, origin, destination
+                assigned_duplicate, candidate, origin
             )
             return 200, PutDuplicateResponse(assigned_duplicate=scored_match)
 
