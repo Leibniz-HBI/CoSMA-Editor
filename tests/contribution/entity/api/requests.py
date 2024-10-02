@@ -31,6 +31,25 @@ def post_similar(
     )
 
 
+def get_score(
+    url,
+    id_contribution_candidate_persistent,
+    id_entity_contribution_persistent,
+    id_entity_existing_persistent,
+    cookies=None,
+):
+    return requests.get(
+        url
+        + (
+            f"/cosmae/api/contributions/{id_contribution_candidate_persistent}"
+            f"/entities/score?id_entity_contribution_persistent={id_entity_contribution_persistent}"
+            f"&id_entity_existing_persistent={id_entity_existing_persistent}"
+        ),
+        cookies=cookies,
+        timeout=9,
+    )
+
+
 def put_duplicate(
     url,
     id_contribution_candidate_persistent,

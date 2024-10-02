@@ -9,7 +9,10 @@ from django.db.models import Q
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.contribution.entity.match_entities import find_matches
+from cosmae.contribution.entity.match_entities import (
+    find_matches,
+    single_pair_similarity,
+)
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.api import (
@@ -41,7 +44,7 @@ class ScoredMatchesWithDuplicateAssignment(Schema):
 
     # pylint: disable=too-few-public-methods
     matches: List[ScoredMatch]
-    assigned_duplicate: Entity | None = None
+    assigned_duplicate: ScoredMatch | None = None
 
 
 class ScoredMatchResponse(Schema):
@@ -71,7 +74,7 @@ class PutDuplicateResponse(Schema):
     "API Response for put duplicate request"
 
     # pylint: disable=too-few-public-methods
-    assigned_duplicate: Entity | None = None
+    assigned_duplicate: ScoredMatch | None = None
 
 
 empty_match = ScoredMatchesWithDuplicateAssignment(assigned_duplicate=None, matches=[])
@@ -147,13 +150,7 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
         matches = find_matches(
             candidate.id_persistent, similar_request.id_entity_persistent_list
         )
-        scored_matches = {
-            entity.id_persistent: ScoredMatchesWithDuplicateAssignment(
-                assigned_duplicate=entity_db_dict_to_api(entity.assigned_duplicate),
-                matches=[scored_match_db_to_api(match) for match in entity.matches],
-            )
-            for entity in matches
-        }
+        scored_matches = matches_db_to_api(matches, candidate)
         for id_persistent in similar_request.id_entity_persistent_list:
             if id_persistent not in scored_matches:
                 scored_matches[id_persistent] = empty_match
@@ -165,6 +162,85 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         return 500, ApiError(msg="Could not get entities of the contribution.")
+
+
+@router.get(
+    "score",
+    response={
+        200: ScoredMatch,
+        400: ApiError,
+        401: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def get_score(
+    request: HttpRequest,
+    id_entity_contribution_persistent,
+    id_entity_existing_persistent,
+):
+    "API method for getting existing entities similar to contributed ones"
+    # pylint: disable=too-many-return-statements
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+
+    id_contribution_persistent = request.resolver_match.captured_kwargs[
+        "id_contribution_persistent"
+    ]
+
+    try:
+        candidate = ContributionCandidate.by_id_persistent(
+            id_contribution_persistent, user
+        ).get()
+        try:
+            entity_contribution = EntityDb.most_recent_by_id(
+                id_entity_contribution_persistent
+            )
+            if (
+                not entity_contribution.contribution_candidate_id
+                == candidate.id_persistent
+            ):
+                return 400, ApiError(msg="Entity is not part of the contribution.")
+        except EntityDb.DoesNotExist:
+            return 404, ApiError(msg="Contributed entity does not exist.")
+        try:
+            entity_existing = EntityDb.most_recent_by_id(id_entity_existing_persistent)
+            if entity_existing.contribution_candidate_id is not None:
+                return 400, ApiError(msg="Existing entity is not curated.")
+        except EntityDb.DoesNotExist:
+            return 404, ApiError(msg="No such existing entity.")
+        matches = single_pair_similarity(
+            candidate.id_persistent,
+            id_entity_contribution_persistent,
+            id_entity_existing_persistent,
+        )
+        scored_match = scored_match_db_to_api(matches[0].matches[0])
+        return 200, scored_match
+    except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Contribution candidate does not exist.")
+    except IndexError:  # pylint: disable=no-member
+        return 404, ApiError(msg="Entity does not exist.")
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.warning(None, exc_info=exc)
+        return 500, ApiError(msg="Could not get entities of the contribution.")
+
+
+def scored_match_from_assigned_duplicate(
+    assigned_duplicate, candidate, origin, destination
+):
+    "Get similarity scores for an assigned duplicate"
+    if assigned_duplicate is not None:
+        matches = single_pair_similarity(
+            candidate.id_persistent,
+            origin.id_persistent,
+            destination.id_persistent,
+        )
+        scored_match = scored_match_db_to_api(matches[0].matches[0])
+    else:
+        scored_match = None
+    return scored_match
 
 
 @router.put(
@@ -238,7 +314,10 @@ def put_duplicate_assignment(
                     id_destination_persistent=destination.id_persistent,
                     contribution_candidate=candidate,
                 )
-            return 200, PutDuplicateResponse(assigned_duplicate=assigned_duplicate)
+            scored_match = scored_match_from_assigned_duplicate(
+                assigned_duplicate, candidate, origin, destination
+            )
+            return 200, PutDuplicateResponse(assigned_duplicate=scored_match)
 
     except EntityDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="One of the entities does not exist.")
@@ -314,3 +393,33 @@ def scored_match_db_to_api(match):
         entity=entity_db_dict_to_api(match),
         id_match_tag_definition_persistent_list=id_match_tag_definition_persistent_list,
     )
+
+
+def matches_db_to_api(matches, candidate):
+    "Convert matches found by DB query to API map."
+    scored_matches = {}
+    for entity in matches:
+        assigned_duplicate = None
+        id_assigned_duplicate = None
+        if entity.assigned_duplicate is not None:
+            id_assigned_duplicate = entity.assigned_duplicate["id_persistent"]
+        matches_api = []
+        for match in entity.matches:
+            match_api = scored_match_db_to_api(match)
+            matches_api.append(match_api)
+            if match["id_persistent"] == id_assigned_duplicate:
+                assigned_duplicate = match_api
+        if assigned_duplicate is None:
+            if id_assigned_duplicate is not None:
+                duplicate_matches = single_pair_similarity(
+                    candidate.id_persistent,
+                    entity.id_persistent,
+                    id_assigned_duplicate,
+                )
+                scored_match = scored_match_db_to_api(duplicate_matches[0].matches[0])
+                matches_api.insert(0, scored_match)
+                assigned_duplicate = scored_match
+        scored_matches[entity.id_persistent] = ScoredMatchesWithDuplicateAssignment(
+            assigned_duplicate=assigned_duplicate, matches=matches_api
+        )
+    return scored_matches

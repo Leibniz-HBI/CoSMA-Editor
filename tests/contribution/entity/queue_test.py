@@ -55,7 +55,11 @@ def test_annotate_duplicates(entities, entity_match):
     no_replace_ids = with_replacement_info.filter(
         replacement_id_entity_persistent__isnull=True
     ).values_list("id_persistent", flat=True)
-    assert list(no_replace_ids) == [ce.id_persistent_test_0, ce.id_persistent_test_1]
+    assert list(no_replace_ids) == [
+        ce.id_persistent_test_0,
+        ce.id_persistent_test_1,
+        c.id_persistent_entity_duplicate_no_match_test,
+    ]
 
 
 @pytest.mark.django_db
@@ -340,7 +344,7 @@ def tag_instances(tag_def, tag_def1, entities):
 def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_match):
     assert 5 == len(TagInstanceHistory.objects.all())  # pylint: disable=no-member
     q.eliminate_duplicates(contribution_candidate.id_persistent)
-    assert 2 == len(
+    assert 3 == len(
         Entity.get_most_recent_chunked(
             0,
             5,

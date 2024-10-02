@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,duplicate-code
 from uuid import uuid4
 
 import tests.contribution.entity.api.requests as r
@@ -133,11 +133,15 @@ def test_similar_entities_with_duplicate(
                         },
                     ],
                     "assigned_duplicate": {
-                        "id_persistent": ce.id_persistent_test_1,
-                        "display_txt": ce.display_txt_test1,
-                        "display_txt_details": "Display Text",
-                        "version": entities[1].id,
-                        "disabled": False,
+                        "entity": {
+                            "id_persistent": ce.id_persistent_test_1,
+                            "display_txt": ce.display_txt_test1,
+                            "display_txt_details": "Display Text",
+                            "version": entities[1].id,
+                            "disabled": False,
+                        },
+                        "id_match_tag_definition_persistent_list": [],
+                        "similarity": 0.9230769230769231,
                     },
                 }
             }
@@ -194,11 +198,92 @@ def test_similar_entities_with_tag_match(
                         },
                     ],
                     "assigned_duplicate": {
-                        "id_persistent": ce.id_persistent_test_1,
-                        "display_txt": ce.display_txt_test1,
-                        "display_txt_details": "Display Text",
-                        "version": entities[1].id,
-                        "disabled": False,
+                        "entity": {
+                            "id_persistent": ce.id_persistent_test_1,
+                            "display_txt": ce.display_txt_test1,
+                            "display_txt_details": "Display Text",
+                            "version": entities[1].id,
+                            "disabled": False,
+                        },
+                        "similarity": 0.9230769230769231,
+                        "id_match_tag_definition_persistent_list": [
+                            "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
+                        ],
+                    },
+                }
+            }
+        },
+    )
+
+
+def test_similar_entities_assigned_duplicate_no_match(
+    auth_server,
+    contribution_candidate,
+    entities,
+    duplicate_assignment_no_match,
+    tag_instances_match,
+    tag_merge_request,
+):
+    live_server, cookies = auth_server
+    rsp = r.post_similar(
+        live_server.url,
+        contribution_candidate.id_persistent,
+        [c.id_persistent_entity_duplicate_test],
+        cookies,
+    )
+    assert rsp.status_code == 200
+    assert_versioned(
+        rsp.json(),
+        {
+            "matches": {
+                c.id_persistent_entity_duplicate_test: {
+                    "matches": [
+                        {
+                            "entity": {
+                                "id_persistent": c.id_persistent_entity_duplicate_no_match_test,
+                                "display_txt": c.display_txt_test_entity_duplicate_no_match,
+                                "display_txt_details": "Display Text",
+                                "version": entities[3].id,
+                                "disabled": False,
+                            },
+                            "similarity": 0.6153846153846154,
+                            "id_match_tag_definition_persistent_list": [],
+                        },
+                        {
+                            "entity": {
+                                "disabled": False,
+                                "display_txt": "test entity 1",
+                                "display_txt_details": "Display Text",
+                                "id_persistent": ce.id_persistent_test_1,
+                                "version": 2,
+                            },
+                            "id_match_tag_definition_persistent_list": [
+                                "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
+                            ],
+                            "similarity": 0.9230769230769231,
+                        },
+                        {
+                            "similarity": 0.9230769230769231,
+                            "id_match_tag_definition_persistent_list": [],
+                            "entity": {
+                                "display_txt": "test entity 0",
+                                "display_txt_details": "Display Text",
+                                "version": 1,
+                                "id_persistent": ce.id_persistent_test_0,
+                                "disabled": False,
+                            },
+                        },
+                    ],
+                    "assigned_duplicate": {
+                        "entity": {
+                            "id_persistent": c.id_persistent_entity_duplicate_no_match_test,
+                            "display_txt": c.display_txt_test_entity_duplicate_no_match,
+                            "display_txt_details": "Display Text",
+                            "version": entities[3].id,
+                            "disabled": False,
+                        },
+                        "similarity": 0.6153846153846154,
+                        "id_match_tag_definition_persistent_list": [],
                     },
                 }
             }

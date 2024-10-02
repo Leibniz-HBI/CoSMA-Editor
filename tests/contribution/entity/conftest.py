@@ -25,8 +25,21 @@ def entity_duplicate(contribution_candidate):
 
 
 @pytest.fixture
-def entities(entity0, entity1, entity_duplicate):
-    return [entity0, entity1, entity_duplicate]
+def entity_duplicate_no_match(contribution_candidate):
+    entity_duplicate, _ = EntityHistory.change_or_create_versioned(
+        id_persistent=c.id_persistent_entity_duplicate_no_match_test,
+        display_txt=c.display_txt_test_entity_duplicate_no_match,
+        time_edit=c.time_edit_test_duplicate_no_match,
+        written_by_session=contribution_candidate.created_by.edit_session,
+        approved_by=contribution_candidate.created_by.id_persistent,
+    )
+    entity_duplicate.save()
+    return entity_duplicate
+
+
+@pytest.fixture
+def entities(entity0, entity1, entity_duplicate, entity_duplicate_no_match):
+    return [entity0, entity1, entity_duplicate, entity_duplicate_no_match]
 
 
 @pytest.fixture
@@ -47,6 +60,15 @@ def duplicate_assignment(contribution_candidate):
     return EntityDuplicate.objects.create(  # pylint: disable=no-member
         id_origin_persistent=c.id_persistent_entity_duplicate_test,
         id_destination_persistent=ce.id_persistent_test_1,
+        contribution_candidate=contribution_candidate,
+    )
+
+
+@pytest.fixture
+def duplicate_assignment_no_match(contribution_candidate):
+    return EntityDuplicate.objects.create(  # pylint: disable=no-member
+        id_origin_persistent=c.id_persistent_entity_duplicate_test,
+        id_destination_persistent=c.id_persistent_entity_duplicate_no_match_test,
         contribution_candidate=contribution_candidate,
     )
 
