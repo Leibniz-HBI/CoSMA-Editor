@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
+import { render, RenderOptions, screen, waitFor, act } from '@testing-library/react'
 import {
     EntityDetailsState,
     newEntity,
@@ -103,7 +103,7 @@ test('search and click result', async () => {
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/search?term=foofoo',
+            'http://127.0.0.1:8000/cosmae/api/entities/search?term=ff',
             { credentials: 'include' }
         ]
     ])
@@ -149,9 +149,9 @@ const tagCommon = {
 }
 
 async function typeInSearchField(user: UserEvent) {
-    await waitFor(() => {
+    await waitFor(async () => {
         const input = screen.getByRole('textbox')
-        user.type(input, 'foo')
+        await act(async () => await user.type(input, 'f'))
     })
 }
 
