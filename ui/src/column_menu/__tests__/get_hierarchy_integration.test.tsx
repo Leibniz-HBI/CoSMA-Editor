@@ -421,7 +421,7 @@ test('open edit menu', async () => {
         expect(textboxes.length).toEqual(2)
         const radios = screen.getAllByRole('radio')
         // 3 type radios + 6 for parent selection
-        expect(radios.length).toEqual(9)
+        expect(radios.length).toEqual(10)
     })
     expect(store.getState().tagSelection.editTagDefinition.value).not.toBeUndefined()
 })

@@ -4,6 +4,7 @@ import { RemoteInterface, newRemote } from '../util/state'
 export enum TagType {
     String = 'STRING',
     Float = 'FLOAT',
+    BOOLEAN = 'BOOL',
     Inner = 'INNER'
 }
 

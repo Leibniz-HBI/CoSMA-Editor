@@ -54,13 +54,13 @@ export function mkComparisonCell(
     let cellKind = 'text' as GridCellKind
     let cellContent
     let displayData: string | undefined = undefined
-    if (columnType == TagType.Inner) {
+    if (columnType == TagType.BOOLEAN) {
         // workaround for typescript jest compatibility
         cellKind = 'boolean' as GridCellKind
         if (cellValues.length == 0) {
             cellContent = undefined
         } else {
-            cellContent = cellValues[0].value
+            cellContent = cellValues[0].value?.toString().toLowerCase() == 'true'
             displayData = cellContent?.toString()
         }
     } else if (columnType == TagType.Float) {
@@ -91,6 +91,9 @@ export function mkComparisonCell(
                 displayData = ''
             }
         }
+    } else if (columnType == TagType.Inner) {
+        displayData = ''
+        cellContent = ''
     }
     return {
         kind: cellKind as GridCellKind,

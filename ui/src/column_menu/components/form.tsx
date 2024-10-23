@@ -1,15 +1,16 @@
 import { Formik, FormikErrors, FormikTouched } from 'formik'
-import { ChangeEvent, FormEvent, ReactNode } from 'react'
-import { Button, Col, Row, Form } from 'react-bootstrap'
+import { ChangeEvent, ChangeEventHandler, FormEvent, ReactNode } from 'react'
+import { Button, Col, Row, Form, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { TagDefinition, TagType } from '../state'
 import * as yup from 'yup'
 import { submitTagDefinition, loadTagDefinitionHierarchy } from '../thunks'
 import { AppDispatch } from '../../store'
 import { useAppDispatch } from '../../hooks'
 import { FormField } from '../../util/form'
+import { QuestionCircleFill } from 'react-bootstrap-icons'
 
 const schema = yup.object({
-    columnType: yup.string().matches(/STRING|FLOAT|INNER/),
+    columnType: yup.string().matches(/STRING|FLOAT|INNER|BOOL/),
     name: yup.string().required()
 })
 
@@ -154,10 +155,10 @@ function ColumnTypeCreateFormBody(props: {
                                                 type="radio"
                                                 name="columnType"
                                                 label="boolean"
-                                                value={TagType.Inner}
+                                                value={TagType.BOOLEAN}
                                                 checked={
                                                     props.formValues.columnType ===
-                                                    TagType.Inner
+                                                    TagType.BOOLEAN
                                                 }
                                                 onChange={props.handleChange}
                                                 disabled={props.alreadyExists}
@@ -196,6 +197,20 @@ function ColumnTypeCreateFormBody(props: {
                                                 checked={
                                                     props.formValues.columnType ===
                                                     TagType.Float
+                                                }
+                                                onChange={props.handleChange}
+                                                disabled={props.alreadyExists}
+                                                isInvalid={
+                                                    props.touchedValues.columnType &&
+                                                    !!props.formErrors.columnType
+                                                }
+                                            />
+                                        </Col>
+                                        <Col>
+                                            <NavigationTypeLabel
+                                                checked={
+                                                    props.formValues.columnType ===
+                                                    TagType.Inner
                                                 }
                                                 onChange={props.handleChange}
                                                 disabled={props.alreadyExists}
@@ -246,5 +261,52 @@ function ColumnTypeCreateFormBody(props: {
                 </Col>
             </Row>
         </Form>
+    )
+}
+
+function NavigationTypeLabel({
+    checked,
+    onChange,
+    disabled,
+    isInvalid
+}: {
+    checked: boolean
+    onChange: ChangeEventHandler<HTMLInputElement>
+    disabled: boolean
+    isInvalid: boolean | undefined
+}) {
+    return (
+        <OverlayTrigger
+            placement="bottom"
+            delay={{ show: 250, hide: 400 }}
+            overlay={(props) => (
+                <Tooltip className="z-3000" id="navigation-type-explanation" {...props}>
+                    Navigational tags are used to structure the column tree. They are
+                    not allowed to contain any data.
+                </Tooltip>
+            )}
+            trigger={['hover', 'focus']}
+        >
+            <Row>
+                <Form.Check
+                    inline
+                    type="radio"
+                    name="columnType"
+                    label={
+                        <>
+                            <span>Navigation </span>
+                            <span>
+                                <QuestionCircleFill />
+                            </span>
+                        </>
+                    }
+                    value={TagType.Inner}
+                    checked={checked}
+                    onChange={onChange}
+                    disabled={disabled}
+                    isInvalid={isInvalid}
+                />
+            </Row>
+        </OverlayTrigger>
     )
 }

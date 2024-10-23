@@ -30,14 +30,14 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
             data: ''
         } as GridCell
     }
-    if (columnType == TagType.Inner) {
+    if (columnType == TagType.BOOLEAN) {
         // workaround for typescript jest compatibility
         allowOverlay = false
         cellKind = 'boolean' as GridCellKind
         if (cellValues.length == 0) {
             cellContent = undefined
         } else {
-            cellContent = cellValues[0].value
+            cellContent = cellValues[0].value?.toString().toLowerCase() == 'true'
         }
     } else if (columnType == TagType.Float) {
         // workaround for typescript jest compatibility
@@ -67,6 +67,10 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
                 displayData = ''
             }
         }
+    } else if (columnType == TagType.Inner) {
+        allowOverlay = false
+        displayData = ''
+        cellContent = ''
     }
     return {
         kind: cellKind as GridCellKind,

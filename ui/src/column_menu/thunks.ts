@@ -241,7 +241,7 @@ export const columnTypeMapApiToApp = new Map<string, TagType>([
     ['INNER', TagType.Inner],
     ['STRING', TagType.String],
     ['FLOAT', TagType.Float],
-    ['BOOLEAN', TagType.Inner]
+    ['BOOL', TagType.BOOLEAN]
 ])
 
 export const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
@@ -280,7 +280,8 @@ export function parseColumnDefinitionsFromApi(
 export const tagTypeMapAppToApi = new Map<TagType, string>([
     [TagType.Inner, 'INNER'],
     [TagType.String, 'STRING'],
-    [TagType.Float, 'FLOAT']
+    [TagType.Float, 'FLOAT'],
+    [TagType.BOOLEAN, 'BOOL']
 ])
 
 export function tagDefinitionToApi(tagDef: TagDefinition) {
