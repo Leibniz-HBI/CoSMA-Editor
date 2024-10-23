@@ -45,7 +45,7 @@ def test_different_type(tag_def_history):
         id_persistent=tag_def_history.id_persistent,
         time_edit=tag_def_history.time_edit,
         name=c.name_tag_def_test,
-        type=TagDefinition.INNER,
+        type=TagDefinition.BOOL,
     )
     assert tag_def_history.check_different_before_save(tag_def1)
     assert tag_def1.check_different_before_save(tag_def_history)
@@ -192,24 +192,24 @@ def test_string_check_invalid(tag_def):
 
 @pytest.mark.django_db
 def test_inner_check_true_valid(tag_def):
-    tag_def.type = TagDefinition.INNER
+    tag_def.type = TagDefinition.BOOL
     tag_def.check_value("true")
 
 
 @pytest.mark.django_db
 def test_inner_check_false_valid(tag_def):
-    tag_def.type = TagDefinition.INNER
+    tag_def.type = TagDefinition.BOOL
     tag_def.check_value("false")
 
 
 @pytest.mark.django_db
 def test_inner_check_invalid(tag_def):
-    tag_def.type = TagDefinition.INNER
+    tag_def.type = TagDefinition.BOOL
     with pytest.raises(InvalidTagValueException) as exc:
         tag_def.check_value(True)
     assert exc.value.args[0] == tag_def.id_persistent
     assert exc.value.args[1]
-    assert exc.value.args[2] == "INR"
+    assert exc.value.args[2] == "BOL"
 
 
 @pytest.mark.django_db

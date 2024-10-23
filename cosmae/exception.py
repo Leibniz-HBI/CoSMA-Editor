@@ -11,6 +11,18 @@ class ApiError(Schema):
     msg: "str"
 
 
+class ApiException(Exception):
+    "An error that translates to an API message"
+
+    def __init__(self, status_code: int, msg: str):
+        self.status_code = status_code
+        self.msg = msg
+
+    def to_api_error_response(self):
+        "Transform the exception to a tuple consisting of HTTP status code and ApiError."
+        return self.status_code, ApiError(msg=self.msg)
+
+
 class ResourceLockedException(Exception):
     """Indicates that a resource is locked."""
 

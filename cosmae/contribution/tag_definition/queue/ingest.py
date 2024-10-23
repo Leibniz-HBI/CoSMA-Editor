@@ -140,7 +140,9 @@ def ingest_values_from_csv(id_contribution_persistent):
                                 id_persistent=id_tag_definition_origin_persistent,
                                 name=merge_request_name,
                                 written_by_session=contribution.created_by.edit_session,
-                                id_parent_persistent=tag_definition_destination.id_persistent,
+                                id_parent_persistent=(
+                                    tag_definition_destination.id_parent_persistent
+                                ),
                                 type=tag_definition_destination.type,
                                 time_edit=time_add,
                                 owner=contribution.created_by,

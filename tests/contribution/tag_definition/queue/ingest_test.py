@@ -50,7 +50,7 @@ def verified_tag_def(db, user):
     return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         name="tag definition verified_test",
         id_parent_persistent=None,
-        type=TagDefinition.INNER,
+        type=TagDefinition.BOOL,
         id_persistent=str(uuid4()),
         time_edit=timestamp(),
         written_by_session=user.edit_session,

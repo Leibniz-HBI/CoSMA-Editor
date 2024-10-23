@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
+# pylint: disable=missing-module-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-positional-arguments,too-many-statements
 from unittest.mock import MagicMock, patch
 
 import tests.tag.api.integration.requests as req
@@ -56,7 +56,7 @@ def test_get_request(
                     "tag_definition": {
                         "id_persistent": c.id_tag_def_curated_test,
                         "name": c.name_tag_def_curated_test,
-                        "type": "INNER",
+                        "type": "BOOL",
                         "curated": True,
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_curated_test],
@@ -131,7 +131,7 @@ def test_get_request_commissioner(
                     "tag_definition": {
                         "id_persistent": c.id_tag_def_curated_test,
                         "name": c.name_tag_def_curated_test,
-                        "type": "INNER",
+                        "type": "BOOL",
                         "curated": True,
                         "id_parent_persistent": None,
                         "name_path": [c.name_tag_def_curated_test],

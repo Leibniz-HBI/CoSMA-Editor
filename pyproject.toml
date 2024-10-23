@@ -33,6 +33,7 @@ pytest-redis = "^3.0.2"
 pip = "^24.0"
 pylint-django = "^2.5.5"
 setuptools = "^72.1.0"
+ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core"]

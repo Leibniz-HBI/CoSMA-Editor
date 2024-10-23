@@ -205,7 +205,7 @@ def test_patch_id_existing(auth_server, user):
     new_id_existing = str(uuid4)
     TagDefinitionHistory.objects.create(
         name="existing tag def test",
-        type=TagDefinition.INNER,
+        type=TagDefinition.BOOL,
         id_persistent=new_id_existing,
         time_edit=datetime.now(),
         written_by_session=user.edit_session,

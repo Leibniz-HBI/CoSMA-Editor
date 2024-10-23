@@ -12,6 +12,7 @@ from cosmae.exception import (
     EntityMissingException,
     ForbiddenException,
     InvalidTagValueException,
+    NoChildTagDefinitionsAllowedException,
     NoParentTagException,
     NoSelfParentTagException,
     TagDefinitionDisabledException,
@@ -25,10 +26,16 @@ from cosmae.versioned.models_django import HistoryMixin, Versioned
 class TagDefinitionAbstract(Versioned):
     "Abstract Django ORM model for tag definitions."
 
+    BOOL = "BOL"
     INNER = "INR"
     FLOAT = "FLT"
     STRING = "STR"
-    TYPE_CHOICES = [(INNER, "inner"), (FLOAT, "float"), (STRING, "string")]
+    TYPE_CHOICES = [
+        (INNER, "inner"),
+        (BOOL, "bool"),
+        (FLOAT, "float"),
+        (STRING, "string"),
+    ]
     name = models.TextField()
     description = models.TextField(blank=True, null=True)
     id_parent_persistent = models.TextField(null=True, blank=True)
@@ -132,37 +139,39 @@ class TagDefinitionHistory(TagDefinitionAbstract, HistoryMixin):
 
     def check_integrity(self):  # pylint: disable=too-many-arguments
         """Check wether new version keeps constraints."""
+        tag_parent = None
         if self.id_parent_persistent is not None:
             if self.id_parent_persistent == self.id_persistent:
                 raise NoSelfParentTagException()
             try:
-                TagDefinition.most_recent_by_id(self.id_parent_persistent)
+                tag_parent = TagDefinition.most_recent_by_id(self.id_parent_persistent)
             except TagDefinition.DoesNotExist as exc:  # pylint: disable=no-member
                 raise NoParentTagException(self.id_parent_persistent) from exc
-        if self.previous_version is None:
-            exists = (
-                TagDefinition.objects.filter(  # pylint: disable=no-member
-                    name=self.name, id_parent_persistent=self.id_parent_persistent
-                )
-                # annotate successor in history
-                .annotate(
-                    next_version=models.Subquery(
-                        TagDefinition.objects.filter(  # pylint: disable=no-member
-                            previous_version=models.OuterRef("id")
-                        ).values("id")
-                    )
-                )
-                # exclude when same id_persistent and no successor present
-                .exclude(id_persistent=self.id_persistent, next_version__isnull=True)
+        if tag_parent is not None and tag_parent.type != self.INNER:
+            raise NoChildTagDefinitionsAllowedException(self.id_parent_persistent)
+        exists = (
+            TagDefinition.objects.filter(  # pylint: disable=no-member
+                name=self.name, id_parent_persistent=self.id_parent_persistent
             )
-            if exists:
-                raise TagDefinitionExistsException(
-                    self.name,
-                    exists.order_by(models.F("previous_version").desc(nulls_last=True))[
-                        0
-                    ].id_persistent,
-                    self.id_parent_persistent,
+            # annotate successor in history
+            .annotate(
+                next_version=models.Subquery(
+                    TagDefinition.objects.filter(  # pylint: disable=no-member
+                        previous_version=models.OuterRef("id")
+                    ).values("id")
                 )
+            )
+            # exclude when same id_persistent and no successor present
+            .exclude(id_persistent=self.id_persistent, next_version__isnull=True)
+        )
+        if exists:
+            raise TagDefinitionExistsException(
+                self.name,
+                exists.order_by(models.F("previous_version").desc(nulls_last=True))[
+                    0
+                ].id_persistent,
+                self.id_parent_persistent,
+            )
 
     def check_different_before_save(self, other):
         """Checks structural equality for two tag definitions."""
@@ -235,7 +244,9 @@ class TagDefinition(TagDefinitionAbstract):
 
     def check_value(self, val: str):
         "Check if a value is of the type for this tag."
-        if self.type == TagDefinition.INNER and not (
+        if self.type == TagDefinition.INNER:
+            raise InvalidTagValueException(self.id_persistent, None, self.type)
+        if self.type == TagDefinition.BOOL and not (
             (isinstance(val, str) and val.lower() in {"true", "false"})
         ):
             raise InvalidTagValueException(self.id_persistent, val, self.type)
@@ -399,6 +410,7 @@ class TagInstanceQuerySet(models.QuerySet):
 
 class TagInstance(TagInstanceAbstract):
     "Django ORM class for view representing the most recent tag instances."
+
     objects = TagInstanceQuerySet().as_manager()
 
     class Meta:

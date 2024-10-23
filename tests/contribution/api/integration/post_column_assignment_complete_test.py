@@ -207,7 +207,7 @@ def test_complete_assignment(auth_server):
     TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         name="tag definition_test",
         id_parent_persistent=None,
-        type=TagDefinition.INNER,
+        type=TagDefinition.BOOL,
         id_persistent=id_tag_definition_persistent,
         time_edit=datetime.now(),
         written_by_session=user.edit_session,

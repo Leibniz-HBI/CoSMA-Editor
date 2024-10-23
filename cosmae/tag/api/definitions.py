@@ -12,6 +12,7 @@ from cosmae.exception import (
     ApiError,
     DbObjectExistsException,
     EntityUpdatedException,
+    NoChildTagDefinitionsAllowedException,
     NoParentTagException,
     NoSelfParentTagException,
     NotAuthenticatedException,
@@ -137,6 +138,8 @@ def post_tag_definitions(  # pylint: disable=too-many-branches
         return 403, ApiError(msg="Insufficient permissions")
     except NoSelfParentTagException:
         return 400, ApiError(msg="Can not set a tag definition as its own parent.")
+    except NoChildTagDefinitionsAllowedException:
+        return 400, ApiError(msg="Only inner tags are allowed to have children.")
     except KeyError as exc:
         return 400, ApiError(msg=f"Type {exc.args[0]} is not known.")
 

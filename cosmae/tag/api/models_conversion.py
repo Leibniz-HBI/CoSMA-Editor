@@ -13,6 +13,7 @@ from cosmae.user.models_conversion import (
 )
 
 _tag_type_mapping_db_to_api = {
+    TagDefinitionDb.BOOL: "BOOL",
     TagDefinitionDb.INNER: "INNER",
     TagDefinitionDb.FLOAT: "FLOAT",
     TagDefinitionDb.STRING: "STRING",
@@ -70,6 +71,7 @@ def tag_definition_db_to_api(tag_definition: TagDefinitionDb) -> TagDefinitionRe
 
 
 _tag_type_mapping_api_to_db = {
+    "BOOL": TagDefinitionDb.BOOL,
     "INNER": TagDefinitionDb.INNER,
     "FLOAT": TagDefinitionDb.FLOAT,
     "STRING": TagDefinitionDb.STRING,

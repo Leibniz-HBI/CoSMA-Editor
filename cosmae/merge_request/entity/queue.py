@@ -67,6 +67,7 @@ def apply_entity_merge_request(
                             type="type",
                             owner_id="owner__id",
                             id_persistent="id_persistent",
+                            id_parent_persistent="id_parent_persistent",
                         )
                     )
                 )
@@ -119,7 +120,7 @@ def apply_entity_merge_request(
         merge_request.save()
 
 
-def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disable=too-many-arguments
+def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disable=too-many-positional-arguments,too-many-arguments
     entity_merge_request: EntityMergeRequest,
     tag_instance_origin: TagInstanceAbstract,
     id_entity_destination_persistent: str,
@@ -137,7 +138,9 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
                 TagDefinitionHistory.change_or_create_versioned(
                     id_persistent=uuid4(),
                     name=f"from entity merge {entity_merge_request.id_persistent}_{count}",
-                    id_parent_persistent=tag_definition_existing_dict["id_persistent"],
+                    id_parent_persistent=tag_definition_existing_dict[
+                        "id_parent_persistent"
+                    ],
                     type=tag_definition_existing_dict["type"],
                     time_edit=time_edit,
                     owner=user,

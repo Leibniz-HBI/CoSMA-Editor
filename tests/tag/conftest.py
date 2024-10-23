@@ -94,7 +94,7 @@ def tag_def_parent(db, user):
         id_persistent=c.id_tag_def_parent_persistent_test,
         time_edit=c.time_edit_test + timedelta(seconds=5),
         written_by_session=user.edit_session,
-        type=TagDefinition.FLOAT,
+        type=TagDefinition.INNER,
         name=c.name_tag_def_parent_test,
         owner=user,
     )
@@ -153,7 +153,7 @@ def tag_def_curated(user):
     "A curated tag definition for tests"
     return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_tag_def_curated_test,
-        type=TagDefinition.INNER,
+        type=TagDefinition.BOOL,
         name=c.name_tag_def_curated_test,
         time_edit=c.time_edit_test + timedelta(minutes=4),
         curated=True,
