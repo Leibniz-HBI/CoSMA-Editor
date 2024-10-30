@@ -9,6 +9,7 @@ from django.db.models.aggregates import Max
 
 from cosmae.entity.models_django import Entity
 from cosmae.exception import (
+    DisabledTagDefinitionHasChildrenException,
     EntityMissingException,
     ForbiddenException,
     InvalidTagValueException,
@@ -109,6 +110,30 @@ class TagDefinitionHistory(TagDefinitionAbstract, HistoryMixin):
         """Return the most recent version of a tag definition."""
         return cls.most_recent_by_id_query_set(id_persistent).get()
 
+    @classmethod
+    def bypass_parent(cls, id_parent_persistent):
+        """Bypasses a parent in history.
+        This is necessary when removing tag definitions
+        to make sure there are no holes in the history."""
+        children = cls.objects.filter(
+            id_parent_persistent=id_parent_persistent
+        ).annotate(
+            id_parent_parent_persistent=models.functions.Coalesce(
+                models.Subquery(
+                    cls.objects.filter(
+                        id_persistent=id_parent_persistent,
+                        time_edit__lt=models.OuterRef("time_edit"),
+                    )
+                    .order_by("-time_edit")
+                    .values("id_parent_persistent")[:0]
+                ),
+                None,
+            )
+        )
+        for child in children:
+            child.id_parent_persistent = child.id_parent_parent_persistent
+            child.save()
+
     def set_curated(self, requester: CosmaeUser, time_edit):
         "Set curated state for a tag definition."
         return TagDefinitionHistory.change_or_create_versioned(
@@ -172,6 +197,10 @@ class TagDefinitionHistory(TagDefinitionAbstract, HistoryMixin):
                 ].id_persistent,
                 self.id_parent_persistent,
             )
+        if self.disabled and self.most_recent_query_set().filter(
+            id_parent_persistent=self.id_persistent
+        ):
+            raise DisabledTagDefinitionHasChildrenException()
 
     def check_different_before_save(self, other):
         """Checks structural equality for two tag definitions."""
@@ -182,6 +211,7 @@ class TagDefinitionHistory(TagDefinitionAbstract, HistoryMixin):
             or other.owner != self.owner
             or other.curated != self.curated
             or other.description != self.description
+            or other.disabled != self.disabled
         )
 
 

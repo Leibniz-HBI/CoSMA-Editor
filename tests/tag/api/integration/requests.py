@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-many-arguments
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-many-arguments,too-many-positional-arguments
 from urllib.parse import urljoin
 
 import requests
@@ -154,6 +154,14 @@ def post_details(url, id_persistent_list, cookies=None):
     return requests.post(
         url + "/cosmae/api/tags/definitions/details",
         json={"id_persistent_list": id_persistent_list},
+        cookies=cookies,
+        timeout=900,
+    )
+
+
+def purge_tag(url, id_tag_definition_persistent, cookies=None):
+    return requests.delete(
+        url + f"/cosmae/api/tags/definitions/{id_tag_definition_persistent}",
         cookies=cookies,
         timeout=900,
     )

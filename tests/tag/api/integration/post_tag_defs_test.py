@@ -5,6 +5,7 @@ from django.db import IntegrityError
 
 import tests.tag.common as c
 from tests.tag.api.integration import requests as r
+from cosmae.tag.models_django import TagDefinitionHistory
 
 
 def test_id_no_version(auth_server, root_tag_def):
@@ -134,6 +135,27 @@ def test_change_description(auth_server, root_tag_def):
     req = r.post_tag_def(live_server.url, new_tag_def, cookies=cookies)
     assert req.status_code == 200
     assert req.json()["tag_definitions"][0]["description"] == test_description
+
+
+def test_disable(auth_server, root_tag_def):
+    live_server, cookies = auth_server
+    req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
+    assert req.status_code == 200
+    created = req.json()["tag_definitions"][0]
+    id_persistent = created["id_persistent"]
+    version = created["version"]
+    new_tag_def = root_tag_def.copy()
+    new_tag_def["id_persistent"] = id_persistent
+    new_tag_def["version"] = version
+    new_tag_def["disabled"] = True
+    req = r.post_tag_def(live_server.url, new_tag_def, cookies=cookies)
+    assert req.status_code == 200
+    assert req.json()["tag_definitions"][0]["disabled"]
+    versions = TagDefinitionHistory.objects.filter(
+        id_persistent=id_persistent
+    ).order_by("id")
+    assert len(versions) == 2
+    assert versions[1].disabled
 
 
 def test_change_type(auth_server, root_tag_def):

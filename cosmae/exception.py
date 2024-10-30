@@ -94,6 +94,10 @@ class InvalidTagValueException(Exception):
         self.type_name = type_name
 
 
+class DisabledTagDefinitionHasChildrenException(Exception):
+    "Indicates that a tag definition marked for disabling still has children."
+
+
 class TagDefinitionExistsException(Exception):
     "Indicates that the tag already exists."
 

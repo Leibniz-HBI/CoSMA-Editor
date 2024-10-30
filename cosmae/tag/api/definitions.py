@@ -11,6 +11,7 @@ from ninja import Router, Schema
 from cosmae.exception import (
     ApiError,
     DbObjectExistsException,
+    DisabledTagDefinitionHasChildrenException,
     EntityUpdatedException,
     NoChildTagDefinitionsAllowedException,
     NoParentTagException,
@@ -139,7 +140,9 @@ def post_tag_definitions(  # pylint: disable=too-many-branches
     except NoSelfParentTagException:
         return 400, ApiError(msg="Can not set a tag definition as its own parent.")
     except NoChildTagDefinitionsAllowedException:
-        return 400, ApiError(msg="Only inner tags are allowed to have children.")
+        return 400, ApiError(msg="Only navigation tags are allowed to have children.")
+    except DisabledTagDefinitionHasChildrenException:
+        return 400, ApiError(msg="Can not delete tag definitions that have children")
     except KeyError as exc:
         return 400, ApiError(msg=f"Type {exc.args[0]} is not known.")
 
@@ -224,6 +227,34 @@ def post_get_tag_definition_children(
         return 500, ApiError(msg="Database Error.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get children tag definitions.")
+
+
+@router.delete(
+    "{id_persistent}",
+    response={200: None, 401: ApiError, 403: ApiError, 404: ApiError, 500: ApiError},
+)
+def purge(request: HttpRequest, id_persistent: str):
+    "Remove a tag definition from the history."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    try:
+        tag_def_history_queryset = TagDefinitionHistoryDb.objects.filter(
+            id_persistent=id_persistent
+        ).order_by("-time_edit")
+        if len(tag_def_history_queryset) == 0:
+            return 404, ApiError(msg="Tag definition not found")
+        most_recent = tag_def_history_queryset[0]
+        if not most_recent.is_owner(user.id_persistent):
+            return 403, ApiError(msg="Insufficient permissions")
+        with transaction.atomic():
+            TagDefinitionHistoryDb.bypass_parent(id_persistent)
+            for tag_def in tag_def_history_queryset:
+                tag_def.delete()
+        return 200, None
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not delete tag definition history")
 
 
 def tag_definition_api_to_db(
