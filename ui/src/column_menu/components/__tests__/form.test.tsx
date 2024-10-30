@@ -84,7 +84,12 @@ describe('form tests', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         tag_definitions: [
-                            { name: inputTest, type: 'STRING', description: '' }
+                            {
+                                name: inputTest,
+                                type: 'STRING',
+                                description: '',
+                                disabled: false
+                            }
                         ]
                     })
                 }

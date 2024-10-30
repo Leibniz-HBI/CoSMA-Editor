@@ -1,4 +1,4 @@
-import { addError } from '../util/notification/slice'
+import { addError, addSuccessVanish } from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { TagDefinition, TagType, newTagDefinition } from './state'
 import { config } from '../config'
@@ -94,6 +94,7 @@ export function submitTagDefinition({
     type,
     idPersistent,
     version,
+    disabled,
     namePath,
     parentNamePath
 }: {
@@ -103,6 +104,7 @@ export function submitTagDefinition({
     type: TagType
     idPersistent?: string
     version?: number
+    disabled?: boolean
     namePath?: string[]
     parentNamePath: string[]
 }): ThunkWithFetch<boolean> {
@@ -114,7 +116,8 @@ export function submitTagDefinition({
                 name: name,
                 id_parent_persistent: idParentPersistent,
                 type: type,
-                description
+                description,
+                disabled
             }
             if (idPersistent !== undefined) {
                 body.id_persistent = idPersistent
@@ -236,12 +239,43 @@ export function getTagDefinitionDetailsThunk(
         }
     }
 }
+export function purgeTagDefinition(tagDefinition: TagDefinition): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(submitTagDefinitionStart())
+        try {
+            const rsp = await fetch(
+                config.api_path + `/tags/definitions/${tagDefinition.idPersistent}`,
+                {
+                    credentials: 'include',
+                    method: 'DELETE'
+                }
+            )
+            if (rsp.status == 200) {
+                dispatch(
+                    submitTagDefinitionSuccess({
+                        tagDefinition: { ...tagDefinition, disabled: true },
+                        namePath: tagDefinition.namePath,
+                        parentNamePath: tagDefinition.namePath.slice(0, -1)
+                    })
+                )
+                dispatch(addSuccessVanish('Successfully purged tag definition.'))
+            } else {
+                const json = await rsp.json()
+                dispatch(submitTagDefinitionError())
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(submitTagDefinitionError())
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
 
 export const columnTypeMapApiToApp = new Map<string, TagType>([
     ['INNER', TagType.Inner],
     ['STRING', TagType.String],
     ['FLOAT', TagType.Float],
-    ['BOOL', TagType.BOOLEAN]
+    ['BOOL', TagType.Boolean]
 ])
 
 export const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
@@ -281,7 +315,7 @@ export const tagTypeMapAppToApi = new Map<TagType, string>([
     [TagType.Inner, 'INNER'],
     [TagType.String, 'STRING'],
     [TagType.Float, 'FLOAT'],
-    [TagType.BOOLEAN, 'BOOL']
+    [TagType.Boolean, 'BOOL']
 ])
 
 export function tagDefinitionToApi(tagDef: TagDefinition) {

@@ -285,7 +285,7 @@ export function EntitySearchResults({
                 onSearchResultClicked={onSearchResultClicked}
                 key={idx}
             />
-        )) ?? [<ListGroup.Item />]
+        )) ?? [<ListGroup.Item key={-1} />]
     }
     return <ListGroup className={className}>{items}</ListGroup>
 }

@@ -64,6 +64,10 @@ html {
     width: 400px !important;
 }
 
+.max-w-800px {
+    max-width: 800px !important;
+}
+
 .h-60 {
     height: 60% !important;
 }

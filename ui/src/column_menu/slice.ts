@@ -59,10 +59,10 @@ export const tagSelectionSlice = createSlice({
             }
             if (path.length == 0) {
                 state.isLoading = false
-                updateNodesFromExisting(state.navigationEntries, selectionEntries)
-                state.navigationEntries = selectionEntries
+                updateNodesFromExisting(state.children, selectionEntries)
+                state.children = selectionEntries
             } else {
-                const entry = pickTagHierarchyNode(state.navigationEntries, path)
+                const entry = pickTagHierarchyNode(state.children, path)
                 if (entry !== undefined) {
                     state.tagDefinitionsByIdPersistent[
                         entry.idTagDefinitionPersistent
@@ -73,7 +73,7 @@ export const tagSelectionSlice = createSlice({
             }
         },
         toggleExpansion(state: TagSelectionState, action: PayloadAction<number[]>) {
-            const entry = pickTagHierarchyNode(state.navigationEntries, action.payload)
+            const entry = pickTagHierarchyNode(state.children, action.payload)
             if (entry !== undefined) {
                 entry.isExpanded = !entry.isExpanded
             }
@@ -95,9 +95,36 @@ export const tagSelectionSlice = createSlice({
             const tagDefinition = action.payload.tagDefinition
             state.tagDefinitionsByIdPersistent[tagDefinition.idPersistent] =
                 newRemote(tagDefinition)
+            if (tagDefinition.disabled) {
+                delete state.tagDefinitionsByIdPersistent[tagDefinition.idPersistent]
+                let parent: { children: TagHierarchyNode[] } | undefined = state
+                if (parentNamePath.length > 0) {
+                    parent = pickTagHierarchyNodeByNamePath(
+                        parent.children,
+                        parentNamePath
+                    )
+                }
+                if (parent !== undefined) {
+                    for (let idx = 0; idx < parent.children.length; idx++) {
+                        if (
+                            parent.children[idx].idTagDefinitionPersistent ==
+                            tagDefinition.idPersistent
+                        ) {
+                            parent.children.splice(
+                                idx,
+                                1,
+                                ...parent.children[idx].children
+                            )
+
+                            return
+                        }
+                    }
+                }
+                return
+            }
             if (oldNamePath !== undefined) {
                 // remove previous entry, if existing
-                let entries: TagHierarchyNode[] | undefined = state.navigationEntries
+                let entries: TagHierarchyNode[] | undefined = state.children
                 if (oldNamePath.length > 0) {
                     entries = pickTagHierarchyNodeByNamePath(
                         entries,
@@ -122,10 +149,10 @@ export const tagSelectionSlice = createSlice({
                 children: []
             })
             if (parentNamePath.length == 0) {
-                state.navigationEntries.push(tagHierarchyNode)
+                state.children.push(tagHierarchyNode)
             } else {
                 const parentEntry = pickTagHierarchyNodeByNamePath(
-                    state.navigationEntries,
+                    state.children,
                     parentNamePath
                 )
                 parentEntry?.children.push(tagHierarchyNode)
@@ -222,12 +249,12 @@ export const tagSelectionSlice = createSlice({
             }
             const tagDefinition = action.payload.tagDefinition
             const oldPathToTagDefinition = action.payload.oldPathToTagDefinition
-            let originHierarchyArray = state.navigationEntries
+            let originHierarchyArray = state.children
             let oldNamePathPrefixLength = 0
             if (oldPathToTagDefinition.length > 1) {
                 // get old parent information
                 const oldParentHierarchyNode = pickTagHierarchyNode(
-                    state.navigationEntries,
+                    state.children,
                     oldPathToTagDefinition.slice(0, -1)
                 )
                 if (oldParentHierarchyNode === undefined) {
@@ -245,11 +272,11 @@ export const tagSelectionSlice = createSlice({
             }
             let namePath: string[] = []
             let destinationHierarchyArray: TagHierarchyNode[] | undefined =
-                state.navigationEntries
+                state.children
             // get new parent information
             if (tagDefinition.idParentPersistent !== undefined) {
                 const newParentHierarchyNode = pickTagHierarchyNode(
-                    state.navigationEntries,
+                    state.children,
                     action.payload.pathToNewParent
                 )
                 if (newParentHierarchyNode === undefined) {

@@ -9,7 +9,7 @@ function selectTagSelection(state: RootState) {
 
 export const selectNavigationEntries = createSelector(
     selectTagSelection,
-    (state) => state.navigationEntries
+    (state) => state.children
 )
 
 export const selectTagSelectionLoading = createSelector(

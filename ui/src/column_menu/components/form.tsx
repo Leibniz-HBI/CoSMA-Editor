@@ -3,11 +3,18 @@ import { ChangeEvent, ChangeEventHandler, FormEvent, ReactNode } from 'react'
 import { Button, Col, Row, Form, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { TagDefinition, TagType } from '../state'
 import * as yup from 'yup'
-import { submitTagDefinition, loadTagDefinitionHierarchy } from '../thunks'
+import {
+    submitTagDefinition,
+    loadTagDefinitionHierarchy,
+    purgeTagDefinition
+} from '../thunks'
 import { AppDispatch } from '../../store'
 import { useAppDispatch } from '../../hooks'
-import { FormField } from '../../util/form'
+import { FormField, TextConfirmedSubmit } from '../../util/form'
 import { QuestionCircleFill } from 'react-bootstrap-icons'
+import { TabView } from '../../util/components/tabs'
+import { CosmaeCard } from '../../util/components/misc'
+import { addError, addSuccessVanish } from '../../util/notification/slice'
 
 const schema = yup.object({
     columnType: yup.string().matches(/STRING|FLOAT|INNER|BOOL/),
@@ -41,6 +48,33 @@ export function TagCreateForm({
     existingTagDefinition?: TagDefinition
     children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }) {
+    const createForm = (
+        <TagEditor existingTagDefinition={existingTagDefinition}>{children}</TagEditor>
+    )
+    if (existingTagDefinition === undefined) {
+        return createForm
+    }
+    return (
+        <TabView
+            tabList={[
+                { name: 'Edit', component: createForm },
+                {
+                    name: 'Delete',
+                    component: <TagDeleteForm tagDefinition={existingTagDefinition} />
+                }
+            ]}
+            initialTabIdx={0}
+        />
+    )
+}
+
+export function TagEditor({
+    existingTagDefinition = undefined,
+    children
+}: {
+    existingTagDefinition?: TagDefinition
+    children: (formProps: ColumnTypeCreateFormProps) => ReactNode
+}) {
     const dispatch: AppDispatch = useAppDispatch()
     let initialValues = emptyTagValues
     if (existingTagDefinition !== undefined) {
@@ -67,6 +101,7 @@ export function TagCreateForm({
                         idParentPersistent:
                             values.parent == '' ? undefined : values.parent,
                         type: values.columnType as TagType,
+                        disabled: existingTagDefinition?.disabled ?? false,
                         parentNamePath: values.parentNamePath
                     })
                 ).then((success) => {
@@ -155,10 +190,10 @@ function ColumnTypeCreateFormBody(props: {
                                                 type="radio"
                                                 name="columnType"
                                                 label="boolean"
-                                                value={TagType.BOOLEAN}
+                                                value={TagType.Boolean}
                                                 checked={
                                                     props.formValues.columnType ===
-                                                    TagType.BOOLEAN
+                                                    TagType.Boolean
                                                 }
                                                 onChange={props.handleChange}
                                                 disabled={props.alreadyExists}
@@ -308,5 +343,100 @@ function NavigationTypeLabel({
                 />
             </Row>
         </OverlayTrigger>
+    )
+}
+
+export function TagDeleteForm({ tagDefinition }: { tagDefinition: TagDefinition }) {
+    const dispatch = useAppDispatch()
+    return (
+        <Col className="d-contents h-100 ms-3 me-3">
+            <Row className="justify-content-center h-100 overflow-hidden">
+                <Col xs="auto" className="max-w-800px overflow-y-auto h-100">
+                    <Row className="mb-4">
+                        <Col>
+                            <CosmaeCard
+                                header="Disable"
+                                bodyClassName="bg-white ps-3 pe-3 pt-2 pb-1"
+                            >
+                                <Col>
+                                    <Row>
+                                        <Col>
+                                            <span>Type </span>
+                                            <span className="fw-bold">DISABLE </span>
+                                            <span>in the </span>
+                                            <span className="fst-italic">Confirm </span>
+                                            <span>
+                                                text box and submit to disable the tag.
+                                                This will make it and the contained data
+                                                inaccessible from now on but the data
+                                                will still be available in the history.
+                                            </span>
+                                        </Col>
+                                    </Row>
+                                    <TextConfirmedSubmit
+                                        requiredInput="DISABLE"
+                                        onSubmit={() =>
+                                            dispatch(
+                                                submitTagDefinition({
+                                                    ...tagDefinition,
+                                                    type: tagDefinition.columnType,
+                                                    parentNamePath:
+                                                        tagDefinition.namePath.slice(
+                                                            0,
+                                                            -1
+                                                        ),
+                                                    name:
+                                                        tagDefinition.namePath.at(-1) ??
+                                                        '',
+                                                    namePath: tagDefinition.namePath,
+                                                    description:
+                                                        tagDefinition.description ?? '',
+                                                    disabled: true
+                                                })
+                                            ).then((success) => {
+                                                if (success) {
+                                                    dispatch(
+                                                        addSuccessVanish(
+                                                            'Successfully disabled tag definition.'
+                                                        )
+                                                    )
+                                                }
+                                            })
+                                        }
+                                    />
+                                </Col>
+                            </CosmaeCard>
+                        </Col>
+                    </Row>
+                    <Row className="mb-4">
+                        <Col>
+                            <CosmaeCard
+                                header="Purge"
+                                bodyClassName="bg-white ps-3 pe-3 pt-2 pb-1"
+                            >
+                                <Row>
+                                    <Col>
+                                        <span>Type </span>
+                                        <span className="fw-bold">PURGE </span>
+                                        <span>in the </span>
+                                        <span className="fst-italic">Confirm </span>
+                                        <span>
+                                            text box and submit to purge the tag and all
+                                            contained data from the history.
+                                        </span>
+                                    </Col>
+                                </Row>
+                                <TextConfirmedSubmit
+                                    requiredInput="PURGE"
+                                    onSubmit={() =>
+                                        dispatch(purgeTagDefinition(tagDefinition))
+                                    }
+                                />
+                            </CosmaeCard>
+                        </Col>
+                    </Row>
+                </Col>
+            </Row>
+        </Col>
     )
 }

@@ -316,7 +316,12 @@ describe('create tag definition', () => {
                     credentials: 'include',
                     body: JSON.stringify({
                         tag_definitions: [
-                            { name: 'new tag def', type: 'STRING', description: '' }
+                            {
+                                name: 'new tag def',
+                                type: 'STRING',
+                                description: '',
+                                disabled: false
+                            }
                         ]
                     }),
                     headers: { 'Content-Type': 'application/json' }
@@ -360,7 +365,8 @@ describe('create tag definition', () => {
                                 name: 'new tag def',
                                 id_parent_persistent: idTagDef1,
                                 type: 'STRING',
-                                description: ''
+                                description: '',
+                                disabled: false
                             }
                         ]
                     }),

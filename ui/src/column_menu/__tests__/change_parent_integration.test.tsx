@@ -68,7 +68,7 @@ export function renderWithProviders(
     {
         preloadedState = {
             tagSelection: newTagSelectionState({
-                navigationEntries: [
+                children: [
                     newTagHierarchyNode({
                         name: nameTagDef,
                         idTagDefinitionPersistent: idTagDef
@@ -186,7 +186,7 @@ test('success', async () => {
     await waitFor(() => {
         expect(store.getState()).toEqual({
             tagSelection: newTagSelectionState({
-                navigationEntries: [
+                children: [
                     newTagHierarchyNode({
                         idTagDefinitionPersistent: idTagDef1,
                         name: nameTagDef1,
@@ -216,7 +216,7 @@ test('success', async () => {
     await waitFor(() => {
         expect(store.getState()).toEqual({
             tagSelection: newTagSelectionState({
-                navigationEntries: [
+                children: [
                     newTagHierarchyNode({
                         idTagDefinitionPersistent: idTagDef1,
                         name: nameTagDef1,
@@ -290,7 +290,7 @@ test('error', async () => {
     await waitFor(() => {
         expect(store.getState()).toEqual({
             tagSelection: newTagSelectionState({
-                navigationEntries: [
+                children: [
                     newTagHierarchyNode({
                         name: nameTagDef,
                         idTagDefinitionPersistent: idTagDef

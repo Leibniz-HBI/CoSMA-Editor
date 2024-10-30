@@ -6,7 +6,7 @@ jest.mock('@glideapps/glide-data-grid', () => ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     DataEditor: jest.fn().mockImplementation((props: any) => <MockTable />)
 }))
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
+import { act, RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import {
     ContributionEntityState,
     newContributionEntityState,
@@ -115,7 +115,9 @@ async function doSearch(fetchMock: jest.Mock) {
     })
     await waitFor(async () => {
         const searchBox = screen.getByRole('textbox')
-        await user.type(searchBox, 't')
+        await act(async () => {
+            await user.type(searchBox, 't')
+        })
     })
     await waitFor(() => {
         const match0 = screen.getByText(displayTxtSearch0)

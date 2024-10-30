@@ -4,7 +4,7 @@ import { RemoteInterface, newRemote } from '../util/state'
 export enum TagType {
     String = 'STRING',
     Float = 'FLOAT',
-    BOOLEAN = 'BOOL',
+    Boolean = 'BOOL',
     Inner = 'INNER'
 }
 
@@ -84,7 +84,7 @@ export function newTagHierarchyNode({
 }
 
 export interface TagSelectionState {
-    navigationEntries: TagHierarchyNode[]
+    children: TagHierarchyNode[]
     tagDefinitionsByIdPersistent: {
         [key: string]: RemoteInterface<TagDefinition | undefined>
     }
@@ -95,7 +95,7 @@ export interface TagSelectionState {
     isDragging: boolean
 }
 export function newTagSelectionState({
-    navigationEntries = [],
+    children = [],
     tagDefinitionsByIdPersistent = {},
     isLoading = false,
     isSearching = false,
@@ -103,7 +103,7 @@ export function newTagSelectionState({
     editTagDefinition = newRemote(undefined),
     isDragging = false
 }: {
-    navigationEntries?: TagHierarchyNode[]
+    children?: TagHierarchyNode[]
     tagDefinitionsByIdPersistent?: {
         [key: string]: RemoteInterface<TagDefinition | undefined>
     }
@@ -115,7 +115,7 @@ export function newTagSelectionState({
     isDragging?: boolean
 }): TagSelectionState {
     return {
-        navigationEntries,
+        children,
         tagDefinitionsByIdPersistent,
         isLoading,
         isSearching,

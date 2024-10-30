@@ -54,7 +54,7 @@ export function mkComparisonCell(
     let cellKind = 'text' as GridCellKind
     let cellContent
     let displayData: string | undefined = undefined
-    if (columnType == TagType.BOOLEAN) {
+    if (columnType == TagType.Boolean) {
         // workaround for typescript jest compatibility
         cellKind = 'boolean' as GridCellKind
         if (cellValues.length == 0) {

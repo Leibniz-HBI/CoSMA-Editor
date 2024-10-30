@@ -30,7 +30,7 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
             data: ''
         } as GridCell
     }
-    if (columnType == TagType.BOOLEAN) {
+    if (columnType == TagType.Boolean) {
         // workaround for typescript jest compatibility
         allowOverlay = false
         cellKind = 'boolean' as GridCellKind
