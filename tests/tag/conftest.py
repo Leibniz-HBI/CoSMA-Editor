@@ -149,6 +149,48 @@ def tag_def_child_1(tag_def_child_1_history):
 
 
 @pytest.fixture
+def tag_def_child_parent_history(user):
+    "Another shared child tag definition for tests"
+    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
+        id_persistent=c.id_tag_def_persistent_child_parent,
+        type=TagDefinition.INNER,
+        id_parent_persistent=c.id_tag_def_parent_persistent_test,
+        name="test tag definition child parent",
+        time_edit=c.time_edit_test + timedelta(seconds=20),
+        owner_id=user.id,
+        written_by_session=user.edit_session,
+    )
+    tag_def.save()
+    return tag_def
+
+
+@pytest.fixture
+def tag_def_child_parent(tag_def_child_parent_history):
+    return TagDefinition.objects.get(id=tag_def_child_parent_history.id)
+
+
+@pytest.fixture
+def tag_def_child_parent_child_history(user):
+    "Another shared child tag definition for tests"
+    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
+        id_persistent=c.id_tag_def_persistent_child_parent_child,
+        type=TagDefinition.FLOAT,
+        id_parent_persistent=c.id_tag_def_persistent_child_parent,
+        name="test tag definition child parent",
+        time_edit=c.time_edit_test + timedelta(seconds=30),
+        owner_id=user.id,
+        written_by_session=user.edit_session,
+    )
+    tag_def.save()
+    return tag_def
+
+
+@pytest.fixture
+def tag_def_child_parent_child(tag_def_child_parent_child_history):
+    return TagDefinition.objects.get(id=tag_def_child_parent_child_history.id)
+
+
+@pytest.fixture
 def tag_def_curated(user):
     "A curated tag definition for tests"
     return TagDefinitionHistory.objects.create(  # pylint: disable=no-member

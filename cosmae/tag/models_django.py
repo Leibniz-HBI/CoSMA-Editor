@@ -70,6 +70,26 @@ class TagDefinitionAbstract(Versioned):
         "Check wether a user can write to the tag definition."
         return self.is_owner(user_id_persistent)
 
+    @classmethod
+    def descendants(cls, id_tag_definition_ancestor_persistent, user: CosmaeUser):
+        "Get all descendants of a tag definition that can contain data."
+        ancestors = []
+        queue = [id_tag_definition_ancestor_persistent]
+        while len(queue) > 0:
+            id_tag_def_parent_persistent = queue.pop(0)
+            ids_with_type = cls.objects.filter(
+                models.Q(curated=True) | models.Q(owner_id=user.id),
+                id_parent_persistent=id_tag_def_parent_persistent,
+                disabled=False,
+                hidden=False,
+            ).values("id_persistent", "type", "curated", "owner_id")
+            for obj in ids_with_type:
+                if obj["type"] == cls.INNER:
+                    queue.append(obj["id_persistent"])
+                else:
+                    ancestors.append(obj["id_persistent"])
+        return ancestors
+
 
 class TagDefinitionHistory(TagDefinitionAbstract, HistoryMixin):
     "Django ORM model for tag definitions history."

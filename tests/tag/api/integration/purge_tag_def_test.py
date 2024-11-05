@@ -26,6 +26,13 @@ def test_no_cookies(auth_server, tag_def_user):
     assert rsp.status_code == 401
 
 
+def test_applicant(auth_server_applicant, tag_def_user):
+    "Make sure applicant can not purge."
+    server, cookies = auth_server_applicant
+    rsp = r.purge_tag(server.url, c.id_tag_def_persistent_test_user, cookies=cookies)
+    assert rsp.status_code == 403
+
+
 def test_no_permission(auth_server1, tag_def_user):
     "Make sure no other user can purge."
     server, _cookies, cookies = auth_server1

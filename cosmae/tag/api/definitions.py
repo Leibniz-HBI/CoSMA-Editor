@@ -86,6 +86,12 @@ class TagDefinitionDetailsRequest(Schema):
     id_persistent_list: List[str]
 
 
+class DescendantListResponse(Schema):
+    "Response when requesting ancestors"
+    # pylint: disable=too-few-public-methods
+    id_descendants_persistent_list: List[str]
+
+
 @router.post(
     "",
     response={
@@ -237,6 +243,8 @@ def purge(request: HttpRequest, id_persistent: str):
     "Remove a tag definition from the history."
     try:
         user = check_user(request)
+        if user.permission_group == CosmaeUser.APPLICANT:
+            return 403, ApiError(msg="Insufficient permissions")
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
     try:
@@ -255,6 +263,36 @@ def purge(request: HttpRequest, id_persistent: str):
         return 200, None
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not delete tag definition history")
+
+
+@router.get(
+    "{id_persistent}/descendants",
+    response={
+        200: DescendantListResponse,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
+)
+def get_descendants(request: HttpRequest, id_persistent: str):
+    "API method for getting all descendants of a tag that may contain data."
+    try:
+        user = check_user(request)
+        if user.permission_group == CosmaeUser.APPLICANT:
+            return 403, ApiError(msg="insufficient_permissions")
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    try:
+        tag_def = TagDefinitionDb.objects.filter(id_persistent=id_persistent).get()
+        if not tag_def.curated and tag_def.owner_id != user.id:
+            return 403, ApiError(msg="Insufficient permission")
+        descendant_id_list = TagDefinitionDb.descendants(id_persistent, user)
+        return DescendantListResponse(id_descendants_persistent_list=descendant_id_list)
+    except TagDefinitionDb.DoesNotExist:
+        return 404, ApiError(msg="Tag definition does not exist")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get descendants")
 
 
 def tag_definition_api_to_db(

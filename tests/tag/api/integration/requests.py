@@ -165,3 +165,11 @@ def purge_tag(url, id_tag_definition_persistent, cookies=None):
         cookies=cookies,
         timeout=900,
     )
+
+
+def get_descendants(url, id_tag_definition_persistent, cookies=None):
+    return requests.get(
+        url + f"/cosmae/api/tags/definitions/{id_tag_definition_persistent}/descendants",
+        cookies=cookies,
+        timeout=900,
+    )
