@@ -1,5 +1,5 @@
 import { TagDefinition } from '../column_menu/state'
-import { Remote, RemoteInterface, newRemote } from '../util/state'
+import { RemoteInterface, newRemote } from '../util/state'
 
 export enum UserPermissionGroup {
     APPLICANT = 'Applicant',

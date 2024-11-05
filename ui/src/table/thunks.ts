@@ -1,12 +1,7 @@
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { fetch_chunk } from '../util/fetch'
 import { TagDefinition, TagType } from '../column_menu/state'
-import {
-    CellValue,
-    displayTextColumn,
-    displayTxtColumnId,
-    justificationColumnId
-} from './state'
+import { CellValue, displayTxtColumnId, justificationColumnId } from './state'
 import { Entity } from '../entity/state'
 import { newEntity } from '../entity/state'
 import { config } from '../config'
@@ -17,14 +12,13 @@ import { ThunkWithFetch } from '../util/type'
 import {
     Edit,
     appendColumn,
-    curateTagDefinitionError,
-    curateTagDefinitionStart,
     entityChangeOrCreateError,
     entityChangeOrCreateStart,
     entityChangeOrCreateSuccess,
     loadEntityJustificationHistoryError,
     loadEntityJustificationHistoryStart,
     loadEntityJustificationHistorySuccess,
+    removeColumnByIdPersistent,
     setColumnLoading,
     setEntities,
     setEntityLoading,
@@ -35,8 +29,7 @@ import {
     submitEntityJustificationSuccess,
     submitValuesError,
     submitValuesStart,
-    submitValuesSuccess,
-    tagDefinitionChange
+    submitValuesSuccess
 } from './slice'
 import { parseCommentFromApi } from '../comments/thunks'
 
@@ -46,7 +39,7 @@ import { parseCommentFromApi } from '../comments/thunks'
 export function getTableAsync(): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(setEntityLoading())
-        dispatch(setColumnLoading(displayTextColumn))
+        dispatch(setColumnLoading(displayTxtColumnId))
         try {
             const entities: Entity[] = []
             for (let i = 0; ; i += 500) {
@@ -97,76 +90,103 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
     }
 }
 
-export function getColumnAsync(columnDefinition: TagDefinition): ThunkWithFetch<void> {
+export function getColumnAsync(
+    columnDefinition: TagDefinition
+): ThunkWithFetch<string[]> {
     return async (dispatch, _getState, fetch) => {
         const id_persistent = columnDefinition.idPersistent
         if (id_persistent == justificationColumnId) {
             dispatch(showEntityJustification())
-            return
+            return []
         }
-        try {
-            dispatch(setColumnLoading(columnDefinition))
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const column_data: { [key: string]: CellValue[] } = {}
-            let offset = 0
-            for (let i = 0; ; i += 5000) {
-                const rsp = await fetch_chunk({
-                    api_path: config.api_path + '/tags/chunk',
-                    offset,
-                    limit: 5000,
-                    payload: {
-                        id_tag_definition_persistent: id_persistent
-                    },
-                    fetchMethod: fetch
-                })
-                if (rsp.status !== 200) {
-                    dispatch(setLoadDataError())
-                    dispatch(
-                        addError(
-                            `Could not load instances chunk ${i}. Reason: "${
-                                (await rsp.json())['msg']
-                            }"`
-                        )
-                    )
-                    return
-                }
+        let idPersistentList = [columnDefinition.idPersistent]
+        if (columnDefinition.columnType === TagType.Inner) {
+            try {
+                const rsp = await fetch(
+                    config.api_path +
+                        `/tags/definitions/${columnDefinition.idPersistent}/descendants`,
+                    { credentials: 'include' }
+                )
                 const json = await rsp.json()
-                const tags = json['tag_instances']
-                for (const tag of tags) {
-                    const id_entity_persistent: string = tag['id_entity_persistent']
-                    const valueString = tag['value']
-                    const valueIdPersistent = tag['id_persistent']
-                    const valueVersion = Number.parseInt(tag['version'])
-                    const parsedValue = parseValue(
-                        columnDefinition.columnType,
-                        valueString
-                    )
-                    const versionedValue = {
-                        value: parsedValue,
-                        idPersistent: valueIdPersistent,
-                        version: valueVersion
-                    }
-                    column_data[id_entity_persistent] = [versionedValue]
-                }
-                if (tags.length < 5000) {
-                    break
+                if (rsp.status == 200) {
+                    idPersistentList = json['id_descendants_persistent_list']
                 } else {
-                    offset =
-                        Math.max(
-                            ...tags.map(
-                                (tagJson: { [key: string]: unknown }) =>
-                                    tagJson['version']
-                            )
-                        ) + 1
+                    dispatch(addError(errorMessageFromApi(json)))
+                    return []
                 }
+            } catch (e: unknown) {
+                dispatch(addError('Could not fetch descendant tags.'))
+                return []
+            } finally {
+                dispatch(removeColumnByIdPersistent(columnDefinition.idPersistent))
             }
-            dispatch(
-                appendColumn({ idPersistent: id_persistent, columnData: column_data })
-            )
-        } catch (e: unknown) {
-            dispatch(setLoadDataError())
-            dispatch(addError(exceptionMessage(e)))
         }
+        const successList = []
+        for (const idPersistent of idPersistentList) {
+            dispatch(setColumnLoading(idPersistent))
+            try {
+                const column_data: { [key: string]: CellValue[] } = {}
+                let offset = 0
+                for (let i = 0; ; i += 5000) {
+                    const rsp = await fetch_chunk({
+                        api_path: config.api_path + '/tags/chunk',
+                        offset,
+                        limit: 5000,
+                        payload: {
+                            id_tag_definition_persistent: idPersistent
+                        },
+                        fetchMethod: fetch
+                    })
+                    if (rsp.status !== 200) {
+                        dispatch(setLoadDataError())
+                        dispatch(
+                            addError(
+                                `Could not load instances chunk ${i}. Reason: "${
+                                    (await rsp.json())['msg']
+                                }"`
+                            )
+                        )
+                        return []
+                    }
+                    const json = await rsp.json()
+                    const tags = json['tag_instances']
+                    for (const tag of tags) {
+                        const id_entity_persistent: string = tag['id_entity_persistent']
+                        const valueString = tag['value']
+                        const valueIdPersistent = tag['id_persistent']
+                        const valueVersion = Number.parseInt(tag['version'])
+                        const versionedValue = {
+                            value: valueString,
+                            idPersistent: valueIdPersistent,
+                            version: valueVersion
+                        }
+                        column_data[id_entity_persistent] = [versionedValue]
+                    }
+                    if (tags.length < 5000) {
+                        break
+                    } else {
+                        offset =
+                            Math.max(
+                                ...tags.map(
+                                    (tagJson: { [key: string]: unknown }) =>
+                                        tagJson['version']
+                                )
+                            ) + 1
+                    }
+                }
+                dispatch(
+                    appendColumn({
+                        idPersistent: idPersistent,
+                        columnData: column_data
+                    })
+                )
+                successList.push(idPersistent)
+            } catch (e: unknown) {
+                dispatch(setLoadDataError())
+                dispatch(addError(exceptionMessage(e)))
+            }
+        }
+        return successList
     }
 }
 
@@ -294,32 +314,6 @@ export function entityChangeOrCreate({
             }
         } catch (e: unknown) {
             dispatch(entityChangeOrCreateError())
-            dispatch(addError(exceptionMessage(e)))
-        }
-    }
-}
-
-export function curateAsync(idTagDefinitionPersistent: string): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
-        dispatch(curateTagDefinitionStart())
-        try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/tags/definitions/permissions/${idTagDefinitionPersistent}/curate`,
-                {
-                    credentials: 'include',
-                    method: 'POST'
-                }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                dispatch(tagDefinitionChange(parseColumnDefinitionsFromApi(json)))
-            } else {
-                dispatch(curateTagDefinitionError())
-                dispatch(addError(errorMessageFromApi(json)))
-            }
-        } catch (e: unknown) {
-            dispatch(curateTagDefinitionError())
             dispatch(addError(exceptionMessage(e)))
         }
     }

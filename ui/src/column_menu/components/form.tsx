@@ -14,7 +14,7 @@ import { FormField, TextConfirmedSubmit } from '../../util/form'
 import { QuestionCircleFill } from 'react-bootstrap-icons'
 import { TabView } from '../../util/components/tabs'
 import { CosmaeCard } from '../../util/components/misc'
-import { addError, addSuccessVanish } from '../../util/notification/slice'
+import { addSuccessVanish } from '../../util/notification/slice'
 
 const schema = yup.object({
     columnType: yup.string().matches(/STRING|FLOAT|INNER|BOOL/),

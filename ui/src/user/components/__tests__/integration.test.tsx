@@ -23,7 +23,6 @@ import {
     newEditSessionState
 } from '../../../session/state'
 import { act } from 'react-dom/test-utils'
-import { selectIdCurrentEditSessionPersistent } from '../../../session/selectors'
 import { editSessionReducer } from '../../../session/slice'
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {

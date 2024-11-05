@@ -12,7 +12,6 @@ import { configureStore } from '@reduxjs/toolkit'
 import { contributionColumnDefinitionSlice } from '../columns/slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { ColumnDefinitionStep } from '../columns/components'
 import { TagSelectionState, newTagSelectionState } from '../../column_menu/state'
 import { tagSelectionSlice } from '../../column_menu/slice'
 import {

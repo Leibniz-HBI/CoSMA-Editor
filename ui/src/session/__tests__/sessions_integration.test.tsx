@@ -23,7 +23,6 @@ import {
     NotificationType
 } from '../../util/notification/slice'
 import userEvent from '@testing-library/user-event'
-import store from '../../store'
 import {
     newUserInfo,
     newUserState,

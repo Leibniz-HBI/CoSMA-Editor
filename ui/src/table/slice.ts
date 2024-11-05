@@ -4,13 +4,11 @@ import {
     TableState,
     newColumnState,
     newTableState,
-    justificationColumn,
     justificationColumnId,
     optionalEntityJustificationColumnIdx
 } from './state'
 import { Entity } from '../entity/state'
 import { newRemote } from '../util/state'
-import { TagDefinition } from '../column_menu/state'
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { Comment } from '../comments/slice'
 
@@ -55,11 +53,11 @@ const tableSlice = createSlice({
                 }
             }
         },
-        setColumnLoading(state: TableState, action: PayloadAction<TagDefinition>) {
-            const idTagDefinitionPersistent = action.payload.idPersistent
+        setColumnLoading(state: TableState, action: PayloadAction<string>) {
+            const idTagDefinitionPersistent = action.payload
             const columnIdx = state.columnIndices[idTagDefinitionPersistent]
             const columnState = newColumnState({
-                tagDefinition: action.payload,
+                idTagDefinitionPersistent: idTagDefinitionPersistent,
                 cellContents: newRemote([], true)
             })
             if (columnIdx === undefined) {
@@ -80,21 +78,18 @@ const tableSlice = createSlice({
             state: TableState,
             action: PayloadAction<{ columnIdx: number; bounds: Rectangle }>
         ) {
-            state.selectedTagDefinition =
-                state.columnStates[action.payload.columnIdx].tagDefinition
+            state.selectedTagDefinitionId =
+                state.columnStates[action.payload.columnIdx].idTagDefinitionPersistent
             state.selectedColumnHeaderBounds = action.payload.bounds
         },
         hideHeaderMenu(state: TableState) {
             clearSelectedColumn(state)
         },
         removeSelectedColumn(state: TableState) {
-            if (state.selectedTagDefinition === undefined) {
+            if (state.selectedTagDefinitionId === undefined) {
                 state.selectedColumnHeaderBounds = undefined
             } else {
-                removeColumnByIdPersistentHelper(
-                    state,
-                    state.selectedTagDefinition.idPersistent
-                )
+                removeColumnByIdPersistentHelper(state, state.selectedTagDefinitionId)
             }
         },
         showEntityJustification(state: TableState) {
@@ -102,7 +97,7 @@ const tableSlice = createSlice({
                 return
             }
             const columnState = newColumnState({
-                tagDefinition: justificationColumn,
+                idTagDefinitionPersistent: justificationColumnId,
                 cellContents: newRemote([])
             })
             state.columnStates.splice(
@@ -137,11 +132,10 @@ const tableSlice = createSlice({
             state.columnStates[action.payload.endIdx] =
                 state.columnStates[action.payload.startIdx]
             state.columnIndices[
-                state.columnStates[action.payload.endIdx].tagDefinition.idPersistent
+                state.columnStates[action.payload.endIdx].idTagDefinitionPersistent
             ] = action.payload.endIdx
             state.columnStates[action.payload.startIdx] = tmp
-            state.columnIndices[tmp.tagDefinition.idPersistent] =
-                action.payload.startIdx
+            state.columnIndices[tmp.idTagDefinitionPersistent] = action.payload.startIdx
         },
         setLoadDataError(state: TableState) {
             state.isLoading = false
@@ -168,24 +162,11 @@ const tableSlice = createSlice({
             }
             state.columnStates[idxColumn].cellContents.value[idxEntity] = [value]
         },
-        curateTagDefinitionStart(_state: TableState) {
-            return
-        },
-        //TODO still needed? better placed at tag definition slice?
-        tagDefinitionChange(state: TableState, action: PayloadAction<TagDefinition>) {
-            updateTagDefinition(state, action.payload)
-        },
-        curateTagDefinitionError(_state: TableState) {
-            return
-        },
-        tagChangeOwnerShipShow(
-            state: TableState,
-            action: PayloadAction<TagDefinition>
-        ) {
-            state.ownershipChangeTagDefinition = action.payload
+        tagChangeOwnerShipShow(state: TableState, action: PayloadAction<string>) {
+            state.ownershipChangeTagDefinitionIdPersistent = action.payload
         },
         tagChangeOwnershipHide(state: TableState) {
-            state.ownershipChangeTagDefinition = undefined
+            state.ownershipChangeTagDefinitionIdPersistent = undefined
         },
         showEntityAdd(state: TableState) {
             state.showEntityAddDialog = true
@@ -291,7 +272,7 @@ export const tableReducer = tableSlice.reducer
 
 function generateColumnStateIndices(state: TableState) {
     state.columnIndices = Object.fromEntries(
-        state.columnStates.map((state, idx) => [state.tagDefinition.idPersistent, idx])
+        state.columnStates.map((state, idx) => [state.idTagDefinitionPersistent, idx])
     )
 }
 
@@ -308,24 +289,12 @@ function removeColumnByIdPersistentHelper(state: TableState, idPersistent: strin
 }
 function clearSelectedColumn(state: TableState) {
     state.selectedColumnHeaderBounds = undefined
-    state.selectedTagDefinition = undefined
-}
-function updateTagDefinition(state: TableState, tagDefinition: TagDefinition) {
-    const idxColumnState = state.columnIndices[tagDefinition.idPersistent]
-    if (idxColumnState === undefined) {
-        return
-    }
-    state.columnStates[idxColumnState].tagDefinition = {
-        ...state.columnStates[idxColumnState].tagDefinition,
-        curated: tagDefinition.curated
-    }
+    state.selectedTagDefinitionId = undefined
 }
 
 export const {
     appendColumn,
     changeColumnIndex,
-    curateTagDefinitionError,
-    curateTagDefinitionStart,
     entityChangeOrCreateError,
     entityChangeOrCreateStart,
     entityChangeOrCreateSuccess,
@@ -347,7 +316,6 @@ export const {
     submitValuesSuccess,
     tagChangeOwnerShipShow,
     tagChangeOwnershipHide,
-    tagDefinitionChange,
     toggleEntityMergingModal,
     showEntityJustification,
     toggleSearch,

@@ -43,6 +43,18 @@ export const makeSelectTagDefinitionByIdPersistent = () => {
     return selector
 }
 
+export const makeSelectTagDefinitionsByIdPersistentList = () => {
+    const selector = createSelector(
+        [
+            selectTagDefinitionByIdPersistentMap,
+            (_state, idPersistentList: string[]) => idPersistentList
+        ],
+        (state, idPersistentList) =>
+            idPersistentList.map((idPersistent) => state[idPersistent])
+    )
+    return selector
+}
+
 export interface TagDefinitionHierarchyNode extends TagHierarchyNode {
     tagDefinition: RemoteInterface<TagDefinition | undefined>
     children: TagDefinitionHierarchyNode[]

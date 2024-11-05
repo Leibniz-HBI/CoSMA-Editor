@@ -28,7 +28,7 @@ import {
     selectFrozenColumns,
     selectIsLoadingEntities,
     selectIsSubmittingValues,
-    selectOwnershipChangeTagDefinition,
+    selectOwnershipChangeTagDefinitionIdPersistent,
     selectSelectedColumnHeaderBounds,
     selectShowEntityJustifications,
     selectShowSearch
@@ -43,7 +43,6 @@ import {
     showEntityJustificationHistory,
     showHeaderMenu,
     tagChangeOwnershipHide,
-    tagDefinitionChange,
     toggleEntityMergingModal,
     toggleSearch
 } from '../slice'
@@ -76,6 +75,7 @@ import { EditSessionButton } from '../../session/components'
 import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
 import { EntityDetailsModal } from './modals'
 import { InfoCircle } from 'react-bootstrap-icons'
+import { useTagDefinitionList } from '../../column_menu/hooks'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -105,7 +105,7 @@ export function RemoteDataTable() {
     const columnIndices = useAppSelector(selectColumnIndices)
     const columnStates = useAppSelector(selectColumnStates)
     const tagDefinitionChangeOwnership = useAppSelector(
-        selectOwnershipChangeTagDefinition
+        selectOwnershipChangeTagDefinitionIdPersistent
     )
     const dispatch = useAppDispatch()
     useEffect(
@@ -190,11 +190,8 @@ export function RemoteDataTable() {
                         <EntityAddModal />
                         <EntityMergingModal />
                         <ChangeOwnershipModal
-                            tagDefinition={tagDefinitionChangeOwnership}
+                            idTagDefinitionPersistent={tagDefinitionChangeOwnership}
                             onClose={() => dispatch(tagChangeOwnershipHide())}
-                            updateTagDefinitionChangeCallback={(tagDefinition) =>
-                                dispatch(tagDefinitionChange(tagDefinition))
-                            }
                         />
                         <EntityJustificationModal />
                         <EntityDetailsModal />
@@ -239,6 +236,9 @@ export function DataTable({
     const dispatch: AppDispatch = useDispatch()
     const tableSelection = useSelector(selectTableSelection)
     const frozenColumns = useAppSelector(selectFrozenColumns),
+        tagDefinitions = useTagDefinitionList(
+            columnStates.map((columnState) => columnState.idTagDefinitionPersistent)
+        ),
         selectedColumnHeaderBounds = useAppSelector(selectSelectedColumnHeaderBounds),
         isLoading = useAppSelector(selectIsLoadingEntities),
         isSubmittingValues = useAppSelector(selectIsSubmittingValues),
@@ -250,6 +250,7 @@ export function DataTable({
             createCellContentCallback({
                 entities,
                 columnStates,
+                tagDefinitions,
                 showEntityJustifications: showEntityJustifications
             }),
             // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -280,16 +281,23 @@ export function DataTable({
                     })
                 )
             } else {
-                dispatch(
-                    submitValuesAsync(columnStates[colIdx].tagDefinition.columnType, [
-                        entities[rowIdx].idPersistent,
-                        columnStates[colIdx].tagDefinition.idPersistent,
-                        {
-                            ...columnStates[colIdx].cellContents.value[rowIdx][0],
-                            value: newValue.data?.toString()
-                        }
-                    ])
-                )
+                const tagDefinition = tagDefinitions[colIdx]
+                if (tagDefinition === undefined || tagDefinition.value === undefined) {
+                    dispatch(
+                        addError('Can not change data for unloaded tag definition.')
+                    )
+                } else {
+                    dispatch(
+                        submitValuesAsync(tagDefinition.value.columnType, [
+                            entities[rowIdx].idPersistent,
+                            tagDefinition.value.idPersistent,
+                            {
+                                ...columnStates[colIdx].cellContents.value[rowIdx][0],
+                                value: newValue.data?.toString()
+                            }
+                        ])
+                    )
+                }
             }
         },
         showHeaderMenuCallback = (columnIdx: number, bounds: Rectangle) =>
@@ -417,12 +425,16 @@ export function DataTable({
         const columnDefs: GridColumn[] = []
         for (let i = 0; i < columnStates.length; ++i) {
             const columnState = columnStates[i]
-            let title = constructColumnTitle(columnState.tagDefinition.namePath)
-            if (columnState.tagDefinition.curated) {
-                title = '☑ ' + title
+            let title = 'loading ...'
+            const tagDefinition = tagDefinitions[i]
+            if (!(tagDefinition === undefined || tagDefinition.value === undefined)) {
+                title = constructColumnTitle(tagDefinition.value.namePath)
+                if (tagDefinition.value.curated) {
+                    title = '☑ ' + title
+                }
             }
             columnDefs.push({
-                id: columnState.tagDefinition.idPersistent,
+                id: columnState.idTagDefinitionPersistent,
                 title,
                 width: columnState.width,
                 hasMenu: i > 1

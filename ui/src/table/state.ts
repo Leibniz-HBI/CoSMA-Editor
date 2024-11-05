@@ -12,11 +12,11 @@ export interface TableState {
     entityIndices: { [key: string]: number }
     isLoading?: boolean
     showColumnAddMenu: boolean
-    selectedTagDefinition?: TagDefinition
+    selectedTagDefinitionId?: string
     selectedColumnHeaderBounds?: Rectangle
     frozenColumns: number
     isSubmittingValues: boolean
-    ownershipChangeTagDefinition?: TagDefinition
+    ownershipChangeTagDefinitionIdPersistent?: string
     showEntityAddDialog: boolean
     entityAddState: RemoteInterface<boolean>
     showEntityMergingModal: boolean
@@ -33,11 +33,11 @@ export function newTableState({
     entityIndices = undefined,
     isLoading = undefined,
     showColumnAddMenu = false,
-    selectedTagDefinition = undefined,
+    selectedTagDefinitionId = undefined,
     selectedColumnHeaderBounds = undefined,
     frozenColumns = 2,
     isSubmittingValues = false,
-    ownershipChangeTagDefinition = undefined,
+    ownershipChangeTagDefinitionIdPersistent = undefined,
     showEntityAddDialog = false,
     entityAddState = newRemote(false),
     showEntityMergingModal = false,
@@ -54,11 +54,11 @@ export function newTableState({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rowObjects?: { [key: string]: any }[]
     showColumnAddMenu?: boolean
-    selectedTagDefinition?: TagDefinition
+    selectedTagDefinitionId?: string
     selectedColumnHeaderBounds?: Rectangle
     frozenColumns?: number
     isSubmittingValues?: boolean
-    ownershipChangeTagDefinition?: TagDefinition
+    ownershipChangeTagDefinitionIdPersistent?: string
     showEntityAddDialog?: boolean
     entityAddState?: RemoteInterface<boolean>
     showEntityMergingModal?: boolean
@@ -84,11 +84,11 @@ export function newTableState({
         entityIndices: newEntityIndices,
         isLoading: isLoading,
         showColumnAddMenu: showColumnAddMenu,
-        selectedTagDefinition: selectedTagDefinition,
+        selectedTagDefinitionId: selectedTagDefinitionId,
         selectedColumnHeaderBounds: selectedColumnHeaderBounds,
         frozenColumns: frozenColumns,
         isSubmittingValues: isSubmittingValues,
-        ownershipChangeTagDefinition: ownershipChangeTagDefinition,
+        ownershipChangeTagDefinitionIdPersistent,
         showEntityAddDialog: showEntityAddDialog,
         entityAddState: entityAddState,
         showEntityMergingModal: showEntityMergingModal,
@@ -109,39 +109,36 @@ export interface CellValue {
 }
 
 export interface ColumnState {
-    tagDefinition: TagDefinition
+    idTagDefinitionPersistent: string
     cellContents: RemoteInterface<CellValue[][]>
     width: number
 }
 export function newColumnState({
-    tagDefinition = {
-        idPersistent: '',
-        namePath: [],
-        columnType: TagType.String,
-        curated: false,
-        version: 0,
-        hidden: false,
-        disabled: false
-    },
+    idTagDefinitionPersistent = '',
     cellContents = newRemote([]),
     width = 200
 }: {
-    tagDefinition: TagDefinition
+    idTagDefinitionPersistent: string
     cellContents?: RemoteInterface<CellValue[][]>
     width?: number
 }): ColumnState {
-    return { tagDefinition: tagDefinition, cellContents: cellContents, width: width }
+    return { idTagDefinitionPersistent, cellContents: cellContents, width: width }
 }
 
-function columnNameFromState(colState: ColumnState): string {
-    return colState.tagDefinition.namePath[colState.tagDefinition.namePath.length - 1]
+function columnNameFromState(tagDefinition?: TagDefinition): string {
+    if (tagDefinition === undefined) {
+        return 'unknown tag'
+    }
+    return tagDefinition.namePath[tagDefinition.namePath.length - 1]
 }
 export function csvLinesFromTable({
     entities,
+    tagDefinitions,
     columnStates,
     showJustifications
 }: {
     entities?: Entity[]
+    tagDefinitions: RemoteInterface<TagDefinition | undefined>[]
     columnStates: ColumnState[]
     showJustifications: boolean
 }): string[] {
@@ -155,9 +152,9 @@ export function csvLinesFromTable({
     const lines = []
     const header =
         '"id_entity_persistent","display_txt","justification",' +
-        columnStates
+        tagDefinitions
             .slice(columnStartIdx)
-            .map((colState) => '"' + columnNameFromState(colState) + '"')
+            .map((colState) => '"' + columnNameFromState(colState.value) + '"')
             .join(',')
     if (header.endsWith(',')) {
         lines.push(header.slice(0, header.length - 1) + '\n')
@@ -199,7 +196,7 @@ export const optionalEntityJustificationColumnIdx = 1
 export const displayTextColumn = newTagDefinition({
     namePath: ['Display Text'],
     idPersistent: displayTxtColumnId,
-    columnType: TagType.String,
+    columnType: 'String' as TagType,
     curated: true,
     version: 0,
     hidden: false
@@ -209,7 +206,7 @@ export const justificationColumnId = 'justification'
 export const justificationColumn = newTagDefinition({
     namePath: ['Justification'],
     idPersistent: justificationColumnId,
-    columnType: TagType.String,
+    columnType: 'String' as TagType,
     curated: true,
     version: 0,
     hidden: false

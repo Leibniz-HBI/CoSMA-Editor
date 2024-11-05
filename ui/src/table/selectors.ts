@@ -4,7 +4,7 @@ import { selectPermissionGroup } from '../user/selectors'
 import { removeSelectedColumn, tagChangeOwnerShipShow } from './slice'
 import { remoteUserProfileColumnDeleteAsync } from '../user/thunks'
 import { UserPermissionGroup } from '../user/state'
-import { curateAsync } from './thunks'
+import { curateAsync } from '../column_menu/thunks'
 import { justificationColumnId } from './state'
 
 function selectTableState(state: RootState) {
@@ -84,17 +84,17 @@ export const selectSelectedColumnHeaderBounds = createSelector(
     (state) => state.selectedColumnHeaderBounds
 )
 
-export const selectSelectedTagDefinition = createSelector(
+export const selectSelectedTagDefinitionIdPersistent = createSelector(
     selectTableState,
-    (state) => state.selectedTagDefinition
+    (state) => state.selectedTagDefinitionId
 )
 
 export const selectColumnHeaderMenu = createSelector(
-    selectSelectedTagDefinition,
+    selectSelectedTagDefinitionIdPersistent,
     selectPermissionGroup,
-    (columnDefinition, permissionGroup) => {
+    (idPersistent, permissionGroup) => {
         return (dispatch: AppDispatch) => {
-            if (columnDefinition === undefined) {
+            if (idPersistent === undefined) {
                 return []
             }
             const ret = [
@@ -103,21 +103,17 @@ export const selectColumnHeaderMenu = createSelector(
                     labelClassName: 'danger text-danger',
                     onClick: () => {
                         dispatch(removeSelectedColumn())
-                        dispatch(
-                            remoteUserProfileColumnDeleteAsync(
-                                columnDefinition.idPersistent
-                            )
-                        )
+                        dispatch(remoteUserProfileColumnDeleteAsync(idPersistent))
                     }
                 }
             ]
-            if (columnDefinition.idPersistent == justificationColumnId) {
+            if (idPersistent == justificationColumnId) {
                 return ret
             }
             ret.push({
                 label: 'Change Owner',
                 labelClassName: '',
-                onClick: () => dispatch(tagChangeOwnerShipShow(columnDefinition))
+                onClick: () => dispatch(tagChangeOwnerShipShow(idPersistent))
             })
             if (
                 permissionGroup == UserPermissionGroup.EDITOR ||
@@ -127,7 +123,7 @@ export const selectColumnHeaderMenu = createSelector(
                     label: 'Curate Tag Definition',
                     labelClassName: '',
                     onClick: () => {
-                        dispatch(curateAsync(columnDefinition.idPersistent))
+                        dispatch(curateAsync(idPersistent))
                     }
                 })
             }
@@ -136,9 +132,9 @@ export const selectColumnHeaderMenu = createSelector(
     }
 )
 
-export const selectOwnershipChangeTagDefinition = createSelector(
+export const selectOwnershipChangeTagDefinitionIdPersistent = createSelector(
     selectTableState,
-    (state) => state.ownershipChangeTagDefinition
+    (state) => state.ownershipChangeTagDefinitionIdPersistent
 )
 
 export const selectIsSubmittingValues = createSelector(

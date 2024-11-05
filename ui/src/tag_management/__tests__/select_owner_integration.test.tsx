@@ -2,7 +2,12 @@
  * @jest-environment jsdom
  */
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import { TagType, newTagDefinition } from '../../column_menu/state'
+import {
+    TagSelectionState,
+    TagType,
+    newTagDefinition,
+    newTagSelectionState
+} from '../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
@@ -17,17 +22,25 @@ import { Provider } from 'react-redux'
 import { ChangeOwnershipModal } from '../components'
 import userEvent from '@testing-library/user-event'
 import { TagManagementState } from '../state'
-import { Remote, newRemote } from '../../util/state'
+import { newRemote } from '../../util/state'
 import {
     NotificationManager,
     NotificationType,
     notificationReducer
 } from '../../util/notification/slice'
+import { tagSelectionSlice } from '../../column_menu/slice'
+import {
+    displayTextColumn,
+    displayTxtColumnId,
+    justificationColumn,
+    justificationColumnId
+} from '../../table/state'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         user: UserState
         tagManagement: TagManagementState
+        tagSelection: TagSelectionState
         notification: NotificationManager
     }
 }
@@ -41,6 +54,7 @@ export function renderWithProviders(
                 ownershipRequests: newRemote({ petitioned: [], received: [] }),
                 putOwnershipRequest: newRemote(undefined)
             },
+            tagSelection: initialTagSelectionState,
             notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
@@ -50,6 +64,7 @@ export function renderWithProviders(
         reducer: {
             user: userReducer,
             tagManagement: tagManagementReducer,
+            tagSelection: tagSelectionSlice.reducer,
             notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -76,10 +91,36 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
         )
     }
 }
+const idUserTest = 'id-user-test'
+const usernameTest = 'user test'
+const permissionGroupTest = UserPermissionGroup.CONTRIBUTOR
+const idTagDefinitionTest = 'id-tag-def-test'
+const tagTypeTest = TagType.Inner
+const namePathTest = ['tag', 'path', 'test']
+const ownerTest = {
+    username: usernameTest,
+    idPersistent: idUserTest,
+    permissionGroup: permissionGroupTest
+}
+const tagDefinitionTest = newTagDefinition({
+    columnType: tagTypeTest,
+    idPersistent: idTagDefinitionTest,
+    idParentPersistent: undefined,
+    curated: false,
+    namePath: namePathTest,
+    version: 4,
+    owner: ownerTest,
+    hidden: false
+})
+const initialTagSelectionState = newTagSelectionState({
+    tagDefinitionsByIdPersistent: {
+        [displayTxtColumnId]: newRemote(displayTextColumn),
+        [justificationColumnId]: newRemote(justificationColumn),
+        [idTagDefinitionTest]: newRemote(tagDefinitionTest)
+    }
+})
+
 describe('Ownership search', () => {
-    const idUserTest = 'id-user-test'
-    const usernameTest = 'user test'
-    const permissionGroupTest = UserPermissionGroup.CONTRIBUTOR
     const userInfoTest = newPublicUserInfo({
         idPersistent: idUserTest,
         username: usernameTest,
@@ -93,24 +134,6 @@ describe('Ownership search', () => {
         username: usernameTest1,
         permissionGroup: permissionGroupTest1
     })
-    const idTagDefinitionTest = 'id-tag-def-test'
-    const tagTypeTest = TagType.Inner
-    const namePathTest = ['tag', 'path', 'test']
-    const ownerTest = {
-        username: usernameTest,
-        idPersistent: idUserTest,
-        permissionGroup: permissionGroupTest
-    }
-    const tagDefinitionTest = newTagDefinition({
-        columnType: tagTypeTest,
-        idPersistent: idTagDefinitionTest,
-        idParentPersistent: undefined,
-        curated: false,
-        namePath: namePathTest,
-        version: 4,
-        owner: ownerTest,
-        hidden: false
-    })
     const stateWithUserSearchResults = {
         user: newUserState({
             userSearchResults: newRemote([userInfoTest, userInfoTest1])
@@ -119,6 +142,7 @@ describe('Ownership search', () => {
             ownershipRequests: newRemote({ petitioned: [], received: [] }),
             putOwnershipRequest: newRemote(undefined)
         },
+        tagSelection: initialTagSelectionState,
         notification: { notificationList: [], notificationMap: {} }
     }
     const testError = 'You do not own this tag.'
@@ -146,9 +170,8 @@ describe('Ownership search', () => {
         ])
         renderWithProviders(
             <ChangeOwnershipModal
-                tagDefinition={tagDefinitionTest}
+                idTagDefinitionPersistent={idTagDefinitionTest}
                 onClose={jest.fn()}
-                updateTagDefinitionChangeCallback={jest.fn()}
             />,
             fetchMock
         )
@@ -188,12 +211,10 @@ describe('Ownership search', () => {
                 }
             ]
         ])
-        const changeMock = jest.fn()
         renderWithProviders(
             <ChangeOwnershipModal
-                tagDefinition={tagDefinitionTest}
+                idTagDefinitionPersistent={idTagDefinitionTest}
                 onClose={jest.fn()}
-                updateTagDefinitionChangeCallback={changeMock}
             />,
             fetchMock,
             {
@@ -220,7 +241,6 @@ describe('Ownership search', () => {
                 { credentials: 'include', method: 'POST' }
             ]
         ])
-        expect(changeMock.mock.calls).toEqual([[tagDefinitionTest]])
     })
     test('dispatches error', async () => {
         const fetchMock = jest.fn()
@@ -232,12 +252,10 @@ describe('Ownership search', () => {
                 }
             ]
         ])
-        const changeMock = jest.fn()
         const { store } = renderWithProviders(
             <ChangeOwnershipModal
-                tagDefinition={tagDefinitionTest}
+                idTagDefinitionPersistent={idTagDefinitionTest}
                 onClose={jest.fn()}
-                updateTagDefinitionChangeCallback={changeMock}
             />,
             fetchMock,
             {
@@ -269,16 +287,14 @@ describe('Ownership search', () => {
                 { credentials: 'include', method: 'POST' }
             ]
         ])
-        expect(changeMock.mock.calls).toEqual([])
     })
     test('close', async () => {
         const fetchMock = jest.fn()
         const closeMock = jest.fn()
         renderWithProviders(
             <ChangeOwnershipModal
-                tagDefinition={tagDefinitionTest}
+                idTagDefinitionPersistent={idTagDefinitionTest}
                 onClose={closeMock}
-                updateTagDefinitionChangeCallback={jest.fn()}
             />,
             fetchMock
         )

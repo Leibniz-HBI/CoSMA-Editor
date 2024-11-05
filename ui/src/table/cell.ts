@@ -1,5 +1,5 @@
 import { GridCell, GridCellKind, Item } from '@glideapps/glide-data-grid'
-import { TagType } from '../column_menu/state'
+import { TagDefinition, TagType } from '../column_menu/state'
 import {
     CellValue,
     ColumnState,
@@ -8,6 +8,7 @@ import {
 } from './state'
 import { Entity } from '../entity/state'
 import { LoadingCell } from './draw'
+import { RemoteInterface } from '../util/state'
 
 const emptyCell = {
     kind: 'text' as GridCellKind,
@@ -83,10 +84,12 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
 export function createCellContentCallback({
     entities,
     columnStates,
+    tagDefinitions,
     showEntityJustifications
 }: {
     entities?: Entity[]
     columnStates: ColumnState[]
+    tagDefinitions: RemoteInterface<TagDefinition | undefined>[]
     showEntityJustifications: boolean
 }): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
@@ -117,16 +120,21 @@ export function createCellContentCallback({
             ])
         }
         const col = columnStates[col_idx]
-        if (col === undefined) {
+        const tagDefinition = tagDefinitions[col_idx]
+        if (
+            col === undefined ||
+            tagDefinition === undefined ||
+            tagDefinition.value === undefined
+        ) {
             return emptyCell
         }
-        if (col.cellContents.isLoading) {
+        if (col.cellContents.isLoading || tagDefinition.isLoading) {
             return {
                 kind: 'custom' as GridCellKind,
                 allowOverlay: true,
                 data: { kind: 'custom-loading-cell', rowIdx: row_idx, colIdx: col_idx }
             } as LoadingCell
         }
-        return mkCell(col.tagDefinition.columnType, col.cellContents.value[row_idx])
+        return mkCell(tagDefinition.value.columnType, col.cellContents.value[row_idx])
     }
 }

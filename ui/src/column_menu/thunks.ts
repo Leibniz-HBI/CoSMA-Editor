@@ -5,6 +5,7 @@ import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
 import {
     changeParentSuccess,
+    curateTagDefinitionSuccess,
     getTagDefinitionDetailsError,
     getTagDefinitionDetailsStart,
     getTagDefinitionDetailsSuccess,
@@ -17,6 +18,7 @@ import {
 } from './slice'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { PublicUserInfo } from '../user/state'
+import { curateTagDefinitionError, curateTagDefinitionStart } from './slice'
 
 export function loadTagDefinitionHierarchy({
     idParentPersistent = undefined,
@@ -216,6 +218,9 @@ export function getTagDefinitionDetailsThunk(
     idPersistentList: string[]
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
+        if (idPersistentList.length == 0) {
+            return
+        }
         dispatch(getTagDefinitionDetailsStart(idPersistentList))
         try {
             const rsp = await fetch(config.api_path + '/tags/definitions/details', {
@@ -266,6 +271,32 @@ export function purgeTagDefinition(tagDefinition: TagDefinition): ThunkWithFetch
             }
         } catch (e: unknown) {
             dispatch(submitTagDefinitionError())
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+
+export function curateAsync(idTagDefinitionPersistent: string): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(curateTagDefinitionStart())
+        try {
+            const rsp = await fetch(
+                config.api_path +
+                    `/tags/definitions/permissions/${idTagDefinitionPersistent}/curate`,
+                {
+                    credentials: 'include',
+                    method: 'POST'
+                }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                dispatch(curateTagDefinitionSuccess(idTagDefinitionPersistent))
+            } else {
+                dispatch(curateTagDefinitionError())
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(curateTagDefinitionError())
             dispatch(addError(exceptionMessage(e)))
         }
     }

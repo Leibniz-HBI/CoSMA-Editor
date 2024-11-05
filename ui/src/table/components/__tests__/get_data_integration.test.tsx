@@ -12,7 +12,13 @@ jest.mock('@glideapps/glide-data-grid', () => {
     }
 })
 import { Col, Row } from 'react-bootstrap'
-import { TagDefinition, TagType, newTagDefinition } from '../../../column_menu/state'
+import {
+    TagDefinition,
+    TagSelectionState,
+    TagType,
+    newTagDefinition,
+    newTagSelectionState
+} from '../../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
@@ -20,7 +26,15 @@ import {
     newUserInfo,
     newUserState
 } from '../../../user/state'
-import { TableState, newColumnState, newTableState } from '../../state'
+import {
+    TableState,
+    displayTextColumn,
+    displayTxtColumnId,
+    justificationColumn,
+    justificationColumnId,
+    newColumnState,
+    newTableState
+} from '../../state'
 import { newEntity } from '../../../entity/state'
 import {
     NotificationManager,
@@ -48,6 +62,7 @@ import {
 import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
+import { tagSelectionSlice } from '../../../column_menu/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -151,17 +166,6 @@ const tagDefTest: TagDefinition = newTagDefinition({
     curated: false,
     owner: userTest,
     version: 2,
-    hidden: false
-})
-
-const nameTagDefDisplayText = 'Display Text'
-const idTagDefPersistentDisplayText = 'display_txt_id'
-const displayTextTagDef: TagDefinition = newTagDefinition({
-    namePath: [nameTagDefDisplayText],
-    idPersistent: idTagDefPersistentDisplayText,
-    columnType: TagType.String,
-    curated: true,
-    version: 0,
     hidden: false
 })
 
@@ -335,7 +339,7 @@ test('get entities error', async () => {
                 columnIndices: { display_txt_id: 0 },
                 columnStates: [
                     newColumnState({
-                        tagDefinition: displayTextTagDef,
+                        idTagDefinitionPersistent: displayTxtColumnId,
                         cellContents: newRemote([], true)
                     })
                 ]
@@ -376,7 +380,7 @@ test('get instances error', async () => {
                 columnStates: [
                     displayTxtColumnState,
                     newColumnState({
-                        tagDefinition: tagDefTest,
+                        idTagDefinitionPersistent: idTagDefPersistent,
                         cellContents: newRemote([], true)
                     })
                 ]
@@ -387,7 +391,7 @@ test('get instances error', async () => {
 })
 
 const displayTxtColumnState = newColumnState({
-    tagDefinition: displayTextTagDef,
+    idTagDefinitionPersistent: displayTxtColumnId,
     cellContents: newRemote([])
 })
 
@@ -396,7 +400,7 @@ const idValue1 = 'test-value-id-1'
 const value0 = 'value 0',
     value1 = 'value 1'
 const tagDefColumnState = newColumnState({
-    tagDefinition: tagDefTest,
+    idTagDefinitionPersistent: idTagDefPersistent,
     cellContents: newRemote([
         [
             {
@@ -462,6 +466,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
+        tagSelection: TagSelectionState
         user: UserState
         editSession: EditSessionState
         entityDetails: EntityDetailsState
@@ -476,6 +481,13 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
+            tagSelection: newTagSelectionState({
+                tagDefinitionsByIdPersistent: {
+                    [displayTxtColumnId]: newRemote(displayTextColumn),
+                    [justificationColumnId]: newRemote(justificationColumn),
+                    [idTagDefPersistent]: newRemote(tagDefTest)
+                }
+            }),
             user: newUserState({
                 userInfo: newUserInfo({
                     ...userTest,
@@ -509,6 +521,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
+            tagSelection: tagSelectionSlice.reducer,
             user: userSlice.reducer,
             editSession: editSessionReducer,
             entityDetails: entityDetailsReducer

@@ -1,6 +1,8 @@
 import { Col, ListGroup, Modal, Row, Spinner } from 'react-bootstrap'
-import { TagDefinition } from '../column_menu/state'
-import { TagDefinitionNamePath } from '../column_menu/components/misc'
+import {
+    TagDefinitionNamePath,
+    TagDefinitionNamePathFromId
+} from '../column_menu/components/misc'
 import { FormField } from '../util/form'
 import { useDispatch, useSelector } from 'react-redux'
 import { userSearch } from '../user/thunks'
@@ -179,13 +181,11 @@ const debouncedSearchDispatchThunk = (searchTerm: string) => (dispatch: AppDispa
     debouncedSearchDispatch(searchTerm, dispatch)
 
 export function ChangeOwnershipModal({
-    tagDefinition,
-    onClose,
-    updateTagDefinitionChangeCallback
+    idTagDefinitionPersistent,
+    onClose
 }: {
-    tagDefinition?: TagDefinition
+    idTagDefinitionPersistent?: string
     onClose: VoidFunction
-    updateTagDefinitionChangeCallback: (tagDefinition: TagDefinition) => void
 }) {
     const [searchTerm, setSearchTerm] = useState('')
     const dispatch: AppDispatch = useDispatch()
@@ -196,12 +196,12 @@ export function ChangeOwnershipModal({
     }
     const searchResults = useSelector(selectSearchResults)
     return (
-        <Modal show={tagDefinition !== undefined} onHide={closeCallback}>
+        <Modal show={idTagDefinitionPersistent !== undefined} onHide={closeCallback}>
             <Modal.Header closeButton={true} closeVariant="white">
                 Change Tag Ownership
             </Modal.Header>
             <Modal.Body>
-                {tagDefinition === undefined ? (
+                {idTagDefinitionPersistent === undefined ? (
                     <div />
                 ) : (
                     <Col>
@@ -209,7 +209,9 @@ export function ChangeOwnershipModal({
                             <span>
                                 Change ownership of tag definition with name path
                             </span>
-                            <TagDefinitionNamePath tagDefinition={tagDefinition} />
+                            <TagDefinitionNamePathFromId
+                                idTagDefinitionPersistent={idTagDefinitionPersistent}
+                            />
                         </Row>
                         <Row>
                             <FormField
@@ -232,10 +234,7 @@ export function ChangeOwnershipModal({
                                             <OwnershipSearchResultsItem
                                                 userInfo={userInfo}
                                                 idTagDefinitionPersistent={
-                                                    tagDefinition.idPersistent
-                                                }
-                                                updateTagDefinitionChangeCallback={
-                                                    updateTagDefinitionChangeCallback
+                                                    idTagDefinitionPersistent
                                                 }
                                             />
                                         </ListGroup.Item>
@@ -252,12 +251,10 @@ export function ChangeOwnershipModal({
 
 export function OwnershipSearchResultsItem({
     userInfo,
-    idTagDefinitionPersistent,
-    updateTagDefinitionChangeCallback
+    idTagDefinitionPersistent
 }: {
     userInfo: PublicUserInfo
     idTagDefinitionPersistent: string
-    updateTagDefinitionChangeCallback: (tagDefinition: TagDefinition) => void
 }) {
     const dispatch: AppDispatch = useDispatch()
     const putOwnershipRequestState = useSelector(selectPutTagOwnership)
@@ -270,11 +267,7 @@ export function OwnershipSearchResultsItem({
                 idUserPersistent: userInfo.idPersistent,
                 idTagDefinitionPersistent: idTagDefinitionPersistent
             })
-        ).then((tagDefinition) => {
-            if (tagDefinition !== undefined) {
-                updateTagDefinitionChangeCallback(tagDefinition)
-            }
-        })
+        )
     }
     const tailElementRef = useRef(null)
     let tailElement

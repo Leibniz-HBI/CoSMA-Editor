@@ -78,6 +78,21 @@ export const tagSelectionSlice = createSlice({
                 entry.isExpanded = !entry.isExpanded
             }
         },
+        curateTagDefinitionStart(_state: TagSelectionState) {
+            return
+        },
+        curateTagDefinitionError(_state: TagSelectionState) {
+            return
+        },
+        curateTagDefinitionSuccess(
+            state: TagSelectionState,
+            action: PayloadAction<string>
+        ) {
+            const tagDefinition = state.tagDefinitionsByIdPersistent[action.payload]
+            if (!(tagDefinition === undefined || tagDefinition.value === undefined)) {
+                tagDefinition.value.curated = true
+            }
+        },
         submitTagDefinitionStart(state: TagSelectionState) {
             state.isSubmittingDefinition = true
         },
@@ -401,6 +416,9 @@ export const {
     changeParentSuccess,
     dragTagDefinitionStart,
     dragTagDefinitionEnd,
+    curateTagDefinitionError,
+    curateTagDefinitionStart,
+    curateTagDefinitionSuccess,
     getTagDefinitionDetailsError,
     getTagDefinitionDetailsStart,
     getTagDefinitionDetailsSuccess

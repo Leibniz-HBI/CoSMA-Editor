@@ -12,7 +12,13 @@ jest.mock('@glideapps/glide-data-grid', () => {
     }
 })
 import { configureStore } from '@reduxjs/toolkit'
-import { TagDefinition, TagType, newTagDefinition } from '../../column_menu/state'
+import {
+    TagDefinition,
+    TagSelectionState,
+    TagType,
+    newTagDefinition,
+    newTagSelectionState
+} from '../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
@@ -27,7 +33,13 @@ import {
     newNotificationManager,
     notificationReducer
 } from '../../util/notification/slice'
-import { TableState, displayTextColumn, newColumnState, newTableState } from '../state'
+import {
+    TableState,
+    displayTextColumn,
+    displayTxtColumnId,
+    newColumnState,
+    newTableState
+} from '../state'
 import { TableSelectionState, tableSelectionSlice } from '../selection/slice'
 import { userSlice } from '../../user/slice'
 import { Provider } from 'react-redux'
@@ -47,18 +59,23 @@ import { newRemote } from '../../util/state'
 import { editSessionReducer } from '../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../entity/state'
 import { entityDetailsReducer } from '../../entity/slice'
+import { tagSelectionSlice } from '../../column_menu/slice'
+import { useTagDefinitionList } from '../../column_menu/hooks'
 
 const rectangle = { x: 0, y: 1, width: 2, height: 4 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
     const columnStates = useAppSelector(selectColumnStates)
+    const columnDefinitions = useTagDefinitionList(
+        columnStates.map((columnState) => columnState.idTagDefinitionPersistent)
+    )
     return (
         <div className="mock">
             <Col>
                 <Row>
-                    {columnStates.map((columnState, idx) => (
+                    {columnDefinitions.map((columnDefinition, idx) => (
                         <Button onClick={() => props.onHeaderMenuClick(idx, rectangle)}>
-                            {columnState.tagDefinition.namePath.at(-1)}
+                            {columnDefinition.value?.namePath.at(-1)}
                         </Button>
                     ))}
                 </Row>
@@ -102,6 +119,7 @@ test('no curation for unprivileged user', async () => {
                 })
             }),
             table: newTableState({}),
+            tagSelection: initialTagSelectionState,
             notification: newNotificationManager({}),
             tableSelection: { cols: [], rows: [], rowSelectionOrder: [] },
             editSession: newEditSessionState({}),
@@ -170,7 +188,9 @@ test('change owner shows modal', async () => {
     await waitFor(() => {
         screen.getByText('Change Tag Ownership')
     })
-    expect(store.getState().table.ownershipChangeTagDefinition).not.toBeUndefined()
+    expect(
+        store.getState().table.ownershipChangeTagDefinitionIdPersistent
+    ).not.toBeUndefined()
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,20 +235,29 @@ const tagDefTest: TagDefinition = newTagDefinition({
     version: 2,
     hidden: false
 })
-const displayTxtColumnState = newColumnState({ tagDefinition: displayTextColumn })
-const columnState = newColumnState({ tagDefinition: tagDefTest })
+const displayTxtColumnState = newColumnState({
+    idTagDefinitionPersistent: displayTxtColumnId
+})
+const columnState = newColumnState({ idTagDefinitionPersistent: idTagDefPersistent })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
+        tagSelection: TagSelectionState
         user: UserState
         editSession: EditSessionState
         entityDetails: EntityDetailsState
     }
 }
 
+const initialTagSelectionState = newTagSelectionState({
+    tagDefinitionsByIdPersistent: {
+        [idTagDefPersistent]: newRemote(tagDefTest),
+        [displayTxtColumnId]: newRemote(displayTextColumn)
+    }
+})
 export function renderWithProviders(
     ui: React.ReactElement,
     fetchMock: jest.Mock,
@@ -237,6 +266,7 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
+            tagSelection: initialTagSelectionState,
             user: newUserState({
                 userInfo: newUserInfo({
                     ...userTest,
@@ -270,6 +300,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
+            tagSelection: tagSelectionSlice.reducer,
             user: userSlice.reducer,
             editSession: editSessionReducer,
             entityDetails: entityDetailsReducer

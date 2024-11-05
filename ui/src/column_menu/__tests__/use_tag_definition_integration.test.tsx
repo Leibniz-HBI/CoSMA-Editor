@@ -23,6 +23,12 @@ import {
 import { newRemote } from '../../util/state'
 
 import { useTagDefinition } from '../hooks'
+import {
+    displayTextColumn,
+    displayTxtColumnId,
+    justificationColumn,
+    justificationColumnId
+} from '../../table/state'
 
 function TestComponent({ idPersistent }: { idPersistent: string }) {
     const tagDefinition = useTagDefinition(idPersistent)
@@ -90,7 +96,11 @@ test('success', async () => {
     ])
     expect(store.getState().tagSelection).toEqual(
         newTagSelectionState({
-            tagDefinitionsByIdPersistent: { [idTagDef]: newRemote(tagDefTest) }
+            tagDefinitionsByIdPersistent: {
+                [displayTxtColumnId]: newRemote(displayTextColumn),
+                [justificationColumnId]: newRemote(justificationColumn),
+                [idTagDef]: newRemote(tagDefTest)
+            }
         })
     )
 })
@@ -112,7 +122,11 @@ test('error', async () => {
     const state = store.getState()
     expect(state.tagSelection).toEqual(
         newTagSelectionState({
-            tagDefinitionsByIdPersistent: { [idTagDef]: newRemote(undefined) }
+            tagDefinitionsByIdPersistent: {
+                [displayTxtColumnId]: newRemote(displayTextColumn),
+                [justificationColumnId]: newRemote(justificationColumn),
+                [idTagDef]: newRemote(undefined)
+            }
         })
     )
     expect(state.notification.notificationList).toEqual([

@@ -1,6 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
-import { create } from 'node:domain'
 
 function selectTagMergeRequestConflicts(state: RootState) {
     return state.tagMergeRequestConflicts

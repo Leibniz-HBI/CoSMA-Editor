@@ -13,7 +13,13 @@ jest.mock('@glideapps/glide-data-grid', () => {
     }
 })
 import { Col, Row } from 'react-bootstrap'
-import { TagDefinition, TagType, newTagDefinition } from '../../../column_menu/state'
+import {
+    TagDefinition,
+    TagSelectionState,
+    TagType,
+    newTagDefinition,
+    newTagSelectionState
+} from '../../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
@@ -21,7 +27,14 @@ import {
     newUserInfo,
     newUserState
 } from '../../../user/state'
-import { TableState, newTableState } from '../../state'
+import {
+    TableState,
+    displayTextColumn,
+    displayTxtColumnId,
+    justificationColumn,
+    justificationColumnId,
+    newTableState
+} from '../../state'
 import { newEntity } from '../../../entity/state'
 import {
     NotificationManager,
@@ -53,6 +66,7 @@ import { newRemote } from '../../../util/state'
 import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
+import { tagSelectionSlice } from '../../../column_menu/slice'
 
 const debounced = debounce(
     (changeCallback: (item: Item, value: string) => void, item: Item, value: string) =>
@@ -72,7 +86,7 @@ function MockTable(props: any) {
             <Col>
                 {Array.from({ length: props.rows }, (_, idx: number) => idx).map(
                     (idxRow) => (
-                        <Row>
+                        <Row key={idxRow}>
                             {Array.from(
                                 { length: props.columns.length },
                                 (_, idx: number) => idx
@@ -81,7 +95,7 @@ function MockTable(props: any) {
                                 const label = `${idxCol}-${idxRow}`
                                 if (cell.kind == 'text') {
                                     return (
-                                        <Col>
+                                        <Col key={idxCol}>
                                             <FormField
                                                 label={label}
                                                 name={label}
@@ -495,6 +509,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
+        tagSelection: TagSelectionState
         user: UserState
         editSession: EditSessionState
         entityDetails: EntityDetailsState
@@ -509,6 +524,13 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
+            tagSelection: newTagSelectionState({
+                tagDefinitionsByIdPersistent: {
+                    [displayTxtColumnId]: newRemote(displayTextColumn),
+                    [justificationColumnId]: newRemote(justificationColumn),
+                    [idTagDefPersistent]: newRemote(tagDefTest)
+                }
+            }),
             user: newUserState({
                 userInfo: newUserInfo({
                     ...userTest,
@@ -542,6 +564,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
+            tagSelection: tagSelectionSlice.reducer,
             user: userSlice.reducer,
             entityDetails: entityDetailsReducer,
             editSession: editSessionReducer

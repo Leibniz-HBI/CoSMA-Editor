@@ -1,3 +1,9 @@
+import {
+    displayTextColumn,
+    displayTxtColumnId,
+    justificationColumn,
+    justificationColumnId
+} from '../table/state'
 import { PublicUserInfo } from '../user/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
@@ -96,7 +102,10 @@ export interface TagSelectionState {
 }
 export function newTagSelectionState({
     children = [],
-    tagDefinitionsByIdPersistent = {},
+    tagDefinitionsByIdPersistent = {
+        [displayTxtColumnId]: newRemote(displayTextColumn),
+        [justificationColumnId]: newRemote(justificationColumn)
+    },
     isLoading = false,
     isSearching = false,
     isSubmittingDefinition = false,

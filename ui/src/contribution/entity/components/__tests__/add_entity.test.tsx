@@ -261,7 +261,6 @@ function mkMatches(
 }
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
-const idTagDefContribution0 = 'id-tag-def-contribution-0'
 const idTagDef1 = 'id-tag-test-1'
 const nameTagDef1 = 'tag def 1'
 function initialResponses(fetchMock: jest.Mock) {
@@ -302,14 +301,10 @@ function initialResponses(fetchMock: jest.Mock) {
 
 const matchValue0 = 'match 0'
 const idEntitySearch0 = 'id-entity-search-0'
-const idTagDefSearch0 = 'id-tag-def-search-0'
 const displayTxtSearch0 = 'Search Entity 0'
-const justificationSearch0 = 'tremendous shit poster'
 const matchValue1 = 'match 1'
 const idEntitySearch1 = 'id-entity-search-1'
-const idTagDefSearch1 = 'id-tag-def-search-1'
 const displayTxtSearch1 = 'Search Entity 1'
-const justificationSearch1 = 'shit poster in chief'
 
 function addSearchResultResponses(fetchMock: jest.Mock) {
     addResponseSequence(fetchMock, [
@@ -330,54 +325,5 @@ function addSearchResultResponses(fetchMock: jest.Mock) {
                 ]
             }
         ]
-    ])
-}
-
-function addValueResponses(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fetchMock: jest.Mock<any, any>,
-    idTagDef: string,
-    suffix: string
-) {
-    addResponseSequence(fetchMock, [
-        [
-            200,
-            {
-                value_responses: personList.slice(0, 50).flatMap((entity, idx) => [
-                    // contributed instance
-                    {
-                        id_entity_persistent: entity.id_persistent,
-                        id_tag_definition: idTagDefContribution0,
-                        id_tag_definition_requested_persistent: idTagDef,
-                        is_existing: false,
-                        version: idx,
-                        value: `val-${suffix}-` + idx,
-                        id_persistent: `id-val-${suffix}-` + idx
-                    },
-                    //existing instance for first match
-                    {
-                        id_entity_persistent: entity.id_persistent + '-0',
-                        id_tag_definition_requested_persistent: idTagDef,
-                        id_tag_definition: idTagDef,
-                        is_existing: true,
-                        version: idx,
-                        value: `val-${suffix}-0-` + idx,
-                        id_persistent: `id-val-${suffix}-0-` + idx
-                    },
-                    // existing instance for second match
-                    {
-                        id_entity_persistent: entity.id_persistent + '-1',
-                        id_tag_definition: idTagDef,
-                        id_tag_definition_requested_persistent: idTagDef,
-                        is_existing: true,
-                        version: idx,
-                        value: `val-${suffix}-1-` + idx,
-                        id_persistent: `id-val-${suffix}-1-` + idx
-                    }
-                ])
-            }
-        ],
-        // no further values
-        [200, { value_responses: [] }]
     ])
 }

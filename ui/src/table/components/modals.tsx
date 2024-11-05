@@ -129,12 +129,14 @@ export function ColumnModal({
                     additionalIndices={additionalIndices}
                     columnIndices={columnIndices}
                     loadColumnDataCallback={(columnDefinition: TagDefinition) =>
-                        dispatch(getColumnAsync(columnDefinition)).then(() =>
-                            dispatch(
-                                remoteUserProfileColumnAppend(
-                                    columnDefinition.idPersistent
-                                )
-                            )
+                        dispatch(getColumnAsync(columnDefinition)).then(
+                            async (idTagDefinitionList) => {
+                                for (const idPersistent of idTagDefinitionList) {
+                                    await dispatch(
+                                        remoteUserProfileColumnAppend(idPersistent)
+                                    )
+                                }
+                            }
                         )
                     }
                     hideColumnDataCallback={(columnDefinition: TagDefinition) =>

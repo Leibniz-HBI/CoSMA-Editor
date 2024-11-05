@@ -27,7 +27,14 @@ import {
     newUserInfo,
     newUserState
 } from '../../../user/state'
-import { TableState, newTableState } from '../../state'
+import {
+    TableState,
+    displayTextColumn,
+    displayTxtColumnId,
+    justificationColumn,
+    justificationColumnId,
+    newTableState
+} from '../../state'
 import {
     NotificationManager,
     newNotificationManager,
@@ -104,7 +111,13 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [0, 1], cols: [], rowSelectionOrder: [0, 1] },
-            tagSelection: newTagSelectionState({}),
+            tagSelection: newTagSelectionState({
+                tagDefinitionsByIdPersistent: {
+                    [displayTxtColumnId]: newRemote(displayTextColumn),
+                    [justificationColumnId]: newRemote(justificationColumn),
+                    [idTagDefPersistent]: newRemote(tagDefTest)
+                }
+            }),
             entityMergeRequests: { entityMergeRequests: newRemote([]) },
             entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
             user: newUserState({

@@ -36,7 +36,14 @@ import {
     newUserInfo,
     newUserState
 } from '../../../user/state'
-import { TableState, newTableState } from '../../state'
+import {
+    TableState,
+    displayTextColumn,
+    displayTxtColumnId,
+    justificationColumn,
+    justificationColumnId,
+    newTableState
+} from '../../state'
 import {
     NotificationManager,
     newNotificationManager,
@@ -279,6 +286,8 @@ export function renderWithProviders(
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
             tagSelection: newTagSelectionState({
                 tagDefinitionsByIdPersistent: {
+                    [displayTxtColumnId]: newRemote(displayTextColumn),
+                    [justificationColumnId]: newRemote(justificationColumn),
                     [idTagDefPersistent]: newRemote(tagDefTest),
                     [idTagDefPersistent1]: newRemote(tagDefTest1)
                 }
