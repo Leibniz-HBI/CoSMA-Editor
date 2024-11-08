@@ -147,6 +147,8 @@ const entities_test = [
         justificationTxt: justification1
     })
 ]
+const columnNameParent = 'column parent test'
+const idTagDefParentPersistent = 'column-id-parent-test'
 const columnNameTest = 'column name test'
 const idTagDefPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
@@ -161,15 +163,73 @@ const idUserTest1 = 'id-user-test-1'
 const tagDefTest: TagDefinition = newTagDefinition({
     namePath: [columnNameTest],
     idPersistent: idTagDefPersistent,
-    idParentPersistent: undefined,
+    idParentPersistent: idTagDefParentPersistent,
     columnType: TagType.String,
     curated: false,
     owner: userTest,
     version: 2,
     hidden: false
 })
+const tagDefParentTest = newTagDefinition({
+    namePath: [columnNameParent],
+    idPersistent: idTagDefParentPersistent,
+    columnType: TagType.Inner,
+    curated: false,
+    owner: userTest,
+    version: 3,
+    hidden: false
+})
 
 test('get entities success', async () => {
+    const fetchMock = jest.fn()
+    addEntitiesResponse(fetchMock)
+    addTagInstanceResponse(fetchMock)
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    await waitFor(() => {
+        screen.getByText(displayTxt0)
+        screen.getByText(displayTxt1)
+        screen.getByText(value0)
+        screen.getByText(value1)
+    })
+    const state = store.getState()
+    expect(state.notification.notificationList).toEqual([])
+    expect(state.table).toEqual(
+        newTableState({
+            entities: entities_test,
+            isLoading: false,
+            columnIndices: {
+                display_txt_id: 0,
+                [idTagDefPersistent]: 1
+            },
+            columnStates: [displayTxtColumnState, tagDefColumnState]
+        })
+    )
+    expect(fetchMock.mock.calls).toEqual([
+        [
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            {
+                credentials: 'include',
+                body: JSON.stringify({ offset: 0, limit: 500 }),
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            {
+                credentials: 'include',
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_tag_definition_persistent: idTagDefPersistent,
+                    offset: 0,
+                    limit: 5000
+                })
+            }
+        ]
+    ])
+})
+test('get entities and inner tag success', async () => {
     const fetchMock = jest.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
@@ -485,7 +545,8 @@ export function renderWithProviders(
                 tagDefinitionsByIdPersistent: {
                     [displayTxtColumnId]: newRemote(displayTextColumn),
                     [justificationColumnId]: newRemote(justificationColumn),
-                    [idTagDefPersistent]: newRemote(tagDefTest)
+                    [idTagDefPersistent]: newRemote(tagDefTest),
+                    [idTagDefParentPersistent]: newRemote(tagDefParentTest)
                 }
             }),
             user: newUserState({
