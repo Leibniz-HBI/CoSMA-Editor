@@ -25,6 +25,7 @@ describe('user reducer', () => {
             isRegistering: false,
             registrationErrorState: undefined,
             showRegistration: false,
+            userInfoByIdPersistent: {},
             userSearchResults: newRemote([])
         })
     })

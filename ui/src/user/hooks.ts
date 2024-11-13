@@ -1,9 +1,16 @@
 import { UserInfo } from './state'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectUser, selectUserInfo } from './selectors'
-import { login, refresh, registration } from './thunks'
+import {
+    makeSelectUserInfoByIdPersistent,
+    selectUser,
+    selectUserInfo
+} from './selectors'
+import { getUserInfoThunk, login, refresh, registration } from './thunks'
 import { loginSuccess, logout, toggleRegistration } from './slice'
-import { AppDispatch } from '../store'
+import { AppDispatch, RootState } from '../store'
+import { useEffect, useMemo } from 'react'
+import { useAppDispatch, useAppSelector } from '../hooks'
+import { newRemote } from '../util/state'
 
 export type UserInfoWithCallbacks = {
     userInfo: UserInfo
@@ -80,4 +87,22 @@ export function useLogin(): UserProps {
         },
         toggleRegistrationCallback: () => dispatch(toggleRegistration())
     }
+}
+
+export function useUserInfo(idUserPersistent: string) {
+    const selectUserInfoByIdPersistent = useMemo(makeSelectUserInfoByIdPersistent, [])
+    const selectPermissionList = (state: RootState) =>
+        selectUserInfoByIdPersistent(state, idUserPersistent)
+    const userInfo = useAppSelector(selectPermissionList)
+    const dispatch = useAppDispatch()
+    useEffect(() => {
+        if (
+            userInfo === undefined ||
+            (userInfo.value === undefined && !userInfo.isLoading)
+        ) {
+            console.log(userInfo)
+            dispatch(getUserInfoThunk(idUserPersistent))
+        }
+    })
+    return userInfo ?? newRemote(undefined)
 }

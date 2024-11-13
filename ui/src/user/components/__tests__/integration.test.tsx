@@ -315,6 +315,7 @@ describe('registration', () => {
                 isLoggingIn: false,
                 isRefreshing: false,
                 isRegistering: false,
+                userInfoByIdPersistent: {},
                 userSearchResults: newRemote([])
             })
             const notifications = state.notification.notificationList
@@ -345,6 +346,7 @@ describe('registration', () => {
                 isLoggingIn: false,
                 isRefreshing: false,
                 isRegistering: false,
+                userInfoByIdPersistent: {},
                 userSearchResults: newRemote([])
             })
             const notifications = state.notification.notificationList

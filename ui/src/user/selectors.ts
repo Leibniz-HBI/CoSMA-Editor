@@ -27,3 +27,19 @@ export const selectSearchResults = createSelector(
     selectUser,
     (userState) => userState.userSearchResults
 )
+
+const selectUserInfoByIdPersistentMap = createSelector(
+    selectUser,
+    (state) => state.userInfoByIdPersistent
+)
+
+export const makeSelectUserInfoByIdPersistent = () => {
+    const selector = createSelector(
+        [
+            selectUserInfoByIdPersistentMap,
+            (_state, idPersistent: string) => idPersistent
+        ],
+        (state, idPersistent) => state[idPersistent]
+    )
+    return selector
+}

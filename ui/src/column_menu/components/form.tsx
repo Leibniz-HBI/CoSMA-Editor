@@ -58,6 +58,14 @@ export function TagCreateForm({
         <TabView
             tabList={[
                 { name: 'Edit', component: createForm },
+                // {
+                //     name: 'Permissions',
+                //     component: (
+                //         <PermissionManager
+                //             idResourcePersistent={existingTagDefinition.idPersistent}
+                //         />
+                //     )
+                // },
                 {
                     name: 'Delete',
                     component: <TagDeleteForm tagDefinition={existingTagDefinition} />

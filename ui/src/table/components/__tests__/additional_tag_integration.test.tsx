@@ -12,13 +12,7 @@ jest.mock('@glideapps/glide-data-grid', () => {
     }
 })
 import { Button } from 'react-bootstrap'
-import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
-} from '../../../column_menu/state'
+import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
@@ -61,8 +55,7 @@ import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
 import { tagSelectionSlice } from '../../../column_menu/slice'
-import { useAppDispatch, useAppSelector } from '../../../hooks'
-import { selectColumnIndices } from '../../selectors'
+import { useAppDispatch } from '../../../hooks'
 
 test('get descendant tag success', async () => {
     const fetchMock = jest.fn()

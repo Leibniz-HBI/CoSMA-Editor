@@ -1,9 +1,16 @@
-import { useLayoutEffect } from 'react'
+import { ChangeEvent, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useUserPermissionGroup } from './hooks'
 import { CosmaeLoading } from '../../util/components/misc'
-import { Col, FormCheck, ListGroup, Row } from 'react-bootstrap'
-import { UserInfo, UserPermissionGroup } from '../state'
+import { Col, FormCheck, ListGroup, Overlay, Row } from 'react-bootstrap'
+import { PublicUserInfo, UserInfo, UserPermissionGroup } from '../state'
 import { Remote } from '../../util/state'
+import { debounce } from 'debounce'
+import { AppDispatch } from '../../store'
+import { useAppDispatch, useAppSelector } from '../../hooks'
+import { FormField } from '../../util/form'
+import { selectSearchResults } from '../selectors'
+import { userSearch } from '../thunks'
+import { userSearchClear } from '../slice'
 export function UserPermissionGroupComponent() {
     const {
         userInfoList,
@@ -120,5 +127,124 @@ export function UserPermissionGroupForm({
                 ))}
             </Row>
         </>
+    )
+}
+const debouncedSearchDispatch = debounce(
+    (searchTerm: string, dispatch: AppDispatch) => dispatch(userSearch(searchTerm)),
+    400
+)
+
+const debouncedSearchDispatchThunk = (searchTerm: string) => (dispatch: AppDispatch) =>
+    debouncedSearchDispatch(searchTerm, dispatch)
+
+export function UserSearch({
+    onSearchResultClicked,
+    resultsClassName = ''
+}: {
+    onSearchResultClicked: (idUserPersistent: string) => void
+    resultsClassName?: string
+}) {
+    const [searchString, setSearchString] = useState('')
+    const dispatch = useAppDispatch()
+    useEffect(() => {
+        return () => {
+            dispatch(userSearchClear())
+        }
+    })
+    const target = useRef(null)
+
+    return (
+        <Col>
+            <FormField
+                label="Search User"
+                name="search-user"
+                value={searchString}
+                handleChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    const searchTerm = e.target.value
+                    setSearchString(searchTerm)
+                    if (searchTerm) {
+                        debouncedSearchDispatchThunk(searchTerm)(dispatch)
+                    } else {
+                        dispatch(userSearchClear())
+                    }
+                }}
+                ref={target}
+            />
+            <Overlay target={target} show={searchString != ''} placement="bottom-start">
+                {({
+                    placement: _placement,
+                    arrowProps: _arrowProps,
+                    show: _show,
+                    popper: _popper,
+                    hasDoneInitialMeasure: _hasDoneInitialMeasure,
+                    ...props
+                }) => {
+                    return (
+                        <Row
+                            {...props}
+                            style={{
+                                position: 'relative',
+                                paddingTop: '4px',
+                                paddingLeft: '12px',
+                                ...props.style,
+                                zIndex: 9000
+                            }}
+                        >
+                            <div className={resultsClassName}>
+                                <div className="h-100 overflow-y-scroll scroll-gutter">
+                                    <UserSearchResults
+                                        onSearchResultClicked={(idUserPersistent) => {
+                                            onSearchResultClicked(idUserPersistent)
+                                            dispatch(userSearchClear())
+                                            setSearchString('')
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </Row>
+                    )
+                }}
+            </Overlay>
+        </Col>
+    )
+}
+
+export function UserSearchResults({
+    onSearchResultClicked,
+    className = ''
+}: {
+    onSearchResultClicked: (idEntityPersistent: string) => void
+    className?: string
+}) {
+    const searchResults = useAppSelector(selectSearchResults)
+    let items = [<ListGroup.Item key={-2}>No entities found</ListGroup.Item>]
+    if (searchResults.value?.length > 0) {
+        console.log(searchResults)
+        items = searchResults?.value.map((result, idx) => (
+            <UserSearchResultItem
+                result={result}
+                onSearchResultClicked={onSearchResultClicked}
+                key={idx}
+            />
+        )) ?? [<ListGroup.Item key={-1} />]
+    }
+    return <ListGroup className={className}>{items}</ListGroup>
+}
+
+export function UserSearchResultItem({
+    result,
+    onSearchResultClicked
+}: {
+    result: PublicUserInfo
+    onSearchResultClicked: (idUserPersistent: string) => void
+}) {
+    console.log(result.username)
+    return (
+        <ListGroup.Item
+            className="z-toast fg-primary"
+            onClick={() => onSearchResultClicked(result.idPersistent)}
+        >
+            <Row className="">{result.username}</Row>
+        </ListGroup.Item>
     )
 }

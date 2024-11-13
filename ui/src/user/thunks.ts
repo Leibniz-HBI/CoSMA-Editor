@@ -1,5 +1,8 @@
 import { AppDispatch } from '../store'
 import {
+    getUserInfoError,
+    getUserInfoStart,
+    getUserInfoSuccess,
     loginError,
     loginStart,
     loginSuccess,
@@ -247,6 +250,29 @@ export function userSearch(searchTerm: string): ThunkWithFetch<void> {
         }
     }
 }
+
+export function getUserInfoThunk(idUserPersistent: string): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(getUserInfoStart(idUserPersistent))
+        try {
+            const rsp = await fetch(config.api_path + `/user/${idUserPersistent}`, {
+                credentials: 'include'
+            })
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const user = parsePublicUserInfoFromJson(json)
+                dispatch(getUserInfoSuccess(user))
+            } else {
+                dispatch(getUserInfoError(idUserPersistent))
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(getUserInfoError(idUserPersistent))
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+
 export function remoteUserProfileColumnAppend(
     idTagPersistent: string
 ): ThunkWithFetch<void> {

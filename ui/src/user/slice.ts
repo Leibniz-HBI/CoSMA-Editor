@@ -9,6 +9,7 @@ const initialState: UserState = {
     isLoggingIn: false,
     isRegistering: false,
     isRefreshing: false,
+    userInfoByIdPersistent: {},
     userSearchResults: newRemote([])
 }
 
@@ -16,6 +17,17 @@ export const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
+        getUserInfoError(state: UserState, action: PayloadAction<string>) {
+            state.userInfoByIdPersistent[action.payload].isLoading = false
+        },
+        getUserInfoStart(state: UserState, action: PayloadAction<string>) {
+            state.userInfoByIdPersistent[action.payload] = newRemote(undefined, true)
+        },
+        getUserInfoSuccess(state: UserState, action: PayloadAction<PublicUserInfo>) {
+            state.userInfoByIdPersistent[action.payload.idPersistent] = newRemote(
+                action.payload
+            )
+        },
         refreshStart: (state: UserState) => {
             state.isRefreshing = true
         },
@@ -95,6 +107,9 @@ export const userSlice = createSlice({
 })
 
 export const {
+    getUserInfoError,
+    getUserInfoStart,
+    getUserInfoSuccess,
     loginStart,
     loginError,
     loginSuccess,

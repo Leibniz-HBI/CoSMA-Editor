@@ -16,6 +16,7 @@ import { commentsReducer } from './comments/slice'
 import { tableReducer } from './table/slice'
 import { editSessionReducer } from './session/slice'
 import { entityDetailsReducer } from './entity/slice'
+import { permissionsReducer } from './permissions/slice'
 
 const rootReducer = combineReducers({
     notification: notificationReducer,
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
     displayTxtManagement: displayTxtManagementReducer,
     comments: commentsReducer,
     table: tableReducer,
+    permissions: permissionsReducer,
     editSession: editSessionReducer
 })
 
