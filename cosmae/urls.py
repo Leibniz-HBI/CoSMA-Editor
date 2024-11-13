@@ -16,6 +16,7 @@ from cosmae.edit_session.api import router as edit_session_router
 from cosmae.entity.api import router as person_router
 from cosmae.management import router as management_router
 from cosmae.merge_request.router import router
+from cosmae.permissions.api import router as permission_router
 from cosmae.tag.api.router import router as tag_router
 from cosmae.user.api import router as user_router
 from cosmae.util.auth import cosmae_auth
@@ -46,6 +47,7 @@ ninja_api.add_router("merge_requests", router, auth=cosmae_auth)
 ninja_api.add_router("manage", management_router, auth=cosmae_auth)
 ninja_api.add_router("comments", comment_router, auth=cosmae_auth)
 ninja_api.add_router("edit_sessions", edit_session_router, auth=cosmae_auth)
+ninja_api.add_router("permissions", permission_router, auth=cosmae_auth)
 
 
 class LoginRequest(Schema):

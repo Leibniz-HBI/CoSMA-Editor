@@ -73,3 +73,11 @@ def post_edit_session(url, id_edit_session_persistent, cookies=None):
         cookies=cookies,
         timeout=900,
     )
+
+
+def get_details(url, id_user_persistent, cookies=None):
+    return requests.get(
+        url + "/cosmae/api/user/" + id_user_persistent,
+        cookies=cookies,
+        timeout=900,
+    )

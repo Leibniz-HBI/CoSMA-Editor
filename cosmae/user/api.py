@@ -25,6 +25,7 @@ from cosmae.user.models_api.login import (
     RegisterRequest,
     SearchResponse,
 )
+from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.user.models_conversion import (
     permission_group_db_to_api,
     user_db_to_public_user_info,
@@ -340,6 +341,33 @@ def get_search(request: HttpRequest, username: str):
         return 401, ApiError(msg="not authenticated")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not search users.")
+
+
+@router.get(
+    "{id_user_persistent}",
+    response={
+        200: PublicUserInfo,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def get_user(request: HttpRequest, id_user_persistent: str):
+    "Get information of a single user."
+    try:
+        user_request = check_user(request)
+        if user_request.permission_group == CosmaeUser.APPLICANT:
+            return 403, ApiError(msg="Insufficient permissions")
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    try:
+        user = CosmaeUser.objects.filter(id_persistent=id_user_persistent).get()
+        return 200, user_db_to_public_user_info(user)
+    except CosmaeUser.DoesNotExist:
+        return 404, ApiError(msg="User does not exist")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="could not get user info")
 
 
 permission_group_api_to_db = {
