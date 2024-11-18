@@ -65,6 +65,7 @@ export const contributionSlice = createSlice({
         ) {
             state.selectedContribution.value = action.payload
             state.selectedContribution.isLoading = false
+            state.showAddContribution = false
         },
         clearSelectedContribution(state: ContributionState) {
             state.selectedContribution.value = undefined
