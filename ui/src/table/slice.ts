@@ -264,6 +264,11 @@ const tableSlice = createSlice({
         },
         submitEntityJustificationError(state: TableState) {
             state.showEntityJustificationHistoryForIdPersistent.isLoading = false
+        },
+        clearTable(state: TableState) {
+            state.columnStates = []
+            state.columnIndices = {}
+            state.entities = undefined
         }
     }
 })
@@ -327,5 +332,6 @@ export const {
     hideEntityJustificationHistory,
     submitEntityJustificationStart,
     submitEntityJustificationError,
-    submitEntityJustificationSuccess
+    submitEntityJustificationSuccess,
+    clearTable
 } = tableSlice.actions

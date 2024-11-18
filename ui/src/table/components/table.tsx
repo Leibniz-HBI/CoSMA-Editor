@@ -36,6 +36,7 @@ import {
 import { selectUserInfo } from '../../user/selectors'
 import {
     changeColumnIndex,
+    clearTable,
     hideHeaderMenu,
     setColumnWidth,
     setLoadDataError,
@@ -136,6 +137,9 @@ export function RemoteDataTable() {
                     await dispatch(getColumnAsync(col))
                 })
             })
+            return () => {
+                dispatch(clearTable())
+            }
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []
