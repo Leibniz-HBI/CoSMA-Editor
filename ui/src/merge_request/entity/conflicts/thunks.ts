@@ -5,8 +5,11 @@ import { addError, addSuccessVanish } from '../../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../../util/exception'
 import { RemoteInterface, newRemote } from '../../../util/state'
 import { ThunkWithFetch } from '../../../util/type'
-import { parseTagInstanceFromJson } from '../../conflicts/thunks'
-import { TagInstance } from '../../conflicts/state'
+import {
+    parseTagInstanceFromJson,
+    replacementStateJsonToAppDict
+} from '../../conflicts/thunks'
+import { ReplacementState, TagInstance } from '../../conflicts/state'
 import { EntityMergeRequest } from '../state'
 import { parseEntityMergeRequestFromJson } from '../thunks'
 import {
@@ -168,7 +171,8 @@ export function resolveEntityConflict({
     entityOrigin,
     tagInstanceDestination,
     entityDestination,
-    replace
+    replacementState,
+    replacementValue
 }: {
     idMergeRequestPersistent: string
     tagDefinition: TagDefinition
@@ -176,7 +180,8 @@ export function resolveEntityConflict({
     entityOrigin: Entity
     tagInstanceDestination?: TagInstance
     entityDestination: Entity
-    replace: boolean
+    replacementState?: ReplacementState
+    replacementValue: string | undefined
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(resolveEntityConflictStart(tagDefinition.idPersistent))
@@ -202,13 +207,18 @@ export function resolveEntityConflict({
                             entityDestination.idPersistent,
                         id_tag_instance_destination_persistent:
                             tagInstanceDestination?.idPersistent,
-                        replace: replace
+                        replacement_state: replacementState,
+                        replacement_value: replacementValue
                     })
                 }
             )
             if (rsp.status == 200) {
                 dispatch(
-                    resolveEntityConflictSuccess([tagDefinition.idPersistent, replace])
+                    resolveEntityConflictSuccess({
+                        idTagDefinitionPersistent: tagDefinition.idPersistent,
+                        replacementState,
+                        replacementValue
+                    })
                 )
             } else {
                 const json = await rsp.json()
@@ -289,7 +299,9 @@ function parseEntityMergeRequestConflictFromJson(conflictJson: {
             conflictJson['tag_instance_origin']
         ),
         tagInstanceDestination,
-        replace: conflictJson['replace'] ?? undefined
+        replacementState:
+            replacementStateJsonToAppDict[conflictJson['replacement_state']],
+        replacementValue: conflictJson['replacement_value'] ?? undefined
     })
 }
 

@@ -1,5 +1,5 @@
 import { RemoteInterface, newRemote } from '../../../util/state'
-import { TagInstance } from '../../conflicts/state'
+import { TagInstance, ReplacementState } from '../../conflicts/state'
 import { EntityMergeRequest } from '../state'
 
 export interface TagDefinition {
@@ -14,25 +14,29 @@ export interface EntityMergeRequestConflict {
     tagDefinition: TagDefinition
     tagInstanceOrigin: TagInstance
     tagInstanceDestination?: TagInstance
-    replace: boolean | undefined
+    replacementState?: ReplacementState
+    replacementValue?: string
 }
 
 export function newEntityMergeRequestConflict({
     tagDefinition,
     tagInstanceOrigin,
     tagInstanceDestination = undefined,
-    replace = undefined
+    replacementState,
+    replacementValue = undefined
 }: {
     tagDefinition: TagDefinition
     tagInstanceOrigin: TagInstance
     tagInstanceDestination?: TagInstance
-    replace?: boolean | undefined
+    replacementState?: ReplacementState
+    replacementValue?: string
 }): EntityMergeRequestConflict {
     return {
         tagDefinition,
         tagInstanceOrigin,
         tagInstanceDestination,
-        replace
+        replacementState,
+        replacementValue
     }
 }
 

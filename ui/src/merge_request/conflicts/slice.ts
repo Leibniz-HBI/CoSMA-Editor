@@ -3,7 +3,8 @@ import {
     MergeRequestConflict,
     MergeRequestConflictResolutionState,
     newMergeRequestConflictResolutionState,
-    newMergeRequestConflictsByState
+    newMergeRequestConflictsByState,
+    ReplacementState
 } from './state'
 import { newRemote, RemoteInterface } from '../../util/state'
 import { MergeRequest } from '../state'
@@ -51,13 +52,18 @@ const tagMergeRequestConflictsSlice = createSlice({
         },
         resolveConflictSuccess: (
             state: MergeRequestConflictResolutionState,
-            action: PayloadAction<{ idEntityPersistent: string; replace: boolean }>
+            action: PayloadAction<{
+                idEntityPersistent: string
+                replacementState: ReplacementState | undefined
+                replacementValue: string | undefined
+            }>
         ) => {
             processConflicts(
                 state,
                 (conflict) => {
                     conflict.isLoading = false
-                    conflict.value.replace = action.payload.replace
+                    conflict.value.replacementState = action.payload.replacementState
+                    conflict.value.replacementValue = action.payload.replacementValue
                     return true
                 },
                 action.payload.idEntityPersistent

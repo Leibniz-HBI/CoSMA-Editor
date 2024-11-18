@@ -13,12 +13,12 @@ import {
     Row,
     Tooltip
 } from 'react-bootstrap'
-import { EntityMergeRequestConflict } from './state'
+import { EntityMergeRequestConflict, TagDefinition } from './state'
 import { EntityMergeRequest } from '../state'
 import { RemoteInterface } from '../../../util/state'
 import { TagDefinitionNamePath } from '../../../column_menu/components/misc'
 import { ChoiceButton, RemoteTriggerButton } from '../../../util/components/misc'
-import { useEffect } from 'react'
+import { ChangeEvent, useEffect, useMemo } from 'react'
 import { AppDispatch } from '../../../store'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
 import {
@@ -31,6 +31,12 @@ import {
 import { useLoaderData } from 'react-router-dom'
 import { clearEntityMergeState } from './slice'
 import { TagType } from '../../../column_menu/state'
+import { ResolutionFormArgs } from '../../conflicts/components'
+import { ReplacementState, TagInstance } from '../../conflicts/state'
+import { Entity } from '../../../entity/state'
+import { Formik } from 'formik'
+import { debounce } from 'debounce'
+import { FormField } from '../../../util/form'
 
 export function EntityMergeRequestConflictView() {
     const idMergeRequestPersistent = useLoaderData() as string
@@ -48,6 +54,16 @@ export function EntityMergeRequestConflictView() {
             }}
         />
     )
+}
+
+type ResolveEntityConflictArg = {
+    tagDefinition: TagDefinition
+    tagInstanceOrigin: TagInstance
+    entityOrigin: Entity
+    tagInstanceDestination?: TagInstance
+    entityDestination: Entity
+    replacementState?: ReplacementState
+    replacementValue: string | undefined
 }
 
 export function EntityMergeRequestConflictComponent({
@@ -78,6 +94,28 @@ export function EntityMergeRequestConflictComponent({
         mergeRequestValue === undefined
     ) {
         return <div className=" shimmer" />
+    }
+    const resolveConflictCallback = ({
+        tagDefinition,
+        tagInstanceOrigin,
+        entityOrigin,
+        tagInstanceDestination,
+        entityDestination,
+        replacementState,
+        replacementValue
+    }: ResolveEntityConflictArg) => {
+        dispatch(
+            resolveEntityConflict({
+                idMergeRequestPersistent: mergeRequestValue.idPersistent,
+                tagDefinition: tagDefinition,
+                tagInstanceOrigin,
+                entityOrigin,
+                tagInstanceDestination,
+                entityDestination,
+                replacementState,
+                replacementValue
+            })
+        )
     }
     return (
         <Row className="h-100">
@@ -122,6 +160,9 @@ export function EntityMergeRequestConflictComponent({
                                             <EntityMergeRequestConflictListItem
                                                 conflict={conflict}
                                                 mergeRequest={mergeRequestValue}
+                                                resolveConflictCallback={
+                                                    resolveConflictCallback
+                                                }
                                                 key={idx}
                                             />
                                         ))}
@@ -141,6 +182,9 @@ export function EntityMergeRequestConflictComponent({
                                                 conflict={conflict}
                                                 key={idx}
                                                 mergeRequest={mergeRequestValue}
+                                                resolveConflictCallback={
+                                                    resolveConflictCallback
+                                                }
                                             />
                                         )
                                     )}
@@ -159,6 +203,9 @@ export function EntityMergeRequestConflictComponent({
                                                 conflict={conflict}
                                                 key={idx}
                                                 mergeRequest={mergeRequestValue}
+                                                resolveConflictCallback={
+                                                    resolveConflictCallback
+                                                }
                                             />
                                         )
                                     )}
@@ -255,42 +302,37 @@ export function EntityMergeRequestConflictHeader({
     )
 }
 
+function mkDebouncedResolveCallback() {
+    return debounce(
+        (
+            args: ResolveEntityConflictArg,
+            callback: (args: ResolveEntityConflictArg) => void
+        ) => callback(args),
+        400
+    )
+}
+
 export function EntityMergeRequestConflictListItem({
     conflict,
-    mergeRequest
+    mergeRequest,
+    resolveConflictCallback
 }: {
     conflict: RemoteInterface<EntityMergeRequestConflict>
     mergeRequest: EntityMergeRequest
+    resolveConflictCallback: (args: ResolveEntityConflictArg) => void
 }) {
-    const dispatch: AppDispatch = useDispatch()
-    let fwKeep = 'fw-normal',
-        fwReplace = 'fw-normal',
-        bgKeep = '',
-        bgReplace = ''
-    if (conflict.value.replace == true) {
-        fwReplace = 'fw-bold'
-        bgReplace = 'bg-primary-subtle'
-    } else if (conflict.value.replace == false) {
-        fwKeep = 'fw-bold'
-        bgKeep = 'bg-primary-subtle'
-    }
-    let destinationInstanceValue = conflict.value.tagInstanceDestination?.value,
-        destinationStyle = 'fst-normal'
-    if (destinationInstanceValue === undefined) {
-        destinationStyle = 'fst-italic'
-        destinationInstanceValue = ''
-    }
-    const destinationSpan = (
-        <span className={destinationStyle}>{destinationInstanceValue}</span>
-    )
+    const debouncedCallback = useMemo(mkDebouncedResolveCallback, [
+        conflict.value.tagInstanceOrigin.idPersistent,
+        conflict.value.tagInstanceDestination?.idPersistent
+    ])
     return (
         <ListGroup.Item className="mb-1">
-            <Col>
+            <Col key="tag-column">
                 <Row key="tag-def-row">
-                    <Col key="entity-description" xs="auto">
+                    <Col key="tag-description" xs="auto">
                         Tag Definition:
                     </Col>
-                    <Col className="fw-bold text-start">
+                    <Col className="fw-bold text-start" key="tag-name-path">
                         <TagDefinitionNamePath
                             tagDefinition={{
                                 ...conflict.value.tagDefinition,
@@ -301,81 +343,162 @@ export function EntityMergeRequestConflictListItem({
                         />
                     </Col>
                 </Row>
-                <Row key="tag-instance-row">
-                    <Col>
-                        <Row key="existing-row">
-                            <Col xs="auto" key="button-column">
-                                <ChoiceButton
-                                    className="w-200px mb-1"
-                                    label="Keep Existing Value"
-                                    checked={conflict.value.replace == false}
-                                    onClick={() =>
-                                        dispatch(
-                                            resolveEntityConflict({
-                                                idMergeRequestPersistent:
-                                                    mergeRequest.idPersistent,
-                                                tagDefinition:
-                                                    conflict.value.tagDefinition,
-                                                tagInstanceOrigin:
-                                                    conflict.value.tagInstanceOrigin,
-                                                entityOrigin: mergeRequest.entityOrigin,
-                                                tagInstanceDestination:
-                                                    conflict.value
-                                                        .tagInstanceDestination,
-                                                entityDestination:
-                                                    mergeRequest.entityDestination,
-                                                replace: false
-                                            })
-                                        )
-                                    }
-                                />
-                            </Col>
-                            <Col
-                                className={
-                                    [fwKeep, bgKeep].join(' ') +
-                                    ' border-start border-end border-top'
-                                }
-                            >
-                                {destinationSpan}
-                            </Col>
-                        </Row>
-                        <Row key="replace-row">
-                            <Col xs="auto" key="button-column">
-                                <ChoiceButton
-                                    className="w-200px mt-1"
-                                    label="Use new Value"
-                                    checked={conflict.value.replace == true}
-                                    onClick={() =>
-                                        dispatch(
-                                            resolveEntityConflict({
-                                                idMergeRequestPersistent:
-                                                    mergeRequest.idPersistent,
-                                                tagDefinition:
-                                                    conflict.value.tagDefinition,
-                                                tagInstanceOrigin:
-                                                    conflict.value.tagInstanceOrigin,
-                                                entityOrigin: mergeRequest.entityOrigin,
-                                                tagInstanceDestination:
-                                                    conflict.value
-                                                        .tagInstanceDestination,
-                                                entityDestination:
-                                                    mergeRequest.entityDestination,
-                                                replace: true
-                                            })
-                                        )
-                                    }
-                                />
-                            </Col>
-                            <Col
-                                className={[fwReplace, bgReplace].join(' ') + ' border'}
-                                key="value-column"
-                            >
-                                {conflict.value.tagInstanceOrigin.value}
-                            </Col>
-                        </Row>
+                <Formik
+                    initialValues={{
+                        replacementState: conflict.value.replacementState,
+                        replacementValue: conflict.value.replacementValue
+                    }}
+                    // eslint-disable-next-line @typescript-eslint/no-empty-function
+                    onSubmit={(formValues) => {
+                        debouncedCallback(
+                            {
+                                tagDefinition: conflict.value.tagDefinition,
+                                tagInstanceOrigin: conflict.value.tagInstanceOrigin,
+                                entityOrigin: mergeRequest.entityOrigin,
+                                tagInstanceDestination:
+                                    conflict.value.tagInstanceDestination,
+                                entityDestination: mergeRequest.entityDestination,
+                                replacementValue: formValues.replacementValue,
+                                replacementState: formValues.replacementState
+                            },
+                            resolveConflictCallback
+                        )
+                    }}
+                >
+                    {({ setValues, values, submitForm }) => (
+                        <ResolutionFormBody
+                            values={values}
+                            setValues={setValues}
+                            submitForm={submitForm}
+                            keepValue={conflict.value?.tagInstanceDestination?.value}
+                            replaceValue={conflict.value?.tagInstanceOrigin?.value}
+                        />
+                    )}
+                </Formik>
+            </Col>
+        </ListGroup.Item>
+    )
+}
+
+function ResolutionFormBody({
+    values,
+    setValues,
+    submitForm,
+    keepValue,
+    replaceValue
+}: {
+    values: ResolutionFormArgs
+    setValues: (values: ResolutionFormArgs) => void
+    submitForm: () => void
+    keepValue?: string
+    replaceValue?: string
+}) {
+    let fwKeep = 'fw-normal',
+        fwReplace = 'fw-normal',
+        fwReplacementValue = 'fw-normal',
+        bgKeep = '',
+        bgReplace = '',
+        bgReplacementValue = ''
+    if (values.replacementState === ReplacementState.REPLACE) {
+        fwReplace = 'fw-bold'
+        bgReplace = 'bg-primary-subtle'
+    } else if (values.replacementState === ReplacementState.VALUE) {
+        fwReplacementValue = 'fw-bold'
+        bgReplacementValue = 'bg-primary-subtle'
+    } else if (values.replacementState === ReplacementState.KEEP) {
+        fwKeep = 'fw-bold'
+        bgKeep = 'bg-primary-subtle'
+    }
+    let keepStyle = 'fst-normal'
+    let keepValueDisplay = keepValue
+    if (keepValue === undefined) {
+        keepStyle = 'fst-italic'
+        keepValueDisplay = ''
+    }
+    const keepValueSpan = <span className={keepStyle}>{keepValueDisplay}</span>
+    return (
+        <Row key="tag-instance-row">
+            <Col>
+                <Row key="existing-row">
+                    <Col xs="auto" key="button-column">
+                        <ChoiceButton
+                            className="w-200px mb-1"
+                            label="Keep Existing Value"
+                            checked={values.replacementState === ReplacementState.KEEP}
+                            onClick={() => {
+                                setValues({
+                                    ...values,
+                                    replacementState: ReplacementState.KEEP
+                                })
+                                submitForm()
+                            }}
+                        />
+                    </Col>
+                    <Col
+                        className={
+                            [fwKeep, bgKeep].join(' ') +
+                            ' border-start border-end border-top'
+                        }
+                    >
+                        {keepValueSpan}
+                    </Col>
+                </Row>
+                <Row key="replace-row">
+                    <Col xs="auto" key="button-column">
+                        <ChoiceButton
+                            className="w-200px mt-1"
+                            label="Use new Value"
+                            checked={
+                                values.replacementState === ReplacementState.REPLACE
+                            }
+                            onClick={() =>
+                                setValues({
+                                    ...values,
+                                    replacementState: ReplacementState.REPLACE
+                                })
+                            }
+                        />
+                    </Col>
+                    <Col
+                        className={[fwReplace, bgReplace].join(' ') + ' border'}
+                        key="value-column"
+                    >
+                        {replaceValue ?? ''}
+                    </Col>
+                </Row>
+                <Row key="replacement-value-row" className="pt-1">
+                    <Col xs="auto" key="button-column" className="mt-1">
+                        <ChoiceButton
+                            className="w-200px mt-1"
+                            label="Use Replacement Value"
+                            checked={values.replacementState === ReplacementState.VALUE}
+                            onClick={() => {
+                                setValues({
+                                    ...values,
+                                    replacementState: ReplacementState.VALUE,
+                                    replacementValue: values.replacementValue ?? ''
+                                })
+                                submitForm()
+                            }}
+                        />
+                    </Col>
+                    <Col className={[fwReplacementValue].join(' ')} key="value-column">
+                        <FormField
+                            value={values.replacementValue ?? ''}
+                            label="Replacement Value"
+                            name="replacement-value"
+                            className={bgReplacementValue}
+                            handleChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                setValues({
+                                    ...values,
+                                    replacementValue: e.target.value
+                                })
+                                submitForm()
+                            }}
+                        />
                     </Col>
                 </Row>
             </Col>
-        </ListGroup.Item>
+        </Row>
     )
 }

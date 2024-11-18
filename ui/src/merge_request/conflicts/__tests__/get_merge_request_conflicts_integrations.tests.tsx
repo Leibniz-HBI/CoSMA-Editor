@@ -28,11 +28,14 @@ import {
     newMergeRequestConflict,
     newMergeRequestConflictResolutionState,
     newMergeRequestConflictsByState,
-    newTagInstance
+    newTagInstance,
+    ReplacementState
 } from '../state'
 import { tagMergeRequestConflictsReducer } from '../slice'
 import { newEntity } from '../../../entity/state'
 import { MergeRequestStep, newMergeRequest } from '../../state'
+import { act } from 'react-dom/test-utils'
+import userEvent from '@testing-library/user-event'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -81,6 +84,7 @@ function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
         )
     }
 }
+const replacementValue = 'test replacement value'
 const tagDefOrigin = newTagDefinition({
     namePath: ['tag def origin test'],
     idPersistent: 'id-tag-def-origin-test',
@@ -167,7 +171,7 @@ const sharedConflictJson = {
         version: sharedConflict.value.entity.version,
         disabled: false
     },
-    replace: sharedConflict.value.replace
+    replacement_state: sharedConflict.value.replacementState
 }
 const sharedConflictJson1 = {
     tag_instance_origin: {
@@ -187,7 +191,7 @@ const sharedConflictJson1 = {
         version: sharedConflict1.value.entity.version,
         disabled: false
     },
-    replace: sharedConflict1.value.replace
+    replacement_state: sharedConflict1.value.replacementState
 }
 const conflicts = [
     newRemote(
@@ -286,6 +290,7 @@ describe('resolve conflicts', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [
             [200, {}],
+            [200, {}],
             [200, {}]
         ])
         const { container, store } = renderWithProviders(
@@ -301,7 +306,9 @@ describe('resolve conflicts', () => {
         expect(keepButtons.length).toEqual(6)
         const replaceButtons = screen.getAllByRole('button', { name: 'Use New Value' })
         expect(replaceButtons.length).toEqual(6)
-        replaceButtons[1].click()
+        act(() => {
+            replaceButtons[1].click()
+        })
         await waitFor(() => {
             expect(store.getState()).toEqual({
                 notification: newNotificationManager({}),
@@ -313,7 +320,7 @@ describe('resolve conflicts', () => {
                                 ...conflicts.slice(0, 1),
                                 newRemote({
                                     ...conflicts[1].value,
-                                    replace: true
+                                    replacementState: ReplacementState.REPLACE
                                 }),
                                 ...conflicts.slice(2)
                             ],
@@ -330,8 +337,55 @@ describe('resolve conflicts', () => {
                 name: 'Use New Value'
             })
             expect(replaceButtons.length).toEqual(5)
-            keepButtons[2].click()
+            const replacementValueButtons = screen.getAllByRole('button', {
+                name: 'Use Replacement Value'
+            })
+            expect(replacementValueButtons.length).toEqual(5)
+            act(() => {
+                keepButtons[2].click()
+            })
         })
+        await waitFor(async () => {
+            expect(store.getState()).toEqual({
+                notification: newNotificationManager({}),
+                tagMergeRequestConflicts: newMergeRequestConflictResolutionState({
+                    conflicts: newRemote(
+                        newMergeRequestConflictsByState({
+                            updated: updatedConflicts.slice(0, 1),
+                            conflicts: [
+                                ...conflicts.slice(0, 1),
+                                newRemote({
+                                    ...conflicts[1].value,
+                                    replacementState: ReplacementState.KEEP
+                                }),
+                                ...conflicts.slice(2)
+                            ],
+                            mergeRequest: mergeRequest
+                        })
+                    )
+                })
+            })
+        })
+        const user = userEvent.setup()
+        await waitFor(
+            async () => {
+                const keepButtons = screen.getAllByRole('button', {
+                    name: 'Keep Existing Value'
+                })
+                expect(keepButtons.length).toEqual(5)
+                const replaceButtons = screen.getAllByRole('button', {
+                    name: 'Use New Value'
+                })
+                expect(replaceButtons.length).toEqual(5)
+                const replacementValueForms = screen.getAllByRole('textbox')
+                expect(replacementValueForms.length).toEqual(5)
+                await act(async () => {
+                    await user.click(replacementValueForms[2])
+                    await user.paste(replacementValue)
+                })
+            },
+            { timeout: 2000 }
+        )
         const replaceBody = {
             id_entity_version: 81,
             id_tag_definition_origin_version: 84,
@@ -343,30 +397,71 @@ describe('resolve conflicts', () => {
             id_tag_instance_origin_persistent: 'id-instance-origin-test1',
             id_tag_definition_destination_persistent: 'id-tag-def-destination-test',
             id_tag_instance_destination_persistent: 'id-instance-destination-test1',
-            replace: true
+            replacement_state: 'REPLACE',
+            replacement_value: undefined
         }
-        expect(fetchMock.mock.calls).toEqual([
-            [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/conflicts',
-                { credentials: 'include' }
-            ],
-            [
+        await waitFor(async () => {
+            expect(fetchMock.mock.calls.length).toEqual(4)
+            expect(fetchMock.mock.calls).toEqual([
+                [
+                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/conflicts',
+                    { credentials: 'include' }
+                ],
+                [
+                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+                    {
+                        credentials: 'include',
+                        method: 'POST',
+                        body: JSON.stringify(replaceBody)
+                    }
+                ],
+                [
+                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+                    {
+                        credentials: 'include',
+                        method: 'POST',
+                        body: JSON.stringify({
+                            ...replaceBody,
+                            replacement_state: 'KEEP'
+                        })
+                    }
+                ],
+                [
+                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+                    {
+                        credentials: 'include',
+                        method: 'POST',
+                        body: JSON.stringify({
+                            ...replaceBody,
+                            replacement_state: 'KEEP',
+                            replacement_value: replacementValue
+                        })
+                    }
+                ]
+            ])
+            const replacementValueButtons = screen.getAllByRole('button', {
+                name: 'Use Replacement Value'
+            })
+            expect(replacementValueButtons.length).toEqual(5)
+            act(() => {
+                replacementValueButtons[2].click()
+            })
+        })
+        await waitFor(() => {
+            expect(fetchMock.mock.calls.length).toEqual(5)
+            expect(fetchMock.mock.calls[4]).toEqual([
                 'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
                 {
                     credentials: 'include',
                     method: 'POST',
-                    body: JSON.stringify(replaceBody)
+                    body: JSON.stringify({
+                        ...replaceBody,
+                        replacement_state: 'VALUE',
+                        replacement_value: replacementValue
+                    })
                 }
-            ],
-            [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
-                {
-                    credentials: 'include',
-                    method: 'POST',
-                    body: JSON.stringify({ ...replaceBody, replace: false })
-                }
-            ]
-        ])
+            ])
+        })
     })
     test('error', async () => {
         const fetchMock = jest.fn()

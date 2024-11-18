@@ -22,7 +22,10 @@ export const selectResolvedCount = createSelector(
         if (state.conflicts.value !== undefined) {
             numResolved = 0
             for (let idx = 0; idx < state.conflicts.value.conflicts.length; ++idx) {
-                if (state.conflicts.value.conflicts[idx].value?.replace !== undefined) {
+                if (
+                    state.conflicts.value.conflicts[idx].value?.replacementState !==
+                    undefined
+                ) {
                     numResolved++
                 }
             }

@@ -6,6 +6,7 @@ import {
 } from './state'
 import { EntityMergeRequest } from '../state'
 import { newRemote, RemoteInterface } from '../../../util/state'
+import { ReplacementState } from '../../conflicts/state'
 
 const initialState: EntityMergeRequestConflictsState = {
     conflicts: newRemote(undefined),
@@ -58,9 +59,14 @@ export const entityMergeRequestConflictSlice = createSlice({
         },
         resolveEntityConflictSuccess(
             state: EntityMergeRequestConflictsState,
-            action: PayloadAction<[string, boolean]>
+            action: PayloadAction<{
+                idTagDefinitionPersistent: string
+                replacementState: ReplacementState | undefined
+                replacementValue: string | undefined
+            }>
         ) {
-            const [idTagDefinitionPersistent, replace] = action.payload
+            const { idTagDefinitionPersistent, replacementState, replacementValue } =
+                action.payload
             const conflicts = state.conflicts.value
             if (conflicts === undefined) {
                 return
@@ -81,7 +87,8 @@ export const entityMergeRequestConflictSlice = createSlice({
                 idTagDefinitionPersistent,
                 (conflict) => {
                     conflict.isLoading = false
-                    conflict.value.replace = replace
+                    conflict.value.replacementState = replacementState
+                    conflict.value.replacementValue = replacementValue
                 }
             )
         },

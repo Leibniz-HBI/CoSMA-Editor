@@ -33,7 +33,7 @@ describe('user reducer', () => {
         const initialState = newUserState({})
         const expectedState = newUserState({
             userInfo: newUserInfo({
-                userName: userNameTest,
+                username: userNameTest,
                 email: emailTest,
                 namesPersonal: namesPersonalTest,
                 idPersistent: 'idUserTest',
@@ -44,7 +44,7 @@ describe('user reducer', () => {
             initialState,
             loginSuccess(
                 newUserInfo({
-                    userName: userNameTest,
+                    username: userNameTest,
                     email: emailTest,
                     namesPersonal: namesPersonalTest,
                     idPersistent: 'idUserTest',
@@ -97,7 +97,7 @@ describe('user reducer', () => {
     test('logout', () => {
         const initialState = newUserState({
             userInfo: newUserInfo({
-                userName: userNameTest,
+                username: userNameTest,
                 email: emailTest,
                 namesPersonal: namesPersonalTest,
                 idPersistent: 'idUserTest',
@@ -117,7 +117,7 @@ describe('user reducer', () => {
     test('refresh error', () => {
         const initialState = newUserState({
             userInfo: newUserInfo({
-                userName: userNameTest,
+                username: userNameTest,
                 email: emailTest,
                 namesPersonal: namesPersonalTest,
                 idPersistent: 'idUserTest',

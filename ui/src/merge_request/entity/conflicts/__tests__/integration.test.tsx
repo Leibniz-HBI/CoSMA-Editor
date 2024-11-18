@@ -24,6 +24,7 @@ import {
 import { entityMergeRequestConflictSlice } from '../slice'
 import { EntityMergeRequestConflictView } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
+import { ReplacementState } from '../../../conflicts/state'
 
 jest.mock('react-router-dom', () => {
     const navigateCallbackMock = jest.fn()
@@ -99,9 +100,11 @@ const idEntityMr0 = 'id-entity-mr-0'
 const displayTextOrigin0 = 'Entity Origin 0'
 const idPersistentOrigin0 = 'id-entity-origin-0'
 const versionOrigin0 = 5550
+const justificationOrigin0 = 'most prolific shit poster'
 const displayTextDestination0 = 'Entity Destination 0'
 const idPersistentDestination0 = 'id-entity-destination-0'
 const versionDestination0 = 4440
+const justificationDestination0 = 'tremendous shit poster'
 const userName0 = 'user 0'
 const idUser0 = 'user-id-0'
 const permissionGroup0 = 'COMMISSIONER'
@@ -162,14 +165,16 @@ function addSuccessResponse(fetchMock: jest.Mock) {
             display_txt_details: 'display_txt_detail',
             id_persistent: idPersistentOrigin0,
             version: versionOrigin0,
-            disabled: false
+            disabled: false,
+            justification_txt: justificationOrigin0
         },
         destination: {
             display_txt: displayTextDestination0,
             display_txt_details: 'display_txt_detail',
             id_persistent: idPersistentDestination0,
             version: versionDestination0,
-            disabled: false
+            disabled: false,
+            justification_txt: justificationDestination0
         },
         created_by: {
             username: userName0,
@@ -222,7 +227,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             value: valueTagInstanceDestinationResolvable0,
                             version: versionTagInstanceDestinationResolvable0
                         },
-                        replace: true
+                        replacement_state: 'REPLACE'
                     },
                     resolvableConflict1,
                     {
@@ -239,7 +244,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             version: versionTagInstanceOriginResolvable2
                         },
                         tag_instance_destination: null,
-                        replace: false
+                        replacement_state: 'KEEP'
                     }
                 ],
                 updated: [resolvableConflict1],
@@ -328,7 +333,8 @@ test('update conflicts', async () => {
             value: valueTagInstanceDestinationResolvable1,
             version: versionTagInstanceDestinationResolvable1
         },
-        replace: undefined
+        replacementState: undefined,
+        replacementValue: undefined
     })
     const expectedState = {
         conflicts: newRemote({
@@ -352,7 +358,8 @@ test('update conflicts', async () => {
                             value: valueTagInstanceDestinationResolvable0,
                             version: versionTagInstanceDestinationResolvable0
                         },
-                        replace: true
+                        replacementState: ReplacementState.REPLACE,
+                        replacementValue: undefined
                     })
                 ),
                 newRemote(conflictResolvable1),
@@ -371,7 +378,8 @@ test('update conflicts', async () => {
                             version: versionTagInstanceOriginResolvable2
                         },
                         tagInstanceDestination: undefined,
-                        replace: false
+                        replacementState: ReplacementState.KEEP,
+                        replacementValue: undefined
                     })
                 )
             ],
@@ -435,14 +443,16 @@ test('update conflicts', async () => {
                     displayTxtDetails: 'display_txt_detail',
                     idPersistent: idPersistentOrigin0,
                     version: versionOrigin0,
-                    disabled: false
+                    disabled: false,
+                    justificationTxt: justificationOrigin0
                 },
                 entityDestination: {
                     displayTxt: displayTextDestination0,
                     displayTxtDetails: 'display_txt_detail',
                     idPersistent: idPersistentDestination0,
                     version: versionDestination0,
-                    disabled: false
+                    disabled: false,
+                    justificationTxt: justificationDestination0
                 },
                 createdBy: {
                     username: userName0,
@@ -456,9 +466,11 @@ test('update conflicts', async () => {
         reverseOriginDestination: newRemote(undefined),
         merge: newRemote(undefined)
     }
-    expect(store.getState()).toEqual({
-        entityMergeRequestConflicts: expectedState,
-        notification: { notificationList: [], notificationMap: {} }
+    await waitFor(() => {
+        expect(store.getState()).toEqual({
+            entityMergeRequestConflicts: expectedState,
+            notification: { notificationList: [], notificationMap: {} }
+        })
     })
     const updatedConflictsLabel = screen.getByText(
         'For the following conflicts the underlying data has changed'

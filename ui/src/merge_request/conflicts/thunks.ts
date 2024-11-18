@@ -1,6 +1,12 @@
 import { exceptionMessage } from '../../util/exception'
 import { config } from '../../config'
-import { TagInstance, newMergeRequestConflict, newTagInstance } from './state'
+import {
+    MergeRequestConflict,
+    ReplacementState,
+    TagInstance,
+    newMergeRequestConflict,
+    newTagInstance
+} from './state'
 import { parseEntityObjectFromJson } from '../../table/thunks'
 import { Entity } from '../../entity/state'
 import { TagDefinition } from '../../column_menu/state'
@@ -72,7 +78,8 @@ export function resolveConflict({
     tagDefinitionOrigin,
     tagInstanceDestination,
     tagDefinitionDestination,
-    replace
+    replacementState,
+    replacementValue
 }: {
     idMergeRequestPersistent: string
     entity: Entity
@@ -80,7 +87,8 @@ export function resolveConflict({
     tagDefinitionOrigin: TagDefinition
     tagInstanceDestination?: TagInstance
     tagDefinitionDestination: TagDefinition
-    replace: boolean
+    replacementState?: ReplacementState
+    replacementValue: string | undefined
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(resolveConflictStart(entity.idPersistent))
@@ -107,7 +115,8 @@ export function resolveConflict({
                             tagDefinitionDestination.idPersistent,
                         id_tag_instance_destination_persistent:
                             tagInstanceDestination?.idPersistent,
-                        replace: replace
+                        replacement_state: replacementState,
+                        replacement_value: replacementValue
                     })
                 }
             )
@@ -115,7 +124,8 @@ export function resolveConflict({
                 dispatch(
                     resolveConflictSuccess({
                         idEntityPersistent: entity.idPersistent,
-                        replace
+                        replacementState: replacementState,
+                        replacementValue: replacementValue
                     })
                 )
             } else {
@@ -131,7 +141,7 @@ export function resolveConflict({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseMergeRequestConflictFromApi(json: any) {
+export function parseMergeRequestConflictFromApi(json: any): MergeRequestConflict {
     const tagInstanceDestinationJson = json['tag_instance_destination']
     const tagInstanceDestination =
         tagInstanceDestinationJson === null
@@ -141,8 +151,17 @@ export function parseMergeRequestConflictFromApi(json: any) {
         entity: parseEntityObjectFromJson(json['entity']),
         tagInstanceOrigin: parseTagInstanceFromJson(json['tag_instance_origin']),
         tagInstanceDestination: tagInstanceDestination,
-        replace: json['replace'] ?? undefined
+        replacementState: replacementStateJsonToAppDict[json['replacement_state']],
+        replacementValue: json['replacement_value'] ?? undefined
     })
+}
+
+export const replacementStateJsonToAppDict: {
+    [key: string]: ReplacementState | undefined
+} = {
+    KEEP: ReplacementState.KEEP,
+    REPLACE: ReplacementState.REPLACE,
+    VALUE: ReplacementState.VALUE
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

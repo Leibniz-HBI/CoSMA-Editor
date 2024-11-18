@@ -23,28 +23,38 @@ export function newTagInstance({
     }
 }
 
+export enum ReplacementState {
+    KEEP = 'KEEP',
+    REPLACE = 'REPLACE',
+    VALUE = 'VALUE'
+}
+
 export interface MergeRequestConflict {
     entity: Entity
     tagInstanceOrigin: TagInstance
     tagInstanceDestination?: TagInstance
-    replace?: boolean
+    replacementState?: ReplacementState
+    replacementValue?: string
 }
 export function newMergeRequestConflict({
     entity,
     tagInstanceOrigin,
     tagInstanceDestination,
-    replace = undefined
+    replacementState,
+    replacementValue = undefined
 }: {
     entity: Entity
     tagInstanceOrigin: TagInstance
     tagInstanceDestination?: TagInstance
-    replace?: boolean
+    replacementState?: ReplacementState
+    replacementValue?: string
 }) {
     return {
         entity: entity,
         tagInstanceOrigin: tagInstanceOrigin,
         tagInstanceDestination: tagInstanceDestination,
-        replace: replace
+        replacementState,
+        replacementValue
     }
 }
 
