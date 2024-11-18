@@ -147,6 +147,7 @@ class TagMergeRequest(AbstractMergeRequest):
         returns:
         A set of tuples. The first element is the id of the tag definition.
         The second element indicates whether this is existing data."""
+        contribution = None
         if id_contribution_persistent is None:
             if id_merge_request_persistent is None:
                 return {(id_tag_definition_persistent, True)}
@@ -168,24 +169,25 @@ class TagMergeRequest(AbstractMergeRequest):
             contribution = ContributionCandidate.by_id_persistent(
                 id_contribution_persistent, user
             ).get()
-        merge_requests_manager = contribution.tagmergerequest_set
-        for merge_request in merge_requests_manager.iterator():
-            if (
-                # pylint:disable-next=consider-using-in
-                merge_request.id_origin_persistent == id_tag_definition_persistent
-                or merge_request.id_destination_persistent
-                == id_tag_definition_persistent
-            ) and (
-                # pylint:disable-next=consider-using-in
-                merge_request.assigned_to == user
-                or merge_request.created_by == user
-            ):
-                # There can't be a duplicate assignment.
-                # Therefore it is safe to return early
-                return {
-                    (merge_request.id_destination_persistent, True),
-                    (merge_request.id_origin_persistent, False),
-                }
+        if contribution is not None:
+            merge_requests_manager = contribution.tagmergerequest_set
+            for merge_request in merge_requests_manager.iterator():
+                if (
+                    # pylint:disable-next=consider-using-in
+                    merge_request.id_origin_persistent == id_tag_definition_persistent
+                    or merge_request.id_destination_persistent
+                    == id_tag_definition_persistent
+                ) and (
+                    # pylint:disable-next=consider-using-in
+                    merge_request.assigned_to == user
+                    or merge_request.created_by == user
+                ):
+                    # There can't be a duplicate assignment.
+                    # Therefore it is safe to return early
+                    return {
+                        (merge_request.id_destination_persistent, True),
+                        (merge_request.id_origin_persistent, False),
+                    }
         return {(id_tag_definition_persistent, True)}
 
     def instance_conflicts_all(
@@ -229,8 +231,11 @@ class TagMergeRequest(AbstractMergeRequest):
                     )
                 )
             ),
-            conflict_resolution_replace=models.Subquery(
-                resolutions_sub_query.values("replace")
+            conflict_resolution_replacement_state=models.Subquery(
+                resolutions_sub_query.values("replacement_state")
+            ),
+            conflict_resolution_replacement_value=models.Subquery(
+                resolutions_sub_query.values("replacement_value")
             ),
         )
         with_conflict_info = conflict_candidate_query.exclude(
@@ -242,7 +247,9 @@ class TagMergeRequest(AbstractMergeRequest):
         if include_resolved:
             return with_conflict_info
 
-        return with_conflict_info.exclude(conflict_resolution_replace__isnull=False)
+        return with_conflict_info.exclude(
+            models.Q(conflict_resolution_replacement_state__isnull=False)
+        )
 
     @classmethod
     def contribution_with_match_tag_definitions(cls, id_contribution_persistent):
@@ -301,7 +308,6 @@ class TagConflictResolution(AbstractConflictResolution):
         TagDefinitionHistory, on_delete=models.CASCADE, related_name="+"
     )
     merge_request = models.ForeignKey(TagMergeRequest, on_delete=models.CASCADE)
-    replace = models.BooleanField()
 
     @classmethod
     def for_merge_request_query_set(cls, merge_request: TagMergeRequest):
@@ -316,7 +322,8 @@ class TagConflictResolution(AbstractConflictResolution):
         tag definition or tag instances."""
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
-        with_version_info = manager.annotate(
+        with_version_info = cls.annotate_instance_origin_most_recent(
+            manager,
             entity_most_recent=models.Subquery(
                 Entity.objects.filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("entity__id_persistent")
@@ -360,19 +367,6 @@ class TagConflictResolution(AbstractConflictResolution):
                         id_parent_persistent="id_parent_persistent",
                         name="name",
                         type="type",
-                    )
-                )[
-                    :1
-                ]
-            ),
-            tag_instance_origin_most_recent=models.Subquery(
-                TagInstance.objects.filter(  # pylint: disable=no-member
-                    id_persistent=models.OuterRef("tag_instance_origin__id_persistent")
-                ).values(
-                    json=models.functions.JSONObject(
-                        id="id",
-                        id_persistent="id_persistent",
-                        value="value",
                     )
                 )[
                     :1
@@ -423,25 +417,7 @@ class TagConflictResolution(AbstractConflictResolution):
                     models.BigIntegerField(),
                 ),
             )
-            | (
-                models.Q(tag_instance_destination__isnull=False)
-                & ~models.Q(
-                    tag_instance_destination__id=models.functions.Cast(
-                        models.F("tag_instance_destination_most_recent__id"),
-                        models.BigIntegerField(),
-                    ),
-                )
-            )
-            | models.Q(
-                tag_instance_destination__isnull=True,
-                tag_instance_destination_most_recent__isnull=False,
-            )
-            | ~models.Q(
-                tag_instance_origin__id=models.functions.Cast(
-                    models.F("tag_instance_origin_most_recent__id"),
-                    models.BigIntegerField(),
-                )
-            )
+            | cls.instance_non_recent_predicate
         )
         return non_recent_query_set.exclude(
             tag_instance_origin_most_recent__value=models.F(

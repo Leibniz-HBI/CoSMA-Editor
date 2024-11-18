@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-positional-arguments,too-many-statements
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
@@ -110,7 +110,8 @@ def test_conflicts_no_resolution(
         json["conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "entity": {
                     "display_txt": ce.display_txt_test0,
                     "display_txt_details": "Display Text",
@@ -124,7 +125,8 @@ def test_conflicts_no_resolution(
                 "tag_instance_destination": None,
             },
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "entity": {
                     "display_txt": ce.display_txt_test1,
                     "display_txt_details": "Display Text",
@@ -292,7 +294,8 @@ def test_conflict_resolved(
         json["conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "entity": {
                     "display_txt": ce.display_txt_test0,
                     "display_txt_details": "Display Text",
@@ -306,7 +309,8 @@ def test_conflict_resolved(
                 "tag_instance_destination": None,
             },
             {
-                "replace": True,
+                "replacement_state": "REPLACE",
+                "replacement_value": None,
                 "entity": {
                     "display_txt": ce.display_txt_test1,
                     "display_txt_details": "Display Text",
@@ -402,7 +406,8 @@ def test_conflict_resolved_tag_def_origin_changed(
         json["conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "entity": {
                     "display_txt": ce.display_txt_test0,
                     "display_txt_details": "Display Text",
@@ -416,7 +421,8 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "tag_instance_destination": None,
             },
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "entity": {
                     "display_txt": ce.display_txt_test1,
                     "display_txt_details": "Display Text",
@@ -438,7 +444,8 @@ def test_conflict_resolved_tag_def_origin_changed(
         json["updated"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "entity": {
                     "display_txt": ce.display_txt_test1,
                     "display_txt_details": "Display Text",
@@ -472,7 +479,7 @@ def test_tag_instance_destination_value_added(
         entity=entity1,
         tag_instance_origin=instances_merge_request_origin_user[1],
         merge_request=merge_request_user,
-        replace=True,
+        replacement_state=TagConflictResolution.REPLACE,
     )
     id_tag_instance_destination = str(uuid4())
     time_edit = datetime(1873, 2, 4, tzinfo=timezone.utc)
@@ -545,7 +552,8 @@ def test_tag_instance_destination_value_added(
     )
 
     conflict1 = {
-        "replace": None,
+        "replacement_state": None,
+        "replacement_value": None,
         "entity": {
             "display_txt": ce.display_txt_test1,
             "display_txt_details": "Display Text",
@@ -566,7 +574,8 @@ def test_tag_instance_destination_value_added(
         json["conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "entity": {
                     "display_txt": ce.display_txt_test0,
                     "display_txt_details": "Display Text",

@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements,duplicate-code
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-positional-arguments,too-many-statements,duplicate-code
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
@@ -82,7 +82,8 @@ def test_conflicts_no_resolution(
         json["resolvable_conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_curated_test],
                     "id_parent_persistent": None,
@@ -102,7 +103,8 @@ def test_conflicts_no_resolution(
         json["unresolvable_conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_test],
                     "id_parent_persistent": None,
@@ -117,7 +119,8 @@ def test_conflicts_no_resolution(
                 "tag_instance_destination": None,
             },
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_test1],
                     "id_parent_persistent": None,
@@ -234,7 +237,8 @@ def test_conflicts_resolved(
         json["resolvable_conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_curated_test],
                     "id_parent_persistent": None,
@@ -254,7 +258,8 @@ def test_conflicts_resolved(
         json["unresolvable_conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_test],
                     "id_parent_persistent": None,
@@ -269,7 +274,8 @@ def test_conflicts_resolved(
                 "tag_instance_destination": None,
             },
             {
-                "replace": True,
+                "replacement_state": "REPLACE",
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_test1],
                     "id_parent_persistent": None,

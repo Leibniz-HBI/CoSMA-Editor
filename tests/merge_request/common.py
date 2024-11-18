@@ -48,3 +48,5 @@ time_instance_destination = datetime(1957, 3, 8, tzinfo=tz.utc)
 time_instance_destination_changed = datetime(1957, 3, 9, tzinfo=tz.utc)
 time_instance_destination1 = datetime(1957, 3, 10, tzinfo=tz.utc)
 time_instance_destination_same_value = datetime(1958, 2, 14, tzinfo=tz.utc)
+
+replacement_value = "test replacement value"

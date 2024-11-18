@@ -59,7 +59,10 @@ def eliminate_duplicates(id_contribution_persistent):
         )
         update_entities(replaced_entities_with_duplicates, contribution, time_edit)
         for merge_request in contribution.tagmergerequest_set.all():
-            django_rq.enqueue(merge_request_fast_forward, merge_request.id_persistent)
+            django_rq.enqueue(
+                merge_request_fast_forward,
+                merge_request.id_persistent,
+            )
         contribution.set_state(ContributionCandidate.MERGED)
         contribution.save()
     except Exception as exc:  # pylint: disable=broad-except

@@ -95,12 +95,67 @@ class AbstractConflictResolution(models.Model):
         null=True,
         blank=True,
     )
-    replace = models.BooleanField()
+    KEEP = "KEEP"
+    REPLACE = "RPLC"
+    VALUE = "VALU"
+    replacement_state = models.CharField(
+        max_length=5,
+        choices=[
+            (KEEP, "keep existing"),
+            (REPLACE, "new value"),
+            (VALUE, "replacement value"),
+        ],
+        default=None,
+        null=True,
+    )
+    replacement_value = models.TextField(default=None, null=True)
 
     class Meta:
         # pylint: disable=too-few-public-methods
         "Meta class for abstract merge request django model"
         abstract = True
+
+    instance_non_recent_predicate = (
+        (
+            models.Q(tag_instance_destination__isnull=False)
+            & ~models.Q(
+                tag_instance_destination__id=models.functions.Cast(
+                    models.F("tag_instance_destination_most_recent__id"),
+                    models.BigIntegerField(),
+                ),
+            )
+        )
+        | models.Q(
+            tag_instance_destination__isnull=True,
+            tag_instance_destination_most_recent__isnull=False,
+        )
+        | ~models.Q(
+            tag_instance_origin__id=models.functions.Cast(
+                models.F("tag_instance_origin_most_recent__id"),
+                models.BigIntegerField(),
+            )
+        )
+    )
+
+    @classmethod
+    def annotate_instance_origin_most_recent(cls, queryset, **additional_annotations):
+        "Annotate a conflict with the most recent instances"
+        return queryset.annotate(
+            tag_instance_origin_most_recent=models.Subquery(
+                TagInstance.objects.filter(  # pylint: disable=no-member
+                    id_persistent=models.OuterRef("tag_instance_origin__id_persistent")
+                ).values(
+                    json=models.functions.JSONObject(
+                        id="id",
+                        id_persistent="id_persistent",
+                        value="value",
+                    )
+                )[
+                    :1
+                ]
+            ),
+            **additional_annotations,
+        )
 
 
 class EntityMergeRequest(AbstractMergeRequest):
@@ -127,7 +182,18 @@ class EntityMergeRequest(AbstractMergeRequest):
         self.id_origin_persistent = self.id_destination_persistent
         self.id_destination_persistent = id_tmp
         self.entityconflictresolution_set.update(  # pylint: disable=no-member
-            replace=~models.F("replace"),
+            replacement_state=models.Case(
+                models.When(
+                    replacement_state=EntityConflictResolution.REPLACE,
+                    then=models.Value(EntityConflictResolution.KEEP),
+                ),
+                models.When(
+                    replacement_state=EntityConflictResolution.KEEP,
+                    then=models.Value(EntityConflictResolution.REPLACE),
+                ),
+                default=models.F("replacement_state"),
+            ),
+            replacement_value=models.F("replacement_value"),
             entity_origin=models.F("entity_destination"),
             entity_destination=models.F("entity_origin"),
             tag_instance_origin=models.F("tag_instance_destination"),
@@ -193,8 +259,11 @@ class EntityMergeRequest(AbstractMergeRequest):
                     )
                 )
             ),
-            conflict_resolution_replace=models.Subquery(
-                resolutions_sub_query.values("replace")
+            conflict_resolution_replacement_state=models.Subquery(
+                resolutions_sub_query.values("replacement_state")
+            ),
+            conflict_resolution_replacement_value=models.Subquery(
+                resolutions_sub_query.values("replacement_value")
             ),
         )
         with_conflict_info = conflict_candidate_query.exclude(
@@ -206,7 +275,9 @@ class EntityMergeRequest(AbstractMergeRequest):
         if include_resolved:
             return with_conflict_info
 
-        return with_conflict_info.exclude(conflict_resolution_replace__isnull=False)
+        return with_conflict_info.exclude(
+            conflict_resolution_replacement_state__isnull=False
+        )
 
     def resolvable_unresolvable_updated(
         self: EntityMergeRequest,
@@ -284,7 +355,8 @@ class EntityConflictResolution(AbstractConflictResolution):
         tag definition or tag instances."""
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
-        with_version_info = manager.annotate(
+        with_version_info = cls.annotate_instance_origin_most_recent(
+            manager,
             tag_definition_most_recent=models.Subquery(
                 TagDefinition.objects.filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("tag_definition__id_persistent"),
@@ -326,19 +398,6 @@ class EntityConflictResolution(AbstractConflictResolution):
                         id="id",
                         id_persistent="id_persistent",
                         display_txt="display_txt",
-                    )
-                )[
-                    :1
-                ]
-            ),
-            tag_instance_origin_most_recent=models.Subquery(
-                TagInstance.objects.filter(  # pylint: disable=no-member
-                    id_persistent=models.OuterRef("tag_instance_origin__id_persistent")
-                ).values(
-                    json=models.functions.JSONObject(
-                        id="id",
-                        id_persistent="id_persistent",
-                        value="value",
                     )
                 )[
                     :1
@@ -391,25 +450,7 @@ class EntityConflictResolution(AbstractConflictResolution):
                     models.BigIntegerField(),
                 ),
             )
-            | (
-                models.Q(tag_instance_destination__isnull=False)
-                & ~models.Q(
-                    tag_instance_destination__id=models.functions.Cast(
-                        models.F("tag_instance_destination_most_recent__id"),
-                        models.BigIntegerField(),
-                    ),
-                )
-            )
-            | models.Q(
-                tag_instance_destination__isnull=True,
-                tag_instance_destination_most_recent__isnull=False,
-            )
-            | ~models.Q(
-                tag_instance_origin__id=models.functions.Cast(
-                    models.F("tag_instance_origin_most_recent__id"),
-                    models.BigIntegerField(),
-                )
-            )
+            | cls.instance_non_recent_predicate
         )
         return non_recent_query_set.exclude(
             tag_instance_origin_most_recent__value=models.F(

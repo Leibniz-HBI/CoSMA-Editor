@@ -10,6 +10,8 @@ from ninja import Router, Schema
 from cosmae.entity.api import Entity, entity_db_dict_to_api
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
 from cosmae.merge_request.entity.api import (
+    REPLACEMENT_STATE_API_TO_DB_MAP,
+    REPLACEMENT_STATE_DB_TO_API_MAP,
     TagInstance,
     merge_request_step_db_to_api_map,
 )
@@ -46,7 +48,8 @@ class MergeRequestConflict(Schema):
     entity: Entity
     tag_instance_origin: TagInstance
     tag_instance_destination: TagInstance | None = None
-    replace: bool | None = None
+    replacement_state: str | None = None
+    replacement_value: str | None = None
 
 
 class MergeRequestConflictResponse(Schema):
@@ -78,7 +81,8 @@ class ConflictResolutionPostRequest(Schema):
     id_tag_instance_origin_persistent: str
     id_tag_definition_destination_persistent: str
     id_tag_instance_destination_persistent: str | None = None
-    replace: bool
+    replacement_value: str | None = None
+    replacement_state: str | None = None
 
 
 class PatchMergeRequestRequest(Schema):
@@ -225,6 +229,8 @@ def post_resolve_conflict(
         merge_request = MergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
         )
+        status = None
+        return_value = None
         TagConflictResolution.objects.filter(  # pylint: disable=no-member
             entity__id_persistent=resolution_info.id_entity_persistent,
             tag_definition_origin__id_persistent=(
@@ -243,22 +249,32 @@ def post_resolve_conflict(
             tag_definition_destination_id=resolution_info.id_tag_definition_destination_version,
             tag_instance_destination_id=resolution_info.id_tag_instance_destination_version,
             merge_request=merge_request,
-            replace=resolution_info.replace,
+            replacement_state=REPLACEMENT_STATE_API_TO_DB_MAP.get(
+                resolution_info.replacement_state
+            ),
+            replacement_value=resolution_info.replacement_value,
         )
         resolution.save()
-        return 200, None
+        status, return_value = 200, None
     except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
-        return 404, ApiError(msg="Merge request does not exists.")
+        status, return_value = 404, ApiError(msg="Merge request does not exists.")
     except NotAuthenticatedException:
-        return 401, ApiError(msg="Not authenticated.")
+        status, return_value = 401, ApiError(msg="Not authenticated.")
     except ForbiddenException:
-        return 403, ApiError(msg="Insufficient permissions")
+        status, return_value = 403, ApiError(msg="Insufficient permissions")
+    except KeyError:
+        status, return_value = 400, ApiError(
+            msg="Invalid method for conflict resolution"
+        )
     except DatabaseError:
-        return 500, ApiError(
+        status, return_value = 500, ApiError(
             msg="Could not get the merge request conflicts from the database."
         )
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get the requested merge request conflicts.")
+        status, return_value = 500, ApiError(
+            msg="Could not get the requested merge request conflicts."
+        )
+    return status, return_value
 
 
 @router.post(
@@ -363,7 +379,10 @@ def annotated_tag_instance_db_to_api(annotated_instance):
             value=annotated_instance.value,
         ),
         tag_instance_destination=tag_instance_destination,
-        replace=annotated_instance.conflict_resolution_replace,
+        replacement_state=REPLACEMENT_STATE_DB_TO_API_MAP.get(
+            annotated_instance.conflict_resolution_replacement_state
+        ),
+        replacement_value=annotated_instance.conflict_resolution_replacement_value,
     )
 
 
@@ -392,5 +411,6 @@ def conflict_with_updated_data_db_to_api(annotated_conflict):
         ),
         tag_instance_destination=tag_instance_destination,
         # Underlying data has changed!
-        replace=None,
+        replacement_state=None,
+        replacement_value=annotated_conflict.replacement_value,
     )

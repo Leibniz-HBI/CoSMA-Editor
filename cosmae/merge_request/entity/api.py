@@ -11,7 +11,12 @@ from ninja import Router, Schema
 from cosmae.entity.api import Entity, entity_db_to_api
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityJustification
-from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
+from cosmae.exception import (
+    ApiError,
+    ApiException,
+    ForbiddenException,
+    NotAuthenticatedException,
+)
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution as EntityConflictResolutionDb,
 )
@@ -75,7 +80,8 @@ class EntityMergeRequestConflict(Schema):
     tag_definition: TagDefinition
     tag_instance_origin: TagInstance
     tag_instance_destination: TagInstance | None = None
-    replace: bool | None = None
+    replacement_state: str | None = None
+    replacement_value: str | None = None
 
 
 class GetEntityMergeRequestConflictsResponse(Schema):
@@ -102,7 +108,8 @@ class EntityConflictResolutionPostRequest(Schema):
     id_tag_instance_origin_persistent: str
     id_entity_destination_persistent: str
     id_tag_instance_destination_persistent: str | None = None
-    replace: bool
+    replacement_state: str | None = None
+    replacement_value: str | None = None
 
 
 @router.get(
@@ -175,26 +182,25 @@ def post_resolve_conflict(
     resolution_info: EntityConflictResolutionPostRequest,
 ):
     "API method for resolving merge conflicts."
-    # pylint: disable=too-many-return-statements
     try:
         user = check_user(request)
         if user.permission_group not in [
             CosmaeUserDb.EDITOR,
             CosmaeUserDb.COMMISSIONER,
         ]:
-            return 403, ApiError(msg="Insufficient permissions.")
+            raise ApiException(403, "Insufficient permissions.")
         merge_request = EntityMergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
         )
         if merge_request.state != EntityMergeRequestDb.OPEN:
-            return 400, ApiError(
-                msg="Can only resolve conflicts for open merge requests."
+            raise ApiException(
+                400, "Can only resolve conflicts for open merge requests."
             )
         tag_definition = TagDefinitionDb.most_recent_by_id(
             resolution_info.id_tag_definition_persistent
         )
         if not tag_definition.has_write_access(user.id_persistent):
-            return 403, ApiError(msg="You can not write to the tag definition.")
+            raise ApiException(403, "You can not write to the tag definition.")
         EntityConflictResolutionDb.objects.filter(  # pylint: disable=no-member
             tag_definition__id_persistent=resolution_info.id_tag_definition_persistent,
             entity_origin__id_persistent=(resolution_info.id_entity_origin_persistent),
@@ -211,22 +217,30 @@ def post_resolve_conflict(
             entity_destination_id=resolution_info.id_entity_destination_version,
             tag_instance_destination_id=resolution_info.id_tag_instance_destination_version,
             merge_request=merge_request,
-            replace=resolution_info.replace,
+            replacement_state=REPLACEMENT_STATE_API_TO_DB_MAP.get(
+                resolution_info.replacement_state
+            ),
+            replacement_value=resolution_info.replacement_value,
         )
         resolution.save()
         return 200, None
+    except ApiException as exc:
+        status, response = exc.status_code, ApiError(msg=exc.msg)
     except EntityMergeRequestDb.DoesNotExist:  # pylint: disable=no-member
-        return 404, ApiError(msg="Merge request does not exists.")
+        status, response = 404, ApiError(msg="Merge request does not exists.")
     except NotAuthenticatedException:
-        return 401, ApiError(msg="Not authenticated.")
+        status, response = 401, ApiError(msg="Not authenticated.")
     except ForbiddenException:
-        return 403, ApiError(msg="Insufficient permissions")
+        status, response = 403, ApiError(msg="Insufficient permissions")
     except DatabaseError:
-        return 500, ApiError(
+        status, response = 500, ApiError(
             msg="Could not get the merge request conflicts from the database."
         )
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get the requested merge request conflicts.")
+        status, response = 500, ApiError(
+            msg="Could not get the requested merge request conflicts."
+        )
+    return status, response
 
 
 @router.post(
@@ -278,7 +292,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                     [
                         conflict
                         for conflict in resolvable
-                        if conflict.conflict_resolution_replace is None
+                        if conflict.conflict_resolution_replacement_state is None
                     ]
                 )
                 > 0
@@ -421,6 +435,18 @@ merge_request_step_db_to_api_map = {
     EntityMergeRequestDb.ERROR: "ERROR",
 }
 
+REPLACEMENT_STATE_DB_TO_API_MAP = {
+    EntityConflictResolutionDb.REPLACE: "REPLACE",
+    EntityConflictResolutionDb.KEEP: "KEEP",
+    EntityConflictResolutionDb.VALUE: "VALUE",
+}
+
+REPLACEMENT_STATE_API_TO_DB_MAP = {
+    "REPLACE": EntityConflictResolutionDb.REPLACE,
+    "KEEP": EntityConflictResolutionDb.KEEP,
+    "VALUE": EntityConflictResolutionDb.VALUE,
+}
+
 
 @router.get(
     "all",
@@ -541,7 +567,10 @@ def annotated_tag_instance_db_to_api(annotated_instance):
             value=annotated_instance.value,
         ),
         tag_instance_destination=tag_instance_destination,
-        replace=annotated_instance.conflict_resolution_replace,
+        replacement_state=REPLACEMENT_STATE_DB_TO_API_MAP.get(
+            annotated_instance.conflict_resolution_replacement_state
+        ),
+        replacement_value=annotated_instance.conflict_resolution_replacement_value,
     )
 
 
@@ -570,7 +599,8 @@ def conflict_with_updated_data_db_to_api(annotated_conflict):
         ),
         tag_instance_destination=tag_instance_destination,
         # Underlying data has changed!
-        replace=None,
+        replacement_state=None,
+        replacement_value=annotated_conflict.replacement_value,
     )
 
 

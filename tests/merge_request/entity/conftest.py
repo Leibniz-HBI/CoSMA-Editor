@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,too-many-positional-arguments
 import pytest
 
 import tests.merge_request.entity.common as c
@@ -183,7 +183,7 @@ def resolution_curated_destination_none(
         tag_instance_origin=instances_merge_request_origin_user[2],
         tag_instance_destination=None,
         merge_request=merge_request_user,
-        replace=True,
+        replacement_state=EntityConflictResolution.REPLACE,
     )
 
 
@@ -259,7 +259,29 @@ def conflict_resolution_replace(
         tag_instance_origin=instances_merge_request_origin_user[1],
         tag_instance_destination=instance_merge_request_destination_user_conflict,
         merge_request=merge_request_user,
-        replace=True,
+        replacement_state=EntityConflictResolution.REPLACE,
+    )
+
+
+@pytest.fixture
+def conflict_resolution_replacement_value(
+    merge_request_user,
+    origin_entity_for_mr,
+    destination_entity_for_mr,
+    tag_def1,
+    instances_merge_request_origin_user,
+    instance_merge_request_destination_user_conflict,
+):
+    return EntityConflictResolution.objects.create(  # pylint: disable=no-member
+        tag_definition=tag_def1,
+        entity_origin=origin_entity_for_mr,
+        entity_destination=destination_entity_for_mr,
+        tag_instance_origin=instances_merge_request_origin_user[1],
+        tag_instance_destination=instance_merge_request_destination_user_conflict,
+        merge_request=merge_request_user,
+        # replacement_state=EntityConflictResolution.REPLACE,
+        replacement_state=EntityConflictResolution.VALUE,
+        replacement_value=c.replacement_value,
     )
 
 
@@ -278,7 +300,7 @@ def conflict_resolution_replace_empty_destination(
         tag_instance_origin=instances_merge_request_origin_user[1],
         tag_instance_destination=None,
         merge_request=merge_request_user,
-        replace=True,
+        replacement_state=EntityConflictResolution.REPLACE,
     )
 
 
@@ -298,7 +320,7 @@ def conflict_resolution_keep(
         tag_instance_origin=instances_merge_request_origin_user[0],
         tag_instance_destination=None,
         merge_request=merge_request_user,
-        replace=False,
+        replacement_state=EntityConflictResolution.KEEP,
     )
 
 

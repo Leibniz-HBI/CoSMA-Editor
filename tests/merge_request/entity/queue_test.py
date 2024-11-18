@@ -87,6 +87,23 @@ def test_applies_resolutions(conflict_resolution_replace, user1):
     assert len(TagDefinition.query_set()) == 3
 
 
+def test_applies_resolution_replacement_value(
+    conflict_resolution_replacement_value, user1
+):
+    merge_request = conflict_resolution_replacement_value.merge_request
+    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.save()
+    apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
+    most_recent = Entity.most_recent_queryset().get()
+    assert most_recent.merged_from == c.id_entity_origin_persistent
+    assert most_recent.display_txt == c.display_txt_entity_destination
+    tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
+    assert len(tag_merge_requests) == 2
+    assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
+    assert len(TagDefinition.query_set(include_hidden=True)) == 5
+    assert len(TagDefinition.query_set()) == 3
+
+
 def test_copies_justification(conflict_resolution_replace, user1):
     merge_request = conflict_resolution_replace.merge_request
     merge_request.state = EntityMergeRequest.RESOLVED

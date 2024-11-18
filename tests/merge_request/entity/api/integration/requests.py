@@ -47,7 +47,7 @@ def get_conflicts(url, id_merge_request_persistent, cookies=None):
     )
 
 
-def post_resolution(  # pylint: disable=too-many-arguments
+def post_resolution(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     url,
     id_merge_request_persistent,
     id_tag_definition_persistent,
@@ -60,7 +60,8 @@ def post_resolution(  # pylint: disable=too-many-arguments
     id_tag_instance_origin_version,
     id_tag_instance_destination_persistent,
     id_tag_instance_destination_version,
-    replace,
+    replacement_state,
+    replacement_value=None,
     cookies=None,
 ):
     return requests.post(
@@ -77,7 +78,8 @@ def post_resolution(  # pylint: disable=too-many-arguments
             "id_entity_destination_persistent": id_entity_destination_persistent,
             "id_tag_instance_origin_persistent": id_tag_instance_origin_persistent,
             "id_tag_instance_destination_persistent": id_tag_instance_destination_persistent,
-            "replace": replace,
+            "replacement_state": replacement_state,
+            "replacement_value": replacement_value,
         },
         cookies=cookies,
         timeout=900,

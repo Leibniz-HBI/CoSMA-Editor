@@ -577,7 +577,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("replace", models.BooleanField()),
+                ("replace", models.BooleanField(default=None, null=True)),
                 (
                     "entity_destination",
                     models.ForeignKey(
@@ -701,7 +701,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("replace", models.BooleanField()),
+                ("replace", models.BooleanField(default=None, null=True)),
                 (
                     "entity",
                     models.ForeignKey(

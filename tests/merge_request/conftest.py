@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,too-many-positional-arguments
 import pytest
 
 import tests.entity.common as ce
@@ -385,7 +385,7 @@ def conflict_resolution_replace(
         tag_instance_origin=instances_merge_request_origin_user[1],
         tag_instance_destination=instance_merge_request_destination_user_conflict,
         merge_request=merge_request_user,
-        replace=True,
+        replacement_state=TagConflictResolution.REPLACE,
     )
 
 
@@ -405,7 +405,7 @@ def conflict_resolution_keep(
         tag_instance_origin=instances_merge_request_origin_user[0],
         tag_instance_destination=None,
         merge_request=merge_request_user,
-        replace=False,
+        replacement_state=TagConflictResolution.KEEP,
     )
 
 

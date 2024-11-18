@@ -50,10 +50,9 @@ def apply_entity_merge_request(
             )
             # get recent resolutions and apply them
             recent_resolutions = EntityConflictResolution.only_recent(resolutions)
-            for resolved in recent_resolutions:
-                if resolved.replace:
-                    apply_resolution(resolved, user, time_edit)
             # get unresolved conflicts and create merge requests.
+            # This has to be done first otherwise resolutions are not recent.
+            # This will lead to unnecesary merge requests.
             unresolved_conflict_query_set = merge_request.instance_conflicts_all(
                 include_resolved=False, resolution_values=recent_resolutions
             ).annotate(
@@ -81,6 +80,10 @@ def apply_entity_merge_request(
                     user,
                     time_edit,
                 )
+            # resolve conflicts
+            for resolved in recent_resolutions:
+                if resolved.replacement_state is not None:
+                    apply_resolution(resolved, user, time_edit)
             # disable the destination entity
             origin = Entity.most_recent_by_id(merge_request.id_origin_persistent)
             disabled, _ = EntityHistory.change_or_create_versioned(
@@ -120,7 +123,7 @@ def apply_entity_merge_request(
         merge_request.save()
 
 
-def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disable=too-many-positional-arguments,too-many-arguments
+def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     entity_merge_request: EntityMergeRequest,
     tag_instance_origin: TagInstanceAbstract,
     id_entity_destination_persistent: str,
@@ -183,8 +186,16 @@ def apply_resolution(
     time_edit: datetime,
 ):
     "Apply a entity merge request conflict resolution"
-    if not resolution.replace:
+    if (
+        resolution.replacement_state is None
+        or resolution.replacement_state == EntityConflictResolution.KEEP
+    ):
         return
+    value = None
+    if resolution.replacement_state == EntityConflictResolution.REPLACE:
+        value = resolution.tag_instance_origin.value
+    elif resolution.replacement_state == EntityConflictResolution.VALUE:
+        value = resolution.replacement_value
     tag_instance_destination = resolution.tag_instance_destination
     if tag_instance_destination is None:
         id_destination_persistent = uuid4()
@@ -201,7 +212,7 @@ def apply_resolution(
             time_edit=time_edit,
             written_by_session=resolution.tag_instance_origin.written_by_session,
             approved_by_id_persistent=user.id_persistent,
-            value=resolution.tag_instance_origin.value,
+            value=value,
         )
         instance.save()
     except (EntityUpdatedException, PermissionException):

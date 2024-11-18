@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-positional-arguments,too-many-statements
 from unittest.mock import MagicMock, patch
 
 import tests.merge_request.api.integration.requests as req
@@ -27,7 +27,7 @@ def test_unknown_user(auth_server):
             0,
             "",
             0,
-            True,
+            "REPLACE",
             cookies=cookies,
         )
         assert rsp.status_code == 401
@@ -48,7 +48,7 @@ def test_no_cookies(auth_server):
         0,
         "",
         0,
-        True,
+        "REPLACE",
     )
     assert rsp.status_code == 401
 
@@ -68,13 +68,13 @@ def test_no_mr(auth_server):
         0,
         "",
         0,
-        True,
+        "REPLACE",
         cookies=cookies,
     )
     assert rsp.status_code == 404
 
 
-def test_creates_resolution(
+def test_allow_value_resolution_without_value(
     auth_server,
     merge_request_user,
     origin_tag_def_for_mr,
@@ -101,7 +101,40 @@ def test_creates_resolution(
             instance_merge_request_destination_user_conflict.id_persistent
         ),
         id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
-        replace=True,
+        replacement_state="VALUE",
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+
+
+def test_creates_resolution_replace(
+    auth_server,
+    merge_request_user,
+    origin_tag_def_for_mr,
+    destination_tag_def_for_mr,
+    entity1,
+    instances_merge_request_origin_user,
+    instance_merge_request_destination_user_conflict,
+):
+    server, cookies = auth_server
+    rsp = req.post_resolution(
+        server.url,
+        str(merge_request_user.id_persistent),
+        id_entity_persistent=entity1.id_persistent,
+        id_entity_version=entity1.id,
+        id_tag_definition_origin_persistent=origin_tag_def_for_mr.id_persistent,
+        id_tag_definition_origin_version=origin_tag_def_for_mr.id,
+        id_tag_definition_destination_persistent=destination_tag_def_for_mr.id_persistent,
+        id_tag_definition_destination_version=destination_tag_def_for_mr.id,
+        id_tag_instance_origin_persistent=instances_merge_request_origin_user[
+            1
+        ].id_persistent,
+        id_tag_instance_origin_version=instances_merge_request_origin_user[1].id,
+        id_tag_instance_destination_persistent=(
+            instance_merge_request_destination_user_conflict.id_persistent
+        ),
+        id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
+        replacement_state="REPLACE",
         cookies=cookies,
     )
     assert rsp.status_code == 200
@@ -117,7 +150,56 @@ def test_creates_resolution(
         resolution.tag_instance_destination_id
         == instance_merge_request_destination_user_conflict.id
     )
-    assert resolution.replace
+    assert resolution.replacement_state == ConflictResolutionDb.REPLACE
+    assert resolution.replacement_value is None
+
+
+def test_creates_resolution_replacement_value(
+    auth_server,
+    merge_request_user,
+    origin_tag_def_for_mr,
+    destination_tag_def_for_mr,
+    entity1,
+    instances_merge_request_origin_user,
+    instance_merge_request_destination_user_conflict,
+):
+    server, cookies = auth_server
+    rsp = req.post_resolution(
+        server.url,
+        str(merge_request_user.id_persistent),
+        id_entity_persistent=entity1.id_persistent,
+        id_entity_version=entity1.id,
+        id_tag_definition_origin_persistent=origin_tag_def_for_mr.id_persistent,
+        id_tag_definition_origin_version=origin_tag_def_for_mr.id,
+        id_tag_definition_destination_persistent=destination_tag_def_for_mr.id_persistent,
+        id_tag_definition_destination_version=destination_tag_def_for_mr.id,
+        id_tag_instance_origin_persistent=instances_merge_request_origin_user[
+            1
+        ].id_persistent,
+        id_tag_instance_origin_version=instances_merge_request_origin_user[1].id,
+        id_tag_instance_destination_persistent=(
+            instance_merge_request_destination_user_conflict.id_persistent
+        ),
+        id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
+        replacement_state="VALUE",
+        replacement_value=c.replacement_value,
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+    resolution = ConflictResolutionDb.objects.all().get()  # pylint: disable=no-member
+    assert str(resolution.merge_request_id) == merge_request_user.id_persistent
+    assert resolution.entity_id == entity1.id
+    assert resolution.tag_definition_origin_id == origin_tag_def_for_mr.id
+    assert resolution.tag_definition_destination_id == destination_tag_def_for_mr.id
+    assert (
+        resolution.tag_instance_origin_id == instances_merge_request_origin_user[1].id
+    )
+    assert (
+        resolution.tag_instance_destination_id
+        == instance_merge_request_destination_user_conflict.id
+    )
+    assert resolution.replacement_state == ConflictResolutionDb.VALUE
+    assert resolution.replacement_value == c.replacement_value
 
 
 def test_overwrites_resolution(
@@ -147,7 +229,7 @@ def test_overwrites_resolution(
             instance_merge_request_destination_user_conflict.id_persistent
         ),
         id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
-        replace=True,
+        replacement_state="REPLACE",
         cookies=cookies,
     )
     assert rsp.status_code == 200
@@ -168,7 +250,7 @@ def test_overwrites_resolution(
             instance_merge_request_destination_user_conflict.id_persistent
         ),
         id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
-        replace=False,
+        replacement_state="KEEP",
         cookies=cookies,
     )
     assert rsp.status_code == 200
@@ -184,4 +266,4 @@ def test_overwrites_resolution(
         resolution.tag_instance_destination_id
         == instance_merge_request_destination_user_conflict.id
     )
-    assert not resolution.replace
+    assert resolution.replacement_state == ConflictResolutionDb.KEEP

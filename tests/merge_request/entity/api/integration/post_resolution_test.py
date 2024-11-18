@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements,duplicate-code
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-positional-arguments,too-many-statements,duplicate-code
 from unittest.mock import MagicMock, patch
 
 from tests.merge_request.entity import common as c
@@ -27,7 +27,7 @@ def test_unknown_user(auth_server_commissioner, merge_request_user):
             0,
             "",
             0,
-            False,
+            "KEEP",
             cookies=cookies,
         )
         assert rsp.status_code == 401
@@ -48,7 +48,7 @@ def test_no_cookies(auth_server_commissioner):
         0,
         "",
         0,
-        False,
+        "KEEP",
     )
     assert rsp.status_code == 401
 
@@ -68,7 +68,7 @@ def test_normal_user(auth_server):
         0,
         "",
         0,
-        False,
+        "KEEP",
         cookies=cookies,
     )
     assert rsp.status_code == 403
@@ -89,7 +89,7 @@ def test_no_mr(auth_server_commissioner):
         0,
         "",
         0,
-        False,
+        "KEEP",
         cookies=cookies,
     )
     assert rsp.status_code == 404
@@ -122,7 +122,7 @@ def test_resolve_conflicts(
             instance_merge_request_destination_user_conflict.id_persistent
         ),
         id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
-        replace=True,
+        replacement_state="REPLACE",
         cookies=cookies,
     )
     assert rsp.status_code == 200
@@ -159,7 +159,8 @@ def test_resolve_conflicts(
         json["resolvable_conflicts"],
         [
             {
-                "replace": True,
+                "replacement_state": "REPLACE",
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_curated_test],
                     "id_parent_persistent": None,
@@ -179,7 +180,8 @@ def test_resolve_conflicts(
         json["unresolvable_conflicts"],
         [
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_test],
                     "id_parent_persistent": None,
@@ -194,7 +196,8 @@ def test_resolve_conflicts(
                 "tag_instance_destination": None,
             },
             {
-                "replace": None,
+                "replacement_state": None,
+                "replacement_value": None,
                 "tag_definition": {
                     "name_path": [ct.name_tag_def_test1],
                     "id_parent_persistent": None,
@@ -241,7 +244,7 @@ def test_can_not_write_tag_def(
             instance_merge_request_destination_user_conflict.id_persistent
         ),
         id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
-        replace=True,
+        replacement_state="REPLACE",
         cookies=cookies,
     )
     assert rsp.status_code == 403

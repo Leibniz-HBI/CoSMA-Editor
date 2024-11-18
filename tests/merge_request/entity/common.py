@@ -34,3 +34,4 @@ id_instance_destination = "6ec94c9a-e6c9-4919-ae38-6838be6c1498"
 id_instance_destination1 = "0fcd508d-08be-4497-8165-bbfc30b2c4e7"
 id_instance_destination_curated = "8fac3631-9efb-4abc-9abd-1f09fdb7150c"
 time_tag_def_changed = datetime(1973, 4, 2, tzinfo=timezone.utc)
+replacement_value = "test replacement value"

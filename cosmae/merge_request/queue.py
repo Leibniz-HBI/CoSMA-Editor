@@ -84,7 +84,6 @@ def merge_request_fast_forward(id_merge_request_persistent):
                     tag_instance, _do_write = (
                         TagInstanceHistory.change_or_create_versioned(
                             id_persistent=str(uuid4()),
-                            # TODO correct written by? needs approved by? pylint: disable=fixme
                             written_by_session=merge_request.created_by.edit_session,
                             time_edit=time_merge,
                             id_entity_persistent=tag_instance.id_entity_persistent,
@@ -149,40 +148,15 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
                 merge_request.state = merge_request.OPEN
                 merge_request.save()
                 return
-            recent = recent.filter(
-                models.Q(replace=True)
-                & ~models.Q(
-                    tag_instance_origin__value=models.F(
-                        "tag_instance_destination__value"
-                    )
-                )
-            )
-            for resolution in recent:
-                try:
-                    tag_definition_destination = resolution.tag_definition_destination
-                    if resolution.tag_instance_destination is None:
-                        id_persistent = str(uuid4())
-                        version = None
-                    else:
-                        tag_instance_reference = resolution.tag_instance_destination
-                        id_persistent = tag_instance_reference.id_persistent
-                        version = tag_instance_reference.id
-                    TagInstanceHistory.change_or_create_versioned(
-                        id_persistent=id_persistent,
-                        time_edit=time_merge,
-                        written_by_session=resolution.tag_instance_origin.written_by_session,
-                        approved_by_id_persistent=approved_by.id_persistent,
-                        id_entity_persistent=resolution.tag_instance_origin.id_entity_persistent,
-                        id_tag_definition_persistent=tag_definition_destination.id_persistent,
-                        merged_from=resolution.tag_instance_origin.id_persistent,
-                        version=version,
-                        value=resolution.tag_instance_origin.value,
-                    )[0].save()
-                except EntityUpdatedException as exc:
-                    logging.warning(None, exc_info=exc)
-                    merge_request.state = merge_request.OPEN
-                    merge_request.save()
-                    return
+            try:
+                with transaction.atomic():
+                    perform_instance_replacement(recent, approved_by, time_merge)
+                    perform_value_replacement(recent, approved_by, time_merge)
+            except EntityUpdatedException as exc:
+                logging.warning(None, exc_info=exc)
+                merge_request.state = merge_request.OPEN
+                merge_request.save()
+                return
 
             merge_request.state = merge_request.MERGED
             merge_request.save()
@@ -198,6 +172,64 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             merge_request = merge_request_query.get()
             merge_request.state = TagMergeRequest.ERROR
             merge_request.save()
+
+
+def perform_instance_replacement(recent_queryset, approved_by, time_merge):
+    "Perform replacement where the instance from the origin tag is selected."
+    replace_queryset = recent_queryset.filter(
+        models.Q(replacement_state=TagConflictResolution.REPLACE)
+        & ~models.Q(
+            tag_instance_origin__value=models.F("tag_instance_destination__value")
+        )
+    )
+    for resolution in replace_queryset:
+        tag_definition_destination = resolution.tag_definition_destination
+        if resolution.tag_instance_destination is None:
+            id_persistent = str(uuid4())
+            version = None
+        else:
+            tag_instance_reference = resolution.tag_instance_destination
+            id_persistent = tag_instance_reference.id_persistent
+            version = tag_instance_reference.id
+        TagInstanceHistory.change_or_create_versioned(
+            id_persistent=id_persistent,
+            time_edit=time_merge,
+            written_by_session=resolution.tag_instance_origin.written_by_session,
+            approved_by_id_persistent=approved_by.id_persistent,
+            id_entity_persistent=resolution.tag_instance_origin.id_entity_persistent,
+            id_tag_definition_persistent=tag_definition_destination.id_persistent,
+            merged_from=resolution.tag_instance_origin.id_persistent,
+            version=version,
+            value=resolution.tag_instance_origin.value,
+        )[0].save()
+
+
+def perform_value_replacement(recent_queryset, approved_by, time_merge):
+    "Perform the replacement for resolutions where a replacement value is provided."
+    replace_queryset = recent_queryset.filter(
+        models.Q(replacement_state=TagConflictResolution.VALUE)
+        & ~models.Q(replacement_value=models.F("tag_instance_destination__value"))
+    )
+    for resolution in replace_queryset:
+        tag_definition_destination = resolution.tag_definition_destination
+        if resolution.tag_instance_destination is None:
+            id_persistent = str(uuid4())
+            version = None
+        else:
+            tag_instance_reference = resolution.tag_instance_destination
+            id_persistent = tag_instance_reference.id_persistent
+            version = tag_instance_reference.id
+        TagInstanceHistory.change_or_create_versioned(
+            id_persistent=id_persistent,
+            time_edit=time_merge,
+            written_by_session=resolution.tag_instance_origin.written_by_session,
+            approved_by_id_persistent=approved_by.id_persistent,
+            id_entity_persistent=resolution.tag_instance_origin.id_entity_persistent,
+            id_tag_definition_persistent=tag_definition_destination.id_persistent,
+            merged_from=resolution.tag_instance_origin.id_persistent,
+            version=version,
+            value=resolution.replacement_value,
+        )[0].save()
 
 
 def dispatch_resolve_conflicts(merge_request: TagMergeRequest, approved_by: CosmaeUser):
