@@ -3,9 +3,21 @@ updates:
   - package-ecosystem: "npm"
     directories:
       - "/ui"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "16:00"
   - package-ecosystem: "pip"
     directories:
       - "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "16:00"
   - package-ecosystem: "docker"
     directories:
       - "/container"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "16:00"
