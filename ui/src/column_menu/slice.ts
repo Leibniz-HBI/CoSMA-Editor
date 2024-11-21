@@ -371,7 +371,6 @@ function updateNamePaths(
     newPrefix: string[]
 ) {
     const queue = [rootEntry]
-    //eslint-disable-next-line no-constant-condition
     while (true) {
         const entry = queue.pop()
         if (entry === undefined) {

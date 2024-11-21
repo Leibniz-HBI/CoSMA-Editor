@@ -348,7 +348,6 @@ export function EntityMergeRequestConflictListItem({
                         replacementState: conflict.value.replacementState,
                         replacementValue: conflict.value.replacementValue
                     }}
-                    // eslint-disable-next-line @typescript-eslint/no-empty-function
                     onSubmit={(formValues) => {
                         debouncedCallback(
                             {

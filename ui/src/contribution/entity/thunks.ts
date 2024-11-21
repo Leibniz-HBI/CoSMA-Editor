@@ -195,7 +195,6 @@ export function getContributionEntityDuplicateCandidatesAction({
                 const json = await rsp.json()
                 if (rsp.status == 200) {
                     const matchesMap = json['matches']
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     for (const idEntityPersistent in matchesMap) {
                         let assignedDuplicate =
                             matchesMap[idEntityPersistent]['assigned_duplicate']

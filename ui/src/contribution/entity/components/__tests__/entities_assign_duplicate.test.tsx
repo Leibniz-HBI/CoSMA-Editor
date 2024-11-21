@@ -44,7 +44,7 @@ jest.mock('react-router-dom', () => {
     loaderMock.mockReturnValue('id-contribution-test')
     return { useLoaderData: loaderMock, useNavigate: jest.fn() }
 })
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     return (
         <div className="mock">

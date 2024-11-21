@@ -97,7 +97,6 @@ export function downloadWorkAround(csvLines: string[]) {
     window.URL.revokeObjectURL(url)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function RemoteDataTable() {
     const isLoading = useAppSelector(selectIsLoadingEntities)
     const entities = useAppSelector(selectEntities)
@@ -257,7 +256,6 @@ export function DataTable({
                 tagDefinitions,
                 showEntityJustifications: showEntityJustifications
             }),
-            // eslint-disable-next-line react-hooks/exhaustive-deps
             [entities, columnStates, showEntityJustifications]
         ),
         submitValueCallback = (cell: Item, newValue: EditableGridCell) => {

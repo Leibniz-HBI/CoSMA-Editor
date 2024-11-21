@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-undef
-module.exports = {
+export default {
     testEnvironment: 'node',
     collectCoverage: true,
     coverageReporters: ['lcov', 'text-summary'],

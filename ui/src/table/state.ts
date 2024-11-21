@@ -5,7 +5,6 @@ import { Comment } from '../comments/slice'
 import { Entity } from '../entity/state'
 
 export interface TableState {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     columnStates: ColumnState[]
     columnIndices: { [key: string]: number }
     entities?: Entity[]

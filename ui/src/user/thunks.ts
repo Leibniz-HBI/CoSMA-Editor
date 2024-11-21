@@ -105,7 +105,7 @@ export function refresh({
             } else {
                 dispatch(refreshDenied())
             }
-        } catch (error: unknown) {
+        } catch (_error: unknown) {
             dispatch(refreshDenied())
         }
         return undefined

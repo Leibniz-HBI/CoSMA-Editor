@@ -70,7 +70,7 @@ import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     const showSearch = useAppSelector(selectShowSearch)
     return (

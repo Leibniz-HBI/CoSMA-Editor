@@ -100,7 +100,7 @@ test('open details', async () => {
         expect(screen.queryByText(modalContentText)).toBeNull()
     })
 })
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     return (
         <div className="mock">

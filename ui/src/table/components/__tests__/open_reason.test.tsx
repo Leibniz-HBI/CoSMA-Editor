@@ -64,7 +64,7 @@ import { editSessionReducer } from '../../../session/slice'
 import { entityDetailsReducer } from '../../../entity/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     return (
         <div className="mock">

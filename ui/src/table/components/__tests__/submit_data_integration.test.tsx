@@ -73,7 +73,7 @@ const debounced = debounce(
         changeCallback(item, value),
     400
 )
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     const changeCallback = (cell: Item, newValue: string) =>
         props.onCellEdited(cell, {

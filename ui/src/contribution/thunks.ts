@@ -20,7 +20,6 @@ export function getContributionList(): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(getContributionListStart())
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const contributions: Contribution[] = []
             for (let i = 0; ; i += 5000) {
                 const rsp = await fetch_chunk_get({

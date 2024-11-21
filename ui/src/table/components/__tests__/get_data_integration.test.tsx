@@ -64,7 +64,7 @@ import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state
 import { entityDetailsReducer } from '../../../entity/slice'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     return (
         <div className="mock">
@@ -304,7 +304,6 @@ test('get chunked', async () => {
     ])
     const idValueChunk = 'test-value-id-0'
     const version = 12
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tagResponse = {
         id_entity_persistent: 'test-id-0',
         id_tag_definition_persistent: idTagDefPersistent,

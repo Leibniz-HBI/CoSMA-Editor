@@ -82,7 +82,6 @@ export function MergeRequestConflictResolutionView({
 }: {
     idMergeRequestPersistent: string
 }) {
-    //eslint-disable-next-line react-hooks/exhaustive-deps
     const dispatch = useAppDispatch()
     const conflictsByCategory = useAppSelector(selectTagMergeRequestConflictsByCategory)
     const startMergeValue = useAppSelector(selectStartMerge)
@@ -274,7 +273,6 @@ export function MergeRequestConflictItem({
                         replacementState: conflict.value.replacementState,
                         replacementValue: conflict.value.replacementValue
                     }}
-                    // eslint-disable-next-line @typescript-eslint/no-empty-function
                     onSubmit={(formValues) => {
                         debouncedCallback(
                             {

@@ -122,7 +122,6 @@ export function addVanishingNotification(props: {
     id?: string
     vanishDelay: number
 }) {
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     return async (dispatch: AppDispatch) => {
         const notification = newNotification(props)
         dispatch(addNotification(notification))

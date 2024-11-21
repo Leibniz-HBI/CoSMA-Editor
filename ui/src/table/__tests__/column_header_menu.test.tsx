@@ -63,7 +63,7 @@ import { tagSelectionSlice } from '../../column_menu/slice'
 import { useTagDefinitionList } from '../../column_menu/hooks'
 
 const rectangle = { x: 0, y: 1, width: 2, height: 4 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     const columnStates = useAppSelector(selectColumnStates)
     const columnDefinitions = useTagDefinitionList(

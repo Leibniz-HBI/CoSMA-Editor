@@ -195,7 +195,7 @@ test('create, select and assign tag definition', async () => {
     await user.type(textBox, nameTagDef0)
     const stringLabel = screen.getByText('string')
     const stringRadio = getByRole(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
+        // eslint-disable-next-line  @typescript-eslint/no-non-null-asserted-optional-chain
         stringLabel.parentElement?.parentElement!,
         'radio'
     )

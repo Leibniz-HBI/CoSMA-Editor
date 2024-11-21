@@ -114,7 +114,7 @@ export function getColumnAsync(
                     dispatch(addError(errorMessageFromApi(json)))
                     return []
                 }
-            } catch (e: unknown) {
+            } catch (_e: unknown) {
                 dispatch(addError('Could not fetch descendant tags.'))
                 return []
             } finally {
@@ -395,7 +395,7 @@ export function parseValue(
             return valueString.toLowerCase() == 'true'
         }
         return valueString
-    } catch (e: unknown) {
+    } catch (_e: unknown) {
         return undefined
     }
 }

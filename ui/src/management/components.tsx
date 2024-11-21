@@ -14,7 +14,7 @@ export function ManagementPage() {
     let category: ManagementCategory | undefined = undefined
     try {
         category = loaderData as ManagementCategory
-    } catch (e: unknown) {
+    } catch (_e: unknown) {
         category = ManagementCategory.None
     }
     return (

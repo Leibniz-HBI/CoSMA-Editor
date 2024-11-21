@@ -37,7 +37,7 @@ import { EntityAddModal } from '../modals'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { act } from 'react-dom/test-utils'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     return (
         <div className="mock">
