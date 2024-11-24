@@ -6,7 +6,7 @@
   "dependencies": {
     "@glideapps/glide-data-grid": "^6.0.3",
     "@reduxjs/toolkit": "^1.9.7",
-    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/jest-dom": "^6.6.3",
     "@types/debounce": "^1.2.4",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.69",
