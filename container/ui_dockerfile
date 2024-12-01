@@ -21,7 +21,7 @@ RUN cp /cosmae/src/config_production.ts /cosmae/src/config.ts
 RUN npm install react-scripts
 RUN npm run build
 
-FROM nginx:1.27.2-alpine
+FROM nginx:1.27.3-alpine
 COPY --from=builder /cosmae/build /srv/cosmae
 COPY container/resources/robots.txt /srv/cosmae
 COPY container/resources/nginx.conf /etc/nginx
