@@ -1,17 +1,27 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
-from unittest.mock import MagicMock, patch
-from uuid import UUID
+from http.cookiejar import Cookie, CookieJar
 
 import pytest
+from allauth.account import app_settings as account_settings
+from allauth.core import context
+from allauth.socialaccount.helpers import complete_social_login
+from allauth.socialaccount.models import SocialAccount, SocialLogin, SocialToken
+from allauth.socialaccount.providers.base import AuthProcess
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.messages.middleware import MessageMiddleware
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.db import IntegrityError
+from django.middleware.csrf import CsrfViewMiddleware
+from django.test.client import RequestFactory
+from django.test.utils import override_settings
 from pytest_redis import factories
 
 from tests.edit_session import common as cs
 from tests.entity import common as ce
 from tests.tag import common as ct
 from tests.user import common as cu
-from tests.user.api.integration.requests import post_login, post_register
+from tests.utils import parse_datetime_cookie
 from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.entity.models_django import EntityHistory, EntityJustification
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
@@ -151,70 +161,110 @@ def tag_def_curated(user):
     )
 
 
-@pytest.fixture
-def auth_server(live_server, user):
-    user = CosmaeUser.objects.filter(id_persistent=cu.test_uuid).get()
-    user.save()
-    rsp = post_login(
-        live_server.url, {"name": cu.test_username, "password": cu.test_password}
+def get_token(user, url):
+    account = SocialAccount(provider="saml", uid=user.username)
+    sociallogin = SocialLogin(user=user, account=account)
+    sociallogin.state["process"] = AuthProcess.LOGIN
+    sociallogin.token = SocialToken(
+        app=sociallogin.account.get_provider().app, token="123", token_secret="456"
     )
-    return live_server, rsp.cookies
+    request_factory = RequestFactory()
+    request = request_factory.get("/accounts/login/callback")
+    session_middleware = SessionMiddleware(lambda request: None)
+    session_middleware.process_request(request)
+    csrf_view_middleware = CsrfViewMiddleware(lambda request: None)
+    csrf_view_middleware.process_request(request)
+    request.user = AnonymousUser
+    MessageMiddleware(lambda request: None).process_request(request)
+    with context.request_context(request):
+        rsp = csrf_view_middleware.process_response(
+            request,
+            session_middleware.process_response(
+                request, complete_social_login(request, sociallogin)
+            ),
+        )
+    cookie_jar = CookieJar()
+    for cookie_name in ["sessionid", "csrftoken"]:
+        cookie = rsp.cookies[cookie_name]
+        expires_str = cookie["expires"]
+        expires = parse_datetime_cookie(expires_str)
+        cookie_jar.set_cookie(
+            Cookie(
+                0,
+                cookie_name,
+                cookie.value,
+                port=None,
+                port_specified=False,
+                domain="localhost.local",
+                domain_specified=False,
+                domain_initial_dot=False,
+                path="/",
+                path_specified=True,
+                secure=False,
+                expires=int(expires.timestamp()),
+                discard=False,
+                comment=None,
+                comment_url=None,
+                rest={"SameSite": "Lax"},
+                rfc2109=False,
+            )
+        )
+    return cookie_jar
+
+
+@override_settings(
+    SOCIALACCOUNT_AUTO_SIGNUP=True,
+    ACCOUNT_SIGNUP_FORM_CLASS=None,
+    ACCOUNT_EMAIL_VERIFICATION=account_settings.EmailVerificationMethod.NONE,  # noqa
+)
+@pytest.fixture
+def auth_server(live_server, user_unsaved):
+    cookies = get_token(user_unsaved, live_server.url)
+    return live_server, cookies
 
 
 @pytest.fixture()
-def auth_server1(auth_server, user1):
+def auth_server1(auth_server, user1_unsaved):
     live_server, cookies_user0 = auth_server
     url = live_server.url
-    rsp = post_login(url, {"name": cu.test_username1, "password": cu.test_password1})
-    return live_server, cookies_user0, rsp.cookies
+    cookies = get_token(user1_unsaved, url)
+    return live_server, cookies_user0, cookies
 
 
 @pytest.fixture()
 def auth_server_applicant(live_server):
-    url = live_server.url
-    user_id_persistent = cu.test_uuid_applicant
-    uuidMock = MagicMock(return_value=UUID(user_id_persistent))
-    with patch("cosmae.user.api.uuid4", uuidMock):
-        rsp = post_register(
-            url,
-            {
-                "username": cu.test_username_applicant,
-                "password": cu.test_password_applicant,
-                "email": cu.test_email_applicant,
-                "names_personal": cu.test_names_personal_applicant,
-            },
-        )
-    user = CosmaeUser.objects.filter(id_persistent=user_id_persistent).get()
-    user.permission_group = CosmaeUser.APPLICANT
-    user.save()
-    rsp = post_login(
-        url,
-        {"name": cu.test_username_applicant, "password": cu.test_password_applicant},
+    session = EditSession.objects.create(
+        id_persistent=cs.id_session_applicant,
+        id_owner_persistent=cu.test_uuid_applicant,
+        name=cs.name_session_applicant,
     )
-    return live_server, rsp.cookies
+    user = CosmaeUser(
+        username=cu.test_username_applicant,
+        email=cu.test_email_applicant,
+        first_name=cu.test_names_personal_applicant,
+        id_persistent=cu.test_uuid_applicant,
+        edit_session=session,
+        permission_group=CosmaeUser.APPLICANT,
+    )
+    cookies = get_token(user, live_server.url)
+    return live_server, cookies
 
 
 @pytest.fixture
-def auth_server_commissioner(live_server, user_commissioner):
-    rsp = post_login(
-        live_server.url,
-        {
-            "name": cu.test_username_commissioner,
-            "password": cu.test_password_commissioner,
-        },
-    )
-    return live_server, rsp.cookies
+def auth_server_commissioner(live_server, user_commissioner_unsaved):
+    cookies = get_token(user_commissioner_unsaved, live_server.url)
+    return live_server, cookies
 
 
-@pytest.fixture
-def user(db):  # pylint: disable=unused-argument
+@pytest.fixture()
+def user_unsaved(db):  # pylint: disable=unused-argument
     session, _ = EditSession.objects.get_or_create(
         id_persistent=cs.id_session_user,
         id_owner_persistent=cu.test_uuid,
         name=cs.name_session_user,
     )
     try:
-        user = CosmaeUser.objects.create_user(
+        user = CosmaeUser(
             username=cu.test_username,
             password=cu.test_password,
             email=cu.test_email,
@@ -235,14 +285,20 @@ def user(db):  # pylint: disable=unused-argument
 
 
 @pytest.fixture
-def user1(db):  # pylint: disable=unused-argument
+def user(user_unsaved):
+    user_unsaved.save()
+    return user_unsaved
+
+
+@pytest.fixture
+def user1_unsaved(db):  # pylint: disable=unused-argument
     try:
         session = EditSession.objects.create(
             id_persistent=cs.id_session_user1,
             id_owner_persistent=cu.test_uuid1,
             name=cs.name_session_user1,
         )
-        user = CosmaeUser.objects.create_user(
+        user = CosmaeUser(
             username=cu.test_username1,
             password=cu.test_password1,
             email=cu.test_email1,
@@ -262,15 +318,21 @@ def user1(db):  # pylint: disable=unused-argument
         return CosmaeUser.objects.get(email=cu.test_email1)  # pylint: disable=no-member
 
 
+@pytest.fixture()
+def user1(user1_unsaved):
+    user1_unsaved.save()
+    return user1_unsaved
+
+
 @pytest.fixture
-def user_commissioner(db):  # pylint: disable=unused-argument
+def user_commissioner_unsaved(db):  # pylint: disable=unused-argument
     try:
         session = EditSession.objects.create(
             id_persistent=cs.id_session_commissioner,
             id_owner_persistent=cu.test_uuid_commissioner,
             name=cs.name_session_commissioner,
         )
-        user = CosmaeUser.objects.create_user(
+        user = CosmaeUser(
             username=cu.test_username_commissioner,
             password=cu.test_password_commissioner,
             email=cu.test_email_commissioner,
@@ -290,6 +352,12 @@ def user_commissioner(db):  # pylint: disable=unused-argument
         return CosmaeUser.objects.get(
             email=cu.test_email_commissioner
         )  # pylint: disable=no-member
+
+
+@pytest.fixture
+def user_commissioner(user_commissioner_unsaved):
+    user_commissioner_unsaved.save()
+    return user_commissioner_unsaved
 
 
 @pytest.fixture

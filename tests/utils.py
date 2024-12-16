@@ -1,9 +1,17 @@
 "Helper functions for tests."
 
 
-def format_datetime(datetime):
+from datetime import datetime
+
+
+def format_datetime(dt: datetime):
     "Helper function for formatting dates like django+ninja"
-    return datetime.strftime("%Y-%m-%d %H:%M:%S %z")
+    return dt.strftime("%Y-%m-%d %H:%M:%S %z")
+
+
+def parse_datetime_cookie(date_str):
+    "parse cookie date"
+    return datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %Z")
 
 
 def version_sort_key(dictionary):

@@ -1,17 +1,10 @@
 "API endpoints for handling user management."
 
-import logging
-from typing import Union
 from urllib.parse import unquote
-from uuid import uuid4
 
-from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import AnonymousUser, Group
-from django.db import DatabaseError, IntegrityError, transaction
+from django.db import DatabaseError
 from django.http import HttpRequest
 from ninja import Router, Schema
-from ninja.constants import NOT_SET
 
 from cosmae.edit_session.api import EditSession, edit_session_db_to_api
 from cosmae.edit_session.models_django import EditSession as EditSessionDb
@@ -19,10 +12,8 @@ from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.tag.api.models_conversion import tag_definition_db_to_api
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.user.models_api.login import (
-    LoginRequest,
     LoginResponse,
     LoginResponseList,
-    RegisterRequest,
     SearchResponse,
 )
 from cosmae.user.models_api.public import PublicUserInfo
@@ -30,8 +21,8 @@ from cosmae.user.models_conversion import (
     permission_group_db_to_api,
     user_db_to_public_user_info,
 )
-from cosmae.util import EmptyResponse, CosmaeUser
-from cosmae.util.auth import CosmaeGroup, check_user, cosmae_auth
+from cosmae.util import CosmaeUser
+from cosmae.util.auth import check_user
 
 
 class PutGroupRequest(Schema):
@@ -47,80 +38,6 @@ class SetEditSessionRequest(Schema):
 
 
 router = Router()
-
-
-@router.post("login", auth=NOT_SET, response={200: Union[LoginResponse, ApiError]})
-def login_post(request, credentials: LoginRequest):
-    "API endpoint for login"
-    user = authenticate(
-        request, username=credentials.name, password=credentials.password
-    )
-    if user is None:
-        return 200, ApiError(msg="Invalid credentials.")
-    login(request, user)
-    return 200, user_db_to_login_response(user)
-
-
-@router.post("logout", auth=cosmae_auth, response=None)
-def logout_post(request: HttpRequest):
-    "API endpoint for logout"
-    logout(request)
-    return 200, None
-
-
-@router.get("refresh", response={200: LoginResponse, 401: EmptyResponse})
-def refresh_get(request):
-    "Endpoint for refreshing a session."
-    user = request.user
-    if isinstance(user, AnonymousUser):
-        return 401, EmptyResponse
-    return 200, user_db_to_login_response(user)
-
-
-@router.post(
-    "register",
-    auth=NOT_SET,
-    response={200: LoginResponse, 500: ApiError, 400: ApiError},
-)
-def register_post(
-    request, registration_info: RegisterRequest
-):  # pylint: disable=unused-argument
-    "API endpoint for registration"
-    try:
-        permission_group = CosmaeUser.APPLICANT
-        if not (settings.DEBUG or settings.IS_UNITTEST):
-            if len(CosmaeUser.objects.exclude(is_superuser=True)) == 0:
-                permission_group = CosmaeUser.COMMISSIONER
-        id_user = uuid4()
-        with transaction.atomic():
-            session = EditSessionDb.objects.create(
-                id_persistent=str(uuid4()),
-                id_owner_persistent=str(id_user),
-                name="Default Edit Session",
-            )
-            user = CosmaeUser.objects.create_user(
-                username=registration_info.username,
-                email=registration_info.email,
-                password=registration_info.password,
-                first_name=registration_info.names_personal,
-                id_persistent=id_user,
-                permission_group=permission_group,
-                edit_session=session,
-            )
-            if user.last_name and user.last_name != "":
-                user.last_name = registration_info.names_family
-            user.groups.set([Group.objects.get(name=str(CosmaeGroup.APPLICANT))])
-            user.save()
-        return 200, user_db_to_login_response(user)
-    except IntegrityError as exc:
-        error_msg = exc.args[0]
-        if str(error_msg).startswith("duplicate"):
-            field_name = error_msg[error_msg.find("(") + 1 : error_msg.find(")")]
-            logging.warning("Value for field %s already in user table.", field_name)
-            return 400, ApiError(msg="Username or mail address already in use.")
-        return 500, ApiError(msg="Could not create user.")
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not create user.")
 
 
 @router.post(
@@ -341,6 +258,20 @@ def get_search(request: HttpRequest, username: str):
         return 401, ApiError(msg="not authenticated")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not search users.")
+
+
+@router.get("self", response={200: LoginResponse, 401: ApiError, 500: ApiError})
+def get_self(request: HttpRequest):
+    "Get your own user details."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    try:
+        user_api = user_db_to_login_response(user)
+        return 200, user_api
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not get your user info.")
 
 
 @router.get(

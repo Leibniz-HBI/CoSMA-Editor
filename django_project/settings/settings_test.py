@@ -60,8 +60,6 @@ def get_file_secret(secret_name):
 ###################################################################
 ALLOWED_HOSTS = []
 
-CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:3000", "http://localhost:3000"]
-
 
 SILENCED_SYSTEM_CHECKS = ["corsheaders.E001", "corsheaders.E003"]
 
@@ -73,9 +71,7 @@ CORS_ALLOW_HEADERS = ["Content-Type", "Access-Control-Allow-Credentials"]
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "None"
-CSRF_COOKIE_SAMESITE = "None"
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = False
 
 # Application definition
 
@@ -89,6 +85,11 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "corsheaders",
     "django_rq",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.saml",
+    "allauth.headless",
     "cosmae",
 ]
 
@@ -101,6 +102,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "django_project.urls"
@@ -157,6 +159,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    "django.contrib.auth.backends.ModelBackend",
+    # `allauth` specific authentication methods, such as login by email
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
@@ -209,3 +218,112 @@ CACHES = {
 }
 
 IS_UNITTEST = False
+
+HEADLESS_ONLY = True
+SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
+ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
+SOCIALACCOUNT_ONLY = True
+ACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_PROVIDERS = {
+    "saml": {
+        # Here, each app represents the SAML provider configuration of one
+        # organization.
+        "APPS": [
+            {
+                # Used for display purposes, e.g. over by: {% get_providers %}
+                "name": "CoSMAE",
+                # Accounts signed up via this provider will have their
+                # `SocialAccount.provider` value set to this ID. The combination
+                # of this value and the `uid` must be unique. The IdP entity ID is a
+                # good choice for this.
+                "provider_id": "urn:example.com",
+                # The organization slug is configured by setting the
+                # `client_id` value. In this example, the SAML login URL is:
+                #
+                #     /accounts/saml/{client_id}/login/
+                "client_id": "cosmae",
+                # The fields above are common `SocialApp` fields. For SAML,
+                # additional configuration is needed, which is placed in
+                # `SocialApp.settings`:
+                "settings": {
+                    # Mapping account attributes to upstream (IdP specific) attributes.
+                    # If left empty, an attempt will be done to map the attributes using
+                    # built-in defaults.
+                    "attribute_mapping": {
+                        "uid": [
+                            "urn:oasis:names:tc:SAML:attribute:subject-id",
+                        ],
+                        "email": ["urn:oid:1.2.840.113549.1.9.1"],
+                        "email_verified": [
+                            "emailVerified",
+                            "http://schemas.auth0.com/email_verified",
+                        ],
+                        "first_name": [
+                            "urn:oid:2.5.4.42",
+                        ],
+                        "last_name": [
+                            "urn:oid:2.5.4.4",
+                        ],
+                        "username": [
+                            "http://schemas.auth0.com/nickname",
+                        ],
+                    },
+                    # The following setting allows you to force the use of nameID as email.
+                    # This can be useful if you are using a SAML IdP that is broken in some way and
+                    # does not allow use of the emailAddress nameid format
+                    "use_nameid_for_email": False,
+                    # The configuration of the IdP.
+                    "idp": {
+                        # The entity ID of the IdP is required.
+                        "entity_id": "http://127.0.0.1/realms/CoSMAE",
+                        # Then, you can either specify the IdP's metadata URL:
+                        "metadata_url": "http://127.0.0.1/realms/CoSMAE/protocol/saml/descriptor",
+                        # for testing purposes only
+                        "metadata_cache_timeout": 0,
+                    },
+                    # The configuration of the SP.
+                    "sp": {
+                        # Optional entity ID of the SP. If not set,
+                        # defaults to the `saml_metadata` urlpattern
+                        # "entity_id": "https://serviceprovider.com/sso/sp/metadata.xml",
+                    },
+                    # Advanced settings.
+                    "advanced": {
+                        "allow_repeat_attribute_name": True,
+                        "allow_single_label_domains": False,
+                        "authn_request_signed": False,
+                        "digest_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+                        "logout_request_signed": False,
+                        "logout_response_signed": False,
+                        "metadata_signed": False,
+                        "name_id_encrypted": False,
+                        "name_id_format": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+                        "private_key": get_file_secret("saml_client_private_key"),
+                        "reject_deprecated_algorithm": True,
+                        # Due to security concerns, IdP initiated SSO is rejected by default.
+                        "reject_idp_initiated_sso": True,
+                        "signature_algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+                        "want_assertion_encrypted": False,
+                        "want_assertion_signed": False,
+                        "want_attribute_statement": True,
+                        "want_message_signed": False,
+                        "want_name_id": False,
+                        "want_name_id_encrypted": False,
+                        # "x509cert": get_file_secret("saml_client_certificate"),
+                    },
+                    "contact_person": {
+                        "technical": {
+                            "givenName": "Alice",
+                            "emailAddress": "alice@example.com",
+                        },
+                        "administrative": {
+                            "givenName": "Bob",
+                            "emailAddress": "bob@example.com",
+                        },
+                    },
+                },
+            },
+        ],
+        "SCOPES": ["emailVerified"],
+    }
+}

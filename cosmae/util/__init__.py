@@ -18,6 +18,7 @@ class CosmaeUser(AbstractUser):
     email = models.EmailField(unique=True)
     id_persistent = models.CharField(unique=True, max_length=36)
     tag_definitions = models.JSONField(default=list)
+    social_provider = models.CharField(max_length=32, default="None")
     APPLICANT = "APLC"
     READER = "READ"
     CONTRIBUTOR = "CNTR"
@@ -36,6 +37,9 @@ class CosmaeUser(AbstractUser):
     edit_session = models.ForeignKey(
         "editsession", null=True, on_delete=models.RESTRICT
     )
+
+    class Meta:
+        unique_together = [["username", "social_provider"]]
 
     @classmethod
     def search_username(cls, search_term: str):

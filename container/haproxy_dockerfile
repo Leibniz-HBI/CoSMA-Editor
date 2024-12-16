@@ -1,0 +1,3 @@
+FROM haproxy:alpine3.20
+ADD container/resources/haproxy.cfg /conf/haproxy.cfg
+ADD container/resources/haproxy_local.cfg /conf/haproxy_local.cfg
