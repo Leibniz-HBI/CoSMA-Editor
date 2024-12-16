@@ -190,11 +190,11 @@ test('finish success', async () => {
         )
     })
     expect(fetchMock).toHaveBeenCalledWith(
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
+        `http://127.0.0.1/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     )
     expect(fetchMock).toHaveBeenCalledWith(
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
+        `http://127.0.0.1/api/contributions/${idContribution}`,
         { credentials: 'include' }
     )
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([
@@ -229,7 +229,7 @@ test('finish error', async () => {
         expect(notification.msg).toEqual(errorMsg)
     })
     expect(fetchMock).toHaveBeenCalledWith(
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
+        `http://127.0.0.1/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     )
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([])

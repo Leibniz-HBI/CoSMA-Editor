@@ -33,7 +33,7 @@ import {
     selectShowEntityJustifications,
     selectShowSearch
 } from '../selectors'
-import { selectUserInfo } from '../../user/selectors'
+import { selectUserInfo } from '../../auth/selectors'
 import {
     changeColumnIndex,
     clearTable,
@@ -122,7 +122,7 @@ export function RemoteDataTable() {
                 if (!success) {
                     return
                 }
-                userInfo?.columns.forEach(async (col: TagDefinition) => {
+                userInfo.value?.columns.forEach(async (col: TagDefinition) => {
                     const idPersistent = col.idPersistent
                     const colStateIdx = columnIndices[idPersistent]
                     const colState = columnStates[colStateIdx ?? -1]

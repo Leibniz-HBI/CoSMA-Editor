@@ -422,7 +422,7 @@ function addValueResponses(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function checkTagValueCalls(fetchMock: jest.Mock<any, any>, idTagDef: string) {
     expect(fetchMock.mock.calls.at(-2)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/tags/entities',
+        'http://127.0.0.1/api/tags/entities',
         {
             credentials: 'include',
             method: 'POST',
@@ -440,7 +440,7 @@ function checkTagValueCalls(fetchMock: jest.Mock<any, any>, idTagDef: string) {
         }
     ])
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/tags/entities',
+        'http://127.0.0.1/api/tags/entities',
         {
             credentials: 'include',
             method: 'POST',

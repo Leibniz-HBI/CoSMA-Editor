@@ -67,6 +67,8 @@ import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
 import { tagSelectionSlice } from '../../../column_menu/slice'
+import { AuthState, newAuthState } from '../../../auth/state'
+import { authReducer } from '../../../auth/slice'
 
 const debounced = debounce(
     (changeCallback: (item: Item, value: string) => void, item: Item, value: string) =>
@@ -170,7 +172,7 @@ test('edit display text success', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(3)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/entities',
+        'http://127.0.0.1/api/entities',
         {
             credentials: 'include',
             method: 'POST',
@@ -275,7 +277,7 @@ test('edit tag value success', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(3)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/tags',
+        'http://127.0.0.1/api/tags',
         {
             credentials: 'include',
             method: 'POST',
@@ -510,6 +512,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         table: TableState
         tableSelection: TableSelectionState
         tagSelection: TagSelectionState
+        auth: AuthState
         user: UserState
         editSession: EditSessionState
         entityDetails: EntityDetailsState
@@ -531,13 +534,16 @@ export function renderWithProviders(
                     [idTagDefPersistent]: newRemote(tagDefTest)
                 }
             }),
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: [tagDefTest]
-                })
+            user: newUserState({}),
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: [tagDefTest]
+                    })
+                )
             }),
             entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
@@ -566,6 +572,7 @@ export function renderWithProviders(
             table: tableReducer,
             tagSelection: tagSelectionSlice.reducer,
             user: userSlice.reducer,
+            auth: authReducer,
             entityDetails: entityDetailsReducer,
             editSession: editSessionReducer
         },

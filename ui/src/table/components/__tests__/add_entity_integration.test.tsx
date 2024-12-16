@@ -14,10 +14,8 @@ jest.mock('@glideapps/glide-data-grid', () => {
 import { Col, Row } from 'react-bootstrap'
 import {
     UserPermissionGroup,
-    UserState,
     newPublicUserInfo,
-    newUserInfo,
-    newUserState
+    newUserInfo
 } from '../../../user/state'
 import { TableState, newTableState } from '../../state'
 import { newEntity } from '../../../entity/state'
@@ -31,11 +29,13 @@ import { tableReducer } from '../../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { EntityAddModal } from '../modals'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { act } from 'react-dom/test-utils'
+import { newRemote } from '../../../util/state'
+import { authReducer } from '../../../auth/slice'
+import { AuthState, newAuthState } from '../../../auth/state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -102,7 +102,7 @@ test('success new entity', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/entities',
+            'http://127.0.0.1/api/entities',
             {
                 credentials: 'include',
                 body: JSON.stringify({
@@ -136,7 +136,7 @@ test('success new entity no display text', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/entities',
+            'http://127.0.0.1/api/entities',
             {
                 credentials: 'include',
                 body: JSON.stringify({
@@ -153,7 +153,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
-        user: UserState
+        auth: AuthState
     }
 }
 
@@ -211,13 +211,15 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({ showEntityAddDialog: true }),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: []
-                })
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: []
+                    })
+                )
             })
         },
         ...renderOptions
@@ -228,7 +230,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
-            user: userSlice.reducer
+            auth: authReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

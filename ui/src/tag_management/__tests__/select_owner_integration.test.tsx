@@ -184,7 +184,7 @@ describe('Ownership search', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/user/search/%C3%A4%25',
+                'http://127.0.0.1/api/user/search/%C3%A4%25',
                 { credentials: 'include', method: 'GET' }
             ]
         ])
@@ -237,7 +237,7 @@ describe('Ownership search', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
+                `http://127.0.0.1/api/tags/definitions/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
                 { credentials: 'include', method: 'POST' }
             ]
         ])
@@ -283,7 +283,7 @@ describe('Ownership search', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
+                `http://127.0.0.1/api/tags/definitions/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
                 { credentials: 'include', method: 'POST' }
             ]
         ])

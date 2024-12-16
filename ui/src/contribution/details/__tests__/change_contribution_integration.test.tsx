@@ -150,7 +150,7 @@ test('submit for changed name', async () => {
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
+                `http://127.0.0.1/api/contributions/${idTest0}`,
                 {
                     credentials: 'include',
                     method: 'PATCH',
@@ -226,7 +226,7 @@ test('submit for changed empty values', async () => {
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
+                `http://127.0.0.1/api/contributions/${idTest0}`,
                 {
                     credentials: 'include',
                     method: 'PATCH',
@@ -296,7 +296,7 @@ test('submit for changed header flag', async () => {
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
+                `http://127.0.0.1/api/contributions/${idTest0}`,
                 {
                     credentials: 'include',
                     method: 'PATCH',
@@ -361,7 +361,7 @@ test('API error', async () => {
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
+                `http://127.0.0.1/api/contributions/${idTest0}`,
                 {
                     credentials: 'include',
                     method: 'PATCH',

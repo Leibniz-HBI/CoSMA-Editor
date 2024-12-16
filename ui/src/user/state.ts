@@ -65,11 +65,6 @@ export function newUserInfo({
 }
 
 export interface UserState {
-    userInfo?: UserInfo
-    showRegistration: boolean
-    isLoggingIn: boolean
-    isRegistering: boolean
-    isRefreshing: boolean
     userInfoByIdPersistent: {
         [key: string]: RemoteInterface<PublicUserInfo | undefined>
     }
@@ -77,30 +72,15 @@ export interface UserState {
 }
 
 export function newUserState({
-    userInfo = undefined,
-    showRegistration = false,
-    isLoggingIn = false,
-    isRegistering = false,
-    isRefreshing = false,
     userInfoByIdPersistent = {},
     userSearchResults = newRemote([])
 }: {
-    userInfo?: UserInfo
-    showRegistration?: boolean
-    isLoggingIn?: boolean
-    isRegistering?: boolean
-    isRefreshing?: boolean
     userInfoByIdPersistent?: {
         [key: string]: RemoteInterface<PublicUserInfo | undefined>
     }
     userSearchResults?: RemoteInterface<(PublicUserInfo | UserInfo)[]>
 }): UserState {
     return {
-        userInfo,
-        showRegistration,
-        isLoggingIn,
-        isRegistering,
-        isRefreshing,
         userInfoByIdPersistent,
         userSearchResults
     }

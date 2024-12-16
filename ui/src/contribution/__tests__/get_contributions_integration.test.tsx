@@ -132,7 +132,7 @@ test('success and open', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/contributions/chunk/0/5000',
+            'http://127.0.0.1/api/contributions/chunk/0/5000',
             {
                 credentials: 'include',
                 method: 'GET',
@@ -140,7 +140,7 @@ test('success and open', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/contributions/chunk/5000/5000',
+            'http://127.0.0.1/api/contributions/chunk/5000/5000',
             {
                 credentials: 'include',
                 method: 'GET',
@@ -184,7 +184,7 @@ test('error', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/contributions/chunk/0/5000',
+            'http://127.0.0.1/api/contributions/chunk/0/5000',
             {
                 credentials: 'include',
                 method: 'GET',
@@ -192,7 +192,7 @@ test('error', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/contributions/chunk/5000/5000',
+            'http://127.0.0.1/api/contributions/chunk/5000/5000',
             {
                 credentials: 'include',
                 method: 'GET',

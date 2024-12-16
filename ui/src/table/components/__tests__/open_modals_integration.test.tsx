@@ -69,6 +69,8 @@ import {
 import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
+import { AuthState, newAuthState } from '../../../auth/state'
+import { authReducer } from '../../../auth/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -95,6 +97,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         table: TableState
         tableSelection: TableSelectionState
         user: UserState
+        auth: AuthState
         tagSelection: TagSelectionState
         entityMergeRequests: EntityMergeRequestState
         entityMergeRequestConflicts: EntityMergeRequestConflictsState
@@ -120,13 +123,16 @@ export function renderWithProviders(
             }),
             entityMergeRequests: { entityMergeRequests: newRemote([]) },
             entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: [tagDefTest]
-                })
+            user: newUserState({}),
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: [tagDefTest]
+                    })
+                )
             }),
             entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
@@ -154,6 +160,7 @@ export function renderWithProviders(
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer,
+            auth: authReducer,
             tagSelection: tagSelectionSlice.reducer,
             entityMergeRequests: entityMergeRequestsReducer,
             entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,

@@ -51,3 +51,7 @@ export async function fetch_chunk_get({
         }
     )
 }
+
+export const ACCEPT_JSON_HEADER = {
+    accept: 'application/json'
+}

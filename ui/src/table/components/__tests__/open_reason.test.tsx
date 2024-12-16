@@ -63,6 +63,8 @@ import {
 import { editSessionReducer } from '../../../session/slice'
 import { entityDetailsReducer } from '../../../entity/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
+import { AuthState, newAuthState } from '../../../auth/state'
+import { authReducer } from '../../../auth/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -170,7 +172,7 @@ test('add justification', async () => {
     expect(state.table.entities?.at(0)?.justificationTxt).toEqual(justificationChanged)
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -179,7 +181,7 @@ test('add justification', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            'http://127.0.0.1/api/tags/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -192,7 +194,7 @@ test('add justification', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1/api/tags/definitions/children',
             {
                 method: 'POST',
                 credentials: 'include',
@@ -201,13 +203,13 @@ test('add justification', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications`,
+            `http://127.0.0.1/api/entities/${idPersistent0}/justifications`,
             {
                 credentials: 'include'
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications`,
+            `http://127.0.0.1/api/entities/${idPersistent0}/justifications`,
             {
                 credentials: 'include',
                 method: 'PUT',
@@ -432,6 +434,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         tagSelection: TagSelectionState
         user: UserState
+        auth: AuthState
         entityDetails: EntityDetailsState
         editSession: EditSessionState
     }
@@ -463,13 +466,16 @@ export function renderWithProviders(
                     [idTagDefPersistent]: newRemote(tagDefTest)
                 }
             }),
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: [tagDefTest]
-                })
+            user: newUserState({}),
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: [tagDefTest]
+                    })
+                )
             }),
             entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
@@ -498,6 +504,7 @@ export function renderWithProviders(
             tagSelection: tagSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer,
+            auth: authReducer,
             entityDetails: entityDetailsReducer,
             editSession: editSessionReducer
         },

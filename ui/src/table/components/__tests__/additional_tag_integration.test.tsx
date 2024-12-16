@@ -56,6 +56,8 @@ import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state
 import { entityDetailsReducer } from '../../../entity/slice'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 import { useAppDispatch } from '../../../hooks'
+import { AuthState, newAuthState } from '../../../auth/state'
+import { authReducer } from '../../../auth/slice'
 
 test('get descendant tag success', async () => {
     const fetchMock = jest.fn()
@@ -99,7 +101,7 @@ test('get descendant tag success', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -108,7 +110,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1/api/tags/definitions/children',
             {
                 body: '{}',
                 credentials: 'include',
@@ -117,7 +119,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1/api/tags/definitions/children',
             {
                 body: JSON.stringify({
                     id_parent_persistent: idTagDefParentPersistent
@@ -128,7 +130,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1/api/tags/definitions/children',
             {
                 body: JSON.stringify({
                     id_parent_persistent: idTagDefPersistent
@@ -139,11 +141,11 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/tags/definitions/${idTagDefParentPersistent}/descendants`,
+            `http://127.0.0.1/api/tags/definitions/${idTagDefParentPersistent}/descendants`,
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            'http://127.0.0.1/api/tags/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -156,7 +158,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/user/tag_definitions/append/column_id_test',
+            'http://127.0.0.1/api/user/tag_definitions/append/column_id_test',
             {
                 credentials: 'include',
                 method: 'POST'
@@ -365,6 +367,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         tagSelection: TagSelectionState
         user: UserState
+        auth: AuthState
         editSession: EditSessionState
         entityDetails: EntityDetailsState
     }
@@ -384,13 +387,16 @@ export function renderWithProviders(
                     [justificationColumnId]: newRemote(justificationColumn)
                 }
             }),
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: []
-                })
+            user: newUserState({}),
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: []
+                    })
+                )
             }),
             entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
@@ -419,6 +425,7 @@ export function renderWithProviders(
             table: tableReducer,
             tagSelection: tagSelectionSlice.reducer,
             user: userSlice.reducer,
+            auth: authReducer,
             editSession: editSessionReducer,
             entityDetails: entityDetailsReducer
         },

@@ -191,15 +191,15 @@ test('assign existing', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags`,
+            `http://127.0.0.1/api/contributions/${idContribution}/tags`,
             { credentials: 'include' }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-0`,
+            `http://127.0.0.1/api/contributions/${idContribution}/preview/id-active-0`,
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1/api/tags/definitions/children',
             {
                 body: '{}',
                 credentials: 'include',
@@ -208,11 +208,11 @@ test('assign existing', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-2`,
+            `http://127.0.0.1/api/contributions/${idContribution}/preview/id-active-2`,
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1/api/tags/definitions/children',
             {
                 body: JSON.stringify({ id_parent_persistent: idTagDef0 }),
                 credentials: 'include',
@@ -221,7 +221,7 @@ test('assign existing', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp1.id_persistent}`,
+            `http://127.0.0.1/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp1.id_persistent}`,
             {
                 method: 'PATCH',
                 credentials: 'include',
@@ -229,7 +229,7 @@ test('assign existing', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/contributions/id-contribution-test/preview/id-active-2',
+            'http://127.0.0.1/api/contributions/id-contribution-test/preview/id-active-2',
             {
                 credentials: 'include'
             }

@@ -23,7 +23,8 @@ import { CheckCircle, XCircleFill } from 'react-bootstrap-icons'
 import { putOwnershipRequestClear } from './slice'
 import { OwnershipRequest } from './state'
 import { RemoteInterface } from '../util/state'
-import { updateUserTagDefinition, userSearchClear } from '../user/slice'
+import { userSearchClear } from '../user/slice'
+import { updateUserTagDefinition } from '../auth/slice'
 
 export function TagManagementPage() {
     const dispatch: AppDispatch = useDispatch()

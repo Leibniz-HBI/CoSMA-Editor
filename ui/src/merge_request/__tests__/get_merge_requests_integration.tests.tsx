@@ -22,16 +22,11 @@ import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ReviewList } from '../components'
 import { newRemote } from '../../util/state'
-import {
-    UserPermissionGroup,
-    UserState,
-    newPublicUserInfo,
-    newUserInfo,
-    newUserState
-} from '../../user/state'
+import { UserPermissionGroup, newPublicUserInfo, newUserInfo } from '../../user/state'
 import { TagType, newTagDefinition } from '../../column_menu/state'
-import { userSlice } from '../../user/slice'
 import { useNavigate } from 'react-router-dom'
+import { AuthState, newAuthState } from '../../auth/state'
+import { authReducer } from '../../auth/slice'
 
 jest.mock('react-router-dom', () => {
     const mockNavigate = jest.fn()
@@ -43,7 +38,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         notification: NotificationManager
         tagMergeRequests: MergeRequestState
-        user: UserState
+        auth: AuthState
     }
 }
 
@@ -54,15 +49,17 @@ export function renderWithProviders(
         preloadedState = {
             tagMergeRequests: newMergeRequestState({}),
             notification: { notificationList: [], notificationMap: {} },
-            user: newUserState({
-                userInfo: newUserInfo({
-                    username: 'logged in user',
-                    idPersistent: 'id-logged-in-user',
-                    email: 'user@logged.in',
-                    namesPersonal: 'name logged in',
-                    columns: [],
-                    permissionGroup: UserPermissionGroup.CONTRIBUTOR
-                })
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        username: 'logged in user',
+                        idPersistent: 'id-logged-in-user',
+                        email: 'user@logged.in',
+                        namesPersonal: 'name logged in',
+                        columns: [],
+                        permissionGroup: UserPermissionGroup.CONTRIBUTOR
+                    })
+                )
             })
         },
         ...renderOptions
@@ -72,7 +69,7 @@ export function renderWithProviders(
         reducer: {
             notification: notificationReducer,
             tagMergeRequests: tagMergeRequestsReducer,
-            user: userSlice.reducer
+            auth: authReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -286,7 +283,7 @@ test('error', async () => {
                 notificationMap: expect.anything(),
                 helpPath: undefined
             }),
-            user: expect.anything()
+            auth: expect.anything()
         })
     })
 })

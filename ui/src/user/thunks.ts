@@ -1,25 +1,13 @@
-import { AppDispatch } from '../store'
 import {
     getUserInfoError,
     getUserInfoStart,
     getUserInfoSuccess,
-    loginError,
-    loginStart,
-    loginSuccess,
-    logout,
-    refreshDenied,
-    refreshStart,
-    refreshSuccess,
-    registrationError,
-    registrationStart,
-    registrationSuccess,
-    removeUserTagDefinition,
     userSearchClear,
     userSearchError,
     userSearchStart,
     userSearchSuccess
 } from './slice'
-import { addError, addSuccessVanish } from '../util/notification/slice'
+import { addError} from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
@@ -28,89 +16,9 @@ import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
 import { justificationColumnId } from '../table/state'
 import { setCurrentEditSession } from '../session/slice'
 import { parseEditSessionFromApi } from '../session/thunks'
+import { removeUserTagDefinition } from '../auth/slice'
 
-export function login(userName: string, password: string): ThunkWithFetch<void> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
-        dispatch(loginStart())
-        try {
-            const rsp = await fetch(config.api_path + '/user/login', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Access-Control-Allow-Credentials': 'true',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name: userName, password: password })
-            })
-            if (rsp.status == 200) {
-                const json = await rsp.json()
-                const msg = json['msg']
-                if (msg !== undefined) {
-                    dispatch(loginError())
-                    dispatch(addError(errorMessageFromApi(json)))
-                } else {
-                    dispatch(loginSuccess(parseUserInfoFromJson(json)))
-                    dispatch(
-                        setCurrentEditSession(
-                            parseEditSessionFromApi(json['edit_session'])
-                        )
-                    )
-                }
-            } else {
-                const json = await rsp.json()
-                let msg = json['msg']
-                if (msg === undefined) {
-                    msg = 'Unknown error'
-                }
-                dispatch(loginError())
-                dispatch(addError(msg))
-            }
-        } catch (e: unknown) {
-            dispatch(loginError())
-            dispatch(addError(exceptionMessage(e)))
-        }
-    }
-}
 
-export function refresh({
-    withDispatch = true
-}: {
-    withDispatch?: boolean
-}): ThunkWithFetch<UserInfo | undefined> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
-        if (withDispatch) {
-            dispatch(refreshStart())
-        }
-        try {
-            const rsp = await fetch(config.api_path + '/user/refresh', {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Access-Control-Allow-Credentials': 'true',
-                    'Content-Type': 'application/json'
-                }
-            })
-            if (rsp.status == 200) {
-                const json = await rsp.json()
-                const userInfo = parseUserInfoFromJson(json)
-                if (withDispatch) {
-                    dispatch(refreshSuccess(userInfo))
-                    dispatch(
-                        setCurrentEditSession(
-                            parseEditSessionFromApi(json['edit_session'])
-                        )
-                    )
-                }
-                return userInfo
-            } else {
-                dispatch(refreshDenied())
-            }
-        } catch (_error: unknown) {
-            dispatch(refreshDenied())
-        }
-        return undefined
-    }
-}
 
 export function setCurrentEditSessionThunk(
     id_edit_session_persistent: string
@@ -135,83 +43,6 @@ export function setCurrentEditSessionThunk(
     }
 }
 
-export function registration({
-    userName,
-    namesPersonal,
-    namesFamily = undefined,
-    email,
-    password
-}: {
-    userName: string
-    namesPersonal: string
-    namesFamily?: string
-    email: string
-    password: string
-}): ThunkWithFetch<void> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
-        dispatch(registrationStart())
-        try {
-            const rsp = await fetch(config.api_path + '/user/register', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Access-Control-Allow-Credentials': 'true',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: userName,
-                    email: email,
-                    names_family: namesFamily == '' ? null : namesFamily,
-                    names_personal: namesPersonal,
-                    password: password
-                })
-            })
-            if (rsp.status == 200) {
-                dispatch(registrationSuccess())
-                dispatch(addSuccessVanish('Registration Successful'))
-            } else {
-                const json = await rsp.json()
-                let msg = ''
-                if (rsp.status == 422) {
-                    errorMessageFromApi(json)
-                } else {
-                    msg = json['msg']
-                    if (msg === undefined) {
-                        msg = 'Unknown error'
-                    }
-                }
-                dispatch(registrationError())
-                dispatch(addError(msg))
-            }
-        } catch (error: unknown) {
-            dispatch(registrationError())
-            dispatch(addError(exceptionMessage(error)))
-        }
-    }
-}
-export function logoutThunk(): ThunkWithFetch<void> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
-        dispatch(loginStart())
-        try {
-            const rsp = await fetch(config.api_path + '/user/logout', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Access-Control-Allow-Credentials': 'true',
-                    'Content-Type': 'application/json'
-                }
-            })
-            if (rsp.status == 200) {
-                dispatch(logout())
-            } else {
-                const json = await rsp.json()
-                dispatch(addError(errorMessageFromApi(json)))
-            }
-        } catch (e: unknown) {
-            dispatch(addError(exceptionMessage(e)))
-        }
-    }
-}
 
 export function userSearch(searchTerm: string): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {

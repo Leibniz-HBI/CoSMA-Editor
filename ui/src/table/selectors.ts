@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { AppDispatch, RootState } from '../store'
-import { selectPermissionGroup } from '../user/selectors'
+import { selectPermissionGroup } from '../auth/selectors'
 import { removeSelectedColumn, tagChangeOwnerShipShow } from './slice'
 import { remoteUserProfileColumnDeleteAsync } from '../user/thunks'
 import { UserPermissionGroup } from '../user/state'

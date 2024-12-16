@@ -120,7 +120,7 @@ test('submit correct name', async () => {
     })
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:8000/cosmae/api/contributions',
+        'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
     checkFormData(fetchMock.mock.calls[0][1].body, {
@@ -151,7 +151,7 @@ test('submit with description and header', async () => {
     })
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:8000/cosmae/api/contributions',
+        'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
     checkFormData(fetchMock.mock.calls[0][1].body, {
@@ -182,7 +182,7 @@ test('error', async () => {
     })
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:8000/cosmae/api/contributions',
+        'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
     checkFormData(fetchMock.mock.calls[0][1].body, {

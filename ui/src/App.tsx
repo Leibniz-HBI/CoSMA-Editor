@@ -3,7 +3,6 @@
 import './App.css'
 import '@glideapps/glide-data-grid/dist/index.css'
 import './App.scss'
-import { LoginProvider } from './user/components/provider'
 import { Col, Container, Nav, Navbar, Row } from 'react-bootstrap'
 import { RemoteDataTable } from './table/components/table'
 import {
@@ -27,12 +26,13 @@ import {
 } from './util/notification/components'
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store, { AppDispatch } from './store'
-import { selectUserInfo } from './user/selectors'
-import { logoutThunk } from './user/thunks'
+import { selectUserInfo } from './auth/selectors'
 import { TagManagementPage } from './tag_management/components'
 import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
 import { ManagementPage } from './management/components'
 import { contributionStepApiToUiMap } from './contribution/thunks'
+import { AuthProvider, ProviderCallback } from './auth/components'
+import { addError } from './util/notification/slice'
 
 export function CosmaeRoot() {
     const userInfo = useSelector(selectUserInfo)
@@ -65,7 +65,7 @@ export function CosmaeRoot() {
                                         <HelpButton />
                                     </Nav>
                                     <Nav>
-                                        {userInfo?.permissionGroup ==
+                                        {userInfo.value?.permissionGroup ==
                                             UserPermissionGroup.COMMISSIONER && (
                                             <Nav.Link as={NavLink} to="/management">
                                                 Manage
@@ -74,10 +74,14 @@ export function CosmaeRoot() {
                                     </Nav>
                                     <Nav>
                                         <Nav.Link
-                                            onClick={() =>
-                                                dispatch(logoutThunk()).then(() =>
-                                                    location.reload()
-                                                )
+                                            onClick={
+                                                () =>
+                                                    dispatch(
+                                                        addError(
+                                                            'Logout not yet implemented.'
+                                                        )
+                                                    )
+                                                // .then(()=>location.reload())
                                             }
                                         >
                                             Logout
@@ -103,6 +107,7 @@ const router = createBrowserRouter([
         element: <CosmaeRoot />,
         children: [
             { path: '', element: <TableConnector />, index: true },
+            { path: 'callback', element: <ProviderCallback /> },
             {
                 path: 'contribute',
                 element: <ContributionList />
@@ -197,7 +202,10 @@ function App() {
                 fluid
                 className="vh-100 d-flex flex-column ps-0 pe-0 ms-0 me-0 cosmae-container"
             >
-                <LoginProvider body={<RouterProvider router={router} />} />
+                {/* <LoginProvider body={<RouterProvider router={router} />} /> */}
+                <AuthProvider>
+                    <RouterProvider router={router} />
+                </AuthProvider>
             </Container>
             <NotificationToastList />
         </Provider>

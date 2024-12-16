@@ -17,6 +17,7 @@ import { tableReducer } from './table/slice'
 import { editSessionReducer } from './session/slice'
 import { entityDetailsReducer } from './entity/slice'
 import { permissionsReducer } from './permissions/slice'
+import { authReducer } from './auth/slice'
 
 const rootReducer = combineReducers({
     notification: notificationReducer,
@@ -36,7 +37,8 @@ const rootReducer = combineReducers({
     comments: commentsReducer,
     table: tableReducer,
     permissions: permissionsReducer,
-    editSession: editSessionReducer
+    editSession: editSessionReducer,
+    auth: authReducer
 })
 
 export function setupStore(preloadedState?: PreloadedState<RootState>) {

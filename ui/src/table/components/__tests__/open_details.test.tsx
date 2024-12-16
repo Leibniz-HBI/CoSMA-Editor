@@ -70,6 +70,8 @@ import { editSessionReducer } from '../../../session/slice'
 import { entityDetailsReducer } from '../../../entity/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import userEvent from '@testing-library/user-event'
+import { AuthState, newAuthState } from '../../../auth/state'
+import { authReducer } from '../../../auth/slice'
 
 test('open details', async () => {
     const modalTitleText = `Entity Details`
@@ -249,6 +251,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         tagSelection: TagSelectionState
         user: UserState
+        auth: AuthState
         entityDetails: EntityDetailsState
         editSession: EditSessionState
     }
@@ -292,13 +295,14 @@ export function renderWithProviders(
                     [idTagDefPersistent1]: newRemote(tagDefTest1)
                 }
             }),
-            user: newUserState({
-                userInfo: newUserInfo({
+            user: newUserState({}),
+            auth: newAuthState({
+                user: newRemote(newUserInfo({
                     ...userTest,
                     email: 'mail@test.org',
                     namesPersonal: 'names personal',
                     columns: [tagDefTest]
-                })
+                }))
             }),
             entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
@@ -327,6 +331,7 @@ export function renderWithProviders(
             tagSelection: tagSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer,
+            auth:authReducer,
             entityDetails: entityDetailsReducer,
             editSession: editSessionReducer
         },

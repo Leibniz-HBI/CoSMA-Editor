@@ -18,6 +18,7 @@ import {
 import { entityMergeRequestConflictSlice } from '../slice'
 import { EntityMergeRequestConflictHeader } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
+import { ReplacementState } from '../../../conflicts/state'
 
 jest.mock('react-router-dom', () => {
     const navigateCallbackMock = jest.fn()
@@ -159,14 +160,16 @@ function addSuccessResponse(fetchMock: jest.Mock) {
             display_txt_details: 'display_txt_detail',
             id_persistent: idPersistentOrigin0,
             version: versionOrigin0,
-            disabled: false
+            disabled: false,
+            justification_txt: ''
         },
         destination: {
             display_txt: displayTextDestination0,
             display_txt_details: 'display_txt_detail',
             id_persistent: idPersistentDestination0,
             version: versionDestination0,
-            disabled: false
+            disabled: false,
+            justification_txt: ''
         },
         created_by: {
             username: userName0,
@@ -219,7 +222,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             value: valueTagInstanceDestinationResolvable0,
                             version: versionTagInstanceDestinationResolvable0
                         },
-                        replace: true
+                        replacement_state: 'REPLACE'
                     },
                     resolvableConflict1,
                     {
@@ -240,7 +243,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             value: valueTagInstanceDestinationResolvable2,
                             version: versionTagInstanceDestinationResolvable2
                         },
-                        replace: false
+                        replacement_state: 'KEEP'
                     }
                 ],
                 updated: [resolvableConflict1],
@@ -300,14 +303,16 @@ test('swap origin and destination', async () => {
             displayTxt: displayTextDestination0,
             displayTxtDetails: 'display_txt_detail',
             version: versionDestination0,
-            disabled: false
+            disabled: false,
+            justificationTxt: ''
         },
         entityDestination: {
             idPersistent: idPersistentOrigin0,
             displayTxt: displayTextOrigin0,
             displayTxtDetails: 'display_txt_detail',
             version: versionOrigin0,
-            disabled: false
+            disabled: false,
+            justificationTxt: ''
         },
         createdBy: {
             idPersistent: idUser0,
@@ -354,7 +359,7 @@ test('swap origin and destination', async () => {
             value: valueTagInstanceDestinationResolvable1,
             version: versionTagInstanceDestinationResolvable1
         },
-        replace: undefined
+        replacementState: undefined
     })
     const expectedConflictState = {
         conflicts: newRemote({
@@ -378,7 +383,7 @@ test('swap origin and destination', async () => {
                             value: valueTagInstanceDestinationResolvable0,
                             version: versionTagInstanceDestinationResolvable0
                         },
-                        replace: true
+                        replacementState: ReplacementState.REPLACE
                     })
                 ),
                 newRemote(conflictResolvable1),
@@ -401,7 +406,7 @@ test('swap origin and destination', async () => {
                             value: valueTagInstanceDestinationResolvable2,
                             version: versionTagInstanceDestinationResolvable2
                         },
-                        replace: false
+                        replacementState: ReplacementState.KEEP
                     })
                 )
             ],
@@ -465,14 +470,16 @@ test('swap origin and destination', async () => {
                     displayTxtDetails: 'display_txt_detail',
                     idPersistent: idPersistentOrigin0,
                     version: versionOrigin0,
-                    disabled: false
+                    disabled: false,
+                    justificationTxt: ''
                 },
                 entityDestination: {
                     displayTxt: displayTextDestination0,
                     displayTxtDetails: 'display_txt_detail',
                     idPersistent: idPersistentDestination0,
                     version: versionDestination0,
-                    disabled: false
+                    disabled: false,
+                    justificationTxt: ''
                 },
                 createdBy: {
                     username: userName0,
@@ -494,11 +501,11 @@ test('swap origin and destination', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/reverse_origin_destination`,
+            `http://127.0.0.1/api/merge_requests/entities/${idEntityMr0}/reverse_origin_destination`,
             { credentials: 'include', method: 'POST' }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts`,
+            `http://127.0.0.1/api/merge_requests/entities/${idEntityMr0}/conflicts`,
             { credentials: 'include' }
         ]
     ])

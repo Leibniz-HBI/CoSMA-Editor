@@ -55,7 +55,7 @@ test('add searched entity', async () => {
     await doSearch(fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.at(-1)).toEqual([
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/score?` +
+            `http://127.0.0.1/api/contributions/${idContribution}/entities/score?` +
                 `id_entity_contribution_persistent=id-entity-1&id_entity_existing_persistent=${idEntitySearch0}`,
             { credentials: 'include' }
         ])

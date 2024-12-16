@@ -61,6 +61,8 @@ import { EntityDetailsState, newEntityDetailsState } from '../../entity/state'
 import { entityDetailsReducer } from '../../entity/slice'
 import { tagSelectionSlice } from '../../column_menu/slice'
 import { useTagDefinitionList } from '../../column_menu/hooks'
+import { AuthState, newAuthState } from '../../auth/state'
+import { authReducer } from '../../auth/slice'
 
 const rectangle = { x: 0, y: 1, width: 2, height: 4 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -109,15 +111,18 @@ test('no curation for unprivileged user', async () => {
     addTagInstanceResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, {
         preloadedState: {
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    permissionGroup: UserPermissionGroup.CONTRIBUTOR,
-                    email: 'mail@test.de',
-                    namesPersonal: 'names',
-                    columns: [tagDefTest]
-                })
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        permissionGroup: UserPermissionGroup.CONTRIBUTOR,
+                        email: 'mail@test.de',
+                        namesPersonal: 'names',
+                        columns: [tagDefTest]
+                    })
+                )
             }),
+            user: newUserState({}),
             table: newTableState({}),
             tagSelection: initialTagSelectionState,
             notification: newNotificationManager({}),
@@ -162,12 +167,12 @@ test('remove column from header menu', async () => {
         expect(remove).toBeNull()
         const state = store.getState()
         expect(state.table.columnStates).toEqual([displayTxtColumnState])
-        expect(state.user.userInfo?.columns).toEqual([])
+        expect(state.auth.user.value?.columns).toEqual([])
     })
     // TODO check menu entries
     expect(fetchMock.mock.calls.length).toEqual(3)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/user/tag_definitions/column_id_test',
+        'http://127.0.0.1/api/user/tag_definitions/column_id_test',
         { credentials: 'include', method: 'DELETE' }
     ])
 })
@@ -247,6 +252,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         tagSelection: TagSelectionState
         user: UserState
+        auth: AuthState
         editSession: EditSessionState
         entityDetails: EntityDetailsState
     }
@@ -267,14 +273,17 @@ export function renderWithProviders(
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
             tagSelection: initialTagSelectionState,
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: [tagDefTest]
-                })
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: [tagDefTest]
+                    })
+                )
             }),
+            user: newUserState({}),
             editSession: newEditSessionState({
                 currentEditSession: newRemote(
                     newEditSession({
@@ -301,6 +310,7 @@ export function renderWithProviders(
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
             tagSelection: tagSelectionSlice.reducer,
+            auth: authReducer,
             user: userSlice.reducer,
             editSession: editSessionReducer,
             entityDetails: entityDetailsReducer

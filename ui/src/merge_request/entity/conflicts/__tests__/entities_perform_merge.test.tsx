@@ -19,6 +19,7 @@ import {
 import { entityMergeRequestConflictSlice } from '../slice'
 import { EntityMergeRequestConflictComponent } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
+import { ReplacementState } from '../../../conflicts/state'
 
 jest.mock('react-router-dom', () => {
     const navigateCallbackMock = jest.fn()
@@ -219,7 +220,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             value: valueTagInstanceDestinationResolvable0,
                             version: versionTagInstanceDestinationResolvable0
                         },
-                        replace: true
+                        replacement_state: 'REPLACE'
                     },
                     resolvableConflict1,
                     {
@@ -240,7 +241,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
                             value: valueTagInstanceDestinationResolvable2,
                             version: versionTagInstanceDestinationResolvable2
                         },
-                        replace: false
+                        replacement_state: 'KEEP'
                     }
                 ],
                 updated: [resolvableConflict1],
@@ -301,14 +302,16 @@ test('apply conflicts', async () => {
             displayTxt: displayTextDestination0,
             displayTxtDetails: 'Display Text',
             version: versionDestination0,
-            disabled: false
+            disabled: false,
+            justificationTxt: ''
         },
         entityDestination: {
             idPersistent: idPersistentOrigin0,
             displayTxt: displayTextOrigin0,
             displayTxtDetails: 'Display Text',
             version: versionOrigin0,
-            disabled: false
+            disabled: false,
+            justificationTxt: ''
         },
         createdBy: {
             idPersistent: idUser0,
@@ -358,7 +361,7 @@ test('apply conflicts', async () => {
             value: valueTagInstanceDestinationResolvable1,
             version: versionTagInstanceDestinationResolvable1
         },
-        replace: undefined
+        replacementState: undefined
     })
     const expectedConflictState = {
         conflicts: newRemote({
@@ -382,7 +385,7 @@ test('apply conflicts', async () => {
                             value: valueTagInstanceDestinationResolvable0,
                             version: versionTagInstanceDestinationResolvable0
                         },
-                        replace: true
+                        replacementState: ReplacementState.REPLACE
                     })
                 ),
                 newRemote(conflictResolvable1),
@@ -405,7 +408,7 @@ test('apply conflicts', async () => {
                             value: valueTagInstanceDestinationResolvable2,
                             version: versionTagInstanceDestinationResolvable2
                         },
-                        replace: false
+                        replacementState: ReplacementState.KEEP
                     })
                 )
             ],
@@ -469,14 +472,16 @@ test('apply conflicts', async () => {
                     displayTxtDetails: 'Display Text',
                     idPersistent: idPersistentDestination0,
                     version: versionDestination0,
-                    disabled: false
+                    disabled: false,
+                    justificationTxt: ''
                 },
                 entityDestination: {
                     displayTxt: displayTextOrigin0,
                     displayTxtDetails: 'Display Text',
                     idPersistent: idPersistentOrigin0,
                     version: versionOrigin0,
-                    disabled: false
+                    disabled: false,
+                    justificationTxt: ''
                 },
                 createdBy: {
                     username: userName0,
@@ -501,11 +506,11 @@ test('apply conflicts', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts`,
+            `http://127.0.0.1/api/merge_requests/entities/${idEntityMr0}/conflicts`,
             { credentials: 'include' }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/merge`,
+            `http://127.0.0.1/api/merge_requests/entities/${idEntityMr0}/merge`,
             { credentials: 'include', method: 'POST' }
         ]
     ])

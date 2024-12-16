@@ -138,7 +138,7 @@ test('success show and edit', async () => {
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/comments',
+                'http://127.0.0.1/api/comments',
                 {
                     method: 'POST',
                     credentials: 'include',
@@ -146,7 +146,7 @@ test('success show and edit', async () => {
                 }
             ],
             [
-                `http://127.0.0.1:8000/cosmae/api/comments/${idPersistent}`,
+                `http://127.0.0.1/api/comments/${idPersistent}`,
                 {
                     method: 'POST',
                     credentials: 'include',

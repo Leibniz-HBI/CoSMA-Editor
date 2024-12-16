@@ -83,15 +83,15 @@ describe('get users', () => {
         ])
         expect((fetch as jest.Mock).mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/user/chunks/0/5000',
+                'http://127.0.0.1/api/user/chunks/0/5000',
                 { credentials: 'include', method: 'GET' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/user/chunks/5/5000',
+                'http://127.0.0.1/api/user/chunks/5/5000',
                 { credentials: 'include', method: 'GET' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/user/chunks/10/5000',
+                'http://127.0.0.1/api/user/chunks/10/5000',
                 { credentials: 'include', method: 'GET' }
             ]
         ])
@@ -129,7 +129,7 @@ describe('set user permissions', () => {
             ]
         ])
         expect((fetch as jest.Mock).mock.calls).toContainEqual([
-            `http://127.0.0.1:8000/cosmae/api/user/${idPersistentTest}/permission_group`,
+            `http://127.0.0.1/api/user/${idPersistentTest}/permission_group`,
             {
                 method: 'PUT',
                 credentials: 'include',

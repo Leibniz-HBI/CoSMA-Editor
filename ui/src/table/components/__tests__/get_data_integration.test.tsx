@@ -63,6 +63,8 @@ import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
 import { tagSelectionSlice } from '../../../column_menu/slice'
+import { AuthState, newAuthState } from '../../../auth/state'
+import { authReducer } from '../../../auth/slice'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -206,7 +208,7 @@ test('get entities success', async () => {
     )
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -215,7 +217,7 @@ test('get entities success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            'http://127.0.0.1/api/tags/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -255,7 +257,7 @@ test('get entities and inner tag success', async () => {
     )
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -264,7 +266,7 @@ test('get entities and inner tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            'http://127.0.0.1/api/tags/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -527,6 +529,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         tagSelection: TagSelectionState
         user: UserState
+        auth: AuthState
         editSession: EditSessionState
         entityDetails: EntityDetailsState
     }
@@ -548,13 +551,16 @@ export function renderWithProviders(
                     [idTagDefParentPersistent]: newRemote(tagDefParentTest)
                 }
             }),
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: [tagDefTest]
-                })
+            user: newUserState({}),
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: [tagDefTest]
+                    })
+                )
             }),
             entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
@@ -583,6 +589,7 @@ export function renderWithProviders(
             table: tableReducer,
             tagSelection: tagSelectionSlice.reducer,
             user: userSlice.reducer,
+            auth: authReducer,
             editSession: editSessionReducer,
             entityDetails: entityDetailsReducer
         },

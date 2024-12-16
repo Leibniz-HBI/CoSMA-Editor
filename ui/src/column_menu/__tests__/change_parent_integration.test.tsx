@@ -241,7 +241,7 @@ test('success', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+            'http://127.0.0.1/api/tags/definitions',
             {
                 method: 'POST',
                 credentials: 'include',
@@ -259,7 +259,7 @@ test('success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+            'http://127.0.0.1/api/tags/definitions',
             {
                 method: 'POST',
                 credentials: 'include',
@@ -320,7 +320,7 @@ test('error', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+            'http://127.0.0.1/api/tags/definitions',
             {
                 method: 'POST',
                 credentials: 'include',

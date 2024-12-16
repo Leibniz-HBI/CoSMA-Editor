@@ -84,7 +84,7 @@ test('loads external entity', async () => {
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/entities?id_persistent=${idEntity}`,
+                `http://127.0.0.1/api/entities?id_persistent=${idEntity}`,
                 { credentials: 'include' }
             ]
         ])

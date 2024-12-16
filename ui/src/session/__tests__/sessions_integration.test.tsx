@@ -23,13 +23,9 @@ import {
     NotificationType
 } from '../../util/notification/slice'
 import userEvent from '@testing-library/user-event'
-import {
-    newUserInfo,
-    newUserState,
-    UserPermissionGroup,
-    UserState
-} from '../../user/state'
-import { userSlice } from '../../user/slice'
+import { newUserInfo, UserPermissionGroup } from '../../user/state'
+import { AuthState, newAuthState } from '../../auth/state'
+import { authReducer } from '../../auth/slice'
 
 test('change session success', async () => {
     const fetchMock = jest.fn()
@@ -50,12 +46,9 @@ test('change session success', async () => {
         expect(store.getState().editSession.currentEditSession.value).toEqual(session2)
     })
     expect(fetchMock.mock.calls).toEqual([
+        ['http://127.0.0.1/api/edit_sessions/owner', { credentials: 'include' }],
         [
-            'http://127.0.0.1:8000/cosmae/api/edit_sessions/owner',
-            { credentials: 'include' }
-        ],
-        [
-            'http://127.0.0.1:8000/cosmae/api/user/edit_session',
+            'http://127.0.0.1/api/user/edit_session',
             {
                 credentials: 'include',
                 body: JSON.stringify({ id_edit_session_persistent: idSession2 }),
@@ -85,10 +78,7 @@ describe('select edit session', () => {
             ])
         })
         expect(fetchMock.mock.calls).toEqual([
-            [
-                'http://127.0.0.1:8000/cosmae/api/edit_sessions/owner',
-                { credentials: 'include' }
-            ]
+            ['http://127.0.0.1/api/edit_sessions/owner', { credentials: 'include' }]
         ])
         expect(store.getState().editSession).toEqual(initialSessionState)
     })
@@ -116,12 +106,9 @@ describe('select edit session', () => {
             ])
         })
         expect(fetchMock.mock.calls).toEqual([
+            ['http://127.0.0.1/api/edit_sessions/owner', { credentials: 'include' }],
             [
-                'http://127.0.0.1:8000/cosmae/api/edit_sessions/owner',
-                { credentials: 'include' }
-            ],
-            [
-                'http://127.0.0.1:8000/cosmae/api/user/edit_session',
+                'http://127.0.0.1/api/user/edit_session',
                 {
                     credentials: 'include',
                     body: JSON.stringify({ id_edit_session_persistent: idSession2 }),
@@ -163,11 +150,11 @@ describe('owner', () => {
             })
             expect(fetchMock.mock.calls).toEqual([
                 [
-                    'http://127.0.0.1:8000/cosmae/api/edit_sessions/owner',
+                    'http://127.0.0.1/api/edit_sessions/owner',
                     { credentials: 'include' }
                 ],
                 [
-                    'http://127.0.0.1:8000/cosmae/api/edit_sessions',
+                    'http://127.0.0.1/api/edit_sessions',
                     {
                         credentials: 'include',
                         method: 'PUT',
@@ -224,11 +211,11 @@ describe('participant', () => {
             })
             expect(fetchMock.mock.calls).toEqual([
                 [
-                    'http://127.0.0.1:8000/cosmae/api/edit_sessions/participant',
+                    'http://127.0.0.1/api/edit_sessions/participant',
                     { credentials: 'include' }
                 ],
                 [
-                    `http://127.0.0.1:8000/cosmae/api/edit_sessions/${idSession2}/participants`,
+                    `http://127.0.0.1/api/edit_sessions/${idSession2}/participants`,
                     {
                         credentials: 'include',
                         method: 'DELETE',
@@ -291,7 +278,7 @@ describe('participant', () => {
             })
             expect(fetchMock.mock.calls).toEqual([
                 [
-                    'http://127.0.0.1:8000/cosmae/api/edit_sessions/participant',
+                    'http://127.0.0.1/api/edit_sessions/participant',
                     { credentials: 'include' }
                 ]
             ])
@@ -384,7 +371,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         editSession: EditSessionState
         notification: NotificationManager
-        user: UserState
+        auth: AuthState
     }
 }
 
@@ -395,14 +382,16 @@ export function renderWithProviders(
         preloadedState = {
             editSession: initialSessionState,
             notification: newNotificationManager({}),
-            user: newUserState({
-                userInfo: newUserInfo({
-                    username: 'user-test',
-                    email: 'mail@test.org',
-                    namesPersonal: ' name test',
-                    permissionGroup: UserPermissionGroup.APPLICANT,
-                    idPersistent: 'id-user'
-                })
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        username: 'user-test',
+                        email: 'mail@test.org',
+                        namesPersonal: ' name test',
+                        permissionGroup: UserPermissionGroup.APPLICANT,
+                        idPersistent: 'id-user'
+                    })
+                )
             })
         },
         ...renderOptions
@@ -412,7 +401,7 @@ export function renderWithProviders(
         reducer: {
             editSession: editSessionReducer,
             notification: notificationReducer,
-            user: userSlice.reducer
+            auth: authReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

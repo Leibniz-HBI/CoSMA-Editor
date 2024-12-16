@@ -329,7 +329,7 @@ test('merge with existing', async () => {
         )
     }, {})
     expect(fetchMock.mock.calls.at(-3)).toEqual([
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-1/duplicate`,
+        `http://127.0.0.1/api/contributions/${idContribution}/entities/id-entity-1/duplicate`,
         {
             body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-1-0' }),
             credentials: 'include',
@@ -337,7 +337,7 @@ test('merge with existing', async () => {
         }
     ])
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-2/duplicate`,
+        `http://127.0.0.1/api/contributions/${idContribution}/entities/id-entity-2/duplicate`,
         {
             body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-2-1' }),
             credentials: 'include',
@@ -354,7 +354,7 @@ test('merge with existing', async () => {
         expect(state.entities.value[3].assignedDuplicate).toEqual(newRemote(undefined))
     })
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-3/duplicate`,
+        `http://127.0.0.1/api/contributions/${idContribution}/entities/id-entity-3/duplicate`,
         {
             body: JSON.stringify({}),
             credentials: 'include',
@@ -470,7 +470,7 @@ test('does not open modal for entity with justification', async () => {
     })
     await waitFor(() => {
         expect(fetchMock.mock.calls.at(-1)).toEqual([
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-0/duplicate`,
+            `http://127.0.0.1/api/contributions/${idContribution}/entities/id-entity-0/duplicate`,
             {
                 body: JSON.stringify({}),
                 credentials: 'include',

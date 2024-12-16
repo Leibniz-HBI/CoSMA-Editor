@@ -53,7 +53,7 @@ import {
 } from './state'
 import { clearParticipantSearchResults } from './slice'
 import { TabView } from '../util/components/tabs'
-import { selectUserInfo } from '../user/selectors'
+import { selectUserInfo } from '../auth/selectors'
 import { setCurrentEditSessionThunk } from '../user/thunks'
 
 export function EditSessionButton({
@@ -571,7 +571,8 @@ function RemoveSelfFromEditSessionDialog({
             </Col>
         </Row>
     )
-    if (userInfo === undefined) {
+    const userInfoValue = userInfo.value
+    if (userInfoValue === undefined) {
         return closeRow
     }
     return (
@@ -588,9 +589,9 @@ function RemoveSelfFromEditSessionDialog({
                                 removeEditSessionParticipantThunk(
                                     session.idPersistent,
                                     newEditSessionParticipant({
-                                        id: userInfo.idPersistent,
+                                        id: userInfoValue.idPersistent,
                                         type: EditSessionParticipantType.internal,
-                                        name: userInfo.username
+                                        name: userInfoValue.username
                                     })
                                 )
                             ).then((result) => {

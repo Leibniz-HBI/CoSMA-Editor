@@ -108,7 +108,7 @@ test('get preview success', async () => {
         <PreviewConnector
             idContributionPersistent={idContributionPersistent}
             idColumnPersistent={idColumnPersistent}
-            idTagDefinitionDestinationPersistent={idDestinationPersistent}
+            idExistingPersistent={idDestinationPersistent}
         />,
         fetchMock
     )
@@ -121,7 +121,7 @@ test('get preview success', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/contributions/' +
+            'http://127.0.0.1/api/contributions/' +
                 `${idContributionPersistent}/preview/${idColumnPersistent}`,
             { credentials: 'include' }
         ]
@@ -153,7 +153,7 @@ test('get preview error', async () => {
         <PreviewConnector
             idContributionPersistent={idContributionPersistent}
             idColumnPersistent={idColumnPersistent}
-            idTagDefinitionDestinationPersistent={idDestinationPersistent}
+            idExistingPersistent={idDestinationPersistent}
         />,
         fetchMock
     )

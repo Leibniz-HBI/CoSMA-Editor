@@ -8,13 +8,7 @@ import {
     newTagDefinition,
     newTagSelectionState
 } from '../../column_menu/state'
-import {
-    UserPermissionGroup,
-    UserState,
-    newPublicUserInfo,
-    newUserInfo,
-    newUserState
-} from '../../user/state'
+import { UserPermissionGroup, newPublicUserInfo, newUserInfo } from '../../user/state'
 import { TableState, newTableState } from '../../table/state'
 import { newEntity } from '../state'
 import {
@@ -29,7 +23,6 @@ import { tableReducer } from '../../table/slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { userSlice } from '../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../table/selection/slice'
 import { tagSelectionSlice } from '../../column_menu/slice'
 import { newRemote } from '../../util/state'
@@ -49,6 +42,8 @@ import {
 } from '../../entity/state'
 import { EntityDetails } from '../components'
 import { newTagInstance } from '../../contribution/entity/state'
+import { AuthState, newAuthState } from '../../auth/state'
+import { authReducer } from '../../auth/slice'
 
 test('success', async () => {
     const fetchMock = jest.fn()
@@ -99,7 +94,7 @@ test('success', async () => {
     )
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1:8000/cosmae/api/entities/values?id_persistent=${idEntityPersistent}`,
+            `http://127.0.0.1/api/entities/values?id_persistent=${idEntityPersistent}`,
             { credentials: 'include' }
         ]
     ])
@@ -208,7 +203,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         table: TableState
         tableSelection: TableSelectionState
         tagSelection: TagSelectionState
-        user: UserState
+        auth: AuthState
         entityDetails: EntityDetailsState
         editSession: EditSessionState
     }
@@ -250,13 +245,15 @@ export function renderWithProviders(
                     [idTagDefPersistent1]: newRemote(tagDefTest1)
                 }
             }),
-            user: newUserState({
-                userInfo: newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: [tagDefTest]
-                })
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: [tagDefTest]
+                    })
+                )
             }),
             entityDetails: newEntityDetailsState({
                 showEntityDetails: idEntityPersistent
@@ -286,7 +283,7 @@ export function renderWithProviders(
             tableSelection: tableSelectionSlice.reducer,
             tagSelection: tagSelectionSlice.reducer,
             table: tableReducer,
-            user: userSlice.reducer,
+            auth: authReducer,
             entityDetails: entityDetailsReducer,
             editSession: editSessionReducer
         },
