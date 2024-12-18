@@ -110,17 +110,17 @@ async function doSearch(fetchMock: jest.Mock) {
     const user = userEvent.setup()
     await waitFor(async () => {
         expect(fetchMock.mock.calls.length).toEqual(7)
-        const entity = screen.getByText('entity 1')
+        const entity = await screen.findByText('entity 1')
         entity.click()
     })
     await waitFor(async () => {
-        const searchBox = screen.getByRole('textbox')
+        const searchBox = await screen.findByRole('textbox')
         await act(async () => {
             await user.type(searchBox, 't')
         })
     })
-    await waitFor(() => {
-        const match0 = screen.getByText(displayTxtSearch0)
+    await waitFor(async () => {
+        const match0 = await screen.findByText(displayTxtSearch0)
         user.click(match0)
     })
 }

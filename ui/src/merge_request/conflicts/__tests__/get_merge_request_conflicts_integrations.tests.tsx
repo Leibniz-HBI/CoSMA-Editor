@@ -462,7 +462,7 @@ describe('resolve conflicts', () => {
                 }
             ])
         })
-    })
+    }, 15000)
     test('error', async () => {
         const fetchMock = jest.fn()
         const testError = 'could not resolve conflict'
@@ -507,8 +507,8 @@ describe('submit', () => {
             <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
-        await waitFor(() => {
-            const mergeButton = screen.getByRole('button', {
+        await waitFor(async () => {
+            const mergeButton = await screen.findByRole('button', {
                 name: /Apply Resolutions to Destination/i
             })
             mergeButton.click()
@@ -548,8 +548,8 @@ describe('submit', () => {
             <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
-        await waitFor(() => {
-            const mergeButton = screen.getByRole('button', {
+        await waitFor(async () => {
+            const mergeButton = await screen.findByRole('button', {
                 name: /Apply Resolutions to Destination/i
             })
             mergeButton.click()
@@ -589,8 +589,8 @@ describe('toggle disable origin on merge', () => {
             <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
-        await waitFor(() => {
-            const toggle = screen.getByRole('checkbox')
+        await waitFor(async () => {
+            const toggle = await screen.findByRole('checkbox')
             toggle.click()
         })
         expect(
@@ -622,8 +622,8 @@ describe('toggle disable origin on merge', () => {
             <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
             fetchMock
         )
-        await waitFor(() => {
-            const toggle = screen.getByRole('checkbox')
+        await waitFor(async () => {
+            const toggle = await screen.findByRole('checkbox')
             toggle.click()
         })
         expect(

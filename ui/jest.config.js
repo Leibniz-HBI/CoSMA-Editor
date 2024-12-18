@@ -5,5 +5,6 @@ export default {
     coverageReporters: ['lcov', 'text-summary'],
     coverageDirectory: '<rootDir>',
     transformIgnorePatterns: ['/node_modules/(?!(react-markdown))/'],
-    testTimeout: 10000
+    testTimeout: 10000,
+    setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts']
 }

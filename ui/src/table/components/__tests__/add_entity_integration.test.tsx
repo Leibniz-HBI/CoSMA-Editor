@@ -32,7 +32,6 @@ import { Provider } from 'react-redux'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { EntityAddModal } from '../modals'
 import userEvent, { UserEvent } from '@testing-library/user-event'
-import { act } from 'react-dom/test-utils'
 import { newRemote } from '../../../util/state'
 import { authReducer } from '../../../auth/slice'
 import { AuthState, newAuthState } from '../../../auth/state'
@@ -104,12 +103,12 @@ test('success new entity', async () => {
         [
             'http://127.0.0.1/api/entities',
             {
-                credentials: 'include',
                 body: JSON.stringify({
                     entity_list: [
                         { display_txt: displayTxt0, justification_txt: justification0 }
                     ]
                 }),
+                credentials: 'include',
                 method: 'POST'
             }
         ]
@@ -142,7 +141,7 @@ test('success new entity no display text', async () => {
                 body: JSON.stringify({
                     entity_list: [{ justification_txt: justification0 }]
                 }),
-                method: 'POST'
+                method: 'POST',
             }
         ]
     ])
@@ -191,13 +190,11 @@ async function fillEntityForm(
             const textBoxes = screen.getAllByRole('textbox')
             expect(textBoxes.length).toEqual(2)
             const button = screen.getByRole('button', { name: 'Add Entity' })
-            await act(async () => {
-                if (displayTxt !== undefined) {
-                    await user.type(textBoxes[0], displayTxt ?? ' ')
-                }
-                await user.type(textBoxes[1], justification)
-                await user.click(button)
-            })
+            if (displayTxt !== undefined) {
+                await user.type(textBoxes[0], displayTxt ?? ' ')
+            }
+            await user.type(textBoxes[1], justification)
+            await user.click(button)
         },
         { timeout: 4000 }
     )

@@ -98,8 +98,8 @@ test('no submit for short input', async () => {
     }
     const user = userEvent.setup()
     await waitFor(async () => {
-        const inputs = screen.getAllByRole('textbox')
-        const button = screen.getByText('Edit')
+        const inputs = await screen.findAllByRole('textbox')
+        const button = await screen.findByText('Edit')
         await user.clear(inputs[0])
         await user.type(inputs[0], 'aa')
         await user.clear(inputs[1])
@@ -141,8 +141,8 @@ test('submit for changed name', async () => {
     }
     const user = userEvent.setup()
     await waitFor(async () => {
-        const inputs = screen.getAllByRole('textbox')
-        const button = screen.getByText('Edit')
+        const inputs = await screen.findAllByRole('textbox')
+        const button = await screen.findByText('Edit')
         await user.clear(inputs[0])
         await user.type(inputs[0], changedName)
         await user.click(button)
@@ -217,8 +217,8 @@ test('submit for changed empty values', async () => {
     ).toEqual(emptyValuesTest)
     const user = userEvent.setup()
     await waitFor(async () => {
-        const inputs = screen.getAllByRole('textbox')
-        const button = screen.getByText('Edit')
+        const inputs = await screen.findAllByRole('textbox')
+        const button = await screen.findByText('Edit')
         await user.clear(inputs[1])
         await user.type(inputs[1], changedEmptyValues)
         await user.click(button)
@@ -288,9 +288,9 @@ test('submit for changed header flag', async () => {
         expect(feedbacks[i].textContent).toEqual('')
     }
     await waitFor(async () => {
-        const checkbox = screen.getByRole('checkbox')
+        const checkbox = await screen.findByRole('checkbox')
         checkbox.click()
-        const button = screen.getByText('Edit')
+        const button = await screen.findByText('Edit')
         button.click()
     })
     await waitFor(() => {
