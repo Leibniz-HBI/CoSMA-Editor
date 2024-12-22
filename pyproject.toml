@@ -14,7 +14,7 @@ django-cors-headers = "^4.6.0"
 pandas = "^2.0.1"
 django-rq = "^3.0.0"
 psycopg = "^3.1.9"
-levenshtein = "^0.25.1"
+levenshtein = "^0.26.1"
 sqlparse = ">=0.5.0,<1.0.0"
 django-allauth = {extras = ["saml", "socialaccount"], version = "^65.2.0"}
 
