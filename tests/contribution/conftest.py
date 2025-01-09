@@ -4,6 +4,7 @@ import pytest
 from django.db.models.signals import post_save
 
 import tests.contribution.common as c
+import tests.edit_session.common as cs
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue import dispatch_read_csv_head
@@ -23,6 +24,7 @@ def contribution_user(user):
         file_name=c.file_name_test0,
         state=ContributionCandidate.COLUMNS_ASSIGNED,
         created_by=user,
+        edit_session=user.edit_session,
     )
 
 
@@ -36,6 +38,7 @@ def contribution_other(user1):
         file_name=c.file_name_test1,
         state=ContributionCandidate.UPLOADED,
         created_by=user1,
+        edit_session=user1.edit_session,
     )
 
 
@@ -64,6 +67,7 @@ def contribution_error(user):
         created_by=user,
         error_msg=c.msg_error_test,
         error_trace=c.trace_error_test,
+        edit_session_id=cs.id_session_user,
     )
 
 

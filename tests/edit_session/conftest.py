@@ -3,16 +3,7 @@
 import pytest
 
 import tests.edit_session.common as c
-from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
-
-
-@pytest.fixture()
-def other_session(user):
-    return EditSession.create(
-        id_persistent=c.id_session_user_changed,
-        name=c.name_session_user_changed,
-        user=user,
-    )
+from cosmae.edit_session.models_django import EditSessionParticipant
 
 
 @pytest.fixture()

@@ -13,6 +13,7 @@ class ContributionPostRequest(Schema):
     description: str
     has_header: bool
     empty_values: str | None = "null,nan,na"
+    id_edit_session_persistent: str
 
 
 class ContributionPostResponse(Schema):
@@ -42,6 +43,7 @@ class ContributionCandidate(Schema):
     empty_values: str
     match_tag_definition_list: List[TagDefinitionResponse] | None = None
     justification_txt: str | None = None
+    id_edit_session_persistent: str
 
 
 class ContributionCandidatePatchRequest(Schema):
@@ -51,6 +53,7 @@ class ContributionCandidatePatchRequest(Schema):
     description: str | None = None
     has_header: bool | None = None
     empty_values: str | None = None
+    id_edit_session_persistent: str | None = None
 
 
 class ContributionChunkResponse(Schema):

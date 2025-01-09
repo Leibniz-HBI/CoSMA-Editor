@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import tests.contribution.api.integration.common as c
 import tests.contribution.api.integration.requests as req_contrib
+import tests.edit_session.common as cs
 import tests.user.common as cu
 from cosmae.util.auth import NotAuthenticatedException
 
@@ -68,6 +69,7 @@ def test_patch_name(auth_server):
     assert contribution["author"] == cu.test_username
     assert not contribution["has_header"]
     assert contribution["empty_values"] == cu.test_empty_values
+    assert contribution["id_edit_session_persistent"] == cs.id_session_user
 
 
 def test_patch_description(auth_server):
@@ -93,6 +95,7 @@ def test_patch_description(auth_server):
     assert contribution["author"] == cu.test_username
     assert not contribution["has_header"]
     assert contribution["empty_values"] == cu.test_empty_values
+    assert contribution["id_edit_session_persistent"] == cs.id_session_user
 
 
 def test_patch_header_flag(auth_server):
@@ -115,6 +118,7 @@ def test_patch_header_flag(auth_server):
     assert contribution["author"] == cu.test_username
     assert contribution["has_header"]
     assert contribution["empty_values"] == cu.test_empty_values
+    assert contribution["id_edit_session_persistent"] == cs.id_session_user
 
 
 def test_patch_empty_values(auth_server):
@@ -140,6 +144,50 @@ def test_patch_empty_values(auth_server):
     assert contribution["author"] == cu.test_username
     assert contribution["empty_values"] == "empty,absent"
     assert not contribution["has_header"]
+    assert contribution["id_edit_session_persistent"] == cs.id_session_user
+
+
+def test_patch_edit_session(auth_server, other_session):
+    live_server, cookies = auth_server
+    rsp = req_contrib.post_contribution(
+        live_server.url, c.contribution_post0, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    id_persistent = rsp.json()["id_persistent"]
+    rsp = req_contrib.patch_contribution(
+        live_server.url,
+        id_persistent,
+        {"id_edit_session_persistent": other_session.id_persistent},
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+    rsp = req_contrib.get_contribution(live_server.url, id_persistent, cookies=cookies)
+    assert rsp.status_code == 200
+    contribution = rsp.json()
+    assert contribution["name"] == c.contribution_post0["name"]
+    assert contribution["description"] == c.contribution_post0["description"]
+    assert contribution["state"] == "UPLOADED"
+    assert contribution["author"] == cu.test_username
+    assert contribution["empty_values"] == "null,nan,na"
+    assert not contribution["has_header"]
+    assert contribution["id_edit_session_persistent"] == cs.id_session_user_changed
+
+
+def test_patch_unknown_edit_session(auth_server):
+    live_server, cookies = auth_server
+    rsp = req_contrib.post_contribution(
+        live_server.url, c.contribution_post0, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    id_persistent = rsp.json()["id_persistent"]
+    rsp = req_contrib.patch_contribution(
+        live_server.url,
+        id_persistent,
+        {"id_edit_session_persistent": "zzzz"},
+        cookies=cookies,
+    )
+    assert rsp.status_code == 400
+    assert rsp.json() == {"msg": "Unknown edit session."}
 
 
 def test_patch_all(auth_server):
@@ -170,6 +218,7 @@ def test_patch_all(auth_server):
     assert contribution["author"] == cu.test_username
     assert contribution["empty_values"] == "empty,absent"
     assert contribution["has_header"]
+    assert contribution["id_edit_session_persistent"] == cs.id_session_user
 
 
 def test_unknown_field(auth_server):
@@ -191,3 +240,4 @@ def test_unknown_field(auth_server):
     assert contribution["state"] == "UPLOADED"
     assert contribution["author"] == cu.test_username
     assert not contribution["has_header"]
+    assert contribution["id_edit_session_persistent"] == cs.id_session_user

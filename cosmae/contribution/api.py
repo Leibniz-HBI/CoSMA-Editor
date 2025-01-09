@@ -4,7 +4,7 @@ import os
 from uuid import uuid4
 
 from django.conf import settings
-from django.db import DatabaseError
+from django.db import DatabaseError, IntegrityError
 from django.http import HttpRequest
 from ninja import File, Form, Router, UploadedFile
 
@@ -22,6 +22,7 @@ from cosmae.contribution.models_django import (
 )
 from cosmae.contribution.preview.api import router as preview_router
 from cosmae.contribution.tag_definition.api import router as tag_router
+from cosmae.edit_session.models_django import EditSession
 from cosmae.exception import (
     ApiError,
     NotAuthenticatedException,
@@ -83,6 +84,8 @@ def contribution_post(
             return 500, ApiError(msg="Could not save the uploaded file.")
         try:
             contribution_db.save()
+        except IntegrityError:
+            return 400, ApiError(msg="Unknown edit session.")
         except DatabaseError:
             if os.path.exists(out_file_path):
                 os.remove(out_file_path)
@@ -144,6 +147,7 @@ def contribution_get(request, id_persistent: str):
     "{id_persistent}",
     response={
         200: ContributionCandidate,
+        400: ApiError,
         401: ApiError,
         500: ApiError,
         404: ApiError,
@@ -156,11 +160,28 @@ def contribution_patch(
     "Update metadata of a contribution"
     try:
         user = check_user(request)
+        patch_data = patch_data.dict(exclude_unset=True)
+        try:
+            patch_data["edit_session_id"] = patch_data.pop("id_edit_session_persistent")
+        except KeyError:
+            pass
         contribution_db = ContributionCandidateDb.update(
-            id_persistent, user, **patch_data.dict(exclude_unset=True)
+            id_persistent, user, **patch_data
         )
         return 200, contribution_db_to_api(contribution_db)
 
+    except IntegrityError as exc:
+        if "edit_session_id" in patch_data:
+            if (
+                len(
+                    EditSession.objects.filter(
+                        id_persistent=patch_data["edit_session_id"]
+                    )
+                )
+                == 0
+            ):
+                return 400, ApiError(msg="Unknown edit session.")
+        raise exc
     except ResourceLockedException:
         return 423, ApiError(msg="Contribution candidate is currently locked.")
     except NotAuthenticatedException:
@@ -266,4 +287,5 @@ def mk_initial_contribution_candidate(
         created_by=user,
         state=ContributionCandidateDb.UPLOADED,
         empty_values=contribution_api.empty_values,
+        edit_session_id=contribution_api.id_edit_session_persistent,
     )

@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import tests.contribution.api.integration.common as c
 import tests.contribution.api.integration.requests as req_contrib
+import tests.edit_session.common as cs
 import tests.user.common as cu
 from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.util.auth import NotAuthenticatedException
@@ -110,4 +111,5 @@ def test_get_with_error(auth_server, contribution_error):
         "match_tag_definition_list": [],
         "empty_values": "null,nan,na",
         "justification_txt": None,
+        "id_edit_session_persistent": cs.id_session_user,
     }

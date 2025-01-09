@@ -472,3 +472,12 @@ def display_txt_order_0_1_curated(tag_def, tag_def1, tag_def_curated):
     ConfigValue.append_to_list(
         DISPLAY_TXT_ORDER_CONFIG_KEY, tag_def_curated.id_persistent
     )
+
+
+@pytest.fixture()
+def other_session(user):
+    return EditSession.create(
+        id_persistent=cs.id_session_user_changed,
+        name=cs.name_session_user_changed,
+        user=user,
+    )

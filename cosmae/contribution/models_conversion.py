@@ -46,4 +46,5 @@ def contribution_db_to_api(
         match_tag_definition_list=match_tag_definition_list,
         empty_values=contribution_db.empty_values,
         justification_txt=contribution_db.justification,
+        id_edit_session_persistent=contribution_db.edit_session_id,
     )

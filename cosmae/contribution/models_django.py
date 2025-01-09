@@ -45,6 +45,9 @@ class ContributionCandidate(models.Model):
     error_trace = models.TextField(blank=True, null=True)
     empty_values = models.TextField(default="null,nan,na")
     justification = models.TextField(default=None, blank=True, null=True)
+    edit_session = models.ForeignKey(
+        "EditSession", on_delete=models.CASCADE, default=None, null=True
+    )
 
     def set_state(self, state, error_msg=None, exception=None):
         "Set state of the contribution and set or reset a possible error message."
