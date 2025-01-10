@@ -2014,13 +2014,13 @@ testing = ["Django", "django-configurations (>=2.0)"]
 
 [[package]]
 name = "pytest-redis"
-version = "3.1.2"
+version = "3.1.3"
 description = "Redis fixtures and fixture factories for Pytest."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "pytest_redis-3.1.2-py3-none-any.whl", hash = "sha256:d06403986dfc2c5bbb11d1b213b75d9108d1ebc2cd9f943dfa8d4d1977c08d03"},
-    {file = "pytest_redis-3.1.2.tar.gz", hash = "sha256:41c98c01def18af533805c0862bc098dede03b8228a4e17761daef1beb701fdf"},
+    {file = "pytest_redis-3.1.3-py3-none-any.whl", hash = "sha256:7fd6eb54ed0878590b857e1011b031c38aa3e230a53771739e845d3fc6b05d79"},
+    {file = "pytest_redis-3.1.3.tar.gz", hash = "sha256:8bb76be4a749f1907c8b4f04213df40b679949cc2ffe39657e222ccb912aecd9"},
 ]
 
 [package.dependencies]
@@ -2735,4 +2735,4 @@ lxml = ">=3.8"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "be8be206b5373fb6e5a038a9b1aea74b1115d5b2b71a77161f3355c0e2ef0142"
+content-hash = "bc8065723b13ff4c212917fb170bdaaff870c7713edfd450ac99c057482ffd12"
