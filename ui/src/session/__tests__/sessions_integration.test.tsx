@@ -13,7 +13,11 @@ import { editSessionReducer } from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
 import { PropsWithChildren } from 'react'
-import { EditSessionOwnerList, EditSessionParticipantList } from '../components'
+import {
+    EditSessionEditorButton,
+    EditSessionOwnerList,
+    EditSessionParticipantList
+} from '../components'
 import { newRemote } from '../../util/state'
 import {
     newNotification,
@@ -33,9 +37,9 @@ test('change session success', async () => {
         [200, sessionListApi],
         [200, sessionApi2]
     ])
-    const backCallback = jest.fn()
+
     const { store } = renderWithProviders(
-        <EditSessionOwnerList backCallback={backCallback} />,
+        <EditSessionEditorButton popoverPlacement="right" tooltipPlacement="right" />,
         fetchMock
     )
     await selectSession()
@@ -56,18 +60,17 @@ test('change session success', async () => {
             }
         ]
     ])
-    expect(backCallback.mock.calls).toEqual([[]])
 })
 describe('select edit session', () => {
     test('error retrieving sessions', async () => {
         const fetchMock = jest.fn()
         const testError = 'Could not get sessions'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
-        const backCallback = jest.fn()
         const { store } = renderWithProviders(
-            <EditSessionOwnerList backCallback={backCallback} />,
+            <EditSessionEditorButton popoverPlacement="top" tooltipPlacement="top" />,
             fetchMock
         )
+        await selectOwnerTab()
         await waitFor(() => {
             expect(store.getState().notification.notificationList).toEqual([
                 newNotification({
@@ -90,9 +93,8 @@ describe('select edit session', () => {
             [200, sessionListApi],
             [500, { msg: testError }]
         ])
-        const backCallback = jest.fn()
         const { store } = renderWithProviders(
-            <EditSessionOwnerList backCallback={backCallback} />,
+            <EditSessionEditorButton tooltipPlacement="left" popoverPlacement="left" />,
             fetchMock
         )
         await selectSession()
@@ -121,7 +123,6 @@ describe('select edit session', () => {
             editSessionOwnerList: successSessionList,
             editSessionOwnerMap: { [idSession1]: 0, [idSession2]: 1 }
         })
-        expect(backCallback.mock.calls).toEqual([])
     })
 })
 
@@ -133,9 +134,11 @@ describe('owner', () => {
                 [200, { edit_session_list: [] }],
                 [200, sessionApi2]
             ])
-            const backMock = jest.fn()
+            const selectEditSessionMock = jest.fn()
             const { store } = renderWithProviders(
-                <EditSessionOwnerList backCallback={backMock} />,
+                <EditSessionOwnerList
+                    selectEditSessionCallback={selectEditSessionMock}
+                />,
                 fetchMock
             )
             await createSession()
@@ -162,7 +165,6 @@ describe('owner', () => {
                     }
                 ]
             ])
-            expect(backMock.mock.calls).toEqual([])
         })
         test('error', async () => {
             const fetchMock = jest.fn()
@@ -171,9 +173,11 @@ describe('owner', () => {
                 [200, { edit_session_list: [] }],
                 [500, { msg: testError }]
             ])
-            const backMock = jest.fn()
+            const selectEditSessionMock = jest.fn()
             const { store } = renderWithProviders(
-                <EditSessionOwnerList backCallback={backMock} />,
+                <EditSessionOwnerList
+                    selectEditSessionCallback={selectEditSessionMock}
+                />,
                 fetchMock
             )
             await createSession()
@@ -311,11 +315,26 @@ describe('participant', () => {
         })
     })
 })
+async function openTabs() {
+    await waitFor(async () => {
+        const button = await screen.findByRole('button')
+        button.click()
+    })
+}
+
+async function selectOwnerTab() {
+    await openTabs()
+    await waitFor(async () => {
+        const tab = await screen.findByText('Owner')
+        tab.click()
+    })
+}
 
 async function selectSession() {
-    await waitFor(() => {
-        screen.getByRole('button', { name: nameSession1 })
-        const button = screen.getByRole('button', { name: nameSession2 })
+    await selectOwnerTab()
+    await waitFor(async () => {
+        await screen.findByRole('button', { name: nameSession1 })
+        const button = await screen.findByRole('button', { name: nameSession2 })
         button.click()
     })
 }
@@ -323,9 +342,9 @@ async function selectSession() {
 async function createSession() {
     await waitFor(async () => {
         const user = userEvent.setup()
-        const textInput = screen.getByRole('textbox')
+        const textInput = await screen.findByRole('textbox')
         await user.type(textInput, nameSession2)
-        const button = screen.getByRole('button', { name: 'New Edit Session' })
+        const button = await screen.findByRole('button', { name: 'New Edit Session' })
         await user.click(button)
     })
 }

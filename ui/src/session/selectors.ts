@@ -1,5 +1,12 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../store'
+import {
+    EditSession,
+    EditSessionParticipantType,
+    newEditSession,
+    newEditSessionParticipant
+} from './state'
+import { newRemote } from '../util/state'
 
 function selectEditSessionState(state: RootState) {
     return state.editSession
@@ -63,3 +70,34 @@ export const selectShowEditSessionList = createSelector(
     selectEditSessionState,
     (state) => state.showEditSessionList
 )
+
+export const makeSelectEditSessionByIdPersistent = () => {
+    const selector = createSelector(
+        [
+            selectEditSessionOwnerList,
+            selectEditSessionParticipantList,
+            (_state, idPersistent) => idPersistent
+        ],
+        (ownerList, participantList, id_persistent) => {
+            if (ownerList.value === undefined || participantList.value === undefined) {
+                return newRemote(
+                    undefined,
+                    ownerList.isLoading || participantList.isLoading
+                )
+            }
+            const predicate = (session: EditSession) =>
+                session.idPersistent == id_persistent
+            const editSession =
+                ownerList.value?.find(predicate) ??
+                participantList.value?.find(predicate)
+            return newRemote(
+                editSession,
+                false,
+                editSession === undefined
+                    ? 'No edit session with this id exists.'
+                    : undefined
+            )
+        }
+    )
+    return selector
+}

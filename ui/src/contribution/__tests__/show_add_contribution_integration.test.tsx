@@ -8,12 +8,15 @@ import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ContributionList } from '../components'
+import { EditSessionState, newEditSessionState } from '../../session/state'
+import { editSessionReducer } from '../../session/slice'
 jest.mock('react-router-dom', () => {
     return { useNavigate: jest.fn() }
 })
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contribution: ContributionState
+        editSession: EditSessionState
     }
 }
 
@@ -22,14 +25,16 @@ export function renderWithProviders(
     fetchMock: jest.Mock,
     {
         preloadedState = {
-            contribution: newContributionState({})
+            contribution: newContributionState({}),
+            editSession: newEditSessionState({})
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
 ) {
     const store = configureStore({
         reducer: {
-            contribution: contributionSlice.reducer
+            contribution: contributionSlice.reducer,
+            editSession: editSessionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

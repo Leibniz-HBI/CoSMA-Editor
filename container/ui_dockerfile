@@ -13,7 +13,7 @@ RUN apk add --update --no-cache \
 WORKDIR /cosmae
 COPY ui/package*.json ./
 COPY ui/tsconfig.json ./
-COPY ui/babel.config.js ./
+COPY ui/babel.config.cjs ./
 RUN npm ci --omit=dev
 ADD ui/src/ /cosmae/src
 ADD ui/public /cosmae/public

@@ -98,12 +98,14 @@ export function uploadContribution({
     description,
     hasHeader,
     emptyValues,
+    idEditSessionPersistent,
     file
 }: {
     name: string
     description: string
     hasHeader: boolean
     emptyValues: string
+    idEditSessionPersistent: string
     file: File
 }): ThunkWithFetch<string | undefined> {
     return async (dispatch, _getState, fetch) => {
@@ -116,6 +118,7 @@ export function uploadContribution({
             form.append('description', description)
             form.append('empty_values', emptyValues)
             form.append('has_header', hasHeader.toString())
+            form.append('id_edit_session_persistent', idEditSessionPersistent)
             const rsp = await fetch(config.api_path + '/contributions', {
                 method: 'POST',
                 credentials: 'include',

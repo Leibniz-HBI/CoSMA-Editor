@@ -12,7 +12,7 @@ import {
 import { Contribution, ContributionStep, contributionIsReady } from './state'
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange, SetFieldValue } from '../util/type'
-import { ChangeEvent, FormEvent, useEffect, useRef } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef } from 'react'
 import { FormField } from '../util/form'
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { StepHeader } from '../util/components/stepper'
@@ -40,6 +40,8 @@ import { ContributionDetailsStep } from './details/components'
 import { ColumnDefinitionStep } from './columns/components'
 import { EntitiesStep } from './entity/components'
 import { CompleteStep } from './complete/components'
+import { useEditSessionByIdPersistent } from '../session/hooks'
+import { EditSessionSelectButton } from '../session/components'
 
 export function ContributionList() {
     const dispatch = useAppDispatch()
@@ -49,7 +51,6 @@ export function ContributionList() {
         if (!contributions.isLoading) {
             dispatch(getContributionList())
         }
-        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showAddContribution])
     if (contributions.isLoading) {
         return <CosmaeLoading />
@@ -160,7 +161,6 @@ function ContributionStepperDisplay({
                 setTimeout(() => dispatch(decrementDelay()), secondDelay)
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         contribution.value?.idPersistent,
         reloadDelay,
@@ -289,6 +289,7 @@ export type UploadFormArgs = {
     description: string
     hasHeader: boolean
     emptyValues: string
+    idEditSessionPersistent: string
     file?: File
 }
 const uploadSchema = yup.object({
@@ -296,6 +297,7 @@ const uploadSchema = yup.object({
     description: yup.string(),
     emptyValues: yup.string(),
     hasHeader: yup.boolean(),
+    idEditSessionPersistent: yup.string().ensure().length(36),
     file: yup.mixed().nullable().defined()
 })
 
@@ -312,6 +314,7 @@ export function UploadForm() {
                             description: values.description,
                             hasHeader: values.hasHeader,
                             emptyValues: values.emptyValues,
+                            idEditSessionPersistent: values.idEditSessionPersistent,
                             file: values.file
                         })
                     ).then((idPersistent) => {
@@ -326,6 +329,7 @@ export function UploadForm() {
                 description: '',
                 hasHeader: false,
                 emptyValues: 'nan,null,na',
+                idEditSessionPersistent: '',
                 file: undefined
             }}
             validationSchema={uploadSchema}
@@ -422,7 +426,15 @@ export function UploadFormBody({
                 error={formErrors.emptyValues}
                 isTouched={touched.emptyValues}
             />
-            <Row>
+            <EditSessionFormSelector
+                idEditSessionPersistent={values.idEditSessionPersistent}
+                error={formErrors.idEditSessionPersistent}
+                onChange={async (idEditSessionPersistent) => {
+                    setFieldValue('idEditSessionPersistent', idEditSessionPersistent)
+                    return true
+                }}
+            />
+            <Row className="mt-2">
                 <Col sm="auto">
                     <Button type="submit" ref={buttonRef}>
                         Submit
@@ -430,5 +442,72 @@ export function UploadFormBody({
                 </Col>
             </Row>
         </Form>
+    )
+}
+
+function EditSessionFormSelector({
+    idEditSessionPersistent,
+    error,
+    onChange
+}: {
+    idEditSessionPersistent: string
+    error?: string
+    onChange: (idEditSessionPersistent: string) => Promise<boolean>
+}) {
+    let editSessionHintClass = 'text-danger'
+    const editSessionFeedback = 'Please select an edit session.'
+    const isEditSessionErrorHidden = error === undefined
+    if (isEditSessionErrorHidden) {
+        editSessionHintClass = 'text-transparent'
+    }
+    const editSessionHint = (
+        <Row className={editSessionHintClass}>
+            <Col>
+                <span className="small">{editSessionFeedback}</span>
+            </Col>
+        </Row>
+    )
+    const selectorWithDisplay = useMemo(
+        () => (
+            <Row>
+                <Col>
+                    <EditSessionSelectionDisplay
+                        idEditSessionPersistent={idEditSessionPersistent}
+                    />
+                </Col>
+                <Col xs="auto">
+                    <EditSessionSelectButton
+                        popoverPlacement="left"
+                        selectEditSessionCallback={onChange}
+                    />
+                </Col>
+            </Row>
+        ),
+        [idEditSessionPersistent, error]
+    )
+    return (
+        <Row>
+            <Col>
+                {selectorWithDisplay}
+                <Row>
+                    <Col>
+                        <Row>{editSessionHint}</Row>
+                    </Col>
+                </Row>
+            </Col>
+        </Row>
+    )
+}
+
+function EditSessionSelectionDisplay({
+    idEditSessionPersistent
+}: {
+    idEditSessionPersistent: string
+}) {
+    const editSession = useEditSessionByIdPersistent(idEditSessionPersistent)
+    return (
+        <span>{`Edit Session: ${
+            editSession?.name ?? 'No Edit Session selected'
+        }`}</span>
     )
 }

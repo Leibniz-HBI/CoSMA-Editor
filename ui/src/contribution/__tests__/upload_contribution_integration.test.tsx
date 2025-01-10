@@ -15,6 +15,15 @@ import { Provider } from 'react-redux'
 import { UploadForm } from '../components'
 import userEvent from '@testing-library/user-event'
 import { useNavigate } from 'react-router-dom'
+import {
+    EditSessionParticipantType,
+    EditSessionState,
+    newEditSession,
+    newEditSessionParticipant,
+    newEditSessionState
+} from '../../session/state'
+import { editSessionReducer } from '../../session/slice'
+import { newRemote } from '../../util/state'
 
 jest.mock('react-router-dom', () => {
     const navigateMock = jest.fn()
@@ -24,6 +33,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contribution: ContributionState
         notification: NotificationManager
+        editSession: EditSessionState
     }
 }
 
@@ -37,7 +47,18 @@ export function renderWithProviders(
     {
         preloadedState = {
             contribution: newContributionState({}),
-            notification: { notificationList: [], notificationMap: {} }
+            notification: { notificationList: [], notificationMap: {} },
+            editSession: newEditSessionState({
+                editSessionOwnerList: newRemote([
+                    newEditSession({
+                        idPersistent: idEditSession,
+                        name: nameSession,
+                        owner,
+                        participantList: [],
+                        participantMap: {}
+                    })
+                ])
+            })
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -45,7 +66,8 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             contribution: contributionSlice.reducer,
-            notification: notificationReducer
+            notification: notificationReducer,
+            editSession: editSessionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -100,15 +122,32 @@ test('feedback for short name', async () => {
         expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
     })
 })
-const nameTest = 'aaaaaaaaaaaa'
-const fileTest = new File([''], 'test.csv', { type: 'text.csv' })
-const idPersistentReturn = 'id-persistent-return'
+test('feedback for no edit session', async () => {
+    const fetchMock = jest.fn()
+    const { container } = renderWithProviders(<UploadForm />, fetchMock)
+    checkEmptyFeedbacks(container)
+    await submitFormWithValues(container, nameTest, fileTest, false)
+    await waitFor(() => {
+        const feedbacks = container.getElementsByClassName('invalid-feedback')
+        expect(feedbacks.length).toEqual(4)
+        const sessionFeedback = screen.getByText('Please select an edit session.')
+        expect(sessionFeedback.parentElement?.parentElement?.className).toEqual(
+            'text-danger row'
+        )
+        expect(fetchMock.mock.calls).toEqual([])
+        expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
+    })
+})
 test('submit correct name', async () => {
     const fetchMock = jest.fn()
-    addResponseSequence(fetchMock, [[200, { id_persistent: idPersistentReturn }]])
+    addResponseSequence(fetchMock, [
+        [200, jsonEditSessionResponse],
+        [200, jsonEditSessionResponse],
+        [200, { id_persistent: idPersistentReturn }],
+    ])
     const { store, container } = renderWithProviders(<UploadForm />, fetchMock)
     checkEmptyFeedbacks(container)
-    await submitFormWithValues(container, nameTest, fileTest)
+    await submitFormWithValues(container, nameTest, fileTest, true)
     checkEmptyFeedbacks(container)
     await waitFor(() => {
         expect(store.getState().notification.notificationList).toEqual([
@@ -118,15 +157,16 @@ test('submit correct name', async () => {
             })
         ])
     })
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(fetchMock).toHaveBeenCalledWith(
         'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
-    checkFormData(fetchMock.mock.calls[0][1].body, {
+    checkFormData(fetchMock.mock.calls[2][1].body, {
         name: nameTest,
         description: '',
         empty_values: 'nan,null,na',
+        id_edit_session_persistent: idEditSession,
         has_header: 'false'
     })
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([
@@ -136,10 +176,14 @@ test('submit correct name', async () => {
 test('submit with description and header', async () => {
     const fetchMock = jest.fn()
     const description = 'test description'
-    addResponseSequence(fetchMock, [[200, { id_persistent: idPersistentReturn }]])
+    addResponseSequence(fetchMock, [
+        [200, jsonEditSessionResponse],
+        [200, jsonEditSessionResponse],
+        [200, { id_persistent: idPersistentReturn }]
+    ])
     const { store, container } = renderWithProviders(<UploadForm />, fetchMock)
     checkEmptyFeedbacks(container)
-    await submitFormWithValues(container, nameTest, fileTest, description, true)
+    await submitFormWithValues(container, nameTest, fileTest, true, description, true)
     checkEmptyFeedbacks(container)
     await waitFor(() => {
         expect(store.getState().notification.notificationList).toEqual([
@@ -149,16 +193,17 @@ test('submit with description and header', async () => {
             })
         ])
     })
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(fetchMock).toHaveBeenCalledWith(
         'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
-    checkFormData(fetchMock.mock.calls[0][1].body, {
+    checkFormData(fetchMock.mock.calls[2][1].body, {
         name: nameTest,
         description: description,
         empty_values: 'nan,null,na',
-        has_header: 'true'
+        has_header: 'true',
+        id_edit_session_persistent: idEditSession
     })
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([
         [`/contribute/${idPersistentReturn}/columns`]
@@ -167,10 +212,14 @@ test('submit with description and header', async () => {
 test('error', async () => {
     const fetchMock = jest.fn()
     const msg = 'test error'
-    addResponseSequence(fetchMock, [[500, { msg }]])
+    addResponseSequence(fetchMock, [
+        [200, jsonEditSessionResponse],
+        [200, jsonEditSessionResponse],
+        [500, { msg }]
+    ])
     const { store, container } = renderWithProviders(<UploadForm />, fetchMock)
     checkEmptyFeedbacks(container)
-    await submitFormWithValues(container, nameTest, fileTest)
+    await submitFormWithValues(container, nameTest, fileTest, true)
     checkEmptyFeedbacks(container)
     await waitFor(() => {
         expect(store.getState().notification.notificationList).toEqual([
@@ -180,16 +229,17 @@ test('error', async () => {
             })
         ])
     })
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(fetchMock).toHaveBeenCalledWith(
         'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
-    checkFormData(fetchMock.mock.calls[0][1].body, {
+    checkFormData(fetchMock.mock.calls[2][1].body, {
         name: nameTest,
         description: '',
         empty_values: 'nan,null,na',
-        has_header: 'false'
+        has_header: 'false',
+        id_edit_session_persistent: idEditSession
     })
     expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
 })
@@ -210,10 +260,39 @@ function checkEmptyFeedbacks(container: HTMLElement) {
     }
 }
 
+const nameTest = 'aaaaaaaaaaaa'
+const fileTest = new File([''], 'test.csv', { type: 'text.csv' })
+const idPersistentReturn = 'id-persistent-return'
+const idEditSession = '7553fa55-f11f-48a7-aebb-4dcaa3af0ae3'
+const nameSession = 'edit session for test'
+const idOwner = 'id-owner'
+const nameOwner = 'owner'
+const owner = newEditSessionParticipant({
+    id: idOwner,
+    name: nameOwner,
+    type: EditSessionParticipantType.internal
+})
+const jsonOwner = {
+    type_participant: 'INTERNAL',
+    id_participant: idOwner,
+    name_participant: nameOwner
+}
+const jsonEditSessionResponse = {
+    edit_session_list: [
+        {
+            id_persistent: idEditSession,
+            name: nameSession,
+            owner: jsonOwner,
+            participant_list: [jsonOwner]
+        }
+    ]
+}
+
 async function submitFormWithValues(
     container: HTMLElement,
     name?: string,
     fileInput?: File,
+    selectEditSession?: boolean,
     description?: string,
     hasHeader?: boolean,
     empty_values?: string
@@ -233,6 +312,17 @@ async function submitFormWithValues(
     }
     if (empty_values !== undefined) {
         await user.type(inputs[2], empty_values)
+    }
+    if (selectEditSession) {
+        const sessionButton = await screen.findByText('Select Edit Session')
+        sessionButton.click()
+        await waitFor(async () => {
+            const session = await screen.findByText(nameSession)
+            session.click()
+        })
+        await waitFor(async () => {
+            await screen.findByText(`Edit Session: ${nameSession}`)
+        })
     }
     if (fileInput !== undefined) {
         const fileInput = container.getElementsByClassName('form-control')[2]

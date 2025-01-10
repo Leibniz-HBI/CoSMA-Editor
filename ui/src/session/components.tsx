@@ -3,6 +3,7 @@ import {
     Button,
     Col,
     ListGroup,
+    Overlay,
     OverlayTrigger,
     Popover,
     Row,
@@ -31,7 +32,7 @@ import {
     selectEditSessionParticipantList
 } from './selectors'
 import { CosmaeLoading } from '../util/components/misc'
-import { ChangeEvent, useEffect, useState } from 'react'
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
     addEditSessionParticipantThunk,
     createEditSessionThunk,
@@ -56,13 +57,14 @@ import { TabView } from '../util/components/tabs'
 import { selectUserInfo } from '../auth/selectors'
 import { setCurrentEditSessionThunk } from '../user/thunks'
 
-export function EditSessionButton({
+export function EditSessionEditorButton({
     popoverPlacement,
     tooltipPlacement
 }: {
     popoverPlacement: Placement
     tooltipPlacement: Placement
 }) {
+    const dispatch = useAppDispatch()
     const countParticipants = useAppSelector(selectEditSessionParticipantNumber)
     return (
         <OverlayTrigger
@@ -71,7 +73,11 @@ export function EditSessionButton({
             placement={popoverPlacement}
             overlay={
                 <Popover className="vh-65 me-5">
-                    <EditSessionTabs />
+                    <EditSessionTabs
+                        onEditSessionSelect={(idPersistent: string) =>
+                            dispatch(setCurrentEditSessionThunk(idPersistent))
+                        }
+                    />
                 </Popover>
             }
         >
@@ -120,9 +126,75 @@ export function EditSessionButton({
     )
 }
 
-export function EditSessionTabs() {
+export function EditSessionSelectButton({
+    popoverPlacement,
+    selectEditSessionCallback
+}: {
+    popoverPlacement: Placement
+    selectEditSessionCallback: (idEditSessionPersistent: string) => Promise<boolean>
+}) {
+    const ref = useRef(null)
+    const [show, setShow] = useState(false)
+
+    return (
+        <>
+            <div ref={ref}>
+                <Badge
+                    pill
+                    bg="primary"
+                    aria-label="manage edit sessions"
+                    role="button"
+                    onClick={() => setShow(true)}
+                >
+                    Select Edit Session
+                </Badge>
+            </div>
+            <Overlay
+                target={ref.current}
+                placement={popoverPlacement}
+                rootClose
+                onHide={() => setShow(false)}
+                show={show}
+            >
+                {({ style, ...props }) => (
+                    <Popover
+                        {...props}
+                        className="h-65"
+                        style={{
+                            position: 'absolute',
+                            backgroundColor: 'white',
+                            borderRadius: 3,
+                            zIndex: 9000,
+                            ...style
+                        }}
+                    >
+                        {show && (
+                            <EditSessionOwnerList
+                                selectEditSessionCallback={(idPersistent: string) => {
+                                    setShow(false)
+                                    selectEditSessionCallback(idPersistent)
+                                }}
+                            />
+                        )}
+                    </Popover>
+                )}
+            </Overlay>
+        </>
+    )
+}
+
+export function EditSessionTabs({
+    onEditSessionSelect
+}: {
+    onEditSessionSelect: (idPersistent: string) => Promise<boolean>
+}) {
     const [tabIdx, setTabIdx] = useState(0)
-    const backCallback = () => setTabIdx(0)
+    const selectEditSessionCallback = (idPersistent: string) =>
+        onEditSessionSelect(idPersistent).then((result) => {
+            if (result) {
+                setTabIdx(0)
+            }
+        })
     return (
         <Col className="h-100 d-flex flex-column pt-2 pb-1 ">
             <TabView
@@ -131,7 +203,11 @@ export function EditSessionTabs() {
                     { name: 'Current', component: <EditSessionEditor /> },
                     {
                         name: 'Owner',
-                        component: <EditSessionOwnerList backCallback={backCallback} />
+                        component: (
+                            <EditSessionOwnerList
+                                selectEditSessionCallback={selectEditSessionCallback}
+                            />
+                        )
                     },
                     {
                         name: 'Participant',
@@ -480,7 +556,11 @@ function EditSessionSearchResultEntry({
     )
 }
 
-export function EditSessionOwnerList({ backCallback }: { backCallback: VoidFunction }) {
+export function EditSessionOwnerList({
+    selectEditSessionCallback
+}: {
+    selectEditSessionCallback: (idPersistent: string) => void
+}) {
     const dispatch = useAppDispatch()
     useEffect(() => {
         dispatch(getEditSessionOwnerListThunk())
@@ -491,7 +571,9 @@ export function EditSessionOwnerList({ backCallback }: { backCallback: VoidFunct
                 Please select an edit session
             </Row>
             <Row className="flex-grow-1 flex-shrink-1 overflow-y-scroll scroll-gutter">
-                <EditSessionOwnerListComponent backCallback={backCallback} />
+                <EditSessionOwnerListComponent
+                    selectEditSessionCallback={selectEditSessionCallback}
+                />
             </Row>
             <Row className="flex-grow-0">
                 <CreateEditSessionForm />
@@ -518,28 +600,19 @@ export function EditSessionParticipantList() {
 }
 
 function EditSessionOwnerListComponent({
-    backCallback
+    selectEditSessionCallback
 }: {
-    backCallback: VoidFunction
+    selectEditSessionCallback: (idPersistent: string) => void
 }) {
     const editSessions = useAppSelector(selectEditSessionOwnerList)
     const idCurrentEditSession = useAppSelector(selectIdCurrentEditSessionPersistent)
-    const dispatch = useAppDispatch()
     return (
         <ListGroup>
             {editSessions.value.map((session, idx) => (
                 <ListGroup.Item
                     key={idx}
                     role="button"
-                    onClick={() =>
-                        dispatch(setCurrentEditSessionThunk(session.idPersistent)).then(
-                            (result) => {
-                                if (result) {
-                                    backCallback()
-                                }
-                            }
-                        )
-                    }
+                    onClick={() => selectEditSessionCallback(session.idPersistent)}
                 >
                     <Row className="justify-content-between">
                         <Col>{session.name}</Col>

@@ -72,7 +72,7 @@ import { createCellContentCallback } from '../cell'
 import { AddEntityButton } from './buttons'
 import { SearchButton } from './buttons'
 import { DownloadButton } from './buttons'
-import { EditSessionButton } from '../../session/components'
+import { EditSessionEditorButton } from '../../session/components'
 import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
 import { EntityDetailsModal } from './modals'
 import { InfoCircle } from 'react-bootstrap-icons'
@@ -164,7 +164,7 @@ export function RemoteDataTable() {
                         </Row>
                     </Col>
                     <Col xs="auto" className="pe-0">
-                        <EditSessionButton
+                        <EditSessionEditorButton
                             popoverPlacement="bottom"
                             tooltipPlacement="left"
                         />

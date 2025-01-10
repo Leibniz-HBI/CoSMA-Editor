@@ -13,14 +13,14 @@ import { editSessionReducer } from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
 import { PropsWithChildren } from 'react'
-import { EditSessionButton } from '../components'
+import { EditSessionEditorButton } from '../components'
 import userEvent from '@testing-library/user-event'
 import { newRemote } from '../../util/state'
 
 test('shows participant number', async () => {
     const fetchMock = jest.fn()
     renderWithProviders(
-        <EditSessionButton popoverPlacement="bottom" tooltipPlacement="right" />,
+        <EditSessionEditorButton popoverPlacement="bottom" tooltipPlacement="right" />,
         fetchMock,
         {
             preloadedState: {
@@ -64,7 +64,7 @@ test('shows participant number', async () => {
 test('shows plus sign', async () => {
     const fetchMock = jest.fn()
     renderWithProviders(
-        <EditSessionButton popoverPlacement="bottom" tooltipPlacement="right" />,
+        <EditSessionEditorButton popoverPlacement="bottom" tooltipPlacement="right" />,
         fetchMock
     )
     const button = screen.getByRole('button')
@@ -82,7 +82,7 @@ test('shows plus sign', async () => {
 test('show tooltip', async () => {
     const fetchMock = jest.fn()
     renderWithProviders(
-        <EditSessionButton popoverPlacement="bottom" tooltipPlacement="right" />,
+        <EditSessionEditorButton popoverPlacement="bottom" tooltipPlacement="right" />,
         fetchMock
     )
     const tooltipText = 'Click to manage edit sessions'
@@ -98,7 +98,7 @@ test('show tooltip', async () => {
 test('show popover', async () => {
     const fetchMock = jest.fn()
     renderWithProviders(
-        <EditSessionButton popoverPlacement="bottom" tooltipPlacement="right" />,
+        <EditSessionEditorButton popoverPlacement="bottom" tooltipPlacement="right" />,
         fetchMock,
         {
             preloadedState: {
