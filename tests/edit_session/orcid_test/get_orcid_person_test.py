@@ -4,8 +4,9 @@ import tests.edit_session.common as c
 from cosmae.edit_session.orcid import OrcidService
 
 
-def test_success(get_orcid_token_mock, get_orcid_person_mock):
+def test_success(mocker, get_orcid_token_mock, get_orcid_person_mock):
     "Check successful retrieval of token and name"
+    mocker.patch.object(OrcidService, "_token", None)
     name = OrcidService.get_name(c.orcid_no_uri)
     assert name == c.name_orcid
     get_orcid_token_mock.assert_called_once_with(
