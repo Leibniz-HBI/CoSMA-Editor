@@ -72,6 +72,8 @@ jobs:
           SAML_CLIENT_PRIVATE_KEY: "no-saml-in_ci"
           COSMAE_REDIS_PASSWORD: ""
           COSMAE_REDIS_CONF: ""
+          ORCID_CLIENT_ID: orcid_test_client_id
+          ORCID_CLIENT_SECRET: orcid_test_client_secret
       - name: Upload pytest test results
         uses: actions/upload-artifact@v4
         with:
