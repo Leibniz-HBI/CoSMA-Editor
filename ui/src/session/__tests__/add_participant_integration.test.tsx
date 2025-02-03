@@ -174,8 +174,8 @@ async function searchParticipant() {
 
 async function selectSearchResult() {
     await waitFor(() => {
-        screen.getByRole('button', { name: nameOtherSearchResult })
-        const button = screen.getByRole('button', { name: nameAddedParticipant })
+        screen.getByRole('button', { name: nameOtherSearchResult + ' Source: internal' })
+        const button = screen.getByRole('button', { name: nameAddedParticipant + ' Source: internal' })
         button.click()
     })
 }

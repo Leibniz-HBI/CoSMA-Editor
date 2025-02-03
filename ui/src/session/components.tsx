@@ -372,8 +372,8 @@ function EditSessionParticipantItem({
 }) {
     return (
         <ListGroup.Item>
-            <Row className="justify-content-between">
-                <Col>{participant.name}</Col>
+            <Row className="justify-content-between align-items-center">
+                <EditSessionParticipantDisplay participant={participant} />
                 <Col
                     xs="auto"
                     className="text-danger button"
@@ -535,8 +535,8 @@ function EditSessionSearchResultEntry({
             role="button"
             onClick={() => addParticipantCallback(participant)}
         >
-            <Row>
-                <Col>{participant.name}</Col>
+            <Row className="justify-content-between align-items-center">
+                <EditSessionParticipantDisplay participant={participant} />
                 <Col xs="auto">
                     {isAdding ? (
                         <Spinner />
@@ -718,5 +718,22 @@ function EditSessionParticipantListComponent() {
                 </ListGroup.Item>
             ))}
         </ListGroup>
+    )
+}
+
+function EditSessionParticipantDisplay({
+    participant
+}: {
+    participant: EditSessionParticipant
+}) {
+    return (
+        <Col>
+            <Row>{participant.name}</Row>
+            <Row>
+                <em>
+                    <small>{'Source: ' + participant.type.toString()}</small>
+                </em>
+            </Row>
+        </Col>
     )
 }
