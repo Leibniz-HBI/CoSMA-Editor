@@ -3,6 +3,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import tests.edit_session.common as c
 import tests.user.common as cu
 from tests.edit_session.api.integration import requests as req
 from cosmae.exception import NotAuthenticatedException
@@ -54,4 +55,20 @@ def test_search_participants(auth_server, user1, user_editor):
         "id_participant": cu.test_uuid_editor,
         "type_participant": "INTERNAL",
         "name_participant": cu.test_username_editor,
+    }
+
+
+def test_search_orcid(auth_server, get_orcid_token_mock, get_orcid_person_mock):
+    server, cookies = auth_server
+    rsp = req.post_search_participant(server.url, c.orcid_0, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == {
+        "search_result_list": [
+            {
+                "id_participant": c.orcid_no_uri,
+                "name_participant": c.name_orcid,
+                "type_participant": "ORCID",
+            }
+        ]
     }

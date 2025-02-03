@@ -219,6 +219,9 @@ CACHES = {
 
 IS_UNITTEST = False
 
+ORCID_CLIENT_ID = get_file_secret("orcid_client_id")
+ORCID_CLIENT_SECRET = get_file_secret("orcid_client_secret")
+
 HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"

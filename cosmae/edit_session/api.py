@@ -1,4 +1,5 @@
 "API models for edit sessions"
+
 from typing import List
 from uuid import uuid4
 
@@ -9,6 +10,7 @@ from cosmae.edit_session.models_django import EditSession as EditSessionDb
 from cosmae.edit_session.models_django import (
     EditSessionParticipant as EditSessionParticipantDb,
 )
+from cosmae.edit_session.orcid import OrcidService, validate_orcid
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
@@ -46,23 +48,27 @@ class EditSessionList(Schema):
 
 class EditSessionPatch(Schema):
     "API model for changing edit sessions."
+
     # pylint: disable=too-few-public-methods
     name: str | None = None
 
 
 class EditSessionPut(Schema):
     "API model  for creating edit sessions"
+
     # pylint: disable=too-few-public-methods
     name: str | None = None
 
 
 class ParticipantSearchPost(Schema):
     "API model for searching participants"
+
     search_term: str
 
 
 class ParticipantSearchResponse(Schema):
     "API model for participant search results"
+
     search_result_list: List[EditSessionParticipantWithName]
 
 
@@ -84,7 +90,22 @@ def search_participants(request: HttpRequest, request_data: ParticipantSearchPos
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions.")
     try:
-        users = CosmaeUser.search_username(request_data.search_term)
+        search_term = request_data.search_term
+        validated_orcid = validate_orcid(search_term)
+        if validated_orcid is not None:
+            name = OrcidService.get_name(validated_orcid)
+            if name is not None:
+                return 200, ParticipantSearchResponse(
+                    search_result_list=[
+                        EditSessionParticipantWithName(
+                            type_participant="ORCID",
+                            id_participant=validated_orcid,
+                            name_participant=name,
+                        )
+                    ]
+                )
+
+        users = CosmaeUser.search_username(search_term)
         return 200, ParticipantSearchResponse(
             search_result_list=[
                 EditSessionParticipantWithName(

@@ -284,9 +284,6 @@ def get_descendants(request: HttpRequest, id_persistent: str):
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
     try:
-        tag_def = TagDefinitionDb.objects.filter(id_persistent=id_persistent).get()
-        if not tag_def.curated and tag_def.owner_id != user.id:
-            return 403, ApiError(msg="Insufficient permission")
         descendant_id_list = TagDefinitionDb.descendants(id_persistent, user)
         return DescendantListResponse(id_descendants_persistent_list=descendant_id_list)
     except TagDefinitionDb.DoesNotExist:

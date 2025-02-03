@@ -185,6 +185,9 @@ CACHES = {
 
 IS_UNITTEST = True
 
+ORCID_CLIENT_ID = get_env("orcid_client_id")
+ORCID_CLIENT_SECRET = get_env("orcid_client_secret")
+
 HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"

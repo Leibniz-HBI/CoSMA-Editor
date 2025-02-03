@@ -203,6 +203,9 @@ CACHES = {
 
 IS_UNITTEST = False
 
+ORCID_CLIENT_ID = get_docker_compose_secret("orcid_client_id")
+ORCID_CLIENT_SECRET = get_docker_compose_secret("orcid_client_secret")
+
 LOGGING = {
     "version": 1,
     "formatters": {

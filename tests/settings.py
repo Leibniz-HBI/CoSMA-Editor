@@ -199,3 +199,5 @@ SOCIALACCOUNT_PROVIDERS = {
         "APPS": [{"name": "Test Social Account", "provider_id": "test.provider.id"}]
     }
 }
+ORCID_CLIENT_ID = get_file_secret("orcid_client_id")
+ORCID_CLIENT_SECRET = get_file_secret("orcid_client_secret")
