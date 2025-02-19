@@ -187,17 +187,14 @@ CACHES = {
 }
 
 IS_UNITTEST = True
+DEBUG = True
+ACCOUNT_RATE_LIMITS = False
 
 HEADLESS_ONLY = False
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
-SOCIALACCOUNT_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
 
-SOCIALACCOUNT_PROVIDERS = {
-    "saml": {
-        "APPS": [{"name": "Test Social Account", "provider_id": "test.provider.id"}]
-    }
-}
 ORCID_CLIENT_ID = get_file_secret("orcid_client_id")
 ORCID_CLIENT_SECRET = get_file_secret("orcid_client_secret")

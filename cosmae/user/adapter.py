@@ -1,8 +1,11 @@
 "Adapter for combinining social accounts with internal accounts."
+
 from uuid import uuid4
 
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from django.conf import settings
+from django.db import transaction
 from django.forms import ValidationError
 
 from cosmae.edit_session.models_django import EditSession
@@ -38,7 +41,43 @@ class CosmaeSocialAccountAdapter(DefaultSocialAccountAdapter):
 
 
 class CosmaeAccountAdapter(DefaultAccountAdapter):
-    "Allauth Account adapter for setting username"
+    "Allauth Account adapter for setting custom fields."
 
-    def populate_username(self, request, user):
-        return user.username
+    def save_user(self, request, user, form, commit=True):
+        data = form.cleaned_data
+        names_personal = data.get("names_personal")
+        names_family = data.get("names_family")
+        email = data.get("email")
+        username = data.get("username")
+
+        if names_personal:
+            user.first_name = names_personal
+        if names_family:
+            user.last_name = names_family
+        user.email = email
+        user.username = username
+        if "password" in data:
+            user.set_password(data["password"])
+        else:
+            user.set_unusable_password()
+        permission_group = CosmaeUser.APPLICANT
+        if not (settings.DEBUG or settings.IS_UNITTEST):
+            if len(CosmaeUser.objects.exclude(is_superuser=True)) == 0:
+                permission_group = CosmaeUser.COMMISSIONER
+        user.permission_group = permission_group
+        id_user = uuid4()
+        user.id_persistent = id_user
+
+        if commit:
+            # Ability not to commit makes it easier to derive from
+            # this adapter by adding
+            with transaction.atomic():
+                session = EditSession.objects.create(
+                    id_persistent=str(uuid4()),
+                    id_owner_persistent=str(id_user),
+                    name="Default Edit Session",
+                )
+                session.save()
+                user.edit_session = session
+                user.save()
+        return user

@@ -3,10 +3,26 @@
 from typing import List, Union
 
 from ninja import Schema
+from pydantic import Field
 
 from cosmae.edit_session.api import EditSession
 from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.user.models_api.public import PublicUserInfo
+
+
+class RegisterRequest(Schema):
+    "API model for register requests."
+
+    username: str = Field(None, min_length=2, max_length=150)
+    names_personal: str = Field(None, min_length=2, max_length=150)
+    names_family: str | None = Field(None, min_length=2, max_length=150)
+    email: str = Field(None, min_length=2, max_length=150)
+    password: str = Field(None, min_length=8, max_length=50)
+
+    def __str__(self) -> str:
+        as_dict = super().dict()
+        as_dict.pop("password")
+        return str(as_dict)
 
 
 class LoginResponse(Schema):

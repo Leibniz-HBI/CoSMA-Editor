@@ -72,6 +72,9 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "corsheaders",
     "django_rq",
+    "allauth",
+    "allauth.account",
+    "allauth.headless",
     "cosmae",
 ]
 
@@ -84,6 +87,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "django_project.urls"
@@ -205,6 +209,13 @@ IS_UNITTEST = False
 
 ORCID_CLIENT_ID = get_docker_compose_secret("orcid_client_id")
 ORCID_CLIENT_SECRET = get_docker_compose_secret("orcid_client_secret")
+
+HEADLESS_ONLY = True
+SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
+ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
+SOCIALACCOUNT_ONLY = False
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
 
 LOGGING = {
     "version": 1,

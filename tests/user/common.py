@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 
 test_username = "test-user"
-test_password = "test1234"
+test_password = "test?!1234"
 test_email = "user@test.org"
 test_names_personal = "test name personal"
 test_uuid = "6af69cf4-7227-4bb4-af4a-b8e020731b86"

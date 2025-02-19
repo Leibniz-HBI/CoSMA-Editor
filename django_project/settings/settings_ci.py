@@ -71,8 +71,6 @@ INSTALLED_APPS = [
     "django_rq",
     "allauth",
     "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.saml",
     "allauth.headless",
     "cosmae",
 ]
@@ -212,6 +210,7 @@ CACHES = {
 }
 
 IS_UNITTEST = True
+ACCOUNT_RATE_LIMITS = False
 
 ORCID_CLIENT_ID = get_docker_compose_secret("orcid_client_id")
 ORCID_CLIENT_SECRET = get_docker_compose_secret("orcid_client_secret")
@@ -239,11 +238,12 @@ LOGGING = {
     # },
 }
 
-HEADLESS_ONLY = False
+HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
-SOCIALACCOUNT_ONLY = True
+SOCIALACCOUNT_ONLY = False
 ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
 SOCIALACCOUNT_PROVIDERS = {
     "saml": {
         # Here, each app represents the SAML provider configuration of one
