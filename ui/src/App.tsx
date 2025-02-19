@@ -31,7 +31,7 @@ import { TagManagementPage } from './tag_management/components'
 import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
 import { ManagementPage } from './management/components'
 import { contributionStepApiToUiMap } from './contribution/thunks'
-import { AuthProvider, ProviderCallback } from './auth/components'
+import { AuthProvider } from './auth/components/provider'
 import { addError } from './util/notification/slice'
 
 export function CosmaeRoot() {
@@ -107,7 +107,6 @@ const router = createBrowserRouter([
         element: <CosmaeRoot />,
         children: [
             { path: '', element: <TableConnector />, index: true },
-            { path: 'callback', element: <ProviderCallback /> },
             {
                 path: 'contribute',
                 element: <ContributionList />

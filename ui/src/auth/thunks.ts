@@ -6,20 +6,21 @@ import { parseUserInfoFromJson } from '../user/thunks'
 import { getCookie } from '../util/cookie'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { ACCEPT_JSON_HEADER } from '../util/fetch'
-import { addError } from '../util/notification/slice'
+import { addError, addSuccessVanish } from '../util/notification/slice'
 import { ThunkWithFetch } from '../util/type'
 import {
     authStepEnd,
-    getConfigStart,
-    getConfigSuccess,
     getSelfEnd,
     getSelfStart,
     getSelfSuccess,
+    getSessionEnd,
     getSessionStart,
-    redirectStart,
+    loginStart,
+    registrationEnd,
+    registrationStart,
     setAuthUser
 } from './slice'
-import { SsoProvider, UserAllAuth } from './state'
+import { UserAllAuth } from './state'
 
 export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
@@ -31,7 +32,6 @@ export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> 
                 headers: ACCEPT_JSON_HEADER,
                 credentials: 'include'
             })
-            console.log(rsp)
             if (rsp.status == 200) {
                 const json = await rsp.json()
                 if (!json['meta']['is_authenticated']) {
@@ -45,31 +45,48 @@ export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> 
                 dispatch(setAuthUser(user))
                 dispatch(authStepEnd())
                 return true
+            } else {
+                // get initial token!
+                await fetch(config.api_path_auth + '/config')
             }
-        // eslint-disable-next-line no-empty
+            // eslint-disable-next-line no-empty
         } catch (_e: unknown) {}
-        dispatch(authStepEnd())
+        dispatch(getSessionEnd())
         return false
     }
 }
 
-export function getConfigThunk(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
-        dispatch(getConfigStart())
+export function loginThunk(username: string, password: string): ThunkWithFetch<void> {
+    return async (dispatch: AppDispatch, _getState, fetch) => {
+        dispatch(loginStart())
         try {
-            const rsp = await fetch(config.api_path_auth + '/config')
-            const json = await rsp.json()
+            const headers: { [key: string]: string } = {
+                'Access-Control-Allow-Credentials': 'true',
+                'Content-Type': 'application/json'
+            }
+            const csrfmiddlewaretoken = getCookie('csrftoken')
+            if (csrfmiddlewaretoken !== undefined) {
+                headers['X-CSRFToken'] = csrfmiddlewaretoken
+            }
+            const rsp = await fetch(config.api_path_auth + '/auth/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers,
+                body: JSON.stringify({ username, password })
+            })
             if (rsp.status == 200) {
-                const providers = json['data']['socialaccount']['providers'].map(
-                    (providerJson: unknown) => parseSsoProviderFromJson(providerJson)
-                )
-                dispatch(getConfigSuccess(providers))
+                const json = await rsp.json()
+                const userJson = json['data']['user']
+                const authUser = parseUserAllAuthFromJson(userJson)
+                dispatch(setAuthUser(authUser))
             } else {
-                dispatch(authStepEnd())
-                const apiMsg = errorMessageFromApi(json)
-                if (apiMsg !== 'Not authenticated') {
-                    dispatch(addError(apiMsg))
+                const json = await rsp.json()
+                let msg = json['msg']
+                if (msg === undefined) {
+                    msg = 'Unknown error'
                 }
+                dispatch(authStepEnd())
+                dispatch(addError(msg))
             }
         } catch (e: unknown) {
             dispatch(authStepEnd())
@@ -78,34 +95,64 @@ export function getConfigThunk(): ThunkWithFetch<void> {
     }
 }
 
-export function redirectThunk(provider: string): ThunkWithFetch<string | undefined> {
-    return async (dispatch, _getState, fetch) => {
-        dispatch(redirectStart())
+export function registerThunk({
+    username,
+    namesPersonal,
+    namesFamily,
+    email,
+    password
+}: {
+    username: string
+    namesPersonal: string
+    namesFamily?: string
+    email: string
+    password: string
+}): ThunkWithFetch<void> {
+    return async (dispatch: AppDispatch, _getState, fetch) => {
+        dispatch(registrationStart())
         try {
-            const csrftoken = getCookie('csrftoken')
-            const data = new URLSearchParams()
-            data.append('provider', provider)
-            data.append('process', 'login')
-            data.append('callback_url', '/callback')
-            if (csrftoken !== undefined) {
-                data.append('csrfmiddlewaretoken', csrftoken)
+            const headers: { [key: string]: string } = {
+                'Access-Control-Allow-Credentials': 'true',
+                'Content-Type': 'application/json'
             }
-            const rsp = await fetch(config.api_path_auth + '/auth/provider/redirect', {
+            const csrfmiddlewaretoken = getCookie('csrftoken')
+            if (csrfmiddlewaretoken !== undefined) {
+                headers['X-CSRFToken'] = csrfmiddlewaretoken
+            }
+            console.log(csrfmiddlewaretoken)
+            const rsp = await fetch(config.api_path_auth + '/auth/signup', {
                 method: 'POST',
-                body: data,
-                credentials: 'include'
+                credentials: 'include',
+                headers,
+                body: JSON.stringify({
+                    username,
+                    email,
+                    password,
+                    names_personal: namesPersonal,
+                    names_family: namesFamily
+                })
             })
             if (rsp.status == 200) {
-                dispatch(authStepEnd())
-                return rsp.url
+                dispatch(registrationEnd())
+                dispatch(addSuccessVanish('Registration Successful'))
             } else {
-                dispatch(addError('Could not perform login redirect.'))
+                const json = await rsp.json()
+                let msg = ''
+                if (rsp.status == 422) {
+                    errorMessageFromApi(json)
+                } else {
+                    msg = json['msg']
+                    if (msg === undefined) {
+                        msg = 'Unknown error'
+                    }
+                }
+                dispatch(registrationEnd())
+                dispatch(addError(msg))
             }
-        } catch (e: unknown) {
-            dispatch(addError(exceptionMessage(e)))
-            dispatch(authStepEnd)
+        } catch (error: unknown) {
+            dispatch(registrationEnd())
+            dispatch(addError(exceptionMessage(error)))
         }
-        return undefined
     }
 }
 
@@ -158,14 +205,5 @@ export function parseUserAllAuthFromJson(userJson: any): UserAllAuth {
         email: userJson['email'] ?? undefined,
         id: userJson['id'],
         username: userJson['username']
-    }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseSsoProviderFromJson(providerJson: any): SsoProvider {
-    return {
-        id: providerJson['id'],
-        name: providerJson['name'],
-        flows: providerJson['flows']
     }
 }

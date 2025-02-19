@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { AuthState, AuthStep, newAuthState, SsoProvider, UserAllAuth } from './state'
+import { AuthState, AuthStep, newAuthState, UserAllAuth } from './state'
 import { newRemote } from '../util/state'
 import { UserInfo } from '../user/state'
 import { TagDefinition } from '../column_menu/state'
@@ -11,15 +11,9 @@ const authSlice = createSlice({
         authStepEnd(state: AuthState) {
             state.step.isLoading = false
         },
-        getConfigStart(state: AuthState) {
-            state.step = newRemote(AuthStep.Config, true)
-        },
-        getConfigSuccess(state: AuthState, action: PayloadAction<SsoProvider[]>) {
-            state.step.isLoading = false
-            state.providers = action.payload
-        },
         getSelfEnd(state: AuthState) {
             state.user.isLoading = false
+            state.step.value = AuthStep.LoggedOut
         },
         getSelfStart(state: AuthState) {
             state.user.isLoading = true
@@ -27,15 +21,27 @@ const authSlice = createSlice({
         getSelfSuccess(state: AuthState, action: PayloadAction<UserInfo>) {
             state.user = newRemote(action.payload)
         },
+        getSessionEnd(state: AuthState) {
+            state.step = newRemote(AuthStep.LoggedOut)
+        },
         getSessionStart(state: AuthState) {
             state.step = newRemote(AuthStep.Session, true)
         },
-        redirectStart(state: AuthState) {
-            state.step = newRemote(AuthStep.Redirect, true)
+        loginStart(state: AuthState) {
+            state.step = newRemote(AuthStep.Login, true)
         },
         setAuthUser(state: AuthState, action: PayloadAction<UserAllAuth | undefined>) {
             state.userAuth = action.payload
             state.step = newRemote(AuthStep.Authenticated)
+        },
+        registrationStart(state: AuthState) {
+            state.showRegistration.isLoading = true
+        },
+        registrationEnd(state: AuthState) {
+            state.showRegistration.isLoading = false
+        },
+        toggleRegistration(state: AuthState, action: PayloadAction<boolean>) {
+            state.showRegistration.value = action.payload
         },
         updateUserTagDefinition(
             state: AuthState,
@@ -69,14 +75,16 @@ function findUserColumnIndex(state: AuthState, idPersistent: string) {
 }
 export const {
     authStepEnd,
-    getConfigStart,
-    getConfigSuccess,
     getSelfEnd,
     getSelfStart,
     getSelfSuccess,
+    getSessionEnd,
     getSessionStart,
-    redirectStart,
+    loginStart,
+    registrationEnd,
+    registrationStart,
     setAuthUser,
+    toggleRegistration,
     removeUserTagDefinition,
     updateUserTagDefinition
 } = authSlice.actions

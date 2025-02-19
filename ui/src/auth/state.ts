@@ -1,12 +1,12 @@
-import { UserInfo } from "../user/state"
-import { newRemote, RemoteInterface } from "../util/state"
+import { UserInfo } from '../user/state'
+import { newRemote, RemoteInterface } from '../util/state'
 
 export enum AuthStep {
+    LoggedOut,
     Initial,
     Session,
-    Config,
-    Redirect,
     Login,
+    Signup,
     Authenticated
 }
 
@@ -17,34 +17,28 @@ export interface UserAllAuth {
     username?: string
 }
 
-export interface SsoProvider {
-    id: string
-    name: string
-    flows: string[]
-}
-
 export interface AuthState {
     userAuth: UserAllAuth | undefined
-    user: RemoteInterface<UserInfo |undefined>
+    user: RemoteInterface<UserInfo | undefined>
     step: RemoteInterface<AuthStep>
-    providers: SsoProvider[] | undefined
+    showRegistration: RemoteInterface<boolean>
 }
 
 export function newAuthState({
     userAuth = undefined,
     user = newRemote(undefined),
     step = newRemote(AuthStep.Initial),
-    providers = undefined
+    showRegistration = newRemote(false)
 }: {
-    user?: RemoteInterface<UserInfo|undefined>
+    user?: RemoteInterface<UserInfo | undefined>
     userAuth?: UserAllAuth | undefined
     step?: RemoteInterface<AuthStep>
-    providers?: SsoProvider[] | undefined
+    showRegistration?: RemoteInterface<boolean>
 }): AuthState {
     return {
         user,
         userAuth,
         step,
-        providers
+        showRegistration
     }
 }

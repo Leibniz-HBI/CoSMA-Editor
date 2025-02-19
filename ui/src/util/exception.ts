@@ -57,5 +57,12 @@ export function errorMessageFromApi(json: { [key: string]: unknown }): string {
         }
         return unprocessableEntityMessage(detail as UnprocessableEntity)
     }
+    const error = json['error'] as { [key: string]: unknown }
+    if (error !== undefined && error !== null) {
+        const msg = error['message']
+        if (msg !== undefined) {
+            return msg as string
+        }
+    }
     return 'Unknown API error'
 }
