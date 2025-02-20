@@ -215,7 +215,7 @@ CACHES = {
     },
 }
 
-IS_UNITTEST = False
+IS_UNITTEST = True
 ACCOUNT_RATE_LIMITS = False
 
 ORCID_CLIENT_ID = get_file_secret("orcid_client_id")
