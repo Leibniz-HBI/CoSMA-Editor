@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import {
@@ -24,13 +24,14 @@ import { ContributionStep, newContribution } from '../../state'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
+import { vi, Mock } from 'vitest'
 
-jest.mock('react-router-dom', () => {
-    const loaderMock = jest.fn()
+vi.mock('react-router-dom', () => {
+    const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
-jest.mock('react-flip-toolkit', () => {
+vi.mock('react-flip-toolkit', () => {
     return {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Flipper: (props: any) => <div>{props.children}</div>,
@@ -49,7 +50,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contributionColumnDefinition: newColumnDefinitionsContributionState({
@@ -90,16 +91,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -120,7 +121,7 @@ export const contributionColumnActiveRsp1 = {
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
 test('assign existing', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             200,

@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
@@ -23,19 +23,20 @@ import {
     notificationReducer
 } from '../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
+import { vi, Mock } from 'vitest'
 
-jest.mock('react-router-dom', () => {
-    const loaderMock = jest.fn()
+vi.mock('react-router-dom', () => {
+    const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    const navigateMock = jest.fn()
+    const navigateMock = vi.fn()
     return {
         useLoaderData: loaderMock,
-        useNavigate: jest.fn().mockReturnValue(navigateMock)
+        useNavigate: vi.fn().mockReturnValue(navigateMock)
     }
 })
 
 beforeEach(() => {
-    ;(useNavigate() as jest.Mock).mockClear()
+    ;(useNavigate() as Mock).mockClear()
 })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -49,7 +50,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contributionColumnDefinition: newColumnDefinitionsContributionState({
@@ -92,16 +93,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -122,7 +123,7 @@ export const contributionColumnActiveRsp1 = {
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
 
-function initialResponseSequence(fetchMock: jest.Mock) {
+function initialResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -154,7 +155,7 @@ function initialResponseSequence(fetchMock: jest.Mock) {
 }
 
 test('finish success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponseSequence(fetchMock)
     addResponseSequence(fetchMock, [
         [200, {}],
@@ -197,12 +198,12 @@ test('finish success', async () => {
         `http://127.0.0.1/api/contributions/${idContribution}`,
         { credentials: 'include' }
     )
-    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+    expect((useNavigate() as Mock).mock.calls).toEqual([
         ['/contribute/id-contribution-test/entities']
     ])
 })
 test('finish error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponseSequence(fetchMock)
     const errorMsg = 'Not Complete'
     addResponseSequence(fetchMock, [
@@ -232,5 +233,5 @@ test('finish error', async () => {
         `http://127.0.0.1/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     )
-    expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
+    expect((useNavigate() as Mock).mock.calls).toEqual([])
 })

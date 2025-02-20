@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import {vi, Mock }  from 'vitest'
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { RemoteInterface, newRemote } from '../../../util/state'
 import {
@@ -22,12 +23,12 @@ import {
 } from '../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
 
-jest.mock('react-router-dom', () => {
-    const navigateCallbackMock = jest.fn()
-    const useNavigateMock = jest.fn().mockReturnValue(navigateCallbackMock)
+vi.mock('react-router-dom', () => {
+    const navigateCallbackMock = vi.fn()
+    const useNavigateMock = vi.fn().mockReturnValue(navigateCallbackMock)
     return { useNavigate: useNavigateMock }
 })
-jest.mock('uuid', () => {
+vi.mock('uuid', () => {
     return {
         v4: () => 'id-error-test'
     }
@@ -44,7 +45,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             entityMergeRequests: { entityMergeRequests: newRemote(undefined) },
@@ -70,16 +71,16 @@ export function renderWithProviders(
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -105,7 +106,7 @@ const idUser1 = 'user-id-1'
 const permissionGroup1 = 'EDITOR'
 
 test('success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addSuccessResponse(fetchMock)
     const { store } = renderWithProviders(<EntityMergeRequests />, fetchMock)
     await waitFor(() => {
@@ -173,18 +174,18 @@ test('success', async () => {
 })
 
 test('navigate to conflicts', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addSuccessResponse(fetchMock)
     renderWithProviders(<EntityMergeRequests />, fetchMock)
     await waitFor(() => {
         screen.getByText(displayTextOrigin0).click()
-        expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+        expect((useNavigate() as Mock).mock.calls).toEqual([
             [`/review/entities/${idEntityMr0}`]
         ])
     })
 })
 test('error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [[400, { msg: 'error' }]])
     const { store } = renderWithProviders(<EntityMergeRequests />, fetchMock)
     // TODO test for correct error message dispatch
@@ -203,7 +204,7 @@ test('error', async () => {
         ['http://127.0.0.1/api/merge_requests/entities/all', { credentials: 'include' }]
     ])
 })
-function addSuccessResponse(fetchMock: jest.Mock) {
+function addSuccessResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,

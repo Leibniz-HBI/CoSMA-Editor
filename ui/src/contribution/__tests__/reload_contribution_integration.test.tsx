@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
@@ -9,16 +9,17 @@ import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ContributionStepper } from '../components'
+import { vi, Mock } from 'vitest'
 
-jest.mock('react-router-dom', () => {
-    const mockNavigate = jest.fn()
+vi.mock('react-router-dom', () => {
+    const mockNavigate = vi.fn()
     return {
-        useNavigate: jest.fn().mockReturnValue(mockNavigate),
-        useLoaderData: jest.fn().mockReturnValue('id-test-1')
+        useNavigate: vi.fn().mockReturnValue(mockNavigate),
+        useLoaderData: vi.fn().mockReturnValue('id-test-1')
     }
 })
-jest.mock('../../config', () => {
-    return { ...jest.requireActual('../../config'), secondDelay: 100 }
+vi.mock('../../config', async () => {
+    return { ...(await vi.importActual('../../config')), secondDelay: 100 }
 })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -30,7 +31,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contribution: newContributionState({}),
@@ -55,16 +56,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -81,7 +82,7 @@ const contributionResponse1 = {
     author: authorTest1
 }
 test('reloads automatically', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [200, { ...contributionResponse1 }],
         [200, { ...contributionResponse1 }],

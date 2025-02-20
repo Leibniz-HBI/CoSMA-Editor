@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
@@ -55,7 +55,7 @@ const tagDefTest = newTagDefinition({
     curated: true
 })
 test('success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             200,
@@ -106,7 +106,7 @@ test('success', async () => {
 })
 
 test('error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const testError = 'Could not get tag definition details.'
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(
@@ -147,7 +147,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             tagSelection: newTagSelectionState({}),
@@ -172,17 +172,17 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(async () => {
+            vi.fn(async () => {
                 await new Promise((promise) => setTimeout(promise, 50))
                 return {
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 }
-            }) as jest.Mock
+            }) as Mock
         )
     }
 }

@@ -1,7 +1,8 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
+import { vi, Mock } from 'vitest'
 import { render, RenderOptions, screen, waitFor, act } from '@testing-library/react'
 import {
     EntityDetailsState,
@@ -35,7 +36,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 }
 
 test('search and click result', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             200,
@@ -57,7 +58,7 @@ test('search and click result', async () => {
             }
         ]
     ])
-    const clickMock = jest.fn()
+    const clickMock = vi.fn()
     const { store } = renderWithProviders(
         <EntitySearch onSearchResultClicked={clickMock} />,
         fetchMock
@@ -163,7 +164,7 @@ function newSearchResultApi(
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             entityDetails: newEntityDetailsState({
@@ -251,16 +252,16 @@ export function renderWithProviders(
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }

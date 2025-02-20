@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import { vi, Mock } from 'vitest'
 import { configureStore } from '@reduxjs/toolkit'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import {
@@ -26,7 +27,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             displayTxtManagement: { tagDefinitions: newRemote([]) },
@@ -54,16 +55,16 @@ export function renderWithProviders(
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -74,7 +75,7 @@ const nameTagDef1 = 'tag def 1'
 const idTagDef2 = 'id-tag-test-2'
 const nameTagDef2 = 'tag def 2'
 
-function initialResponseSequence(mock: jest.Mock) {
+function initialResponseSequence(mock: Mock) {
     addResponseSequence(mock, [
         [
             200,
@@ -168,7 +169,7 @@ const expectedGetRequests = [
     ]
 ]
 test('get', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponseSequence(fetchMock)
     renderWithProviders(<DisplayTxtManagementComponent />, fetchMock)
     await waitFor(() => {
@@ -180,7 +181,7 @@ test('get', async () => {
     expect(fetchMock.mock.calls).toEqual(expectedGetRequests)
 })
 test('append and remove', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponseSequence(fetchMock)
     addResponseSequence(fetchMock, [[200, {}]])
     addResponseSequence(fetchMock, [[200, {}]])

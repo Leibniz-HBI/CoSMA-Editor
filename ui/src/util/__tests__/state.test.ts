@@ -1,24 +1,24 @@
 /*eslint @typescript-eslint/no-unused-vars: ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]*/
-import { describe } from '@jest/globals'
+import { vi, Mock } from 'vitest'
 import { Dispatch, useCallback, useReducer } from 'react'
 import { Remote, useThunkReducer } from '../state'
 import { AsyncAction } from '../async_action'
 import { AppDispatch } from '../../store'
 
-jest.mock('react', () => {
-    const original = jest.requireActual('react')
+vi.mock('react', async () => {
+    const original = await vi.importActual('react')
     return {
         ...original,
-        useReducer: jest.fn(),
-        useCallback: jest.fn()
+        useReducer: vi.fn(),
+        useCallback: vi.fn()
     }
 })
 
-jest.mock('../../user/hooks', () => {
-    const original = jest.requireActual('../../user/hooks')
+vi.mock('../../user/hooks', async () => {
+    const original = await vi.importActual('../../user/hooks')
     return {
         ...original,
-        useLogoutCallback: jest.fn()
+        useLogoutCallback: vi.fn()
     }
 })
 
@@ -36,12 +36,12 @@ class AsyncActionTest extends AsyncAction<number, void> {
 }
 describe('thunker', () => {
     test('runs async action', () => {
-        const dispatch = jest.fn()
-        const reducer = jest.fn()
-        const reduxDispatch = jest.fn()
+        const dispatch = vi.fn()
+        const reducer = vi.fn()
+        const reduxDispatch = vi.fn()
         const state = new CounterState()
-        ;(useReducer as jest.Mock).mockReturnValueOnce([state, dispatch])
-        ;(useCallback as jest.Mock).mockImplementationOnce((fun, _state) => fun)
+        ;(useReducer as Mock).mockReturnValueOnce([state, dispatch])
+        ;(useCallback as Mock).mockImplementationOnce((fun, _state) => fun)
         const [_state, thunkDispatch] = useThunkReducer(reducer, state, reduxDispatch)
         thunkDispatch(new AsyncActionTest())
         expect(dispatch.mock.calls).toEqual([[5]])
@@ -51,12 +51,12 @@ describe('thunker', () => {
         expect(result).toEqual(6)
     })
     test('dispatches normal action', () => {
-        const dispatch = jest.fn()
-        const reducer = jest.fn()
-        const reduxDispatch = jest.fn()
+        const dispatch = vi.fn()
+        const reducer = vi.fn()
+        const reduxDispatch = vi.fn()
         const state = new CounterState()
-        ;(useReducer as jest.Mock).mockReturnValueOnce([state, dispatch])
-        ;(useCallback as jest.Mock).mockImplementationOnce((fun, _state) => fun)
+        ;(useReducer as Mock).mockReturnValueOnce([state, dispatch])
+        ;(useCallback as Mock).mockImplementationOnce((fun, _state) => fun)
         const [_state, thunkDispatch] = useThunkReducer(reducer, state, reduxDispatch)
         thunkDispatch(2)
         expect(dispatch.mock.calls).toEqual([[2]])

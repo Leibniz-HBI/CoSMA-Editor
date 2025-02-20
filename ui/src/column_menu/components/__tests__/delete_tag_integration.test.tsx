@@ -1,7 +1,6 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-import { describe } from '@jest/globals'
 import { act, render, waitFor, screen, RenderOptions } from '@testing-library/react'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { TagDeleteForm } from '../form'
@@ -23,6 +22,7 @@ import {
 import { configureStore } from '@reduxjs/toolkit'
 import { tagSelectionSlice } from '../../slice'
 import { PropsWithChildren } from 'react'
+import { vi, Mock } from 'vitest'
 
 const idTagDef = 'id-tag-def'
 const idParentPersistent = 'id-parent'
@@ -54,7 +54,7 @@ describe('disable', () => {
         })
     }
     test('wrong input', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, {}]])
         renderWithProviders(<TagDeleteForm tagDefinition={tagDefTest} />, fetchMock)
         const user = userEvent.setup()
@@ -64,7 +64,7 @@ describe('disable', () => {
         }) //
     })
     test('success', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [
                 200,
@@ -138,7 +138,7 @@ describe('disable', () => {
         //TODO test state
     })
     test('failure', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const testError = 'Could not disable tag in test.'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
@@ -171,7 +171,7 @@ describe('purge', () => {
         })
     }
     test('wrong input', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, {}]])
         renderWithProviders(<TagDeleteForm tagDefinition={tagDefTest} />, fetchMock)
         const user = userEvent.setup()
@@ -181,7 +181,7 @@ describe('purge', () => {
         }) //
     })
     test('success', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
             <TagDeleteForm tagDefinition={tagDefTest} />,
@@ -222,7 +222,7 @@ describe('purge', () => {
         //TODO test state
     })
     test('failure', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const testError = 'Could not disable tag in test.'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
@@ -252,7 +252,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             tagSelection: newTagSelectionState({
@@ -296,17 +296,17 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(async () => {
+            vi.fn(async () => {
                 await new Promise((promise) => setTimeout(promise, 50))
                 return {
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 }
-            }) as jest.Mock
+            }) as Mock
         )
     }
 }

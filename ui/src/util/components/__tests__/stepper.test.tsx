@@ -1,7 +1,8 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
+import { vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { StepHeader, StepTitle } from '../stepper'
 
@@ -46,7 +47,7 @@ describe('Stepper Header', () => {
                 stepNames={[step1, step2]}
                 selectedIdx={0}
                 activeIdx={0}
-                navigateCallback={jest.fn()}
+                navigateCallback={vi.fn()}
             />
         )
         const elements = container.getElementsByClassName('justify-content-center')

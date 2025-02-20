@@ -1,16 +1,17 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async () => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection
     }
 })
+import { vi, Mock } from 'vitest'
 import { Button } from 'react-bootstrap'
 import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
 import {
@@ -60,7 +61,7 @@ import { AuthState, newAuthState } from '../../../auth/state'
 import { authReducer } from '../../../auth/slice'
 
 test('get descendant tag success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addHierarchyAndDescendantsResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
@@ -167,11 +168,11 @@ test('get descendant tag success', async () => {
     ])
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
@@ -264,13 +265,13 @@ const displayTxtColumnState = newColumnState({
     cellContents: newRemote([])
 })
 
-function addEntitiesResponse(fetchMock: jest.Mock) {
+function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }]
     ])
 }
 
-function addHierarchyAndDescendantsResponse(fetchMock: jest.Mock) {
+function addHierarchyAndDescendantsResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -310,7 +311,7 @@ function addHierarchyAndDescendantsResponse(fetchMock: jest.Mock) {
     ])
 }
 
-function addTagInstanceResponse(fetchMock: jest.Mock) {
+function addTagInstanceResponse(fetchMock: Mock) {
     const tagResponse = {
         id_entity_persistent: idPersistent0,
 
@@ -375,7 +376,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),

@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, screen, render, waitFor } from '@testing-library/react'
@@ -17,6 +17,7 @@ import { CommentHistoryAndForm } from '../components'
 import userEvent from '@testing-library/user-event'
 import { newRemote } from '../../util/state'
 import { UserPermissionGroup, newPublicUserInfo } from '../../user/state'
+import {vi, Mock} from 'vitest'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -27,7 +28,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             comments: { commentsByIdPersistent: {}, isSubmitting: false },
@@ -52,16 +53,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -93,7 +94,7 @@ const author = newPublicUserInfo({
 })
 
 test('success show and edit', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             200,
@@ -172,7 +173,7 @@ test('success show and edit', async () => {
     screen.getByText(content2)
 })
 test('error loading', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const errorMsg = 'error loading comments'
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
     const { store } = renderWithProviders(
@@ -191,7 +192,7 @@ test('error loading', async () => {
 })
 
 test('error submitting', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const errorMsg = 'error submitting comments'
     addResponseSequence(fetchMock, [
         [200, { comments_by_id_persistent: { [idPersistent]: [] } }],

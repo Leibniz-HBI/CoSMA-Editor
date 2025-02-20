@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
@@ -31,7 +31,8 @@ import { act } from 'react-dom/test-utils'
 import { editSessionReducer } from '../../../session/slice'
 import { AuthState, AuthStep, newAuthState } from '../../state'
 import { authReducer } from '../../slice'
-import { makeSelectUserInfoByIdPersistent } from '../../../user/selectors'
+import { vi, Mock } from 'vitest'
+
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         auth: AuthState
@@ -42,7 +43,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 }
 
 const idErrorTest = 'id-error-test'
-jest.mock('uuid', () => {
+vi.mock('uuid', () => {
     return {
         v4: () => idErrorTest
     }
@@ -50,7 +51,7 @@ jest.mock('uuid', () => {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             user: newUserState({}),
@@ -80,16 +81,16 @@ export function renderWithProviders(
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -168,7 +169,7 @@ describe('login', () => {
         })
     }
     test('login on successful refresh', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [200, authUserApiRsp],
             [200, userInfoApi]
@@ -203,7 +204,7 @@ describe('login', () => {
         )
     })
     test('successful login', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [401, { msg: 'not authenticated' }],
             [200, {}],
@@ -224,7 +225,7 @@ describe('login', () => {
         expect(store.getState().auth).toEqual(authStateSuccess)
     })
     test('login error with message', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [401, {}],
             [200, {}],
@@ -249,7 +250,7 @@ describe('login', () => {
         })
     })
     test('login error without message', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [401, {}],
             [200, {}],
@@ -312,7 +313,7 @@ describe('registration', () => {
     }
 
     test('success', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [401, { msg: 'not authenticated' }],
             [200, {}],
@@ -343,7 +344,7 @@ describe('registration', () => {
         })
     })
     test('error', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [401, { msg: 'not authenticated' }],
             [200, {}],
@@ -371,7 +372,7 @@ describe('registration', () => {
         })
     })
     test('error without message', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [401, { msg: 'not authenticated' }],
             [200, {}],

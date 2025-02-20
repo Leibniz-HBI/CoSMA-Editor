@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, waitFor } from '@testing-library/react'
@@ -21,13 +21,14 @@ import {
 } from '../../util/notification/slice'
 import { ContributionState, contributionSlice, newContributionState } from '../slice'
 import { ContributionStepper } from '../components'
+import { vi, Mock } from 'vitest'
 
-jest.mock('react-router-dom', () => {
-    const loaderMock = jest.fn()
+vi.mock('react-router-dom', () => {
+    const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
-jest.mock('uuid', () => {
+vi.mock('uuid', () => {
     return {
         v4: () => 'id-error-test'
     }
@@ -44,7 +45,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contributionColumnDefinition: newColumnDefinitionsContributionState({
@@ -77,16 +78,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -117,7 +118,7 @@ const contributionRsp = {
     error_details: errorDetails
 }
 test('sets error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [[200, contributionRsp]])
     const { store } = renderWithProviders(
         <ContributionStepper selectedIdx={0} />,

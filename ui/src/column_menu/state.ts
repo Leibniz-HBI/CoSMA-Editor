@@ -1,7 +1,7 @@
 import {
+    justificationColumn,
     displayTextColumn,
     displayTxtColumnId,
-    justificationColumn,
     justificationColumnId
 } from '../table/state'
 import { PublicUserInfo } from '../user/state'
@@ -51,7 +51,7 @@ export function newTagDefinition({
     disabled?: boolean
 }): TagDefinition {
     return {
-        namePath,
+        namePath: namePath,
         idPersistent,
         idParentPersistent,
         columnType,

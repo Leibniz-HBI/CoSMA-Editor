@@ -1,23 +1,23 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-import { describe } from '@jest/globals'
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TagCreateForm, ColumnTypeCreateFormProps } from '../form'
 import { useDispatch } from 'react-redux'
-jest.mock('react-redux', () => {
-    const dispatchMock = jest.fn()
+import { vi, Mock } from 'vitest'
+vi.mock('react-redux', () => {
+    const dispatchMock = vi.fn()
     return {
         // eslint-disable-next-line
-        useSelector: jest.fn(),
-        useDispatch: jest.fn().mockImplementation(() => dispatchMock)
+        useSelector: vi.fn(),
+        useDispatch: vi.fn().mockImplementation(() => dispatchMock)
     }
 })
 
 describe('form tests', () => {
     beforeEach(() => {
-        ;(useDispatch() as jest.Mock).mockClear()
+        ;(useDispatch() as Mock).mockClear()
     })
     function childTest(formProps?: ColumnTypeCreateFormProps) {
         const testClassName = 'testClassName'
@@ -54,7 +54,7 @@ describe('form tests', () => {
     })
     test('submit handled for complete form', async () => {
         const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
-        const dispatchMock = useDispatch() as jest.Mock
+        const dispatchMock = useDispatch() as Mock
         dispatchMock.mockReset().mockReturnValue(Promise.resolve(true))
         expectErrorsEmpty(container)
         const textInput = screen.getAllByRole('textbox')[0] as HTMLInputElement
@@ -68,12 +68,12 @@ describe('form tests', () => {
         })
         await user.click(radioButtons[1])
         await user.click(buttons[0])
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         expectErrorsEmpty(container)
         await waitFor(() => {
-            const mockCalls = (dispatchMock as jest.Mock).mock.calls
+            const mockCalls = (dispatchMock as Mock).mock.calls
             expect(mockCalls.length).toEqual(2)
-            mockCalls[0][0](jest.fn(), undefined, fetchMock)
+            mockCalls[0][0](vi.fn(), undefined, fetchMock)
         })
         expect(fetchMock.mock.calls).toEqual([
             [

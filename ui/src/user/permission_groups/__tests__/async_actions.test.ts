@@ -1,3 +1,4 @@
+import { vi, Mock } from 'vitest'
 import { UserPermissionGroup, newUserInfo } from '../../state'
 import {
     GetUserInfoListErrorAction,
@@ -11,16 +12,16 @@ import { GetUserInfoListAction, SetUserPermissionAction } from '../async_actions
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, any][]) {
-    const fetchMock = jest.spyOn(global, 'fetch')
+    const fetchMock = vi.spyOn(global, 'fetch')
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -74,14 +75,14 @@ describe('get users', () => {
             [200, { user_list: [userInfoJsonTest1], next_offset: 10 }],
             [200, { user_list: [], next_offset: -1 }]
         ])
-        const dispatch = jest.fn()
-        const reduxDispatch = jest.fn()
+        const dispatch = vi.fn()
+        const reduxDispatch = vi.fn()
         await new GetUserInfoListAction().run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new GetUserInfoListStartAction()],
             [new GetUserInfoListSuccessAction([userInfoTest, userInfoTest1])]
         ])
-        expect((fetch as jest.Mock).mock.calls).toEqual([
+        expect((fetch as Mock).mock.calls).toEqual([
             [
                 'http://127.0.0.1/api/user/chunks/0/5000',
                 { credentials: 'include', method: 'GET' }
@@ -101,8 +102,8 @@ describe('get users', () => {
             [200, { user_list: [userInfoJsonTest], next_offset: 5 }],
             [400, { msg: 'error' }]
         ])
-        const dispatch = jest.fn()
-        const reduxDispatch = jest.fn()
+        const dispatch = vi.fn()
+        const reduxDispatch = vi.fn()
         await new GetUserInfoListAction().run(dispatch, reduxDispatch)
         expect(dispatch.mock.calls).toEqual([
             [new GetUserInfoListStartAction()],
@@ -113,8 +114,8 @@ describe('get users', () => {
 describe('set user permissions', () => {
     test('success', async () => {
         responseSequence([[200, {}]])
-        const dispatch = jest.fn()
-        const reduxDispatch = jest.fn()
+        const dispatch = vi.fn()
+        const reduxDispatch = vi.fn()
         await new SetUserPermissionAction(
             idPersistentTest,
             UserPermissionGroup.APPLICANT
@@ -128,7 +129,7 @@ describe('set user permissions', () => {
                 )
             ]
         ])
-        expect((fetch as jest.Mock).mock.calls).toContainEqual([
+        expect((fetch as Mock).mock.calls).toContainEqual([
             `http://127.0.0.1/api/user/${idPersistentTest}/permission_group`,
             {
                 method: 'PUT',
@@ -139,8 +140,8 @@ describe('set user permissions', () => {
     })
     test('error', async () => {
         responseSequence([[400, { msg: 'error' }]])
-        const dispatch = jest.fn()
-        const reduxDispatch = jest.fn()
+        const dispatch = vi.fn()
+        const reduxDispatch = vi.fn()
         await new SetUserPermissionAction(
             idPersistentTest,
             UserPermissionGroup.APPLICANT

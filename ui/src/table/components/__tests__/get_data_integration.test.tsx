@@ -1,16 +1,17 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async () => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection
     }
 })
+import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     TagDefinition,
@@ -92,11 +93,11 @@ function MockTable(props: any) {
     )
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
@@ -183,7 +184,7 @@ const tagDefParentTest = newTagDefinition({
 })
 
 test('get entities success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -232,7 +233,7 @@ test('get entities success', async () => {
     ])
 })
 test('get entities and inner tag success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -282,7 +283,7 @@ test('get entities and inner tag success', async () => {
 })
 
 test('get chunked', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const entities: any[][] = [[], [], []]
     for (let j = 0; j < 2; ++j) {
@@ -376,7 +377,7 @@ test('get chunked', async () => {
 })
 
 test('get entities error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const entityError = 'Could not load entities'
     addResponseSequence(fetchMock, [[500, { msg: entityError }]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -411,7 +412,7 @@ test('get entities error', async () => {
 })
 
 test('get instances error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const instancesError = 'Could not load instances'
     addEntitiesResponse(fetchMock)
     addResponseSequence(fetchMock, [[500, { msg: instancesError }]])
@@ -480,13 +481,13 @@ const tagDefColumnState = newColumnState({
     ])
 })
 
-function addEntitiesResponse(fetchMock: jest.Mock) {
+function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }]
     ])
 }
 
-function addTagInstanceResponse(fetchMock: jest.Mock) {
+function addTagInstanceResponse(fetchMock: Mock) {
     const tagResponse = {
         id_entity_persistent: idPersistent0,
 
@@ -537,7 +538,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),

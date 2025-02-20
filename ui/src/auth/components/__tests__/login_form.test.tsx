@@ -1,13 +1,14 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { LoginForm } from '../login_form'
+import { vi } from 'vitest'
 
 test('renders without error set', () => {
-    const loginCallback = jest.fn()
-    const toggleRegistrationCallback = jest.fn()
+    const loginCallback = vi.fn()
+    const toggleRegistrationCallback = vi.fn()
     const { container } = render(
         <LoginForm
             loginCallback={loginCallback}
@@ -27,8 +28,8 @@ test('renders without error set', () => {
 })
 
 test('handles login', async () => {
-    const loginCallback = jest.fn()
-    const toggleRegistrationCallback = jest.fn()
+    const loginCallback = vi.fn()
+    const toggleRegistrationCallback = vi.fn()
     const { container } = render(
         <LoginForm
             loginCallback={loginCallback}
@@ -49,9 +50,9 @@ test('handles login', async () => {
 })
 
 test('handles registration toggle', async () => {
-    const loginCallback = jest.fn()
-    const clearLoginErrorCallback = jest.fn()
-    const toggleRegistrationCallback = jest.fn()
+    const loginCallback = vi.fn()
+    const clearLoginErrorCallback = vi.fn()
+    const toggleRegistrationCallback = vi.fn()
     const { container } = render(
         <LoginForm
             loginCallback={loginCallback}

@@ -1,3 +1,4 @@
+import { vi, Mock } from 'vitest'
 import { Remote, useThunkReducer } from '../../../util/state'
 import { UserPermissionGroup, newUserInfo } from '../../state'
 import { SelectUserInfoAction } from '../actions'
@@ -5,18 +6,18 @@ import { GetUserInfoListAction, SetUserPermissionAction } from '../async_actions
 import { useUserPermissionGroup } from '../hooks'
 import { PermissionGroupState } from '../state'
 
-jest.mock('../../../util/state', () => {
-    const original = jest.requireActual('../../../util/state')
+vi.mock('../../../util/state', async () => {
+    const original = await vi.importActual('../../../util/state')
     return {
         ...original,
-        useThunkReducer: jest.fn()
+        useThunkReducer: vi.fn()
     }
 })
-jest.mock('react-redux', () => {
-    const mockDispatch = jest.fn()
+vi.mock('react-redux', async () => {
+    const mockDispatch = vi.fn()
     return {
-        ...jest.requireActual('react-redux'),
-        useDispatch: jest.fn().mockReturnValue(mockDispatch)
+        ...await vi.importActual('react-redux'),
+        useDispatch: vi.fn().mockReturnValue(mockDispatch)
     }
 })
 
@@ -26,25 +27,22 @@ const namesPersonalTest = 'names personal test'
 const idPersistentTest = 'id-user=test'
 const permissionGroupTest = UserPermissionGroup.EDITOR
 const userInfoTest = newUserInfo({
-    userName: userNameTest,
+    username: userNameTest,
     email: emailTest,
     namesPersonal: namesPersonalTest,
     idPersistent: idPersistentTest,
     permissionGroup: permissionGroupTest
 })
 test('get user list callback', () => {
-    const dispatch = jest.fn()
-    ;(useThunkReducer as jest.Mock).mockReturnValue([
-        new PermissionGroupState({}),
-        dispatch
-    ])
+    const dispatch = vi.fn()
+    ;(useThunkReducer as Mock).mockReturnValue([new PermissionGroupState({}), dispatch])
     const { getUserInfoListCallback } = useUserPermissionGroup()
     getUserInfoListCallback()
     expect(dispatch.mock.calls).toEqual([[new GetUserInfoListAction()]])
 })
 test('get user list callback exits early when already loading', () => {
-    const dispatch = jest.fn()
-    ;(useThunkReducer as jest.Mock).mockReturnValue([
+    const dispatch = vi.fn()
+    ;(useThunkReducer as Mock).mockReturnValue([
         new PermissionGroupState({ userList: new Remote([], true) }),
         dispatch
     ])
@@ -54,11 +52,8 @@ test('get user list callback exits early when already loading', () => {
 })
 
 test('set user permission callback', () => {
-    const dispatch = jest.fn()
-    ;(useThunkReducer as jest.Mock).mockReturnValue([
-        new PermissionGroupState({}),
-        dispatch
-    ])
+    const dispatch = vi.fn()
+    ;(useThunkReducer as Mock).mockReturnValue([new PermissionGroupState({}), dispatch])
     const { setUserPermissionCallback } = useUserPermissionGroup()
     setUserPermissionCallback('id-user-test', UserPermissionGroup.CONTRIBUTOR)
     expect(dispatch.mock.calls).toEqual([
@@ -66,8 +61,8 @@ test('set user permission callback', () => {
     ])
 })
 test('set user permission callback exists early', () => {
-    const dispatch = jest.fn()
-    ;(useThunkReducer as jest.Mock).mockReturnValue([
+    const dispatch = vi.fn()
+    ;(useThunkReducer as Mock).mockReturnValue([
         new PermissionGroupState({ selectedUser: new Remote(undefined, true) }),
         dispatch
     ])
@@ -76,11 +71,8 @@ test('set user permission callback exists early', () => {
     expect(dispatch.mock.calls).toEqual([])
 })
 test('select user callback', () => {
-    const dispatch = jest.fn()
-    ;(useThunkReducer as jest.Mock).mockReturnValue([
-        new PermissionGroupState({}),
-        dispatch
-    ])
+    const dispatch = vi.fn()
+    ;(useThunkReducer as Mock).mockReturnValue([new PermissionGroupState({}), dispatch])
     const { selectUserCallback } = useUserPermissionGroup()
     selectUserCallback(userInfoTest)
     expect(dispatch.mock.calls).toEqual([[new SelectUserInfoAction(userInfoTest)]])

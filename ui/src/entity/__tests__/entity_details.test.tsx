@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import { vi, Mock } from 'vitest'
 import {
     TagDefinition,
     TagSelectionState,
@@ -46,7 +47,7 @@ import { AuthState, newAuthState } from '../../auth/state'
 import { authReducer } from '../../auth/slice'
 
 test('success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addDetailsResponseSequence(fetchMock)
     const { store } = renderWithProviders(
         <EntityDetails idEntityPersistent={idEntityPersistent} />,
@@ -100,7 +101,7 @@ test('success', async () => {
     ])
 })
 test('error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const testError = 'Could not load entity details'
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(
@@ -157,11 +158,11 @@ const versionInstance0 = 10
 const versionInstance1 = 11
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
@@ -171,7 +172,7 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
     }
 }
 
-function addDetailsResponseSequence(fetchMock: jest.Mock) {
+function addDetailsResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -233,7 +234,7 @@ const tagDefTest1: TagDefinition = newTagDefinition({
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),

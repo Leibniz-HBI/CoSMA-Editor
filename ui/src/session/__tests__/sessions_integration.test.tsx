@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import {vi, Mock }  from 'vitest'
 import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
 import {
     EditSessionParticipantType,
@@ -32,7 +33,7 @@ import { AuthState, newAuthState } from '../../auth/state'
 import { authReducer } from '../../auth/slice'
 
 test('change session success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [200, sessionListApi],
         [200, sessionApi2]
@@ -63,7 +64,7 @@ test('change session success', async () => {
 })
 describe('select edit session', () => {
     test('error retrieving sessions', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const testError = 'Could not get sessions'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
@@ -87,7 +88,7 @@ describe('select edit session', () => {
     })
 
     test('error setting session', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const testError = 'Could not get sessions'
         addResponseSequence(fetchMock, [
             [200, sessionListApi],
@@ -129,12 +130,12 @@ describe('select edit session', () => {
 describe('owner', () => {
     describe('create session', () => {
         test('success', async () => {
-            const fetchMock = jest.fn()
+            const fetchMock = vi.fn()
             addResponseSequence(fetchMock, [
                 [200, { edit_session_list: [] }],
                 [200, sessionApi2]
             ])
-            const selectEditSessionMock = jest.fn()
+            const selectEditSessionMock = vi.fn()
             const { store } = renderWithProviders(
                 <EditSessionOwnerList
                     selectEditSessionCallback={selectEditSessionMock}
@@ -167,13 +168,13 @@ describe('owner', () => {
             ])
         })
         test('error', async () => {
-            const fetchMock = jest.fn()
+            const fetchMock = vi.fn()
             const testError = 'Could not create session'
             addResponseSequence(fetchMock, [
                 [200, { edit_session_list: [] }],
                 [500, { msg: testError }]
             ])
-            const selectEditSessionMock = jest.fn()
+            const selectEditSessionMock = vi.fn()
             const { store } = renderWithProviders(
                 <EditSessionOwnerList
                     selectEditSessionCallback={selectEditSessionMock}
@@ -197,7 +198,7 @@ describe('owner', () => {
 describe('participant', () => {
     describe('remove from session', () => {
         test('success', async () => {
-            const fetchMock = jest.fn()
+            const fetchMock = vi.fn()
             addResponseSequence(fetchMock, [
                 [200, sessionListApi],
                 [200, {}]
@@ -232,7 +233,7 @@ describe('participant', () => {
             ])
         })
         test('error deleting', async () => {
-            const fetchMock = jest.fn()
+            const fetchMock = vi.fn()
             const testError = 'Could not remove participant'
             addResponseSequence(fetchMock, [
                 [200, sessionListApi],
@@ -260,7 +261,7 @@ describe('participant', () => {
             })
         })
         test('error retrieving sessions', async () => {
-            const fetchMock = jest.fn()
+            const fetchMock = vi.fn()
             const testError = 'Could not remove participant'
             addResponseSequence(fetchMock, [[500, { msg: testError }]])
             const { store } = renderWithProviders(
@@ -288,7 +289,7 @@ describe('participant', () => {
             ])
         })
         test('can cancel', async () => {
-            const fetchMock = jest.fn()
+            const fetchMock = vi.fn()
             const testError = 'Could not remove participant'
             addResponseSequence(fetchMock, [
                 [200, sessionListApi],
@@ -372,16 +373,16 @@ async function confirmRemoval() {
     })
 }
 
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -396,7 +397,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             editSession: initialSessionState,

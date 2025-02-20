@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import { vi, Mock } from 'vitest'
 import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
 import {
     EditSessionParticipantType,
@@ -26,7 +27,7 @@ import userEvent from '@testing-library/user-event'
 
 describe('change name', () => {
     test('success', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, { ...sessionApi, name: changedName }]])
         const { store } = renderWithProviders(<EditSessionEditor />, fetchMock)
         await setName()
@@ -41,7 +42,7 @@ describe('change name', () => {
     })
     test('error', async () => {
         const testError = 'Could not patch edit session'
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(<EditSessionEditor />, fetchMock)
         await setName()
@@ -73,16 +74,16 @@ async function setName() {
     ;(button as HTMLInputElement).click()
 }
 
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -96,7 +97,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             editSession: newEditSessionState({

@@ -1,17 +1,18 @@
 /*
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async () => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection,
         GridCellKind: actual.GridCellKind
     }
 })
+import { vi } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     TagDefinition,
@@ -126,7 +127,7 @@ function MockTable(props: any) {
     )
 }
 test('edit display text success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     addResponseSequence(fetchMock, [
@@ -189,7 +190,7 @@ test('edit display text success', async () => {
     ])
 })
 test('edit display text error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     const msg = 'could not edit entity for test'
@@ -233,7 +234,7 @@ test('edit display text error', async () => {
     expect(fetchMock.mock.calls.length).toEqual(3)
 })
 test('edit tag value success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     addResponseSequence(fetchMock, [
@@ -298,7 +299,7 @@ test('edit tag value success', async () => {
 })
 
 test('edit tag value api msg error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     const msg = 'Could not change tag instance'
@@ -341,7 +342,7 @@ test('edit tag value api msg error', async () => {
 })
 
 test('edit tag value changed in backend', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     const valueChangedByOther = 'already changed'
@@ -401,11 +402,11 @@ test('edit tag value changed in backend', async () => {
     expect(fetchMock.mock.calls.length).toEqual(3)
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: vi.mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
@@ -458,7 +459,7 @@ const tagDefTest: TagDefinition = newTagDefinition({
     version: 2,
     hidden: false
 })
-function addEntitiesResponse(fetchMock: jest.Mock) {
+function addEntitiesResponse(fetchMock: vi.mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }]
     ])
@@ -470,7 +471,7 @@ const versionValue0 = 12
 const value0 = 'value 0',
     value1 = 'value 1',
     valueChanged = 'changed'
-function addTagInstanceResponse(fetchMock: jest.Mock) {
+function addTagInstanceResponse(fetchMock: vi.mock) {
     const tagResponse = {
         id_entity_persistent: idPersistent0,
 
@@ -521,7 +522,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: vi.mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),

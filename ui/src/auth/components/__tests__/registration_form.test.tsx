@@ -1,14 +1,15 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { render, screen, waitFor } from '@testing-library/react'
 import { RegistrationForm } from '../registration_form'
+import { vi } from 'vitest'
 
 import userEvent from '@testing-library/user-event'
 test('renders without error set', async () => {
-    const registrationCallback = jest.fn()
-    const closeRegistrationCallback = jest.fn()
+    const registrationCallback = vi.fn()
+    const closeRegistrationCallback = vi.fn()
     const { container } = render(
         <RegistrationForm
             registrationCallback={registrationCallback}
@@ -28,8 +29,8 @@ test('renders without error set', async () => {
 })
 
 test('can register', async () => {
-    const registrationCallback = jest.fn()
-    const closeRegistrationCallback = jest.fn()
+    const registrationCallback = vi.fn()
+    const closeRegistrationCallback = vi.fn()
     render(
         <RegistrationForm
             registrationCallback={registrationCallback}
@@ -68,8 +69,8 @@ test('can register', async () => {
 })
 
 test('can cancel registration', async () => {
-    const registrationCallback = jest.fn()
-    const closeRegistrationCallback = jest.fn()
+    const registrationCallback = vi.fn()
+    const closeRegistrationCallback = vi.fn()
     render(
         <RegistrationForm
             registrationCallback={registrationCallback}

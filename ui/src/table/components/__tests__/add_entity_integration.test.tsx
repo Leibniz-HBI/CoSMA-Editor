@@ -1,16 +1,17 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async () => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection
     }
 })
+import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     UserPermissionGroup,
@@ -62,11 +63,11 @@ function MockTable(props: any) {
     )
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
@@ -81,7 +82,7 @@ const displayTxt0 = 'test display txt 0'
 const justification0 = 'Tremendously terrific shit poster.'
 
 test('success new entity', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntityResponse(fetchMock, displayTxt0, justification0)
     const { store } = renderWithProviders(<EntityAddModal />, fetchMock)
     const user = userEvent.setup()
@@ -115,7 +116,7 @@ test('success new entity', async () => {
     ])
 })
 test('success new entity no display text', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntityResponse(fetchMock, displayTxt0, justification0)
     const { store } = renderWithProviders(<EntityAddModal />, fetchMock)
     const user = userEvent.setup()
@@ -141,7 +142,7 @@ test('success new entity no display text', async () => {
                 body: JSON.stringify({
                     entity_list: [{ justification_txt: justification0 }]
                 }),
-                method: 'POST',
+                method: 'POST'
             }
         ]
     ])
@@ -156,11 +157,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     }
 }
 
-function addEntityResponse(
-    fetchMock: jest.Mock,
-    displayTxt: string,
-    justification: string
-) {
+function addEntityResponse(fetchMock: Mock, displayTxt: string, justification: string) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -202,7 +199,7 @@ async function fillEntityForm(
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),

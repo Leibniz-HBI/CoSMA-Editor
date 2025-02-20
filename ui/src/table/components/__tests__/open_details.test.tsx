@@ -1,26 +1,29 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async () => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection
     }
 })
-jest.mock('../../../entity/components', () => {
+vi.mock('../../../entity/components', async () => {
+    const actual = await vi.importActual('../../../entity/components')
     return {
         __esmodule: true,
-        EntityDetails: jest
+        ...actual,
+        EntityDetails: vi
             .fn()
             .mockImplementation((props: { idEntityPersistent: string }) => (
                 <MockEntityDetails {...props} />
             ))
     }
 })
+import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     TagDefinition,
@@ -76,7 +79,7 @@ import { authReducer } from '../../../auth/slice'
 test('open details', async () => {
     const modalTitleText = `Entity Details`
     const modalContentText = `Show details for entity with id ${idPersistent1}`
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesAndInstancesResponse(fetchMock)
     addDetailsResponseSequence(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -198,11 +201,11 @@ const versionInstance0 = 10
 const versionInstance1 = 11
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
@@ -211,14 +214,14 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
         )
     }
 }
-function addEntitiesAndInstancesResponse(fetchMock: jest.Mock) {
+function addEntitiesAndInstancesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: [test_entity_rsp_0, test_entities_rsp_1] }],
         [200, { tag_instances: [] }]
     ])
 }
 
-function addDetailsResponseSequence(fetchMock: jest.Mock) {
+function addDetailsResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -281,7 +284,7 @@ const tagDefTest1: TagDefinition = newTagDefinition({
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),
@@ -297,12 +300,14 @@ export function renderWithProviders(
             }),
             user: newUserState({}),
             auth: newAuthState({
-                user: newRemote(newUserInfo({
-                    ...userTest,
-                    email: 'mail@test.org',
-                    namesPersonal: 'names personal',
-                    columns: [tagDefTest]
-                }))
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: [tagDefTest]
+                    })
+                )
             }),
             entityDetails: newEntityDetailsState({}),
             editSession: newEditSessionState({
@@ -331,7 +336,7 @@ export function renderWithProviders(
             tagSelection: tagSelectionSlice.reducer,
             table: tableReducer,
             user: userSlice.reducer,
-            auth:authReducer,
+            auth: authReducer,
             entityDetails: entityDetailsReducer,
             editSession: editSessionReducer
         },

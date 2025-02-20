@@ -1,7 +1,6 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-import { describe } from '@jest/globals'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ColumnAddButton } from '../misc'

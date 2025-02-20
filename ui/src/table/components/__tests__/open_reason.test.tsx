@@ -1,16 +1,17 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async () => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection
     }
 })
+import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     TagDefinition,
@@ -109,11 +110,11 @@ function MockTable(props: any) {
     )
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
@@ -123,7 +124,7 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
     }
 }
 test('show justifications, open modal and hide again', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesAndInstancesResponse(fetchMock)
     addJustificationHistoryResponse(fetchMock)
     renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -135,7 +136,7 @@ test('show justifications, open modal and hide again', async () => {
     })
 })
 test('add justification', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesAndInstancesResponse(fetchMock)
     addJustificationHistoryResponse(fetchMock)
     addResponseSequence(fetchMock, [
@@ -219,7 +220,7 @@ test('add justification', async () => {
     ])
 })
 test('add justification found', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesAndInstancesResponse(fetchMock)
     addJustificationHistoryResponse(fetchMock)
     addResponseSequence(fetchMock, [[302, {}]])
@@ -252,7 +253,7 @@ test('add justification found', async () => {
     expect(fetchMock.mock.calls.length).toEqual(5)
 })
 test('get justification error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const errorMsg = 'error getting justification history'
     addEntitiesAndInstancesResponse(fetchMock)
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
@@ -275,7 +276,7 @@ test('get justification error', async () => {
     expect(fetchMock.mock.calls.length).toEqual(4)
 })
 test('add justification error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const errorMsg = 'error submitting justification'
     addEntitiesAndInstancesResponse(fetchMock)
     addJustificationHistoryResponse(fetchMock)
@@ -390,7 +391,7 @@ const userApi = {
 }
 const timeJustification = '2005-03-18 09:57:51 +0000'
 
-function addJustificationHistoryResponse(fetchMock: jest.Mock) {
+function addJustificationHistoryResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -420,7 +421,7 @@ async function openModalForEntity0() {
     })
 }
 
-function addEntitiesAndInstancesResponse(fetchMock: jest.Mock) {
+function addEntitiesAndInstancesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }],
         [200, { tag_instances: [] }],
@@ -453,7 +454,7 @@ const tagDefTest: TagDefinition = newTagDefinition({
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),

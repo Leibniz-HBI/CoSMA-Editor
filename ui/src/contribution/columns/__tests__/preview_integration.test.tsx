@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
@@ -21,10 +21,11 @@ import {
 } from '../state'
 import { newRemote } from '../../../util/state'
 import { contributionColumnDefinitionSlice } from '../slice'
+import { vi, Mock } from 'vitest'
 
-jest.mock('react-router-dom', () => {
-    const navigateMock = jest.fn()
-    return { useNavigate: jest.fn().mockReturnValue(navigateMock) }
+vi.mock('react-router-dom', () => {
+    const navigateMock = vi.fn()
+    return { useNavigate: vi.fn().mockReturnValue(navigateMock) }
 })
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -34,12 +35,12 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 }
 
 beforeEach(() => {
-    ;(useNavigate() as jest.Mock).mockRestore()
+    ;(useNavigate() as Mock).mockRestore()
 })
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contributionColumnDefinition: newColumnDefinitionsContributionState({
@@ -66,16 +67,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -90,7 +91,7 @@ test('get preview success', async () => {
     const destinationValue = 'value destination'
     const destinationValue1 = 'value destination1'
     const destinationValue2 = 'value destination2'
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             200,
@@ -140,7 +141,7 @@ test('get preview success', async () => {
 
 test('get preview error', async () => {
     const testError = 'Could not get preview'
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             500,

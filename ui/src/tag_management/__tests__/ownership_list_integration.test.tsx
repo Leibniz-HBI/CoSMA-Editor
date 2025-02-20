@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import { vi, Mock } from 'vitest'
 import {
     RenderOptions,
     getByText,
@@ -22,7 +23,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 }
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             tagManagement: {
@@ -46,16 +47,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -93,7 +94,7 @@ describe('Ownership Request List', () => {
     }
     const idOwnershipTest = 'id-ownership-test'
     const idOwnershipTest1 = 'id-ownership-test1'
-    function addOwnershipRequestsQuery(fetchMock: jest.Mock) {
+    function addOwnershipRequestsQuery(fetchMock: Mock) {
         addResponseSequence(fetchMock, [
             [
                 200,
@@ -133,7 +134,7 @@ describe('Ownership Request List', () => {
         ])
     }
     test('get requests', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addOwnershipRequestsQuery(fetchMock)
         renderWithProviders(<TagManagementPage />, fetchMock)
         await waitFor(() => {
@@ -166,7 +167,7 @@ describe('Ownership Request List', () => {
         ])
     })
     test('can accept', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addOwnershipRequestsQuery(fetchMock)
         addResponseSequence(fetchMock, [[200, tagDefinitionApiTest]])
         renderWithProviders(<TagManagementPage />, fetchMock)
@@ -189,7 +190,7 @@ describe('Ownership Request List', () => {
         ])
     })
     test('can withdraw', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         addOwnershipRequestsQuery(fetchMock)
         addResponseSequence(fetchMock, [[200, {}]])
         renderWithProviders(<TagManagementPage />, fetchMock)

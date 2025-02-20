@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
@@ -16,11 +16,13 @@ import { ContributionDetailsStep } from '../components'
 import userEvent from '@testing-library/user-event'
 import { ContributionStep, newContribution } from '../../state'
 import { newRemote } from '../../../util/state'
-jest.mock('react-router-dom', () => {
-    const mockNavigate = jest.fn()
+import { vi, Mock } from 'vitest'
+
+vi.mock('react-router-dom', () => {
+    const mockNavigate = vi.fn()
     return {
-        useNavigate: jest.fn().mockReturnValue(mockNavigate),
-        useLoaderData: jest.fn().mockReturnValue('id-test-0')
+        useNavigate: vi.fn().mockReturnValue(mockNavigate),
+        useLoaderData: vi.fn().mockReturnValue('id-test-0')
     }
 })
 
@@ -33,7 +35,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contribution: newContributionState({
@@ -70,16 +72,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -90,7 +92,7 @@ const authorTest = 'author test'
 const emptyValuesTest = 'empty,absent'
 
 test('no submit for short input', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const { container } = renderWithProviders(<ContributionDetailsStep />, fetchMock)
     const feedbacks = container.getElementsByClassName('invalid-feedback')
     for (let i = 0; i < feedbacks.length; ++i) {
@@ -116,7 +118,7 @@ test('no submit for short input', async () => {
 })
 const changedName = 'changed name use in tests'
 test('submit for changed name', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             200,
@@ -188,7 +190,7 @@ test('submit for changed name', async () => {
 })
 
 test('submit for changed empty values', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const changedEmptyValues = 'null,nan,na'
     addResponseSequence(fetchMock, [
         [
@@ -264,7 +266,7 @@ test('submit for changed empty values', async () => {
 })
 
 test('submit for changed header flag', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             200,
@@ -334,7 +336,7 @@ test('submit for changed header flag', async () => {
 })
 
 test('API error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const errorMsg = 'could not patch contribution'
     addResponseSequence(fetchMock, [
         [

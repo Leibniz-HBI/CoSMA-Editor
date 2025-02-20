@@ -1,11 +1,12 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => ({
+vi.mock('@glideapps/glide-data-grid', () => ({
     __esmodule: true,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    DataEditor: jest.fn().mockImplementation((props: any) => <MockTable />)
+    DataEditor: vi.fn().mockImplementation((props: any) => <MockTable />)
 }))
+import { vi, Mock } from 'vitest'
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { ContributionEntityState, newContributionEntityState } from '../../state'
 import { newRemote } from '../../../../util/state'
@@ -27,10 +28,10 @@ import {
     notificationReducer
 } from '../../../../util/notification/slice'
 
-jest.mock('react-router-dom', () => {
-    const loaderMock = jest.fn()
+vi.mock('react-router-dom', () => {
+    const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -48,7 +49,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
@@ -89,16 +90,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -158,7 +159,7 @@ function mkMatches(
         ])
     )
 }
-function initialResponses(fetchMock: jest.Mock) {
+function initialResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: entityList }],
         [200, { entity_list: [] }],
@@ -184,7 +185,7 @@ function initialResponses(fetchMock: jest.Mock) {
     ])
 }
 test('get duplicates', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(fetchMock)
     const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
@@ -217,7 +218,7 @@ test('get duplicates', async () => {
     })
 })
 test('select entity', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(fetchMock)
     addResponseSequence(fetchMock, [])
     const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)

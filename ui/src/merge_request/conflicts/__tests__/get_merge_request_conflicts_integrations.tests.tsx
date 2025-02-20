@@ -1,7 +1,8 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
+import {vi, Mock }  from 'vitest'
 import {
     RenderOptions,
     render,
@@ -46,7 +47,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: vi.mock,
     {
         preloadedState = {
             tagMergeRequestConflicts: newMergeRequestConflictResolutionState({}),
@@ -71,16 +72,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: vi.mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as vi.mock
         )
     }
 }
@@ -235,7 +236,7 @@ const conflicts = [
 ]
 describe('get tests', () => {
     test('get success', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         const { container, store } = renderWithProviders(
             <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
@@ -258,7 +259,7 @@ describe('get tests', () => {
         })
     })
     test('error', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const testError = 'Could not get conflicts.'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { container, store } = renderWithProviders(
@@ -286,7 +287,7 @@ describe('get tests', () => {
 })
 describe('resolve conflicts', () => {
     test('success', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [
             [200, {}],
@@ -464,7 +465,7 @@ describe('resolve conflicts', () => {
         })
     }, 15000)
     test('error', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const testError = 'could not resolve conflict'
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
@@ -500,7 +501,7 @@ describe('resolve conflicts', () => {
 })
 describe('submit', () => {
     test('success', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
@@ -540,7 +541,7 @@ describe('submit', () => {
         ])
     })
     test('error', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         const testError = 'Could not start merge'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
@@ -582,7 +583,7 @@ describe('submit', () => {
 })
 describe('toggle disable origin on merge', () => {
     test('success', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
@@ -614,7 +615,7 @@ describe('toggle disable origin on merge', () => {
         ])
     })
     test('error', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const testError = 'Could not patch merge request.'
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
@@ -691,7 +692,7 @@ function checkConflicts(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function initialResponseSequence(fetchMock: jest.Mock<any, any>) {
+function initialResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,

@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
@@ -24,10 +24,11 @@ import {
 } from '../../session/state'
 import { editSessionReducer } from '../../session/slice'
 import { newRemote } from '../../util/state'
+import { vi, Mock } from 'vitest'
 
-jest.mock('react-router-dom', () => {
-    const navigateMock = jest.fn()
-    return { useNavigate: jest.fn().mockReturnValue(navigateMock) }
+vi.mock('react-router-dom', () => {
+    const navigateMock = vi.fn()
+    return { useNavigate: vi.fn().mockReturnValue(navigateMock) }
 })
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -38,12 +39,12 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 }
 
 beforeEach(() => {
-    ;(useNavigate() as jest.Mock).mockRestore()
+    ;(useNavigate() as Mock).mockRestore()
 })
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contribution: newContributionState({}),
@@ -80,21 +81,21 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
 test('empty does not submit', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const { container } = renderWithProviders(<UploadForm />, fetchMock)
     checkEmptyFeedbacks(container)
     const button = screen.getByText('Submit')
@@ -105,11 +106,11 @@ test('empty does not submit', async () => {
         expect(feedbacks[0].textContent).not.toEqual('')
         expect(feedbacks[2].textContent).not.toEqual('')
         expect(fetchMock.mock.calls).toEqual([])
-        expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
+        expect((useNavigate() as Mock).mock.calls).toEqual([])
     })
 })
 test('feedback for short name', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const { container } = renderWithProviders(<UploadForm />, fetchMock)
     checkEmptyFeedbacks(container)
     await submitFormWithValues(container, 'aa')
@@ -119,11 +120,11 @@ test('feedback for short name', async () => {
         expect(feedbacks[0].textContent).not.toEqual('')
         expect(feedbacks[2].textContent).not.toEqual('')
         expect(fetchMock.mock.calls).toEqual([])
-        expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
+        expect((useNavigate() as Mock).mock.calls).toEqual([])
     })
 })
 test('feedback for no edit session', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const { container } = renderWithProviders(<UploadForm />, fetchMock)
     checkEmptyFeedbacks(container)
     await submitFormWithValues(container, nameTest, fileTest, false)
@@ -135,12 +136,13 @@ test('feedback for no edit session', async () => {
             'text-danger row'
         )
         expect(fetchMock.mock.calls).toEqual([])
-        expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
+        expect((useNavigate() as Mock).mock.calls).toEqual([])
     })
 })
 test('submit correct name', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
+        [200, jsonEditSessionResponse],
         [200, jsonEditSessionResponse],
         [200, jsonEditSessionResponse],
         [200, { id_persistent: idPersistentReturn }],
@@ -157,26 +159,27 @@ test('submit correct name', async () => {
             })
         ])
     })
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock).toHaveBeenCalledTimes(4)
     expect(fetchMock).toHaveBeenCalledWith(
         'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
-    checkFormData(fetchMock.mock.calls[2][1].body, {
+    checkFormData(fetchMock.mock.calls[3][1].body, {
         name: nameTest,
         description: '',
         empty_values: 'nan,null,na',
         id_edit_session_persistent: idEditSession,
         has_header: 'false'
     })
-    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+    expect((useNavigate() as Mock).mock.calls).toEqual([
         [`/contribute/${idPersistentReturn}/columns`]
     ])
 })
 test('submit with description and header', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const description = 'test description'
     addResponseSequence(fetchMock, [
+        [200, jsonEditSessionResponse],
         [200, jsonEditSessionResponse],
         [200, jsonEditSessionResponse],
         [200, { id_persistent: idPersistentReturn }]
@@ -193,26 +196,27 @@ test('submit with description and header', async () => {
             })
         ])
     })
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock).toHaveBeenCalledTimes(4)
     expect(fetchMock).toHaveBeenCalledWith(
         'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
-    checkFormData(fetchMock.mock.calls[2][1].body, {
+    checkFormData(fetchMock.mock.calls[3][1].body, {
         name: nameTest,
         description: description,
         empty_values: 'nan,null,na',
         has_header: 'true',
         id_edit_session_persistent: idEditSession
     })
-    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+    expect((useNavigate() as Mock).mock.calls).toEqual([
         [`/contribute/${idPersistentReturn}/columns`]
     ])
 })
 test('error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const msg = 'test error'
     addResponseSequence(fetchMock, [
+        [200, jsonEditSessionResponse],
         [200, jsonEditSessionResponse],
         [200, jsonEditSessionResponse],
         [500, { msg }]
@@ -229,19 +233,19 @@ test('error', async () => {
             })
         ])
     })
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock).toHaveBeenCalledTimes(4)
     expect(fetchMock).toHaveBeenCalledWith(
         'http://127.0.0.1/api/contributions',
         expect.objectContaining({ method: 'POST', credentials: 'include' })
     )
-    checkFormData(fetchMock.mock.calls[2][1].body, {
+    checkFormData(fetchMock.mock.calls[3][1].body, {
         name: nameTest,
         description: '',
         empty_values: 'nan,null,na',
         has_header: 'false',
         id_edit_session_persistent: idEditSession
     })
-    expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
+    expect((useNavigate() as Mock).mock.calls).toEqual([])
 })
 
 function checkFormData(formData: FormData, object: { [key: string]: unknown }) {

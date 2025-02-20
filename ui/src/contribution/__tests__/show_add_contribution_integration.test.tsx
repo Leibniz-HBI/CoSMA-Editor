@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
@@ -10,8 +10,9 @@ import { Provider } from 'react-redux'
 import { ContributionList } from '../components'
 import { EditSessionState, newEditSessionState } from '../../session/state'
 import { editSessionReducer } from '../../session/slice'
-jest.mock('react-router-dom', () => {
-    return { useNavigate: jest.fn() }
+import {vi, Mock} from 'vitest'
+vi.mock('react-router-dom', () => {
+    return { useNavigate: vi.fn() }
 })
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -22,7 +23,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contribution: newContributionState({}),
@@ -47,22 +48,22 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
 
 test('show modal', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [[200, { contributions: [] }]])
     const { store } = renderWithProviders(<ContributionList />, fetchMock)
     await waitFor(() => {

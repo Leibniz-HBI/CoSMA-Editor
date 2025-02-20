@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import {vi, Mock }  from 'vitest'
 import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
 import {
     EditSessionParticipantType,
@@ -18,7 +19,7 @@ import userEvent from '@testing-library/user-event'
 import { newRemote } from '../../util/state'
 
 test('shows participant number', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     renderWithProviders(
         <EditSessionEditorButton popoverPlacement="bottom" tooltipPlacement="right" />,
         fetchMock,
@@ -62,7 +63,7 @@ test('shows participant number', async () => {
 })
 
 test('shows plus sign', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     renderWithProviders(
         <EditSessionEditorButton popoverPlacement="bottom" tooltipPlacement="right" />,
         fetchMock
@@ -80,7 +81,7 @@ test('shows plus sign', async () => {
 })
 
 test('show tooltip', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     renderWithProviders(
         <EditSessionEditorButton popoverPlacement="bottom" tooltipPlacement="right" />,
         fetchMock
@@ -96,7 +97,7 @@ test('show tooltip', async () => {
 })
 
 test('show popover', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     renderWithProviders(
         <EditSessionEditorButton popoverPlacement="bottom" tooltipPlacement="right" />,
         fetchMock,
@@ -141,7 +142,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             editSession: newEditSessionState({})

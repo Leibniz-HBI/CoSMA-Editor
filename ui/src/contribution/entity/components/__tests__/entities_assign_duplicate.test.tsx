@@ -1,16 +1,17 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async() => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection
     }
 })
+import { vi, Mock } from 'vitest'
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import {
     ContributionEntityState,
@@ -39,10 +40,10 @@ import {
 } from '@glideapps/glide-data-grid'
 import { ContributionStep, newContribution } from '../../../state'
 
-jest.mock('react-router-dom', () => {
-    const loaderMock = jest.fn()
+vi.mock('react-router-dom', () => {
+    const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -122,7 +123,7 @@ const contribution = newContribution({
 })
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
@@ -154,16 +155,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -222,7 +223,7 @@ function mkMatches(
     )
 }
 function initialResponses(
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     personList: any,
     numIncludedMatches: number
@@ -236,7 +237,7 @@ function initialResponses(
 }
 
 test('merge with existing', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(fetchMock, personList, 50)
     addResponseSequence(fetchMock, [[200, {}]])
     addResponseSequence(fetchMock, [
@@ -363,7 +364,7 @@ test('merge with existing', async () => {
     ])
 })
 test('last match', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(fetchMock, personList.slice(0, 1), 1)
     addResponseSequence(fetchMock, [
         [200, { value_responses: [] }],
@@ -392,7 +393,7 @@ test('last match', async () => {
     })
 })
 test('open justification modal', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(fetchMock, personList, 1)
     addResponseSequence(fetchMock, [
         [200, {}],
@@ -432,7 +433,7 @@ test('open justification modal', async () => {
 })
 
 test('does not open modal for entity with justification', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(
         fetchMock,
         [

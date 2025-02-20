@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 import {
     RenderOptions,
@@ -18,9 +18,10 @@ import {
 } from '../slice'
 import { HelpButton, HelpModal } from '../components'
 import { useLocation } from 'react-router-dom'
+import { vi, Mock } from 'vitest'
 
-jest.mock('react-router-dom', () => {
-    const useLocationCallback = jest.fn()
+vi.mock('react-router-dom', () => {
+    const useLocationCallback = vi.fn()
     return { useLocation: useLocationCallback }
 })
 
@@ -63,7 +64,7 @@ function TestHelpComponent() {
 }
 
 test('show missing help', async () => {
-    ;(useLocation as unknown as jest.Mock).mockReturnValue({
+    ;(useLocation as unknown as Mock).mockReturnValue({
         pathname: '/some/unknown/path'
     })
     const { store } = renderWithProviders(<TestHelpComponent />)
@@ -83,7 +84,7 @@ test('show missing help', async () => {
 })
 
 test('show existing help with variable', async () => {
-    ;(useLocation as unknown as jest.Mock).mockReturnValue({
+    ;(useLocation as unknown as Mock).mockReturnValue({
         pathname: '/contribute/id/entities'
     })
     const { store } = renderWithProviders(<TestHelpComponent />)

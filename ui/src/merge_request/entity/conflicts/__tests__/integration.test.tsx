@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import {vi, Mock }  from 'vitest'
 import {
     RenderOptions,
     render,
@@ -26,20 +27,20 @@ import { EntityMergeRequestConflictView } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
 import { ReplacementState } from '../../../conflicts/state'
 
-jest.mock('react-router-dom', () => {
-    const navigateCallbackMock = jest.fn()
-    const useNavigateMock = jest.fn().mockReturnValue(navigateCallbackMock)
+vi.mock('react-router-dom', () => {
+    const navigateCallbackMock = vi.fn()
+    const useNavigateMock = vi.fn().mockReturnValue(navigateCallbackMock)
     return { useNavigate: useNavigateMock }
 })
-jest.mock('uuid', () => {
+vi.mock('uuid', () => {
     return {
         v4: () => 'id-error-test'
     }
 })
-jest.mock('react-router-dom', () => {
-    const loaderMock = jest.fn()
+vi.mock('react-router-dom', () => {
+    const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-entity-merge-request-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -51,7 +52,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             entityMergeRequestConflicts: {
@@ -83,16 +84,16 @@ export function renderWithProviders(
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -157,7 +158,7 @@ const idTagInstanceDestinationUnresolvable1 = 'id-instance-unresolvable-destinat
 const versionTagInstanceDestinationUnresolvable1 = 7741
 const valueTagInstanceDestinationUnresolvable1 = 'unresolvable value destination 1'
 
-function addSuccessResponse(fetchMock: jest.Mock) {
+function addSuccessResponse(fetchMock: Mock) {
     const entityMergeRequestApi = {
         id_persistent: idEntityMr0,
         origin: {
@@ -295,7 +296,7 @@ function addSuccessResponse(fetchMock: jest.Mock) {
 }
 
 test('update conflicts', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addSuccessResponse(fetchMock)
     const { store } = renderWithProviders(<EntityMergeRequestConflictView />, fetchMock)
     await waitFor(() => {

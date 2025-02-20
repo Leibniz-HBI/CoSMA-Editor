@@ -1,6 +1,7 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
+import {vi, Mock }  from 'vitest'
 import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
 import {
     EditSessionParticipantType,
@@ -24,7 +25,7 @@ import {
 } from '../../util/notification/slice'
 
 test('remove participant success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [[200, {}]])
     const { store } = renderWithProviders(<EditSessionEditor />, fetchMock)
     await removeParticipant()
@@ -65,7 +66,7 @@ test('remove participant success', async () => {
     ])
 })
 test('remove participant error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const testError = 'Can not remove yourself'
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(<EditSessionEditor />, fetchMock)
@@ -83,7 +84,7 @@ test('remove participant error', async () => {
 })
 
 test('cancel removal', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [[200, {}]])
     const { store } = renderWithProviders(<EditSessionEditor />, fetchMock)
     await removeParticipant()
@@ -146,16 +147,16 @@ async function cancelRemoval() {
     })
 }
 
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -169,7 +170,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             editSession: newEditSessionState({

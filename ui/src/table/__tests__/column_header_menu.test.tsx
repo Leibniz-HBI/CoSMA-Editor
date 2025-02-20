@@ -1,16 +1,17 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async () => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection
     }
 })
+import { vi, Mock } from 'vitest'
 import { configureStore } from '@reduxjs/toolkit'
 import {
     TagDefinition,
@@ -87,7 +88,7 @@ function MockTable(props: any) {
 }
 
 test('renders all menu entries', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -106,7 +107,7 @@ test('renders all menu entries', async () => {
 })
 
 test('no curation for unprivileged user', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, {
@@ -147,7 +148,7 @@ test('no curation for unprivileged user', async () => {
 })
 
 test('remove column from header menu', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     addResponseSequence(fetchMock, [[200, {}]])
@@ -178,7 +179,7 @@ test('remove column from header menu', async () => {
 })
 
 test('change owner shows modal', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addTagInstanceResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -199,11 +200,11 @@ test('change owner shows modal', async () => {
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
@@ -213,11 +214,11 @@ function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
     }
 }
 
-function addEntitiesResponse(fetchMock: jest.Mock) {
+function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [[200, { entity_list: [] }]])
 }
 
-function addTagInstanceResponse(fetchMock: jest.Mock) {
+function addTagInstanceResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [[200, { tag_instances: [] }]])
 }
 
@@ -266,7 +267,7 @@ const initialTagSelectionState = newTagSelectionState({
 })
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),

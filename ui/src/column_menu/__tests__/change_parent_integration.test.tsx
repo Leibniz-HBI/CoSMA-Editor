@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import {
@@ -30,6 +30,7 @@ import {
 } from '../../util/notification/slice'
 import { ColumnSelector } from '../components/selection'
 import { newRemote } from '../../util/state'
+import { vi, Mock } from 'vitest'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -64,7 +65,7 @@ const tagDefTest1 = newTagDefinition({
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             tagSelection: newTagSelectionState({
@@ -105,16 +106,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -140,8 +141,8 @@ function mkTailElement(_tagDefinition: TagDefinition) {
     return <div />
 }
 
-test('success', async () => {
-    const fetchMock = jest.fn()
+test('success', async function () {
+    const fetchMock = vi.fn()
     const newVersion = 5,
         newVersion1 = 6
     addResponseSequence(fetchMock, [
@@ -278,8 +279,8 @@ test('success', async () => {
     ])
 })
 
-test('error', async () => {
-    const fetchMock = jest.fn()
+test('error', async function (){
+    const fetchMock = vi.fn()
     const testError = 'Could not change parent'
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(

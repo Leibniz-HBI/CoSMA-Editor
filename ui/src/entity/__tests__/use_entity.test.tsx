@@ -1,7 +1,8 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
+import { vi, Mock } from 'vitest'
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
 import { EntityDetailsState, newEntity, newEntityDetailsState } from '../state'
 import { newTableState, TableState } from '../../table/state'
@@ -19,7 +20,7 @@ function TestComponent({ idEntity }: { idEntity: string }) {
 }
 
 test('uses entity from table state', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     renderWithProviders(<TestComponent idEntity={idEntity} />, fetchMock, {
         preloadedState: {
             table: newTableState({
@@ -37,7 +38,7 @@ test('uses entity from table state', async () => {
     })
 })
 test('uses entity from details state', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     renderWithProviders(<TestComponent idEntity={idEntity} />, fetchMock, {
         preloadedState: {
             table: newTableState({}),
@@ -54,7 +55,7 @@ test('uses entity from details state', async () => {
     })
 })
 test('loads external entity', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [
             200,
@@ -109,7 +110,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             entityDetails: newEntityDetailsState({}),
@@ -134,17 +135,17 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(async () => {
+            vi.fn(async () => {
                 await new Promise((promise) => setTimeout(promise, 50))
                 return {
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 }
-            }) as jest.Mock
+            }) as Mock
         )
     }
 }

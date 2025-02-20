@@ -1,11 +1,12 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => ({
+vi.mock('@glideapps/glide-data-grid', () => ({
     __esmodule: true,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    DataEditor: jest.fn().mockImplementation((props: any) => <MockTable />)
+    DataEditor: vi.fn().mockImplementation((props: any) => <MockTable />)
 }))
+import { vi, Mock } from 'vitest'
 import { act, RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import {
     ContributionEntityState,
@@ -37,10 +38,10 @@ import { entityDetailsReducer } from '../../../../entity/slice'
 import { newTableState, TableState } from '../../../../table/state'
 import { tableReducer } from '../../../../table/slice'
 
-jest.mock('react-router-dom', () => {
-    const loaderMock = jest.fn()
+vi.mock('react-router-dom', () => {
+    const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: jest.fn() }
+    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
@@ -48,7 +49,7 @@ function MockTable(props: any) {
 }
 
 test('add searched entity', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(fetchMock)
     addSearchResultResponses(fetchMock)
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
@@ -106,7 +107,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     }
 }
 
-async function doSearch(fetchMock: jest.Mock) {
+async function doSearch(fetchMock: Mock) {
     const user = userEvent.setup()
     await waitFor(async () => {
         expect(fetchMock.mock.calls.length).toEqual(7)
@@ -127,7 +128,7 @@ async function doSearch(fetchMock: jest.Mock) {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
@@ -191,16 +192,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -263,7 +264,7 @@ const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
 const idTagDef1 = 'id-tag-test-1'
 const nameTagDef1 = 'tag def 1'
-function initialResponses(fetchMock: jest.Mock) {
+function initialResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: personList }],
         [200, { entity_list: [] }],
@@ -306,7 +307,7 @@ const matchValue1 = 'match 1'
 const idEntitySearch1 = 'id-entity-search-1'
 const displayTxtSearch1 = 'Search Entity 1'
 
-function addSearchResultResponses(fetchMock: jest.Mock) {
+function addSearchResultResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,

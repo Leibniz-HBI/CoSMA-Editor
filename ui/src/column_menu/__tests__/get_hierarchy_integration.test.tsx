@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import {
@@ -23,6 +23,7 @@ import {
     NotificationType,
     notificationReducer
 } from '../../util/notification/slice'
+import {vi, Mock} from 'vitest'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -33,7 +34,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             tagSelection: newTagSelectionState({}),
@@ -58,16 +59,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -91,7 +92,7 @@ const owner_api = {
     permission_group: 'CONTRIBUTOR',
     username: 'user-test'
 }
-function initialResponseSequence(fetchMock: jest.Mock) {
+function initialResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -187,13 +188,13 @@ function initialResponseSequence(fetchMock: jest.Mock) {
 }
 describe('get hierarchy', () => {
     test('get hierarchy expand collapse', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         renderWithProviders(
             <ColumnMenu
                 columnIndices={{}}
-                loadColumnDataCallback={jest.fn()}
-                hideColumnDataCallback={jest.fn()}
+                loadColumnDataCallback={vi.fn()}
+                hideColumnDataCallback={vi.fn()}
             />,
             fetchMock
         )
@@ -238,14 +239,14 @@ describe('get hierarchy', () => {
         expect(fetchMock.mock.calls.length).toEqual(8)
     })
     test('dispatches error', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const errorMsg = 'Error while loading hierarchy'
         addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
         const { store } = renderWithProviders(
             <ColumnMenu
                 columnIndices={{}}
-                loadColumnDataCallback={jest.fn()}
-                hideColumnDataCallback={jest.fn()}
+                loadColumnDataCallback={vi.fn()}
+                hideColumnDataCallback={vi.fn()}
             />,
             fetchMock
         )
@@ -290,15 +291,15 @@ describe('create tag definition', () => {
         return user
     }
     test('no parent', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[200, { tag_definitions: [tagDefinitionRsp] }]])
         initialResponseSequence(fetchMock)
         renderWithProviders(
             <ColumnMenu
                 columnIndices={{}}
-                loadColumnDataCallback={jest.fn()}
-                hideColumnDataCallback={jest.fn()}
+                loadColumnDataCallback={vi.fn()}
+                hideColumnDataCallback={vi.fn()}
             />,
             fetchMock
         )
@@ -330,15 +331,15 @@ describe('create tag definition', () => {
         })
     })
     test('with parent', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[200, { tag_definitions: [tagDefinitionRsp] }]])
         initialResponseSequence(fetchMock)
         renderWithProviders(
             <ColumnMenu
                 columnIndices={{}}
-                loadColumnDataCallback={jest.fn()}
-                hideColumnDataCallback={jest.fn()}
+                loadColumnDataCallback={vi.fn()}
+                hideColumnDataCallback={vi.fn()}
             />,
             fetchMock
         )
@@ -376,15 +377,15 @@ describe('create tag definition', () => {
         })
     })
     test('dispatches error', async () => {
-        const fetchMock = jest.fn()
+        const fetchMock = vi.fn()
         const errorMsg = 'Error while creating tag def'
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
         const { store } = renderWithProviders(
             <ColumnMenu
                 columnIndices={{}}
-                loadColumnDataCallback={jest.fn()}
-                hideColumnDataCallback={jest.fn()}
+                loadColumnDataCallback={vi.fn()}
+                hideColumnDataCallback={vi.fn()}
             />,
             fetchMock
         )
@@ -401,13 +402,13 @@ describe('create tag definition', () => {
     })
 })
 test('open edit menu', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponseSequence(fetchMock)
     const { store } = renderWithProviders(
         <ColumnMenu
             columnIndices={{}}
-            loadColumnDataCallback={jest.fn()}
-            hideColumnDataCallback={jest.fn()}
+            loadColumnDataCallback={vi.fn()}
+            hideColumnDataCallback={vi.fn()}
         />,
         fetchMock
     )

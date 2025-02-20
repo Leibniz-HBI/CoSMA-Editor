@@ -1,17 +1,18 @@
 /*
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => {
-    const actual = jest.requireActual('@glideapps/glide-data-grid')
+vi.mock('@glideapps/glide-data-grid', async () => {
+    const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
-        DataEditor: jest
+        DataEditor: vi
             .fn()
             .mockImplementation((props: object) => <MockTable {...props} />),
         CompactSelection: actual.CompactSelection,
         GridCellKind: actual.GridCellKind
     }
 })
+import { vi, Mock } from 'vitest'
 import { Button, Col, Row } from 'react-bootstrap'
 import {
     TagDefinition,
@@ -108,7 +109,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),
@@ -180,7 +181,7 @@ export function renderWithProviders(
 }
 
 test('show and hide Search', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addInitialTable(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
@@ -200,7 +201,7 @@ test('show and hide Search', async () => {
 })
 
 test('show and hide add entity modal', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addInitialTable(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
@@ -222,7 +223,7 @@ test('show and hide add entity modal', async () => {
     })
 })
 test('show and hide add column modal', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addInitialTable(fetchMock)
     addResponseSequence(fetchMock, [[200, [{ tag_definitions: [] }]]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -243,7 +244,7 @@ test('show and hide add column modal', async () => {
 })
 
 test('show and hide entity merging modal', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addInitialTable(fetchMock)
     addResponseSequence(fetchMock, [[200, [{ tag_definitions: [] }]]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -289,7 +290,7 @@ const test_entity_rsp_1 = {
  * We do not care about data in this test file.
  * @param fetchMock
  */
-function addInitialTable(fetchMock: jest.Mock) {
+function addInitialTable(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }],
         [200, { tag_instances: [] }]
@@ -297,11 +298,11 @@ function addInitialTable(fetchMock: jest.Mock) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: jest.Mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)

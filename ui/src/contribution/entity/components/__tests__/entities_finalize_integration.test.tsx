@@ -1,11 +1,12 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
-jest.mock('@glideapps/glide-data-grid', () => ({
+vi.mock('@glideapps/glide-data-grid', () => ({
     __esmodule: true,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    DataEditor: jest.fn().mockImplementation((props: any) => <MockTable />)
+    DataEditor: vi.fn().mockImplementation((props: any) => <MockTable />)
 }))
+import { vi, Mock } from 'vitest'
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { ContributionEntityState, newContributionEntityState } from '../../state'
 import { configureStore } from '@reduxjs/toolkit'
@@ -29,13 +30,13 @@ import { useNavigate } from 'react-router-dom'
 import { ContributionStep, newContribution } from '../../../state'
 import { newRemote } from '../../../../util/state'
 
-jest.mock('react-router-dom', () => {
-    const loaderMock = jest.fn()
+vi.mock('react-router-dom', () => {
+    const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-contribution-test')
-    const navigateMock = jest.fn()
+    const navigateMock = vi.fn()
     return {
         useLoaderData: loaderMock,
-        useNavigate: jest.fn().mockReturnValue(navigateMock)
+        useNavigate: vi.fn().mockReturnValue(navigateMock)
     }
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -44,7 +45,7 @@ function MockTable(props: any) {
 }
 
 beforeEach(() => {
-    ;(useNavigate() as jest.Mock).mockClear()
+    ;(useNavigate() as Mock).mockClear()
 })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -58,7 +59,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contributionEntity: newContributionEntityState({}),
@@ -99,16 +100,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -168,7 +169,7 @@ const personList = Array.from({ length: 60 }, (_val, idx) => {
 })
 const idTagDef0 = 'id-tag-test-0'
 const nameTagDef0 = 'tag def 0'
-function initialResponses(fetchMock: jest.Mock) {
+function initialResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: personList }],
         [200, { entity_list: [] }],
@@ -194,7 +195,7 @@ function initialResponses(fetchMock: jest.Mock) {
 }
 
 test('success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(fetchMock)
     addResponseSequence(fetchMock, [[200, {}]])
     addResponseSequence(fetchMock, [
@@ -236,13 +237,13 @@ test('success', async () => {
         `http://127.0.0.1/api/contributions/${idContribution}`,
         { credentials: 'include' }
     ])
-    expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+    expect((useNavigate() as Mock).mock.calls).toEqual([
         [`/contribute/${idContribution}/complete`]
     ])
 })
 
 test('error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     initialResponses(fetchMock)
     const errorMsg = 'Could not finalize'
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
@@ -265,5 +266,5 @@ test('error', async () => {
         `http://127.0.0.1/api/contributions/${idContribution}/entity_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     ])
-    expect((useNavigate() as jest.Mock).mock.calls).toEqual([])
+    expect((useNavigate() as Mock).mock.calls).toEqual([])
 })

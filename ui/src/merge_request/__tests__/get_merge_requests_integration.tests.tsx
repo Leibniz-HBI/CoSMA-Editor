@@ -1,7 +1,8 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
+import {vi, Mock }  from 'vitest'
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import {
     MergeRequestState,
@@ -28,10 +29,10 @@ import { useNavigate } from 'react-router-dom'
 import { AuthState, newAuthState } from '../../auth/state'
 import { authReducer } from '../../auth/slice'
 
-jest.mock('react-router-dom', () => {
-    const mockNavigate = jest.fn()
+vi.mock('react-router-dom', () => {
+    const mockNavigate = vi.fn()
     return {
-        useNavigate: jest.fn().mockReturnValue(mockNavigate)
+        useNavigate: vi.fn().mockReturnValue(mockNavigate)
     }
 })
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -44,7 +45,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             tagMergeRequests: newMergeRequestState({}),
@@ -82,16 +83,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -173,7 +174,7 @@ const mergeRequest1 = {
 }
 
 test('success', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [200, { assigned: [mergeRequest1], created: [mergeRequest] }]
     ])
@@ -187,7 +188,7 @@ test('success', async () => {
         items[0].click()
     })
     await waitFor(() => {
-        expect((useNavigate() as jest.Mock).mock.calls).toEqual([
+        expect((useNavigate() as Mock).mock.calls).toEqual([
             [`/review/tags/${idMergeRequest}`]
         ])
     })
@@ -265,7 +266,7 @@ test('success', async () => {
 })
 
 test('error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const testError = 'test error tag mr'
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(<ReviewList />, fetchMock)

@@ -4,9 +4,13 @@ import { newRemote } from '../../../util/state'
 import { mkCellContentCallback } from '../hooks'
 import { newEntityWithDuplicates, newScoredEntity } from '../state'
 import { newReplaceButtonCellData } from '../../../table/draw'
+import { vi } from 'vitest'
 
-jest.mock('../../../util/state', () => {
-    return { ...jest.requireActual('../../../util/state'), useThunkReducer: jest.fn() }
+vi.mock('../../../util/state', async () => {
+    return {
+        ...(await vi.importActual('../../../util/state')),
+        useThunkReducer: vi.fn()
+    }
 })
 const idTagDefinition = 'id-tag-def-test'
 describe('cell contents callback', () => {

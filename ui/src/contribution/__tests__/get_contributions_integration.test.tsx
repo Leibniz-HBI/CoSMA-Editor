@@ -1,5 +1,5 @@
 /**
- * @jest-environment jsdom
+ * @vitest-environment jsdom
  */
 
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
@@ -16,11 +16,12 @@ import { ContributionList } from '../components'
 import { newRemote } from '../../util/state'
 import { ContributionStep, newContribution } from '../state'
 import { useNavigate } from 'react-router-dom'
+import {vi, Mock} from 'vitest'
 
-jest.mock('react-router-dom', () => {
-    const mockNavigate = jest.fn()
+vi.mock('react-router-dom', () => {
+    const mockNavigate = vi.fn()
     return {
-        useNavigate: jest.fn().mockReturnValue(mockNavigate)
+        useNavigate: vi.fn().mockReturnValue(mockNavigate)
     }
 })
 
@@ -33,7 +34,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: jest.Mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             contribution: newContributionState({}),
@@ -58,16 +59,16 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: jest.Mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
-            jest.fn(() =>
+            vi.fn(() =>
                 Promise.resolve({
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as jest.Mock
+            ) as Mock
         )
     }
 }
@@ -97,7 +98,7 @@ const contributionResponse1 = {
     empty_values: 'null,none'
 }
 test('success and open', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
         [200, { contributions: [contributionResponse0, contributionResponse1] }],
         [200, { contributions: [] }]
@@ -154,12 +155,12 @@ test('success and open', async () => {
     const label1 = screen.getByText(nameTest1)
     label1.click()
     await waitFor(() => {
-        const navigateMock = useNavigate() as jest.Mock
+        const navigateMock = useNavigate() as Mock
         expect(navigateMock.mock.calls).toEqual([[`/contribute/${idTest1}`]])
     })
 })
 test('error', async () => {
-    const fetchMock = jest.fn()
+    const fetchMock = vi.fn()
     const errorMsg = 'error loading credentials'
     addResponseSequence(fetchMock, [
         [200, { contributions: [contributionResponse0, contributionResponse1] }],

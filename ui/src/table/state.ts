@@ -1,5 +1,5 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
-import { TagDefinition, TagType, newTagDefinition } from '../column_menu/state'
+import { newTagDefinition, TagDefinition, TagType } from '../column_menu/state'
 import { RemoteInterface, newRemote } from '../util/state'
 import { Comment } from '../comments/slice'
 import { Entity } from '../entity/state'
@@ -188,25 +188,26 @@ export function csvLinesFromTable({
     return lines
 }
 
+export const justificationColumnId = 'justification'
 export const displayTxtColumnId = 'display_txt_id'
 export const displayTxtColumnIdx = 0
 export const optionalEntityJustificationColumnIdx = 1
 
-export const displayTextColumn = newTagDefinition({
+export const displayTextColumn: TagDefinition = {
     namePath: ['Display Text'],
     idPersistent: displayTxtColumnId,
     columnType: 'String' as TagType,
     curated: true,
     version: 0,
+    disabled: false,
     hidden: false
-})
-
-export const justificationColumnId = 'justification'
-export const justificationColumn = newTagDefinition({
+}
+export const justificationColumn: TagDefinition = {
     namePath: ['Justification'],
     idPersistent: justificationColumnId,
     columnType: 'String' as TagType,
     curated: true,
     version: 0,
+    disabled: false,
     hidden: false
-})
+}
