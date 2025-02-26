@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.saml",
     "allauth.headless",
+    "allauth.mfa",
     "cosmae",
 ]
 
@@ -192,6 +193,7 @@ ACCOUNT_RATE_LIMITS = False
 
 HEADLESS_ONLY = False
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
+SOCIALACCOUNT_ENABLED = False
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"

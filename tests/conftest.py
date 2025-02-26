@@ -1,5 +1,7 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 
+from unittest.mock import MagicMock
+
 import pytest
 from allauth.account import app_settings as account_settings
 from django.conf import settings
@@ -151,13 +153,19 @@ def tag_def_curated(user):
     )
 
 
+@pytest.fixture()
+def mock_mfa(mocker):
+    mock = MagicMock(return_value=True)
+    mocker.patch("cosmae.util.auth.check_mfa", mock)
+
+
 @override_settings(
     SOCIALACCOUNT_AUTO_SIGNUP=True,
     ACCOUNT_SIGNUP_FORM_CLASS=None,
     ACCOUNT_EMAIL_VERIFICATION=account_settings.EmailVerificationMethod.NONE,  # noqa
 )
 @pytest.fixture
-def auth_server(live_server, user):
+def auth_server_no_mfa(live_server, user):
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
     rsp = post_login(
@@ -170,9 +178,14 @@ def auth_server(live_server, user):
     return live_server, rsp.cookies
 
 
+@pytest.fixture
+def auth_server(auth_server_no_mfa, mock_mfa):
+    return auth_server_no_mfa
+
+
 @pytest.fixture()
-def auth_server1(auth_server, user1):
-    live_server, cookies_user0 = auth_server
+def auth_server_no_mfa1(auth_server_no_mfa, user1):
+    live_server, cookies_user0 = auth_server_no_mfa
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
     rsp = post_login(
@@ -185,8 +198,13 @@ def auth_server1(auth_server, user1):
     return live_server, cookies_user0, rsp.cookies
 
 
+@pytest.fixture
+def auth_server1(auth_server_no_mfa1, mock_mfa):
+    return auth_server_no_mfa1
+
+
 @pytest.fixture()
-def auth_server_applicant(live_server):
+def auth_server_applicant_no_mfa(live_server):
     session = EditSession.objects.create(
         id_persistent=cs.id_session_applicant,
         id_owner_persistent=cu.test_uuid_applicant,
@@ -217,7 +235,12 @@ def auth_server_applicant(live_server):
 
 
 @pytest.fixture
-def auth_server_commissioner(live_server, user_commissioner):
+def auth_server_applicant(auth_server_applicant_no_mfa, mock_mfa):
+    return auth_server_applicant_no_mfa
+
+
+@pytest.fixture
+def auth_server_commissioner_no_mfa(live_server, user_commissioner):
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
     rsp = post_login(
@@ -228,6 +251,11 @@ def auth_server_commissioner(live_server, user_commissioner):
     )
     assert rsp.status_code == 200
     return live_server, rsp.cookies
+
+
+@pytest.fixture
+def auth_server_commissioner(auth_server_commissioner_no_mfa, mock_mfa):
+    return auth_server_commissioner_no_mfa
 
 
 @pytest.fixture

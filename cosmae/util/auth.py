@@ -1,4 +1,5 @@
 "Utils for authentication"
+
 from enum import Enum
 
 from django.http import HttpRequest
@@ -35,9 +36,21 @@ def cosmae_auth(request: HttpRequest):
     return django_auth.authenticate(request, None)
 
 
-def check_user(request):
+def check_user(request, require_2fa=True):
     "Checks wether a request is authenticated, otherwise throws an exception."
     user = request.user
     if isinstance(user, CosmaeUser):
+        if require_2fa:
+            mfa_completed = check_mfa(request)
+            if not mfa_completed:
+                raise NotAuthenticatedException()
         return user
     raise NotAuthenticatedException()
+
+
+def check_mfa(request):
+    "Check whether the request is authenticated using MFA."
+    return any(
+        method.get("type") == "totp"
+        for method in request.session.get("account_authentication_methods", [])
+    )

@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.headless",
+    "allauth.mfa",
     "cosmae",
 ]
 

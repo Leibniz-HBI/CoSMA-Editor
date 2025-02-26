@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.headless",
+    "allauth.mfa",
     "cosmae",
 ]
 
@@ -223,7 +224,7 @@ ORCID_CLIENT_SECRET = get_file_secret("orcid_client_secret")
 
 HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
+SOCIALACCOUNT_ENABLED = False
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
-SOCIALACCOUNT_ONLY = False
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
