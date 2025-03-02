@@ -67,7 +67,7 @@
         "@vitejs/plugin-react": "^4.3.4",
         "canvas": "^2.11.2",
         "eslint": "^9.21.0",
-        "eslint-config-prettier": "^8.10.0",
+        "eslint-config-prettier": "^10.0.2",
         "eslint-plugin-functional": "^7.1.0",
         "eslint-plugin-import": "^2.31.0",
         "eslint-plugin-prettier": "^4.2.1",
