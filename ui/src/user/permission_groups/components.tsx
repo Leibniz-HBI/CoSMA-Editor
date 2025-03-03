@@ -219,7 +219,6 @@ export function UserSearchResults({
     const searchResults = useAppSelector(selectSearchResults)
     let items = [<ListGroup.Item key={-2}>No entities found</ListGroup.Item>]
     if (searchResults.value?.length > 0) {
-        console.log(searchResults)
         items = searchResults?.value.map((result, idx) => (
             <UserSearchResultItem
                 result={result}
@@ -238,7 +237,6 @@ export function UserSearchResultItem({
     result: PublicUserInfo
     onSearchResultClicked: (idUserPersistent: string) => void
 }) {
-    console.log(result.username)
     return (
         <ListGroup.Item
             className="z-toast fg-primary"

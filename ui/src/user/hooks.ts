@@ -17,7 +17,6 @@ export function useUserInfo(idUserPersistent: string) {
             userInfo === undefined ||
             (userInfo.value === undefined && !userInfo.isLoading)
         ) {
-            console.log(userInfo)
             dispatch(getUserInfoThunk(idUserPersistent))
         }
     })

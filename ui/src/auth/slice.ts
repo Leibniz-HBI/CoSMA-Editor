@@ -9,11 +9,24 @@ const authSlice = createSlice({
     initialState: newAuthState({}),
     reducers: {
         authStepEnd(state: AuthState) {
-            state.step.isLoading = false
+            state.stepStack.isLoading = false
+            state.totpUrl.isLoading = false
+        },
+        getTotpNotFound(state: AuthState, action: PayloadAction<string>) {
+            state.totpUrl = newRemote(action.payload)
+            const stepStackValue = state.stepStack.value
+            stepStackValue[stepStackValue.length - 1] = AuthStep.Totp
+            state.stepStack.isLoading = false
+        },
+        getTotpStart(state: AuthState) {
+            state.stepStack.isLoading = true
+        },
+        getTotpSuccess(state: AuthState) {
+            state.stepStack = newRemote([AuthStep.Totp])
         },
         getSelfEnd(state: AuthState) {
             state.user.isLoading = false
-            state.step.value = AuthStep.LoggedOut
+            state.stepStack.value = [AuthStep.LoggedOut]
         },
         getSelfStart(state: AuthState) {
             state.user.isLoading = true
@@ -22,23 +35,61 @@ const authSlice = createSlice({
             state.user = newRemote(action.payload)
         },
         getSessionEnd(state: AuthState) {
-            state.step = newRemote(AuthStep.LoggedOut)
+            state.stepStack = newRemote([AuthStep.LoggedOut])
         },
         getSessionStart(state: AuthState) {
-            state.step = newRemote(AuthStep.Session, true)
+            state.stepStack = newRemote([AuthStep.Session], true)
+        },
+        loginPartial(state: AuthState) {
+            state.stepStack = newRemote([AuthStep.PartiallyAuthenticated])
         },
         loginStart(state: AuthState) {
-            state.step = newRemote(AuthStep.Login, true)
+            state.stepStack = newRemote([AuthStep.Login], true)
+        },
+        logoutStart(state: AuthState) {
+            state.stepStack = newRemote([AuthStep.LoggedOut], true)
+        },
+        logoutSuccess(state: AuthState) {
+            state.stepStack = newRemote([AuthStep.LoggedOut])
+            state.userAuth = undefined
+            state.user = newRemote(undefined)
+        },
+        postReauthenticateStart(state: AuthState) {
+            state.stepStack.isLoading = true
+        },
+        postReauthenticateSuccess(state: AuthState) {
+            state.stepStack.value.splice(-1, 1)
+            state.stepStack.isLoading = false
+        },
+        postTotpCodeEnd(state: AuthState) {
+            state.totpUrl.isLoading = false
+            state.stepStack = newRemote([AuthStep.LoggedOut])
+        },
+        postTotpCodeStart(state: AuthState) {
+            state.totpUrl.isLoading = true
+        },
+        postTotpCodeSuccess(state: AuthState) {
+            state.totpUrl = newRemote(undefined)
+            state.stepStack = newRemote([AuthStep.Authenticated])
         },
         setAuthUser(state: AuthState, action: PayloadAction<UserAllAuth | undefined>) {
             state.userAuth = action.payload
-            state.step = newRemote(AuthStep.Authenticated)
+            state.stepStack = newRemote([AuthStep.Authenticated])
+            state.totpUrl = newRemote(undefined)
+        },
+        setReauthenticate(state: AuthState) {
+            state.stepStack.isLoading = false
+            state.stepStack.value.push(AuthStep.Reauthentication)
+            state.totpUrl.isLoading =false
+        },
+        setPartiallyAuthenticated(state: AuthState) {
+            state.stepStack = newRemote([AuthStep.PartiallyAuthenticated])
         },
         registrationStart(state: AuthState) {
             state.showRegistration.isLoading = true
         },
         registrationEnd(state: AuthState) {
-            state.showRegistration.isLoading = false
+            state.showRegistration = newRemote(false)
         },
         toggleRegistration(state: AuthState, action: PayloadAction<boolean>) {
             state.showRegistration.value = action.payload
@@ -75,15 +126,28 @@ function findUserColumnIndex(state: AuthState, idPersistent: string) {
 }
 export const {
     authStepEnd,
+    getTotpNotFound,
+    getTotpStart,
+    getTotpSuccess,
     getSelfEnd,
     getSelfStart,
     getSelfSuccess,
     getSessionEnd,
     getSessionStart,
+    loginPartial,
     loginStart,
+    logoutStart,
+    logoutSuccess,
+    postReauthenticateStart,
+    postReauthenticateSuccess,
+    postTotpCodeEnd,
+    postTotpCodeStart,
+    postTotpCodeSuccess,
     registrationEnd,
     registrationStart,
     setAuthUser,
+    setReauthenticate,
+    setPartiallyAuthenticated,
     toggleRegistration,
     removeUserTagDefinition,
     updateUserTagDefinition

@@ -1,84 +1,100 @@
 import { ReactElement, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import {
-    selectAuthStep,
+    selectAuthStepStack,
     selectShowRegistrationValue,
     selectUserAuth,
     selectUserInfo
 } from '../selectors'
-import { getSelfThunk, getSessionThunk, loginThunk, registerThunk } from '../thunks'
+import {
+    getSelfThunk,
+    getSessionThunk,
+    getTotpThunk,
+    loginThunk,
+    registerThunk
+} from '../thunks'
 import { CosmaeLoading } from '../../util/components/misc'
 import { AuthStep } from '../state'
 import { LoginForm } from './login_form'
 import { toggleRegistration } from '../slice'
 import { RegistrationForm } from './registration_form'
 import { Modal } from 'react-bootstrap'
+import { MfaForm } from './mfa_form'
+import { ReauthenticationForm } from './reauthentication_form'
 
 export function AuthProvider(props: { children: ReactElement }) {
     const authUser = useAppSelector(selectUserAuth)
-    const authStep = useAppSelector(selectAuthStep)
+    const stepStack = useAppSelector(selectAuthStepStack)
     const userInfo = useAppSelector(selectUserInfo)
     const showRegistration = useAppSelector(selectShowRegistrationValue)
     const toggleRegistrationCallback = () =>
         dispatch(toggleRegistration(!showRegistration))
     const dispatch = useAppDispatch()
     useEffect(() => {
-        if (
-            authStep.value !== AuthStep.LoggedOut &&
-            authUser === undefined &&
-            !authStep.isLoading
-        ) {
-            switch (authStep.value) {
-                case AuthStep.Initial:
-                    dispatch(getSessionThunk(true))
-                    break
-                case AuthStep.Session:
+        if (stepStack.isLoading || userInfo.isLoading) {
+            return
+        }
+        switch (stepStack.value.at(-1)) {
+            case undefined:
+                dispatch(getSessionThunk(true))
+                break
+            case AuthStep.PartiallyAuthenticated:
+                dispatch(getTotpThunk())
+                break
+            case AuthStep.Authenticated:
+                if (userInfo.value === undefined) {
                     dispatch(getSelfThunk())
-                    break
-            }
-        } else if (
-            authStep.value === AuthStep.Authenticated &&
-            userInfo.value === undefined &&
-            !userInfo.isLoading
-        ) {
-            dispatch(getSelfThunk())
+                }
+                break
         }
     })
-    if (authStep.isLoading || userInfo.isLoading) {
+    const currentAuthStep = stepStack.value.at(-1)
+    if (stepStack.isLoading || userInfo.isLoading || currentAuthStep === undefined) {
         return <CosmaeLoading />
     }
-    if (authUser === undefined || userInfo.value === undefined) {
-        let modalContent = (
-            <LoginForm
-                openRegistrationCallback={toggleRegistrationCallback}
-                loginCallback={(username, password) =>
-                    dispatch(loginThunk(username, password))
-                }
-            />
-        )
-        if (showRegistration) {
-            modalContent = (
-                <RegistrationForm
-                    closeRegistrationCallback={toggleRegistrationCallback}
-                    registrationCallback={({
-                        username,
-                        namesPersonal,
-                        namesFamily,
-                        email,
-                        password
-                    }) =>
-                        dispatch(
-                            registerThunk({
+    if (authUser === undefined) {
+        let modalContent = <div>Could not authenticate. Please refresh the page.</div>
+        switch (currentAuthStep) {
+            case AuthStep.Reauthentication:
+                modalContent = <ReauthenticationForm />
+                break
+            case AuthStep.Totp:
+                modalContent = <MfaForm />
+                break
+            default:
+                if (showRegistration) {
+                    modalContent = (
+                        <RegistrationForm
+                            closeRegistrationCallback={toggleRegistrationCallback}
+                            registrationCallback={({
                                 username,
                                 namesPersonal,
                                 namesFamily,
                                 email,
                                 password
-                            })
-                        )
-                    }
-                />
-            )
+                            }) =>
+                                dispatch(
+                                    registerThunk({
+                                        username,
+                                        namesPersonal,
+                                        namesFamily,
+                                        email,
+                                        password
+                                    })
+                                )
+                            }
+                        />
+                    )
+                } else {
+                    modalContent = (
+                        <LoginForm
+                            openRegistrationCallback={toggleRegistrationCallback}
+                            loginCallback={(username, password) =>
+                                dispatch(loginThunk(username, password))
+                            }
+                        />
+                    )
+                }
         }
         return (
             <div
@@ -91,5 +107,7 @@ export function AuthProvider(props: { children: ReactElement }) {
             </div>
         )
     }
-    return props.children ?? <div />
+    if (userInfo.value !== undefined) {
+        return props.children ?? <div />
+    }
 }

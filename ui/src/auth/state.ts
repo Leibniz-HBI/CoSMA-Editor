@@ -3,11 +3,13 @@ import { newRemote, RemoteInterface } from '../util/state'
 
 export enum AuthStep {
     LoggedOut,
-    Initial,
     Session,
     Login,
     Signup,
-    Authenticated
+    PartiallyAuthenticated,
+    Totp,
+    Authenticated,
+    Reauthentication
 }
 
 export interface UserAllAuth {
@@ -20,25 +22,29 @@ export interface UserAllAuth {
 export interface AuthState {
     userAuth: UserAllAuth | undefined
     user: RemoteInterface<UserInfo | undefined>
-    step: RemoteInterface<AuthStep>
+    stepStack: RemoteInterface<AuthStep[]>
     showRegistration: RemoteInterface<boolean>
+    totpUrl: RemoteInterface<string | undefined>
 }
 
 export function newAuthState({
     userAuth = undefined,
     user = newRemote(undefined),
-    step = newRemote(AuthStep.Initial),
-    showRegistration = newRemote(false)
+    stepStack = newRemote([]),
+    showRegistration = newRemote(false),
+    totpUrl = newRemote(undefined)
 }: {
     user?: RemoteInterface<UserInfo | undefined>
     userAuth?: UserAllAuth | undefined
-    step?: RemoteInterface<AuthStep>
+    stepStack?: RemoteInterface<AuthStep[]>
     showRegistration?: RemoteInterface<boolean>
+    totpUrl?: RemoteInterface<string | undefined>
 }): AuthState {
     return {
         user,
         userAuth,
-        step,
-        showRegistration
+        stepStack,
+        showRegistration,
+        totpUrl
     }
 }

@@ -18,6 +18,8 @@ import { newRemote } from '../../../util/state'
 import {
     NotificationManager,
     NotificationType,
+    newNotification,
+    newNotificationManager,
     notificationReducer
 } from '../../../util/notification/slice'
 import {
@@ -105,6 +107,7 @@ const idEditSession = 'id-session-test'
 const idAuthTest = 287
 const nameEditSession = 'edit session for tests'
 const authUserApiRsp = {
+    status: 200,
     data: {
         user: {
             display: userNameTest,
@@ -134,8 +137,39 @@ const userInfoApi = {
         participant_list: []
     }
 }
+
+const totpRequiredRsp = {
+    status: 401,
+    data: {
+        flows: [{ id: 'mfa_authenticate', is_pending: true }]
+    },
+    meta: { is_authenticated: false }
+}
+
+const notAuthenticatedRsp = {
+    status: 401,
+    data: {
+        flows: [{ id: 'login' }, { id: 'signup' }]
+    },
+    meta: { is_authenticated: false }
+}
+
+const authenticatorExistingRsp = {
+    status: 200,
+    data: {
+        last_used_at: 1711555057.065702,
+        created_at: 1711555057.065702,
+        type: 'totp'
+    }
+}
+
+const reauthenticateRsp = {
+    status: 401,
+    data: { flows: [{ id: 'reauthenticate' }] },
+    meta: { is_authenticated: true }
+}
 const authStateSuccess = newAuthState({
-    step: newRemote(AuthStep.Authenticated),
+    stepStack: newRemote([AuthStep.Authenticated]),
     userAuth: {
         id: idAuthTest,
         username: userNameTest,
@@ -154,6 +188,28 @@ const authStateSuccess = newAuthState({
         })
     )
 })
+const reauthenticateState = newAuthState({
+    stepStack: newRemote([AuthStep.Totp, AuthStep.Reauthentication]),
+    totpUrl: newRemote(undefined)
+})
+
+function allauthErrorRsp(msg: string) {
+    return {
+        status: 400,
+        errors: [{ message: msg }],
+        meta: { is_authenticated: false }
+    }
+}
+const loggedInText = 'You are logged in'
+const authStepPartial = newAuthState({
+    stepStack: newRemote([AuthStep.PartiallyAuthenticated]),
+    userAuth: undefined
+})
+const authStateTotp = newAuthState({
+    ...authStepPartial,
+    stepStack: newRemote([AuthStep.Totp])
+})
+
 describe('login', () => {
     async function performLogin(container: HTMLElement) {
         const user = userEvent.setup()
@@ -171,21 +227,122 @@ describe('login', () => {
     test('login on successful refresh', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
+            [200, {}],
             [200, authUserApiRsp],
             [200, userInfoApi]
         ])
         const { store } = renderWithProviders(
-            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            <AuthProvider children={<span>{loggedInText}</span>}></AuthProvider>,
             fetchMock
         )
         await waitFor(() => {
-            expect(fetchMock.mock.calls.length).toEqual(2)
+            expect(fetchMock.mock.calls.length).toEqual(3)
         })
         await waitFor(async () => {
-            expect(screen.getByText('You are logged in')).toBeDefined()
+            expect(screen.getByText(loggedInText)).toBeDefined()
         })
         expect(store.getState().auth).toEqual(authStateSuccess)
-        expect(store.getState().editSession).toEqual(
+    })
+    test('successful login to totp', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [
+            [200, {}],
+            [401, notAuthenticatedRsp],
+            [401, totpRequiredRsp]
+        ])
+        const { store, container } = renderWithProviders(
+            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            fetchMock
+        )
+        await performLogin(container)
+        await waitFor(async () => {
+            expect(
+                screen.getByText(
+                    'Please enter the current code from your authenticator app.'
+                )
+            ).toBeDefined()
+        })
+        await waitFor(() => {
+            expect(fetchMock.mock.calls.length).toEqual(3)
+        })
+        expect(store.getState().auth).toEqual(authStateTotp)
+    })
+    test('login error with message', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [
+            [200, {}],
+            [401, notAuthenticatedRsp],
+            [400, allauthErrorRsp(testError)]
+        ])
+        const { store, container } = renderWithProviders(
+            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            fetchMock
+        )
+        await performLogin(container)
+        await waitFor(() => {
+            const state = store.getState()
+            expect(state.user).toEqual(newUserState({}))
+            const notifications = state.notification.notificationList
+            expect(notifications.length).toEqual(1)
+            const notification = notifications[0]
+            expect(notification.msg).toEqual(testError)
+        })
+        expect(screen.queryByText('You are logged in')).toBeNull()
+    })
+})
+describe('totp', () => {
+    const partialState = {
+        preloadedState: {
+            auth: authStepPartial,
+            user: newUserState({}),
+            notification: newNotificationManager({}),
+            editSession: newEditSessionState({})
+        }
+    }
+    const newTotpRsp = {
+        meta: {
+            secret: 'J4ZKKXTK7NOVU7EPUVY23LCDV4T2QZYM',
+            totp_url:
+                'otpauth://totp/Example:alice@fsf.org?secret=JBSWY3DPEHPK3PXP&issuer=Example'
+        }
+    }
+    const mfaCode = '123456'
+    const headers = {
+        'Access-Control-Allow-Credentials': 'true',
+        'Content-Type': 'application/json'
+    }
+    async function enterMfaCode() {
+        const user = userEvent.setup()
+        const textInput = await screen.findByRole('textbox')
+        await act(async () => {
+            await user.type(textInput, mfaCode)
+        })
+        const submitButton = await screen.findByRole('button', {
+            name: 'Submit'
+        })
+        await act(async () => {
+            await user.click(submitButton)
+        })
+    }
+    test('new authenticator success', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [
+            [404, newTotpRsp],
+            [200, authUserApiRsp],
+            [200, userInfoApi]
+        ])
+        const { store } = renderWithProviders(
+            <AuthProvider children={<span>{loggedInText}</span>}></AuthProvider>,
+            fetchMock,
+            partialState
+        )
+        await enterMfaCode()
+        await waitFor(() => {
+            screen.getByText(loggedInText)
+        })
+        const state = store.getState()
+        expect(state.auth).toEqual(authStateSuccess)
+        expect(state.editSession).toEqual(
             newEditSessionState({
                 currentEditSession: newRemote(
                     newEditSession({
@@ -202,83 +359,199 @@ describe('login', () => {
                 )
             })
         )
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1/auth/account/authenticators/totp',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1/auth/account/authenticators/totp',
+                {
+                    credentials: 'include',
+                    body: JSON.stringify({ code: mfaCode }),
+                    headers: headers,
+                    method: 'POST'
+                }
+            ],
+            ['http://127.0.0.1/api/user/self', { credentials: 'include', headers }]
+        ])
     })
-    test('successful login', async () => {
+    test('new totp error', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
-            [401, { msg: 'not authenticated' }],
-            [200, {}],
+            [404, newTotpRsp],
+            [401, { errors: [{ message: testError }] }]
+        ])
+        const { store } = renderWithProviders(
+            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            fetchMock,
+            partialState
+        )
+        await enterMfaCode()
+        await waitFor(() => {
+            expect(store.getState().notification).toEqual(
+                newNotificationManager({
+                    notificationList: [
+                        newNotification({
+                            msg: testError,
+                            type: NotificationType.Error,
+                            id: expect.anything()
+                        })
+                    ],
+                    notificationMap: expect.anything()
+                })
+            )
+        })
+        expect(screen.queryByText('You are logged in')).toBeNull()
+        screen.getByRole('textbox')
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1/auth/account/authenticators/totp',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1/auth/account/authenticators/totp',
+                {
+                    credentials: 'include',
+                    body: JSON.stringify({ code: mfaCode }),
+                    headers: headers,
+                    method: 'POST'
+                }
+            ]
+        ])
+    })
+    test('new totp reauthenticate', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [
+            [404, newTotpRsp],
+            [401, reauthenticateRsp]
+        ])
+        const { store } = renderWithProviders(
+            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            fetchMock,
+            partialState
+        )
+        await enterMfaCode()
+        await waitFor(() => {
+            expect(store.getState().auth).toEqual({
+                ...reauthenticateState,
+                totpUrl: newRemote(expect.anything())
+            })
+        })
+    })
+    test('existing totp success', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [
+            [200, authenticatorExistingRsp],
             [200, authUserApiRsp],
             [200, userInfoApi]
         ])
-        const { store, container } = renderWithProviders(
+        const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
-            fetchMock
+            fetchMock,
+            partialState
         )
-        await performLogin(container)
+        await enterMfaCode()
         await waitFor(() => {
-            expect(fetchMock.mock.calls.length).toEqual(4)
+            screen.getByText('You are logged in')
         })
-        await waitFor(async () => {
-            expect(screen.getByText('You are logged in')).toBeDefined()
-        })
-        expect(store.getState().auth).toEqual(authStateSuccess)
+        const state = store.getState()
+        expect(state.auth).toEqual(authStateSuccess)
+        expect(state.editSession).toEqual(
+            newEditSessionState({
+                currentEditSession: newRemote(
+                    newEditSession({
+                        idPersistent: idEditSession,
+                        name: nameEditSession,
+                        owner: newEditSessionParticipant({
+                            type: EditSessionParticipantType.internal,
+                            name: userNameTest,
+                            id: idPersistentTest
+                        }),
+                        participantList: [],
+                        participantMap: {}
+                    })
+                )
+            })
+        )
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1/auth/account/authenticators/totp',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1/auth/auth/2fa/authenticate',
+                {
+                    credentials: 'include',
+                    body: JSON.stringify({ code: mfaCode }),
+                    headers: headers,
+                    method: 'POST'
+                }
+            ],
+            ['http://127.0.0.1/api/user/self', { credentials: 'include', headers }]
+        ])
     })
-    test('login error with message', async () => {
+    test('existing totp error', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
+            [200, authenticatorExistingRsp],
+            [401, { errors: [{ message: testError }] }],
             [401, {}],
-            [200, {}],
-            [200, authUserApiRsp],
-            [400, { msg: testError }]
+            [401, {}]
         ])
-        const { store, container } = renderWithProviders(
+        const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
-            fetchMock
+            fetchMock,
+            partialState
         )
-        await performLogin(container)
+        await enterMfaCode()
         await waitFor(() => {
-            const state = store.getState()
-            expect(state.user).toEqual(newUserState({}))
-            const notifications = state.notification.notificationList
-            expect(notifications.length).toEqual(1)
-            const notification = notifications[0]
-            expect(notification.msg).toEqual(testError)
+            expect(store.getState().notification).toEqual(
+                newNotificationManager({
+                    notificationList: [
+                        newNotification({
+                            msg: testError,
+                            type: NotificationType.Error,
+                            id: expect.anything()
+                        })
+                    ],
+                    notificationMap: expect.anything()
+                })
+            )
         })
-        await waitFor(() => {
-            expect(screen.queryByText('You are logged in')).toBeNull()
-        })
+        expect(screen.queryByText('You are logged in')).toBeNull()
+        screen.getByRole('textbox')
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1/auth/account/authenticators/totp',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1/auth/auth/2fa/authenticate',
+                {
+                    credentials: 'include',
+                    body: JSON.stringify({ code: mfaCode }),
+                    headers: headers,
+                    method: 'POST'
+                }
+            ]
+        ])
     })
-    test('login error without message', async () => {
+    test('existing totp reauthenticate', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
-            [401, {}],
-            [200, {}],
-            [200, authUserApiRsp],
-            [400, {}]
+            [200, authenticatorExistingRsp],
+            [401, reauthenticateRsp]
         ])
-        const { store, container } = renderWithProviders(
+        const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
-            fetchMock
+            fetchMock,
+            partialState
         )
-        performLogin(container)
-        await waitFor(async () => {
-            expect(store.getState().user).toEqual(newUserState({}))
-        })
+        await enterMfaCode()
         await waitFor(() => {
-            expect(screen.queryByText('You are logged in')).toBeNull()
+            expect(store.getState().auth).toEqual(reauthenticateState)
         })
-        await waitFor(
-            async () => {
-                const state = store.getState()
-                expect(state.user).toEqual(newUserState({}))
-                const notifications = state.notification.notificationList
-                expect(notifications.length).toEqual(1)
-                const notification = notifications[0]
-                expect(notification.msg).toEqual('Unknown error')
-            },
-            { timeout: 2000 }
-        )
     })
 })
 
@@ -315,8 +588,8 @@ describe('registration', () => {
     test('success', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
-            [401, { msg: 'not authenticated' }],
             [200, {}],
+            [401, notAuthenticatedRsp],
             [200, authUserApiRsp],
             [200, userInfoApi]
         ])
@@ -346,9 +619,9 @@ describe('registration', () => {
     test('error', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
-            [401, { msg: 'not authenticated' }],
             [200, {}],
-            [400, { msg: 'registration error' }]
+            [401, notAuthenticatedRsp],
+            [400, { errors: [{ message: 'registration error' }] }]
         ])
         const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
@@ -371,32 +644,98 @@ describe('registration', () => {
             expect(notification.msg).toEqual('registration error')
         })
     })
-    test('error without message', async () => {
+})
+describe('reauthenticate', () => {
+    const partialState = {
+        preloadedState: {
+            auth: reauthenticateState,
+            user: newUserState({}),
+            notification: newNotificationManager({}),
+            editSession: newEditSessionState({})
+        }
+    }
+    async function performReauthentication() {
+        const user = userEvent.setup()
+        const input = await screen.findByLabelText('Password')
+        await user.type(input, passwordTest)
+        const button = await screen.findByRole('button')
+        await user.click(button)
+    }
+    test('success', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [[200, authUserApiRsp]])
+        const { store } = renderWithProviders(
+            <AuthProvider>
+                <span>{loggedInText}</span>
+            </AuthProvider>,
+            fetchMock,
+            partialState
+        )
+        await performReauthentication()
+        await waitFor(() => {
+            screen.findByText(
+                'Please enter the current code from your authenticator app.'
+            )
+            const state = store.getState()
+            expect(state.auth).toEqual({
+                ...partialState.preloadedState.auth,
+                stepStack: newRemote([AuthStep.Totp])
+            })
+            expect(state.notification.notificationList.length).toEqual(0)
+        })
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1/auth/auth/reauthenticate',
+                {
+                    headers: {
+                        'Access-Control-Allow-Credentials': 'true',
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST',
+                    body: JSON.stringify({ password: passwordTest })
+                }
+            ]
+        ])
+    })
+    test('error', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
-            [401, { msg: 'not authenticated' }],
-            [200, {}],
-            [400, {}]
+            [500, { status: 500, errors: [{ message: testError }] }]
         ])
         const { store } = renderWithProviders(
-            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
-            fetchMock
+            <AuthProvider>
+                <span>{loggedInText}</span>
+            </AuthProvider>,
+            fetchMock,
+            partialState
         )
-        await performRegistration()
-        await waitFor(async () => {
-            expect(screen.queryByText('You are logged in')).toBeNull()
-        })
-        await waitFor(async () => {
+        await performReauthentication()
+        await waitFor(() => {
+            screen.findByText(
+                'Please enter the current code from your authenticator app.'
+            )
             const state = store.getState()
-            expect(state.auth.user).toEqual(newRemote(undefined))
-            expect(state.user).toEqual({
-                userSearchResults: newRemote([]),
-                userInfoByIdPersistent: {}
-            })
-            const notifications = state.notification.notificationList
-            expect(notifications.length).toEqual(1)
-            const notification = notifications[0]
-            expect(notification.msg).toEqual('Unknown error')
+            expect(state.auth).toEqual(partialState.preloadedState.auth)
+            expect(state.notification.notificationList).toEqual([
+                newNotification({
+                    msg: testError,
+                    type: NotificationType.Error,
+                    id: expect.anything()
+                })
+            ])
         })
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1/auth/auth/reauthenticate',
+                {
+                    headers: {
+                        'Access-Control-Allow-Credentials': 'true',
+                        'Content-Type': 'application/json'
+                    },
+                    method: 'POST',
+                    body: JSON.stringify({ password: passwordTest })
+                }
+            ]
+        ])
     })
 })

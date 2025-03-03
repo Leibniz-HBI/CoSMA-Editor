@@ -32,7 +32,7 @@ import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts
 import { ManagementPage } from './management/components'
 import { contributionStepApiToUiMap } from './contribution/thunks'
 import { AuthProvider } from './auth/components/provider'
-import { addError } from './util/notification/slice'
+import { logoutThunk } from './auth/thunks'
 
 export function CosmaeRoot() {
     const userInfo = useSelector(selectUserInfo)
@@ -74,14 +74,10 @@ export function CosmaeRoot() {
                                     </Nav>
                                     <Nav>
                                         <Nav.Link
-                                            onClick={
-                                                () =>
-                                                    dispatch(
-                                                        addError(
-                                                            'Logout not yet implemented.'
-                                                        )
-                                                    )
-                                                // .then(()=>location.reload())
+                                            onClick={() =>
+                                                dispatch(logoutThunk()).then(() =>
+                                                    location.reload()
+                                                )
                                             }
                                         >
                                             Logout
