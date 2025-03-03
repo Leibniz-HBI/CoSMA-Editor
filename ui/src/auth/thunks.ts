@@ -261,7 +261,7 @@ export function postTotpCode(apiSuffix: string, code: string): ThunkWithFetch<vo
 export function logoutThunk(): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         try {
-            dispatch(logoutStart)
+            dispatch(logoutStart())
             const rsp = await fetch(config.api_path_auth + '/auth/session', {
                 method: 'DELETE',
                 credentials: 'include'
@@ -272,7 +272,7 @@ export function logoutThunk(): ThunkWithFetch<void> {
             }
             dispatch(logoutSuccess())
         } catch (e: unknown) {
-            dispatch(authStepEnd)
+            dispatch(authStepEnd())
             dispatch(addError(exceptionMessage(e)))
         }
     }
