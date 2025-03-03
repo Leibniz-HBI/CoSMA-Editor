@@ -1,4 +1,5 @@
 "Selects different settings dependent on environment variables."
+
 from os import environ
 
 try:
@@ -8,9 +9,8 @@ try:
 except ImportError:
     pass
 
-if environ.get("COSMAE_CI", "false").lower() == "true":
-    from django_project.settings.settings_ci import *
-elif environ.get("COSMAE_DEBUG", "false").lower() == "true":
-    from django_project.settings.settings_test import *
-else:
+if (
+    environ.get("COSMAE_CI", "false").lower() == "false"
+    and environ.get("COSMAE_DEBUG", "false").lower() == "false"
+):
     from django_project.settings.settings_production import *
