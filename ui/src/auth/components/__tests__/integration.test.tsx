@@ -34,180 +34,11 @@ import { editSessionReducer } from '../../../session/slice'
 import { AuthState, AuthStep, newAuthState } from '../../state'
 import { authReducer } from '../../slice'
 import { vi, Mock } from 'vitest'
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        auth: AuthState
-        user: UserState
-        notification: NotificationManager
-        editSession: EditSessionState
-    }
-}
-
 const idErrorTest = 'id-error-test'
 vi.mock('uuid', () => {
     return {
         v4: () => idErrorTest
     }
-})
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            user: newUserState({}),
-            auth: newAuthState({}),
-            notification: { notificationList: [], notificationMap: {} },
-            editSession: newEditSessionState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            user: userReducer,
-            auth: authReducer,
-            notification: notificationReducer,
-            editSession: editSessionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
-
-const userNameTest = 'test_user'
-const emailTest = 'me@test.url'
-const passwordTest = 'pA$sw0rd-1234'
-const namesPersonalTest = 'names personal test'
-const testError = 'test error message'
-const idPersistentTest = 'id-user-test'
-const idEditSession = 'id-session-test'
-const idAuthTest = 287
-const nameEditSession = 'edit session for tests'
-const authUserApiRsp = {
-    status: 200,
-    data: {
-        user: {
-            display: userNameTest,
-            username: userNameTest,
-            email: emailTest,
-            id: idAuthTest
-        }
-    },
-    meta: { is_authenticated: true }
-}
-const userInfoApi = {
-    username: userNameTest,
-    names_personal: namesPersonalTest,
-    email: emailTest,
-    names_family: '',
-    tag_definition_list: [],
-    id_persistent: idPersistentTest,
-    permission_group: 'CONTRIBUTOR',
-    edit_session: {
-        id_persistent: idEditSession,
-        name: nameEditSession,
-        owner: {
-            id_participant: idPersistentTest,
-            name_participant: userNameTest,
-            type_participant: 'INTERNAL'
-        },
-        participant_list: []
-    }
-}
-
-const totpRequiredRsp = {
-    status: 401,
-    data: {
-        flows: [{ id: 'mfa_authenticate', is_pending: true }]
-    },
-    meta: { is_authenticated: false }
-}
-
-const notAuthenticatedRsp = {
-    status: 401,
-    data: {
-        flows: [{ id: 'login' }, { id: 'signup' }]
-    },
-    meta: { is_authenticated: false }
-}
-
-const authenticatorExistingRsp = {
-    status: 200,
-    data: {
-        last_used_at: 1711555057.065702,
-        created_at: 1711555057.065702,
-        type: 'totp'
-    }
-}
-
-const reauthenticateRsp = {
-    status: 401,
-    data: { flows: [{ id: 'reauthenticate' }] },
-    meta: { is_authenticated: true }
-}
-const authStateSuccess = newAuthState({
-    stepStack: newRemote([AuthStep.Authenticated]),
-    userAuth: {
-        id: idAuthTest,
-        username: userNameTest,
-        display: userNameTest,
-        email: emailTest
-    },
-    user: newRemote(
-        newUserInfo({
-            username: userNameTest,
-            namesPersonal: namesPersonalTest,
-            email: emailTest,
-            namesFamily: '',
-            columns: [],
-            idPersistent: idPersistentTest,
-            permissionGroup: UserPermissionGroup.CONTRIBUTOR
-        })
-    )
-})
-const reauthenticateState = newAuthState({
-    stepStack: newRemote([AuthStep.Totp, AuthStep.Reauthentication]),
-    totpUrl: newRemote(undefined)
-})
-
-function allauthErrorRsp(msg: string) {
-    return {
-        status: 400,
-        errors: [{ message: msg }],
-        meta: { is_authenticated: false }
-    }
-}
-const loggedInText = 'You are logged in'
-const authStepPartial = newAuthState({
-    stepStack: newRemote([AuthStep.PartiallyAuthenticated]),
-    userAuth: undefined
-})
-const authStateTotp = newAuthState({
-    ...authStepPartial,
-    stepStack: newRemote([AuthStep.Totp])
 })
 
 describe('login', () => {
@@ -229,7 +60,7 @@ describe('login', () => {
         addResponseSequence(fetchMock, [
             [200, {}],
             [200, authUserApiRsp],
-            [200, userInfoApi]
+            [200, userInfoApiResponse]
         ])
         const { store } = renderWithProviders(
             <AuthProvider children={<span>{loggedInText}</span>}></AuthProvider>,
@@ -243,12 +74,12 @@ describe('login', () => {
         })
         expect(store.getState().auth).toEqual(authStateSuccess)
     })
-    test('successful login to totp', async () => {
+    test('successful login to totp input', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
             [200, {}],
             [401, notAuthenticatedRsp],
-            [401, totpRequiredRsp]
+            [401, totpInputRequiredRsp]
         ])
         const { store, container } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
@@ -266,6 +97,35 @@ describe('login', () => {
             expect(fetchMock.mock.calls.length).toEqual(3)
         })
         expect(store.getState().auth).toEqual(authStateTotp)
+    })
+    test('successful login to totp registration', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [
+            [200, {}],
+            [401, notAuthenticatedRsp],
+            [200, authUserApiRsp],
+            [401, totpRegistrationRequiredRsp],
+            [404, newTotpRsp]
+        ])
+        const { store, container } = renderWithProviders(
+            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            fetchMock
+        )
+        await performLogin(container)
+        await waitFor(async () => {
+            expect(
+                screen.getByText(
+                    'Please register an authenticator app using the QR-Code'
+                )
+            ).toBeDefined()
+        })
+        await waitFor(() => {
+            expect(fetchMock.mock.calls.length).toEqual(5)
+        })
+        expect(store.getState().auth).toEqual({
+            ...authStateTotp,
+            totpUrl: expect.anything()
+        })
     })
     test('login error with message', async () => {
         const fetchMock = vi.fn()
@@ -299,13 +159,6 @@ describe('totp', () => {
             editSession: newEditSessionState({})
         }
     }
-    const newTotpRsp = {
-        meta: {
-            secret: 'J4ZKKXTK7NOVU7EPUVY23LCDV4T2QZYM',
-            totp_url:
-                'otpauth://totp/Example:alice@fsf.org?secret=JBSWY3DPEHPK3PXP&issuer=Example'
-        }
-    }
     const mfaCode = '123456'
     const headers = {
         'Access-Control-Allow-Credentials': 'true',
@@ -329,7 +182,7 @@ describe('totp', () => {
         addResponseSequence(fetchMock, [
             [404, newTotpRsp],
             [200, authUserApiRsp],
-            [200, userInfoApi]
+            [200, userInfoApiResponse]
         ])
         const { store } = renderWithProviders(
             <AuthProvider children={<span>{loggedInText}</span>}></AuthProvider>,
@@ -444,7 +297,7 @@ describe('totp', () => {
         addResponseSequence(fetchMock, [
             [200, authenticatorExistingRsp],
             [200, authUserApiRsp],
-            [200, userInfoApi]
+            [200, userInfoApiResponse]
         ])
         const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
@@ -591,7 +444,7 @@ describe('registration', () => {
             [200, {}],
             [401, notAuthenticatedRsp],
             [200, authUserApiRsp],
-            [200, userInfoApi]
+            [200, userInfoApiResponse]
         ])
         const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
@@ -738,4 +591,192 @@ describe('reauthenticate', () => {
             ]
         ])
     })
+})
+
+interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
+    preloadedState?: {
+        auth: AuthState
+        user: UserState
+        notification: NotificationManager
+        editSession: EditSessionState
+    }
+}
+
+export function renderWithProviders(
+    ui: React.ReactElement,
+    fetchMock: Mock,
+    {
+        preloadedState = {
+            user: newUserState({}),
+            auth: newAuthState({}),
+            notification: { notificationList: [], notificationMap: {} },
+            editSession: newEditSessionState({})
+        },
+        ...renderOptions
+    }: ExtendedRenderOptions = {}
+) {
+    const store = configureStore({
+        reducer: {
+            user: userReducer,
+            auth: authReducer,
+            notification: notificationReducer,
+            editSession: editSessionReducer
+        },
+        middleware: (getDefaultMiddleware) =>
+            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
+        preloadedState
+    })
+    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
+        return <Provider store={store}>{children}</Provider>
+    }
+
+    // Return an object with the store and all of RTL's query functions
+    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
+}
+
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
+    for (const tpl of responses) {
+        const [status_code, rsp] = tpl
+        mock.mockImplementationOnce(
+            vi.fn(() =>
+                Promise.resolve({
+                    status: status_code,
+                    json: () => Promise.resolve(rsp)
+                })
+            ) as Mock
+        )
+    }
+}
+
+const userNameTest = 'test_user'
+const emailTest = 'me@test.url'
+const passwordTest = 'pA$sw0rd-1234'
+const namesPersonalTest = 'names personal test'
+const testError = 'test error message'
+const idPersistentTest = 'id-user-test'
+const idEditSession = 'id-session-test'
+const idAuthTest = 287
+const nameEditSession = 'edit session for tests'
+const authUserApiRsp = {
+    status: 200,
+    data: {
+        user: {
+            display: userNameTest,
+            username: userNameTest,
+            email: emailTest,
+            id: idAuthTest
+        }
+    },
+    meta: { is_authenticated: true }
+}
+const userInfoApiResponse = {
+    status: 200,
+    data: {
+        username: userNameTest,
+        names_personal: namesPersonalTest,
+        email: emailTest,
+        names_family: '',
+        tag_definition_list: [],
+        id_persistent: idPersistentTest,
+        permission_group: 'CONTRIBUTOR',
+        edit_session: {
+            id_persistent: idEditSession,
+            name: nameEditSession,
+            owner: {
+                id_participant: idPersistentTest,
+                name_participant: userNameTest,
+                type_participant: 'INTERNAL'
+            },
+            participant_list: []
+        }
+    },
+    meta: { is_authenticated: true }
+}
+
+const totpRegistrationRequiredRsp = {
+    status: 401,
+    data: {
+        flows: [{ id: 'mfa_register', is_pending: true }]
+    },
+    meta: { is_authenticated: false }
+}
+
+const totpInputRequiredRsp = {
+    status: 401,
+    data: {
+        flows: [{ id: 'mfa_authenticate', is_pending: true }]
+    },
+    meta: { is_authenticated: false }
+}
+
+const newTotpRsp = {
+    meta: {
+        secret: 'J4ZKKXTK7NOVU7EPUVY23LCDV4T2QZYM',
+        totp_url:
+            'otpauth://totp/Example:alice@fsf.org?secret=JBSWY3DPEHPK3PXP&issuer=Example'
+    }
+}
+
+const notAuthenticatedRsp = {
+    status: 401,
+    data: {
+        flows: [{ id: 'login' }, { id: 'signup' }]
+    },
+    meta: { is_authenticated: false }
+}
+
+const authenticatorExistingRsp = {
+    status: 200,
+    data: {
+        last_used_at: 1711555057.065702,
+        created_at: 1711555057.065702,
+        type: 'totp'
+    }
+}
+
+const reauthenticateRsp = {
+    status: 401,
+    data: { flows: [{ id: 'reauthenticate' }] },
+    meta: { is_authenticated: true }
+}
+const authStateSuccess = newAuthState({
+    stepStack: newRemote([AuthStep.Authenticated]),
+    userAuth: {
+        id: idAuthTest,
+        username: userNameTest,
+        display: userNameTest,
+        email: emailTest
+    },
+    user: newRemote(
+        newUserInfo({
+            username: userNameTest,
+            namesPersonal: namesPersonalTest,
+            email: emailTest,
+            namesFamily: '',
+            columns: [],
+            idPersistent: idPersistentTest,
+            permissionGroup: UserPermissionGroup.CONTRIBUTOR
+        })
+    )
+})
+const reauthenticateState = newAuthState({
+    stepStack: newRemote([AuthStep.Totp, AuthStep.Reauthentication]),
+    totpUrl: newRemote(undefined)
+})
+
+function allauthErrorRsp(msg: string) {
+    return {
+        status: 400,
+        errors: [{ message: msg }],
+        meta: { is_authenticated: false }
+    }
+}
+const loggedInText = 'You are logged in'
+const authStepPartial = newAuthState({
+    stepStack: newRemote([AuthStep.PartiallyAuthenticated]),
+    userAuth: undefined
+})
+const authStateTotp = newAuthState({
+    ...authStepPartial,
+    stepStack: newRemote([AuthStep.Totp])
 })

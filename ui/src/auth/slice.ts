@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { AuthState, AuthStep, newAuthState, UserAllAuth } from './state'
+import { AuthState, AuthStep, EmailAllauth, newAuthState, UserAllAuth } from './state'
 import { newRemote } from '../util/state'
 import { UserInfo } from '../user/state'
 import { TagDefinition } from '../column_menu/state'
@@ -11,6 +11,20 @@ const authSlice = createSlice({
         authStepEnd(state: AuthState) {
             state.stepStack.isLoading = false
             state.totpUrl.isLoading = false
+            state.emailVerified = newRemote(undefined)
+            state.user.isLoading = false
+        },
+        getEmailAddressListEnd(state: AuthState) {
+            state.emailAddressList.isLoading = false
+        },
+        getEmailAddressListStart(state: AuthState) {
+            state.emailAddressList.isLoading = true
+        },
+        getEmailAddressListSuccess(
+            state: AuthState,
+            action: PayloadAction<EmailAllauth[]>
+        ) {
+            state.emailAddressList = newRemote(action.payload)
         },
         getTotpNotFound(state: AuthState, action: PayloadAction<string>) {
             state.totpUrl = newRemote(action.payload)
@@ -20,13 +34,10 @@ const authSlice = createSlice({
         },
         getTotpStart(state: AuthState) {
             state.stepStack.isLoading = true
+            state.userAuth = undefined
         },
         getTotpSuccess(state: AuthState) {
             state.stepStack = newRemote([AuthStep.Totp])
-        },
-        getSelfEnd(state: AuthState) {
-            state.user.isLoading = false
-            state.stepStack.value = [AuthStep.LoggedOut]
         },
         getSelfStart(state: AuthState) {
             state.user.isLoading = true
@@ -54,6 +65,25 @@ const authSlice = createSlice({
             state.userAuth = undefined
             state.user = newRemote(undefined)
         },
+        postEmailVerificationError(state: AuthState) {
+            state.emailVerified=newRemote(false)
+        },
+        postEmailVerificationStart(state: AuthState) {
+            state.emailVerified.isLoading = true
+        },
+        postEmailVerificationSuccess(state: AuthState) {
+            state.emailVerified = newRemote(true)
+        },
+        postReauthenticateMfaStart(state: AuthState) {
+            state.stepStack.isLoading = true
+        },
+        postReauthenticateMfaSuccess(
+            state: AuthState,
+            action: PayloadAction<UserAllAuth>
+        ) {
+            state.stepStack = newRemote([AuthStep.Authenticated])
+            state.userAuth = action.payload
+        },
         postReauthenticateStart(state: AuthState) {
             state.stepStack.isLoading = true
         },
@@ -80,16 +110,32 @@ const authSlice = createSlice({
         setReauthenticate(state: AuthState) {
             state.stepStack.isLoading = false
             state.stepStack.value.push(AuthStep.Reauthentication)
-            state.totpUrl.isLoading =false
+            state.totpUrl.isLoading = false
+            state.userAuth = undefined
         },
-        setPartiallyAuthenticated(state: AuthState) {
-            state.stepStack = newRemote([AuthStep.PartiallyAuthenticated])
+        setReauthenticateMfa(state: AuthState) {
+            state.stepStack = newRemote([AuthStep.ReauthenticationMfa])
+            state.userAuth = undefined
+        },
+        setPartiallyAuthenticated(state: AuthState, action: PayloadAction<boolean>) {
+            state.userAuth = undefined
+            if (action.payload) {
+                state.stepStack = newRemote([AuthStep.PartiallyAuthenticated])
+            } else {
+                state.stepStack = newRemote([AuthStep.Totp])
+            }
+        },
+        setVerifyEmail(state: AuthState) {
+            state.stepStack = newRemote([AuthStep.VerifyEmail])
         },
         registrationStart(state: AuthState) {
             state.showRegistration.isLoading = true
         },
         registrationEnd(state: AuthState) {
             state.showRegistration = newRemote(false)
+        },
+        resetEmailVerification(state: AuthState) {
+            state.emailVerified = newRemote(undefined)
         },
         toggleRegistration(state: AuthState, action: PayloadAction<boolean>) {
             state.showRegistration.value = action.payload
@@ -126,10 +172,12 @@ function findUserColumnIndex(state: AuthState, idPersistent: string) {
 }
 export const {
     authStepEnd,
+    getEmailAddressListEnd,
+    getEmailAddressListStart,
+    getEmailAddressListSuccess,
     getTotpNotFound,
     getTotpStart,
     getTotpSuccess,
-    getSelfEnd,
     getSelfStart,
     getSelfSuccess,
     getSessionEnd,
@@ -138,6 +186,11 @@ export const {
     loginStart,
     logoutStart,
     logoutSuccess,
+    postEmailVerificationError,
+    postEmailVerificationSuccess,
+    postEmailVerificationStart,
+    postReauthenticateMfaStart,
+    postReauthenticateMfaSuccess,
     postReauthenticateStart,
     postReauthenticateSuccess,
     postTotpCodeEnd,
@@ -145,8 +198,11 @@ export const {
     postTotpCodeSuccess,
     registrationEnd,
     registrationStart,
+    resetEmailVerification,
     setAuthUser,
     setReauthenticate,
+    setReauthenticateMfa,
+    setVerifyEmail,
     setPartiallyAuthenticated,
     toggleRegistration,
     removeUserTagDefinition,

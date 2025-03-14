@@ -21,15 +21,16 @@ import { RegistrationForm } from './registration_form'
 import { Modal } from 'react-bootstrap'
 import { MfaForm } from './mfa_form'
 import { ReauthenticationForm } from './reauthentication_form'
+import { EmailVerificationNeeded } from './email_verification'
 
 export function AuthProvider(props: { children: ReactElement }) {
-    const authUser = useAppSelector(selectUserAuth)
     const stepStack = useAppSelector(selectAuthStepStack)
     const userInfo = useAppSelector(selectUserInfo)
     const showRegistration = useAppSelector(selectShowRegistrationValue)
     const toggleRegistrationCallback = () =>
         dispatch(toggleRegistration(!showRegistration))
     const dispatch = useAppDispatch()
+    const authUser = useAppSelector(selectUserAuth)
     useEffect(() => {
         if (stepStack.isLoading || userInfo.isLoading) {
             return
@@ -58,8 +59,14 @@ export function AuthProvider(props: { children: ReactElement }) {
             case AuthStep.Reauthentication:
                 modalContent = <ReauthenticationForm />
                 break
+            case AuthStep.ReauthenticationMfa:
+                modalContent =<MfaForm reauthenticate={true}/>
+                break
             case AuthStep.Totp:
-                modalContent = <MfaForm />
+                modalContent = <MfaForm reauthenticate={false}/>
+                break
+            case AuthStep.VerifyEmail:
+                modalContent = <EmailVerificationNeeded />
                 break
             default:
                 if (showRegistration) {

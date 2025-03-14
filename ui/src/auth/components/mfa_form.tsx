@@ -3,12 +3,13 @@ import { useAppDispatch, useAppSelector } from '../../hooks'
 import { selectTotpUrl } from '../selectors'
 import {
     postActivateTotpThunk,
+    postReauthenticateMfaThunk,
     postTotpAuthenticationThunk
 } from '../thunks'
 import { FormField } from '../../util/form'
 import { ChangeEvent, useState } from 'react'
 
-export function MfaForm() {
+export function MfaForm({ reauthenticate }: { reauthenticate: boolean }) {
     const [code, setCode] = useState('')
     const dispatch = useAppDispatch()
     const totpUrl = useAppSelector(selectTotpUrl)
@@ -17,7 +18,7 @@ export function MfaForm() {
             <Row>Please enter the current code from your authenticator app.</Row>
         </Col>
     )
-    let action = (code: string) => dispatch(postTotpAuthenticationThunk(code))
+    let action = postTotpAuthenticationThunk
     if (totpUrl.value !== undefined) {
         qrCode = (
             <Col>
@@ -27,7 +28,17 @@ export function MfaForm() {
                 </Row>
             </Col>
         )
-        action = (code) => dispatch(postActivateTotpThunk(code))
+        action = postActivateTotpThunk
+    } else if (reauthenticate) {
+        action = postReauthenticateMfaThunk
+        qrCode = (
+            <Col>
+                <Row>
+                    Please reauthenticate using the current code from your authenticator
+                    app.
+                </Row>
+            </Col>
+        )
     }
     return (
         <Col>
@@ -43,7 +54,7 @@ export function MfaForm() {
                 />
             </Row>
             <Row>
-                <Button onClick={() => action(code)}>Submit</Button>
+                <Button onClick={() => dispatch(action(code))}>Submit</Button>
             </Row>
         </Col>
     )

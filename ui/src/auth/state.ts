@@ -7,9 +7,11 @@ export enum AuthStep {
     Login,
     Signup,
     PartiallyAuthenticated,
+    VerifyEmail,
     Totp,
     Authenticated,
-    Reauthentication
+    Reauthentication,
+    ReauthenticationMfa
 }
 
 export interface UserAllAuth {
@@ -19,12 +21,20 @@ export interface UserAllAuth {
     username?: string
 }
 
+export interface EmailAllauth {
+    email:string
+    primary: boolean
+    verified: boolean
+}
+
 export interface AuthState {
     userAuth: UserAllAuth | undefined
     user: RemoteInterface<UserInfo | undefined>
     stepStack: RemoteInterface<AuthStep[]>
     showRegistration: RemoteInterface<boolean>
     totpUrl: RemoteInterface<string | undefined>
+    emailVerified: RemoteInterface<boolean | undefined>
+    emailAddressList: RemoteInterface<EmailAllauth[]|undefined>
 }
 
 export function newAuthState({
@@ -32,19 +42,25 @@ export function newAuthState({
     user = newRemote(undefined),
     stepStack = newRemote([]),
     showRegistration = newRemote(false),
-    totpUrl = newRemote(undefined)
+    totpUrl = newRemote(undefined),
+    emailVerified = newRemote(undefined),
+    emailAddressList = newRemote(undefined)
 }: {
     user?: RemoteInterface<UserInfo | undefined>
     userAuth?: UserAllAuth | undefined
     stepStack?: RemoteInterface<AuthStep[]>
     showRegistration?: RemoteInterface<boolean>
     totpUrl?: RemoteInterface<string | undefined>
+    emailVerified?: RemoteInterface<boolean | undefined>
+    emailAddressList?: RemoteInterface<EmailAllauth[]|undefined>
 }): AuthState {
     return {
         user,
         userAuth,
         stepStack,
         showRegistration,
-        totpUrl
+        totpUrl,
+        emailVerified,
+        emailAddressList
     }
 }

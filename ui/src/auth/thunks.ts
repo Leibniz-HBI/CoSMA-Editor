@@ -14,7 +14,6 @@ import {
     getTotpNotFound,
     getTotpStart,
     getTotpSuccess,
-    getSelfEnd,
     getSelfStart,
     getSelfSuccess,
     getSessionEnd,
@@ -30,9 +29,15 @@ import {
     logoutSuccess,
     setReauthenticate,
     postReauthenticateStart,
-    postReauthenticateSuccess
+    postReauthenticateSuccess,
+    postEmailVerificationStart,
+    postEmailVerificationSuccess,
+    setPartiallyAuthenticated,
+    setVerifyEmail,
+    setReauthenticateMfa,
+    postEmailVerificationError
 } from './slice'
-import { UserAllAuth } from './state'
+import { EmailAllauth, UserAllAuth } from './state'
 
 export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
@@ -50,7 +55,7 @@ export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> 
             handleAllauthResponse(
                 dispatch,
                 (dispatch, json) => {
-                    const user = parseUserAllAuthFromJson(json['user'])
+                    const user = parseUserAllauthFromJson(json['user'])
                     dispatch(setAuthUser(user))
                 },
                 json
@@ -79,7 +84,7 @@ export function loginThunk(username: string, password: string): ThunkWithFetch<v
                 dispatch,
                 (dispatch, json) => {
                     const userJson = json['user']
-                    const authUser = parseUserAllAuthFromJson(userJson)
+                    const authUser = parseUserAllauthFromJson(userJson)
                     dispatch(setAuthUser(authUser))
                 },
                 json
@@ -160,31 +165,21 @@ export function getSelfThunk(): ThunkWithFetch<void> {
                 }
             })
             const json = await rsp.json()
-            if (rsp.status == 200) {
-                const msg = json['msg']
-                if (msg !== undefined) {
-                    dispatch(getSelfEnd())
-                    dispatch(addError(errorMessageFromApi(json)))
-                } else {
+            handleAllauthResponse(
+                dispatch,
+                (dispatch, json) => {
                     dispatch(getSelfSuccess(parseUserInfoFromJson(json)))
                     dispatch(
                         setCurrentEditSession(
                             parseEditSessionFromApi(json['edit_session'])
                         )
                     )
-                }
-            } else {
-                let msg = json['msg']
-                if (msg === undefined) {
-                    msg = 'Unknown error'
-                }
-                dispatch(getSelfEnd())
-                if (msg !== 'Not authenticated') {
-                    dispatch(addError(msg))
-                }
-            }
+                },
+                json
+            )
+            dispatch(authStepEnd())
         } catch (e: unknown) {
-            dispatch(getSelfEnd())
+            dispatch(authStepEnd())
             dispatch(addError(exceptionMessage(e)))
         }
     }
@@ -228,6 +223,10 @@ export function postActivateTotpThunk(code: string): ThunkWithFetch<void> {
     return postTotpCode('/account/authenticators/totp', code)
 }
 
+export function postReauthenticateMfaThunk(code: string): ThunkWithFetch<void> {
+    return postTotpCode('/auth/2fa/reauthenticate', code)
+}
+
 export function postTotpCode(apiSuffix: string, code: string): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         try {
@@ -244,7 +243,7 @@ export function postTotpCode(apiSuffix: string, code: string): ThunkWithFetch<vo
                 (dispatch, json) => {
                     const user = json['user']
                     if (user !== undefined) {
-                        dispatch(setAuthUser(parseUserAllAuthFromJson(user)))
+                        dispatch(setAuthUser(parseUserAllauthFromJson(user)))
                     } else {
                         dispatch(postTotpCodeSuccess())
                     }
@@ -264,7 +263,8 @@ export function logoutThunk(): ThunkWithFetch<void> {
             dispatch(logoutStart())
             const rsp = await fetch(config.api_path_auth + '/auth/session', {
                 method: 'DELETE',
-                credentials: 'include'
+                credentials: 'include',
+                headers: mkPostHeaders()
             })
             if (rsp.status != 401) {
                 const json = await rsp.json()
@@ -301,6 +301,40 @@ export function reauthenticateThunk(password: string): ThunkWithFetch<void> {
     }
 }
 
+export function postEmailVerificationThunk(key: string): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        try {
+            dispatch(postEmailVerificationStart())
+            await fetch(config.api_path_auth + '/config')
+            const rsp = await fetch(config.api_path_auth + '/auth/email/verify', {
+                method: 'POST',
+                body: JSON.stringify({ key }),
+                headers: mkPostHeaders(),
+                credentials: 'include'
+            })
+            const json = await rsp.json()
+            handleAllauthResponse(
+                dispatch,
+                (dispatch, _json) => {
+                    dispatch(addSuccessVanish('Email successfully verified'))
+                    dispatch(postEmailVerificationSuccess())
+                },
+                json
+            )
+            // When there is no bad request, confirmation was successful
+            if (rsp.status == 401) {
+                dispatch(addSuccessVanish('Email successfully verified'))
+                dispatch(postEmailVerificationSuccess())
+            }else if (rsp.status ==400){
+                dispatch(postEmailVerificationError())
+            }
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+            dispatch(postEmailVerificationError())
+        }
+    }
+}
+
 function handleAllauthResponse(
     dispatch: AppDispatch,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -315,7 +349,7 @@ function handleAllauthResponse(
         return
     }
     const errors: { [key: string]: string }[] = json['errors']
-    if (errors !== undefined && errors.length >0) {
+    if (errors !== undefined && errors.length > 0) {
         for (const error of errors) {
             dispatch(addError(error['message']))
         }
@@ -338,11 +372,17 @@ function handleAllauthResponse(
     if (status == 401) {
         const isAuthenticated = meta['is_authenticated']
         if (isAuthenticated) {
-            if (availableFlows.has('reauthenticate')) {
+            if (availableFlows.has('mfa_reauthenticate')) {
+                dispatch(setReauthenticateMfa())
+            } else if (availableFlows.has('reauthenticate')) {
                 dispatch(setReauthenticate())
             }
         } else if (pendingFlows.has('mfa_authenticate')) {
-            dispatch(getTotpSuccess())
+            dispatch(setPartiallyAuthenticated(false))
+        } else if (pendingFlows.has('mfa_register')) {
+            dispatch(setPartiallyAuthenticated(true))
+        } else if (pendingFlows.has('verify_email')) {
+            dispatch(setVerifyEmail())
         } else {
             dispatch(logoutSuccess())
         }
@@ -350,11 +390,19 @@ function handleAllauthResponse(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseUserAllAuthFromJson(userJson: any): UserAllAuth {
+export function parseUserAllauthFromJson(userJson: any): UserAllAuth {
     return {
         display: userJson['display'] ?? undefined,
         email: userJson['email'] ?? undefined,
         id: userJson['id'],
         username: userJson['username']
+    }
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parseEmailAllauthFromJson(emailJson: any): EmailAllauth {
+    return {
+        email: emailJson['email'],
+        verified: emailJson['verified'],
+        primary: emailJson['primary']
     }
 }

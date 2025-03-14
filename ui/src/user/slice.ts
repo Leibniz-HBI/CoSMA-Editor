@@ -11,45 +11,6 @@ export const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        // refreshStart: (state: UserState) => {
-        //     state.isRefreshing = true
-        // },
-        // refreshDenied: (state: UserState) => {
-        //     state.userInfo = undefined
-        //     state.isRefreshing = false
-        // },
-        // refreshSuccess: (state: UserState, action: PayloadAction<UserInfo>) => {
-        //     state.isRefreshing = false
-        //     state.userInfo = action.payload
-        // },
-        // loginStart: (state: UserState) => {
-        //     state.userInfo = undefined
-        //     state.isLoggingIn = true
-        // },
-        // loginSuccess: (state: UserState, action: PayloadAction<UserInfo>) => {
-        //     state.userInfo = action.payload
-        //     state.isLoggingIn = false
-        //     state.isRegistering = false
-        // },
-        // loginError: (state: UserState) => {
-        //     state.isLoggingIn = false
-        // },
-        // registrationStart: (state: UserState) => {
-        //     state.isRegistering = true
-        // },
-        // registrationError: (state: UserState) => {
-        //     state.isRegistering = false
-        // },
-        // registrationSuccess(stater: UserState) {
-        //     stater.isRegistering = false
-        //     stater.showRegistration = false
-        // },
-        // toggleRegistration: (state: UserState) => {
-        //     state.showRegistration = !state.showRegistration
-        // },
-        // logout: (state: UserState) => {
-        //     state.userInfo = undefined
-        // },
         getUserInfoError(state: UserState, action: PayloadAction<string>) {
             state.userInfoByIdPersistent[action.payload].isLoading = false
         },
@@ -81,6 +42,8 @@ export const userSlice = createSlice({
         },
     }
 })
+
+export const userReducer = userSlice.reducer
 
 export const {
     getUserInfoError,

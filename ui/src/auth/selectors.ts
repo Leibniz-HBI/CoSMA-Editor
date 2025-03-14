@@ -5,7 +5,10 @@ function selectAuthState(state: RootState) {
     return state.auth
 }
 
-export const selectAuthStepStack = createSelector(selectAuthState, (state) => state.stepStack)
+export const selectAuthStepStack = createSelector(
+    selectAuthState,
+    (state) => state.stepStack
+)
 
 export const selectUserAuth = createSelector(selectAuthState, (state) => state.userAuth)
 
@@ -27,3 +30,8 @@ export const selectShowRegistrationValue = createSelector(
 )
 
 export const selectTotpUrl = createSelector(selectAuthState, (state) => state.totpUrl)
+
+export const selectEmailVerification = createSelector(
+    selectAuthState,
+    (state) => state.emailVerified
+)
