@@ -73,7 +73,7 @@ jobs:
           COSMAE_REDIS_PASSWORD: ""
           COSMAE_REDIS_CONF: ""
           EMAIL_HOST_USER: "test.org"
-          EMAIL_HOST_PASSWORD: "test7845#&($"
+          EMAIL_APP_PASSWORD: "test7845#&($"
           ORCID_CLIENT_ID: orcid_test_client_id
           ORCID_CLIENT_SECRET: orcid_test_client_secret
       - name: Upload pytest test results
