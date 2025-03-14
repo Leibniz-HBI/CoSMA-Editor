@@ -1,27 +1,8 @@
-import { AxiosError } from 'axios'
 import { JsonValue } from './type'
 
 export function exceptionMessage(e: unknown): string {
     if (typeof e === 'string') {
         return e.toUpperCase()
-    }
-    if (e instanceof AxiosError) {
-        if (e.response) {
-            return errorMessageFromApi(e.response.data)
-        }
-        if (e.request) {
-            const request = e.request
-            let path = ''
-            let method = ''
-            if (request instanceof XMLHttpRequest) {
-                path = request.responseURL
-                method = 'reach'
-            } else {
-                path = request.path
-                method = request.method
-            }
-            return `Could not ${method} ${path}`
-        }
     }
     if (e instanceof Error) {
         return e.message
