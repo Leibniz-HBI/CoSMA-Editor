@@ -218,6 +218,13 @@ SOCIALACCOUNT_ONLY = False
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
 
+EMAIL_HOST = get_docker_compose_secret("email_host")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = get_docker_compose_secret("email_host_user")
+EMAIL_HOST_PASSWORD = get_docker_compose_secret("email_app_password")
+
+
 LOGGING = {
     "version": 1,
     "formatters": {
