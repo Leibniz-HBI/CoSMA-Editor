@@ -1,8 +1,10 @@
 "Utils for authentication"
 
 from enum import Enum
+from typing import Generic, List, Optional, TypeVar
 
 from django.http import HttpRequest
+from ninja import Schema
 from ninja.security import django_auth
 
 from cosmae.exception import NotAuthenticatedException
@@ -54,3 +56,62 @@ def check_mfa(request):
         method.get("type") == "totp"
         for method in request.session.get("account_authentication_methods", [])
     )
+
+
+class MetaAllauthLikeResponse(Schema):
+    """Response similar to the allauth meta field"""
+
+    is_authenticated: bool
+
+
+class ErrorAllauthLikeResponse(Schema):
+    """Response for errors similar to allauth"""
+
+    message: str
+    code: str
+    param: str
+
+
+class BaseAllauthLikeResponse(Schema):
+    """Base Response that is similar to allauth Response"""
+
+    status: int
+
+
+class ErrorListAllauthLikeResponse(BaseAllauthLikeResponse):
+    "General error response similar to allauth"
+
+    errors: List[ErrorAllauthLikeResponse]
+
+
+class FlowAllauthLikeResponse(Schema):
+    "Response for an allauth flow"
+
+    id: str
+    is_pending: Optional[bool] = None
+
+
+class FlowListAllauthLikeResponse(Schema):
+    "Response for a list off allauth flows."
+
+    flows: List[FlowAllauthLikeResponse]
+
+
+class UnauthorizedAllauthLikeResponse(BaseAllauthLikeResponse):
+    "Allauth style unauthorized response."
+
+    status: int = 401
+    errors: Optional[ErrorListAllauthLikeResponse] = None
+    data: FlowListAllauthLikeResponse
+    meta: MetaAllauthLikeResponse
+
+
+SchemaExtension = TypeVar("SchemaExtension", bound=Schema)
+
+
+class SuccessAllauthLikeResponse(BaseAllauthLikeResponse, Generic[SchemaExtension]):
+    "Allauth style success response."
+
+    status: int = 200
+    data: SchemaExtension
+    meta: Optional[MetaAllauthLikeResponse]

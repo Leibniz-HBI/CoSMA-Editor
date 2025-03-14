@@ -39,6 +39,6 @@ def test_existing_tag_definition(
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["tag_definition_list"]] == [
-        tag_def_user_profile1.id_persistent
-    ]
+    assert [
+        tag_def["id_persistent"] for tag_def in json["data"]["tag_definition_list"]
+    ] == [tag_def_user_profile1.id_persistent]

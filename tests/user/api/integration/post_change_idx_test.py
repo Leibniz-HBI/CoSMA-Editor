@@ -48,7 +48,9 @@ def test_start_to_middle(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["tag_definition_list"]] == [
+    assert [
+        tag_def["id_persistent"] for tag_def in json["data"]["tag_definition_list"]
+    ] == [
         c.id_tag_def_persistent2,
         c.id_tag_def_persistent1,
         c.id_tag_def_persistent,
@@ -64,7 +66,9 @@ def test_start_to_end(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["tag_definition_list"]] == [
+    assert [
+        tag_def["id_persistent"] for tag_def in json["data"]["tag_definition_list"]
+    ] == [
         c.id_tag_def_persistent3,
         c.id_tag_def_persistent1,
         c.id_tag_def_persistent2,
@@ -79,7 +83,9 @@ def test_middle_to_start(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["tag_definition_list"]] == [
+    assert [
+        tag_def["id_persistent"] for tag_def in json["data"]["tag_definition_list"]
+    ] == [
         c.id_tag_def_persistent2,
         c.id_tag_def_persistent1,
         c.id_tag_def_persistent,
@@ -94,7 +100,9 @@ def test_middle_to_middle(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["tag_definition_list"]] == [
+    assert [
+        tag_def["id_persistent"] for tag_def in json["data"]["tag_definition_list"]
+    ] == [
         c.id_tag_def_persistent,
         c.id_tag_def_persistent2,
         c.id_tag_def_persistent1,
@@ -109,7 +117,9 @@ def test_middle_to_end(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["tag_definition_list"]] == [
+    assert [
+        tag_def["id_persistent"] for tag_def in json["data"]["tag_definition_list"]
+    ] == [
         c.id_tag_def_persistent,
         c.id_tag_def_persistent1,
         c.id_tag_def_persistent3,
@@ -124,7 +134,9 @@ def test_ent_to_start(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["tag_definition_list"]] == [
+    assert [
+        tag_def["id_persistent"] for tag_def in json["data"]["tag_definition_list"]
+    ] == [
         c.id_tag_def_persistent3,
         c.id_tag_def_persistent1,
         c.id_tag_def_persistent2,
@@ -139,7 +151,9 @@ def test_end_to_middle(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["tag_definition_list"]] == [
+    assert [
+        tag_def["id_persistent"] for tag_def in json["data"]["tag_definition_list"]
+    ] == [
         c.id_tag_def_persistent,
         c.id_tag_def_persistent3,
         c.id_tag_def_persistent2,

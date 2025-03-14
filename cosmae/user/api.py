@@ -2,6 +2,8 @@
 
 from urllib.parse import unquote
 
+from allauth.account.models import EmailAddress
+from allauth.mfa.models import Authenticator
 from django.db import DatabaseError
 from django.http import HttpRequest
 from ninja import Router, Schema
@@ -22,7 +24,17 @@ from cosmae.user.models_conversion import (
     user_db_to_public_user_info,
 )
 from cosmae.util import CosmaeUser
-from cosmae.util.auth import check_user
+from cosmae.util.auth import (
+    ErrorAllauthLikeResponse,
+    ErrorListAllauthLikeResponse,
+    FlowAllauthLikeResponse,
+    FlowListAllauthLikeResponse,
+    MetaAllauthLikeResponse,
+    SuccessAllauthLikeResponse,
+    UnauthorizedAllauthLikeResponse,
+    check_mfa,
+    check_user,
+)
 
 
 class PutGroupRequest(Schema):
@@ -260,18 +272,34 @@ def get_search(request: HttpRequest, username: str):
         return 500, ApiError(msg="Could not search users.")
 
 
-@router.get("self", response={200: LoginResponse, 401: ApiError, 500: ApiError})
+@router.get(
+    "self",
+    response={
+        200: SuccessAllauthLikeResponse[LoginResponse],
+        401: UnauthorizedAllauthLikeResponse,
+        500: ErrorListAllauthLikeResponse,
+    },
+    exclude_none=True,
+)
 def get_self(request: HttpRequest):
     "Get your own user details."
     try:
         user = check_user(request)
     except NotAuthenticatedException:
-        return 401, ApiError(msg="Not authenticated")
+        return 401, create_unauthorized_response(request)
     try:
         user_api = user_db_to_login_response(user)
-        return 200, user_api
+        return 200, SuccessAllauthLikeResponse[LoginResponse](
+            data=user_api, meta=MetaAllauthLikeResponse(is_authenticated=True)
+        )
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get your user info.")
+        return 500, ErrorListAllauthLikeResponse(
+            errors=[
+                ErrorAllauthLikeResponse(
+                    message="Could not get your user info.", code="", param=""
+                )
+            ]
+        )
 
 
 @router.get(
@@ -331,4 +359,29 @@ def user_db_to_login_response(user: CosmaeUser):
         tag_definition_list=tag_definitions,
         permission_group=permission_group_db_to_api[user.permission_group],
         edit_session=edit_session_db_to_api(user.edit_session),
+    )
+
+
+def create_unauthorized_response(request):
+    "Collect flows available for (partially) unauthenticated users"
+    user = request.user
+    flows = [FlowAllauthLikeResponse(id="login"), FlowAllauthLikeResponse(id="signup")]
+    is_authenticated = False
+    if isinstance(user, CosmaeUser):
+        email_verified_list = EmailAddress.objects.filter(user=user, verified=True)
+        if len(email_verified_list) == 0:
+            flows = [FlowAllauthLikeResponse(id="verify_email", is_pending=True)]
+        elif not check_mfa(request):
+            authenticators = Authenticator.objects.filter(user=user)
+            if len(authenticators) > 0:
+                flows = [
+                    FlowAllauthLikeResponse(id="mfa_reauthenticate", is_pending=True)
+                ]
+                is_authenticated = True
+
+            else:
+                flows = [FlowAllauthLikeResponse(id="mfa_register", is_pending=True)]
+    return UnauthorizedAllauthLikeResponse(
+        meta=MetaAllauthLikeResponse(is_authenticated=is_authenticated),
+        data=FlowListAllauthLikeResponse(flows=flows),
     )

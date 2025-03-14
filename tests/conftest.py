@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from allauth.account import app_settings as account_settings
+from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.db import IntegrityError
 from django.test.utils import override_settings
@@ -285,6 +286,16 @@ def user(db):
         return user
     except IntegrityError:
         return CosmaeUser.objects.get(email=cu.test_email)  # pylint: disable=no-member
+
+
+@pytest.fixture
+def user_email_unverified(user):
+    EmailAddress.objects.create(user=user, verified=False, primary=True)
+
+
+@pytest.fixture
+def user_email_verified(user):
+    EmailAddress.objects.create(user=user, verified=True, primary=True)
 
 
 @pytest.fixture()
