@@ -16,8 +16,8 @@ from cosmae.tag.api.models_conversion import (
 )
 from cosmae.tag.models_django import OwnershipRequest as OwnershipRequestDb
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
+from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
-from cosmae.user.models_conversion import user_db_to_public_user_info
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 

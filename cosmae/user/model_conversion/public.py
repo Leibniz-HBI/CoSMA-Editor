@@ -1,4 +1,5 @@
-"Model conversions for user information."
+"Model conversions for public user information."
+
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util import CosmaeUser
 

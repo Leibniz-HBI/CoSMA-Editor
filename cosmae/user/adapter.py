@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db import transaction
 from django.forms import ValidationError
 
-from cosmae.edit_session.models_django import EditSession
+from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.util import CosmaeUser
 
 
@@ -25,6 +25,12 @@ class CosmaeSocialAccountAdapter(DefaultSocialAccountAdapter):
             id_owner_persistent=id_persistent,
             name="Default Edit Session",
         )
+        EditSessionParticipant.objects.create(
+            edit_session=edit_session,
+            type_participant=EditSessionParticipant.INTERNAL,
+            id_participant=id_persistent,
+            name_participant=username,
+        )
         return CosmaeUser(
             id_persistent=id_persistent,
             social_provider=provider[:31],
@@ -38,6 +44,10 @@ class CosmaeSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def validate_disconnect(self, account, accounts) -> None:
         raise ValidationError("Can not disconnect account.")
+
+
+class AccountExistsException(Exception):
+    "Raised when an account already exists."
 
 
 class CosmaeAccountAdapter(DefaultAccountAdapter):
@@ -69,8 +79,6 @@ class CosmaeAccountAdapter(DefaultAccountAdapter):
         user.id_persistent = id_user
 
         if commit:
-            # Ability not to commit makes it easier to derive from
-            # this adapter by adding
             with transaction.atomic():
                 session = EditSession.objects.create(
                     id_persistent=str(uuid4()),
@@ -78,6 +86,16 @@ class CosmaeAccountAdapter(DefaultAccountAdapter):
                     name="Default Edit Session",
                 )
                 session.save()
+                EditSessionParticipant.objects.create(
+                    edit_session=session,
+                    type_participant=EditSessionParticipant.INTERNAL,
+                    id_participant=id_user,
+                    name_participant=username,
+                )
                 user.edit_session = session
                 user.save()
         return user
+
+    def send_account_already_exists_mail(self, email: str) -> None:
+        "We do not wand to send mails for existing accounts"
+        raise AccountExistsException()

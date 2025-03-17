@@ -26,8 +26,8 @@ from cosmae.merge_request.entity.models_django import (
 from cosmae.merge_request.entity.queue import apply_entity_merge_request
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.tag.queue import get_tag_definition_name_path_from_parts
+from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
-from cosmae.user.models_conversion import user_db_to_public_user_info
 from cosmae.util import CosmaeUser as CosmaeUserDb
 from cosmae.util import timestamp
 from cosmae.util.auth import check_user

@@ -8,7 +8,10 @@ from ninja import Router, Schema
 
 from cosmae.comments.models_django import Comment as CommentDb
 from cosmae.exception import ApiError, NotAuthenticatedException
-from cosmae.user.models_conversion import PublicUserInfo, user_db_to_public_user_info
+from cosmae.user.model_conversion.public import (
+    PublicUserInfo,
+    user_db_to_public_user_info,
+)
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 

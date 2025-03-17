@@ -9,7 +9,7 @@ from django_rq import enqueue
 from cosmae.entity.models_django import Entity
 from cosmae.management.display_txt.util import get_display_txt_order_tag_definitions
 from cosmae.tag.models_django import TagInstance
-from cosmae.user.models_conversion import user_db_to_public_user_info_dict
+from cosmae.user.model_conversion.public import user_db_to_public_user_info_dict
 
 entity_display_txt_information_cache = caches["entity_display_txt_information"]
 

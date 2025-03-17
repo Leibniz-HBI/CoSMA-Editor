@@ -7,7 +7,7 @@ from cosmae.tag.queue import (
     get_tag_definition_name_path,
     get_tag_definition_name_path_from_parts,
 )
-from cosmae.user.models_conversion import (
+from cosmae.user.model_conversion.public import (
     permission_group_db_to_api,
     user_db_to_public_user_info,
 )
