@@ -86,7 +86,7 @@ test('success', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1/api/tags/definitions/details',
+            'http://127.0.0.1:8000/cosmae/api/tags/definitions/details',
             {
                 method: 'POST',
                 credentials: 'include',

@@ -405,11 +405,11 @@ describe('resolve conflicts', () => {
             expect(fetchMock.mock.calls.length).toEqual(4)
             expect(fetchMock.mock.calls).toEqual([
                 [
-                    'http://127.0.0.1/api/merge_requests/id-merge-request-persistent/conflicts',
+                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/conflicts',
                     { credentials: 'include' }
                 ],
                 [
-                    'http://127.0.0.1/api/merge_requests/id-merge-request-persistent/resolve',
+                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
                     {
                         credentials: 'include',
                         method: 'POST',
@@ -417,7 +417,7 @@ describe('resolve conflicts', () => {
                     }
                 ],
                 [
-                    'http://127.0.0.1/api/merge_requests/id-merge-request-persistent/resolve',
+                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
                     {
                         credentials: 'include',
                         method: 'POST',
@@ -428,7 +428,7 @@ describe('resolve conflicts', () => {
                     }
                 ],
                 [
-                    'http://127.0.0.1/api/merge_requests/id-merge-request-persistent/resolve',
+                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
                     {
                         credentials: 'include',
                         method: 'POST',
@@ -451,7 +451,7 @@ describe('resolve conflicts', () => {
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(5)
             expect(fetchMock.mock.calls[4]).toEqual([
-                'http://127.0.0.1/api/merge_requests/id-merge-request-persistent/resolve',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
                 {
                     credentials: 'include',
                     method: 'POST',
@@ -530,11 +530,11 @@ describe('submit', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1/api/merge_requests/id-merge-request/merge',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/merge',
 
                 { credentials: 'include', method: 'POST' }
             ]
@@ -571,11 +571,11 @@ describe('submit', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1/api/merge_requests/id-merge-request/merge',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/merge',
                 { credentials: 'include', method: 'POST' }
             ]
         ])
@@ -601,11 +601,11 @@ describe('toggle disable origin on merge', () => {
         expect(store.getState().notification).toEqual(newNotificationManager({}))
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1/api/merge_requests/id-merge-request',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request',
                 {
                     credentials: 'include',
                     method: 'PATCH',
@@ -645,11 +645,11 @@ describe('toggle disable origin on merge', () => {
         )
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1/api/merge_requests/id-merge-request',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request',
                 {
                     credentials: 'include',
                     method: 'PATCH',

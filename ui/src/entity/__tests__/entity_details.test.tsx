@@ -95,7 +95,7 @@ test('success', async () => {
     )
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1/api/entities/values?id_persistent=${idEntityPersistent}`,
+            `http://127.0.0.1:8000/cosmae/api/entities/values?id_persistent=${idEntityPersistent}`,
             { credentials: 'include' }
         ]
     ])

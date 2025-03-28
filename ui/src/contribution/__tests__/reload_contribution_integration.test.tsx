@@ -100,7 +100,7 @@ test('reloads automatically', async () => {
             expect(fetchMock.mock.calls.length).toEqual(3)
             for (let idx = 0; idx < 3; ++idx) {
                 expect(fetchMock.mock.calls[idx]).toEqual([
-                    'http://127.0.0.1/api/contributions/id-test-1',
+                    'http://127.0.0.1:8000/cosmae/api/contributions/id-test-1',
                     { credentials: 'include' }
                 ])
             }

@@ -173,7 +173,7 @@ test('edit display text success', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(3)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1/api/entities',
+        'http://127.0.0.1:8000/cosmae/api/entities',
         {
             credentials: 'include',
             method: 'POST',
@@ -278,7 +278,7 @@ test('edit tag value success', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(3)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1/api/tags',
+        'http://127.0.0.1:8000/cosmae/api/tags',
         {
             credentials: 'include',
             method: 'POST',

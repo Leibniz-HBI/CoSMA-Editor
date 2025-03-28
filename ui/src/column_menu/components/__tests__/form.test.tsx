@@ -77,7 +77,7 @@ describe('form tests', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/api/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
                 {
                     method: 'POST',
                     credentials: 'include',

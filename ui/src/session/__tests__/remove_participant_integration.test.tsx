@@ -53,7 +53,7 @@ test('remove participant success', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1/api/edit_sessions/${idSession}/participants`,
+            `http://127.0.0.1:8000/cosmae/api/edit_sessions/${idSession}/participants`,
             {
                 method: 'DELETE',
                 credentials: 'include',

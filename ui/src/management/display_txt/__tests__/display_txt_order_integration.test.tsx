@@ -130,9 +130,9 @@ function initialResponseSequence(mock: Mock) {
 }
 
 const expectedGetRequests = [
-    ['http://127.0.0.1/api/manage/display_txt/order', { credentials: 'include' }],
+    ['http://127.0.0.1:8000/cosmae/api/manage/display_txt/order', { credentials: 'include' }],
     [
-        'http://127.0.0.1/api/tags/definitions/children',
+        'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
         {
             credentials: 'include',
             method: 'POST',
@@ -141,7 +141,7 @@ const expectedGetRequests = [
         }
     ],
     [
-        'http://127.0.0.1/api/tags/definitions/children',
+        'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
         {
             credentials: 'include',
             method: 'POST',
@@ -150,7 +150,7 @@ const expectedGetRequests = [
         }
     ],
     [
-        'http://127.0.0.1/api/tags/definitions/children',
+        'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
         {
             credentials: 'include',
             method: 'POST',
@@ -159,7 +159,7 @@ const expectedGetRequests = [
         }
     ],
     [
-        'http://127.0.0.1/api/tags/definitions/children',
+        'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
         {
             credentials: 'include',
             method: 'POST',
@@ -212,7 +212,7 @@ test('append and remove', async () => {
     expect(fetchMock.mock.calls).toEqual([
         ...expectedGetRequests,
         [
-            'http://127.0.0.1/api/manage/display_txt/order/append',
+            'http://127.0.0.1:8000/cosmae/api/manage/display_txt/order/append',
             {
                 method: 'POST',
                 credentials: 'include',
@@ -220,7 +220,7 @@ test('append and remove', async () => {
             }
         ],
         [
-            `http://127.0.0.1/api/manage/display_txt/order/${idTagDef2}`,
+            `http://127.0.0.1:8000/cosmae/api/manage/display_txt/order/${idTagDef2}`,
             {
                 method: 'DELETE',
                 credentials: 'include'

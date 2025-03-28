@@ -102,7 +102,7 @@ test('get descendant tag success', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -111,7 +111,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
             {
                 body: '{}',
                 credentials: 'include',
@@ -120,7 +120,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
             {
                 body: JSON.stringify({
                     id_parent_persistent: idTagDefParentPersistent
@@ -131,7 +131,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
             {
                 body: JSON.stringify({
                     id_parent_persistent: idTagDefPersistent
@@ -142,11 +142,11 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            `http://127.0.0.1/api/tags/definitions/${idTagDefParentPersistent}/descendants`,
+            `http://127.0.0.1:8000/cosmae/api/tags/definitions/${idTagDefParentPersistent}/descendants`,
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1/api/tags/chunk',
+            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -159,7 +159,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1/api/user/tag_definitions/append/column_id_test',
+            'http://127.0.0.1:8000/cosmae/api/user/tag_definitions/append/column_id_test',
             {
                 credentials: 'include',
                 method: 'POST'

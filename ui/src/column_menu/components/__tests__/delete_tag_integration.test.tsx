@@ -114,7 +114,7 @@ describe('disable', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/api/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
                 {
                     credentials: 'include',
                     method: 'POST',
@@ -212,7 +212,7 @@ describe('purge', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1/api/tags/definitions/${idTagDef}`,
+                `http://127.0.0.1:8000/cosmae/api/tags/definitions/${idTagDef}`,
                 {
                     credentials: 'include',
                     method: 'DELETE'

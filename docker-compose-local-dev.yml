@@ -1,18 +1,4 @@
 services:
-  ha_proxy:
-    restart: unless-stopped
-    build:
-      context: ./
-      dockerfile: container/haproxy_dockerfile
-    ports:
-    - 80:80
-    - 443:443
-    volumes:
-    - /etc/localtime:/etc/localtime:ro
-    extra_hosts:
-    - "host.docker.internal:host-gateway"
-    command: ["-f", "/conf/haproxy_local.cfg", -V"]
-
   cosmae_db:
     container_name: cosmae_db
     image: postgres:15.4

@@ -102,7 +102,7 @@ test('success new entity', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1/api/entities',
+            'http://127.0.0.1:8000/cosmae/api/entities',
             {
                 body: JSON.stringify({
                     entity_list: [
@@ -136,7 +136,7 @@ test('success new entity no display text', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1/api/entities',
+            'http://127.0.0.1:8000/cosmae/api/entities',
             {
                 credentials: 'include',
                 body: JSON.stringify({

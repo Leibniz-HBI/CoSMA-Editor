@@ -507,11 +507,11 @@ test('apply conflicts', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1/api/merge_requests/entities/${idEntityMr0}/conflicts`,
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts`,
             { credentials: 'include' }
         ],
         [
-            `http://127.0.0.1/api/merge_requests/entities/${idEntityMr0}/merge`,
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/merge`,
             { credentials: 'include', method: 'POST' }
         ]
     ])

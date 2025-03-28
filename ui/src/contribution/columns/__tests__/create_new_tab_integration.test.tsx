@@ -222,7 +222,7 @@ test('create, select and assign tag definition', async () => {
         ).toEqual(idTagDef0)
     })
     expect(fetchMock.mock.calls.at(-2)).toEqual([
-        `http://127.0.0.1/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp1.id_persistent}`,
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp1.id_persistent}`,
         {
             method: 'PATCH',
             credentials: 'include',
@@ -230,7 +230,7 @@ test('create, select and assign tag definition', async () => {
         }
     ])
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        `http://127.0.0.1/api/contributions/${idContribution}/preview/id-active-2`,
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-2`,
         { credentials: 'include' }
     ])
 }, 10000)

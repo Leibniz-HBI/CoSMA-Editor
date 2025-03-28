@@ -173,7 +173,7 @@ test('add justification', async () => {
     expect(state.table.entities?.at(0)?.justificationTxt).toEqual(justificationChanged)
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -182,7 +182,7 @@ test('add justification', async () => {
             }
         ],
         [
-            'http://127.0.0.1/api/tags/chunk',
+            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -195,7 +195,7 @@ test('add justification', async () => {
             }
         ],
         [
-            'http://127.0.0.1/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
             {
                 method: 'POST',
                 credentials: 'include',
@@ -204,13 +204,13 @@ test('add justification', async () => {
             }
         ],
         [
-            `http://127.0.0.1/api/entities/${idPersistent0}/justifications`,
+            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications`,
             {
                 credentials: 'include'
             }
         ],
         [
-            `http://127.0.0.1/api/entities/${idPersistent0}/justifications`,
+            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications`,
             {
                 credentials: 'include',
                 method: 'PUT',

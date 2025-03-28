@@ -502,11 +502,11 @@ test('swap origin and destination', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1/api/merge_requests/entities/${idEntityMr0}/reverse_origin_destination`,
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/reverse_origin_destination`,
             { credentials: 'include', method: 'POST' }
         ],
         [
-            `http://127.0.0.1/api/merge_requests/entities/${idEntityMr0}/conflicts`,
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts`,
             { credentials: 'include' }
         ]
     ])

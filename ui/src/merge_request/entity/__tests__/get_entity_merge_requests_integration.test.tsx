@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import {vi, Mock }  from 'vitest'
+import { vi, Mock } from 'vitest'
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { RemoteInterface, newRemote } from '../../../util/state'
 import {
@@ -169,7 +169,10 @@ test('success', async () => {
         }
     })
     expect(fetchMock.mock.calls).toEqual([
-        ['http://127.0.0.1/api/merge_requests/entities/all', { credentials: 'include' }]
+        [
+            'http://127.0.0.1:8000/cosmae/api/merge_requests/entities/all',
+            { credentials: 'include' }
+        ]
     ])
 })
 
@@ -201,7 +204,10 @@ test('error', async () => {
         expect(notification.msg).toEqual('error')
     })
     expect(fetchMock.mock.calls).toEqual([
-        ['http://127.0.0.1/api/merge_requests/entities/all', { credentials: 'include' }]
+        [
+            'http://127.0.0.1:8000/cosmae/api/merge_requests/entities/all',
+            { credentials: 'include' }
+        ]
     ])
 })
 function addSuccessResponse(fetchMock: Mock) {

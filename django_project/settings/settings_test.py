@@ -17,7 +17,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DOMAIN_NAME = "http://127.0.0.1"
+DOMAIN_NAME = "http://127.0.0.1:5173"
 
 
 # Quick-start development settings - unsuitable for production
@@ -61,18 +61,25 @@ def get_file_secret(secret_name):
 ###################################################################
 ALLOWED_HOSTS = []
 
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:5173", "http://localhost:5173"]
 
 SILENCED_SYSTEM_CHECKS = ["corsheaders.E001", "corsheaders.E003"]
 
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_HEADERS = ["Content-Type", "Access-Control-Allow-Credentials"]
+CORS_ALLOW_HEADERS = [
+    "Content-Type",
+    "Access-Control-Allow-Credentials",
+    "Access-Control-Allow-Origin",
+    "X-CSRFToken",
+]
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_SAMESITE = False
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:5173"]
 
 # Application definition
 
@@ -233,6 +240,8 @@ ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
 
 HEADLESS_FRONTEND_URLS = {
     "account_confirm_email": DOMAIN_NAME + "/account/verify-email/{key}",
+    "account_signup": DOMAIN_NAME,
+    "password_reset_url": DOMAIN_NAME,
     # Key placeholders are automatically populated. You are free to adjust this
     # to your own needs, e.g.
     #

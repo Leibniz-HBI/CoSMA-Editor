@@ -59,9 +59,9 @@ test('successful confirmation while logged in', async () => {
         ])
     })
     expect(fetchMock.mock.calls).toEqual([
-        ['http://127.0.0.1/auth/config'],
+        ['http://127.0.0.1:8000/_allauth/browser/v1/config'],
         [
-            'http://127.0.0.1/auth/auth/email/verify',
+            'http://127.0.0.1:8000/_allauth/browser/v1/auth/email/verify',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -102,9 +102,9 @@ test('successful confirmation while logged out', async () => {
         ])
     })
     expect(fetchMock.mock.calls).toEqual([
-        ['http://127.0.0.1/auth/config'],
+        ['http://127.0.0.1:8000/_allauth/browser/v1/config'],
         [
-            'http://127.0.0.1/auth/auth/email/verify',
+            'http://127.0.0.1:8000/_allauth/browser/v1/auth/email/verify',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -146,9 +146,9 @@ test('shows error msg', async () => {
         ])
     })
     expect(fetchMock.mock.calls).toEqual([
-        ['http://127.0.0.1/auth/config'],
+        ['http://127.0.0.1:8000/_allauth/browser/v1/config'],
         [
-            'http://127.0.0.1/auth/auth/email/verify',
+            'http://127.0.0.1:8000/_allauth/browser/v1/auth/email/verify',
             {
                 credentials: 'include',
                 method: 'POST',

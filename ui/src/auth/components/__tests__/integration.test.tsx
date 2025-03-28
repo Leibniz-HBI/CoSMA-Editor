@@ -214,11 +214,11 @@ describe('totp', () => {
         )
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/auth/account/authenticators/totp',
+                'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1/auth/account/authenticators/totp',
+                'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 {
                     credentials: 'include',
                     body: JSON.stringify({ code: mfaCode }),
@@ -226,7 +226,7 @@ describe('totp', () => {
                     method: 'POST'
                 }
             ],
-            ['http://127.0.0.1/api/user/self', { credentials: 'include', headers }]
+            ['http://127.0.0.1:8000/cosmae/api/user/self', { credentials: 'include', headers }]
         ])
     })
     test('new totp error', async () => {
@@ -259,11 +259,11 @@ describe('totp', () => {
         screen.getByRole('textbox')
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/auth/account/authenticators/totp',
+                'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1/auth/account/authenticators/totp',
+                'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 {
                     credentials: 'include',
                     body: JSON.stringify({ code: mfaCode }),
@@ -329,11 +329,11 @@ describe('totp', () => {
         )
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/auth/account/authenticators/totp',
+                'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1/auth/auth/2fa/authenticate',
+                'http://127.0.0.1:8000/_allauth/browser/v1/auth/2fa/authenticate',
                 {
                     credentials: 'include',
                     body: JSON.stringify({ code: mfaCode }),
@@ -341,7 +341,7 @@ describe('totp', () => {
                     method: 'POST'
                 }
             ],
-            ['http://127.0.0.1/api/user/self', { credentials: 'include', headers }]
+            ['http://127.0.0.1:8000/cosmae/api/user/self', { credentials: 'include', headers }]
         ])
     })
     test('existing totp error', async () => {
@@ -376,11 +376,11 @@ describe('totp', () => {
         screen.getByRole('textbox')
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/auth/account/authenticators/totp',
+                'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1/auth/auth/2fa/authenticate',
+                'http://127.0.0.1:8000/_allauth/browser/v1/auth/2fa/authenticate',
                 {
                     credentials: 'include',
                     body: JSON.stringify({ code: mfaCode }),
@@ -538,7 +538,7 @@ describe('reauthenticate', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/auth/auth/reauthenticate',
+                'http://127.0.0.1:8000/_allauth/browser/v1/auth/reauthenticate',
                 {
                     headers: {
                         'Access-Control-Allow-Credentials': 'true',
@@ -579,7 +579,7 @@ describe('reauthenticate', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1/auth/auth/reauthenticate',
+                'http://127.0.0.1:8000/_allauth/browser/v1/auth/reauthenticate',
                 {
                     headers: {
                         'Access-Control-Allow-Credentials': 'true',

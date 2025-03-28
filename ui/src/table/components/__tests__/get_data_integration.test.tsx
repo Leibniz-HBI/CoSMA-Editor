@@ -209,7 +209,7 @@ test('get entities success', async () => {
     )
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -218,7 +218,7 @@ test('get entities success', async () => {
             }
         ],
         [
-            'http://127.0.0.1/api/tags/chunk',
+            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
@@ -258,7 +258,7 @@ test('get entities and inner tag success', async () => {
     )
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
                 body: JSON.stringify({ offset: 0, limit: 500 }),
@@ -267,7 +267,7 @@ test('get entities and inner tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1/api/tags/chunk',
+            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
             {
                 credentials: 'include',
                 method: 'POST',

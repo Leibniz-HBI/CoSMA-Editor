@@ -99,8 +99,8 @@ test('search and click result', async () => {
         expect(clickMock.mock.calls).toEqual([[resultId11]])
     })
     expect(fetchMock.mock.calls).toEqual([
-        ['http://127.0.0.1/api/entities/search?term=f', { credentials: 'include' }],
-        ['http://127.0.0.1/api/entities/search?term=ff', { credentials: 'include' }]
+        ['http://127.0.0.1:8000/cosmae/api/entities/search?term=f', { credentials: 'include' }],
+        ['http://127.0.0.1:8000/cosmae/api/entities/search?term=ff', { credentials: 'include' }]
     ])
     expect(store.getState().entityDetails.entitySearchResults).toEqual(
         newRemote(undefined)

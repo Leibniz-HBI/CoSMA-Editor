@@ -311,7 +311,7 @@ describe('create tag definition', () => {
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(9)
             expect(fetchMock.mock.calls[8]).toEqual([
-                'http://127.0.0.1/api/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
                 {
                     method: 'POST',
                     credentials: 'include',
@@ -356,7 +356,7 @@ describe('create tag definition', () => {
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(9)
             expect(fetchMock.mock.calls[8]).toEqual([
-                'http://127.0.0.1/api/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
                 {
                     method: 'POST',
                     credentials: 'include',
