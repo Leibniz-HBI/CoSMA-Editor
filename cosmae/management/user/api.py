@@ -10,7 +10,6 @@ from ninja import Field, Router, Schema
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.user.adapter import AccountExistsException
 from cosmae.user.model_conversion.login import user_db_to_login_response
-from cosmae.user.models_api.login import LoginResponse
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import (
     ErrorListAllauthLikeResponse,
@@ -42,7 +41,7 @@ router = Router()
 @router.post(
     "",
     response={
-        200: SuccessAllauthLikeResponse[LoginResponse],
+        200: SuccessAllauthLikeResponse,
         400: ErrorListAllauthLikeResponse,
         401: ErrorListAllauthLikeResponse,
         403: ErrorListAllauthLikeResponse,

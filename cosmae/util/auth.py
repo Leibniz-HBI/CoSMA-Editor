@@ -1,7 +1,7 @@
 "Utils for authentication"
 
 from enum import Enum
-from typing import List, Optional, Tuple, TypeVar
+from typing import Generic, List, Optional, Tuple, TypeVar
 
 from django.http import HttpRequest
 from ninja import Schema
@@ -109,7 +109,7 @@ class UnauthorizedAllauthLikeResponse(BaseAllauthLikeResponse):
 SchemaExtension = TypeVar("SchemaExtension", bound=Schema)
 
 
-class SuccessAllauthLikeResponse[SchemaExtension](BaseAllauthLikeResponse):
+class SuccessAllauthLikeResponse(BaseAllauthLikeResponse, Generic[SchemaExtension]):
     "Allauth style success response."
 
     status: int = 200
