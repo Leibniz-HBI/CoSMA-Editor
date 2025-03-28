@@ -31,7 +31,7 @@ export interface AuthState {
     userAuth: UserAllAuth | undefined
     user: RemoteInterface<UserInfo | undefined>
     stepStack: RemoteInterface<AuthStep[]>
-    showRegistration: RemoteInterface<boolean>
+    registration: RemoteInterface<boolean>
     totpUrl: RemoteInterface<string | undefined>
     emailVerified: RemoteInterface<boolean | undefined>
     emailAddressList: RemoteInterface<EmailAllauth[]|undefined>
@@ -41,7 +41,7 @@ export function newAuthState({
     userAuth = undefined,
     user = newRemote(undefined),
     stepStack = newRemote([]),
-    showRegistration = newRemote(false),
+    registration= newRemote(false),
     totpUrl = newRemote(undefined),
     emailVerified = newRemote(undefined),
     emailAddressList = newRemote(undefined)
@@ -49,7 +49,7 @@ export function newAuthState({
     user?: RemoteInterface<UserInfo | undefined>
     userAuth?: UserAllAuth | undefined
     stepStack?: RemoteInterface<AuthStep[]>
-    showRegistration?: RemoteInterface<boolean>
+    registration?: RemoteInterface<boolean>
     totpUrl?: RemoteInterface<string | undefined>
     emailVerified?: RemoteInterface<boolean | undefined>
     emailAddressList?: RemoteInterface<EmailAllauth[]|undefined>
@@ -58,7 +58,7 @@ export function newAuthState({
         user,
         userAuth,
         stepStack,
-        showRegistration,
+        registration,
         totpUrl,
         emailVerified,
         emailAddressList

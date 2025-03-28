@@ -21,12 +21,7 @@ export const selectPermissionGroup = createSelector(
 
 export const selectShowRegistration = createSelector(
     selectAuthState,
-    (state) => state.showRegistration
-)
-
-export const selectShowRegistrationValue = createSelector(
-    selectShowRegistration,
-    (state) => state.value
+    (state) => state.registration
 )
 
 export const selectTotpUrl = createSelector(selectAuthState, (state) => state.totpUrl)

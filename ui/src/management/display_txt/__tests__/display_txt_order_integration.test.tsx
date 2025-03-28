@@ -130,7 +130,14 @@ function initialResponseSequence(mock: Mock) {
 }
 
 const expectedGetRequests = [
-    ['http://127.0.0.1:8000/cosmae/api/manage/display_txt/order', { credentials: 'include' }],
+    [
+        'http://127.0.0.1:8000/cosmae/api/manage/display_txt/order',
+        { credentials: 'include' }
+    ],
+    [
+        'http://127.0.0.1:8000/cosmae/api/manage/display_txt/order',
+        { credentials: 'include' }
+    ],
     [
         'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
         {

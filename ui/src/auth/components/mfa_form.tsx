@@ -1,4 +1,4 @@
-import { Button, Col, Row } from 'react-bootstrap'
+import { Button, Col, Form, Row } from 'react-bootstrap'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import { selectTotpUrl } from '../selectors'
 import {
@@ -7,10 +7,10 @@ import {
     postTotpAuthenticationThunk
 } from '../thunks'
 import { FormField } from '../../util/form'
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent } from 'react'
+import { Formik } from 'formik'
 
 export function MfaForm({ reauthenticate }: { reauthenticate: boolean }) {
-    const [code, setCode] = useState('')
     const dispatch = useAppDispatch()
     const totpUrl = useAppSelector(selectTotpUrl)
     let qrCode = (
@@ -41,29 +41,30 @@ export function MfaForm({ reauthenticate }: { reauthenticate: boolean }) {
         )
     }
     return (
-        <Col>
-            <Row>{qrCode}</Row>
-            <Row>
-                <FormField
-                    name="mfa-Code"
-                    label="Authenticator Code"
-                    value={code}
-                    handleChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setCode(e.target.value)
-                    }
-                />
-            </Row>
-            <Row>
-                <Button onClick={() => dispatch(action(code))}>Submit</Button>
-            </Row>
-        </Col>
+        <Formik
+            initialValues={{ code: '' }}
+            onSubmit={(values) => dispatch(action(values.code))}
+        >
+            {({ setValues, values, handleSubmit }) => (
+                <Form noValidate onSubmit={handleSubmit}>
+                    <Col>
+                        <Row>{qrCode}</Row>
+                        <Row>
+                            <FormField
+                                name="mfa-Code"
+                                label="Authenticator Code"
+                                value={values.code}
+                                handleChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                    setValues({ code: e.target.value })
+                                }}
+                            />
+                        </Row>
+                        <Row>
+                            <Button type="submit">Submit</Button>
+                        </Row>
+                    </Col>
+                </Form>
+            )}
+        </Formik>
     )
-}
-
-export function RegisterMfaForm() {
-    return <div></div>
-}
-
-export function ActivateMfaForm() {
-    return <div></div>
 }

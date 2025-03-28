@@ -34,6 +34,8 @@ import { editSessionReducer } from '../../../session/slice'
 import { AuthState, AuthStep, newAuthState } from '../../state'
 import { authReducer } from '../../slice'
 import { vi, Mock } from 'vitest'
+import { RegistrationForm } from '../registration_form'
+import { RegisterUserManagementComponent } from '../../../management/components'
 const idErrorTest = 'id-error-test'
 vi.mock('uuid', () => {
     return {
@@ -46,11 +48,11 @@ describe('login', () => {
         const user = userEvent.setup()
         const textInput = await screen.findByRole('textbox')
         const passwordInput = screen.getByLabelText('Password')
-        const buttons = container.getElementsByTagName('button')
+        const button = screen.getByRole('button')
         await act(async () => {
             await user.type(textInput, 'username')
             await user.type(passwordInput, 'password')
-            const loginButton = buttons[1]
+            const loginButton = button
             expect(loginButton.textContent).toEqual('Login')
             await user.click(loginButton)
         })
@@ -160,10 +162,6 @@ describe('totp', () => {
         }
     }
     const mfaCode = '123456'
-    const headers = {
-        'Access-Control-Allow-Credentials': 'true',
-        'Content-Type': 'application/json'
-    }
     async function enterMfaCode() {
         const user = userEvent.setup()
         const textInput = await screen.findByRole('textbox')
@@ -226,7 +224,10 @@ describe('totp', () => {
                     method: 'POST'
                 }
             ],
-            ['http://127.0.0.1:8000/cosmae/api/user/self', { credentials: 'include', headers }]
+            [
+                'http://127.0.0.1:8000/cosmae/api/user/self',
+                { credentials: 'include', headers }
+            ]
         ])
     })
     test('new totp error', async () => {
@@ -341,7 +342,10 @@ describe('totp', () => {
                     method: 'POST'
                 }
             ],
-            ['http://127.0.0.1:8000/cosmae/api/user/self', { credentials: 'include', headers }]
+            [
+                'http://127.0.0.1:8000/cosmae/api/user/self',
+                { credentials: 'include', headers }
+            ]
         ])
     })
     test('existing totp error', async () => {
@@ -411,24 +415,15 @@ describe('totp', () => {
 describe('registration', () => {
     async function performRegistration() {
         const user = userEvent.setup()
-        await waitFor(
-            async () => {
-                const registrationButton = screen.getByRole('button', {
-                    name: 'Registration'
-                })
-                await user.click(registrationButton)
-            },
-            { timeout: 2000 }
-        )
         await act(async () => {
             const textInputs = await waitFor(() => {
                 const textInputs = screen.getAllByRole('textbox')
                 expect(textInputs.length).toEqual(4)
                 return textInputs
             })
-            await user.type(textInputs[0], 'username')
-            await user.type(textInputs[1], 'mail@test.url')
-            await user.type(textInputs[2], 'names personal')
+            await user.type(textInputs[0], userNameTest)
+            await user.type(textInputs[1], emailTest)
+            await user.type(textInputs[2], namesPersonalTest)
             const passwordInput = screen.getByLabelText('Password')
             await user.type(passwordInput, passwordTest)
             const repeatPasswordInput = screen.getByLabelText('Repeat password')
@@ -440,14 +435,9 @@ describe('registration', () => {
 
     test('success', async () => {
         const fetchMock = vi.fn()
-        addResponseSequence(fetchMock, [
-            [200, {}],
-            [401, notAuthenticatedRsp],
-            [200, authUserApiRsp],
-            [200, userInfoApiResponse]
-        ])
+        addResponseSequence(fetchMock, [[200, authUserApiRsp]])
         const { store } = renderWithProviders(
-            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            <RegisterUserManagementComponent />,
             fetchMock
         )
         await performRegistration()
@@ -465,25 +455,33 @@ describe('registration', () => {
                 notificationMap: expect.anything()
             })
         })
-        await waitFor(() => {
-            expect(store.getState().notification.notificationList.length).toEqual(1)
-        })
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                'http://127.0.0.1:8000/cosmae/api/manage/user',
+                {
+                    credentials: 'include',
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        username: userNameTest,
+                        email: emailTest,
+                        password: passwordTest,
+                        names_personal: namesPersonalTest
+                    })
+                }
+            ]
+        ])
     })
     test('error', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
-            [200, {}],
-            [401, notAuthenticatedRsp],
             [400, { errors: [{ message: 'registration error' }] }]
         ])
         const { store } = renderWithProviders(
-            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            <RegisterUserManagementComponent />,
             fetchMock
         )
         await performRegistration()
-        await waitFor(async () => {
-            expect(screen.queryByText('You are logged in')).toBeNull()
-        })
         await waitFor(async () => {
             const state = store.getState()
             expect(state.auth.user).toEqual(newRemote(undefined))
@@ -540,10 +538,7 @@ describe('reauthenticate', () => {
             [
                 'http://127.0.0.1:8000/_allauth/browser/v1/auth/reauthenticate',
                 {
-                    headers: {
-                        'Access-Control-Allow-Credentials': 'true',
-                        'Content-Type': 'application/json'
-                    },
+                    headers,
                     method: 'POST',
                     body: JSON.stringify({ password: passwordTest })
                 }
@@ -581,10 +576,7 @@ describe('reauthenticate', () => {
             [
                 'http://127.0.0.1:8000/_allauth/browser/v1/auth/reauthenticate',
                 {
-                    headers: {
-                        'Access-Control-Allow-Credentials': 'true',
-                        'Content-Type': 'application/json'
-                    },
+                    headers,
                     method: 'POST',
                     body: JSON.stringify({ password: passwordTest })
                 }
@@ -657,6 +649,10 @@ const idPersistentTest = 'id-user-test'
 const idEditSession = 'id-session-test'
 const idAuthTest = 287
 const nameEditSession = 'edit session for tests'
+const headers = {
+    'Access-Control-Allow-Credentials': 'true',
+    'Content-Type': 'application/json'
+}
 const authUserApiRsp = {
     status: 200,
     data: {

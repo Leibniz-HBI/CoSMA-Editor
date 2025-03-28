@@ -2,7 +2,6 @@ import { ReactElement, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import {
     selectAuthStepStack,
-    selectShowRegistrationValue,
     selectUserAuth,
     selectUserInfo
 } from '../selectors'
@@ -11,13 +10,10 @@ import {
     getSessionThunk,
     getTotpThunk,
     loginThunk,
-    registerThunk
 } from '../thunks'
 import { CosmaeLoading } from '../../util/components/misc'
 import { AuthStep } from '../state'
 import { LoginForm } from './login_form'
-import { toggleRegistration } from '../slice'
-import { RegistrationForm } from './registration_form'
 import { Modal } from 'react-bootstrap'
 import { MfaForm } from './mfa_form'
 import { ReauthenticationForm } from './reauthentication_form'
@@ -26,9 +22,6 @@ import { EmailVerificationNeeded } from './email_verification'
 export function AuthProvider(props: { children: ReactElement }) {
     const stepStack = useAppSelector(selectAuthStepStack)
     const userInfo = useAppSelector(selectUserInfo)
-    const showRegistration = useAppSelector(selectShowRegistrationValue)
-    const toggleRegistrationCallback = () =>
-        dispatch(toggleRegistration(!showRegistration))
     const dispatch = useAppDispatch()
     const authUser = useAppSelector(selectUserAuth)
     useEffect(() => {
@@ -69,39 +62,13 @@ export function AuthProvider(props: { children: ReactElement }) {
                 modalContent = <EmailVerificationNeeded />
                 break
             default:
-                if (showRegistration) {
-                    modalContent = (
-                        <RegistrationForm
-                            closeRegistrationCallback={toggleRegistrationCallback}
-                            registrationCallback={({
-                                username,
-                                namesPersonal,
-                                namesFamily,
-                                email,
-                                password
-                            }) =>
-                                dispatch(
-                                    registerThunk({
-                                        username,
-                                        namesPersonal,
-                                        namesFamily,
-                                        email,
-                                        password
-                                    })
-                                )
-                            }
-                        />
-                    )
-                } else {
-                    modalContent = (
-                        <LoginForm
-                            openRegistrationCallback={toggleRegistrationCallback}
-                            loginCallback={(username, password) =>
-                                dispatch(loginThunk(username, password))
-                            }
-                        />
-                    )
-                }
+                modalContent = (
+                    <LoginForm
+                        loginCallback={(username, password) =>
+                            dispatch(loginThunk(username, password))
+                        }
+                    />
+                )
         }
         return (
             <div

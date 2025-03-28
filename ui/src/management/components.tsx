@@ -2,10 +2,14 @@ import { Col, ListGroup, Row } from 'react-bootstrap'
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { UserPermissionGroupComponent } from '../user/permission_groups/components'
 import { DisplayTxtManagementComponent } from './display_txt/components'
+import { RegistrationForm } from '../auth/components/registration_form'
+import { createUserThunk } from '../auth/thunks'
+import { useAppDispatch } from '../hooks'
 
 enum ManagementCategory {
     None = '',
-    User = 'user',
+    UserCreation = 'user-creation',
+    UserPermission = 'user-permission',
     DisplayTxt = 'display-txt'
 }
 
@@ -33,11 +37,12 @@ export function ManagementCategoryBody({
 }: {
     selectedCategory: ManagementCategory
 }) {
-    if (selectedCategory == ManagementCategory.User) {
+    if (selectedCategory == ManagementCategory.UserPermission) {
         return <UserPermissionGroupComponent />
-    }
-    if (selectedCategory == ManagementCategory.DisplayTxt) {
+    } else if (selectedCategory == ManagementCategory.DisplayTxt) {
         return <DisplayTxtManagementComponent />
+    } else if (selectedCategory === ManagementCategory.UserCreation) {
+        return <RegisterUserManagementComponent />
     }
     return <div>Please select a management category.</div>
 }
@@ -51,10 +56,16 @@ export function ManagementCategorySelection({
     return (
         <ListGroup>
             <ListGroup.Item
-                active={selectedCategory == ManagementCategory.User}
-                onClick={() => navigate('/management/user')}
+                active={selectedCategory == ManagementCategory.UserPermission}
+                onClick={() => navigate('/management/user-permission')}
             >
                 User Permissions
+            </ListGroup.Item>
+            <ListGroup.Item
+                active={selectedCategory == ManagementCategory.UserCreation}
+                onClick={() => navigate('/management/user-creation')}
+            >
+                Create User
             </ListGroup.Item>
             <ListGroup.Item
                 active={selectedCategory == ManagementCategory.DisplayTxt}
@@ -63,5 +74,16 @@ export function ManagementCategorySelection({
                 Display Text Order
             </ListGroup.Item>
         </ListGroup>
+    )
+}
+
+export function RegisterUserManagementComponent() {
+    const dispatch = useAppDispatch()
+    return (
+        <Row className="h-100 overflow-hidden d-flex flex-row mt-4">
+            <RegistrationForm
+                registrationCallback={(props) => dispatch(createUserThunk(props))}
+            />
+        </Row>
     )
 }

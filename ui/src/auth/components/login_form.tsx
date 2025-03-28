@@ -14,13 +14,7 @@ const loginSchema = yup.object({
 
 export type LoginCallback = (userName: string, password: string) => void
 
-export function LoginForm({
-    loginCallback,
-    openRegistrationCallback
-}: {
-    loginCallback: LoginCallback
-    openRegistrationCallback: VoidFunction
-}) {
+export function LoginForm({ loginCallback }: { loginCallback: LoginCallback }) {
     return (
         <Formik
             validationSchema={loginSchema}
@@ -34,7 +28,6 @@ export function LoginForm({
                     values={values}
                     handleChange={handleChange}
                     handleSubmit={handleSubmit}
-                    openRegistrationCallback={openRegistrationCallback}
                 />
             )}
         </Formik>
@@ -45,9 +38,8 @@ export function LoginFormBody(props: {
     values: LoginFormArgs
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
     handleChange: HandleChange
-    openRegistrationCallback: VoidFunction
 }) {
-    const { handleSubmit, handleChange, values, openRegistrationCallback } = props
+    const { handleSubmit, handleChange, values } = props
     return (
         <Form noValidate onSubmit={handleSubmit}>
             <FormField
@@ -65,14 +57,6 @@ export function LoginFormBody(props: {
             />
             <Row className="justify-content-end mt-4">
                 <Col></Col>
-                <Col sm="auto">
-                    <Button
-                        variant="outline-primary"
-                        onClick={openRegistrationCallback}
-                    >
-                        Registration
-                    </Button>
-                </Col>
                 <Col sm="auto">
                     <Button type="submit">Login</Button>
                 </Col>

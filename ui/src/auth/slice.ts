@@ -129,16 +129,13 @@ const authSlice = createSlice({
             state.stepStack = newRemote([AuthStep.VerifyEmail])
         },
         registrationStart(state: AuthState) {
-            state.showRegistration.isLoading = true
+            state.registration.isLoading = true
         },
         registrationEnd(state: AuthState) {
-            state.showRegistration = newRemote(false)
+            state.registration = newRemote(false)
         },
         resetEmailVerification(state: AuthState) {
             state.emailVerified = newRemote(undefined)
-        },
-        toggleRegistration(state: AuthState, action: PayloadAction<boolean>) {
-            state.showRegistration.value = action.payload
         },
         updateUserTagDefinition(
             state: AuthState,
@@ -204,7 +201,6 @@ export const {
     setReauthenticateMfa,
     setVerifyEmail,
     setPartiallyAuthenticated,
-    toggleRegistration,
     removeUserTagDefinition,
     updateUserTagDefinition
 } = authSlice.actions

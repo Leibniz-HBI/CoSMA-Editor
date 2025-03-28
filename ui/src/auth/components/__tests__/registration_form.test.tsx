@@ -9,21 +9,13 @@ import { vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
 test('renders without error set', async () => {
     const registrationCallback = vi.fn()
-    const closeRegistrationCallback = vi.fn()
-    const { container } = render(
-        <RegistrationForm
-            registrationCallback={registrationCallback}
-            closeRegistrationCallback={closeRegistrationCallback}
-        />
-    )
+    render(<RegistrationForm registrationCallback={registrationCallback} />)
     const textInputs = screen.getAllByRole('textbox')
     expect(textInputs.length).toEqual(4)
     screen.getByLabelText('Password')
     screen.getByLabelText('Repeat password')
-    const buttons = container.getElementsByTagName('button')
-    expect(buttons.length).toEqual(2)
-    expect(buttons[0].textContent).toEqual('Login')
-    expect(buttons[1].textContent).toEqual('Register')
+    const button = screen.getByRole('button')
+    expect(button.textContent).toEqual('Register')
     const errorTooltip = screen.queryByRole('tooltip')
     expect(errorTooltip).toBeNull()
 })
@@ -31,12 +23,7 @@ test('renders without error set', async () => {
 test('can register', async () => {
     const registrationCallback = vi.fn()
     const closeRegistrationCallback = vi.fn()
-    render(
-        <RegistrationForm
-            registrationCallback={registrationCallback}
-            closeRegistrationCallback={closeRegistrationCallback}
-        />
-    )
+    render(<RegistrationForm registrationCallback={registrationCallback} />)
     const user = userEvent.setup()
     const textInputs = screen.getAllByRole('textbox')
     expect(textInputs.length).toEqual(4)
@@ -65,34 +52,5 @@ test('can register', async () => {
             ]
         ])
         expect(closeRegistrationCallback.mock.calls).toEqual([])
-    })
-})
-
-test('can cancel registration', async () => {
-    const registrationCallback = vi.fn()
-    const closeRegistrationCallback = vi.fn()
-    render(
-        <RegistrationForm
-            registrationCallback={registrationCallback}
-            closeRegistrationCallback={closeRegistrationCallback}
-        />
-    )
-    const user = userEvent.setup()
-    const textInputs = screen.getAllByRole('textbox')
-    expect(textInputs.length).toEqual(4)
-    await user.type(textInputs[0], 'username')
-    await user.type(textInputs[1], 'mail@test.url')
-    await user.type(textInputs[2], 'names personal')
-    const passwordInput = screen.getByLabelText('Password')
-    await user.type(passwordInput, 'password')
-    const repeatPasswordInput = screen.getByLabelText('Repeat password')
-    await user.type(repeatPasswordInput, 'password')
-    await waitFor(() => {
-        const button = screen.getByRole('button', { name: /login/i })
-        user.click(button)
-    })
-    await waitFor(() => {
-        expect(registrationCallback.mock.calls).toEqual([])
-        expect(closeRegistrationCallback.mock.calls.length).toEqual(1)
     })
 })

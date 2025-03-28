@@ -108,7 +108,7 @@ function mkPostHeaders() {
     return headers
 }
 
-export function registerThunk({
+export function createUserThunk({
     username,
     namesPersonal,
     namesFamily,
@@ -125,17 +125,20 @@ export function registerThunk({
         dispatch(registrationStart())
         try {
             const headers = mkPostHeaders()
-            const rsp = await fetch(config.api_path_auth + '/auth/signup', {
+            const body: { [key: string]: string } = {
+                username,
+                email,
+                password,
+                names_personal: namesPersonal
+            }
+            if (namesFamily !== undefined && namesFamily.length > 0) {
+                body['namesFamily'] = namesFamily
+            }
+            const rsp = await fetch(config.api_path + '/manage/user', {
                 method: 'POST',
                 credentials: 'include',
                 headers,
-                body: JSON.stringify({
-                    username,
-                    email,
-                    password,
-                    names_personal: namesPersonal,
-                    names_family: namesFamily
-                })
+                body: JSON.stringify(body)
             })
             const json = await rsp.json()
             handleAllauthResponse(
@@ -325,7 +328,7 @@ export function postEmailVerificationThunk(key: string): ThunkWithFetch<void> {
             if (rsp.status == 401) {
                 dispatch(addSuccessVanish('Email successfully verified'))
                 dispatch(postEmailVerificationSuccess())
-            }else if (rsp.status ==400){
+            } else if (rsp.status == 400) {
                 dispatch(postEmailVerificationError())
             }
         } catch (e: unknown) {

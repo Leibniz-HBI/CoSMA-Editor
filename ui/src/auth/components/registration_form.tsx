@@ -52,10 +52,8 @@ const registrationSchema = yup.object({
 
 export function RegistrationForm({
     registrationCallback,
-    closeRegistrationCallback
 }: {
     registrationCallback: RegistrationCallback
-    closeRegistrationCallback: VoidFunction
 }) {
     return (
         <Formik
@@ -85,7 +83,6 @@ export function RegistrationForm({
                     touched={touched}
                     handleSubmit={handleSubmit}
                     handleChange={handleChange}
-                    closeRegistrationCallback={closeRegistrationCallback}
                 />
             )}
         </Formik>
@@ -98,14 +95,12 @@ export function RegistrationFormBody({
     handleChange,
     touched,
     formErrors,
-    closeRegistrationCallback
 }: {
     values: RegistrationFormArgs
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
     handleChange: HandleChange
     formErrors: FormikErrors<RegistrationFormArgs>
     touched: FormikTouched<RegistrationFormArgs>
-    closeRegistrationCallback: VoidFunction
 }) {
     const passwordHintClass =
         touched.password && formErrors.password ? 'text-danger' : ''
@@ -164,14 +159,6 @@ export function RegistrationFormBody({
             <Row className="justify-content-end mt-4">
                 <Col>
                     <span className={passwordHintClass}>{passwordHint}</span>
-                </Col>
-                <Col sm="auto" className="align-self-center">
-                    <Button
-                        variant="outline-primary"
-                        onClick={closeRegistrationCallback}
-                    >
-                        Login
-                    </Button>
                 </Col>
                 <Col sm="auto" className="align-self-center">
                     <Button variant="primary" type="submit">
