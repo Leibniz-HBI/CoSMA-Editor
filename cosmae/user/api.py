@@ -12,6 +12,7 @@ from cosmae.edit_session.api import EditSession, edit_session_db_to_api
 from cosmae.edit_session.models_django import EditSession as EditSessionDb
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
+from cosmae.user.adapter import CosmaeAccountAdapter
 from cosmae.user.model_conversion.login import user_db_to_login_response
 from cosmae.user.model_conversion.public import (
     user_db_to_public_user_info,
@@ -20,9 +21,10 @@ from cosmae.user.models_api.login import (
     LoginResponse,
     LoginResponseList,
     SearchResponse,
+    SetPasswordRequest,
 )
 from cosmae.user.models_api.public import PublicUserInfo
-from cosmae.util import CosmaeUser
+from cosmae.util import EmptyResponse, CosmaeUser
 from cosmae.util.auth import (
     ErrorAllauthLikeResponse,
     ErrorListAllauthLikeResponse,
@@ -33,6 +35,8 @@ from cosmae.util.auth import (
     UnauthorizedAllauthLikeResponse,
     check_mfa,
     check_user,
+    single_error_allauth_like_response,
+    success_allauth_like_response,
 )
 
 
@@ -249,12 +253,20 @@ def get_user_chunk(request: HttpRequest, offset: int, count: int):
 
 @router.get(
     "search/{username}",
-    response={200: SearchResponse, 400: ApiError, 401: ApiError, 500: ApiError},
+    response={
+        200: SearchResponse,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
 )
 def get_search(request: HttpRequest, username: str):
     "API method for searching user by username"
     try:
         user = check_user(request)
+        if user.permission_group == CosmaeUser.APPLICANT:
+            return 403, ApiError(msg="Insufficient permissions")
         unquoted_username = unquote(username)
         results_db = CosmaeUser.search_username(unquoted_username)
         has_elevated_rights = user.has_elevated_rights()
@@ -299,6 +311,50 @@ def get_self(request: HttpRequest):
                 )
             ]
         )
+
+
+@router.post(
+    "password",
+    response={
+        200: SuccessAllauthLikeResponse,
+        400: ErrorListAllauthLikeResponse,
+        401: ErrorListAllauthLikeResponse,
+        403: ErrorListAllauthLikeResponse,
+        404: ErrorListAllauthLikeResponse,
+        500: ErrorListAllauthLikeResponse,
+    },
+)
+def post_set_password_for_user(request: HttpRequest, data: SetPasswordRequest):
+    """Set password for user.
+    Either for requesting user or with commissioner for arbitrary user."""
+    try:
+        request_user = check_user(request)
+    except NotAuthenticatedException:
+        return single_error_allauth_like_response(401, "Not authenticated")
+    try:
+        if data.id_user_persistent is not None:
+            if request_user.permission_group != CosmaeUser.COMMISSIONER:
+                return single_error_allauth_like_response(
+                    403, "Insufficient permissions"
+                )
+            target_user = CosmaeUser.objects.filter(
+                id_persistent=data.id_user_persistent
+            ).get()
+        else:
+            if data.old_password is None or not request_user.check_password(
+                data.old_password
+            ):
+                return single_error_allauth_like_response(
+                    400, "Existing password missing or incorrect."
+                )
+            target_user = request_user
+        adapter = CosmaeAccountAdapter(request)
+        adapter.set_password(target_user, data.new_password)
+        return success_allauth_like_response(EmptyResponse())
+    except CosmaeUser.DoesNotExist:
+        return single_error_allauth_like_response(404, "User does not exist.")
+    except Exception:  # pylint: disable=broad-except
+        return single_error_allauth_like_response(500, "Could not change password.")
 
 
 @router.get(

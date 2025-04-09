@@ -71,3 +71,18 @@ def get_details(url, id_user_persistent, cookies=None):
         cookies=cookies,
         timeout=900,
     )
+
+
+def post_password(
+    url, new_password, old_password=None, id_user_persistent=None, cookies=None
+):
+    return requests.post(
+        url + "/cosmae/api/user/password",
+        json={
+            "new_password": new_password,
+            "old_password": old_password,
+            "id_user_persistent": id_user_persistent,
+        },
+        cookies=cookies,
+        timeout=900,
+    )

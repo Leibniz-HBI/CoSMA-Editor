@@ -53,3 +53,5 @@ time_edit_tag_def = datetime(1742, 3, 2, tzinfo=timezone.utc)
 time_edit_tag_def1 = datetime(1742, 3, 3, tzinfo=timezone.utc)
 time_edit_tag_def2 = datetime(1742, 3, 4, tzinfo=timezone.utc)
 time_edit_tag_def3 = datetime(1742, 3, 5, tzinfo=timezone.utc)
+
+test_password_new = "5&tZfgyhu21"

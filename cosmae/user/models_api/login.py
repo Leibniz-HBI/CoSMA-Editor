@@ -1,6 +1,6 @@
 "API models for login and registration."
 
-from typing import List, Union
+from typing import List, Optional, Union
 
 from ninja import Schema
 from pydantic import Field
@@ -51,3 +51,11 @@ class SearchResponse(Schema):
     # pylint: disable=too-few-public-methods
     results: Union[List[LoginResponse], List[PublicUserInfo]]
     contains_complete_info: bool
+
+
+class SetPasswordRequest(Schema):
+    "API models for setting or changing passwords"
+
+    id_user_persistent: Optional[str] = None
+    old_password: Optional[str] = None
+    new_password: str
