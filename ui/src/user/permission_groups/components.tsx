@@ -31,7 +31,7 @@ export function UserPermissionGroupComponent() {
     }
     return (
         <Row className="h-100">
-            <Col className="h-100" xs={6}>
+            <Col className="h-100 overflow-y-scroll" xs={6}>
                 <ListGroup>
                     {userInfoList.value.map((userInfo) => (
                         <UserInfoListItem

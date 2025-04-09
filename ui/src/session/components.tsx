@@ -32,7 +32,7 @@ import {
     selectEditSessionParticipantList
 } from './selectors'
 import { CosmaeLoading } from '../util/components/misc'
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import {
     addEditSessionParticipantThunk,
     createEditSessionThunk,

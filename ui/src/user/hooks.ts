@@ -1,4 +1,3 @@
-import { UserInfo } from './state'
 import { makeSelectUserInfoByIdPersistent } from './selectors'
 import { getUserInfoThunk } from './thunks'
 import { RootState } from '../store'
@@ -8,17 +7,19 @@ import { newRemote } from '../util/state'
 
 export function useUserInfo(idUserPersistent: string) {
     const selectUserInfoByIdPersistent = useMemo(makeSelectUserInfoByIdPersistent, [])
-    const selectPermissionList = (state: RootState) =>
+    const selectUserInfo = (state: RootState) =>
         selectUserInfoByIdPersistent(state, idUserPersistent)
-    const userInfo = useAppSelector(selectPermissionList)
+    const userInfo = useAppSelector(selectUserInfo)
     const dispatch = useAppDispatch()
     useEffect(() => {
         if (
-            userInfo === undefined ||
-            (userInfo.value === undefined && !userInfo.isLoading)
+            idUserPersistent === undefined || idUserPersistent == '' ||
+            (userInfo !== undefined &&
+                (userInfo.value !== undefined || userInfo.isLoading))
         ) {
-            dispatch(getUserInfoThunk(idUserPersistent))
+            return
         }
+            dispatch(getUserInfoThunk(idUserPersistent))
     })
     return userInfo ?? newRemote(undefined)
 }

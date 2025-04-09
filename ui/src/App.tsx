@@ -3,94 +3,35 @@
 import './App.css'
 import '@glideapps/glide-data-grid/dist/index.css'
 import './App.scss'
-import { Col, Container, Nav, Navbar, Row } from 'react-bootstrap'
+import { Col, Container, Row } from 'react-bootstrap'
 import { RemoteDataTable } from './table/components/table'
-import {
-    NavLink,
-    Outlet,
-    RouterProvider,
-    createBrowserRouter,
-    redirect
-} from 'react-router-dom'
+import { Outlet, RouterProvider, createBrowserRouter, redirect } from 'react-router-dom'
 import { ContributionList, ContributionStepper } from './contribution/components'
 import { config } from './config'
 import { ContributionStep } from './contribution/state'
 import { exceptionMessage } from './util/exception'
 import { ReviewList } from './merge_request/components'
 import { MergeRequestConflictView } from './merge_request/conflicts/components'
-import { UserPermissionGroup } from './user/state'
-import {
-    HelpButton,
-    HelpModal,
-    NotificationToastList
-} from './util/notification/components'
-import { Provider, useDispatch, useSelector } from 'react-redux'
-import store, { AppDispatch } from './store'
-import { selectUserInfo } from './auth/selectors'
+import { HelpModal, NotificationToastList } from './util/notification/components'
+import { Provider } from 'react-redux'
+import store from './store'
 import { TagManagementPage } from './tag_management/components'
 import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
 import { ManagementPage } from './management/components'
 import { contributionStepApiToUiMap } from './contribution/thunks'
 import { AuthProvider } from './auth/components/provider'
-import { logoutThunk } from './auth/thunks'
 import { EmailVerification } from './auth/components/email_verification'
+import { CosmaeNavbar } from './navigation/components'
+import { ProfilePage } from './user/components'
 
 export function CosmaeRoot() {
-    const userInfo = useSelector(selectUserInfo)
-    const dispatch: AppDispatch = useDispatch()
     return (
         <AuthProvider>
             <>
                 <Row className="m-0 h-100">
                     <Col className="ps-0 pe-0 h-100">
                         <div className="cosmae-page-container">
-                            <Navbar
-                                expand="lg"
-                                className="bg-primary flex-shrink-0 mb-3"
-                            >
-                                <Container className="text-secondary">
-                                    <Navbar.Brand href="/">Cosmae</Navbar.Brand>
-                                    <Navbar.Toggle aria-controls="basic-navbar-nav" />
-                                    <Navbar.Collapse id="basic-navbar-nav">
-                                        <Nav className="me-auto">
-                                            <Nav.Link as={NavLink} to="/">
-                                                View
-                                            </Nav.Link>
-                                            <Nav.Link as={NavLink} to="/contribute">
-                                                Contribute
-                                            </Nav.Link>
-                                            <Nav.Link as={NavLink} to="/review">
-                                                Review
-                                            </Nav.Link>
-                                            <Nav.Link as={NavLink} to="/tags">
-                                                Tags
-                                            </Nav.Link>
-                                        </Nav>
-                                        <Nav className="me-2">
-                                            <HelpButton />
-                                        </Nav>
-                                        <Nav>
-                                            {userInfo.value?.permissionGroup ==
-                                                UserPermissionGroup.COMMISSIONER && (
-                                                <Nav.Link as={NavLink} to="/management">
-                                                    Manage
-                                                </Nav.Link>
-                                            )}
-                                        </Nav>
-                                        <Nav>
-                                            <Nav.Link
-                                                onClick={() =>
-                                                    dispatch(logoutThunk()).then(() =>
-                                                        location.reload()
-                                                    )
-                                                }
-                                            >
-                                                Logout
-                                            </Nav.Link>
-                                        </Nav>
-                                    </Navbar.Collapse>
-                                </Container>
-                            </Navbar>
+                            <CosmaeNavbar />
                             <div className="d-contents">
                                 <Outlet />
                             </div>
@@ -176,6 +117,16 @@ const router = createBrowserRouter([
             {
                 path: 'management/:category',
                 element: <ManagementPage />,
+                loader: ({ params }) => params.category ?? ''
+            },
+            {
+                path: 'profile/',
+                element: <ProfilePage/>,
+                loader: ({ params }) => params.category ?? ''
+            },
+            {
+                path: 'profile/:category',
+                element: <ProfilePage />,
                 loader: ({ params }) => params.category ?? ''
             }
         ]

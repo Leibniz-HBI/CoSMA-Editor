@@ -7,7 +7,7 @@ import {
     userSearchStart,
     userSearchSuccess
 } from './slice'
-import { addError} from '../util/notification/slice'
+import { addError, addSuccessVanish } from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
@@ -17,8 +17,7 @@ import { justificationColumnId } from '../table/state'
 import { setCurrentEditSession } from '../session/slice'
 import { parseEditSessionFromApi } from '../session/thunks'
 import { removeUserTagDefinition } from '../auth/slice'
-
-
+import { handleAllauthResponse } from '../util/api'
 
 export function setCurrentEditSessionThunk(
     id_edit_session_persistent: string
@@ -43,6 +42,33 @@ export function setCurrentEditSessionThunk(
     }
 }
 
+export function setPasswordThunk(
+    oldPassword: string,
+    newPassword: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        try {
+            const rsp = await fetch(config.api_path + '/user/password', {
+                method: 'POST',
+                credentials: 'include',
+                body: JSON.stringify({
+                    old_password: oldPassword,
+                    new_password: newPassword
+                })
+            })
+            const json = await rsp.json()
+            handleAllauthResponse(
+                dispatch,
+                (dispatch, _json) => {
+                    dispatch(addSuccessVanish('Password changed'))
+                },
+                json,
+            )
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
 
 export function userSearch(searchTerm: string): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {

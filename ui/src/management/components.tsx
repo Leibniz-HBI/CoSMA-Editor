@@ -5,11 +5,13 @@ import { DisplayTxtManagementComponent } from './display_txt/components'
 import { RegistrationForm } from '../auth/components/registration_form'
 import { createUserThunk } from '../auth/thunks'
 import { useAppDispatch } from '../hooks'
+import { Subpage } from '../util/components/subpage'
+import { ManagementPasswordComponent } from './password/components'
 
 enum ManagementCategory {
-    None = '',
     UserCreation = 'user-creation',
     UserPermission = 'user-permission',
+    Password = 'password',
     DisplayTxt = 'display-txt'
 }
 
@@ -19,62 +21,42 @@ export function ManagementPage() {
     try {
         category = loaderData as ManagementCategory
     } catch (_e: unknown) {
-        category = ManagementCategory.None
+        category = undefined
     }
     return (
-        <Row className="h-100 overflow-hidden d-flex flex-row">
-            <Col xs={2} className="overflow-y-scroll">
-                <ManagementCategorySelection selectedCategory={category} />
-            </Col>
-            <Col className="h-100 overflow-y-scroll">
-                <ManagementCategoryBody selectedCategory={category} />
-            </Col>
-        </Row>
+        <Subpage
+            pages={{
+                'Create User': ManagementCategory.UserCreation,
+                'User Permissions': ManagementCategory.UserPermission,
+                'Reset User Password': ManagementCategory.Password,
+                'Display Text': ManagementCategory.DisplayTxt
+            }}
+            selectedPage={category}
+            pathPrefix={'/management/'}
+        >
+            {(category) => (
+                <ManagementCategoryBody
+                    selectedCategory={category as ManagementCategory}
+                />
+            )}
+        </Subpage>
     )
 }
 export function ManagementCategoryBody({
     selectedCategory
 }: {
-    selectedCategory: ManagementCategory
+    selectedCategory: ManagementCategory | undefined
 }) {
     if (selectedCategory == ManagementCategory.UserPermission) {
         return <UserPermissionGroupComponent />
-    } else if (selectedCategory == ManagementCategory.DisplayTxt) {
-        return <DisplayTxtManagementComponent />
+    } else if (selectedCategory === ManagementCategory.Password) {
+        return <ManagementPasswordComponent />
     } else if (selectedCategory === ManagementCategory.UserCreation) {
         return <RegisterUserManagementComponent />
+    } else if (selectedCategory == ManagementCategory.DisplayTxt) {
+        return <DisplayTxtManagementComponent />
     }
     return <div>Please select a management category.</div>
-}
-
-export function ManagementCategorySelection({
-    selectedCategory
-}: {
-    selectedCategory: ManagementCategory
-}) {
-    const navigate = useNavigate()
-    return (
-        <ListGroup>
-            <ListGroup.Item
-                active={selectedCategory == ManagementCategory.UserPermission}
-                onClick={() => navigate('/management/user-permission')}
-            >
-                User Permissions
-            </ListGroup.Item>
-            <ListGroup.Item
-                active={selectedCategory == ManagementCategory.UserCreation}
-                onClick={() => navigate('/management/user-creation')}
-            >
-                Create User
-            </ListGroup.Item>
-            <ListGroup.Item
-                active={selectedCategory == ManagementCategory.DisplayTxt}
-                onClick={() => navigate('/management/display-txt')}
-            >
-                Display Text Order
-            </ListGroup.Item>
-        </ListGroup>
-    )
 }
 
 export function RegisterUserManagementComponent() {

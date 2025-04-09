@@ -33,7 +33,7 @@ export function DisplayTxtManagementComponent() {
             <Col className="pt-2" xs={6}>
                 <DisplayTxtOrder />
             </Col>
-            <Col xs={6}>
+            <Col xs={6} className='h-100'>
                 <DisplayTxtAddMenu />
             </Col>
         </Row>

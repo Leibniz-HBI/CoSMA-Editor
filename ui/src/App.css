@@ -308,3 +308,7 @@ div#layers > div > .container {
 .grid-row-1-3 {
     grid-row: 1 / 3;
 }
+
+.nav-item > .dropdown-toggle::after {
+    display: none !important;
+}

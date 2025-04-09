@@ -34,7 +34,6 @@ import { editSessionReducer } from '../../../session/slice'
 import { AuthState, AuthStep, newAuthState } from '../../state'
 import { authReducer } from '../../slice'
 import { vi, Mock } from 'vitest'
-import { RegistrationForm } from '../registration_form'
 import { RegisterUserManagementComponent } from '../../../management/components'
 const idErrorTest = 'id-error-test'
 vi.mock('uuid', () => {
@@ -44,7 +43,7 @@ vi.mock('uuid', () => {
 })
 
 describe('login', () => {
-    async function performLogin(container: HTMLElement) {
+    async function performLogin(_container: HTMLElement) {
         const user = userEvent.setup()
         const textInput = await screen.findByRole('textbox')
         const passwordInput = screen.getByLabelText('Password')
