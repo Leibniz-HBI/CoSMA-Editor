@@ -3,6 +3,7 @@
 from urllib.parse import unquote
 
 from allauth.account.models import EmailAddress
+from allauth.account.signals import password_changed
 from allauth.mfa.models import Authenticator
 from django.db import DatabaseError
 from django.http import HttpRequest
@@ -350,6 +351,11 @@ def post_set_password_for_user(request: HttpRequest, data: SetPasswordRequest):
             target_user = request_user
         adapter = CosmaeAccountAdapter(request)
         adapter.set_password(target_user, data.new_password)
+        password_changed.send(
+            sender=target_user.__class__,
+            request=request,
+            user=target_user,
+        )
         return success_allauth_like_response(EmptyResponse())
     except CosmaeUser.DoesNotExist:
         return single_error_allauth_like_response(404, "User does not exist.")

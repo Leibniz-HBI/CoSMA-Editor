@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 
-from allauth.account.signals import user_signed_up
+from allauth.account.signals import password_changed, user_signed_up
 from django.apps import apps
 from django.db.backends.signals import connection_created
 from django.db.models.signals import post_save
@@ -100,4 +100,17 @@ def connect_user_created_signal():
         dispatch_create_system_user,
         sender=CosmaeUser,
         dispatch_uid="cosmae.signed_up",
+    )
+
+
+def connect_password_changed_signal():
+    "Connect the signal for reading csv files on uploads."
+    # pylint: disable=import-outside-toplevel
+    from cosmae.management.user.queue import dispatch_update_password
+    from cosmae.util import CosmaeUser
+
+    password_changed.connect(
+        dispatch_update_password,
+        sender=CosmaeUser,
+        dispatch_uid="cosmae.password_changed",
     )

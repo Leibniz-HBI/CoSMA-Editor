@@ -12,6 +12,7 @@ from django.db.utils import DatabaseError, OperationalError, ProgrammingError
 from cosmae.signals import (
     connect_add_superuser,
     connect_entity_display_txt,
+    connect_password_changed_signal,
     connect_read_csv_signal,
     connect_tag_definition_queue_process,
     connect_tag_instance_display_txt,
@@ -77,6 +78,7 @@ class CosmaeConfig(AppConfig):
                 connect_entity_display_txt()
                 connect_tag_instance_display_txt()
                 connect_user_created_signal()
+                connect_password_changed_signal()
         except AppRegistryNotReady:
             pass
         super().ready()
