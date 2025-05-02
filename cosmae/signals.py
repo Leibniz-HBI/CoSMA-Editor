@@ -2,6 +2,7 @@
 
 from uuid import uuid4
 
+from allauth.account.signals import user_signed_up
 from django.apps import apps
 from django.db.backends.signals import connection_created
 from django.db.models.signals import post_save
@@ -86,4 +87,17 @@ def connect_tag_instance_display_txt():
         dispatch_display_txt_queue_process,
         sender=TagInstanceHistory,
         dispatch_uid="cosmae.taginstancehistory_display_txt_queue_process",
+    )
+
+
+def connect_user_created_signal():
+    "Connect the signal for reading csv files on uploads."
+    # pylint: disable=import-outside-toplevel
+    from cosmae.management.user.queue import dispatch_create_system_user
+    from cosmae.util import CosmaeUser
+
+    user_signed_up.connect(
+        dispatch_create_system_user,
+        sender=CosmaeUser,
+        dispatch_uid="cosmae.signed_up",
     )

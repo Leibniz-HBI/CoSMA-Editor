@@ -15,10 +15,14 @@ COPY ui/package*.json ./
 COPY ui/tsconfig.json ./
 COPY ui/babel.config.cjs ./
 RUN npm ci --omit=dev
+ADD ui/index.html /cosmae/
+ADD ui/vite.config.js /cosmae/
+ADD ui/tsconfig.app.json /cosmae/
+ADD ui/tsconfig.node.json /cosmae/
 ADD ui/src/ /cosmae/src
 ADD ui/public /cosmae/public
 RUN cp /cosmae/src/config_production.ts /cosmae/src/config.ts
-RUN npm install react-scripts
+RUN npm install vite @vitejs/plugin-react
 RUN npm run build
 
 FROM nginx:1.27.4-alpine

@@ -147,6 +147,11 @@ DATABASES = {
     }
 }
 
+PASSWORD_HASHERS = [
+    "cosmae.util.password_hasher.MkPasswordYescryptPasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+]
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -224,7 +229,9 @@ CACHES = {
     },
 }
 
-IS_UNITTEST = True
+HOST_PIPE_PATH = "/srv/cosmae/user_pipe"
+
+IS_UNITTEST = False
 ACCOUNT_RATE_LIMITS = False
 
 ORCID_CLIENT_ID = get_file_secret("orcid_client_id")

@@ -45,6 +45,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /srv/cosmae/contributions:/srv/cosmae/contributions
+      - /srv/cosmae/user_pipe:/srv/cosmae_user_pipe
     image: 127.0.0.1:5000/cosmae_django
     command: [
       "python",

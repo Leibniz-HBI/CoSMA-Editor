@@ -11,9 +11,23 @@ Currently the following features are supported:
 * Upload batch data in `.csv` format and merge it with existing data, with automatic duplicate detection.
 
 # Running
+There a two components in running the CoSMA-Editor.
+One is the local user service and the other is the containerized environment.
+They communicate using a Unix pipe.
+
+
+## Local User Service
+1. Create a folder `/srv/cosmae`.
+2. Edit the `cosmae-user.service` file in `./scripts/deployments` so that the the `ExecStart` uses the absolute path of the file `./scripts/cosmae_system_user_service.py`.
+3. Copy the file to `/etc/systemd/system`.
+4. Run `systemctl daemon-reload` to notify systemd of the new service definition.
+5. Start the service using `systemctl start cosma_editor_user.service`.
+6. To start the service after a system restart run `systemctl start cosma_editor_user.service`.
+
+## Container Environment
 You can run CoSMA-Editor using `docker compose`.
 The following instructions use a single node Docker Swarm.
-## Setup Docker Swarm
+### Setup Docker Swarm
 1. [Install docker](https://docs.docker.com/engine/install/)
 2. Setup swarm: `docker swarm init`
 
@@ -39,7 +53,12 @@ you can either use the `quick_setup.py` script for setting up secrets or registe
   * `cosmae_django_key` contains the django secret key.
   You can generate it using `< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-64};echo;`
   * `cosmae_redis_password` contains the redis password
-  * `cosmae_redis_conf` contains `requirepass $REDIS_PASSWORD`
+  * `cosmae_redis_conf` contains `requirepass $REDIS_PASSWORD`.
+  * `orcid_client_id` containing the orcid client id
+  * `orcid_client_secret` containing the orcid client secret
+  * `email_host` containing the SMTP host for outgoing messages
+  * `email_host_user` containing the username for the SMTP host
+  * `email_host_app_password` containing the password for the SMTP host
 3. From the base directory of the repository run `docker compose build` to build the containers.
 4. Run `docker compose push` to push the images to the registry.
 5. Create empty directories:

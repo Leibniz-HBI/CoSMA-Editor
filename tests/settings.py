@@ -111,6 +111,11 @@ DATABASES = {
     }
 }
 
+PASSWORD_HASHERS = [
+    "cosmae.util.password_hasher.MkPasswordYescryptPasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+]
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -186,6 +191,8 @@ CACHES = {
         "LOCATION": "/tmp/django_cache_entity_display_txt_information",
     },
 }
+
+HOST_PIPE_PATH = "/tmp/test_host_pipe"
 
 IS_UNITTEST = True
 DEBUG = True

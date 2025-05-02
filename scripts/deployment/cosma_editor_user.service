@@ -1,0 +1,11 @@
+[Unit]
+Description=User Management for CoSMA-Editor
+After=network.target auditd.service
+
+[Service]
+# Edit the following line to point to the absolute path of the script and set the group prefix for system users.
+ExecStart=/usr/bin/python3 ${ABSOLUTE_PATH_TO_CLONED_REPO}/scripts/cosma_editor_system_user_service.py /srv/cosmae/user_pipe ${ACCOUNT_PREFIX}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
