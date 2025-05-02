@@ -6,12 +6,15 @@ import { useAppDispatch, useAppSelector } from '../hooks'
 import { PersonCircle } from 'react-bootstrap-icons'
 import { logoutThunk } from '../auth/thunks'
 import { selectUserInfo } from '../auth/selectors'
+import { config } from '../config'
 
 export function CosmaeNavbar() {
     return (
         <Navbar expand="lg" className="bg-primary flex-shrink-0 mb-3">
             <Container className="text-secondary">
-                <Navbar.Brand href="/">Cosmae</Navbar.Brand>
+                <Navbar.Brand href="/" className="fw-bold">
+                    {config.navBarName}
+                </Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
