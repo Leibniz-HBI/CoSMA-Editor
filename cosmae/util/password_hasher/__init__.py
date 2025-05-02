@@ -2,6 +2,7 @@
 
 import subprocess
 from random import randbytes
+from sys import byteorder
 from typing import Tuple
 
 from django.contrib.auth.hashers import BasePasswordHasher, mask_hash
@@ -63,7 +64,8 @@ def encode_bytes(value: bytes):
         if end > num_bytes:
             n_bytes_step = 3 - (end - num_bytes)
         return_value += encode64_uint32(
-            int.from_bytes(value[offset : offset + n_bytes_step]), n_bytes_step * 8
+            int.from_bytes(value[offset : offset + n_bytes_step], byteorder="big"),
+            n_bytes_step * 8,
         )
     return return_value
 
