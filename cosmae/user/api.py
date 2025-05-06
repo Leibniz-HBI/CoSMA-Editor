@@ -9,7 +9,7 @@ from django.db import DatabaseError
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.models_django import Column as ColumnDb
 from cosmae.edit_session.api import EditSession, edit_session_db_to_api
 from cosmae.edit_session.models_django import EditSession as EditSessionDb
 from cosmae.exception import ApiError, NotAuthenticatedException
@@ -90,85 +90,77 @@ def set_edit_session(request: HttpRequest, body: SetEditSessionRequest):
 
 
 @router.post(
-    "/tag_definitions/append/{id_tag_definition_persistent}",
+    "/columns/append/{id_column_persistent}",
     response={200: None, 400: ApiError, 401: ApiError, 500: ApiError},
 )
-def post_append_tag_definition_id_persistent(
-    request: HttpRequest, id_tag_definition_persistent: str
-):
-    """API method for adding a tag definition given by its persistent id
-    to the end of the user profile tag definitions."""
+def post_append_column_id_persistent(request: HttpRequest, id_column_persistent: str):
+    """API method for adding a column definition given by its persistent id
+    to the end of the user profile columns."""
     try:
         user = check_user(request)
-        TagDefinitionDb.most_recent_by_id(id_tag_definition_persistent)
-        user.append_tag_definition_by_id(id_tag_definition_persistent)
+        ColumnDb.most_recent_by_id(id_column_persistent)
+        user.append_column_by_id(id_column_persistent)
         user.save()
         return 200, None
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
-    except TagDefinitionDb.DoesNotExist:  # pylint: disable=no-member
-        return 400, ApiError(
-            msg="There is no tag definition with the provided persistent id."
-        )
+    except ColumnDb.DoesNotExist:  # pylint: disable=no-member
+        return 400, ApiError(msg="There is no column with the provided persistent id.")
     except DatabaseError:
         return 500, ApiError(
-            msg="Could not add the persistent tag definition id to the database."
+            msg="Could not add the persistent column id to the database."
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(
-            msg="Could not add the persistent tag definition id to the user profile."
+            msg="Could not add the persistent column id to the user profile."
         )
 
 
 @router.delete(
-    "/tag_definitions/{id_tag_definition_persistent}",
+    "/columns/{id_column_persistent}",
     response={200: None, 400: ApiError, 401: ApiError, 500: ApiError},
 )
-def delete_tag_definition_id_persistent(
-    request: HttpRequest, id_tag_definition_persistent: str
-):
-    "API method for removing a tag definition given by its persistent id from the user profile."
+def delete_column_id_persistent(request: HttpRequest, id_column_persistent: str):
+    "API method for removing a column given by its persistent id from the user profile."
     try:
         user = check_user(request)
-        user.remove_tag_definition_by_id(id_tag_definition_persistent)
+        user.remove_column_by_id(id_column_persistent)
         user.save()
         return 200, None
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
     except DatabaseError:
         return 500, ApiError(
-            msg="Could not delete the persistent tag definition id from the database."
+            msg="Could not delete the persistent column id from the database."
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(
-            msg="Could not delete the persistent tag definition id from the user profile."
+            msg="Could not delete the persistent column id from the user profile."
         )
 
 
 @router.post(
-    "/tag_definitions/change/{start_idx}/{end_idx}",
+    "/columns/change/{start_idx}/{end_idx}",
     response={200: None, 400: ApiError, 401: ApiError, 500: ApiError},
 )
-def change_tag_definitions_by_idx(request: HttpRequest, start_idx: int, end_idx: int):
-    "API method for removing a tag definition given by its persistent id from the user profile."
+def change_columns_by_idx(request: HttpRequest, start_idx: int, end_idx: int):
+    "API method for removing a column given by its persistent id from the user profile."
     try:
         user = check_user(request)
-        user.swap_tag_definition_idx(start_idx, end_idx)
+        user.swap_column_idx(start_idx, end_idx)
         user.save()
         return 200, None
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
     except IndexError:
-        return 400, ApiError(
-            msg="Persistent tag definition at the index does not exist."
-        )
+        return 400, ApiError(msg="Persistent column at the index does not exist.")
     except DatabaseError:
         return 500, ApiError(
-            msg="Could not switch the persistent tag definition ids in the database."
+            msg="Could not switch the persistent column ids in the database."
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(
-            msg="Could not switch the persistent tag definition ids in the user profile."
+            msg="Could not switch the persistent column ids in the user profile."
         )
 
 

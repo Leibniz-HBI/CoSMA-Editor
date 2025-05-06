@@ -7,7 +7,7 @@ from cosmae.column.models_django import Column
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.merge_request.entity.models_django import EntityMergeRequest
 from cosmae.merge_request.entity.queue import apply_entity_merge_request
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.value.models_django import Value
 
 
@@ -19,7 +19,7 @@ def test_creates_tag_merge_requests(conflict_resolution_replace):
     apply_entity_merge_request(merge_request.id_persistent, user.id_persistent)
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
+    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 2
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
     for mr in tag_merge_requests:
@@ -51,7 +51,7 @@ def test_creates_tag_merge_requests_empty_destination(
     apply_entity_merge_request(merge_request.id_persistent, user.id_persistent)
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
+    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 2
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
     for mr in tag_merge_requests:
@@ -81,7 +81,7 @@ def test_applies_resolutions(conflict_resolution_replace, user1):
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.merged_from == c.id_entity_origin_persistent
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
+    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 2
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
     assert len(Column.query_set(include_hidden=True)) == 5
@@ -98,7 +98,7 @@ def test_applies_resolution_replacement_value(
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.merged_from == c.id_entity_origin_persistent
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
+    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 2
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
     assert len(Column.query_set(include_hidden=True)) == 5
@@ -146,7 +146,7 @@ def test_creates_tag_merge_request_for_updated(
     apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
+    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 3
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 3
     tag_defs_including_hidden = Column.query_set(include_hidden=True)

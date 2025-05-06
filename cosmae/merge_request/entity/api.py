@@ -8,7 +8,7 @@ from django.http import HttpRequest
 from django_rq import enqueue
 from ninja import Router, Schema
 
-from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.queue import get_column_name_path_from_parts
 from cosmae.entity.api import Entity, entity_db_to_api
 from cosmae.entity.models_django import Entity as EntityDb
@@ -35,8 +35,8 @@ from cosmae.util.auth import check_user
 router = Router()
 
 
-class TagDefinition(Schema):
-    "A stripped down view on tag definitions"
+class Column(Schema):
+    "A stripped down view on columns"
 
     # pylint: disable=too-few-public-methods
     name_path: List[str]
@@ -46,8 +46,8 @@ class TagDefinition(Schema):
     curated: bool
 
 
-class TagInstance(Schema):
-    "Stripped down view on tag instances."
+class Value(Schema):
+    "Stripped down view on values."
 
     # pylint: disable=too-few-public-methods
     id_persistent: str
@@ -77,9 +77,9 @@ class EntityMergeRequestConflict(Schema):
     "API model for entity merge request conflicts."
 
     # pylint: disable=too-few-public-methods
-    tag_definition: TagDefinition
-    tag_instance_origin: TagInstance
-    tag_instance_destination: TagInstance | None = None
+    column: Column
+    value_origin: Value
+    value_destination: Value | None = None
     replacement_state: str | None = None
     replacement_value: str | None = None
 
@@ -98,16 +98,16 @@ class EntityConflictResolutionPostRequest(Schema):
     "Body for requests that resolve entity merge request conflicts"
 
     # pylint: disable=too-few-public-methods
-    id_tag_definition_version: int
+    id_column_version: int
     id_entity_origin_version: int
-    id_tag_instance_origin_version: int
+    id_value_origin_version: int
     id_entity_destination_version: int
-    id_tag_instance_destination_version: int | None = None
-    id_tag_definition_persistent: str
+    id_value_destination_version: int | None = None
+    id_column_persistent: str
     id_entity_origin_persistent: str
-    id_tag_instance_origin_persistent: str
+    id_value_origin_persistent: str
     id_entity_destination_persistent: str
-    id_tag_instance_destination_persistent: str | None = None
+    id_value_destination_persistent: str | None = None
     replacement_state: str | None = None
     replacement_value: str | None = None
 
@@ -130,19 +130,18 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
         merge_request = EntityMergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
         )
-        writable_tag_defs = TagDefinitionDb.for_user(user, True)
+        writable_columns = ColumnDb.for_user(user, True)
         (
             resolvable_query_set,
             unresolvable_query_set,
             updated_query_set,
-        ) = merge_request.resolvable_unresolvable_updated(writable_tag_defs)
+        ) = merge_request.resolvable_unresolvable_updated(writable_columns)
         return 200, GetEntityMergeRequestConflictsResponse(
             resolvable_conflicts=[
-                annotated_tag_instance_db_to_api(conflict)
-                for conflict in resolvable_query_set
+                annotated_value_db_to_api(conflict) for conflict in resolvable_query_set
             ],
             unresolvable_conflicts=[
-                annotated_tag_instance_db_to_api(conflict)
+                annotated_value_db_to_api(conflict)
                 for conflict in unresolvable_query_set
             ],
             updated=[
@@ -196,26 +195,24 @@ def post_resolve_conflict(
             raise ApiException(
                 400, "Can only resolve conflicts for open merge requests."
             )
-        tag_definition = TagDefinitionDb.most_recent_by_id(
-            resolution_info.id_tag_definition_persistent
-        )
-        if not tag_definition.has_write_access(user.id_persistent):
-            raise ApiException(403, "You can not write to the tag definition.")
+        column = ColumnDb.most_recent_by_id(resolution_info.id_column_persistent)
+        if not column.has_write_access(user.id_persistent):
+            raise ApiException(403, "You can not write to the column.")
         EntityConflictResolutionDb.objects.filter(  # pylint: disable=no-member
-            column__id_persistent=resolution_info.id_tag_definition_persistent,
+            column__id_persistent=resolution_info.id_column_persistent,
             entity_origin__id_persistent=(resolution_info.id_entity_origin_persistent),
-            value_origin__id_persistent=resolution_info.id_tag_instance_origin_persistent,
+            value_origin__id_persistent=resolution_info.id_value_origin_persistent,
             entity_destination__id_persistent=(
                 resolution_info.id_entity_destination_persistent
             ),
             merge_request=merge_request,
         ).delete()
         resolution = EntityConflictResolutionDb(
-            column_id=resolution_info.id_tag_definition_version,
+            column_id=resolution_info.id_column_version,
             entity_origin_id=resolution_info.id_entity_origin_version,
-            value_origin_id=resolution_info.id_tag_instance_origin_version,
+            value_origin_id=resolution_info.id_value_origin_version,
             entity_destination_id=resolution_info.id_entity_destination_version,
-            value_destination_id=resolution_info.id_tag_instance_destination_version,
+            value_destination_id=resolution_info.id_value_destination_version,
             merge_request=merge_request,
             replacement_state=REPLACEMENT_STATE_API_TO_DB_MAP.get(
                 resolution_info.replacement_state
@@ -278,9 +275,9 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 or EntityMergeRequestDb.ERROR
             ):
                 return 400, ApiError(msg="Merge request not available for merging.")
-            writable_tag_defs = TagDefinitionDb.for_user(user, True)
+            writable_columns = ColumnDb.for_user(user, True)
             resolvable, _, updated = merge_request.resolvable_unresolvable_updated(
-                writable_tag_defs
+                writable_columns
             )
             if len(updated) > 0:
                 return 400, ApiError(
@@ -547,26 +544,26 @@ def entity_merge_request_db_to_api(merge_request: EntityMergeRequestDb):
     )
 
 
-def annotated_tag_instance_db_to_api(annotated_instance):
-    "Converts an annotated tag instance from DB to API representation"
-    tag_definition = annotated_instance.column
-    tag_instance_destination_db = annotated_instance.value_destination
-    if tag_instance_destination_db is None:
-        tag_instance_destination = None
+def annotated_value_db_to_api(annotated_instance):
+    "Converts an annotated value from DB to API representation"
+    column = annotated_instance.column
+    value_destination_db = annotated_instance.value_destination
+    if value_destination_db is None:
+        value_destination = None
     else:
-        tag_instance_destination = TagInstance(
-            id_persistent=tag_instance_destination_db["id_persistent"],
-            version=tag_instance_destination_db["id"],
-            value=tag_instance_destination_db["value"],
+        value_destination = Value(
+            id_persistent=value_destination_db["id_persistent"],
+            version=value_destination_db["id"],
+            value=value_destination_db["value"],
         )
     return EntityMergeRequestConflict(
-        tag_definition=tag_definition_json_field_to_api(tag_definition),
-        tag_instance_origin=TagInstance(
+        column=column_json_field_to_api(column),
+        value_origin=Value(
             id_persistent=annotated_instance.id_persistent,
             version=annotated_instance.id,
             value=annotated_instance.value,
         ),
-        tag_instance_destination=tag_instance_destination,
+        value_destination=value_destination,
         replacement_state=REPLACEMENT_STATE_DB_TO_API_MAP.get(
             annotated_instance.conflict_resolution_replacement_state
         ),
@@ -576,42 +573,40 @@ def annotated_tag_instance_db_to_api(annotated_instance):
 
 def conflict_with_updated_data_db_to_api(annotated_conflict):
     "Transform an annotated conflict from DB to API representation."
-    tag_definition = annotated_conflict.tag_definition_most_recent
-    tag_instance_destination_db = (
-        annotated_conflict.tag_instance_destination_most_recent
-    )
-    if tag_instance_destination_db is None:
-        tag_instance_destination = None
+    column = annotated_conflict.column_most_recent
+    value_destination_db = annotated_conflict.value_destination_most_recent
+    if value_destination_db is None:
+        value_destination = None
     else:
-        tag_instance_destination = TagInstance(
-            id_persistent=tag_instance_destination_db["id_persistent"],
-            version=tag_instance_destination_db["id"],
-            value=tag_instance_destination_db["value"],
+        value_destination = Value(
+            id_persistent=value_destination_db["id_persistent"],
+            version=value_destination_db["id"],
+            value=value_destination_db["value"],
         )
 
-    tag_instance_origin = annotated_conflict.tag_instance_origin_most_recent
+    value_origin = annotated_conflict.value_origin_most_recent
     return EntityMergeRequestConflict(
-        tag_definition=tag_definition_json_field_to_api(tag_definition),
-        tag_instance_origin=TagInstance(
-            id_persistent=tag_instance_origin["id_persistent"],
-            version=tag_instance_origin["id"],
-            value=tag_instance_origin["value"],
+        column=column_json_field_to_api(column),
+        value_origin=Value(
+            id_persistent=value_origin["id_persistent"],
+            version=value_origin["id"],
+            value=value_origin["value"],
         ),
-        tag_instance_destination=tag_instance_destination,
+        value_destination=value_destination,
         # Underlying data has changed!
         replacement_state=None,
         replacement_value=annotated_conflict.replacement_value,
     )
 
 
-def tag_definition_json_field_to_api(tag_def_dict):
-    "Converts an as JSONField annotated tag definition to API representation."
-    id_persistent = tag_def_dict["id_persistent"]
-    name = tag_def_dict["name"]
-    return TagDefinition(
-        version=tag_def_dict["id"],
+def column_json_field_to_api(column_dict):
+    "Converts an as JSONField annotated column to API representation."
+    id_persistent = column_dict["id_persistent"]
+    name = column_dict["name"]
+    return Column(
+        version=column_dict["id"],
         name_path=get_column_name_path_from_parts(id_persistent, name),
         id_persistent=id_persistent,
-        id_parent_persistent=tag_def_dict["id_parent_persistent"],
-        curated=tag_def_dict["curated"],
+        id_parent_persistent=column_dict["id_parent_persistent"],
+        curated=column_dict["curated"],
     )

@@ -108,20 +108,18 @@ def test_resolve_conflicts(
     rsp = req.post_resolution(
         server.url,
         c.id_merge_request_persistent,
-        id_tag_definition_persistent=column_curated.id_persistent,
-        id_tag_definition_version=column_curated.id,
+        id_column_persistent=column_curated.id_persistent,
+        id_column_version=column_curated.id,
         id_entity_origin_persistent=origin_entity_for_mr.id_persistent,
         id_entity_origin_version=origin_entity_for_mr.id,
         id_entity_destination_persistent=destination_entity_for_mr.id_persistent,
         id_entity_destination_version=destination_entity_for_mr.id,
-        id_tag_instance_origin_persistent=instances_merge_request_origin_user[
-            2
-        ].id_persistent,
-        id_tag_instance_origin_version=instances_merge_request_origin_user[2].id,
-        id_tag_instance_destination_persistent=(
+        id_value_origin_persistent=instances_merge_request_origin_user[2].id_persistent,
+        id_value_origin_version=instances_merge_request_origin_user[2].id,
+        id_value_destination_persistent=(
             instance_merge_request_destination_user_conflict.id_persistent
         ),
-        id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
         replacement_state="REPLACE",
         cookies=cookies,
     )
@@ -161,18 +159,18 @@ def test_resolve_conflicts(
             {
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_curated_test],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_curated_test,
                     "curated": True,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin_curated,
                     "value": c.value_origin_curated,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
         ],
     )
@@ -182,34 +180,34 @@ def test_resolve_conflicts(
             {
                 "replacement_state": None,
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin,
                     "value": c.value_origin,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
             {
                 "replacement_state": None,
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },
@@ -219,7 +217,7 @@ def test_resolve_conflicts(
     assert json["updated"] == []
 
 
-def test_can_not_write_tag_def(
+def test_can_not_write_column(
     auth_server_commissioner,
     column,
     merge_request_user,
@@ -230,20 +228,18 @@ def test_can_not_write_tag_def(
     rsp = req.post_resolution(
         server.url,
         c.id_merge_request_persistent,
-        id_tag_definition_persistent=column.id_persistent,
-        id_tag_definition_version=column.id,
+        id_column_persistent=column.id_persistent,
+        id_column_version=column.id,
         id_entity_origin_persistent=merge_request_user.id_origin_persistent,
         id_entity_origin_version=1,
         id_entity_destination_persistent=merge_request_user.id_destination_persistent,
         id_entity_destination_version=2,
-        id_tag_instance_origin_persistent=instances_merge_request_origin_user[
-            0
-        ].id_persistent,
-        id_tag_instance_origin_version=instances_merge_request_origin_user[0].id,
-        id_tag_instance_destination_persistent=(
+        id_value_origin_persistent=instances_merge_request_origin_user[0].id_persistent,
+        id_value_origin_version=instances_merge_request_origin_user[0].id,
+        id_value_destination_persistent=(
             instance_merge_request_destination_user_conflict.id_persistent
         ),
-        id_tag_instance_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
         replacement_state="REPLACE",
         cookies=cookies,
     )

@@ -66,13 +66,13 @@ class CosmaeUser(AbstractUser):
             filtered_by_id = filtered_by_id.exclude(is_superuser=True)
         return filtered_by_id.order_by(models.F("id").asc())[:count]
 
-    def append_tag_definition_by_id(self, id_tag_definition_persistent):
+    def append_column_by_id(self, id_tag_definition_persistent):
         """Adds the persistent id of a tag definition to the end of
         the list containing the persistent tag definition ids for the user"""
         tag_definitions = self.tag_definitions
         tag_definitions.append(id_tag_definition_persistent)
 
-    def remove_tag_definition_by_id(self, id_tag_definition_persistent):
+    def remove_column_by_id(self, id_tag_definition_persistent):
         """Removes a persistent id of a tag definition from
         the list containing the persistent tag definition ids for the user"""
         old_tag_definitions = self.tag_definitions
@@ -84,7 +84,7 @@ class CosmaeUser(AbstractUser):
         self.tag_definitions = new_tag_definitions
         self.save()
 
-    def swap_tag_definition_idx(self, start_idx, end_idx):
+    def swap_column_idx(self, start_idx, end_idx):
         """Switches two positions in the list containing
         the persistent tag definition ids for the user"""
         tag_definitions = self.tag_definitions

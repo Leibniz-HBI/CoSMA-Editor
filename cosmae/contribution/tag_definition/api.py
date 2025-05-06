@@ -20,7 +20,7 @@ from cosmae.util.django import patch_from_dict
 router = Router()
 
 
-class TagDefinitionContribution(Schema):
+class ColumnContribution(Schema):
     "Response Schema for contribution tag definitions."
 
     # pylint: disable=too-few-public-methods
@@ -31,11 +31,11 @@ class TagDefinitionContribution(Schema):
     discard: bool
 
 
-class TagDefinitionContributionResponseList(Schema):
+class ColumnContributionResponseList(Schema):
     "Response schema for multiple contribution tag definitions"
 
     # pylint: disable=too-few-public-methods
-    tag_definitions: List[TagDefinitionContribution]
+    column_list: List[ColumnContribution]
 
 
 class TagDefinitionPatchRequest(Schema):
@@ -49,14 +49,14 @@ class TagDefinitionPatchRequest(Schema):
 @router.get(
     "",
     response={
-        200: TagDefinitionContributionResponseList,
+        200: ColumnContributionResponseList,
         404: ApiError,
         401: ApiError,
         500: ApiError,
         400: ApiError,
     },
 )
-def get_tag_definitions(request: HttpRequest):
+def get_columns(request: HttpRequest):
     "API method for getting tag definitions of a contribution candidate."
     # pylint: disable=too-many-return-statements
     try:
@@ -72,15 +72,14 @@ def get_tag_definitions(request: HttpRequest):
             return 404, ApiError(msg="Contribution candidate does not exist.")
         if candidate.state == ContributionCandidateDb.UPLOADED:
             return 400, ApiError(msg="Column definitions not yet extracted.")
-        tag_definitions_db = TagDefContributionDb.get_by_candidate_query_set(
+        columns_db = TagDefContributionDb.get_by_candidate_query_set(
             candidate
         ).order_by("index_in_file")
-        if not tag_definitions_db:
+        if not columns_db:
             return 404, ApiError(msg="No tag definitions match the given parameters.")
-        return 200, TagDefinitionContributionResponseList(
-            tag_definitions=[
-                tag_definitions_contribution_db_to_api(tag_def)
-                for tag_def in tag_definitions_db
+        return 200, ColumnContributionResponseList(
+            column_list=[
+                columns_contribution_db_to_api(tag_def) for tag_def in columns_db
             ],
         )
     except NotAuthenticatedException:
@@ -88,7 +87,7 @@ def get_tag_definitions(request: HttpRequest):
     except DatabaseError:
         return 500, ApiError(msg="Could not get the tag definitions from the database.")
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get the requested tag_definitions.")
+        return 500, ApiError(msg="Could not get the requested columns.")
 
 
 allowed_additional_fields = {"display_txt", "id_persistent", "justification"}
@@ -97,7 +96,7 @@ allowed_additional_fields = {"display_txt", "id_persistent", "justification"}
 @router.patch(
     "{id_persistent}",
     response={
-        200: TagDefinitionContribution,
+        200: ColumnContribution,
         400: ApiError,
         401: ApiError,
         404: ApiError,
@@ -135,7 +134,7 @@ def patch_tag_definition(
             elif "discard" not in patch_dict:
                 patch_dict["discard"] = True
             patch_from_dict(candidate_definition, **patch_dict)
-            return 200, tag_definitions_contribution_db_to_api(candidate_definition)
+            return 200, columns_contribution_db_to_api(candidate_definition)
         except Column.DoesNotExist:  # pylint: disable=no-member
             return 400, ApiError(msg="Existing tag definition does not exist.")
         except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
@@ -152,9 +151,9 @@ def patch_tag_definition(
         return 500, ApiError(msg="Could not update the requested tag_definition.")
 
 
-def tag_definitions_contribution_db_to_api(tag_def_db: TagDefinitionContribution):
+def columns_contribution_db_to_api(tag_def_db: ColumnContribution):
     "Convert a contribution tag definition from API to database representation."
-    return TagDefinitionContribution(
+    return ColumnContribution(
         name=tag_def_db.name,
         id_persistent=str(tag_def_db.id_persistent),
         id_existing_persistent=tag_def_db.id_existing_persistent,

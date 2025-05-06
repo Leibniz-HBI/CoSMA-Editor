@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,duplicate-code
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,too-many-positional-arguments,duplicate-code
 from uuid import uuid4
 
 import tests.contribution.entity.api.requests as r
@@ -100,7 +100,7 @@ def test_get_pair_similarity(
         rsp.json(),
         {
             "similarity": 0.9230769230769231,
-            "id_match_tag_definition_persistent_list": [],
+            "id_match_column_persistent_list": [],
             "entity": {
                 "display_txt": "test entity 0",
                 "display_txt_details": "Display Text",
@@ -139,9 +139,7 @@ def test_get_pair_similarity_with_tag_match(
                 "id_persistent": ce.id_persistent_test_1,
                 "version": 2,
             },
-            "id_match_tag_definition_persistent_list": [
-                "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
-            ],
+            "id_match_column_persistent_list": ["2ec43995-338b-4f4b-b1cc-4bfc71466fc5"],
             "similarity": 0.9230769230769231,
         },
     )

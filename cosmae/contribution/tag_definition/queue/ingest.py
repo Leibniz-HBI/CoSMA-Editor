@@ -14,7 +14,7 @@ from cosmae.contribution.tag_definition.models_django import TagDefinitionContri
 from cosmae.contribution.tag_definition.queue.util import read_csv_of_candidate
 from cosmae.entity.models_django import EntityHistory, EntityJustification
 from cosmae.exception import ColumnExistsException
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.value.models_django import (
     ValueHistory,
@@ -204,7 +204,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                     )
                     tag_instance.save()
             for origin, destination in tag_definition_pairs:
-                TagMergeRequest(
+                ColumnMergeRequest(
                     id_persistent=uuid4(),
                     id_origin_persistent=origin.id_persistent,
                     id_destination_persistent=destination.id_persistent,

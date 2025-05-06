@@ -46,7 +46,7 @@ def test_multiple(auth_server):
     assert len(contributions) == 2
     for contribution in contributions:
         contribution.pop("id_persistent")
-        contribution.pop("match_tag_definition_list")
+        contribution.pop("match_column_list")
     assert contributions[0] == c.contribution_test_upload0
     assert contributions[1] == c.contribution_test_upload1
 
@@ -67,7 +67,7 @@ def test_multiple_users(auth_server1):
     assert len(contributions) == 1
     contribution = contributions[0]
     contribution.pop("id_persistent")
-    contribution.pop("match_tag_definition_list")
+    contribution.pop("match_column_list")
     assert contribution == c.contribution_test_upload0
     rsp = req_contrib.get_chunk(server.url, 0, 100, cookies=cookies_user1)
     assert rsp.status_code == 200
@@ -75,7 +75,7 @@ def test_multiple_users(auth_server1):
     assert len(contributions) == 1
     contribution = contributions[0]
     contribution.pop("id_persistent")
-    contribution.pop("match_tag_definition_list")
+    contribution.pop("match_column_list")
     expected = c.contribution_test_upload1.copy()
     expected["author"] = cu.test_username1
     assert contribution == expected

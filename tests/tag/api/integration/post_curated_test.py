@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, patch
 
 import tests.tag.api.integration.requests as req
 import tests.tag.common as c
-from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.models_django import OwnershipRequest as OwnershipRequestDb
 from cosmae.exception import NotAuthenticatedException
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 
 
 def test_unknown_user(auth_server):
@@ -47,7 +47,7 @@ def test_curate(auth_server_commissioner, tag_def_user):
     server, cookies = auth_server_commissioner
     rsp = req.post_curation(server.url, tag_def_user.id_persistent, cookies=cookies)
     assert rsp.status_code == 200
-    tag_def = TagDefinitionDb.most_recent_by_id(tag_def_user.id_persistent)
+    tag_def = ColumnDb.most_recent_by_id(tag_def_user.id_persistent)
     assert tag_def.curated
     assert tag_def.owner is None
 
@@ -61,9 +61,7 @@ def test_curate_removes_ownership_requests(
         server.url, ownership_request_user.id_column_persistent, cookies=cookies
     )
     assert rsp.status_code == 200
-    tag_def = TagDefinitionDb.most_recent_by_id(
-        ownership_request_user.id_column_persistent
-    )
+    tag_def = ColumnDb.most_recent_by_id(ownership_request_user.id_column_persistent)
     assert tag_def.curated
     assert tag_def.owner is None
     assert 0 == len(
@@ -76,10 +74,10 @@ def test_curate_removes_ownership_requests(
 def test_curate_changes_mrs(auth_server_commissioner, tag_def_user, user_editor):
     "Check whether a commissioner can curate a tag."
     id_mr_persistent = "83cea683-d504-495f-b9dc-d14b025267a2"
-    TagMergeRequest.objects.create(  # pylint: disable=no-member
+    ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         assigned_to=tag_def_user.owner,
         created_by=user_editor,
-        state=TagMergeRequest.OPEN,
+        state=ColumnMergeRequest.OPEN,
         id_origin_persistent="origin_for_test",
         id_destination_persistent=tag_def_user.id_persistent,
         created_at=c.time_edit_test,
@@ -89,7 +87,7 @@ def test_curate_changes_mrs(auth_server_commissioner, tag_def_user, user_editor)
     rsp = req.post_curation(server.url, tag_def_user.id_persistent, cookies=cookies)
     assert rsp.status_code == 200
     assert (
-        TagMergeRequest.objects.filter(  # pylint: disable=no-member
+        ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
             id_persistent=id_mr_persistent
         )
         .get()

@@ -1,15 +1,15 @@
 "Model conversions for values"
 
-from cosmae.value.models_api import TagInstancePost
-from cosmae.value.models_django import ValueAbstract as TagInstanceAbstractDb
+from cosmae.value.models_api import ValuePost
+from cosmae.value.models_django import ValueAbstract as ValueAbstractDb
 
 
-def tag_instance_db_to_api(tag_db: TagInstanceAbstractDb) -> TagInstancePost:
-    "Convert tag instances from database to API representation."
-    return TagInstancePost(
-        id_persistent=tag_db.id_persistent,
-        id_entity_persistent=tag_db.id_entity_persistent,
-        id_tag_definition_persistent=tag_db.id_column_persistent,
-        value=tag_db.value,
-        version=tag_db.id,
+def value_db_to_api(value_db: ValueAbstractDb) -> ValuePost:
+    "Convert values from database to API representation."
+    return ValuePost(
+        id_persistent=value_db.id_persistent,
+        id_entity_persistent=value_db.id_entity_persistent,
+        id_column_persistent=value_db.id_column_persistent,
+        value=value_db.value,
+        version=value_db.id,
     )

@@ -35,7 +35,7 @@ class ScoredMatch(Schema):
 
     # pylint: disable=too-few-public-methods
     similarity: float
-    id_match_tag_definition_persistent_list: List[str]
+    id_match_column_persistent_list: List[str]
     entity: Entity
 
 
@@ -389,7 +389,7 @@ def scored_match_db_to_api(match):
     return ScoredMatch(
         similarity=match["levenshtein_similarity"],
         entity=entity_db_dict_to_api(match),
-        id_match_tag_definition_persistent_list=id_match_column_persistent_list,
+        id_match_column_persistent_list=id_match_column_persistent_list,
     )
 
 

@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 import requests
 
 
-def get_tag_definition(url, cookies=None):
+def get_column(url, cookies=None):
     return requests.get(
         urljoin(url, "/cosmae/api/manage/display_txt/order"),
         cookies=cookies,
@@ -12,20 +12,18 @@ def get_tag_definition(url, cookies=None):
     )
 
 
-def post_append_tag_definition(url, id_tag_definition_persistent, cookies=None):
+def post_append_column(url, id_column_persistent, cookies=None):
     return requests.post(
         urljoin(url, "/cosmae/api/manage/display_txt/order/append"),
-        json={"id_tag_definition_persistent": id_tag_definition_persistent},
+        json={"id_column_persistent": id_column_persistent},
         cookies=cookies,
         timeout=9,
     )
 
 
-def delete_tag_definition(url, id_tag_definition_persistent, cookies=None):
+def delete_column(url, id_column_persistent, cookies=None):
     return requests.delete(
-        urljoin(
-            url, f"/cosmae/api/manage/display_txt/order/{id_tag_definition_persistent}"
-        ),
+        urljoin(url, f"/cosmae/api/manage/display_txt/order/{id_column_persistent}"),
         cookies=cookies,
         timeout=9,
     )

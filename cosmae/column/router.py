@@ -1,4 +1,4 @@
-"Combination of tag definitions and instance API."
+"Combination of column and column permissions APIs."
 
 from cosmae.column.api import router
 from cosmae.column.api_permissions import router as permissions_router

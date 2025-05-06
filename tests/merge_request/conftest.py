@@ -5,7 +5,7 @@ import tests.entity.common as ce
 import tests.merge_request.common as c
 from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest, TagConflictResolution
 from cosmae.value.models_django import (
     ValueHistory,
 )
@@ -92,7 +92,7 @@ def contribution_for_mr(db, user1):
 def merge_request_user_fast_forward(
     db, origin_tag_def_for_mr, destination_tag_def_for_mr_user1, contribution_for_mr
 ):
-    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+    return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_origin_persistent=origin_tag_def_for_mr.id_persistent,
         id_destination_persistent=destination_tag_def_for_mr_user1.id_persistent,
         created_by=origin_tag_def_for_mr.owner,
@@ -107,7 +107,7 @@ def merge_request_user_fast_forward(
 def merge_request_user_fast_forward_disable_origin(
     db, origin_tag_def_for_mr, destination_tag_def_for_mr_user1, contribution_for_mr
 ):
-    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+    return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_origin_persistent=origin_tag_def_for_mr.id_persistent,
         id_destination_persistent=destination_tag_def_for_mr_user1.id_persistent,
         created_by=origin_tag_def_for_mr.owner,
@@ -123,7 +123,7 @@ def merge_request_user_fast_forward_disable_origin(
 def merge_request_user(
     db, origin_tag_def_for_mr, destination_tag_def_for_mr, contribution_for_mr
 ):
-    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+    return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_origin_persistent=origin_tag_def_for_mr.id_persistent,
         id_destination_persistent=destination_tag_def_for_mr.id_persistent,
         created_by=origin_tag_def_for_mr.owner,
@@ -136,7 +136,7 @@ def merge_request_user(
 
 @pytest.fixture
 def merge_request_user_resolved(merge_request_user):
-    merge_request_user.state = TagMergeRequest.RESOLVED
+    merge_request_user.state = ColumnMergeRequest.RESOLVED
     merge_request_user.save()
     return merge_request_user
 
@@ -145,7 +145,7 @@ def merge_request_user_resolved(merge_request_user):
 def merge_request_user_disable_origin(
     db, origin_tag_def_for_mr, destination_tag_def_for_mr, contribution_for_mr
 ):
-    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+    return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_origin_persistent=origin_tag_def_for_mr.id_persistent,
         id_destination_persistent=destination_tag_def_for_mr.id_persistent,
         created_by=origin_tag_def_for_mr.owner,
@@ -161,7 +161,7 @@ def merge_request_user_disable_origin(
 def merge_request_user_disable_origin_resolved(
     merge_request_user_disable_origin,
 ):
-    merge_request_user_disable_origin.state = TagMergeRequest.RESOLVED
+    merge_request_user_disable_origin.state = ColumnMergeRequest.RESOLVED
     merge_request_user_disable_origin.save()
     return merge_request_user_disable_origin
 
@@ -208,7 +208,7 @@ def contribution_for_mr1(db, user):
 def merge_request_user1(
     db, destination_tag_def_for_mr1, origin_tag_def_for_mr1, contribution_for_mr1
 ):
-    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+    return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_destination_persistent=destination_tag_def_for_mr1.id_persistent,
         id_origin_persistent=origin_tag_def_for_mr1.id_persistent,
         created_by=origin_tag_def_for_mr1.owner,
@@ -221,7 +221,7 @@ def merge_request_user1(
 
 @pytest.fixture
 def merge_request_curated(column_curated, column1, contribution_for_mr):
-    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+    return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_destination_persistent=column_curated.id_persistent,
         id_origin_persistent=column1.id_persistent,
         created_by=column1.owner,

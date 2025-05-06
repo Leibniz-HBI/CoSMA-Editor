@@ -9,12 +9,12 @@ from tests.tag import common as c
 from tests.utils import assert_versioned
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.exception import NotAuthenticatedException
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 
 
 def test_no_cookies(auth_server):
     live_server, _ = auth_server
-    rsp = req.post_tag_instances_for_entities(live_server.url, [], [])
+    rsp = req.post_values_for_entities(live_server.url, [], [])
     assert rsp.status_code == 401
 
 
@@ -23,21 +23,19 @@ def test_invalid_user(auth_server):
     mock.side_effect = NotAuthenticatedException()
     with patch("cosmae.value.api.check_user", mock):
         live_server, cookies = auth_server
-        rsp = req.post_tag_instances_for_entities(
-            live_server.url, [], [], cookies=cookies
-        )
+        rsp = req.post_values_for_entities(live_server.url, [], [], cookies=cookies)
         assert rsp.status_code == 401
 
 
 def test_empty_200(auth_server):
     live_server, cookies = auth_server
-    rsp = req.post_tag_instances_for_entities(live_server.url, [], [], cookies=cookies)
+    rsp = req.post_values_for_entities(live_server.url, [], [], cookies=cookies)
     assert rsp.status_code == 200
 
 
 def test_empty_entities_200(auth_server):
     live_server, cookies = auth_server
-    rsp = req.post_tag_instances_for_entities(
+    rsp = req.post_values_for_entities(
         live_server.url, [ce.id_persistent_test_0], [], cookies=cookies
     )
     assert rsp.status_code == 200
@@ -45,7 +43,7 @@ def test_empty_entities_200(auth_server):
 
 def test_empty_tags_200(auth_server):
     live_server, cookies = auth_server
-    rsp = req.post_tag_instances_for_entities(
+    rsp = req.post_values_for_entities(
         live_server.url, [], [c.id_column_persistent_test], cookies=cookies
     )
     assert rsp.status_code == 200
@@ -56,7 +54,7 @@ def test_get_multiple(
     auth_server, tag_def_user, tag_def_user1, entity0, entity1, tag_instances_user
 ):
     live_server, cookies = auth_server
-    rsp = req.post_tag_instances_for_entities(
+    rsp = req.post_values_for_entities(
         live_server.url,
         [ce.id_persistent_test_0, ce.id_persistent_test_1],
         [c.id_column_persistent_test_user, c.id_column_persistent_test_user1],
@@ -67,11 +65,10 @@ def test_get_multiple(
     value_responses = json["value_responses"]
     assert value_responses[0]["id_entity_persistent"] == ce.id_persistent_test_0
     assert (
-        value_responses[0]["id_tag_definition_persistent"]
-        == c.id_column_persistent_test_user
+        value_responses[0]["id_column_persistent"] == c.id_column_persistent_test_user
     )
     assert (
-        value_responses[0]["id_tag_definition_requested_persistent"]
+        value_responses[0]["id_column_requested_persistent"]
         == c.id_column_persistent_test_user
     )
     assert value_responses[0]["id_persistent"] == c.id_instance_test0
@@ -80,11 +77,10 @@ def test_get_multiple(
     assert "version" in value_responses[0]
     assert value_responses[1]["id_entity_persistent"] == ce.id_persistent_test_1
     assert (
-        value_responses[1]["id_tag_definition_persistent"]
-        == c.id_column_persistent_test_user
+        value_responses[1]["id_column_persistent"] == c.id_column_persistent_test_user
     )
     assert (
-        value_responses[1]["id_tag_definition_requested_persistent"]
+        value_responses[1]["id_column_requested_persistent"]
         == c.id_column_persistent_test_user
     )
     assert value_responses[1]["id_persistent"] == c.id_instance_test1
@@ -93,11 +89,10 @@ def test_get_multiple(
     assert "version" in value_responses[1]
     assert value_responses[2]["id_entity_persistent"] == ce.id_persistent_test_0
     assert (
-        value_responses[2]["id_tag_definition_persistent"]
-        == c.id_column_persistent_test_user1
+        value_responses[2]["id_column_persistent"] == c.id_column_persistent_test_user1
     )
     assert (
-        value_responses[2]["id_tag_definition_requested_persistent"]
+        value_responses[2]["id_column_requested_persistent"]
         == c.id_column_persistent_test_user1
     )
     assert value_responses[2]["id_persistent"] == c.id_instance_test2
@@ -106,11 +101,10 @@ def test_get_multiple(
     assert "version" in value_responses[2]
     assert value_responses[3]["id_entity_persistent"] == ce.id_persistent_test_1
     assert (
-        value_responses[3]["id_tag_definition_persistent"]
-        == c.id_column_persistent_test_user1
+        value_responses[3]["id_column_persistent"] == c.id_column_persistent_test_user1
     )
     assert (
-        value_responses[3]["id_tag_definition_requested_persistent"]
+        value_responses[3]["id_column_requested_persistent"]
         == c.id_column_persistent_test_user1
     )
     assert value_responses[3]["id_persistent"] == c.id_instance_test3
@@ -121,10 +115,10 @@ def test_get_multiple(
 
 @pytest.fixture
 def merge_request(user, user1):
-    mr = TagMergeRequest(
+    mr = ColumnMergeRequest(
         id_origin_persistent=c.id_column_persistent_test_user1,
         id_destination_persistent=c.id_column_persistent_test_user,
-        state=TagMergeRequest.OPEN,
+        state=ColumnMergeRequest.OPEN,
         id_persistent=c.id_merge_request,
         created_at=c.time_created_merge_request,
         created_by=user,
@@ -145,7 +139,7 @@ def test_related_by_merge_request(
     merge_request,
 ):
     live_server, cookies = auth_server
-    rsp = req.post_tag_instances_for_entities(
+    rsp = req.post_values_for_entities(
         live_server.url,
         [ce.id_persistent_test_0, ce.id_persistent_test_1],
         [c.id_column_persistent_test_user],
@@ -160,32 +154,32 @@ def test_related_by_merge_request(
         [
             {
                 "id_entity_persistent": ce.id_persistent_test_0,
-                "id_tag_definition_persistent": c.id_column_persistent_test_user,
-                "id_tag_definition_requested_persistent": c.id_column_persistent_test_user,
+                "id_column_persistent": c.id_column_persistent_test_user,
+                "id_column_requested_persistent": c.id_column_persistent_test_user,
                 "id_persistent": c.id_instance_test0,
                 "is_existing": True,
                 "value": "value",
             },
             {
                 "id_entity_persistent": ce.id_persistent_test_1,
-                "id_tag_definition_persistent": c.id_column_persistent_test_user,
-                "id_tag_definition_requested_persistent": c.id_column_persistent_test_user,
+                "id_column_persistent": c.id_column_persistent_test_user,
+                "id_column_requested_persistent": c.id_column_persistent_test_user,
                 "id_persistent": c.id_instance_test1,
                 "is_existing": True,
                 "value": "value 1",
             },
             {
                 "id_entity_persistent": ce.id_persistent_test_0,
-                "id_tag_definition_persistent": c.id_column_persistent_test_user1,
-                "id_tag_definition_requested_persistent": c.id_column_persistent_test_user,
+                "id_column_persistent": c.id_column_persistent_test_user1,
+                "id_column_requested_persistent": c.id_column_persistent_test_user,
                 "id_persistent": c.id_instance_test2,
                 "is_existing": False,
                 "value": "value 2",
             },
             {
                 "id_entity_persistent": ce.id_persistent_test_1,
-                "id_tag_definition_persistent": c.id_column_persistent_test_user1,
-                "id_tag_definition_requested_persistent": c.id_column_persistent_test_user,
+                "id_column_persistent": c.id_column_persistent_test_user1,
+                "id_column_requested_persistent": c.id_column_persistent_test_user,
                 "id_persistent": c.id_instance_test3,
                 "is_existing": False,
                 "value": "value 3",
@@ -217,7 +211,7 @@ def test_related_by_contribution(
     merge_request.contribution_candidate = contribution
     merge_request.save()
     live_server, cookies = auth_server
-    rsp = req.post_tag_instances_for_entities(
+    rsp = req.post_values_for_entities(
         live_server.url,
         [ce.id_persistent_test_0, ce.id_persistent_test_1],
         [c.id_column_persistent_test_user],
@@ -233,32 +227,32 @@ def test_related_by_contribution(
         [
             {
                 "id_entity_persistent": ce.id_persistent_test_0,
-                "id_tag_definition_persistent": c.id_column_persistent_test_user,
-                "id_tag_definition_requested_persistent": c.id_column_persistent_test_user,
+                "id_column_persistent": c.id_column_persistent_test_user,
+                "id_column_requested_persistent": c.id_column_persistent_test_user,
                 "id_persistent": c.id_instance_test0,
                 "is_existing": True,
                 "value": "value",
             },
             {
                 "id_entity_persistent": ce.id_persistent_test_1,
-                "id_tag_definition_persistent": c.id_column_persistent_test_user,
-                "id_tag_definition_requested_persistent": c.id_column_persistent_test_user,
+                "id_column_persistent": c.id_column_persistent_test_user,
+                "id_column_requested_persistent": c.id_column_persistent_test_user,
                 "id_persistent": c.id_instance_test1,
                 "is_existing": True,
                 "value": "value 1",
             },
             {
                 "id_entity_persistent": ce.id_persistent_test_0,
-                "id_tag_definition_persistent": c.id_column_persistent_test_user1,
-                "id_tag_definition_requested_persistent": c.id_column_persistent_test_user,
+                "id_column_persistent": c.id_column_persistent_test_user1,
+                "id_column_requested_persistent": c.id_column_persistent_test_user,
                 "id_persistent": c.id_instance_test2,
                 "is_existing": False,
                 "value": "value 2",
             },
             {
                 "id_entity_persistent": ce.id_persistent_test_1,
-                "id_tag_definition_persistent": c.id_column_persistent_test_user1,
-                "id_tag_definition_requested_persistent": c.id_column_persistent_test_user,
+                "id_column_persistent": c.id_column_persistent_test_user1,
+                "id_column_requested_persistent": c.id_column_persistent_test_user,
                 "id_persistent": c.id_instance_test3,
                 "is_existing": False,
                 "value": "value 3",

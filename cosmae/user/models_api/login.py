@@ -5,7 +5,7 @@ from typing import List, Optional, Union
 from ninja import Schema
 from pydantic import Field
 
-from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_api import ColumnResponse
 from cosmae.edit_session.api import EditSession
 from cosmae.user.models_api.public import PublicUserInfo
 
@@ -33,7 +33,7 @@ class LoginResponse(Schema):
     names_personal: str
     names_family: str
     email: str
-    tag_definition_list: List[TagDefinitionResponse]
+    column_list: List[ColumnResponse]
     permission_group: str
     edit_session: EditSession
 

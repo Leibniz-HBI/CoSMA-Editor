@@ -84,18 +84,18 @@ def test_conflicts_no_resolution(
             {
                 "replacement_state": None,
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_curated_test],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_curated_test,
                     "curated": True,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin_curated,
                     "value": c.value_origin_curated,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
         ],
     )
@@ -105,34 +105,34 @@ def test_conflicts_no_resolution(
             {
                 "replacement_state": None,
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin,
                     "value": c.value_origin,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
             {
                 "replacement_state": None,
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },
@@ -239,18 +239,18 @@ def test_conflicts_resolved(
             {
                 "replacement_state": None,
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_curated_test],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_curated_test,
                     "curated": True,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin_curated,
                     "value": c.value_origin_curated,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
         ],
     )
@@ -260,34 +260,34 @@ def test_conflicts_resolved(
             {
                 "replacement_state": None,
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin,
                     "value": c.value_origin,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
             {
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },

@@ -6,7 +6,7 @@ import tests.entity.common as ce
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import EntityHistory
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.value.models_django import ValueHistory
 
 
@@ -99,12 +99,12 @@ def tag_instances_match(column_curated, column1):
 
 @pytest.fixture
 def tag_merge_request(column_curated, column1, contribution_candidate):
-    return TagMergeRequest.objects.create(  # pylint: disable=no-member
+    return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_tag_merge_request_persistent,
         id_origin_persistent=column1.id_persistent,
         id_destination_persistent=column_curated.id_persistent,
         contribution_candidate=contribution_candidate,
-        state=TagMergeRequest.OPEN,
+        state=ColumnMergeRequest.OPEN,
         created_by=column1.owner,
         created_at=c.time_edit_tag_merge_request,
     )

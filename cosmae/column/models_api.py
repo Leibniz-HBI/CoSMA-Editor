@@ -7,8 +7,8 @@ from ninja import Schema
 from cosmae.user.models_api.public import PublicUserInfo
 
 
-class TagDefinitionResponse(Schema):
-    "API model for a tag definition as a response object."
+class ColumnResponse(Schema):
+    "API model for a column as a response object."
 
     # pylint: disable=too-few-public-methods
     id_persistent: str | None = None

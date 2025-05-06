@@ -7,7 +7,7 @@ from django.db.models import OuterRef, Subquery
 from django_rq import enqueue
 
 from cosmae.entity.models_django import Entity
-from cosmae.management.display_txt.util import get_display_txt_order_tag_definitions
+from cosmae.management.display_txt.util import get_display_txt_order_columns
 from cosmae.user.model_conversion.public import user_db_to_public_user_info_dict
 from cosmae.value.models_django import Value
 
@@ -38,7 +38,7 @@ def update_display_txt_cache(id_entity_persistent):
                 id_entity_persistent, (entity.display_txt, "Display Text")
             )
         else:
-            tag_definition_order_query = get_display_txt_order_tag_definitions(
+            tag_definition_order_query = get_display_txt_order_columns(
                 entity.contribution_candidate_id
             )
             with_tag_instance_value_query = tag_definition_order_query.annotate(

@@ -119,11 +119,11 @@ def test_conflicts_no_resolution(
                     "id_persistent": ce.id_persistent_test_0,
                     "disabled": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin,
                     "value": c.value_origin,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
             {
                 "replacement_state": None,
@@ -134,11 +134,11 @@ def test_conflicts_no_resolution(
                     "id_persistent": ce.id_persistent_test_1,
                     "disabled": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },
@@ -303,11 +303,11 @@ def test_conflict_resolved(
                     "id_persistent": ce.id_persistent_test_0,
                     "disabled": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin,
                     "value": c.value_origin,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
             {
                 "replacement_state": "REPLACE",
@@ -318,11 +318,11 @@ def test_conflict_resolved(
                     "id_persistent": ce.id_persistent_test_1,
                     "disabled": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },
@@ -415,11 +415,11 @@ def test_conflict_resolved_tag_def_origin_changed(
                     "id_persistent": ce.id_persistent_test_0,
                     "disabled": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin,
                     "value": c.value_origin,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
             {
                 "replacement_state": None,
@@ -430,11 +430,11 @@ def test_conflict_resolved_tag_def_origin_changed(
                     "id_persistent": ce.id_persistent_test_1,
                     "disabled": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },
@@ -453,11 +453,11 @@ def test_conflict_resolved_tag_def_origin_changed(
                     "id_persistent": ce.id_persistent_test_1,
                     "disabled": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },
@@ -561,11 +561,11 @@ def test_tag_instance_destination_value_added(
             "id_persistent": ce.id_persistent_test_1,
             "disabled": False,
         },
-        "tag_instance_origin": {
+        "value_origin": {
             "id_persistent": c.id_instance_origin1,
             "value": c.value_origin1,
         },
-        "tag_instance_destination": {
+        "value_destination": {
             "id_persistent": id_tag_instance_destination,
             "value": "new value destination test",
         },
@@ -583,11 +583,11 @@ def test_tag_instance_destination_value_added(
                     "id_persistent": ce.id_persistent_test_0,
                     "disabled": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin,
                     "value": c.value_origin,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
             conflict1,
         ],

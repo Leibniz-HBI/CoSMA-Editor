@@ -48,7 +48,7 @@ def test_get_instances(
     rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    instances = json["tag_instance_list"]
+    instances = json["value_list"]
     assert len(instances) == 2
     id_set = {instance["id_persistent"] for instance in instances}
     assert id_set == {c.id_instance_test0, c.id_instance_test2}

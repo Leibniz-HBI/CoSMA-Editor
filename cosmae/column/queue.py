@@ -1,4 +1,4 @@
-"""Queue methods for tag instances and tag definitions."""
+"""Queue methods for columns and values"""
 
 from typing import List, Optional
 

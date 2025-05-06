@@ -18,7 +18,7 @@ from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,
 )
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.value.models_django import (
     ValueAbstract,
@@ -161,12 +161,12 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
     )
     tag_instance.save()
     # Create tag definition merge request.
-    TagMergeRequest.objects.create(  # pylint: disable=no-member
+    ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_origin_persistent=tag_definition_new.id_persistent,
         id_destination_persistent=column_existing_dict["id_persistent"],
         assigned_to_id=column_existing_dict["owner_id"],
         created_by=user,
-        state=TagMergeRequest.OPEN,
+        state=ColumnMergeRequest.OPEN,
         created_at=time_edit,
         id_persistent=uuid4(),
         disable_origin_on_merge=True,

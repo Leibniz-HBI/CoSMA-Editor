@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,duplicate-code
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,too-many-positional-arguments,duplicate-code
 from uuid import uuid4
 
 import tests.contribution.entity.api.requests as r
@@ -63,7 +63,7 @@ def test_similar_entities_no_duplicate(auth_server, contribution_candidate, enti
                     "matches": [
                         {
                             "similarity": 0.9230769230769231,
-                            "id_match_tag_definition_persistent_list": [],
+                            "id_match_column_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
                                 "display_txt_details": "Display Text",
@@ -80,7 +80,7 @@ def test_similar_entities_no_duplicate(auth_server, contribution_candidate, enti
                                 "id_persistent": ce.id_persistent_test_1,
                                 "version": 2,
                             },
-                            "id_match_tag_definition_persistent_list": [],
+                            "id_match_column_persistent_list": [],
                             "similarity": 0.9230769230769231,
                         },
                     ],
@@ -111,7 +111,7 @@ def test_similar_entities_with_duplicate(
                     "matches": [
                         {
                             "similarity": 0.9230769230769231,
-                            "id_match_tag_definition_persistent_list": [],
+                            "id_match_column_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
                                 "display_txt_details": "Display Text",
@@ -128,7 +128,7 @@ def test_similar_entities_with_duplicate(
                                 "id_persistent": ce.id_persistent_test_1,
                                 "version": 2,
                             },
-                            "id_match_tag_definition_persistent_list": [],
+                            "id_match_column_persistent_list": [],
                             "similarity": 0.9230769230769231,
                         },
                     ],
@@ -140,7 +140,7 @@ def test_similar_entities_with_duplicate(
                             "version": entities[1].id,
                             "disabled": False,
                         },
-                        "id_match_tag_definition_persistent_list": [],
+                        "id_match_column_persistent_list": [],
                         "similarity": 0.9230769230769231,
                     },
                 }
@@ -180,14 +180,14 @@ def test_similar_entities_with_tag_match(
                                 "id_persistent": ce.id_persistent_test_1,
                                 "version": 2,
                             },
-                            "id_match_tag_definition_persistent_list": [
+                            "id_match_column_persistent_list": [
                                 "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
                             ],
                             "similarity": 0.9230769230769231,
                         },
                         {
                             "similarity": 0.9230769230769231,
-                            "id_match_tag_definition_persistent_list": [],
+                            "id_match_column_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
                                 "display_txt_details": "Display Text",
@@ -206,7 +206,7 @@ def test_similar_entities_with_tag_match(
                             "disabled": False,
                         },
                         "similarity": 0.9230769230769231,
-                        "id_match_tag_definition_persistent_list": [
+                        "id_match_column_persistent_list": [
                             "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
                         ],
                     },
@@ -247,7 +247,7 @@ def test_similar_entities_assigned_duplicate_no_match(
                                 "disabled": False,
                             },
                             "similarity": 0.6153846153846154,
-                            "id_match_tag_definition_persistent_list": [],
+                            "id_match_column_persistent_list": [],
                         },
                         {
                             "entity": {
@@ -257,14 +257,14 @@ def test_similar_entities_assigned_duplicate_no_match(
                                 "id_persistent": ce.id_persistent_test_1,
                                 "version": 2,
                             },
-                            "id_match_tag_definition_persistent_list": [
+                            "id_match_column_persistent_list": [
                                 "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
                             ],
                             "similarity": 0.9230769230769231,
                         },
                         {
                             "similarity": 0.9230769230769231,
-                            "id_match_tag_definition_persistent_list": [],
+                            "id_match_column_persistent_list": [],
                             "entity": {
                                 "display_txt": "test entity 0",
                                 "display_txt_details": "Display Text",
@@ -283,7 +283,7 @@ def test_similar_entities_assigned_duplicate_no_match(
                             "disabled": False,
                         },
                         "similarity": 0.6153846153846154,
-                        "id_match_tag_definition_persistent_list": [],
+                        "id_match_column_persistent_list": [],
                     },
                 }
             }

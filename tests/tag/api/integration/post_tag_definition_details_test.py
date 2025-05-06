@@ -48,7 +48,7 @@ def test_get_details(auth_server, tag_def, column1, tag_def_user):
     assert rsp.status_code == 200
     json = rsp.json()
     assert_versioned(
-        json["tag_definitions"],
+        json["column_list"],
         [
             {
                 "id_persistent": tag_def_user.id_persistent,

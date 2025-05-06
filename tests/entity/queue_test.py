@@ -14,7 +14,7 @@ from cosmae.entity.queue import (
     tag_def_db_to_dict,
     update_display_txt_cache,
 )
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.value.models_django import ValueHistory
 
 id_persistent_entity_no_display_txt = "7d5c19e6-f47d-4c4f-a92f-0c858c18885f"
@@ -118,7 +118,7 @@ def test_exception(entity_without_display_txt):
     entity_display_txt_information_cache.delete(
         entity_without_display_txt.id_persistent
     )
-    with patch("cosmae.entity.queue.get_display_txt_order_tag_definitions", mock):
+    with patch("cosmae.entity.queue.get_display_txt_order_columns", mock):
         update_display_txt_cache(entity_without_display_txt.id_persistent)
     result = entity_display_txt_information_cache.get(
         entity_without_display_txt.id_persistent
@@ -150,7 +150,7 @@ def contribution_instance_without_display_txt(
         written_by_session=user.edit_session,
     )
     entity.save()
-    TagMergeRequest.objects.create(  # pylint: disable=no-member
+    ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_persistent=id_tag_merge_request_persistent,
         assigned_to=None,
         contribution_candidate=contribution,

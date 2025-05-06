@@ -10,8 +10,8 @@ from django.db.models.functions import Cast
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.column.models_api import TagDefinitionResponse
-from cosmae.column.models_conversion import tag_definition_db_dict_to_api
+from cosmae.column.models_api import ColumnResponse
+from cosmae.column.models_conversion import column_db_dict_to_api
 from cosmae.comments.api import Comment
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityHistory
@@ -29,11 +29,11 @@ from cosmae.management.models_django import ConfigValue
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
-from cosmae.value.models_api import TagInstancePost
+from cosmae.value.models_api import ValuePost
 from cosmae.value.models_conversion import (
-    tag_instance_db_to_api,
+    value_db_to_api,
 )
-from cosmae.value.models_django import Value as TagInstanceDb
+from cosmae.value.models_django import Value as ValueDb
 
 router = Router()
 
@@ -48,7 +48,7 @@ class Entity(Schema):
     If null on POST, a new person is created."""
     id_persistent: str | None = None
     disabled: bool | None = None
-    display_txt_details: Union[str, TagDefinitionResponse] | None = None
+    display_txt_details: Union[str, ColumnResponse] | None = None
 
 
 class JustificationList(Schema):
@@ -126,7 +126,7 @@ class EntityDetailsResponse(Schema):
     # pylint: disable=too-few-public-methods
     """API Response combining an entity with its tag instances."""
     entity: Entity
-    tag_instance_list: List[TagInstancePost]
+    value_list: List[ValuePost]
 
 
 class EntitySearchResult(Schema):
@@ -253,10 +253,10 @@ def get_values(request: HttpRequest, id_persistent: str):
         entity = EntityJustificationDb.annotate_justification(
             EntityDb.most_recent_by_id_queryset(id_persistent=id_persistent)
         ).get()
-        instances_db = TagInstanceDb.for_entity_queryset(id_persistent, user)
-        instances_api = [tag_instance_db_to_api(instance) for instance in instances_db]
+        instances_db = ValueDb.for_entity_queryset(id_persistent, user)
+        instances_api = [value_db_to_api(instance) for instance in instances_db]
         return 200, EntityDetailsResponse(
-            entity=entity_db_to_api(entity), tag_instance_list=instances_api
+            entity=entity_db_to_api(entity), value_list=instances_api
         )
     except EntityDb.DoesNotExist:
         return 404, ApiError(msg="Entity does not exist")
@@ -316,7 +316,7 @@ def search(request: HttpRequest, term: str):
                 value=F("display_txt"),
             )
         )
-        tag_value_results = TagInstanceDb.objects.search(
+        tag_value_results = ValueDb.objects.search(
             term,
             id_columns=ConfigValue.objects.filter(key=DISPLAY_TXT_ORDER_CONFIG_KEY)
             .annotate(text_value=Cast("value", TextField()))
@@ -495,7 +495,7 @@ def entity_db_to_api(entity: EntityDb) -> Entity:
     id_persistent = entity.id_persistent
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
     if isinstance(display_txt_info, dict):
-        display_txt_info = tag_definition_db_dict_to_api(display_txt_info)
+        display_txt_info = column_db_dict_to_api(display_txt_info)
     return EntityWithJustification(
         display_txt=display_txt,
         version=entity.id,
@@ -514,7 +514,7 @@ def entity_db_dict_to_api(entity: Optional[dict]) -> Optional[Entity]:
     display_txt = entity["display_txt"]
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
     if isinstance(display_txt_info, dict):
-        display_txt_info = tag_definition_db_dict_to_api(display_txt_info)
+        display_txt_info = column_db_dict_to_api(display_txt_info)
     return Entity(
         display_txt=display_txt,
         version=entity["id"],

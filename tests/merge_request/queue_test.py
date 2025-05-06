@@ -3,7 +3,7 @@
 import tests.merge_request.common as c
 import cosmae.merge_request.queue as q
 from cosmae.column.models_django import Column
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.value.models_django import Value
 
 
@@ -12,11 +12,11 @@ def test_fast_forward_destination_empty(
 ):
     "Fast forward a merge request for an empty destination"
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = TagMergeRequest.by_id_persistent(
+    merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == TagMergeRequest.MERGED
+    assert merge_request_after.state == ColumnMergeRequest.MERGED
     assert not Column.most_recent_by_id(
         merge_request_user_fast_forward.id_origin_persistent
     ).disabled
@@ -29,11 +29,11 @@ def test_fast_forward_destination_empty_with_disable(
     q.merge_request_fast_forward(
         merge_request_user_fast_forward_disable_origin.id_persistent
     )
-    merge_request_after = TagMergeRequest.by_id_persistent(
+    merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward_disable_origin.id_persistent,
         merge_request_user_fast_forward_disable_origin.created_by,
     )
-    assert merge_request_after.state == TagMergeRequest.MERGED
+    assert merge_request_after.state == ColumnMergeRequest.MERGED
     assert Column.most_recent_by_id(
         merge_request_user_fast_forward_disable_origin.id_origin_persistent
     ).disabled
@@ -44,11 +44,11 @@ def test_fast_forward_origin_empty(
 ):
     "Fast forward a merge request if the origin tag has no data."
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = TagMergeRequest.by_id_persistent(
+    merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == TagMergeRequest.MERGED
+    assert merge_request_after.state == ColumnMergeRequest.MERGED
 
 
 def test_fast_forward_no_value(
@@ -57,11 +57,11 @@ def test_fast_forward_no_value(
     instance_merge_request_destination_user_no_conflict_fast_forward,
 ):
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = TagMergeRequest.by_id_persistent(
+    merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == TagMergeRequest.CONFLICTS
+    assert merge_request_after.state == ColumnMergeRequest.CONFLICTS
 
 
 def test_fast_forward_conflict(
@@ -71,11 +71,11 @@ def test_fast_forward_conflict(
 ):
     "Does not fast forward on conflict."
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = TagMergeRequest.by_id_persistent(
+    merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == TagMergeRequest.CONFLICTS
+    assert merge_request_after.state == ColumnMergeRequest.CONFLICTS
 
 
 def test_fast_forward_no_conflict_same_value(
@@ -85,11 +85,11 @@ def test_fast_forward_no_conflict_same_value(
 ):
     "Does fast forward for same value."
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = TagMergeRequest.by_id_persistent(
+    merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == TagMergeRequest.MERGED
+    assert merge_request_after.state == ColumnMergeRequest.MERGED
 
 
 def test_applies_resolutions(
@@ -101,11 +101,11 @@ def test_applies_resolutions(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to.id_persistent,
     )
-    merge_request = TagMergeRequest.by_id_persistent(
+    merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to,
     )
-    assert merge_request.state == TagMergeRequest.MERGED
+    assert merge_request.state == ColumnMergeRequest.MERGED
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
@@ -124,11 +124,11 @@ def test_applies_resolutions_disable_origin(merge_request_user_disable_origin_re
         merge_request_user_disable_origin_resolved.id_persistent,
         merge_request_user_disable_origin_resolved.assigned_to.id_persistent,
     )
-    merge_request = TagMergeRequest.by_id_persistent(
+    merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_disable_origin_resolved.id_persistent,
         merge_request_user_disable_origin_resolved.assigned_to,
     )
-    assert merge_request.state == TagMergeRequest.MERGED
+    assert merge_request.state == ColumnMergeRequest.MERGED
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
             id_column_persistent=(
@@ -151,11 +151,11 @@ def test_incomplete_resolution_stays_open_keep(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to.id_persistent,
     )
-    merge_request = TagMergeRequest.by_id_persistent(
+    merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to,
     )
-    assert merge_request.state == TagMergeRequest.OPEN
+    assert merge_request.state == ColumnMergeRequest.OPEN
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
@@ -175,11 +175,11 @@ def test_incomplete_resolution_stays_open_replace(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to.id_persistent,
     )
-    merge_request = TagMergeRequest.by_id_persistent(
+    merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to,
     )
-    assert merge_request.state == TagMergeRequest.OPEN
+    assert merge_request.state == ColumnMergeRequest.OPEN
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
@@ -201,11 +201,11 @@ def test_merges_for_equal_value_replace(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to.id_persistent,
     )
-    merge_request = TagMergeRequest.by_id_persistent(
+    merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to,
     )
-    assert merge_request.state == TagMergeRequest.MERGED
+    assert merge_request.state == ColumnMergeRequest.MERGED
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
@@ -229,11 +229,11 @@ def test_merges_for_equal_value_keep(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to.id_persistent,
     )
-    merge_request = TagMergeRequest.by_id_persistent(
+    merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to,
     )
-    assert merge_request.state == TagMergeRequest.MERGED
+    assert merge_request.state == ColumnMergeRequest.MERGED
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
@@ -252,11 +252,11 @@ def test_merges_for_equal_value_updated(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to.id_persistent,
     )
-    merge_request = TagMergeRequest.by_id_persistent(
+    merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to,
     )
-    assert merge_request.state == TagMergeRequest.MERGED
+    assert merge_request.state == ColumnMergeRequest.MERGED
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
@@ -277,8 +277,8 @@ def test_instance_changed(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to.id_persistent,
     )
-    merge_request = TagMergeRequest.by_id_persistent(
+    merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to,
     )
-    assert merge_request.state == TagMergeRequest.OPEN
+    assert merge_request.state == ColumnMergeRequest.OPEN

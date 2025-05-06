@@ -19,7 +19,7 @@ def child_tag_def():
 def float_tag(tag_def_user, entity0):
     return {
         "value": "2.0",
-        "id_tag_definition_persistent": tag_def_user.id_persistent,
+        "id_column_persistent": tag_def_user.id_persistent,
         "id_entity_persistent": entity0.id_persistent,
     }
 

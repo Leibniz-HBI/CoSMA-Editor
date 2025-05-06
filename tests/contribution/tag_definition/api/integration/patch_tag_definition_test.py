@@ -35,7 +35,7 @@ def test_unknown_user(auth_server):
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
     with patch("cosmae.contribution.tag_definition.api.check_user", mock):
-        rsp = req.patch_tag_definition(
+        rsp = req.patch_column(
             server.url,
             "id-contribution-test",
             "id-tag-definition-test",
@@ -47,7 +47,7 @@ def test_unknown_user(auth_server):
 
 def test_no_cookies(auth_server):
     server, _ = auth_server
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         "id-contribution-test",
         "id-tag-definition-test",
@@ -58,7 +58,7 @@ def test_no_cookies(auth_server):
 
 def test_404_candidate(auth_server):
     server, cookies = auth_server
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         str(uuid4()),
         "id-tag-definition-test",
@@ -72,7 +72,7 @@ def test_404_candidate(auth_server):
 def test_404_tag_definition(auth_server):
     server, cookies = auth_server
     id_candidate_persistent, _ = candidate_id_with_extracted(server, cookies)
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         str(uuid4()),
@@ -91,7 +91,7 @@ def test_columns_not_extracted(auth_server):
     candidate = ContributionCandidate.objects.get(id_persistent=id_candidate_persistent)
     candidate.state = ContributionCandidate.COLUMNS_ASSIGNED
     candidate.save()
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
@@ -110,7 +110,7 @@ def test_patch_display_txt(auth_server):
     id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(
         server, cookies
     )
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
@@ -118,14 +118,14 @@ def test_patch_display_txt(auth_server):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    rsp = req.get_tag_definition(server.url, id_candidate_persistent, cookies)
+    rsp = req.get_column(server.url, id_candidate_persistent, cookies)
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
-    expected_contribution["match_tag_definition_list"] = []
+    expected_contribution["match_column_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "tag_definitions": [
+        "column_list": [
             {
                 "name": "tag definition_test",
                 "discard": False,
@@ -148,7 +148,7 @@ def test_patch_id_persistent(auth_server):
     id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(
         server, cookies
     )
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
@@ -156,14 +156,14 @@ def test_patch_id_persistent(auth_server):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    rsp = req.get_tag_definition(server.url, id_candidate_persistent, cookies)
+    rsp = req.get_column(server.url, id_candidate_persistent, cookies)
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
-    expected_contribution["match_tag_definition_list"] = []
+    expected_contribution["match_column_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "tag_definitions": [
+        "column_list": [
             {
                 "name": "tag definition_test",
                 "discard": False,
@@ -186,7 +186,7 @@ def test_patch_id_unknown_special_tag(auth_server):
     id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(
         server, cookies
     )
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
@@ -211,7 +211,7 @@ def test_patch_id_existing(auth_server, user):
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
@@ -219,14 +219,14 @@ def test_patch_id_existing(auth_server, user):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    rsp = req.get_tag_definition(server.url, id_candidate_persistent, cookies)
+    rsp = req.get_column(server.url, id_candidate_persistent, cookies)
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
-    expected_contribution["match_tag_definition_list"] = []
+    expected_contribution["match_column_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "tag_definitions": [
+        "column_list": [
             {
                 "name": "tag definition_test",
                 "discard": False,
@@ -249,7 +249,7 @@ def test_patch_id_existing_display_txt(auth_server):
     id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(
         server, cookies
     )
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
@@ -257,14 +257,14 @@ def test_patch_id_existing_display_txt(auth_server):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    rsp = req.get_tag_definition(server.url, id_candidate_persistent, cookies)
+    rsp = req.get_column(server.url, id_candidate_persistent, cookies)
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
-    expected_contribution["match_tag_definition_list"] = []
+    expected_contribution["match_column_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "tag_definitions": [
+        "column_list": [
             {
                 "name": "tag definition_test",
                 "discard": False,
@@ -287,7 +287,7 @@ def test_patch_id_existing_justification(auth_server):
     id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(
         server, cookies
     )
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
@@ -295,14 +295,14 @@ def test_patch_id_existing_justification(auth_server):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    rsp = req.get_tag_definition(server.url, id_candidate_persistent, cookies)
+    rsp = req.get_column(server.url, id_candidate_persistent, cookies)
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
-    expected_contribution["match_tag_definition_list"] = []
+    expected_contribution["match_column_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "tag_definitions": [
+        "column_list": [
             {
                 "name": "tag definition_test",
                 "discard": False,
@@ -325,7 +325,7 @@ def test_patch_discard(auth_server):
     id_candidate_persistent, id_definition_persistent = candidate_id_with_extracted(
         server, cookies
     )
-    rsp = req.patch_tag_definition(
+    rsp = req.patch_column(
         server.url,
         id_candidate_persistent,
         id_definition_persistent,
@@ -333,14 +333,14 @@ def test_patch_discard(auth_server):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    rsp = req.get_tag_definition(server.url, id_candidate_persistent, cookies)
+    rsp = req.get_column(server.url, id_candidate_persistent, cookies)
     expected_contribution = c.contribution_test_upload0.copy()
     expected_contribution["state"] = "COLUMNS_EXTRACTED"
     expected_contribution["id_persistent"] = str(id_candidate_persistent)
-    expected_contribution["match_tag_definition_list"] = []
+    expected_contribution["match_column_list"] = []
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "tag_definitions": [
+        "column_list": [
             {
                 "name": "tag definition_test",
                 "discard": False,

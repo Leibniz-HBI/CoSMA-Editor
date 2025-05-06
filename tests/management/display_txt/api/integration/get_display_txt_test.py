@@ -10,7 +10,7 @@ from cosmae.exception import NotAuthenticatedException
 
 def test_no_cookies(auth_server):
     server, _ = auth_server
-    rsp = req.get_tag_definition(server.url)
+    rsp = req.get_column(server.url)
     assert rsp.status_code == 401
 
 
@@ -19,31 +19,31 @@ def test_not_authenticated(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     with patch("cosmae.management.display_txt.api.check_user", mock):
-        rsp = req.get_tag_definition(server.url, cookies=cookies)
+        rsp = req.get_column(server.url, cookies=cookies)
     assert rsp.status_code == 401
 
 
 def test_insufficient_permissions(auth_server):
     server, cookies = auth_server
-    rsp = req.get_tag_definition(server.url, cookies=cookies)
+    rsp = req.get_column(server.url, cookies=cookies)
     assert rsp.status_code == 403
 
 
 def test_empty(auth_server_commissioner):
     server, cookies = auth_server_commissioner
-    rsp = req.get_tag_definition(server.url, cookies=cookies)
+    rsp = req.get_column(server.url, cookies=cookies)
     assert rsp.status_code == 200
-    assert rsp.json() == {"tag_definitions": []}
+    assert rsp.json() == {"column_list": []}
 
 
 def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_curated):
     server, cookies = auth_server_commissioner
-    rsp = req.get_tag_definition(server.url, cookies=cookies)
+    rsp = req.get_column(server.url, cookies=cookies)
     assert rsp.status_code == 200
     assert_versioned(
         rsp.json(),
         {
-            "tag_definitions": [
+            "column_list": [
                 {
                     "id_persistent": ct.id_column_persistent_test,
                     "id_parent_persistent": None,

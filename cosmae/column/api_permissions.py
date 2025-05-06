@@ -1,4 +1,4 @@
-"API methods for changing tag definition permissions."
+"API methods for changing column permissions."
 
 from typing import List, Union
 from uuid import uuid4
@@ -7,15 +7,15 @@ from django.db import transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_api import ColumnResponse
 from cosmae.column.models_conversion import (
-    tag_definition_db_dict_to_api,
-    tag_definition_db_to_api,
+    column_db_dict_to_api,
+    column_db_to_api,
 )
-from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.models_django import OwnershipRequest as OwnershipRequestDb
 from cosmae.exception import ApiError, NotAuthenticatedException, PermissionException
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util import CosmaeUser, timestamp
@@ -29,7 +29,7 @@ class OwnershipRequest(Schema):
     "API model for ownership requests."
     petitioner: PublicUserInfo
     receiver: PublicUserInfo
-    tag_definition: TagDefinitionResponse
+    column: ColumnResponse
     id_persistent: str
 
 
@@ -41,9 +41,9 @@ class OwnerShipRequestList(Schema):
 
 
 @router.post(
-    "/{id_tag_definition_persistent}/curate",
+    "/{id_column_persistent}/curate",
     response={
-        200: TagDefinitionResponse,
+        200: ColumnResponse,
         400: ApiError,
         401: ApiError,
         403: ApiError,
@@ -51,8 +51,8 @@ class OwnerShipRequestList(Schema):
         500: ApiError,
     },
 )
-def post_curation(request: HttpRequest, id_tag_definition_persistent):
-    "API method for setting a tag definition as curated."
+def post_curation(request: HttpRequest, id_column_persistent):
+    "API method for setting a column as curated."
     try:
         user = check_user(request)
     except NotAuthenticatedException:
@@ -61,30 +61,28 @@ def post_curation(request: HttpRequest, id_tag_definition_persistent):
         if user.permission_group not in {CosmaeUser.COMMISSIONER, CosmaeUser.EDITOR}:
             return 403, ApiError(msg="Insufficient permissions")
         with transaction.atomic():
-            tag_definition = TagDefinitionDb.most_recent_by_id(
-                id_tag_definition_persistent
-            )
+            column = ColumnDb.most_recent_by_id(id_column_persistent)
             time_edit = timestamp()
-            tag_definition, do_write = tag_definition.set_curated(user, time_edit)
+            column, do_write = column.set_curated(user, time_edit)
             if do_write:
-                tag_definition.save()
+                column.save()
             OwnershipRequestDb.by_id_column_persistent_query_set(
-                id_tag_definition_persistent
+                id_column_persistent
             ).delete()
-            TagMergeRequest.change_owner_for_column(tag_definition.id_persistent, None)
-        return 200, tag_definition_db_to_api(tag_definition)
-    except TagDefinitionDb.DoesNotExist:  # pylint: disable=no-member
-        return 404, ApiError(msg="Tag Definition does not exist.")
+            ColumnMergeRequest.change_owner_for_column(column.id_persistent, None)
+        return 200, column_db_to_api(column)
+    except ColumnDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Column does not exist.")
     except PermissionException:
         return 403, ApiError(msg="Insufficient permissions.")
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not change curation status of tag definition")
+        return 500, ApiError(msg="Could not change curation status of column")
 
 
 @router.post(
-    "{id_tag_definition_persistent}/owner/{id_user_persistent}",
+    "{id_column_persistent}/owner/{id_user_persistent}",
     response={
-        200: Union[TagDefinitionResponse, None],
+        200: Union[ColumnResponse, None],
         400: ApiError,
         401: ApiError,
         403: ApiError,
@@ -93,46 +91,44 @@ def post_curation(request: HttpRequest, id_tag_definition_persistent):
     },
 )
 def post_ownership_request(  # pylint:: disable=too-many-return-statements
-    request: HttpRequest, id_tag_definition_persistent: str, id_user_persistent: str
+    request: HttpRequest, id_column_persistent: str, id_user_persistent: str
 ):
     "API method for creating an ownership request."
     try:
         user = check_user(request)
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
-    tag_definition = TagDefinitionDb.most_recent_by_id(id_tag_definition_persistent)
+    column = ColumnDb.most_recent_by_id(id_column_persistent)
     if not (
-        tag_definition.owner == user
+        column.owner == user
         or (
-            tag_definition.owner is None
+            column.owner is None
             and user.permission_group in {CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER}
         )
     ):
-        return 403, ApiError(msg="You do not own the tag definition.")
-    if tag_definition.owner is not None and id_user_persistent == str(
-        tag_definition.owner.id_persistent
+        return 403, ApiError(msg="You do not own the column.")
+    if column.owner is not None and id_user_persistent == str(
+        column.owner.id_persistent
     ):
-        return 400, ApiError(msg="You already own that tag.")
+        return 400, ApiError(msg="You already own that column.")
     try:
         with transaction.atomic():
             OwnershipRequestDb.by_id_column_persistent_query_set(
-                id_tag_definition_persistent
+                id_column_persistent
             ).delete()
             if str(user.id_persistent) == id_user_persistent:
                 time_edit = timestamp()
-                tag_definition_new, do_save = tag_definition.set_owner(
-                    user, user, time_edit
-                )
+                column_new, do_save = column.set_owner(user, user, time_edit)
                 if do_save:
                     with transaction.atomic():
-                        tag_definition_new.save()
-                        TagMergeRequest.change_owner_for_column(
-                            id_tag_definition_persistent, user
+                        column_new.save()
+                        ColumnMergeRequest.change_owner_for_column(
+                            id_column_persistent, user
                         )
-                return 200, tag_definition_db_to_api(tag_definition_new)
+                return 200, column_db_to_api(column_new)
             receiver = CosmaeUser.objects.filter(id_persistent=id_user_persistent).get()
             OwnershipRequestDb.objects.create(  # pylint: disable = no-member
-                id_column_persistent=id_tag_definition_persistent,
+                id_column_persistent=id_column_persistent,
                 receiver=receiver,
                 petitioner=user,
                 id_persistent=uuid4(),
@@ -147,7 +143,7 @@ def post_ownership_request(  # pylint:: disable=too-many-return-statements
 @router.post(
     "owner/{id_ownership_request_persistent}/accept",
     response={
-        200: TagDefinitionResponse,
+        200: ColumnResponse,
         400: ApiError,
         401: ApiError,
         403: ApiError,
@@ -172,20 +168,18 @@ def post_accept_ownership_request(
                 msg="You are not the recipient of the ownership request."
             )
         time_edit = timestamp()
-        tag_definition = TagDefinitionDb.most_recent_by_id(
-            ownership_request.id_column_persistent
-        )
-        tag_definition_new, do_save = tag_definition.set_owner(
+        column = ColumnDb.most_recent_by_id(ownership_request.id_column_persistent)
+        column_new, do_save = column.set_owner(
             user, ownership_request.petitioner, time_edit
         )
         if do_save:
             with transaction.atomic():
-                tag_definition_new.save()
-                TagMergeRequest.change_owner_for_column(
-                    tag_definition_new.id_persistent, ownership_request.receiver
+                column_new.save()
+                ColumnMergeRequest.change_owner_for_column(
+                    column_new.id_persistent, ownership_request.receiver
                 )
                 ownership_request.delete()
-        return 200, tag_definition_db_to_api(tag_definition_new)
+        return 200, column_db_to_api(column_new)
 
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not accept ownership request")
@@ -215,10 +209,10 @@ def delete_ownership_request(request: HttpRequest, id_ownership_request_persiste
         if ownership_request.petitioner != user:
             is_owner = False
             if user.permission_group in {CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER}:
-                tag_definition = TagDefinitionDb.most_recent_by_id(
+                column = ColumnDb.most_recent_by_id(
                     ownership_request.id_column_persistent
                 )
-                is_owner = tag_definition.curated
+                is_owner = column.curated
             if not is_owner:
                 return 403, ApiError(
                     msg="You are not the petitioner of the ownership request."
@@ -226,8 +220,8 @@ def delete_ownership_request(request: HttpRequest, id_ownership_request_persiste
         ownership_request.delete()
         return 200, None
 
-    except TagDefinitionDb.DoesNotExist:  # pylint: disable=no-member
-        return 404, ApiError(msg="Tag Definition does not exist.")
+    except ColumnDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Column does not exist.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not delete ownership request")
 
@@ -275,6 +269,6 @@ def ownership_request_db_to_api(ownership_request: OwnershipRequestDb):
     return OwnershipRequest(
         petitioner=user_db_to_public_user_info(ownership_request.petitioner),
         receiver=user_db_to_public_user_info(ownership_request.receiver),
-        tag_definition=tag_definition_db_dict_to_api(ownership_request.column),
+        column=column_db_dict_to_api(ownership_request.column),
         id_persistent=str(ownership_request.id_persistent),
     )

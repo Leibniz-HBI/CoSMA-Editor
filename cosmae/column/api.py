@@ -1,4 +1,4 @@
-"API endpoints for tag definitions."
+"API endpoints for columns."
 
 from datetime import datetime
 from typing import List
@@ -8,13 +8,13 @@ from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_api import ColumnResponse
 from cosmae.column.models_conversion import (
-    _tag_type_mapping_api_to_db,
-    tag_definition_db_to_api,
+    _column_type_mapping_api_to_db,
+    column_db_to_api,
 )
-from cosmae.column.models_django import Column as TagDefinitionDb
-from cosmae.column.models_django import ColumnHistory as TagDefinitionHistoryDb
+from cosmae.column.models_django import Column as ColumnDb
+from cosmae.column.models_django import ColumnHistory as ColumnHistoryDb
 from cosmae.column.queue import update_column_name_path
 from cosmae.exception import (
     ApiError,
@@ -37,9 +37,9 @@ from cosmae.util.auth import check_user
 router = Router()
 
 
-class TagDefinitionRequest(Schema):
+class ColumnRequest(Schema):
     # pylint: disable=too-few-public-methods
-    "API model for a tag definition in a request."
+    "API model for a column in a request."
     id_persistent: str | None = None
     id_parent_persistent: str | None = None
     name: str
@@ -51,37 +51,37 @@ class TagDefinitionRequest(Schema):
     disabled: bool | None = None
 
 
-class TagDefinitionRequestList(Schema):
-    "API model for a list of request tag definition objects."
+class ColumnRequestList(Schema):
+    "API model for a list of request column objects."
 
     # pylint: disable=too-few-public-methods
-    tag_definitions: List[TagDefinitionRequest]
+    column_list: List[ColumnRequest]
 
 
-class TagDefinitionResponseList(Schema):
-    "API model for a list of response tag definition objects."
+class ColumnResponseList(Schema):
+    "API model for a list of response column objects."
 
     # pylint: disable=too-few-public-methods
-    tag_definitions: List[TagDefinitionResponse]
+    column_list: List[ColumnResponse]
 
 
 class PostGetChildrenRequest(Schema):
-    "API model for getting tag definitions by parent_id_persistent"
+    "API model for getting columns by parent_id_persistent"
 
     # pylint: disable=too-few-public-methods
     id_parent_persistent: str | None = None
 
 
 class CurationPostRequest(Schema):
-    "Request for changing the curation state of a tag definition"
+    "Request for changing the curation state of a column"
 
     # pylint: disable=too-few-public-methods
     id_persistent: bool
     is_curated: bool
 
 
-class TagDefinitionDetailsRequest(Schema):
-    "Request for getting details on tag definition"
+class ColumnDefinitionDetailsRequest(Schema):
+    "Request for getting details on column"
 
     # pylint: disable=too-few-public-methods
     id_persistent_list: List[str]
@@ -97,23 +97,23 @@ class DescendantListResponse(Schema):
 @router.post(
     "",
     response={
-        200: TagDefinitionResponseList,
+        200: ColumnResponseList,
         400: ApiError,
         403: ApiError,
         500: ApiError,
     },
 )
-def post_tag_definitions(  # pylint: disable=too-many-branches
-    request: HttpRequest, tag_definition_list: TagDefinitionRequestList
+def post_columns(  # pylint: disable=too-many-branches
+    request: HttpRequest, column_list: ColumnRequestList
 ):
-    "Add tag definitions."
+    "Add columns."
     # pylint: disable=too-many-return-statements
     now = timestamp()
-    tag_def_apis = tag_definition_list.tag_definitions
+    column_api_list = column_list.column_list
     try:
         user = check_user(request)
-        tag_def_dbs = [
-            tag_definition_api_to_db(tag_def, user, now) for tag_def in tag_def_apis
+        column_def_db_list = [
+            column_api_to_db(column, user, now) for column in column_api_list
         ]
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
@@ -121,12 +121,12 @@ def post_tag_definitions(  # pylint: disable=too-many-branches
         return 400, ApiError(msg=str(exc))
     except NoParentColumnException as exc:
         return 400, ApiError(
-            msg=f"There is no tag definition with id_persistent {exc.id_persistent}."
+            msg=f"There is no column with id_persistent {exc.id_persistent}."
         )
     except ColumnExistsException as exc:
         return 400, ApiError(
-            msg="There is an existing tag definition with name "
-            f"{exc.tag_name} and id_parent_persistent {exc.id_parent_persistent}. "
+            msg="There is an existing column with name "
+            f"{exc.column_name} and id_parent_persistent {exc.id_parent_persistent}. "
             f"Its id_persistent is {exc.id_persistent}."
         )
     except UnmodifiableFieldException as exc:
@@ -135,52 +135,52 @@ def post_tag_definitions(  # pylint: disable=too-many-branches
         )
     except DbObjectExistsException as exc:
         return 500, ApiError(
-            msg="Could not generate id_persistent for tag definition with name "
+            msg="Could not generate id_persistent for column with name "
             f"{exc.values['name']}."
         )
     except EntityUpdatedException as exc:
         return 500, ApiError(
-            msg="There has been a concurrent modification to the tag definition "
+            msg="There has been a concurrent modification to the column "
             f"with id_persistent {exc.new_value.id_persistent}."
         )
     except PermissionException:
         return 403, ApiError(msg="Insufficient permissions")
     except NoSelfParentColumnException:
-        return 400, ApiError(msg="Can not set a tag definition as its own parent.")
+        return 400, ApiError(msg="Can not set a column as its own parent.")
     except NoChildColumnAllowedException:
-        return 400, ApiError(msg="Only navigation tags are allowed to have children.")
+        return 400, ApiError(
+            msg="Only navigation columns are allowed to have children."
+        )
     except DisabledColumnHasChildrenException:
-        return 400, ApiError(msg="Can not delete tag definitions that have children")
+        return 400, ApiError(msg="Can not delete columns that have children")
     except KeyError as exc:
         return 400, ApiError(msg=f"Type {exc.args[0]} is not known.")
 
     try:
         with transaction.atomic():
-            for tag_def, do_write in tag_def_dbs:
+            for column, do_write in column_def_db_list:
                 if do_write:
-                    tag_def.save()
-                    update_column_name_path(tag_def.id_parent_persistent)
+                    column.save()
+                    update_column_name_path(column.id_parent_persistent)
     except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
 
-    return 200, TagDefinitionResponseList(
-        tag_definitions=[
-            tag_definition_db_to_api(tag_def) for tag_def, _ in tag_def_dbs
-        ]
+    return 200, ColumnResponseList(
+        column_list=[column_db_to_api(column) for column, _ in column_def_db_list]
     )
 
 
 @router.post(
     "/details",
     response={
-        200: TagDefinitionResponseList,
+        200: ColumnResponseList,
         400: ApiError,
         401: ApiError,
         403: ApiError,
     },
 )
-def post_details(request: HttpRequest, body: TagDefinitionDetailsRequest):
-    "Get details on tag definitions."
+def post_details(request: HttpRequest, body: ColumnDefinitionDetailsRequest):
+    "Get details on columns."
     try:
         user = check_user(request)
     except NotAuthenticatedException:
@@ -189,31 +189,29 @@ def post_details(request: HttpRequest, body: TagDefinitionDetailsRequest):
         return 403, ApiError(msg="Insufficient permissions.")
     try:
         if len(body.id_persistent_list) > 1000:
-            return 400, ApiError(msg="Requested too many tag definition.")
-        tag_definitions_db = TagDefinitionDb.objects.filter(
+            return 400, ApiError(msg="Requested too many column.")
+        column_db_queryset = ColumnDb.objects.filter(
             id_persistent__in=body.id_persistent_list
         )
-        tag_definitions_api = [
-            tag_definition_db_to_api(tag_def) for tag_def in tag_definitions_db
-        ]
-        return 200, TagDefinitionResponseList(tag_definitions=tag_definitions_api)
+        column_api_list = [column_db_to_api(column) for column in column_db_queryset]
+        return 200, ColumnResponseList(column_list=column_api_list)
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get tag definitions.")
+        return 500, ApiError(msg="Could not get columns.")
 
 
 @router.post(
     "/children",
     response={
-        200: TagDefinitionResponseList,
+        200: ColumnResponseList,
         401: ApiError,
         403: ApiError,
         500: ApiError,
     },
 )
-def post_get_tag_definition_children(
+def post_get_column_children(
     request: HttpRequest, post_children_request: PostGetChildrenRequest
 ):
-    "Get tag definitions by id_parent_persistent."
+    "Get columns by id_parent_persistent."
     try:
         user = check_user(request)
     except NotAuthenticatedException:
@@ -222,19 +220,17 @@ def post_get_tag_definition_children(
         return 403, ApiError(msg="Insufficient permissions.")
     try:
         child_definitions_db = list(
-            TagDefinitionDb.children_query_set(
+            ColumnDb.children_query_set(
                 post_children_request.id_parent_persistent, user
             )
         )
-        return 200, TagDefinitionResponseList(
-            tag_definitions=[
-                tag_definition_db_to_api(tag_def) for tag_def in child_definitions_db
-            ]
+        return 200, ColumnResponseList(
+            column_list=[column_db_to_api(column) for column in child_definitions_db]
         )
     except DatabaseError:
         return 500, ApiError(msg="Database Error.")
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get children tag definitions.")
+        return 500, ApiError(msg="Could not get children columns.")
 
 
 @router.delete(
@@ -242,7 +238,7 @@ def post_get_tag_definition_children(
     response={200: None, 401: ApiError, 403: ApiError, 404: ApiError, 500: ApiError},
 )
 def purge(request: HttpRequest, id_persistent: str):
-    "Remove a tag definition from the history."
+    "Remove a column from the history."
     try:
         user = check_user(request)
         if user.permission_group == CosmaeUser.APPLICANT:
@@ -250,21 +246,21 @@ def purge(request: HttpRequest, id_persistent: str):
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
     try:
-        tag_def_history_queryset = TagDefinitionHistoryDb.objects.filter(
+        column_history_queryset = ColumnHistoryDb.objects.filter(
             id_persistent=id_persistent
         ).order_by("-time_edit")
-        if len(tag_def_history_queryset) == 0:
-            return 404, ApiError(msg="Tag definition not found")
-        most_recent = tag_def_history_queryset[0]
+        if len(column_history_queryset) == 0:
+            return 404, ApiError(msg="Column not found")
+        most_recent = column_history_queryset[0]
         if not most_recent.is_owner(user.id_persistent):
             return 403, ApiError(msg="Insufficient permissions")
         with transaction.atomic():
-            TagDefinitionHistoryDb.bypass_parent(id_persistent)
-            for tag_def in tag_def_history_queryset:
-                tag_def.delete()
+            ColumnHistoryDb.bypass_parent(id_persistent)
+            for column in column_history_queryset:
+                column.delete()
         return 200, None
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not delete tag definition history")
+        return 500, ApiError(msg="Could not delete column history")
 
 
 @router.get(
@@ -278,7 +274,7 @@ def purge(request: HttpRequest, id_persistent: str):
     },
 )
 def get_descendants(request: HttpRequest, id_persistent: str):
-    "API method for getting all descendants of a tag that may contain data."
+    "API method for getting all descendants of a column that may contain data."
     try:
         user = check_user(request)
         if user.permission_group == CosmaeUser.APPLICANT:
@@ -286,45 +282,44 @@ def get_descendants(request: HttpRequest, id_persistent: str):
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
     try:
-        descendant_id_list = TagDefinitionDb.descendants(id_persistent, user)
+        descendant_id_list = ColumnDb.descendants(id_persistent, user)
         return DescendantListResponse(id_descendants_persistent_list=descendant_id_list)
-    except TagDefinitionDb.DoesNotExist:
-        return 404, ApiError(msg="Tag definition does not exist")
+    except ColumnDb.DoesNotExist:
+        return 404, ApiError(msg="Column does not exist")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get descendants")
 
 
-def tag_definition_api_to_db(
-    tag_definition: TagDefinitionRequest, requester: CosmaeUser, time_edit: datetime
-) -> TagDefinitionDb:
-    "Convert a tag definition from API to database model."
+def column_api_to_db(
+    column: ColumnRequest, requester: CosmaeUser, time_edit: datetime
+) -> ColumnDb:
+    "Convert a column from API to database model."
     additional_values = {}
-    if tag_definition.id_persistent:
-        persistent_id = tag_definition.id_persistent
-        if tag_definition.version is None:
+    if column.id_persistent:
+        persistent_id = column.id_persistent
+        if column.version is None:
             raise ValidationException(
-                f"Tag definition with id_persistent {tag_definition.id_persistent} "
+                f"Column with id_persistent {column.id_persistent} "
                 "has no previous version."
             )
     else:
-        if tag_definition.version:
+        if column.version:
             raise ValidationException(
-                f"Tag definition with name {tag_definition.name} "
-                "has version but no id_persistent."
+                f"Column with name {column.name} " "has version but no id_persistent."
             )
-        # new tag definition.
+        # new column.
         additional_values["owner_id"] = requester.id
         persistent_id = str(uuid4())
-    return TagDefinitionHistoryDb.change_or_create_versioned(
+    return ColumnHistoryDb.change_or_create_versioned(
         id_persistent=persistent_id,
-        id_parent_persistent=tag_definition.id_parent_persistent,
-        version=tag_definition.version,
+        id_parent_persistent=column.id_parent_persistent,
+        version=column.version,
         time_edit=time_edit,
-        name=tag_definition.name,
-        description=tag_definition.description,
-        type=_tag_type_mapping_api_to_db[tag_definition.type],
+        name=column.name,
+        description=column.description,
+        type=_column_type_mapping_api_to_db[column.type],
         written_by_session=requester.edit_session,
-        hidden=tag_definition.hidden or False,
-        disabled=tag_definition.disabled or False,
+        hidden=column.hidden or False,
+        disabled=column.disabled or False,
         **additional_values,
     )

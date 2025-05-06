@@ -120,6 +120,10 @@ class Migration(migrations.Migration):
                 unique=True,
             ),
         ),
+        migrations.RenameModel(
+            old_name="TagMergeRequest",
+            new_name="ColumnMergeRequest",
+        ),
         migrations.RunSQL(
             CREATE_VALUE_VALUE_INDEX_QUERY, reverse_sql=DROP_VALUE_VALUE_INDEX_QUERY
         ),

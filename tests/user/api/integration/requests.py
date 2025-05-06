@@ -11,29 +11,25 @@ def get_self(url, cookies=None):
     )
 
 
-def post_append_id_tag_definition_persistent(
-    url, id_tag_definition_persistent, cookies=None
-):
+def post_append_id_column_persistent(url, id_column_persistent, cookies=None):
     return requests.post(
-        url + f"/cosmae/api/user/tag_definitions/append/{id_tag_definition_persistent}",
+        url + f"/cosmae/api/user/columns/append/{id_column_persistent}",
         cookies=cookies,
         timeout=900,
     )
 
 
-def delete_id_tag_definition_persistent(
-    url, id_tag_definition_persistent, cookies=None
-):
+def delete_id_column_persistent(url, id_column_persistent, cookies=None):
     return requests.delete(
-        url + f"/cosmae/api/user/tag_definitions/{id_tag_definition_persistent}",
+        url + f"/cosmae/api/user/columns/{id_column_persistent}",
         cookies=cookies,
         timeout=900,
     )
 
 
-def post_change_tag_definitions(url, start_idx, end_idx, cookies=None):
+def post_change_columns(url, start_idx, end_idx, cookies=None):
     return requests.post(
-        url + f"/cosmae/api/user/tag_definitions/change/{start_idx}/{end_idx}",
+        url + f"/cosmae/api/user/columns/change/{start_idx}/{end_idx}",
         cookies=cookies,
         timeout=900,
     )

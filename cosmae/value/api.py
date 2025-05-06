@@ -1,4 +1,4 @@
-"API methods for tag instances."
+"API methods for values."
 
 from datetime import datetime
 from typing import List
@@ -13,137 +13,137 @@ from cosmae.exception import (
     ApiError,
     ColumnDisabledException,
     ColumnMissingException,
+    ColumnPermissionException,
     DbObjectExistsException,
     EntityMissingException,
     EntityUpdatedException,
     InvalidValueException,
     NotAuthenticatedException,
-    TagDefinitionPermissionException,
     ValidationException,
 )
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 from cosmae.util.django import save_many_atomic
-from cosmae.value.models_api import TagInstancePost
-from cosmae.value.models_conversion import tag_instance_db_to_api
-from cosmae.value.models_django import Value as TagInstanceDb
-from cosmae.value.models_django import ValueAbstract as TagInstanceAbstractDb
-from cosmae.value.models_django import ValueHistory as TagInstanceHistoryDb
+from cosmae.value.models_api import ValuePost
+from cosmae.value.models_conversion import value_db_to_api
+from cosmae.value.models_django import Value as ValueDb
+from cosmae.value.models_django import ValueAbstract as ValueAbstractDb
+from cosmae.value.models_django import ValueHistory as ValueHistoryDb
 
 router = Router()
 
-MAX_TAG_INSTANCE_CHUNK_LIMIT = 10000
-MAX_TAG_INSTANCE_VALUE_LIMIT = 50000
+MAX_VALUE_CHUNK_LIMIT = 10000
+MAX_VALUE_VALUE_LIMIT = 50000
 
 
-class TagInstancePostList(Schema):
+class ValuePostList(Schema):
     # pylint: disable=too-few-public-methods
-    "Multiple tag instances for post requests."
-    tag_instances: List[TagInstancePost]
+    "Multiple values for post requests."
+    value_list: List[ValuePost]
 
 
-class TagInstancePostChunkRequest(Schema):
+class ValuePostChunkRequest(Schema):
     # pylint: disable=too-few-public-methods
-    "Request body for getting instances of a tag."
-    id_tag_definition_persistent: str
+    "Request body for getting instances of a column."
+    id_column_persistent: str
     offset: int
     limit: int
 
 
-class TagInstanceForEntitiesPostRequest(Schema):
-    "Request body for getting tag instances for a set of entities"
+class ValueForEntitiesPostRequest(Schema):
+    "Request body for getting values for a set of entities"
 
     # pylint: disable=too-few-public-methods
-    id_tag_definition_persistent_list: List[str]
+    id_column_persistent_list: List[str]
     id_entity_persistent_list: List[str]
     id_merge_request_persistent: str | None = None
     """When a merge request is referenced,
-    the values of the origin tag are also returned. when querying for the destination."""
+    the values of the origin column are also returned. when querying for the destination."""
     id_contribution_persistent: str | None = None
     """When a contribution is referenced, all merge requests contained are considered.
     I.e., for all merge requests of the contribution,
-    when the destination tag is queried values for the origin tag are also returned."""
+    when the destination column is queried values for the origin column are also returned."""
 
 
-class TagInstanceValueRequest(Schema):
+class ValueValueRequest(Schema):
     # pylint: disable=too-few-public-methods
     "Request body for getting a specific value"
     id_entity_persistent: str
-    id_tag_definition_persistent: str
+    id_column_persistent: str
 
 
-class TagInstanceValueRequestList(Schema):
+class ValueValueRequestList(Schema):
     # pylint: disable=too-few-public-methods
     "Request body for multiple value request"
-    value_requests: List[TagInstanceValueRequest]
+    value_requests: List[ValueValueRequest]
 
 
-class TagInstanceValueResponse(Schema):
+class ValueValueResponse(Schema):
     # pylint: disable=too-few-public-methods
     "Response for a value request"
     id_entity_persistent: str
-    id_tag_definition_persistent: str
-    values: List[TagInstancePost]
+    id_column_persistent: str
+    values: List[ValuePost]
 
 
-class TagInstanceValueWithExistingFlagResponse(TagInstancePost):
+class ValueValueWithExistingFlagResponse(ValuePost):
     # pylint: disable= too-few-public-methods
-    """Tag instance value with a flag for marking data as existing.
-    This is used in context of retrieving values of tag definitions
+    """Value value with a flag for marking data as existing.
+    This is used in context of retrieving values of columns
     that are part of a merge request or the entity review of contributions."""
     is_existing: bool
-    id_tag_definition_requested_persistent: str
+    id_column_requested_persistent: str
 
 
-class TagInstanceValueResponseList(Schema):
+class ValueValueResponseList(Schema):
     # pylint: disable=too-few-public-methods
     "Multiple Value request responses"
-    value_responses: List[TagInstanceValueResponse]
+    value_responses: List[ValueValueResponse]
 
 
-class TagInstanceForEntitiesPostResponse(Schema):
+class ValueForEntitiesPostResponse(Schema):
     # pylint: disable=too-few-public-methods
-    "Response body for getting tag instances for a set of entities."
-    value_responses: List[TagInstanceValueWithExistingFlagResponse]
+    "Response body for getting values for a set of entities."
+    value_responses: List[ValueValueWithExistingFlagResponse]
 
 
-class TagInstanceUpdatedResponse(Schema):
+class ValueUpdatedResponse(Schema):
     # pylint: disable=too-few-public-methods
     "Information on updates when submitting values"
     msg: str
-    tag_instances: List[TagInstancePost]
+    value_list: List[ValuePost]
 
 
 @router.post(
     "",
     response={
-        200: TagInstancePostList,
+        200: ValuePostList,
         400: ApiError,
         401: ApiError,
         403: ApiError,
-        409: TagInstanceUpdatedResponse,
+        409: ValueUpdatedResponse,
         500: ApiError,
     },
 )
-def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
-    "Create or change a tag instance."
+def post_value(request: HttpRequest, value_list: ValuePostList):
+    "Create or change a value."
     # pylint: disable=too-many-return-statements
     try:
         user = check_user(request)
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
-    tag_apis = tag_list.tag_instances
+    value_api_list = value_list.value_list
     now = timestamp()
     try:
-        tag_dbs = [tag_instance_api_to_db(tag, user, now) for tag in tag_apis]
+        value_db_list = [value_api_to_db(value, user, now) for value in value_api_list]
     except ValidationException as exc:
         return 400, ApiError(msg=str(exc))
     except DbObjectExistsException as exc:
         return 500, ApiError(
-            msg="Could not generate id_persistent for tag instance with "
+            msg="Could not generate id_persistent for value with "
             f"id_entity_persistent {exc.values['id_entity_persistent']}, "
-            f"id_tag_definition_persistent {exc.values['id_column_persistent']} and "
+            f"id_column_persistent {exc.values['id_column_persistent']} and "
             f"value {exc.values['value']}."
         )
     except EntityMissingException as exc:
@@ -152,70 +152,70 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
         )
     except ColumnMissingException as exc:
         return 400, ApiError(
-            msg=f"There is no tag definition with id_persistent {exc.id_persistent}."
+            msg=f"There is no column with id_persistent {exc.id_persistent}."
         )
     except InvalidValueException as exc:
         return 400, ApiError(
             msg=f"Value {exc.value} should be of type {exc.type_name} "
-            f"for tag with id_persistent {exc.tag_id_persistent}."
+            f"for column with id_persistent {exc.column_id_persistent}."
         )
-    except TagDefinitionPermissionException as exc:
+    except ColumnPermissionException as exc:
         return 403, ApiError(
-            msg="Your are not allowed to change the tag definition with id_persistent: "
+            msg="Your are not allowed to change the column with id_persistent: "
             f"{exc.id_persistent}"
         )
     except ColumnDisabledException as exc:
         return 403, ApiError(
-            msg=f"Tag definition with with id_persistent: {exc.id_persistent} is disabled."
+            msg=f"Column with with id_persistent: {exc.id_persistent} is disabled."
         )
     except EntityUpdatedException as exc:
-        return 409, TagInstanceUpdatedResponse(
+        return 409, ValueUpdatedResponse(
             msg="There has been a concurrent modification "
-            f"to the tag instance with id_persistent {exc.new_value.id_persistent}.",
-            tag_instances=[tag_instance_db_to_api(exc.new_value)],
+            f"to the value with id_persistent {exc.new_value.id_persistent}.",
+            value_list=[value_db_to_api(exc.new_value)],
         )
-    tag_db_saves = [tag for tag, do_write in tag_dbs if do_write]
+    value_db_saves = [value for value, do_write in value_db_list if do_write]
     try:
-        save_many_atomic(tag_db_saves)
+        save_many_atomic(value_db_saves)
     except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
-    response_tag_instances = [tag_instance_db_to_api(tag) for tag, _ in tag_dbs]
-    return 200, TagInstancePostList(tag_instances=response_tag_instances)
+    response_value_list = [value_db_to_api(value) for value, _ in value_db_list]
+    return 200, ValuePostList(value_list=response_value_list)
 
 
 @router.post(
     "chunk",
     response={
-        200: TagInstancePostList,
+        200: ValuePostList,
         400: ApiError,
         401: ApiError,
         403: ApiError,
         500: ApiError,
     },
 )
-def post_tag_instance_chunks(
-    request, chunk_req: TagInstancePostChunkRequest  # pylint: disable=unused-argument
+def post_value_chunks(
+    request, chunk_req: ValuePostChunkRequest  # pylint: disable=unused-argument
 ):
-    "API method for retrieving a chunk of tag instances."
+    "API method for retrieving a chunk of values."
     try:
         user = check_user(request)
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
     if user.permission_group in {CosmaeUser.APPLICANT, CosmaeUser.READER}:
         return 403, ApiError(msg="Insufficient permissions.")
-    if chunk_req.limit > MAX_TAG_INSTANCE_CHUNK_LIMIT:
+    if chunk_req.limit > MAX_VALUE_CHUNK_LIMIT:
         return 400, ApiError(
-            msg=f"Please specify limit smaller than {MAX_TAG_INSTANCE_CHUNK_LIMIT}."
+            msg=f"Please specify limit smaller than {MAX_VALUE_CHUNK_LIMIT}."
         )
     try:
-        instance_dbs = TagInstanceDb.by_column_chunked_queryset(
-            chunk_req.id_tag_definition_persistent, chunk_req.offset, chunk_req.limit
+        instance_dbs = ValueDb.by_column_chunked_queryset(
+            chunk_req.id_column_persistent, chunk_req.offset, chunk_req.limit
         )
-        instance_apis = [tag_instance_db_to_api(tag) for tag in instance_dbs]
-        return 200, TagInstancePostList(tag_instances=instance_apis)
+        instance_apis = [value_db_to_api(value) for value in instance_dbs]
+        return 200, ValuePostList(value_list=instance_apis)
     except ColumnMissingException as exc:
         return 400, ApiError(
-            msg=f"Tag definition with id_persistent {exc.id_persistent} does not exist."
+            msg=f"Column with id_persistent {exc.id_persistent} does not exist."
         )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
@@ -224,36 +224,36 @@ def post_tag_instance_chunks(
 @router.post(
     "values",
     response={
-        200: TagInstanceValueResponseList,
+        200: ValueValueResponseList,
         400: ApiError,
         404: ApiError,
         500: ApiError,
     },
 )
-def post_tag_instance_values(
-    request, values_req: TagInstanceValueRequestList
+def post_value_values(
+    request, values_req: ValueValueRequestList
 ):  # pylint: disable=unused-argument
-    "API method for obtaining specific tag instance values."
-    if len(values_req.value_requests) > MAX_TAG_INSTANCE_VALUE_LIMIT:
+    "API method for obtaining specific value values."
+    if len(values_req.value_requests) > MAX_VALUE_VALUE_LIMIT:
         return 400, ApiError(
-            msg=f"Please specify limit smaller than {MAX_TAG_INSTANCE_VALUE_LIMIT}."
+            msg=f"Please specify limit smaller than {MAX_VALUE_VALUE_LIMIT}."
         )
     try:
         ret = []
         for req in values_req.value_requests:
             id_entity_persistent = req.id_entity_persistent
-            id_tag_definition_persistent = req.id_tag_definition_persistent
-            vals = TagInstanceDb.most_recent_by_entity_and_definition_id_query_set(
-                id_entity_persistent, id_tag_definition_persistent
+            id_column_persistent = req.id_column_persistent
+            vals = ValueDb.most_recent_by_entity_and_definition_id_query_set(
+                id_entity_persistent, id_column_persistent
             )
             ret.append(
-                TagInstanceValueResponse(
+                ValueValueResponse(
                     id_entity_persistent=id_entity_persistent,
-                    id_tag_definition_persistent=id_tag_definition_persistent,
-                    values=[tag_instance_db_to_api(val) for val in vals],
+                    id_column_persistent=id_column_persistent,
+                    values=[value_db_to_api(val) for val in vals],
                 )
             )
-        return 200, TagInstanceValueResponseList(value_responses=ret)
+        return 200, ValueValueResponseList(value_responses=ret)
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested values.")
 
@@ -261,18 +261,18 @@ def post_tag_instance_values(
 @router.post(
     "entities",
     response={
-        200: TagInstanceForEntitiesPostResponse,
+        200: ValueForEntitiesPostResponse,
         400: ApiError,
         401: ApiError,
         404: ApiError,
         500: ApiError,
     },
 )
-def post_tag_instances_for_entities(
-    request: HttpRequest, request_data: TagInstanceForEntitiesPostRequest
+def post_values_for_entities(
+    request: HttpRequest, request_data: ValueForEntitiesPostRequest
 ):
-    """API method for getting tag instances for a list of entities.
-    Also include tag instances of tag definitions that are related by
+    """API method for getting values for a list of entities.
+    Also include values of columns that are related by
     contribution or merge request."""
     try:
         user = check_user(request)
@@ -280,82 +280,75 @@ def post_tag_instances_for_entities(
         return 401, ApiError(msg="Not authenticated")
     if (
         len(request_data.id_entity_persistent_list) == 0
-        or len(request_data.id_tag_definition_persistent_list) == 0
+        or len(request_data.id_column_persistent_list) == 0
     ):
-        return 200, TagInstanceForEntitiesPostResponse(value_responses=[])
+        return 200, ValueForEntitiesPostResponse(value_responses=[])
     try:
-        instances_all = TagInstanceDb.objects.none()  # pylint: disable=no-member
-        for (
-            id_tag_definition_persistent
-        ) in request_data.id_tag_definition_persistent_list:
-            tag_definitions = TagMergeRequest.get_columns_for_entities_request(
-                id_tag_definition_persistent,
+        instances_all = ValueDb.objects.none()  # pylint: disable=no-member
+        for id_column_persistent in request_data.id_column_persistent_list:
+            columns = ColumnMergeRequest.get_columns_for_entities_request(
+                id_column_persistent,
                 request_data.id_contribution_persistent,
                 request_data.id_merge_request_persistent,
                 user,
             )
-            for id_tag_def, is_existing in tag_definitions:
-                instances_for_tag = TagInstanceDb.for_entities(
-                    id_tag_def,
+            for id_column, is_existing in columns:
+                instances_for_column = ValueDb.for_entities(
+                    id_column,
                     request_data.id_entity_persistent_list,
                 ).annotate(
                     is_existing=Value(is_existing),
-                    id_tag_definition_requested_persistent=Value(
-                        id_tag_definition_persistent
-                    ),
+                    id_column_requested_persistent=Value(id_column_persistent),
                 )
-                instances_all = instances_all.union(instances_for_tag)
-        return 200, TagInstanceForEntitiesPostResponse(
+                instances_all = instances_all.union(instances_for_column)
+        return 200, ValueForEntitiesPostResponse(
             value_responses=[
-                tag_instance_with_existing_db_to_api(tag_instance)
-                for tag_instance in instances_all
+                value_with_existing_db_to_api(value) for value in instances_all
             ]
         )
 
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(
-            msg="Could not get the tag instances for the provided entities."
-        )
+        return 500, ApiError(msg="Could not get the values for the provided entities.")
 
 
-def tag_instance_api_to_db(tag_api: TagInstancePost, user: CosmaeUser, time: datetime):
-    "Convert a tag instance from API to database representation."
-    if tag_api.id_persistent:
-        persistent_id = tag_api.id_persistent
-        if tag_api.version is None:
+def value_api_to_db(value: ValuePost, user: CosmaeUser, time: datetime):
+    "Convert a value from API to database representation."
+    if value.id_persistent:
+        persistent_id = value.id_persistent
+        if value.version is None:
             raise ValidationException(
-                f"Tag instance with id_persistent {tag_api.id_persistent} "
+                f"Value with id_persistent {value.id_persistent} "
                 "has no previous version."
             )
     else:
-        if tag_api.version:
+        if value.version:
             raise ValidationException(
-                f"Tag instance with id_entity_persistent {tag_api.id_entity_persistent}, "
-                f"id_tag_definition_persistent {tag_api.id_tag_definition_persistent} and "
-                f"value {tag_api.value} has version but no id_persistent."
+                f"Value with id_entity_persistent {value.id_entity_persistent}, "
+                f"id_column_persistent {value.id_column_persistent} and "
+                f"value {value.value} has version but no id_persistent."
             )
         persistent_id = str(uuid4())
-    return TagInstanceHistoryDb.change_or_create_versioned(
+    return ValueHistoryDb.change_or_create_versioned(
         id_persistent=persistent_id,
-        id_entity_persistent=tag_api.id_entity_persistent,
-        id_column_persistent=tag_api.id_tag_definition_persistent,
+        id_entity_persistent=value.id_entity_persistent,
+        id_column_persistent=value.id_column_persistent,
         written_by_session=user.edit_session,
-        value=tag_api.value,
+        value=value.value,
         time_edit=time,
-        version=tag_api.version,
+        version=value.version,
     )
 
 
-def tag_instance_with_existing_db_to_api(
-    tag_db: TagInstanceAbstractDb,
-) -> TagInstancePost:
-    "Convert tag instances from database to API representation."
-    return TagInstanceValueWithExistingFlagResponse(
-        id_persistent=tag_db.id_persistent,
-        id_entity_persistent=tag_db.id_entity_persistent,
-        id_tag_definition_persistent=tag_db.id_column_persistent,
-        value=tag_db.value,
-        version=tag_db.id,
-        is_existing=tag_db.is_existing,
-        id_tag_definition_requested_persistent=tag_db.id_tag_definition_requested_persistent,
+def value_with_existing_db_to_api(
+    value_db: ValueAbstractDb,
+) -> ValuePost:
+    "Convert values from database to API representation."
+    return ValueValueWithExistingFlagResponse(
+        id_persistent=value_db.id_persistent,
+        id_entity_persistent=value_db.id_entity_persistent,
+        id_column_persistent=value_db.id_column_persistent,
+        value=value_db.value,
+        version=value_db.id,
+        is_existing=value_db.is_existing,
+        id_column_requested_persistent=value_db.id_column_requested_persistent,
     )

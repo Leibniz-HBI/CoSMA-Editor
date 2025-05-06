@@ -16,7 +16,7 @@ from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,
 )
-from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest, TagConflictResolution
 from cosmae.permissions.models_django import Permission
 from cosmae.util import CosmaeUser
 from cosmae.value.models_django import Value

@@ -4,12 +4,12 @@ from django.db.models import Case, IntegerField, OuterRef, Subquery, When
 
 from cosmae.column.models_django import Column
 from cosmae.management.models_django import ConfigValue
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 
 DISPLAY_TXT_ORDER_CONFIG_KEY = "display_txt_order"
 
 
-def get_display_txt_order_tag_definitions(id_contribution_persistent=None):
+def get_display_txt_order_columns(id_contribution_persistent=None):
     "Retrieve the order of tag definitions used for display text alternatives."
     id_tag_def_persistent_list = ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY, [])
     if id_contribution_persistent is None:
@@ -22,7 +22,7 @@ def get_display_txt_order_tag_definitions(id_contribution_persistent=None):
         )
 
     else:
-        merge_requests = TagMergeRequest.get_for_contribution_query_set(
+        merge_requests = ColumnMergeRequest.get_for_contribution_query_set(
             str(id_contribution_persistent)
         )
         relevant_for_display_txt_order = merge_requests.filter(

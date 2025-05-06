@@ -4,7 +4,7 @@ from typing import List
 
 from ninja import Schema
 
-from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_api import ColumnResponse
 
 
 class ContributionPostRequest(Schema):
@@ -42,7 +42,7 @@ class ContributionCandidate(Schema):
     error_msg: str | None = None
     error_details: str | None = None
     empty_values: str
-    match_tag_definition_list: List[TagDefinitionResponse] | None = None
+    match_column_list: List[ColumnResponse] | None = None
     justification_txt: str | None = None
     id_edit_session_persistent: str
 

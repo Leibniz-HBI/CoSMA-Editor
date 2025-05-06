@@ -53,7 +53,7 @@ def test_get_request(
                         "id_persistent": cu.test_uuid,
                         "permission_group": "CONTRIBUTOR",
                     },
-                    "tag_definition": {
+                    "column": {
                         "id_persistent": c.id_column_curated_test,
                         "name": c.name_column_curated_test,
                         "type": "BOOL",
@@ -80,7 +80,7 @@ def test_get_request(
                         "id_persistent": cu.test_uuid1,
                         "permission_group": "CONTRIBUTOR",
                     },
-                    "tag_definition": {
+                    "column": {
                         "id_persistent": c.id_column_persistent_test_user,
                         "name": c.name_tag_def_test_user,
                         "type": "FLOAT",
@@ -107,7 +107,7 @@ def test_get_request_commissioner(
     auth_server_commissioner, ownership_request_curated_editor
 ):
     """Make sure that permission requests are returned from api
-    for commissioners, when there are curated tags involved."""
+    for commissioners, when there are curated columns involved."""
     server, cookies = auth_server_commissioner
     rsp = req.get_ownership_requests(server.url, cookies)
     assert rsp.status_code == 200
@@ -128,7 +128,7 @@ def test_get_request_commissioner(
                         "id_persistent": cu.test_uuid,
                         "permission_group": "CONTRIBUTOR",
                     },
-                    "tag_definition": {
+                    "column": {
                         "id_persistent": c.id_column_curated_test,
                         "name": c.name_column_curated_test,
                         "type": "BOOL",

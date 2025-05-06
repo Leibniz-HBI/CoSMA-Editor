@@ -5,31 +5,30 @@ from django.db import IntegrityError
 
 import tests.tag.common as c
 from tests.tag.api.integration.requests import (
-    post_tag_instance_chunks,
-    post_tag_instances,
+    post_value_chunks,
+    post_value_list,
 )
 
 
 def test_empty_chunk(auth_server, tag_def):
     live_server, cookies = auth_server
-    rsp = post_tag_instance_chunks(
+    rsp = post_value_chunks(
         live_server.url, tag_def.id_persistent, 0, 20, cookies=cookies
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json["tag_instances"]) == 0
+    assert len(json["value_list"]) == 0
 
 
 def test_missing_tag_def(auth_server):
     live_server, cookies = auth_server
-    rsp = post_tag_instance_chunks(
+    rsp = post_value_chunks(
         live_server.url, c.id_column_persistent_test, 0, 20, cookies=cookies
     )
     assert rsp.status_code == 400
     json = rsp.json()
     assert json["msg"] == (
-        f"Tag definition with id_persistent {c.id_column_persistent_test} "
-        "does not exist."
+        f"Column with id_persistent {c.id_column_persistent_test} " "does not exist."
     )
 
 
@@ -40,14 +39,14 @@ def test_can_slice(auth_server, tag_def_user, entity0):
         {
             "value": str(float(i) + 0.3),
             "id_entity_persistent": entity0.id_persistent,
-            "id_tag_definition_persistent": tag_def_user.id_persistent,
+            "id_column_persistent": tag_def_user.id_persistent,
         }
         for i in range(20)
     ]
-    rsp = post_tag_instances(live_server.url, instances, cookies=cookies)
+    rsp = post_value_list(live_server.url, instances, cookies=cookies)
     assert rsp.status_code == 200
-    instances_rsp = rsp.json()["tag_instances"]
-    rsp = post_tag_instance_chunks(
+    instances_rsp = rsp.json()["value_list"]
+    rsp = post_value_chunks(
         live_server.url,
         tag_def_user.id_persistent,
         instances_rsp[3]["version"],
@@ -55,7 +54,7 @@ def test_can_slice(auth_server, tag_def_user, entity0):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    instances = rsp.json()["tag_instances"]
+    instances = rsp.json()["value_list"]
     assert len(instances) == 4
     for i in range(4):
         assert instances[i]["value"] == str(float(i) + 3.3)
@@ -68,22 +67,22 @@ def test_non_existent_slice(auth_server, tag_def, entity0):
         {
             "value": float(i) + 0.3,
             "id_entity_persistent": entity0.id_persistent,
-            "id_tag_definition_persistent": tag_def.id_persistent,
+            "id_column_persistent": tag_def.id_persistent,
         }
         for i in range(2)
     ]
-    post_tag_instances(live_server.url, instances, cookies=cookies)
-    rsp = post_tag_instance_chunks(
+    post_value_list(live_server.url, instances, cookies=cookies)
+    rsp = post_value_chunks(
         live_server.url, tag_def.id_persistent, 30000, 4, cookies=cookies
     )
     assert rsp.status_code == 200
-    persons = rsp.json()["tag_instances"]
+    persons = rsp.json()["value_list"]
     assert len(persons) == 0
 
 
 def test_request_too_large(auth_server):
     live_server, cookies = auth_server
-    rsp = post_tag_instance_chunks(
+    rsp = post_value_chunks(
         live_server.url, "test_id_persistent", 0, 10001, cookies=cookies
     )
     assert rsp.status_code == 400
@@ -95,7 +94,7 @@ def test_bad_db(auth_server):
     mock = MagicMock()
     mock.side_effect = IntegrityError()
     with patch("cosmae.value.models_django.Value.by_column_chunked_queryset", mock):
-        rsp = post_tag_instance_chunks(
+        rsp = post_value_chunks(
             live_server.url, "test_id_persistent", 0, 2, cookies=cookies
         )
     assert rsp.status_code == 500
@@ -103,5 +102,5 @@ def test_bad_db(auth_server):
 
 
 def test_not_logged_in(live_server):
-    rsp = post_tag_instance_chunks(live_server.url, "test_id_persistent", 0, 2)
+    rsp = post_value_chunks(live_server.url, "test_id_persistent", 0, 2)
     assert rsp.status_code == 401

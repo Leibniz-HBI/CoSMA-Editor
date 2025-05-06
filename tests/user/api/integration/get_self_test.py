@@ -36,7 +36,7 @@ def test_success(auth_server):
             "names_family": "",
             "email": c.test_email,
             "permission_group": "CONTRIBUTOR",
-            "tag_definition_list": [],
+            "column_list": [],
             "edit_session": {
                 "owner": {
                     "id_participant": c.test_uuid,

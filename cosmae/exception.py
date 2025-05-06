@@ -88,8 +88,8 @@ class NoParentColumnException(Exception):
 class InvalidValueException(Exception):
     "Indicates that a given value is not of the type defined by a tag."
 
-    def __init__(self, tag_id_persistent, value, type_name):
-        self.tag_id_persistent = tag_id_persistent
+    def __init__(self, column_id_persistent, value, type_name):
+        self.column_id_persistent = column_id_persistent
         self.value = value
         self.type_name = type_name
 
@@ -102,7 +102,7 @@ class ColumnExistsException(Exception):
     "Indicates that the tag already exists."
 
     def __init__(self, tag_name, id_persistent, id_parent_persistent):
-        self.tag_name = tag_name
+        self.column_name = tag_name
         self.id_persistent = id_persistent
         self.id_parent_persistent = id_parent_persistent
 
@@ -128,7 +128,7 @@ class PermissionException(Exception):
         self.id_persistent = id_persistent
 
 
-class TagDefinitionPermissionException(Exception):
+class ColumnPermissionException(Exception):
     "Indicates that there are insufficient permissions for writing to a tag definition"
 
     def __init__(self, id_persistent) -> None:

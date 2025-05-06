@@ -28,12 +28,12 @@ from cosmae.exception import (
     NotAuthenticatedException,
     ResourceLockedException,
 )
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user, cosmae_auth
 
 router = Router()
-router.add_router("/{id_contribution_persistent}/tags", tag_router, auth=cosmae_auth)
+router.add_router("/{id_contribution_persistent}/columns", tag_router, auth=cosmae_auth)
 router.add_router(
     "/{id_contribution_persistent}/entities", entity_router, auth=cosmae_auth
 )
@@ -129,7 +129,7 @@ def contribution_get(request, id_persistent: str):
     try:
         try:
             check_user(request)
-            contribution_db = TagMergeRequest.contribution_with_match_columns(
+            contribution_db = ColumnMergeRequest.contribution_with_match_columns(
                 id_persistent
             ).get()
         except NotAuthenticatedException:

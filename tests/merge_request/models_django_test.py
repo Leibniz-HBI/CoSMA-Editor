@@ -2,16 +2,16 @@
 from datetime import datetime, timezone
 
 from cosmae.entity.models_django import EntityHistory
-from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest, TagConflictResolution
 
 
 def test_created_by_user(user, merge_request_user, merge_request_user1):
-    mr = TagMergeRequest.created_by_user(user).get()
+    mr = ColumnMergeRequest.created_by_user(user).get()
     assert str(mr.id_persistent) == str(merge_request_user1.id_persistent)
 
 
 def test_assigned_to_user(user, merge_request_user, merge_request_user1):
-    mr = TagMergeRequest.assigned_to_user(user).get()
+    mr = ColumnMergeRequest.assigned_to_user(user).get()
     assert str(mr.id_persistent) == str(merge_request_user.id_persistent)
 
 

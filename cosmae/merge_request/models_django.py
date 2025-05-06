@@ -21,7 +21,7 @@ from cosmae.value.models_django import (
 )
 
 
-class TagMergeRequest(AbstractMergeRequest):
+class ColumnMergeRequest(AbstractMergeRequest):
     "Django model for a merge request."
 
     assigned_to = models.ForeignKey(
@@ -43,18 +43,18 @@ class TagMergeRequest(AbstractMergeRequest):
     def assigned_to_user(cls, user: CosmaeUser):
         "Get all merge requests assigned to a user"
         states = [
-            TagMergeRequest.OPEN,
-            TagMergeRequest.CONFLICTS,
-            TagMergeRequest.ERROR,
+            ColumnMergeRequest.OPEN,
+            ColumnMergeRequest.CONFLICTS,
+            ColumnMergeRequest.ERROR,
         ]
 
-        assigned = TagMergeRequest.objects.filter(  # pylint: disable=no-member
+        assigned = ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
             assigned_to=user,
             state__in=states,
         )
         if user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
             curated = (
-                TagMergeRequest.objects.filter(  # pylint: disable=no-member
+                ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
                     state__in=states
                 )
                 .annotate(
@@ -75,18 +75,18 @@ class TagMergeRequest(AbstractMergeRequest):
     def created_by_user(cls, user: CosmaeUser):
         "Get all merge requests created by a user"
         states = [
-            TagMergeRequest.OPEN,
-            TagMergeRequest.CONFLICTS,
-            TagMergeRequest.ERROR,
+            ColumnMergeRequest.OPEN,
+            ColumnMergeRequest.CONFLICTS,
+            ColumnMergeRequest.ERROR,
         ]
 
-        created = TagMergeRequest.objects.filter(  # pylint: disable=no-member
+        created = ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
             created_by=user,
             state__in=states,
         )
         if user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
             curated = (
-                TagMergeRequest.objects.filter(  # pylint: disable=no-member
+                ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
                     state__in=states
                 )
                 .annotate(
@@ -150,7 +150,7 @@ class TagMergeRequest(AbstractMergeRequest):
         if id_contribution_persistent is None:
             if id_merge_request_persistent is None:
                 return {(id_column_persistent, True)}
-            merge_request = TagMergeRequest.by_id_persistent(
+            merge_request = ColumnMergeRequest.by_id_persistent(
                 id_merge_request_persistent, user
             )
             if merge_request.contribution_candidate:
@@ -252,7 +252,7 @@ class TagMergeRequest(AbstractMergeRequest):
             id_persistent=id_contribution_persistent
         ).annotate(
             matched_columns=models.Subquery(
-                TagMergeRequest.objects.filter(  # pylint: disable=no-member
+                ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
                     contribution_candidate_id=models.OuterRef("id_persistent")
                 )
                 .annotate(
@@ -301,10 +301,10 @@ class TagConflictResolution(AbstractConflictResolution):
     column_origin = models.ForeignKey(
         ColumnHistory, on_delete=models.CASCADE, related_name="+"
     )
-    merge_request = models.ForeignKey(TagMergeRequest, on_delete=models.CASCADE)
+    merge_request = models.ForeignKey(ColumnMergeRequest, on_delete=models.CASCADE)
 
     @classmethod
-    def for_merge_request_query_set(cls, merge_request: TagMergeRequest):
+    def for_merge_request_query_set(cls, merge_request: ColumnMergeRequest):
         "Get resolutions for a merge request."
         return cls.objects.filter(  # pylint: disable=no-member
             merge_request=merge_request

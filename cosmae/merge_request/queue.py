@@ -11,7 +11,7 @@ from django.db.utils import OperationalError
 from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.edit_session.models_django import EditSession
 from cosmae.exception import EntityUpdatedException
-from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest, TagConflictResolution
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.value.models_django import (
     Value,
@@ -20,7 +20,7 @@ from cosmae.value.models_django import (
 
 
 def disable_origin(
-    merge_request: TagMergeRequest,
+    merge_request: ColumnMergeRequest,
     written_by_session: EditSession,
     id_approved_by_persistent: Optional[str],
     time_edit,
@@ -48,8 +48,10 @@ def disable_origin(
 
 def merge_request_fast_forward(id_merge_request_persistent):
     "Tries to fast forward a merge request."
-    merge_request_query = TagMergeRequest.objects.filter(  # pylint: disable=no-member
-        id_persistent=id_merge_request_persistent
+    merge_request_query = (
+        ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_merge_request_persistent
+        )
     )
     try:
         with transaction.atomic():
@@ -86,7 +88,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                         version=None,
                     )
                     tag_instance.save()
-                merge_request.state = TagMergeRequest.MERGED
+                merge_request.state = ColumnMergeRequest.MERGED
                 merge_request.save()
                 disable_origin(
                     merge_request,
@@ -101,7 +103,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
-            merge_request.state = TagMergeRequest.ERROR
+            merge_request.state = ColumnMergeRequest.ERROR
             merge_request.save()
 
 
@@ -113,15 +115,17 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
     id_merge_request_persistent, id_approved_by_persistent
 ):
     "Merges a merge request while incorporating conflict resolutions."
-    merge_request_query = TagMergeRequest.objects.filter(  # pylint: disable=no-member
-        id_persistent=id_merge_request_persistent
+    merge_request_query = (
+        ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_merge_request_persistent
+        )
     )
     approved_by_query = CosmaeUser.by_id_persistent_query_set(id_approved_by_persistent)
     try:
         with transaction.atomic():
             try:
                 merge_request = merge_request_query.get()
-                if not merge_request.state == TagMergeRequest.RESOLVED:
+                if not merge_request.state == ColumnMergeRequest.RESOLVED:
                     raise NotResolvedException("Tag Merge request is not resolved.")
                 approved_by = approved_by_query.get()
             except OperationalError:
@@ -163,7 +167,7 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
-            merge_request.state = TagMergeRequest.ERROR
+            merge_request.state = ColumnMergeRequest.ERROR
             merge_request.save()
 
 
@@ -223,7 +227,9 @@ def perform_value_replacement(recent_queryset, approved_by, time_merge):
         )[0].save()
 
 
-def dispatch_resolve_conflicts(merge_request: TagMergeRequest, approved_by: CosmaeUser):
+def dispatch_resolve_conflicts(
+    merge_request: ColumnMergeRequest, approved_by: CosmaeUser
+):
     "Dispatch method for resolving conflicts to queue"
     django_rq.enqueue(
         merge_request_resolve_conflicts,

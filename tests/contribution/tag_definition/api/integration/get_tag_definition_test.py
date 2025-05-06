@@ -14,19 +14,19 @@ def test_unknown_user(auth_server):
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
     with patch("cosmae.contribution.tag_definition.api.check_user", mock):
-        rsp = req.get_tag_definition(server.url, "id-test", cookies=cookies)
+        rsp = req.get_column(server.url, "id-test", cookies=cookies)
         assert rsp.status_code == 401
 
 
 def test_no_cookies(auth_server):
     server, _ = auth_server
-    rsp = req.get_tag_definition(server.url, "id-test")
+    rsp = req.get_column(server.url, "id-test")
     assert rsp.status_code == 401
 
 
 def test_404(auth_server):
     server, cookies = auth_server
-    rsp = req.get_tag_definition(server.url, str(uuid4()), cookies=cookies)
+    rsp = req.get_column(server.url, str(uuid4()), cookies=cookies)
     assert rsp.status_code == 404
 
 
@@ -37,7 +37,7 @@ def test_uploaded_400(auth_server):
     )
     assert rsp.status_code == 200
     id_persistent = rsp.json()["id_persistent"]
-    rsp = req.get_tag_definition(server.url, id_persistent, cookies)
+    rsp = req.get_column(server.url, id_persistent, cookies)
     assert rsp.status_code == 400
     assert rsp.json() == {"msg": "Column definitions not yet extracted."}
 
@@ -54,7 +54,7 @@ def test_no_defs(auth_server):
     )
     candidate.state = ContributionCandidate.COLUMNS_EXTRACTED
     candidate.save()
-    rsp = req.get_tag_definition(server.url, id_persistent, cookies)
+    rsp = req.get_column(server.url, id_persistent, cookies)
     assert rsp.status_code == 404
     assert rsp.json() == {"msg": "No tag definitions match the given parameters."}
 
@@ -63,8 +63,8 @@ def test_get_tag_defs(auth_server, contribution_column, contribution_column_1):
     server, cookies = auth_server
     contribution_candidate = contribution_column.contribution_candidate
     id_persistent = contribution_candidate.id_persistent
-    rsp = req.get_tag_definition(server.url, id_persistent, cookies)
+    rsp = req.get_column(server.url, id_persistent, cookies)
     assert rsp.status_code == 200
     assert rsp.json() == {
-        "tag_definitions": [c.column_test1, c.column_test0],
+        "column_list": [c.column_test1, c.column_test0],
     }

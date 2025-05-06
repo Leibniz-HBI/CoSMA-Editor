@@ -95,18 +95,18 @@ def test_reverse(
             {
                 "replacement_state": "KEEP",
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
@@ -170,18 +170,18 @@ def test_reverse_replacement_value(
             {
                 "replacement_state": "VALUE",
                 "replacement_value": c.replacement_value,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
@@ -248,17 +248,17 @@ def test_double_reverse(
             {
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_curated_test],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_curated_test,
                     "curated": True,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin_curated,
                     "value": c.value_origin_curated,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
         ],
     )
@@ -268,32 +268,32 @@ def test_double_reverse(
             {
                 "replacement_state": None,
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test,
                     "curated": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin,
                     "value": c.value_origin,
                 },
-                "tag_instance_destination": None,
+                "value_destination": None,
             },
             {
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
-                "tag_definition": {
+                "column": {
                     "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
                     "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                 },
-                "tag_instance_origin": {
+                "value_origin": {
                     "id_persistent": c.id_instance_origin1,
                     "value": c.value_origin1,
                 },
-                "tag_instance_destination": {
+                "value_destination": {
                     "id_persistent": c.id_instance_destination,
                     "value": c.value_destination,
                 },

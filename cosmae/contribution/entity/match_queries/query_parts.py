@@ -93,9 +93,9 @@ MATCHES_QUERY_STRING_WITHOUT_PAIRS = """
 				from (
 					(
                         select "id_origin_persistent",  "id_destination_persistent"
-						from cosmae_tagmergerequest
+						from cosmae_columnmergerequest
 						where contribution_candidate_id=%(id_contribution_persistent)s
-					) tagmergerequest
+					) columnmergerequest
 					inner join (
 						select "id_persistent"
 						from cosmae_column

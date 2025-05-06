@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import tests.tag.api.integration.requests as req
 import tests.tag.common as c
 import tests.user.common as cu
-from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.models_django import OwnershipRequest as OwnershipRequestDb
 from cosmae.exception import NotAuthenticatedException
 
@@ -111,5 +111,5 @@ def test_curated_commissioner_to_self(
             id_column_persistent=tag_def_curated.id_persistent
         )
     )
-    tag_def = TagDefinitionDb.most_recent_by_id(tag_def_curated.id_persistent)
+    tag_def = ColumnDb.most_recent_by_id(tag_def_curated.id_persistent)
     assert tag_def.owner == user_commissioner

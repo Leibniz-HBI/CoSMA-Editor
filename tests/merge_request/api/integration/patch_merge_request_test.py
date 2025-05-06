@@ -6,7 +6,7 @@ from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
 from tests.utils import assert_versioned, format_datetime
 from cosmae.exception import NotAuthenticatedException
-from cosmae.merge_request.models_django import TagMergeRequest
+from cosmae.merge_request.models_django import ColumnMergeRequest
 
 
 def test_unknown_user(auth_server):
@@ -44,7 +44,7 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
     )
     assert rsp.status_code == 200
     assert (
-        TagMergeRequest.objects.filter(  # pylint: disable=no-member
+        ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
             id_persistent=merge_request_user.id_persistent
         )
         .get()
@@ -59,7 +59,7 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
     )
     assert rsp.status_code == 200
     assert (
-        not TagMergeRequest.objects.filter(  # pylint: disable=no-member
+        not ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
             id_persistent=merge_request_user.id_persistent
         )
         .get()
