@@ -23,12 +23,12 @@ def test_empty_chunk(auth_server, tag_def):
 def test_missing_tag_def(auth_server):
     live_server, cookies = auth_server
     rsp = post_tag_instance_chunks(
-        live_server.url, c.id_tag_def_persistent_test, 0, 20, cookies=cookies
+        live_server.url, c.id_column_persistent_test, 0, 20, cookies=cookies
     )
     assert rsp.status_code == 400
     json = rsp.json()
     assert json["msg"] == (
-        f"Tag definition with id_persistent {c.id_tag_def_persistent_test} "
+        f"Tag definition with id_persistent {c.id_column_persistent_test} "
         "does not exist."
     )
 
@@ -94,7 +94,7 @@ def test_bad_db(auth_server):
     live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
-    with patch("cosmae.tag.models_django.TagInstance.by_tag_chunked_queryset", mock):
+    with patch("cosmae.value.models_django.Value.by_column_chunked_queryset", mock):
         rsp = post_tag_instance_chunks(
             live_server.url, "test_id_persistent", 0, 2, cookies=cookies
         )

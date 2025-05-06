@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, patch
 
 import tests.tag.api.integration.requests as req
 import tests.tag.common as c
+from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.models_django import OwnershipRequest as OwnershipRequestDb
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import OwnershipRequest as OwnershipRequestDb
-from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 
 
 def test_unknown_user(auth_server):
@@ -14,9 +14,9 @@ def test_unknown_user(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
-    with patch("cosmae.tag.api.permissions.check_user", mock):
+    with patch("cosmae.column.api_permissions.check_user", mock):
         rsp = req.post_curation(
-            server.url, c.id_tag_def_persistent_test, cookies=cookies
+            server.url, c.id_column_persistent_test, cookies=cookies
         )
     assert rsp.status_code == 401
 
@@ -24,21 +24,21 @@ def test_unknown_user(auth_server):
 def test_no_cookies(auth_server):
     "Check 401 response for missing cookies."
     server, _ = auth_server
-    rsp = req.post_curation(server.url, c.id_tag_def_persistent_test)
+    rsp = req.post_curation(server.url, c.id_column_persistent_test)
     assert rsp.status_code == 401
 
 
 def test_insufficient_permissions(auth_server):
     "Check correct status code for normal users."
     server, cookies = auth_server
-    rsp = req.post_curation(server.url, c.id_tag_def_persistent_test, cookies=cookies)
+    rsp = req.post_curation(server.url, c.id_column_persistent_test, cookies=cookies)
     assert rsp.status_code == 403
 
 
 def test_not_existing(auth_server_commissioner):
     "Check correct status for non existing tag def."
     server, cookies = auth_server_commissioner
-    rsp = req.post_curation(server.url, c.id_tag_def_persistent_test, cookies=cookies)
+    rsp = req.post_curation(server.url, c.id_column_persistent_test, cookies=cookies)
     assert rsp.status_code == 404
 
 
@@ -58,17 +58,17 @@ def test_curate_removes_ownership_requests(
     "Check whether a commissioner can curate a tag."
     server, cookies = auth_server_commissioner
     rsp = req.post_curation(
-        server.url, ownership_request_user.id_tag_definition_persistent, cookies=cookies
+        server.url, ownership_request_user.id_column_persistent, cookies=cookies
     )
     assert rsp.status_code == 200
     tag_def = TagDefinitionDb.most_recent_by_id(
-        ownership_request_user.id_tag_definition_persistent
+        ownership_request_user.id_column_persistent
     )
     assert tag_def.curated
     assert tag_def.owner is None
     assert 0 == len(
-        OwnershipRequestDb.by_id_tag_definition_persistent_query_set(
-            ownership_request_user.id_tag_definition_persistent
+        OwnershipRequestDb.by_id_column_persistent_query_set(
+            ownership_request_user.id_column_persistent
         )
     )
 

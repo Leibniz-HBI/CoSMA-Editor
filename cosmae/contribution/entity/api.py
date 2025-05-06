@@ -383,13 +383,13 @@ def add_justification(
 
 def scored_match_db_to_api(match):
     "Converts an entity annotated with a similarity score to a scored match"
-    id_match_tag_definition_persistent_list = match["equal_tag_definition_list"]
-    if id_match_tag_definition_persistent_list is None:
-        id_match_tag_definition_persistent_list = []
+    id_match_column_persistent_list = match["equal_column_list"]
+    if id_match_column_persistent_list is None:
+        id_match_column_persistent_list = []
     return ScoredMatch(
         similarity=match["levenshtein_similarity"],
         entity=entity_db_dict_to_api(match),
-        id_match_tag_definition_persistent_list=id_match_tag_definition_persistent_list,
+        id_match_tag_definition_persistent_list=id_match_column_persistent_list,
     )
 
 

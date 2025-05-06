@@ -9,7 +9,7 @@ from tests.tag import common as ct
 from tests.user import common as cu
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
-from cosmae.tag.models_django import TagInstanceHistory
+from cosmae.value.models_django import ValueHistory
 
 
 def test_unknown_user(auth_server):
@@ -40,7 +40,7 @@ def test_no_mr(auth_server):
 def test_conflicts_no_resolution(
     auth_server_commissioner,
     merge_request_user,
-    tag_def,
+    column,
     origin_entity_for_mr,
     destination_entity_for_mr,
     instances_merge_request_origin_user,
@@ -85,9 +85,9 @@ def test_conflicts_no_resolution(
                 "replacement_state": None,
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_curated_test],
+                    "name_path": [ct.name_column_curated_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_curated_test,
+                    "id_persistent": ct.id_column_curated_test,
                     "curated": True,
                     "hidden": False,
                 },
@@ -106,9 +106,9 @@ def test_conflicts_no_resolution(
                 "replacement_state": None,
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test],
+                    "name_path": [ct.name_column_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test,
+                    "id_persistent": ct.id_column_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },
@@ -122,9 +122,9 @@ def test_conflicts_no_resolution(
                 "replacement_state": None,
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test1],
+                    "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test_user1,
+                    "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
@@ -145,15 +145,15 @@ def test_conflicts_no_resolution(
 def test_conflicts_same_value(
     auth_server_commissioner,
     merge_request_user,
-    tag_def,
+    column,
     origin_entity_for_mr,
     destination_entity_for_mr,
     instances_merge_request_origin_user,
 ):
     for instance_origin in instances_merge_request_origin_user:
-        instance_destination = TagInstanceHistory(
+        instance_destination = ValueHistory(
             id_entity_persistent=merge_request_user.id_destination_persistent,
-            id_tag_definition_persistent=instance_origin.id_tag_definition_persistent,
+            id_column_persistent=instance_origin.id_column_persistent,
             id_persistent=str(uuid4()),
             value=instance_origin.value,
             time_edit=datetime(1994, 12, 2, tzinfo=timezone.utc),
@@ -240,9 +240,9 @@ def test_conflicts_resolved(
                 "replacement_state": None,
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_curated_test],
+                    "name_path": [ct.name_column_curated_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_curated_test,
+                    "id_persistent": ct.id_column_curated_test,
                     "curated": True,
                     "hidden": False,
                 },
@@ -261,9 +261,9 @@ def test_conflicts_resolved(
                 "replacement_state": None,
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test],
+                    "name_path": [ct.name_column_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test,
+                    "id_persistent": ct.id_column_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },
@@ -277,9 +277,9 @@ def test_conflicts_resolved(
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test1],
+                    "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test_user1,
+                    "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },

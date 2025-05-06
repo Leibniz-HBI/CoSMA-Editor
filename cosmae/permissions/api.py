@@ -1,12 +1,13 @@
 "API methods for managing permissions. Currently only works for tag definitions."
+
 from typing import List, Optional
 
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.column.models_django import Column
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.permissions.models_django import Permission
-from cosmae.tag.models_django import TagDefinition
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
 
@@ -69,7 +70,7 @@ def get_permissions(request: HttpRequest, id_resource_persistent: str):
                 for permission in permission_list_db
             ]
         )
-    except TagDefinition.DoesNotExist:
+    except Column.DoesNotExist:
         return 404, ApiError(msg="Resource does not exist.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not set permission.")
@@ -124,7 +125,7 @@ def put_permission(
                     write=permissions.write is not None and permissions.write,
                 )
         return 200, permission_db_to_api(permission)
-    except (TagDefinition.DoesNotExist, CosmaeUser.DoesNotExist):
+    except (Column.DoesNotExist, CosmaeUser.DoesNotExist):
         return 404, ApiError(msg="Resource or User do not exist.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not set permission.")

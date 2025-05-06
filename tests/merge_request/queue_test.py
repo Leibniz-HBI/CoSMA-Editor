@@ -2,8 +2,9 @@
 
 import tests.merge_request.common as c
 import cosmae.merge_request.queue as q
+from cosmae.column.models_django import Column
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.value.models_django import Value
 
 
 def test_fast_forward_destination_empty(
@@ -16,7 +17,7 @@ def test_fast_forward_destination_empty(
         merge_request_user_fast_forward.created_by,
     )
     assert merge_request_after.state == TagMergeRequest.MERGED
-    assert not TagDefinition.most_recent_by_id(
+    assert not Column.most_recent_by_id(
         merge_request_user_fast_forward.id_origin_persistent
     ).disabled
 
@@ -33,7 +34,7 @@ def test_fast_forward_destination_empty_with_disable(
         merge_request_user_fast_forward_disable_origin.created_by,
     )
     assert merge_request_after.state == TagMergeRequest.MERGED
-    assert TagDefinition.most_recent_by_id(
+    assert Column.most_recent_by_id(
         merge_request_user_fast_forward_disable_origin.id_origin_persistent
     ).disabled
 
@@ -106,8 +107,8 @@ def test_applies_resolutions(
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
-        TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
+        Value.objects.filter(  # pylint: disable=no-member
+            id_column_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -129,14 +130,14 @@ def test_applies_resolutions_disable_origin(merge_request_user_disable_origin_re
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
-        TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=(
+        Value.objects.filter(  # pylint: disable=no-member
+            id_column_persistent=(
                 merge_request_user_disable_origin_resolved.id_destination_persistent
             )
         )
     )
     assert len(instances) == 0
-    assert TagDefinition.most_recent_by_id(
+    assert Column.most_recent_by_id(
         merge_request_user_disable_origin_resolved.id_origin_persistent
     ).disabled
 
@@ -156,8 +157,8 @@ def test_incomplete_resolution_stays_open_keep(
     )
     assert merge_request.state == TagMergeRequest.OPEN
     instances = list(
-        TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
+        Value.objects.filter(  # pylint: disable=no-member
+            id_column_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -180,8 +181,8 @@ def test_incomplete_resolution_stays_open_replace(
     )
     assert merge_request.state == TagMergeRequest.OPEN
     instances = list(
-        TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
+        Value.objects.filter(  # pylint: disable=no-member
+            id_column_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -206,8 +207,8 @@ def test_merges_for_equal_value_replace(
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
-        TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
+        Value.objects.filter(  # pylint: disable=no-member
+            id_column_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert instances[1].merged_from == c.id_instance_origin1
@@ -234,8 +235,8 @@ def test_merges_for_equal_value_keep(
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
-        TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
+        Value.objects.filter(  # pylint: disable=no-member
+            id_column_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -257,8 +258,8 @@ def test_merges_for_equal_value_updated(
     )
     assert merge_request.state == TagMergeRequest.MERGED
     instances = list(
-        TagInstance.objects.filter(  # pylint: disable=no-member
-            id_tag_definition_persistent=merge_request_user_resolved.id_destination_persistent
+        Value.objects.filter(  # pylint: disable=no-member
+            id_column_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
     assert len(instances) == 1

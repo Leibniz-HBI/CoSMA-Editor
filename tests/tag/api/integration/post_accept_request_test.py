@@ -3,9 +3,9 @@ from unittest.mock import MagicMock, patch
 
 import tests.tag.api.integration.requests as req
 import tests.tag.common as c
+from cosmae.column.models_django import Column
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagDefinition
 
 
 def test_unknown_user(auth_server):
@@ -13,7 +13,7 @@ def test_unknown_user(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
-    with patch("cosmae.tag.api.permissions.check_user", mock):
+    with patch("cosmae.column.api_permissions.check_user", mock):
         rsp = req.post_accept(server.url, c.id_ownership_request_test, cookies)
     assert rsp.status_code == 401
 
@@ -37,8 +37,8 @@ def test_correct_user(auth_server1, ownership_request_user):
     server, _, cookies = auth_server1
     rsp = req.post_accept(server.url, c.id_ownership_request_test, cookies=cookies)
     assert rsp.status_code == 200
-    tag_definition = TagDefinition.most_recent_by_id(
-        ownership_request_user.id_tag_definition_persistent
+    tag_definition = Column.most_recent_by_id(
+        ownership_request_user.id_column_persistent
     )
     assert tag_definition.owner == ownership_request_user.receiver
 
@@ -51,8 +51,8 @@ def test_correct_user_curated(auth_server, ownership_request_curated):
         server.url, c.id_ownership_request_curated_test, cookies=cookies
     )
     assert rsp.status_code == 200
-    tag_definition = TagDefinition.most_recent_by_id(
-        ownership_request_curated.id_tag_definition_persistent
+    tag_definition = Column.most_recent_by_id(
+        ownership_request_curated.id_column_persistent
     )
     assert tag_definition.owner == ownership_request_curated.receiver
     assert not tag_definition.curated
@@ -68,7 +68,7 @@ def test_changes_owner_of_mrs(auth_server1, ownership_request_user, user_editor)
         created_by=user_editor,
         state=TagMergeRequest.OPEN,
         id_origin_persistent="origin_for_test",
-        id_destination_persistent=ownership_request_user.id_tag_definition_persistent,
+        id_destination_persistent=ownership_request_user.id_column_persistent,
         created_at=c.time_edit_test,
         id_persistent=id_mr_persistent,
     )
@@ -76,15 +76,15 @@ def test_changes_owner_of_mrs(auth_server1, ownership_request_user, user_editor)
         assigned_to=user_editor,
         created_by=ownership_request_user.petitioner,
         state=TagMergeRequest.OPEN,
-        id_origin_persistent=ownership_request_user.id_tag_definition_persistent,
+        id_origin_persistent=ownership_request_user.id_column_persistent,
         id_destination_persistent="destination_for_test",
         created_at=c.time_edit_test,
         id_persistent=id_mr_persistent1,
     )
     rsp = req.post_accept(server.url, c.id_ownership_request_test, cookies=cookies)
     assert rsp.status_code == 200
-    tag_definition = TagDefinition.most_recent_by_id(
-        ownership_request_user.id_tag_definition_persistent
+    tag_definition = Column.most_recent_by_id(
+        ownership_request_user.id_column_persistent
     )
     assert tag_definition.owner == ownership_request_user.receiver
     assert (

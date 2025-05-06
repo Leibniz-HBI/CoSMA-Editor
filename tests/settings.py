@@ -182,9 +182,9 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": "/tmp/django_cache",
     },
-    "tag_definition_name_paths": {
+    "column_name_paths": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": "/tmp/django_cache_tag_definition_name_paths",
+        "LOCATION": "/tmp/django_cache_column_name_paths",
     },
     "entity_display_txt_information": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",

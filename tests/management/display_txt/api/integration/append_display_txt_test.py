@@ -35,43 +35,43 @@ def test_unknown_tag_def(auth_server_commissioner):
     assert rsp.status_code == 404
 
 
-def test_append_not_curated_config(auth_server_commissioner, tag_def):
+def test_append_not_curated_config(auth_server_commissioner, column):
     server, cookies = auth_server_commissioner
     rsp = req.post_append_tag_definition(
-        server.url, tag_def.id_persistent, cookies=cookies
+        server.url, column.id_persistent, cookies=cookies
     )
     assert rsp.status_code == 400
 
 
-def test_append_already_present(auth_server_commissioner, tag_def_curated):
+def test_append_already_present(auth_server_commissioner, column_curated):
     server, cookies = auth_server_commissioner
     rsp = req.post_append_tag_definition(
-        server.url, tag_def_curated.id_persistent, cookies=cookies
+        server.url, column_curated.id_persistent, cookies=cookies
     )
     assert rsp.status_code == 200
     rsp = req.post_append_tag_definition(
-        server.url, tag_def_curated.id_persistent, cookies=cookies
+        server.url, column_curated.id_persistent, cookies=cookies
     )
     assert rsp.status_code == 400
 
 
-def test_append_to_nonexisting_config(auth_server_commissioner, tag_def_curated):
+def test_append_to_nonexisting_config(auth_server_commissioner, column_curated):
     server, cookies = auth_server_commissioner
     rsp = req.post_append_tag_definition(
-        server.url, tag_def_curated.id_persistent, cookies=cookies
+        server.url, column_curated.id_persistent, cookies=cookies
     )
     assert rsp.status_code == 200
 
 
 def test_append_to_existing(
-    auth_server_commissioner, tag_def_curated, display_txt_order_0
+    auth_server_commissioner, column_curated, display_txt_order_0
 ):
     server, cookies = auth_server_commissioner
     rsp = req.post_append_tag_definition(
-        server.url, tag_def_curated.id_persistent, cookies=cookies
+        server.url, column_curated.id_persistent, cookies=cookies
     )
     assert rsp.status_code == 200
     assert ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY) == [
-        ct.id_tag_def_persistent_test,
-        ct.id_tag_def_curated_test,
+        ct.id_column_persistent_test,
+        ct.id_column_curated_test,
     ]

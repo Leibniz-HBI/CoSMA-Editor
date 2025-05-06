@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-positional-arguments,too-many-statements
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-positional-arguments,too-many-statements,duplicate-code
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
@@ -8,9 +8,10 @@ from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
 from tests.user import common as cu
 from tests.utils import assert_versioned, format_datetime
+from cosmae.column.models_django import ColumnHistory
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import TagConflictResolution
-from cosmae.tag.models_django import TagDefinitionHistory, TagInstanceHistory
+from cosmae.value.models_django import ValueHistory
 
 
 def test_unknown_user(auth_server):
@@ -156,9 +157,9 @@ def test_conflicts_same_value(
     instances_merge_request_origin_user,
 ):
     for instance_origin in instances_merge_request_origin_user:
-        instance_destination = TagInstanceHistory(
+        instance_destination = ValueHistory(
             id_entity_persistent=instance_origin.id_entity_persistent,
-            id_tag_definition_persistent=destination_tag_def_for_mr.id_persistent,
+            id_column_persistent=destination_tag_def_for_mr.id_persistent,
             id_persistent=str(uuid4()),
             value=instance_origin.value,
             time_edit=datetime(1994, 12, 2, tzinfo=timezone.utc),
@@ -334,8 +335,8 @@ def test_conflict_resolved(
 def test_conflict_resolved_tag_def_origin_changed(
     auth_server, merge_request_user, conflict_resolution_replace
 ):
-    old_tag_definition = conflict_resolution_replace.tag_definition_origin
-    TagDefinitionHistory.change_or_create_versioned(
+    old_tag_definition = conflict_resolution_replace.column_origin
+    ColumnHistory.change_or_create_versioned(
         id_persistent=old_tag_definition.id_persistent,
         version=old_tag_definition.id,
         name="changed tag definition test",
@@ -474,17 +475,17 @@ def test_tag_instance_destination_value_added(
     instances_merge_request_origin_user,
 ):
     TagConflictResolution.objects.create(  # pylint: disable=no-member
-        tag_definition_origin=origin_tag_def_for_mr,
-        tag_definition_destination=destination_tag_def_for_mr,
+        column_origin=origin_tag_def_for_mr,
+        column_destination=destination_tag_def_for_mr,
         entity=entity1,
-        tag_instance_origin=instances_merge_request_origin_user[1],
+        value_origin=instances_merge_request_origin_user[1],
         merge_request=merge_request_user,
         replacement_state=TagConflictResolution.REPLACE,
     )
     id_tag_instance_destination = str(uuid4())
     time_edit = datetime(1873, 2, 4, tzinfo=timezone.utc)
-    TagInstanceHistory.objects.create(  # pylint: disable=no-member
-        id_tag_definition_persistent=destination_tag_def_for_mr.id_persistent,
+    ValueHistory.objects.create(  # pylint: disable=no-member
+        id_column_persistent=destination_tag_def_for_mr.id_persistent,
         id_entity_persistent=entity1.id_persistent,
         id_persistent=id_tag_instance_destination,
         value="new value destination test",

@@ -12,9 +12,9 @@ def test_unknown_user(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
-    with patch("cosmae.tag.api.definitions.check_user", mock):
+    with patch("cosmae.column.api.check_user", mock):
         rsp = r.get_descendants(
-            server.url, c.id_tag_def_persistent_test_user, cookies=cookies
+            server.url, c.id_column_persistent_test_user, cookies=cookies
         )
     assert rsp.status_code == 401
 
@@ -22,7 +22,7 @@ def test_unknown_user(auth_server):
 def test_no_cookies(auth_server, tag_def_user):
     "Make sure that without cookies the response has a unauthenticated status."
     server, _ = auth_server
-    rsp = r.get_descendants(server.url, c.id_tag_def_persistent_test_user)
+    rsp = r.get_descendants(server.url, c.id_column_persistent_test_user)
     assert rsp.status_code == 401
 
 
@@ -30,7 +30,7 @@ def test_applicant(auth_server_applicant, tag_def_user):
     "Make sure applicant can not purge."
     server, cookies = auth_server_applicant
     rsp = r.get_descendants(
-        server.url, c.id_tag_def_persistent_test_user, cookies=cookies
+        server.url, c.id_column_persistent_test_user, cookies=cookies
     )
     assert rsp.status_code == 403
 

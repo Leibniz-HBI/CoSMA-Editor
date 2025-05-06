@@ -1,27 +1,27 @@
 # pylint: disable=invalid-name,missing-module-docstring
 from datetime import datetime, timezone
 
-name_tag_def_test = "name tag test"
+name_column_test = "name tag test"
 name_tag_def_test_user = "name tag test_user"
-name_tag_def_test1 = "name tag test1"
+name_column_test1 = "name tag test1"
 name_tag_def_parent_test = "tag_def_parent_test"
-name_tag_def_curated_test = "name curated tag test"
-name_tag_def_disabled_test = "name tag def disabled test"
+name_column_curated_test = "name curated tag test"
+name_column_disabled_test = "name tag def disabled test"
 time_edit_test = datetime(2022, 12, 20, tzinfo=timezone.utc)
 time_edit_test1 = datetime(2022, 12, 21, tzinfo=timezone.utc)
 time_edit_curated_test = datetime(2022, 12, 22, tzinfo=timezone.utc)
 id_entity_test = "6def6d63-e688-4343-a8ad-edd578146174"
-id_tag_def_persistent_test = "b17463e5-8f95-4b12-bc31-b469030f813a"
+id_column_persistent_test = "b17463e5-8f95-4b12-bc31-b469030f813a"
 id_tag_def_parent_persistent_test = "5a682460-9a91-414e-8c87-b5e1cb00dd97"
 id_tag_persistent_test = "934e25f9-ebc4-4fcb-97ea-a33c4186bfc3"
-id_tag_def_persistent_test_user = "e37a05ca-d5f1-4bff-ba6f-d2f3a1f45e76"
-id_tag_def_persistent_test_user1 = "52d5de0a-2fdb-457f-80d0-6e10131ad1b9"
+id_column_persistent_test_user = "e37a05ca-d5f1-4bff-ba6f-d2f3a1f45e76"
+id_column_persistent_test_user1 = "52d5de0a-2fdb-457f-80d0-6e10131ad1b9"
 id_tag_def_persistent_child_0 = "f2a2e623-404d-494c-9f6d-3436f5d0ad48"
 id_tag_def_persistent_child_1 = "e0a3ec8d-3365-4979-8e51-6fcc3e445afd"
 id_tag_def_persistent_child_parent = "2eea6ebb-b83b-404e-ad9a-80f6b014a488"
 id_tag_def_persistent_child_parent_child = "49e45ba7-36cf-4725-a297-f315ee3d1b49"
-id_tag_def_curated_test = "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
-id_tag_def_disabled_test = "6698156c-a425-40d1-b792-014d81ca216f"
+id_column_curated_test = "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
+id_column_disabled_test = "6698156c-a425-40d1-b792-014d81ca216f"
 id_instance_test0 = "efee09fd-cee7-402f-8e8e-6ca790352e41"
 id_instance_test1 = "3f7f1a90-cf62-4b73-8dee-8982bd422edf"
 id_instance_test2 = "602364a9-1e75-4c93-833d-1c4fa0296f04"

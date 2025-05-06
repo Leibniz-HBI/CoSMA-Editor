@@ -3,17 +3,17 @@ import pytest
 
 import tests.edit_session.common as cs
 import tests.user.common as c
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.edit_session.models_django import EditSession
-from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
 
 
 @pytest.fixture
 def tag_def_user_profile(user):
-    return TagDefinitionHistory.objects.create(
+    return ColumnHistory.objects.create(
         name=c.name_tag_def,
         id_persistent=c.id_tag_def_persistent,
         time_edit=c.time_edit_tag_def,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
@@ -21,11 +21,11 @@ def tag_def_user_profile(user):
 
 @pytest.fixture
 def tag_def_user_profile1(user):
-    return TagDefinitionHistory.objects.create(
+    return ColumnHistory.objects.create(
         name=c.name_tag_def1,
         id_persistent=c.id_tag_def_persistent1,
         time_edit=c.time_edit_tag_def1,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
@@ -33,11 +33,11 @@ def tag_def_user_profile1(user):
 
 @pytest.fixture
 def tag_def_user_profile2(user):
-    return TagDefinitionHistory.objects.create(
+    return ColumnHistory.objects.create(
         name=c.name_tag_def2,
         id_persistent=c.id_tag_def_persistent2,
         time_edit=c.time_edit_tag_def2,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
@@ -45,11 +45,11 @@ def tag_def_user_profile2(user):
 
 @pytest.fixture
 def tag_def_user_profile3(user):
-    return TagDefinitionHistory.objects.create(
+    return ColumnHistory.objects.create(
         name=c.name_tag_def3,
         id_persistent=c.id_tag_def_persistent3,
         time_edit=c.time_edit_tag_def3,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )

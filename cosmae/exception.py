@@ -67,25 +67,25 @@ class EntityUpdatedException(Exception):
         self.new_value = new_value
 
 
-class NoChildTagDefinitionsAllowedException(Exception):
+class NoChildColumnAllowedException(Exception):
     "Indicates that a tag definition is not allowed to have children."
 
     def __init__(self, id_persistent):
         self.id_persistent = id_persistent
 
 
-class NoSelfParentTagException(Exception):
+class NoSelfParentColumnException(Exception):
     "Indicates that the tag was set to have itself as parent.."
 
 
-class NoParentTagException(Exception):
+class NoParentColumnException(Exception):
     "Indicates that the tag with the specified id_persistent does not exist."
 
     def __init__(self, id_persistent):
         self.id_persistent = id_persistent
 
 
-class InvalidTagValueException(Exception):
+class InvalidValueException(Exception):
     "Indicates that a given value is not of the type defined by a tag."
 
     def __init__(self, tag_id_persistent, value, type_name):
@@ -94,11 +94,11 @@ class InvalidTagValueException(Exception):
         self.type_name = type_name
 
 
-class DisabledTagDefinitionHasChildrenException(Exception):
+class DisabledColumnHasChildrenException(Exception):
     "Indicates that a tag definition marked for disabling still has children."
 
 
-class TagDefinitionExistsException(Exception):
+class ColumnExistsException(Exception):
     "Indicates that the tag already exists."
 
     def __init__(self, tag_name, id_persistent, id_parent_persistent):
@@ -114,7 +114,7 @@ class EntityMissingException(Exception):
         self.id_persistent = id_persistent
 
 
-class TagDefinitionMissingException(Exception):
+class ColumnMissingException(Exception):
     "Indicates that there is no tag definition with the given persistent id."
 
     def __init__(self, id_persistent):
@@ -135,7 +135,7 @@ class TagDefinitionPermissionException(Exception):
         self.id_persistent = id_persistent
 
 
-class TagDefinitionDisabledException(Exception):
+class ColumnDisabledException(Exception):
     "Indicates a write to a disabled tag definition."
 
     def __init__(self, id_persistent):

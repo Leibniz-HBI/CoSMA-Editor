@@ -1,6 +1,7 @@
 """Union of all DB models."""
 
 # pylint: disable=unused-import
+from cosmae.column.models_django import Column
 from cosmae.comments.models_django import Comment
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
@@ -17,5 +18,5 @@ from cosmae.merge_request.entity.models_django import (
 )
 from cosmae.merge_request.models_django import TagConflictResolution, TagMergeRequest
 from cosmae.permissions.models_django import Permission
-from cosmae.tag.models_django import TagDefinition, TagInstance
 from cosmae.util import CosmaeUser
+from cosmae.value.models_django import Value

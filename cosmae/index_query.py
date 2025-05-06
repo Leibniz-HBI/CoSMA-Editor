@@ -19,3 +19,13 @@ CREATE_TAG_INSTANCE_VALUE_INDEX_QUERY = """
             USING GIST (value gist_trgm_ops)"""
 
 DROP_TAG_INSTANCE_VALUE_INDEX_QUERY = "DROP INDEX cosmae_taginstance_value_trgm_idx"
+
+# Possible alternative gin index with `opclasses=["gin_trgrm_ops"],
+# Would mean faster retrieval but increased size and update time.
+# Needs to add extension via migration.
+CREATE_VALUE_VALUE_INDEX_QUERY = """
+            CREATE INDEX cosmae_value_value_trgm_idx
+            ON cosmae_valuehistory
+            USING GIST (value gist_trgm_ops)"""
+
+DROP_VALUE_VALUE_INDEX_QUERY = "DROP INDEX cosmae_value_value_trgm_idx"

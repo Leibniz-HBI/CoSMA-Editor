@@ -5,7 +5,7 @@ from django.db import IntegrityError
 
 import tests.tag.common as c
 from tests.tag.api.integration import requests as r
-from cosmae.tag.models_django import TagDefinitionHistory
+from cosmae.column.models_django import ColumnHistory
 
 
 def test_id_no_version(auth_server, root_tag_def):
@@ -26,7 +26,7 @@ def test_no_id_version(auth_server, root_tag_def):
     assert req.status_code == 400
     assert (
         req.json()["msg"]
-        == f"Tag definition with name {c.name_tag_def_test} has version but no id_persistent."
+        == f"Tag definition with name {c.name_column_test} has version but no id_persistent."
     )
 
 
@@ -64,14 +64,14 @@ def test_exists(auth_server, root_tag_def):
     live_server, cookies = auth_server
     mock = MagicMock()
     mock.return_value = "7dc7030c-35bd-49d7-9150-07e6f97c4b05"
-    with patch("cosmae.tag.api.definitions.uuid4", mock):
+    with patch("cosmae.column.api.uuid4", mock):
         req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
         assert req.status_code == 200
         req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
         assert req.status_code == 500
         assert req.json()["msg"] == (
             "Could not generate id_persistent for tag definition with "
-            f"name {c.name_tag_def_test}."
+            f"name {c.name_column_test}."
         )
 
 
@@ -84,7 +84,7 @@ def test_name_exists(auth_server, root_tag_def):
     assert req.status_code == 400
     assert req.json()["msg"] == (
         "There is an existing tag definition with name "
-        f"{c.name_tag_def_test} and id_parent_persistent {None}. "
+        f"{c.name_column_test} and id_parent_persistent {None}. "
         f"Its id_persistent is {id_persistent}."
     )
 
@@ -151,9 +151,7 @@ def test_disable(auth_server, root_tag_def):
     req = r.post_tag_def(live_server.url, new_tag_def, cookies=cookies)
     assert req.status_code == 200
     assert req.json()["tag_definitions"][0]["disabled"]
-    versions = TagDefinitionHistory.objects.filter(
-        id_persistent=id_persistent
-    ).order_by("id")
+    versions = ColumnHistory.objects.filter(id_persistent=id_persistent).order_by("id")
     assert len(versions) == 2
     assert versions[1].disabled
 
@@ -197,7 +195,7 @@ def test_bad_db(auth_server, root_tag_def):
     live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
-    with patch("cosmae.tag.models_django.TagDefinitionHistory.save", mock):
+    with patch("cosmae.column.models_django.ColumnHistory.save", mock):
         req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
     assert req.status_code == 500
     assert req.json()["msg"] == "Provided data not consistent with database."

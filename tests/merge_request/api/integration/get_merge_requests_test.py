@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-statements
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-statements,duplicate-code
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -6,8 +6,8 @@ import tests.user.common as cu
 from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
 from tests.utils import assert_versioned, format_datetime
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.exception import NotAuthenticatedException
-from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
 
 
 def test_unknown_user(auth_server):
@@ -142,7 +142,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
 def test_get_merge_requests_with_hidden(
     auth_server, merge_request_user, merge_request_user1, origin_tag_def_for_mr1
 ):
-    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
+    tag_def, _ = ColumnHistory.change_or_create_versioned(
         id_persistent=origin_tag_def_for_mr1.id_persistent,
         id_parent_persistent=origin_tag_def_for_mr1.id_parent_persistent,
         name=origin_tag_def_for_mr1.name,
@@ -154,7 +154,7 @@ def test_get_merge_requests_with_hidden(
         written_by_session=origin_tag_def_for_mr1.owner.edit_session,
     )
     tag_def.save()
-    assert TagDefinition.most_recent_by_id(origin_tag_def_for_mr1.id_persistent).hidden
+    assert Column.most_recent_by_id(origin_tag_def_for_mr1.id_persistent).hidden
     server, cookies = auth_server
     rsp = req.get_merge_requests(server.url, cookies=cookies)
     assert rsp.status_code == 200

@@ -13,8 +13,8 @@ from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import EntityHistory, EntityJustification
 from cosmae.entity.queue import update_display_txt_cache
 from cosmae.merge_request.queue import merge_request_fast_forward
-from cosmae.tag.models_django import TagInstance, TagInstanceHistory
 from cosmae.util import timestamp
+from cosmae.value.models_django import Value, ValueHistory
 
 
 class MissingJustificationException(Exception):
@@ -42,7 +42,7 @@ def eliminate_duplicates(id_contribution_persistent):
             contribution_candidate=contribution
         )
         tag_instances_with_duplicates = annotate_with_replacement_info(
-            TagInstance.objects.all(),  # pylint: disable=no-member
+            Value.objects.all(),  # pylint: disable=no-member
             duplicates,
             "id_entity_persistent",
         )
@@ -83,22 +83,20 @@ def update_tag_instances(tag_instances_with_duplicates, user, time_edit):
     tag_instances_with_duplicates = tag_instances_with_duplicates.filter(
         replacement_id_entity_persistent__isnull=False
     )
-    updated_tag_instances = [
-        TagInstanceHistory.change_or_create_versioned(
+    updated_values = [
+        ValueHistory.change_or_create_versioned(
             id_persistent=tag_instance.id_persistent,
             id_entity_persistent=tag_instance.replacement_id_entity_persistent,
             value=tag_instance.value,
-            id_tag_definition_persistent=tag_instance.id_tag_definition_persistent,
+            id_column_persistent=tag_instance.id_column_persistent,
             written_by_session=user.edit_session,
             version=tag_instance.id,
             time_edit=time_edit,
         )[0]
         for tag_instance in tag_instances_with_duplicates
     ]
-    TagInstanceHistory.objects.bulk_create(  # pylint: disable=no-member
-        updated_tag_instances
-    )
-    for tag_instance in updated_tag_instances:
+    ValueHistory.objects.bulk_create(updated_values)  # pylint: disable=no-member
+    for tag_instance in updated_values:
         django_rq.enqueue(update_display_txt_cache, tag_instance.id_entity_persistent)
 
 

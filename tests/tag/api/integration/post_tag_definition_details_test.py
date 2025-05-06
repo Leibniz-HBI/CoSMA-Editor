@@ -19,7 +19,7 @@ def test_unauthenticated(auth_server):
     server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
-    with patch("cosmae.tag.api.definitions.check_user", mock):
+    with patch("cosmae.column.api.check_user", mock):
         rsp = r.post_details(server.url, [], cookies=cookies)
     assert rsp.status_code == 401
 
@@ -39,7 +39,7 @@ def test_request_too_large(auth_server):
     assert rsp.status_code == 400
 
 
-def test_get_details(auth_server, tag_def, tag_def1, tag_def_user):
+def test_get_details(auth_server, tag_def, column1, tag_def_user):
     "check correct details response"
     server, cookies = auth_server
     rsp = r.post_details(

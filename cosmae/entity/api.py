@@ -10,6 +10,8 @@ from django.db.models.functions import Cast
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_conversion import tag_definition_db_dict_to_api
 from cosmae.comments.api import Comment
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityHistory
@@ -24,16 +26,14 @@ from cosmae.exception import (
 )
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
 from cosmae.management.models_django import ConfigValue
-from cosmae.tag.api.definitions import TagDefinitionResponse
-from cosmae.tag.api.models_api import TagInstancePost
-from cosmae.tag.api.models_conversion import (
-    tag_definition_db_dict_to_api,
-    tag_instance_db_to_api,
-)
-from cosmae.tag.models_django import TagInstance as TagInstanceDb
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
+from cosmae.value.models_api import TagInstancePost
+from cosmae.value.models_conversion import (
+    tag_instance_db_to_api,
+)
+from cosmae.value.models_django import Value as TagInstanceDb
 
 router = Router()
 
@@ -318,12 +318,10 @@ def search(request: HttpRequest, term: str):
         )
         tag_value_results = TagInstanceDb.objects.search(
             term,
-            id_tag_definitions=ConfigValue.objects.filter(
-                key=DISPLAY_TXT_ORDER_CONFIG_KEY
-            )
+            id_columns=ConfigValue.objects.filter(key=DISPLAY_TXT_ORDER_CONFIG_KEY)
             .annotate(text_value=Cast("value", TextField()))
             .values("text_value"),
-        ).values("id_entity_persistent", "id_tag_definition_persistent", "value")
+        ).values("id_entity_persistent", "id_column_persistent", "value")
         without_known = tag_value_results.exclude(
             id_entity_persistent__in=display_txt_results.values("id_entity_persistent")
         )

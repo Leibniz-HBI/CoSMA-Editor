@@ -141,13 +141,11 @@ def test_creates_resolution_replace(
     resolution = ConflictResolutionDb.objects.all().get()  # pylint: disable=no-member
     assert str(resolution.merge_request_id) == merge_request_user.id_persistent
     assert resolution.entity_id == entity1.id
-    assert resolution.tag_definition_origin_id == origin_tag_def_for_mr.id
-    assert resolution.tag_definition_destination_id == destination_tag_def_for_mr.id
+    assert resolution.column_origin_id == origin_tag_def_for_mr.id
+    assert resolution.column_destination_id == destination_tag_def_for_mr.id
+    assert resolution.value_origin_id == instances_merge_request_origin_user[1].id
     assert (
-        resolution.tag_instance_origin_id == instances_merge_request_origin_user[1].id
-    )
-    assert (
-        resolution.tag_instance_destination_id
+        resolution.value_destination_id
         == instance_merge_request_destination_user_conflict.id
     )
     assert resolution.replacement_state == ConflictResolutionDb.REPLACE
@@ -189,13 +187,11 @@ def test_creates_resolution_replacement_value(
     resolution = ConflictResolutionDb.objects.all().get()  # pylint: disable=no-member
     assert str(resolution.merge_request_id) == merge_request_user.id_persistent
     assert resolution.entity_id == entity1.id
-    assert resolution.tag_definition_origin_id == origin_tag_def_for_mr.id
-    assert resolution.tag_definition_destination_id == destination_tag_def_for_mr.id
+    assert resolution.column_origin_id == origin_tag_def_for_mr.id
+    assert resolution.column_destination_id == destination_tag_def_for_mr.id
+    assert resolution.value_origin_id == instances_merge_request_origin_user[1].id
     assert (
-        resolution.tag_instance_origin_id == instances_merge_request_origin_user[1].id
-    )
-    assert (
-        resolution.tag_instance_destination_id
+        resolution.value_destination_id
         == instance_merge_request_destination_user_conflict.id
     )
     assert resolution.replacement_state == ConflictResolutionDb.VALUE
@@ -257,13 +253,11 @@ def test_overwrites_resolution(
     resolution = ConflictResolutionDb.objects.all().get()  # pylint: disable=no-member
     assert str(resolution.merge_request_id) == merge_request_user.id_persistent
     assert resolution.entity_id == entity1.id
-    assert resolution.tag_definition_origin_id == origin_tag_def_for_mr.id
-    assert resolution.tag_definition_destination_id == destination_tag_def_for_mr.id
+    assert resolution.column_origin_id == origin_tag_def_for_mr.id
+    assert resolution.column_destination_id == destination_tag_def_for_mr.id
+    assert resolution.value_origin_id == instances_merge_request_origin_user[1].id
     assert (
-        resolution.tag_instance_origin_id == instances_merge_request_origin_user[1].id
-    )
-    assert (
-        resolution.tag_instance_destination_id
+        resolution.value_destination_id
         == instance_merge_request_destination_user_conflict.id
     )
     assert resolution.replacement_state == ConflictResolutionDb.KEEP

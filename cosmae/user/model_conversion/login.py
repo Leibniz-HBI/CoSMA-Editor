@@ -1,8 +1,8 @@
 "Model conversion for login information."
 
+from cosmae.column.models_conversion import tag_definition_db_to_api
+from cosmae.column.models_django import Column as TagDefinitionDb
 from cosmae.edit_session.api import edit_session_db_to_api
-from cosmae.tag.api.models_conversion import tag_definition_db_to_api
-from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.user.model_conversion.public import permission_group_db_to_api
 from cosmae.user.models_api.login import LoginResponse
 from cosmae.util import CosmaeUser

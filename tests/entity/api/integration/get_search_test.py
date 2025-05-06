@@ -8,7 +8,7 @@ import tests.entity.common as c
 import tests.tag.common as ct
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
-from cosmae.tag.models_django import TagInstanceHistory
+from cosmae.value.models_django import ValueHistory
 
 _search_term = "tes ent"
 _search_term_value = "al ear"
@@ -69,21 +69,21 @@ def test_single_entity(auth_server, entity1):
 
 
 @pytest.fixture()
-def instance_search(user, tag_def):
+def instance_search(user, column):
     "A value used for testing search"
-    instance, _ = TagInstanceHistory.change_or_create_versioned(
+    instance, _ = ValueHistory.change_or_create_versioned(
         ct.id_instance_test0,
         ct.time_edit_test,
         user.edit_session,
         id_entity_persistent=c.id_persistent_test_0,
-        id_tag_definition_persistent=ct.id_tag_def_persistent_test,
+        id_column_persistent=ct.id_column_persistent_test,
         value=_instance_value,
     )
     instance.save()
     return instance
 
 
-def test_tag_value(auth_server, entity0, tag_def, instance_search, display_txt_order_0):
+def test_tag_value(auth_server, entity0, column, instance_search, display_txt_order_0):
     "Test search for tag values"
     server, cookies = auth_server
     # patch to make sure we get a tag result
@@ -97,7 +97,7 @@ def test_tag_value(auth_server, entity0, tag_def, instance_search, display_txt_o
                 {
                     "match_value": _instance_value,
                     "id_entity_persistent": c.id_persistent_test_0,
-                    "id_tag_definition_persistent": ct.id_tag_def_persistent_test,
+                    "id_tag_definition_persistent": ct.id_column_persistent_test,
                 },
             ]
         },

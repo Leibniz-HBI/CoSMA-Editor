@@ -5,8 +5,8 @@ import tests.merge_request.api.integration.requests as req
 import tests.merge_request.common as c
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagInstanceHistory
 from cosmae.util import timestamp
+from cosmae.value.models_django import ValueHistory
 
 
 def test_unknown_user(auth_server):
@@ -84,11 +84,11 @@ def test_updated_data(
     conflict_resolution_keep,
 ):
     server, cookies = auth_server
-    old_instance = conflict_resolution_replace.tag_instance_destination
-    instance, _ = TagInstanceHistory.change_or_create_versioned(
+    old_instance = conflict_resolution_replace.value_destination
+    instance, _ = ValueHistory.change_or_create_versioned(
         id_persistent=old_instance.id_persistent,
         id_entity_persistent=old_instance.id_entity_persistent,
-        id_tag_definition_persistent=old_instance.id_tag_definition_persistent,
+        id_column_persistent=old_instance.id_column_persistent,
         version=old_instance.id,
         written_by_session=merge_request_user.assigned_to.edit_session,
         time_edit=timestamp(),

@@ -6,9 +6,9 @@ from uuid import uuid4
 import tests.contribution.api.integration.common as c
 import tests.contribution.api.integration.requests as req_contrib
 import tests.contribution.tag_definition.api.integration.requests as req
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
-from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
 from cosmae.util.auth import NotAuthenticatedException
 
 
@@ -203,9 +203,9 @@ def test_patch_id_existing(auth_server, user):
         server, cookies
     )
     new_id_existing = str(uuid4)
-    TagDefinitionHistory.objects.create(
+    ColumnHistory.objects.create(
         name="existing tag def test",
-        type=TagDefinition.BOOL,
+        type=Column.BOOL,
         id_persistent=new_id_existing,
         time_edit=datetime.now(),
         written_by_session=user.edit_session,

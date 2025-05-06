@@ -1,10 +1,12 @@
 "API endpoints for managing tags of new contributions."
+
 from typing import List
 
 from django.db import DatabaseError
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.column.models_django import Column
 from cosmae.contribution.models_django import (
     ContributionCandidate as ContributionCandidateDb,
 )
@@ -12,7 +14,6 @@ from cosmae.contribution.tag_definition.models_django import (
     TagDefinitionContribution as TagDefContributionDb,
 )
 from cosmae.exception import ApiError, NotAuthenticatedException
-from cosmae.tag.models_django import TagDefinition
 from cosmae.util.auth import check_user
 from cosmae.util.django import patch_from_dict
 
@@ -21,6 +22,7 @@ router = Router()
 
 class TagDefinitionContribution(Schema):
     "Response Schema for contribution tag definitions."
+
     # pylint: disable=too-few-public-methods
     name: str
     id_persistent: str
@@ -31,12 +33,14 @@ class TagDefinitionContribution(Schema):
 
 class TagDefinitionContributionResponseList(Schema):
     "Response schema for multiple contribution tag definitions"
+
     # pylint: disable=too-few-public-methods
     tag_definitions: List[TagDefinitionContribution]
 
 
 class TagDefinitionPatchRequest(Schema):
     "Request for updating a contribution tag definition"
+
     # pylint: disable=too-few-public-methods
     id_existing_persistent: str | None = None
     discard: bool | None = None
@@ -126,13 +130,13 @@ def patch_tag_definition(
             id_existing_persistent = patch_dict.get("id_existing_persistent")
             if id_existing_persistent is not None:
                 if id_existing_persistent not in allowed_additional_fields:
-                    TagDefinition.most_recent_by_id(id_existing_persistent)
+                    Column.most_recent_by_id(id_existing_persistent)
                 patch_dict["discard"] = False
             elif "discard" not in patch_dict:
                 patch_dict["discard"] = True
             patch_from_dict(candidate_definition, **patch_dict)
             return 200, tag_definitions_contribution_db_to_api(candidate_definition)
-        except TagDefinition.DoesNotExist:  # pylint: disable=no-member
+        except Column.DoesNotExist:  # pylint: disable=no-member
             return 400, ApiError(msg="Existing tag definition does not exist.")
         except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
             return 404, ApiError(msg="Contribution candidate does not exist.")

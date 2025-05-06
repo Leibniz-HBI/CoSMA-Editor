@@ -6,13 +6,14 @@ import pandas as pd
 import pytest
 from django.db.models import Subquery
 
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue.ingest import ingest_values_from_csv
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory, TagInstance
 from cosmae.util import timestamp
+from cosmae.value.models_django import Value
 
 csv_cols = {
     "names": ["name_0", "name_1"],
@@ -47,10 +48,10 @@ def csv_mock_with_empty_lines():
 
 @pytest.fixture
 def verified_tag_def(db, user):
-    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
+    return ColumnHistory.objects.create(  # pylint: disable=no-member
         name="tag definition verified_test",
         id_parent_persistent=None,
-        type=TagDefinition.BOOL,
+        type=Column.BOOL,
         id_persistent=str(uuid4()),
         time_edit=timestamp(),
         written_by_session=user.edit_session,
@@ -60,10 +61,10 @@ def verified_tag_def(db, user):
 
 @pytest.fixture
 def party_tag_def(db, user):
-    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
+    return ColumnHistory.objects.create(  # pylint: disable=no-member
         name="tag definition party test",
         id_parent_persistent=None,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         id_persistent=str(uuid4()),
         time_edit=timestamp(),
         written_by_session=user.edit_session,
@@ -132,7 +133,7 @@ def test_ingest_columns_names_only(
             return_value=",",
         ):
             ingest_values_from_csv(contribution_other.id_persistent)
-    instances = TagInstance.objects.all()  # pylint: disable=no-member
+    instances = Value.objects.all()  # pylint: disable=no-member
     assert len(instances) == 0
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
@@ -151,7 +152,7 @@ def test_ingest_columns_names_only(
 
 
 def get_tag_value_by_mr(entity_name, id_tag_persistent):
-    origin_tag = TagDefinition.objects.filter(  # pylint: disable=no-member
+    origin_tag = Column.objects.filter(  # pylint: disable=no-member
         id_persistent=Subquery(
             TagMergeRequest.objects.filter(  # pylint: disable=no-member
                 id_destination_persistent=id_tag_persistent
@@ -159,13 +160,13 @@ def get_tag_value_by_mr(entity_name, id_tag_persistent):
         )
     ).get()
     return (
-        TagInstance.objects.filter(  # pylint: disable=no-member
+        Value.objects.filter(  # pylint: disable=no-member
             id_entity_persistent=Entity.objects.filter(  # pylint: disable=no-member
                 display_txt=entity_name
             )
             .get()
             .id_persistent,
-            id_tag_definition_persistent=origin_tag.id_persistent,
+            id_column_persistent=origin_tag.id_persistent,
         )
         .get()
         .value
@@ -194,7 +195,7 @@ def test_ingest_inner(
     assert persons == {"name_0", "name_1"}
     assert get_tag_value_by_mr("name_0", verified_tag_def.id_persistent) == "true"
     assert get_tag_value_by_mr("name_1", verified_tag_def.id_persistent) == "false"
-    instances = TagInstance.objects.all()  # pylint: disable=no-member
+    instances = Value.objects.all()  # pylint: disable=no-member
     assert len(instances) == 2
     assert (
         ContributionCandidate.objects.filter(  # pylint: disable=no-member
@@ -228,7 +229,7 @@ def test_ingest_string(
     assert persons == {"name_0", "name_1"}
     assert get_tag_value_by_mr("name_0", party_tag_def.id_persistent) == "party_0"
     assert get_tag_value_by_mr("name_1", party_tag_def.id_persistent) == "party_1"
-    instances = TagInstance.objects.all()  # pylint: disable=no-member
+    instances = Value.objects.all()  # pylint: disable=no-member
     assert len(instances) == 2
     assert (
         ContributionCandidate.objects.filter(  # pylint: disable=no-member
@@ -283,7 +284,7 @@ def test_ingest_with_empty(
     assert persons == {"name_0", "name_1"}
     assert get_tag_value_by_mr("name_0", verified_tag_def.id_persistent) == "true"
     assert get_tag_value_by_mr("name_1", verified_tag_def.id_persistent) == "false"
-    instances = TagInstance.objects.all()  # pylint: disable=no-member
+    instances = Value.objects.all()  # pylint: disable=no-member
     assert len(instances) == 2
     assert (
         ContributionCandidate.objects.filter(  # pylint: disable=no-member

@@ -6,9 +6,9 @@ from uuid import uuid4
 import tests.contribution.api.integration.common as c
 import tests.contribution.api.integration.requests as req_contrib
 import tests.user.common as cu
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
-from cosmae.tag.models_django import TagDefinition, TagDefinitionHistory
 from cosmae.util.auth import NotAuthenticatedException, CosmaeUser
 
 
@@ -204,10 +204,10 @@ def test_complete_assignment(auth_server):
         )
     )
     id_tag_definition_persistent = str(uuid4())
-    TagDefinitionHistory.objects.create(  # pylint: disable=no-member
+    ColumnHistory.objects.create(  # pylint: disable=no-member
         name="tag definition_test",
         id_parent_persistent=None,
-        type=TagDefinition.BOOL,
+        type=Column.BOOL,
         id_persistent=id_tag_definition_persistent,
         time_edit=datetime.now(),
         written_by_session=user.edit_session,

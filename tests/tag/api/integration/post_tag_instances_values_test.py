@@ -18,14 +18,14 @@ id_value_test2 = "id-value-test2"
 def test_empty_db(auth_server):
     live_server, cookies = auth_server
     rsp = post_tag_instance_values(
-        live_server.url, c.id_entity_test, c.id_tag_def_persistent_test, cookies=cookies
+        live_server.url, c.id_entity_test, c.id_column_persistent_test, cookies=cookies
     )
     assert rsp.status_code == 200
     assert rsp.json() == {
         "value_responses": [
             {
                 "id_entity_persistent": c.id_entity_test,
-                "id_tag_definition_persistent": c.id_tag_def_persistent_test,
+                "id_tag_definition_persistent": c.id_column_persistent_test,
                 "values": [],
             }
         ]
@@ -168,13 +168,13 @@ def test_bad_db(auth_server):
     mock = MagicMock()
     mock.side_effect = Exception()
     with patch(
-        "cosmae.tag.models_django.TagInstance.most_recent_by_entity_and_definition_id_query_set",
+        "cosmae.value.models_django.Value.most_recent_by_entity_and_definition_id_query_set",
         mock,
     ):
         req = post_tag_instance_values(
             live_server.url,
             c.id_entity_test,
-            c.id_tag_def_persistent_test,
+            c.id_column_persistent_test,
             cookies=cookies,
         )
     assert req.status_code == 500
@@ -185,6 +185,6 @@ def test_not_logged_in(live_server):
     req = post_tag_instance_values(
         live_server.url,
         c.id_entity_test,
-        c.id_tag_def_persistent_test,
+        c.id_column_persistent_test,
     )
     assert req.status_code == 401

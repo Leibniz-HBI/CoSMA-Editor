@@ -45,10 +45,10 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
         {
             "tag_definitions": [
                 {
-                    "id_persistent": ct.id_tag_def_persistent_test,
+                    "id_persistent": ct.id_column_persistent_test,
                     "id_parent_persistent": None,
-                    "name": ct.name_tag_def_test,
-                    "name_path": [ct.name_tag_def_test],
+                    "name": ct.name_column_test,
+                    "name_path": [ct.name_column_test],
                     "type": "STRING",
                     "curated": False,
                     "hidden": False,
@@ -61,10 +61,10 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     },
                 },
                 {
-                    "id_persistent": ct.id_tag_def_persistent_test_user1,
+                    "id_persistent": ct.id_column_persistent_test_user1,
                     "id_parent_persistent": None,
-                    "name": ct.name_tag_def_test1,
-                    "name_path": [ct.name_tag_def_test1],
+                    "name": ct.name_column_test1,
+                    "name_path": [ct.name_column_test1],
                     "type": "STRING",
                     "curated": False,
                     "hidden": False,
@@ -77,10 +77,10 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     },
                 },
                 {
-                    "id_persistent": ct.id_tag_def_curated_test,
+                    "id_persistent": ct.id_column_curated_test,
                     "id_parent_persistent": None,
-                    "name": ct.name_tag_def_curated_test,
-                    "name_path": [ct.name_tag_def_curated_test],
+                    "name": ct.name_column_curated_test,
+                    "name_path": [ct.name_column_curated_test],
                     "type": "STRING",
                     "description": None,
                     "curated": True,

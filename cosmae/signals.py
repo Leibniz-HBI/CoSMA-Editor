@@ -24,11 +24,12 @@ def connect_read_csv_signal():
 def connect_tag_definition_queue_process():
     "Connect the signal for computing tag definition name paths."
     # pylint: disable=import-outside-toplevel
-    from cosmae.tag.queue import TagDefinition, dispatch_tag_definition_queue_process
+    from cosmae.column.models_django import Column
+    from cosmae.column.queue import dispatch_column_queue_process
 
     post_save.connect(
-        dispatch_tag_definition_queue_process,
-        sender=TagDefinition,
+        dispatch_column_queue_process,
+        sender=Column,
         dispatch_uid="cosmae_tag_definition_queue",
     )
 
@@ -80,12 +81,12 @@ def connect_entity_display_txt():
 def connect_tag_instance_display_txt():
     "Connect signal for updating display txt on tag instance change."
     # pylint: disable=import-outside-toplevel
-    from cosmae.tag.models_django import TagInstanceHistory
-    from cosmae.tag.queue import dispatch_display_txt_queue_process
+    from cosmae.column.queue import dispatch_display_txt_queue_process
+    from cosmae.value.models_django import ValueHistory
 
     post_save.connect(
         dispatch_display_txt_queue_process,
-        sender=TagInstanceHistory,
+        sender=ValueHistory,
         dispatch_uid="cosmae.taginstancehistory_display_txt_queue_process",
     )
 

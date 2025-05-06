@@ -1,9 +1,10 @@
 "API models for contributions."
+
 from typing import List
 
 from ninja import Schema
 
-from cosmae.tag.api.definitions import TagDefinitionResponse
+from cosmae.column.models_api import TagDefinitionResponse
 
 
 class ContributionPostRequest(Schema):

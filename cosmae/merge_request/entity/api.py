@@ -8,6 +8,8 @@ from django.http import HttpRequest
 from django_rq import enqueue
 from ninja import Router, Schema
 
+from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.queue import get_column_name_path_from_parts
 from cosmae.entity.api import Entity, entity_db_to_api
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityJustification
@@ -24,8 +26,6 @@ from cosmae.merge_request.entity.models_django import (
     EntityMergeRequest as EntityMergeRequestDb,
 )
 from cosmae.merge_request.entity.queue import apply_entity_merge_request
-from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
-from cosmae.tag.queue import get_tag_definition_name_path_from_parts
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util import CosmaeUser as CosmaeUserDb
@@ -202,20 +202,20 @@ def post_resolve_conflict(
         if not tag_definition.has_write_access(user.id_persistent):
             raise ApiException(403, "You can not write to the tag definition.")
         EntityConflictResolutionDb.objects.filter(  # pylint: disable=no-member
-            tag_definition__id_persistent=resolution_info.id_tag_definition_persistent,
+            column__id_persistent=resolution_info.id_tag_definition_persistent,
             entity_origin__id_persistent=(resolution_info.id_entity_origin_persistent),
-            tag_instance_origin__id_persistent=resolution_info.id_tag_instance_origin_persistent,
+            value_origin__id_persistent=resolution_info.id_tag_instance_origin_persistent,
             entity_destination__id_persistent=(
                 resolution_info.id_entity_destination_persistent
             ),
             merge_request=merge_request,
         ).delete()
         resolution = EntityConflictResolutionDb(
-            tag_definition_id=resolution_info.id_tag_definition_version,
+            column_id=resolution_info.id_tag_definition_version,
             entity_origin_id=resolution_info.id_entity_origin_version,
-            tag_instance_origin_id=resolution_info.id_tag_instance_origin_version,
+            value_origin_id=resolution_info.id_tag_instance_origin_version,
             entity_destination_id=resolution_info.id_entity_destination_version,
-            tag_instance_destination_id=resolution_info.id_tag_instance_destination_version,
+            value_destination_id=resolution_info.id_tag_instance_destination_version,
             merge_request=merge_request,
             replacement_state=REPLACEMENT_STATE_API_TO_DB_MAP.get(
                 resolution_info.replacement_state
@@ -549,8 +549,8 @@ def entity_merge_request_db_to_api(merge_request: EntityMergeRequestDb):
 
 def annotated_tag_instance_db_to_api(annotated_instance):
     "Converts an annotated tag instance from DB to API representation"
-    tag_definition = annotated_instance.tag_definition
-    tag_instance_destination_db = annotated_instance.tag_instance_destination
+    tag_definition = annotated_instance.column
+    tag_instance_destination_db = annotated_instance.value_destination
     if tag_instance_destination_db is None:
         tag_instance_destination = None
     else:
@@ -610,7 +610,7 @@ def tag_definition_json_field_to_api(tag_def_dict):
     name = tag_def_dict["name"]
     return TagDefinition(
         version=tag_def_dict["id"],
-        name_path=get_tag_definition_name_path_from_parts(id_persistent, name),
+        name_path=get_column_name_path_from_parts(id_persistent, name),
         id_persistent=id_persistent,
         id_parent_persistent=tag_def_dict["id_parent_persistent"],
         curated=tag_def_dict["curated"],

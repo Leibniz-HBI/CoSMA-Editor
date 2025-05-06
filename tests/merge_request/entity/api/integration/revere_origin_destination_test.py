@@ -96,9 +96,9 @@ def test_reverse(
                 "replacement_state": "KEEP",
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test1],
+                    "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test_user1,
+                    "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
@@ -171,9 +171,9 @@ def test_reverse_replacement_value(
                 "replacement_state": "VALUE",
                 "replacement_value": c.replacement_value,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test1],
+                    "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test_user1,
+                    "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
@@ -249,9 +249,9 @@ def test_double_reverse(
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_curated_test],
+                    "name_path": [ct.name_column_curated_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_curated_test,
+                    "id_persistent": ct.id_column_curated_test,
                     "curated": True,
                 },
                 "tag_instance_origin": {
@@ -269,9 +269,9 @@ def test_double_reverse(
                 "replacement_state": None,
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test],
+                    "name_path": [ct.name_column_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test,
+                    "id_persistent": ct.id_column_persistent_test,
                     "curated": False,
                 },
                 "tag_instance_origin": {
@@ -284,9 +284,9 @@ def test_double_reverse(
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test1],
+                    "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test_user1,
+                    "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                 },
                 "tag_instance_origin": {

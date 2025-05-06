@@ -5,6 +5,7 @@ from typing import List, Optional
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.column.models_django import Column
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import (
     TagDefinitionContribution,
@@ -12,8 +13,8 @@ from cosmae.contribution.tag_definition.models_django import (
 )
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.exception import ApiError, NotAuthenticatedException
-from cosmae.tag.models_django import TagDefinition, TagInstance
 from cosmae.util.auth import check_user
+from cosmae.value.models_django import Value
 
 router = Router()
 
@@ -75,7 +76,7 @@ def get_preview(
         else:
             destination_values = [
                 value.value
-                for value in TagInstance.by_tag_chunked_queryset(
+                for value in Value.by_column_chunked_queryset(
                     id_tag_definition_persistent, 0, 10
                 )
             ]
@@ -88,7 +89,7 @@ def get_preview(
         return 404, ApiError(msg="Contribution candidate does not exist.")
     except TagDefinitionContribution.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contributed column does not exist")
-    except TagDefinition.DoesNotExist:  # pylint: disable=no-member
+    except Column.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Destination tag definition does not exist.")
     except Exception:  #  pylint: disable=broad-except
         return 500, ApiError(msg="Could not get preview.")

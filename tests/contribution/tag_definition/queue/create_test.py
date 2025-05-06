@@ -8,16 +8,16 @@ from cosmae.contribution.tag_definition.models_django import TagDefinitionContri
 from cosmae.contribution.tag_definition.queue.create import read_csv_head
 
 
-def test_deletes_existing_tag_definition(contribution_tag_def):
+def test_deletes_existing_tag_definition(contribution_column):
     conf_mock = MagicMock
     conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/"
     with patch("cosmae.contribution.tag_definition.queue.util.settings", conf_mock):
-        read_csv_head(contribution_tag_def.contribution_candidate.id_persistent)
+        read_csv_head(contribution_column.contribution_candidate.id_persistent)
     with pytest.raises(
         TagDefinitionContribution.DoesNotExist  # pylint: disable=no-member
     ):
         TagDefinitionContribution.objects.get(  # pylint: disable=no-member
-            id_persistent=contribution_tag_def.id_persistent
+            id_persistent=contribution_column.id_persistent
         )
 
 

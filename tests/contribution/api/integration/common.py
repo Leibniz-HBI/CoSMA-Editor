@@ -45,17 +45,17 @@ contribution_test_upload1 = {
     "id_edit_session_persistent": cs.id_session_user,
 }
 
-tag_def_test0 = {
+column_test0 = {
     "name": c.name_definition_test0,
-    "id_persistent": c.id_persistent_tag_def_test0,
+    "id_persistent": c.id_persistent_column_test0,
     "id_existing_persistent": None,
     "index_in_file": 9000,
     "discard": True,
 }
 
-tag_def_test1 = {
+column_test1 = {
     "name": c.name_definition_test1,
-    "id_persistent": c.id_persistent_tag_def_test1,
+    "id_persistent": c.id_persistent_column_test1,
     "id_existing_persistent": None,
     "index_in_file": 900,
     "discard": False,

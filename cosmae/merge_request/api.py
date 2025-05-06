@@ -7,6 +7,9 @@ from django.db import DatabaseError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_conversion import tag_definition_db_to_api
+from cosmae.column.models_django import Column as TagDefinitionDb
 from cosmae.entity.api import Entity, entity_db_dict_to_api
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
 from cosmae.merge_request.entity.api import (
@@ -18,13 +21,10 @@ from cosmae.merge_request.entity.api import (
 from cosmae.merge_request.models_django import TagConflictResolution
 from cosmae.merge_request.models_django import TagMergeRequest as MergeRequestDb
 from cosmae.merge_request.queue import dispatch_resolve_conflicts
-from cosmae.tag.api.models_api import TagDefinitionResponse
-from cosmae.tag.api.models_conversion import tag_definition_db_to_api
-from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
-from cosmae.tag.models_django import TagInstance as TagInstanceDb
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util.auth import check_user
+from cosmae.value.models_django import Value as TagInstanceDb
 
 router = Router()
 
@@ -233,21 +233,21 @@ def post_resolve_conflict(
         return_value = None
         TagConflictResolution.objects.filter(  # pylint: disable=no-member
             entity__id_persistent=resolution_info.id_entity_persistent,
-            tag_definition_origin__id_persistent=(
+            column_origin__id_persistent=(
                 resolution_info.id_tag_definition_origin_persistent
             ),
-            tag_instance_origin__id_persistent=resolution_info.id_tag_instance_origin_persistent,
-            tag_definition_destination__id_persistent=(
+            value_origin__id_persistent=resolution_info.id_tag_instance_origin_persistent,
+            column_destination__id_persistent=(
                 resolution_info.id_tag_definition_destination_persistent
             ),
             merge_request=merge_request,
         ).delete()
         resolution = TagConflictResolution(
             entity_id=resolution_info.id_entity_version,
-            tag_definition_origin_id=resolution_info.id_tag_definition_origin_version,
-            tag_instance_origin_id=resolution_info.id_tag_instance_origin_version,
-            tag_definition_destination_id=resolution_info.id_tag_definition_destination_version,
-            tag_instance_destination_id=resolution_info.id_tag_instance_destination_version,
+            column_origin_id=resolution_info.id_tag_definition_origin_version,
+            value_origin_id=resolution_info.id_tag_instance_origin_version,
+            column_destination_id=resolution_info.id_tag_definition_destination_version,
+            value_destination_id=resolution_info.id_tag_instance_destination_version,
             merge_request=merge_request,
             replacement_state=REPLACEMENT_STATE_API_TO_DB_MAP.get(
                 resolution_info.replacement_state
@@ -272,7 +272,7 @@ def post_resolve_conflict(
         )
     except Exception:  # pylint: disable=broad-except
         status, return_value = 500, ApiError(
-            msg="Could not get the requested merge request conflicts."
+            msg="Could not resolve the merge request conflict."
         )
     return status, return_value
 
@@ -362,7 +362,7 @@ def merge_request_db_to_api(mr_db: MergeRequestDb) -> MergeRequest:
 def annotated_tag_instance_db_to_api(annotated_instance):
     "Converts an annotated tag instance from DB to API representation"
     entity = annotated_instance.entity
-    tag_instance_destination_db = annotated_instance.tag_instance_destination
+    tag_instance_destination_db = annotated_instance.value_destination
     if tag_instance_destination_db is None:
         tag_instance_destination = None
     else:
@@ -389,9 +389,7 @@ def annotated_tag_instance_db_to_api(annotated_instance):
 def conflict_with_updated_data_db_to_api(annotated_conflict):
     "Transform an annotated conflict from DB to API representation."
     entity = annotated_conflict.entity_most_recent
-    tag_instance_destination_db = (
-        annotated_conflict.tag_instance_destination_most_recent
-    )
+    tag_instance_destination_db = annotated_conflict.value_destination_most_recent
     if tag_instance_destination_db is None:
         tag_instance_destination = None
     else:
@@ -401,7 +399,7 @@ def conflict_with_updated_data_db_to_api(annotated_conflict):
             value=tag_instance_destination_db["value"],
         )
 
-    tag_instance_origin = annotated_conflict.tag_instance_origin_most_recent
+    tag_instance_origin = annotated_conflict.value_origin_most_recent
     return MergeRequestConflict(
         entity=entity_db_dict_to_api(entity),
         tag_instance_origin=TagInstance(

@@ -8,28 +8,28 @@ from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.exception import (
-    ApiError,
-    DbObjectExistsException,
-    DisabledTagDefinitionHasChildrenException,
-    EntityUpdatedException,
-    NoChildTagDefinitionsAllowedException,
-    NoParentTagException,
-    NoSelfParentTagException,
-    NotAuthenticatedException,
-    PermissionException,
-    TagDefinitionExistsException,
-    UnmodifiableFieldException,
-    ValidationException,
-)
-from cosmae.tag.api.models_api import TagDefinitionResponse
-from cosmae.tag.api.models_conversion import (
+from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_conversion import (
     _tag_type_mapping_api_to_db,
     tag_definition_db_to_api,
 )
-from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
-from cosmae.tag.models_django import TagDefinitionHistory as TagDefinitionHistoryDb
-from cosmae.tag.queue import update_tag_definition_name_path
+from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.models_django import ColumnHistory as TagDefinitionHistoryDb
+from cosmae.column.queue import update_column_name_path
+from cosmae.exception import (
+    ApiError,
+    ColumnExistsException,
+    DbObjectExistsException,
+    DisabledColumnHasChildrenException,
+    EntityUpdatedException,
+    NoChildColumnAllowedException,
+    NoParentColumnException,
+    NoSelfParentColumnException,
+    NotAuthenticatedException,
+    PermissionException,
+    UnmodifiableFieldException,
+    ValidationException,
+)
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
@@ -82,12 +82,14 @@ class CurationPostRequest(Schema):
 
 class TagDefinitionDetailsRequest(Schema):
     "Request for getting details on tag definition"
+
     # pylint: disable=too-few-public-methods
     id_persistent_list: List[str]
 
 
 class DescendantListResponse(Schema):
     "Response when requesting ancestors"
+
     # pylint: disable=too-few-public-methods
     id_descendants_persistent_list: List[str]
 
@@ -117,11 +119,11 @@ def post_tag_definitions(  # pylint: disable=too-many-branches
         return 401, ApiError(msg="Not authenticated")
     except ValidationException as exc:
         return 400, ApiError(msg=str(exc))
-    except NoParentTagException as exc:
+    except NoParentColumnException as exc:
         return 400, ApiError(
             msg=f"There is no tag definition with id_persistent {exc.id_persistent}."
         )
-    except TagDefinitionExistsException as exc:
+    except ColumnExistsException as exc:
         return 400, ApiError(
             msg="There is an existing tag definition with name "
             f"{exc.tag_name} and id_parent_persistent {exc.id_parent_persistent}. "
@@ -143,11 +145,11 @@ def post_tag_definitions(  # pylint: disable=too-many-branches
         )
     except PermissionException:
         return 403, ApiError(msg="Insufficient permissions")
-    except NoSelfParentTagException:
+    except NoSelfParentColumnException:
         return 400, ApiError(msg="Can not set a tag definition as its own parent.")
-    except NoChildTagDefinitionsAllowedException:
+    except NoChildColumnAllowedException:
         return 400, ApiError(msg="Only navigation tags are allowed to have children.")
-    except DisabledTagDefinitionHasChildrenException:
+    except DisabledColumnHasChildrenException:
         return 400, ApiError(msg="Can not delete tag definitions that have children")
     except KeyError as exc:
         return 400, ApiError(msg=f"Type {exc.args[0]} is not known.")
@@ -157,7 +159,7 @@ def post_tag_definitions(  # pylint: disable=too-many-branches
             for tag_def, do_write in tag_def_dbs:
                 if do_write:
                     tag_def.save()
-                    update_tag_definition_name_path(tag_def.id_parent_persistent)
+                    update_column_name_path(tag_def.id_parent_persistent)
     except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
 

@@ -1,20 +1,23 @@
 "Models for contribution proposals."
+
 from traceback import TracebackException
 
 from django.db import models, transaction
 from django.db.models import Count, Subquery
 from django.db.utils import OperationalError
 
+from cosmae.column.models_django import Column
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.entity.models_django import Entity
 from cosmae.exception import ResourceLockedException
-from cosmae.tag.models_django import TagDefinition, TagInstance
 from cosmae.util import CosmaeUser
 from cosmae.util.django import patch_from_dict
+from cosmae.value.models_django import Value
 
 
 class ContributionCandidate(models.Model):
     "ORM Model for maintaining proposed contributions."
+
     UPLOADED = "UPLD"
     COLUMNS_EXTRACTED = "CLXT"
     COLUMNS_ASSIGNED = "CLAS"
@@ -136,7 +139,7 @@ class ContributionCandidate(models.Model):
             .exclude(id_existing_persistent="justification")
             .exclude(
                 id_existing_persistent__in=Subquery(
-                    TagDefinition.objects.filter(  # pylint: disable=no-member
+                    Column.objects.filter(  # pylint: disable=no-member
                         hidden=False
                     ).values("id_persistent")
                 )
@@ -171,7 +174,7 @@ class ContributionCandidate(models.Model):
     def curated_tags_match_count(self, entities_manager: models.Manager[Entity]):
         """Get numbers of matching tag instances for curated tag definitions.
         Also includes the number of considered tag definitions."""
-        tag_definitions_curated = TagDefinition.curated_query_set()
+        tag_definitions_curated = Column.curated_query_set()
         tag_definition_contribution_query_set = (
             TagDefinitionContribution.get_by_candidate_query_set(self)
         )
@@ -183,7 +186,7 @@ class ContributionCandidate(models.Model):
             )
         ).filter(id_tag_definition_origin__isnull=False)
         tag_instance_most_recent_query_set = (
-            TagInstance.objects.filter(  # pylint: disable=no-member
+            Value.objects.filter(  # pylint: disable=no-member
                 id_entity_persistent__in=entities_manager.values("id_persistent")
             )
         )

@@ -217,10 +217,10 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://localhost:6379",
     },
-    "tag_definition_name_paths": {
+    "column_name_paths": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://localhost:6379",
-        "KEY_PREFIX": "tag_definition_name_path",
+        "KEY_PREFIX": "column_name_path",
     },
     "entity_display_txt_information": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",

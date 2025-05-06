@@ -6,20 +6,19 @@ from typing import Optional
 
 from django.db import models
 
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.merge_request.entity.models_django import (
     AbstractConflictResolution,
     AbstractMergeRequest,
 )
-from cosmae.tag.models_django import (
-    TagDefinition,
-    TagDefinitionHistory,
-    TagInstance,
-    TagInstanceHistory,
-)
 from cosmae.util import CosmaeUser
 from cosmae.util.django import get_json_array_agg
+from cosmae.value.models_django import (
+    Value,
+    ValueHistory,
+)
 
 
 class TagMergeRequest(AbstractMergeRequest):
@@ -60,7 +59,7 @@ class TagMergeRequest(AbstractMergeRequest):
                 )
                 .annotate(
                     curated=models.Subquery(
-                        TagDefinition.query_set()
+                        Column.query_set()
                         .filter(
                             id_persistent=models.OuterRef("id_destination_persistent")
                         )
@@ -92,7 +91,7 @@ class TagMergeRequest(AbstractMergeRequest):
                 )
                 .annotate(
                     curated=models.Subquery(
-                        TagDefinition.query_set()
+                        Column.query_set()
                         .filter(id_persistent=models.OuterRef("id_origin_persistent"))
                         .values("curated")
                     )
@@ -116,16 +115,16 @@ class TagMergeRequest(AbstractMergeRequest):
         )
 
     @classmethod
-    def change_owner_for_tag_def(
-        cls, id_tag_definition_persistent: str, user: Optional[CosmaeUser]
+    def change_owner_for_column(
+        cls, id_column_persistent: str, user: Optional[CosmaeUser]
     ):
         """Change the owner for all merge requests that have
         a specific tag definition as destination."""
         cls.objects.filter(  # pylint: disable=no-member
-            id_destination_persistent=id_tag_definition_persistent
+            id_destination_persistent=id_column_persistent
         ).update(assigned_to=user)
         cls.objects.filter(  # pylint: disable=no-member
-            id_origin_persistent=id_tag_definition_persistent,
+            id_origin_persistent=id_column_persistent,
         ).update(created_by=user)
 
     @classmethod
@@ -136,21 +135,21 @@ class TagMergeRequest(AbstractMergeRequest):
         )
 
     @classmethod
-    def get_tag_definitions_for_entities_request(
+    def get_columns_for_entities_request(
         cls,
-        id_tag_definition_persistent: str,
+        id_column_persistent: str,
         id_contribution_persistent: Optional[str],
         id_merge_request_persistent: Optional[str],
         user: CosmaeUser,
     ):
-        """Get the tag definitions relevant for an entities focused tag_instance request.
+        """Get the tag definitions relevant for an entities focused value request.
         returns:
         A set of tuples. The first element is the id of the tag definition.
         The second element indicates whether this is existing data."""
         contribution = None
         if id_contribution_persistent is None:
             if id_merge_request_persistent is None:
-                return {(id_tag_definition_persistent, True)}
+                return {(id_column_persistent, True)}
             merge_request = TagMergeRequest.by_id_persistent(
                 id_merge_request_persistent, user
             )
@@ -158,8 +157,8 @@ class TagMergeRequest(AbstractMergeRequest):
                 contribution = merge_request.contribution_candidate
             elif (
                 # pylint:disable-next=consider-using-in
-                merge_request.id_destination_persistent == id_tag_definition_persistent
-                or merge_request.id_origin_persistent == id_tag_definition_persistent
+                merge_request.id_destination_persistent == id_column_persistent
+                or merge_request.id_origin_persistent == id_column_persistent
             ):
                 return {
                     (merge_request.id_destination_persistent, True),
@@ -174,9 +173,8 @@ class TagMergeRequest(AbstractMergeRequest):
             for merge_request in merge_requests_manager.iterator():
                 if (
                     # pylint:disable-next=consider-using-in
-                    merge_request.id_origin_persistent == id_tag_definition_persistent
-                    or merge_request.id_destination_persistent
-                    == id_tag_definition_persistent
+                    merge_request.id_origin_persistent == id_column_persistent
+                    or merge_request.id_destination_persistent == id_column_persistent
                 ) and (
                     # pylint:disable-next=consider-using-in
                     merge_request.assigned_to == user
@@ -188,7 +186,7 @@ class TagMergeRequest(AbstractMergeRequest):
                         (merge_request.id_destination_persistent, True),
                         (merge_request.id_origin_persistent, False),
                     }
-        return {(id_tag_definition_persistent, True)}
+        return {(id_column_persistent, True)}
 
     def instance_conflicts_all(
         self,
@@ -197,17 +195,15 @@ class TagMergeRequest(AbstractMergeRequest):
     ):
         """Get conflicts to merging the origin tag referenced by the merge request
         into the destination tag"""
-        instance_origin_recent_query = TagInstanceHistory.most_recent_queryset().filter(
-            id_tag_definition_persistent=self.id_origin_persistent
+        instance_origin_recent_query = ValueHistory.most_recent_queryset().filter(
+            id_column_persistent=self.id_origin_persistent
         )
 
         if len(instance_origin_recent_query) == 0:
             return instance_origin_recent_query
 
-        instance_destination_recent_query = (
-            TagInstanceHistory.most_recent_queryset().filter(
-                id_tag_definition_persistent=self.id_destination_persistent
-            )
+        instance_destination_recent_query = ValueHistory.most_recent_queryset().filter(
+            id_column_persistent=self.id_destination_persistent
         )
         conflicts_sub_query = instance_destination_recent_query.filter(
             id_entity_persistent=models.OuterRef("id_entity_persistent")
@@ -218,13 +214,11 @@ class TagMergeRequest(AbstractMergeRequest):
                 TagConflictResolution.objects.none()  # pylint: disable=no-member
             )
         resolutions_sub_query = resolution_values.filter(
-            tag_definition_origin__id_persistent=models.OuterRef(
-                "id_tag_definition_persistent"
-            ),
-            tag_instance_origin__id_persistent=models.OuterRef("id_persistent"),
+            column_origin__id_persistent=models.OuterRef("id_column_persistent"),
+            value_origin__id_persistent=models.OuterRef("id_persistent"),
         )
         conflict_candidate_query = instance_origin_recent_query.annotate(
-            tag_instance_destination=models.Subquery(
+            value_destination=models.Subquery(
                 conflicts_sub_query.values(
                     json=models.functions.JSONObject(
                         id="id", id_persistent="id_persistent", value="value"
@@ -240,8 +234,8 @@ class TagMergeRequest(AbstractMergeRequest):
         )
         with_conflict_info = conflict_candidate_query.exclude(
             models.Q(
-                tag_instance_destination__isnull=False,
-                value=models.fields.json.KT("tag_instance_destination__value"),
+                value_destination__isnull=False,
+                value=models.fields.json.KT("value_destination__value"),
             )
         )
         if include_resolved:
@@ -252,24 +246,24 @@ class TagMergeRequest(AbstractMergeRequest):
         )
 
     @classmethod
-    def contribution_with_match_tag_definitions(cls, id_contribution_persistent):
-        "Gets the tag definitions that were used for matching in a specific contribution."
+    def contribution_with_match_columns(cls, id_contribution_persistent):
+        "Gets the columns that were used for matching in a specific contribution."
         return ContributionCandidate.objects.filter(  # pylint: disable=no-member
             id_persistent=id_contribution_persistent
         ).annotate(
-            matched_tag_definitions=models.Subquery(
+            matched_columns=models.Subquery(
                 TagMergeRequest.objects.filter(  # pylint: disable=no-member
                     contribution_candidate_id=models.OuterRef("id_persistent")
                 )
                 .annotate(
-                    tag_def_json=models.Subquery(
-                        TagDefinition.query_set()
+                    column_json=models.Subquery(
+                        Column.query_set()
                         .filter(
                             curated=True,
                             id_persistent=models.OuterRef("id_destination_persistent"),
                         )
                         .values(
-                            tag_def_json=models.functions.JSONObject(
+                            column_json=models.functions.JSONObject(
                                 id="id",
                                 id_persistent="id_persistent",
                                 id_parent_persistent="id_parent_persistent",
@@ -282,14 +276,14 @@ class TagMergeRequest(AbstractMergeRequest):
                                 disabled="disabled",
                             )
                         )
-                        .filter(tag_def_json__isnull=False)
+                        .filter(column_json__isnull=False)
                     )
                 )
                 .values("contribution_candidate_id")
                 .annotate(
-                    json_tag_def_list=get_json_array_agg()("tag_def_json", default=[])
+                    json_column_list=get_json_array_agg()("column_json", default=[])
                 )
-                .values("json_tag_def_list")
+                .values("json_column_list")
             )
         )
 
@@ -301,11 +295,11 @@ class TagConflictResolution(AbstractConflictResolution):
     entity = models.ForeignKey(
         EntityHistory, on_delete=models.CASCADE, related_name="+"
     )
-    tag_definition_destination = models.ForeignKey(
-        TagDefinitionHistory, on_delete=models.CASCADE, related_name="+"
+    column_destination = models.ForeignKey(
+        ColumnHistory, on_delete=models.CASCADE, related_name="+"
     )
-    tag_definition_origin = models.ForeignKey(
-        TagDefinitionHistory, on_delete=models.CASCADE, related_name="+"
+    column_origin = models.ForeignKey(
+        ColumnHistory, on_delete=models.CASCADE, related_name="+"
     )
     merge_request = models.ForeignKey(TagMergeRequest, on_delete=models.CASCADE)
 
@@ -338,11 +332,9 @@ class TagConflictResolution(AbstractConflictResolution):
                     :1
                 ]
             ),
-            tag_definition_origin_most_recent=models.Subquery(
-                TagDefinition.objects.filter(  # pylint: disable=no-member
-                    id_persistent=models.OuterRef(
-                        "tag_definition_origin__id_persistent"
-                    )
+            column_origin_most_recent=models.Subquery(
+                Column.objects.filter(  # pylint: disable=no-member
+                    id_persistent=models.OuterRef("column_origin__id_persistent")
                 ).values(  # pylint: disable=duplicate-code
                     json=models.functions.JSONObject(
                         id="id",
@@ -355,11 +347,9 @@ class TagConflictResolution(AbstractConflictResolution):
                     :1
                 ]
             ),
-            tag_definition_destination_most_recent=models.Subquery(
-                TagDefinition.objects.filter(  # pylint: disable=no-member
-                    id_persistent=models.OuterRef(
-                        "tag_definition_destination__id_persistent"
-                    )
+            column_destination_most_recent=models.Subquery(
+                Column.objects.filter(  # pylint: disable=no-member
+                    id_persistent=models.OuterRef("column_destination__id_persistent")
                 ).values(
                     json=models.functions.JSONObject(
                         id="id",
@@ -372,19 +362,19 @@ class TagConflictResolution(AbstractConflictResolution):
                     :1
                 ]
             ),
-            tag_instance_destination_most_recent=models.Subquery(
-                TagInstance.objects.filter(  # pylint: disable=no-member
+            value_destination_most_recent=models.Subquery(
+                Value.objects.filter(  # pylint: disable=no-member
                     models.Q(
                         id_persistent=models.OuterRef(
-                            "tag_instance_destination__id_persistent"
+                            "value_destination__id_persistent"
                         )
                     )
                     | models.Q(
-                        # case when tag_instance destination is null
+                        # case when value destination is null
                         # therefore use entity information
-                        # and tag_definition information from merge request!
+                        # and column information from merge request!
                         id_entity_persistent=models.OuterRef("entity__id_persistent"),
-                        id_tag_definition_persistent=models.OuterRef(
+                        id_column_persistent=models.OuterRef(
                             "merge_request__id_destination_persistent"
                         ),
                     )
@@ -406,22 +396,22 @@ class TagConflictResolution(AbstractConflictResolution):
                 )
             )
             | ~models.Q(
-                tag_definition_origin__id=models.functions.Cast(
-                    models.F("tag_definition_origin_most_recent__id"),
+                column_origin__id=models.functions.Cast(
+                    models.F("column_origin_most_recent__id"),
                     models.BigIntegerField(),
                 ),
             )
             | ~models.Q(
-                tag_definition_destination__id=models.functions.Cast(
-                    models.F("tag_definition_destination_most_recent__id"),
+                column_destination__id=models.functions.Cast(
+                    models.F("column_destination_most_recent__id"),
                     models.BigIntegerField(),
                 ),
             )
             | cls.instance_non_recent_predicate
         )
         return non_recent_query_set.exclude(
-            tag_instance_origin_most_recent__value=models.F(
-                "tag_instance_destination_most_recent__value"
+            value_origin_most_recent__value=models.F(
+                "value_destination_most_recent__value"
             )
         )
 
@@ -439,39 +429,35 @@ class TagConflictResolution(AbstractConflictResolution):
         only_with_recent_entities = with_entity_version_info.filter(
             entity__id=models.F("id_entity_most_recent")
         )
-        with_tag_def_origin_version_info = only_with_recent_entities.annotate(
-            id_tag_definition_origin_most_recent=TagDefinition.objects.filter(  # pylint: disable=no-member
-                id_persistent=models.OuterRef("tag_definition_origin__id_persistent")
+        with_column_origin_version_info = only_with_recent_entities.annotate(
+            id_column_origin_most_recent=Column.objects.filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("column_origin__id_persistent")
             ).values(
                 "id"
             )[
                 :1
             ]
         )
-        only_with_recent_tag_def_origins = with_tag_def_origin_version_info.filter(
-            tag_definition_origin__id=models.F("id_tag_definition_origin_most_recent")
+        only_with_recent_column_origins = with_column_origin_version_info.filter(
+            column_origin__id=models.F("id_column_origin_most_recent")
         )
-        with_tag_def_destination_version_info = only_with_recent_tag_def_origins.annotate(
-            id_tag_definition_destination_most_recent=TagDefinition.objects.filter(  # pylint: disable=no-member
-                id_persistent=models.OuterRef(
-                    "tag_definition_destination__id_persistent"
-                )
+        with_column_destination_version_info = only_with_recent_column_origins.annotate(
+            id_column_destination_most_recent=Column.objects.filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("column_destination__id_persistent")
             ).values(
                 "id"
             )[
                 :1
             ]
         )
-        only_with_recent_tag_def_destinations = (
-            with_tag_def_destination_version_info.filter(
-                tag_definition_destination__id=models.F(
-                    "id_tag_definition_destination_most_recent"
-                )
+        only_with_recent_column_destinations = (
+            with_column_destination_version_info.filter(
+                column_destination__id=models.F("id_column_destination_most_recent")
             )
         )
-        with_instance_origin_version_info = only_with_recent_tag_def_destinations.annotate(
-            id_tag_instance_origin_most_recent=TagInstance.objects.filter(  # pylint: disable=no-member
-                id_persistent=models.OuterRef("tag_instance_origin__id_persistent")
+        with_instance_origin_version_info = only_with_recent_column_destinations.annotate(
+            id_value_origin_most_recent=Value.objects.filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("value_origin__id_persistent")
             ).values(
                 "id"
             )[
@@ -479,40 +465,38 @@ class TagConflictResolution(AbstractConflictResolution):
             ]
         )
         only_with_recent_instance_origin = with_instance_origin_version_info.filter(
-            tag_instance_origin__id=models.F("id_tag_instance_origin_most_recent")
+            value_origin__id=models.F("id_value_origin_most_recent")
         )
         with_instance_destination_version_info = only_with_recent_instance_origin.annotate(
-            id_tag_instance_destination_most_recent=models.Subquery(
-                TagInstance.objects.filter(  # pylint: disable=no-member
+            id_value_destination_most_recent=models.Subquery(
+                Value.objects.filter(  # pylint: disable=no-member
                     models.Q(
                         id_persistent=models.OuterRef(
-                            "tag_instance_destination__id_persistent"
+                            "value_destination__id_persistent"
                         )
                     )
                     | models.Q(
-                        # case when tag_instance destination is null
+                        # case when value destination is null
                         # therefore use entity information
-                        # and tag_definition information from merge request!
+                        # and column information from merge request!
                         id_entity_persistent=models.OuterRef("entity__id_persistent"),
-                        id_tag_definition_persistent=models.OuterRef(
+                        id_column_persistent=models.OuterRef(
                             "merge_request__id_destination_persistent"
                         ),
                     )
                 ).values("id")[:1]
             )
         )
-        only_with_recent_instance_destination = (
+        only_with_recent_value_destination = (
             with_instance_destination_version_info.filter(
                 models.Q(
-                    id_tag_instance_destination_most_recent__isnull=False,
-                    tag_instance_destination__id=models.F(
-                        "id_tag_instance_destination_most_recent"
-                    ),
+                    id_value_destination_most_recent__isnull=False,
+                    value_destination__id=models.F("id_value_destination_most_recent"),
                 )
                 | models.Q(
-                    tag_instance_destination__isnull=True,
-                    id_tag_instance_destination_most_recent__isnull=True,
+                    value_destination__isnull=True,
+                    id_value_destination_most_recent__isnull=True,
                 )
             )
         )
-        return only_with_recent_instance_destination
+        return only_with_recent_value_destination

@@ -2,12 +2,12 @@
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 
 
-def test_ignore_users(contribution_tag_def, contribution_tag_def_other):
+def test_ignore_users(contribution_column, contribution_column_other):
     assert list(
         TagDefinitionContribution.get_by_candidate_query_set(
-            contribution_tag_def.contribution_candidate
+            contribution_column.contribution_candidate
         )
-    ) == [contribution_tag_def]
+    ) == [contribution_column]
 
 
 def test_empty(contribution_user):

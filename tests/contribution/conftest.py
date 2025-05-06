@@ -72,31 +72,31 @@ def contribution_error(user):
 
 
 @pytest.fixture
-def contribution_tag_def(contribution_user):
+def contribution_column(contribution_user):
     return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,
-        id_persistent=c.id_persistent_tag_def_test0,
+        id_persistent=c.id_persistent_column_test0,
         contribution_candidate=contribution_user,
         index_in_file=9000,
     )
 
 
 @pytest.fixture
-def contribution_tag_def_assigned(contribution_user, tag_def):
+def contribution_column_assigned(contribution_user, column):
     return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,
-        id_persistent=c.id_persistent_tag_def_test0,
+        id_persistent=c.id_persistent_column_test0,
         contribution_candidate=contribution_user,
         index_in_file=9000,
-        id_existing_persistent=tag_def.id_persistent,
+        id_existing_persistent=column.id_persistent,
     )
 
 
 @pytest.fixture
-def contribution_tag_def_assigned_justification(contribution_user, tag_def):
+def contribution_column_assigned_justification(contribution_user, column):
     return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,
-        id_persistent=c.id_persistent_tag_def_test0,
+        id_persistent=c.id_persistent_column_test0,
         contribution_candidate=contribution_user,
         index_in_file=9000,
         id_existing_persistent="justification",
@@ -104,10 +104,10 @@ def contribution_tag_def_assigned_justification(contribution_user, tag_def):
 
 
 @pytest.fixture
-def contribution_tag_def_assigned_display_txt(contribution_user, tag_def):
+def contribution_column_assigned_display_txt(contribution_user, column):
     return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,
-        id_persistent=c.id_persistent_tag_def_test0,
+        id_persistent=c.id_persistent_column_test0,
         contribution_candidate=contribution_user,
         index_in_file=9000,
         id_existing_persistent="display_txt",
@@ -115,10 +115,10 @@ def contribution_tag_def_assigned_display_txt(contribution_user, tag_def):
 
 
 @pytest.fixture
-def contribution_tag_def_1(contribution_user):
+def contribution_column_1(contribution_user):
     return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test1,
-        id_persistent=c.id_persistent_tag_def_test1,
+        id_persistent=c.id_persistent_column_test1,
         contribution_candidate=contribution_user,
         index_in_file=900,
         discard=False,
@@ -126,10 +126,10 @@ def contribution_tag_def_1(contribution_user):
 
 
 @pytest.fixture
-def contribution_tag_def_other(contribution_other):
+def contribution_column_other(contribution_other):
     return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test1,
-        id_persistent=c.id_persistent_tag_def_test1,
+        id_persistent=c.id_persistent_column_test1,
         contribution_candidate=contribution_other,
         index_in_file=900,
     )

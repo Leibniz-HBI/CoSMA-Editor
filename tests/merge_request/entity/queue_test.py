@@ -3,11 +3,12 @@
 from django.db import models
 
 from tests.merge_request.entity import common as c
+from cosmae.column.models_django import Column
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.merge_request.entity.models_django import EntityMergeRequest
 from cosmae.merge_request.entity.queue import apply_entity_merge_request
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagDefinition, TagInstance
+from cosmae.value.models_django import Value
 
 
 def test_creates_tag_merge_requests(conflict_resolution_replace):
@@ -23,15 +24,15 @@ def test_creates_tag_merge_requests(conflict_resolution_replace):
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
     for mr in tag_merge_requests:
         assert mr.disable_origin_on_merge
-    tag_defs_including_hidden = TagDefinition.query_set(include_hidden=True)
+    tag_defs_including_hidden = Column.query_set(include_hidden=True)
     assert len(tag_defs_including_hidden) == 5
-    assert len(TagDefinition.query_set()) == 3
+    assert len(Column.query_set()) == 3
     hidden_tag_def_instances = (
-        TagInstance.objects.all()  # pylint: disable=no-member
+        Value.objects.all()  # pylint: disable=no-member
         .annotate(
             tag_def_hidden=models.Subquery(
                 tag_defs_including_hidden.filter(
-                    id_persistent=models.OuterRef("id_tag_definition_persistent")
+                    id_persistent=models.OuterRef("id_column_persistent")
                 ).values("hidden")
             )
         )
@@ -55,15 +56,15 @@ def test_creates_tag_merge_requests_empty_destination(
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
     for mr in tag_merge_requests:
         assert mr.disable_origin_on_merge
-    tag_defs_including_hidden = TagDefinition.query_set(include_hidden=True)
+    tag_defs_including_hidden = Column.query_set(include_hidden=True)
     assert len(tag_defs_including_hidden) == 5
-    assert len(TagDefinition.query_set()) == 3
+    assert len(Column.query_set()) == 3
     hidden_tag_def_instances = (
-        TagInstance.objects.all()  # pylint: disable=no-member
+        Value.objects.all()  # pylint: disable=no-member
         .annotate(
             tag_def_hidden=models.Subquery(
                 tag_defs_including_hidden.filter(
-                    id_persistent=models.OuterRef("id_tag_definition_persistent")
+                    id_persistent=models.OuterRef("id_column_persistent")
                 ).values("hidden")
             )
         )
@@ -83,8 +84,8 @@ def test_applies_resolutions(conflict_resolution_replace, user1):
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 2
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
-    assert len(TagDefinition.query_set(include_hidden=True)) == 5
-    assert len(TagDefinition.query_set()) == 3
+    assert len(Column.query_set(include_hidden=True)) == 5
+    assert len(Column.query_set()) == 3
 
 
 def test_applies_resolution_replacement_value(
@@ -100,8 +101,8 @@ def test_applies_resolution_replacement_value(
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 2
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
-    assert len(TagDefinition.query_set(include_hidden=True)) == 5
-    assert len(TagDefinition.query_set()) == 3
+    assert len(Column.query_set(include_hidden=True)) == 5
+    assert len(Column.query_set()) == 3
 
 
 def test_copies_justification(conflict_resolution_replace, user1):
@@ -148,15 +149,15 @@ def test_creates_tag_merge_request_for_updated(
     tag_merge_requests = TagMergeRequest.objects.all()  # pylint: disable=no-member
     assert len(tag_merge_requests) == 3
     assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 3
-    tag_defs_including_hidden = TagDefinition.query_set(include_hidden=True)
+    tag_defs_including_hidden = Column.query_set(include_hidden=True)
     assert len(tag_defs_including_hidden) == 6
-    assert len(TagDefinition.query_set()) == 3
+    assert len(Column.query_set()) == 3
     hidden_tag_def_instances = (
-        TagInstance.objects.all()  # pylint: disable=no-member
+        Value.objects.all()  # pylint: disable=no-member
         .annotate(
             tag_def_hidden=models.Subquery(
                 tag_defs_including_hidden.filter(
-                    id_persistent=models.OuterRef("id_tag_definition_persistent")
+                    id_persistent=models.OuterRef("id_column_persistent")
                 ).values("hidden")
             )
         )

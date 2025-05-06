@@ -7,14 +7,13 @@ import tests.contribution.entity.common as c
 import tests.entity.common as ce
 import tests.tag.common as ct
 import cosmae.contribution.entity.queue as q
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity, EntityHistory, EntityJustification
-from cosmae.tag.models_django import (
-    TagDefinition,
-    TagDefinitionHistory,
-    TagInstance,
-    TagInstanceHistory,
+from cosmae.value.models_django import (
+    Value,
+    ValueHistory,
 )
 
 
@@ -165,10 +164,10 @@ def test_exception_for_entity_update_without_justification(
 
 @pytest.fixture
 def tag_def(user):
-    return TagDefinitionHistory.objects.create(  # pylint: disable = no-member
+    return ColumnHistory.objects.create(  # pylint: disable = no-member
         id_persistent=c.id_tag_def_test,
         name=c.name_tag_def_test,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         time_edit=c.time_edit_tag_def_test,
         owner=user,
         written_by_session=user.edit_session,
@@ -178,11 +177,11 @@ def tag_def(user):
 
 @pytest.fixture
 def tag_def1(user):
-    return TagDefinitionHistory.objects.create(  # pylint: disable = no-member
+    return ColumnHistory.objects.create(  # pylint: disable = no-member
         id_persistent=c.id_tag_def_test1,
         id_parent_persistent=c.id_tag_def_test,
         name=c.name_tag_def_test1,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         time_edit=c.time_edit_tag_def_test1,
         owner=user,
         written_by_session=user.edit_session,
@@ -192,18 +191,18 @@ def tag_def1(user):
 
 @pytest.fixture
 def tag_instances_for_replace(tag_def, tag_def1, entities):
-    inst0 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
+    inst0 = ValueHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
-        id_tag_definition_persistent=c.id_tag_def_test,
+        id_column_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_replace_test,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
         written_by_session=tag_def.owner.edit_session,
         approved_by=tag_def.owner.id_persistent,
     )
-    inst0 = TagInstanceHistory.objects.create(  # pylint: disable=no-member
+    inst0 = ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
-        id_tag_definition_persistent=c.id_tag_def_test,
+        id_column_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_replace_test,
         value="b",
         previous_version=inst0,
@@ -211,9 +210,9 @@ def tag_instances_for_replace(tag_def, tag_def1, entities):
         written_by_session=tag_def.owner.edit_session,
         approved_by=tag_def.owner.id_persistent,
     )
-    _inst1 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
+    _inst1 = ValueHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
-        id_tag_definition_persistent=c.id_tag_def_test,
+        id_column_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_replace_test1,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
@@ -224,18 +223,18 @@ def tag_instances_for_replace(tag_def, tag_def1, entities):
 
 @pytest.fixture
 def tag_instance_existing(tag_def, tag_def1, entities):
-    inst0 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
+    inst0 = ValueHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=ce.id_persistent_test_0,
-        id_tag_definition_persistent=c.id_tag_def_test,
+        id_column_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_existing_test,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
         written_by_session=tag_def.owner.edit_session,
         approved_by=tag_def.owner.id_persistent,
     )
-    inst0 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
+    inst0 = ValueHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=ce.id_persistent_test_0,
-        id_tag_definition_persistent=c.id_tag_def_test,
+        id_column_persistent=c.id_tag_def_test,
         id_persistent=c.id_instance_existing_test,
         value="b",
         previous_version=inst0,
@@ -243,9 +242,9 @@ def tag_instance_existing(tag_def, tag_def1, entities):
         written_by_session=tag_def.owner.edit_session,
         approved_by=tag_def.owner.id_persistent,
     )
-    _inst1 = TagInstanceHistory.objects.create(  # pylint: disable = no-member
+    _inst1 = ValueHistory.objects.create(  # pylint: disable = no-member
         id_entity_persistent=ce.id_persistent_test_1,
-        id_tag_definition_persistent=c.id_tag_def_test1,
+        id_column_persistent=c.id_tag_def_test1,
         id_persistent=c.id_instance_existing_test1,
         value="a",
         time_edit=c.time_edit_tag_instance_test,
@@ -258,14 +257,14 @@ def tag_instance_existing(tag_def, tag_def1, entities):
 def test_replaces_entity_of_tag_def(tag_instances_for_replace, user, entity_match):
     q.update_tag_instances(
         q.annotate_with_replacement_info(
-            TagInstance.objects,  # pylint: disable=no-member
+            Value.objects,  # pylint: disable=no-member
             EntityDuplicate.objects.all(),  # pylint: disable=no-member
             "id_entity_persistent",
         ),
         user,
         c.time_edit_deduplication,
     )
-    instances = TagInstance.objects.all()  # pylint: disable=no-member
+    instances = Value.objects.all()  # pylint: disable=no-member
 
     assert len(instances) == 2
     for inst in instances:
@@ -276,14 +275,14 @@ def test_replaces_entity_of_tag_def(tag_instances_for_replace, user, entity_matc
 def test_keeps_entity_of_tag_def(user, tag_instances_for_replace):
     q.update_tag_instances(
         q.annotate_with_replacement_info(
-            TagInstance.objects,  # pylint: disable=no-member
+            Value.objects,  # pylint: disable=no-member
             EntityDuplicate.objects.all(),  # pylint: disable=no-member
             "id_entity_persistent",
         ),
         user,
         c.time_edit_deduplication,
     )
-    instances = TagInstance.objects.all()  # pylint: disable=no-member
+    instances = Value.objects.all()  # pylint: disable=no-member
 
     assert len(instances) == 2
     for inst in instances:
@@ -292,36 +291,36 @@ def test_keeps_entity_of_tag_def(user, tag_instances_for_replace):
 
 @pytest.fixture
 def tag_instances(tag_def, tag_def1, entities):
-    tag_inst0, _ = TagInstanceHistory.change_or_create_versioned(
+    tag_inst0, _ = ValueHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test0,
         time_edit=ce.time_edit_test_0,
-        id_tag_definition_persistent=c.id_tag_def_test,
+        id_column_persistent=c.id_tag_def_test,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         written_by_session=tag_def.owner.edit_session,
         value="2.4",
     )
     tag_inst0.save()
-    tag_inst1, _ = TagInstanceHistory.change_or_create_versioned(
+    tag_inst1, _ = ValueHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test1,
-        id_tag_definition_persistent=c.id_tag_def_test,
+        id_column_persistent=c.id_tag_def_test,
         id_entity_persistent=ce.id_persistent_test_0,
         time_edit=ce.time_edit_test_0,
         written_by_session=tag_def.owner.edit_session,
         value="1.7",
     )
     tag_inst1.save()
-    tag_inst2, _ = TagInstanceHistory.change_or_create_versioned(
+    tag_inst2, _ = ValueHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test2,
-        id_tag_definition_persistent=c.id_tag_def_test1,
+        id_column_persistent=c.id_tag_def_test1,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         time_edit=ce.time_edit_test_0,
         written_by_session=tag_def1.owner.edit_session,
         value="foo",
     )
     tag_inst2.save()
-    tag_inst2, _ = TagInstanceHistory.change_or_create_versioned(
+    tag_inst2, _ = ValueHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test2,
-        id_tag_definition_persistent=c.id_tag_def_test1,
+        id_column_persistent=c.id_tag_def_test1,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         time_edit=ce.time_edit_test_0,
         written_by_session=tag_def1.owner.edit_session,
@@ -329,9 +328,9 @@ def tag_instances(tag_def, tag_def1, entities):
         version=tag_inst2.id,
     )
     tag_inst2.save()
-    tag_inst3, _ = TagInstanceHistory.change_or_create_versioned(
+    tag_inst3, _ = ValueHistory.change_or_create_versioned(
         id_persistent=ct.id_instance_test3,
-        id_tag_definition_persistent=c.id_tag_def_test1,
+        id_column_persistent=c.id_tag_def_test1,
         id_entity_persistent=ce.id_persistent_test_1,
         time_edit=ce.time_edit_test_0,
         written_by_session=tag_def1.owner.edit_session,
@@ -342,7 +341,7 @@ def tag_instances(tag_def, tag_def1, entities):
 
 
 def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_match):
-    assert 5 == len(TagInstanceHistory.objects.all())  # pylint: disable=no-member
+    assert 5 == len(ValueHistory.objects.all())  # pylint: disable=no-member
     q.eliminate_duplicates(contribution_candidate.id_persistent)
     assert 3 == len(
         Entity.get_most_recent_chunked(
@@ -363,10 +362,10 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
         )
     )
     # There have been two edits
-    assert 7 == len(TagInstanceHistory.objects.all())  # pylint: disable=no-member
+    assert 7 == len(ValueHistory.objects.all())  # pylint: disable=no-member
     for_tag = [
         tag.__dict__
-        for tag in TagInstance.by_tag_chunked_queryset(c.id_tag_def_test, 0, 20)
+        for tag in Value.by_column_chunked_queryset(c.id_tag_def_test, 0, 20)
     ]
     assert for_tag[0]["previous_version_id"] is None
     assert for_tag[1]["previous_version_id"] is not None
@@ -378,7 +377,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
     assert for_tag == [
         {
             "id_persistent": ct.id_instance_test1,
-            "id_tag_definition_persistent": c.id_tag_def_test,
+            "id_column_persistent": c.id_tag_def_test,
             "id_entity_persistent": ce.id_persistent_test_0,
             "value": "1.7",
             "hidden": False,
@@ -390,7 +389,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
         {
             "id_persistent": ct.id_instance_test0,
             "id_entity_persistent": ce.id_persistent_test_1,
-            "id_tag_definition_persistent": c.id_tag_def_test,
+            "id_column_persistent": c.id_tag_def_test,
             "value": "2.4",
             "hidden": False,
             "disabled": False,
@@ -401,7 +400,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
     ]
     for_tag = [
         tag.__dict__
-        for tag in TagInstance.by_tag_chunked_queryset(c.id_tag_def_test1, 0, 20)
+        for tag in Value.by_column_chunked_queryset(c.id_tag_def_test1, 0, 20)
     ]
     assert for_tag[0]["previous_version_id"] is None
     assert for_tag[1]["previous_version_id"] is not None
@@ -413,7 +412,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
     assert for_tag == [
         {
             "id_persistent": ct.id_instance_test3,
-            "id_tag_definition_persistent": c.id_tag_def_test1,
+            "id_column_persistent": c.id_tag_def_test1,
             "id_entity_persistent": ce.id_persistent_test_1,
             "value": "baz",
             "hidden": False,
@@ -425,7 +424,7 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
         {
             "id_persistent": ct.id_instance_test2,
             "id_entity_persistent": ce.id_persistent_test_1,
-            "id_tag_definition_persistent": c.id_tag_def_test1,
+            "id_column_persistent": c.id_tag_def_test1,
             "value": "bar",
             "hidden": False,
             "disabled": False,

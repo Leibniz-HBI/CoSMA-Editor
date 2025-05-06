@@ -9,10 +9,10 @@ from django.db import DatabaseError
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.column.models_django import Column as TagDefinitionDb
 from cosmae.edit_session.api import EditSession, edit_session_db_to_api
 from cosmae.edit_session.models_django import EditSession as EditSessionDb
 from cosmae.exception import ApiError, NotAuthenticatedException
-from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
 from cosmae.user.adapter import CosmaeAccountAdapter
 from cosmae.user.model_conversion.login import user_db_to_login_response
 from cosmae.user.model_conversion.public import (

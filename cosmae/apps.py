@@ -89,12 +89,12 @@ def populate_tag_definition_name_path_cache():
     # pylint: disable=import-outside-toplevel
     from django_rq import enqueue
 
-    from cosmae.tag.models_django import TagDefinition
-    from cosmae.tag.queue import update_tag_definition_name_path
+    from cosmae.column.models_django import Column
+    from cosmae.column.queue import update_column_name_path
 
     try:
-        roots = TagDefinition.children_query_set(None)
+        roots = Column.children_query_set(None)
         for root in roots:
-            enqueue(update_tag_definition_name_path, root.id_persistent, [])
+            enqueue(update_column_name_path, root.id_persistent, [])
     except (OperationalError, DatabaseError, ProgrammingError):
         pass  #

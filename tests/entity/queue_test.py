@@ -15,7 +15,7 @@ from cosmae.entity.queue import (
     update_display_txt_cache,
 )
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagInstanceHistory
+from cosmae.value.models_django import ValueHistory
 
 id_persistent_entity_no_display_txt = "7d5c19e6-f47d-4c4f-a92f-0c858c18885f"
 time_edit_entity_no_display_txt = datetime(2002, 3, 7, tzinfo=timezone.utc)
@@ -58,14 +58,14 @@ def test_without_display_txt_and_no_tag_def_order(entity_without_display_txt):
 
 
 @pytest.fixture
-def instance_tag_def_1(entity_without_display_txt, tag_def1):
-    instance, _ = TagInstanceHistory.change_or_create_versioned(
+def instance_tag_def_1(entity_without_display_txt, column1):
+    instance, _ = ValueHistory.change_or_create_versioned(
         id_persistent=id_persistent_instance_tag_def_1,
         time_edit=time_edit_instance_tag_def_1,
         id_entity_persistent=entity_without_display_txt.id_persistent,
-        id_tag_definition_persistent=tag_def1.id_persistent,
+        id_column_persistent=column1.id_persistent,
         value=value_instance_tag_def_1,
-        written_by_session=tag_def1.owner.edit_session,
+        written_by_session=column1.owner.edit_session,
     )
     instance.save()
     return instance
@@ -83,9 +83,9 @@ def test_without_display_txt_but_relevant_tag_instance(
     assert_versioned(
         tag_def,
         {
-            "id_persistent": ct.id_tag_def_persistent_test_user1,
+            "id_persistent": ct.id_column_persistent_test_user1,
             "id_parent_persistent": None,
-            "name": ct.name_tag_def_test1,
+            "name": ct.name_column_test1,
             "type": "STR",
             "owner": {
                 "username": "test-user1",
@@ -128,7 +128,7 @@ def test_exception(entity_without_display_txt):
 
 @pytest.fixture
 def contribution_instance_without_display_txt(
-    entity_without_display_txt, tag_def, tag_def1, user, instance_tag_def_1
+    entity_without_display_txt, column, column1, user, instance_tag_def_1
 ):
     (
         contribution,
@@ -154,8 +154,8 @@ def contribution_instance_without_display_txt(
         id_persistent=id_tag_merge_request_persistent,
         assigned_to=None,
         contribution_candidate=contribution,
-        id_origin_persistent=tag_def1.id_persistent,
-        id_destination_persistent=tag_def.id_persistent,
+        id_origin_persistent=column1.id_persistent,
+        id_destination_persistent=column.id_persistent,
         created_at=time_tag_def_created_at,
         created_by=user,
     )
@@ -174,9 +174,9 @@ def test_contribution(contribution_instance_without_display_txt, display_txt_ord
     assert_versioned(
         tag_def,
         {
-            "id_persistent": ct.id_tag_def_persistent_test_user1,
+            "id_persistent": ct.id_column_persistent_test_user1,
             "id_parent_persistent": None,
-            "name": ct.name_tag_def_test1,
+            "name": ct.name_column_test1,
             "type": "STR",
             "owner": {
                 "username": "test-user1",
@@ -192,19 +192,19 @@ def test_contribution(contribution_instance_without_display_txt, display_txt_ord
     )
 
 
-def test_db_to_dict(tag_def):
-    tag_def.disabled = True
-    tag_def_dict = tag_def_db_to_dict(tag_def)
+def test_db_to_dict(column):
+    column.disabled = True
+    tag_def_dict = tag_def_db_to_dict(column)
     assert_versioned(
         tag_def_dict,
         {
-            "id_persistent": ct.id_tag_def_persistent_test,
+            "id_persistent": ct.id_column_persistent_test,
             "id_parent_persistent": None,
-            "name": ct.name_tag_def_test,
+            "name": ct.name_column_test,
             "type": "STR",
             "owner": {
                 "username": "test-user",
-                "id_persistent": tag_def.owner.id_persistent,
+                "id_persistent": column.owner.id_persistent,
                 "permission_group": "CONTRIBUTOR",
             },
             "curated": False,

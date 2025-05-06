@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,too-many-positional-arguments
 from unittest.mock import MagicMock, patch
 
 import tests.contribution.common as cc
@@ -10,7 +10,7 @@ from cosmae.exception import NotAuthenticatedException
 
 def test_no_cookies(auth_server):
     server, _cookies = auth_server
-    rsp = req.get_preview(server.url, cc.id_test0, cc.id_persistent_tag_def_test0)
+    rsp = req.get_preview(server.url, cc.id_test0, cc.id_persistent_column_test0)
     assert rsp.status_code == 401
 
 
@@ -21,7 +21,7 @@ def test_unauthorized(auth_server):
     server, cookies = auth_server
     with patch("cosmae.contribution.preview.api.check_user", mock):
         rsp = req.get_preview(
-            server.url, cc.id_test0, cc.id_persistent_tag_def_test0, cookies=cookies
+            server.url, cc.id_test0, cc.id_persistent_column_test0, cookies=cookies
         )
     assert rsp.status_code == 401
 
@@ -29,7 +29,7 @@ def test_unauthorized(auth_server):
 def test_preview_unassigned(auth_server, instances_contribution):
     server, _cookies = auth_server
     rsp = req.get_preview(
-        server.url, cc.id_test0, cc.id_persistent_tag_def_test0, cookies=_cookies
+        server.url, cc.id_test0, cc.id_persistent_column_test0, cookies=_cookies
     )
     assert rsp.status_code == 200
     json = rsp.json()
@@ -42,7 +42,7 @@ def test_preview_assigned(
 ):
     server, _cookies = auth_server
     rsp = req.get_preview(
-        server.url, cc.id_test0, cc.id_persistent_tag_def_test0, cookies=_cookies
+        server.url, cc.id_test0, cc.id_persistent_column_test0, cookies=_cookies
     )
     assert rsp.status_code == 200
     json = rsp.json()
@@ -55,7 +55,7 @@ def test_preview_display_txt(
 ):
     server, _cookies = auth_server
     rsp = req.get_preview(
-        server.url, cc.id_test0, cc.id_persistent_tag_def_test0, cookies=_cookies
+        server.url, cc.id_test0, cc.id_persistent_column_test0, cookies=_cookies
     )
     assert rsp.status_code == 200
     json = rsp.json()
@@ -73,7 +73,7 @@ def test_preview_justification(
 ):
     server, _cookies = auth_server
     rsp = req.get_preview(
-        server.url, cc.id_test0, cc.id_persistent_tag_def_test0, cookies=_cookies
+        server.url, cc.id_test0, cc.id_persistent_column_test0, cookies=_cookies
     )
     assert rsp.status_code == 200
     json = rsp.json()

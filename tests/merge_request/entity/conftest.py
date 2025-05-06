@@ -2,12 +2,13 @@
 import pytest
 
 import tests.merge_request.entity.common as c
+from cosmae.column.models_django import ColumnHistory
 from cosmae.entity.models_django import EntityHistory
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,
 )
-from cosmae.tag.models_django import TagDefinitionHistory, TagInstanceHistory
+from cosmae.value.models_django import ValueHistory
 
 
 @pytest.fixture
@@ -77,36 +78,34 @@ def merge_request_user(
 
 @pytest.fixture
 def instances_merge_request_origin_user(
-    merge_request_user, tag_def, tag_def1, tag_def_curated, user_commissioner
+    merge_request_user, column, column1, column_curated, user_commissioner
 ):
-    tag_instance = TagInstanceHistory.objects.create(  # pylint: disable=no-member
+    tag_instance = ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_origin_persistent,
-        id_tag_definition_persistent=tag_def.id_persistent,
+        id_column_persistent=column.id_persistent,
         value=c.value_origin,
         id_persistent=c.id_instance_origin,
         time_edit=c.time_instance_origin,
-        written_by_session=tag_def.owner.edit_session,
-        approved_by=tag_def.owner.id_persistent,
+        written_by_session=column.owner.edit_session,
+        approved_by=column.owner.id_persistent,
     )
-    tag_instance1 = TagInstanceHistory.objects.create(  # pylint: disable=no-member
+    tag_instance1 = ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_origin_persistent,
-        id_tag_definition_persistent=tag_def1.id_persistent,
+        id_column_persistent=column1.id_persistent,
         value=c.value_origin1,
         id_persistent=c.id_instance_origin1,
         time_edit=c.time_instance_origin1,
-        written_by_session=tag_def1.owner.edit_session,
-        approved_by=tag_def1.owner.id_persistent,
+        written_by_session=column1.owner.edit_session,
+        approved_by=column1.owner.id_persistent,
     )
-    tag_instance_curated = (
-        TagInstanceHistory.objects.create(  # pylint: disable=no-member
-            id_entity_persistent=c.id_entity_origin_persistent,
-            id_tag_definition_persistent=tag_def_curated.id_persistent,
-            value=c.value_origin_curated,
-            id_persistent=c.id_instance_origin_curated,
-            time_edit=c.time_instance_origin_curated,
-            written_by_session=user_commissioner.edit_session,
-            approved_by=user_commissioner.id_persistent,
-        )
+    tag_instance_curated = ValueHistory.objects.create(  # pylint: disable=no-member
+        id_entity_persistent=c.id_entity_origin_persistent,
+        id_column_persistent=column_curated.id_persistent,
+        value=c.value_origin_curated,
+        id_persistent=c.id_instance_origin_curated,
+        time_edit=c.time_instance_origin_curated,
+        written_by_session=user_commissioner.edit_session,
+        approved_by=user_commissioner.id_persistent,
     )
     return [tag_instance, tag_instance1, tag_instance_curated]
 
@@ -116,9 +115,9 @@ def instance_merge_request_origin_user_changed(
     user1, instances_merge_request_origin_user
 ):
     old_tag_instance = instances_merge_request_origin_user[1]
-    tag_instance, _ = TagInstanceHistory.change_or_create_versioned(
+    tag_instance, _ = ValueHistory.change_or_create_versioned(
         id_entity_persistent=old_tag_instance.id_entity_persistent,
-        id_tag_definition_persistent=old_tag_instance.id_tag_definition_persistent,
+        id_column_persistent=old_tag_instance.id_column_persistent,
         id_persistent=old_tag_instance.id_persistent,
         version=old_tag_instance.id,
         written_by_session=user1.edit_session,
@@ -130,36 +129,36 @@ def instance_merge_request_origin_user_changed(
 
 
 @pytest.fixture
-def instance_merge_request_destination_user_no_conflict(merge_request_user, tag_def1):
-    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
+def instance_merge_request_destination_user_no_conflict(merge_request_user, column1):
+    return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_destination_persistent,
-        id_tag_definition_persistent=tag_def1.id_persistent,
+        id_column_persistent=column1.id_persistent,
         id_persistent=c.id_instance_destination,
         value=c.value_origin,
         time_edit=c.time_instance_destination,
-        written_by_session=tag_def1.owner.edit_session,
-        approved_by=tag_def1.owner.id_persistent,
+        written_by_session=column1.owner.edit_session,
+        approved_by=column1.owner.id_persistent,
     )
 
 
 @pytest.fixture
-def instance_merge_request_destination_user_conflict(merge_request_user, tag_def1):
-    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
+def instance_merge_request_destination_user_conflict(merge_request_user, column1):
+    return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_destination_persistent,
-        id_tag_definition_persistent=tag_def1.id_persistent,
+        id_column_persistent=column1.id_persistent,
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
-        written_by_session=tag_def1.owner.edit_session,
-        approved_by=tag_def1.owner.id_persistent,
+        written_by_session=column1.owner.edit_session,
+        approved_by=column1.owner.id_persistent,
     )
 
 
 @pytest.fixture
-def conflict_curated(merge_request_user, tag_def_curated, user_commissioner):
-    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
+def conflict_curated(merge_request_user, column_curated, user_commissioner):
+    return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_destination_persistent,
-        id_tag_definition_persistent=tag_def_curated.id_persistent,
+        id_column_persistent=column_curated.id_persistent,
         value=c.value_destination_curated,
         id_persistent=c.id_instance_destination_curated,
         time_edit=c.time_instance_destination_curated,
@@ -173,15 +172,15 @@ def resolution_curated_destination_none(
     merge_request_user,
     origin_entity_for_mr,
     destination_entity_for_mr,
-    tag_def_curated,
+    column_curated,
     instances_merge_request_origin_user,
 ):
     return EntityConflictResolution.objects.create(  # pylint: disable=no-member
-        tag_definition=tag_def_curated,
+        column=column_curated,
         entity_origin=origin_entity_for_mr,
         entity_destination=destination_entity_for_mr,
-        tag_instance_origin=instances_merge_request_origin_user[2],
-        tag_instance_destination=None,
+        value_origin=instances_merge_request_origin_user[2],
+        value_destination=None,
         merge_request=merge_request_user,
         replacement_state=EntityConflictResolution.REPLACE,
     )
@@ -192,10 +191,10 @@ def instance_merge_request_destination_user_conflict_changed(
     user1,
     instance_merge_request_destination_user_conflict,
 ):
-    tag_instance, _ = TagInstanceHistory.change_or_create_versioned(
+    tag_instance, _ = ValueHistory.change_or_create_versioned(
         id_entity_persistent=instance_merge_request_destination_user_conflict.id_entity_persistent,
-        id_tag_definition_persistent=(
-            instance_merge_request_destination_user_conflict.id_tag_definition_persistent
+        id_column_persistent=(
+            instance_merge_request_destination_user_conflict.id_column_persistent
         ),
         id_persistent=instance_merge_request_destination_user_conflict.id_persistent,
         version=instance_merge_request_destination_user_conflict.id,
@@ -210,9 +209,9 @@ def instance_merge_request_destination_user_conflict_changed(
 @pytest.fixture
 def instance_merge_request_destination_user_same_value1(merge_request_user):
     id_tag_definition = merge_request_user.id_destination_persistent
-    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
+    return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_destination_persistent,
-        id_tag_definition_persistent=id_tag_definition,
+        id_column_persistent=id_tag_definition,
         id_persistent=c.id_instance_destination,
         value=c.value_origin1,
         time_edit=c.time_instance_destination,
@@ -222,22 +221,22 @@ def instance_merge_request_destination_user_same_value1(merge_request_user):
 
 
 @pytest.fixture()
-def tag_def_for_mr_changed(tag_def1):
-    tag_def, _ = TagDefinitionHistory.change_or_create_versioned(
-        id_persistent=tag_def1.id_persistent,
-        version=tag_def1.id,
+def tag_def_for_mr_changed(column1):
+    tag_def, _ = ColumnHistory.change_or_create_versioned(
+        id_persistent=column1.id_persistent,
+        version=column1.id,
         time_edit=c.time_tag_def_changed,
         name="changed tag def 1",
-        written_by_session=tag_def1.owner.edit_session,
+        written_by_session=column1.owner.edit_session,
     )
     tag_def.save()
     return tag_def
 
 
 @pytest.fixture()
-def tag_def_for_mr_changed_owner(tag_def1, user_commissioner):
-    tag_def, _ = tag_def1.set_owner(
-        user_commissioner, tag_def1.owner, c.time_tag_def_changed
+def tag_def_for_mr_changed_owner(column1, user_commissioner):
+    tag_def, _ = column1.set_owner(
+        user_commissioner, column1.owner, c.time_tag_def_changed
     )
     tag_def.save()
     return tag_def
@@ -248,16 +247,16 @@ def conflict_resolution_replace(
     merge_request_user,
     origin_entity_for_mr,
     destination_entity_for_mr,
-    tag_def1,
+    column1,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
 ):
     return EntityConflictResolution.objects.create(  # pylint: disable=no-member
-        tag_definition=tag_def1,
+        column=column1,
         entity_origin=origin_entity_for_mr,
         entity_destination=destination_entity_for_mr,
-        tag_instance_origin=instances_merge_request_origin_user[1],
-        tag_instance_destination=instance_merge_request_destination_user_conflict,
+        value_origin=instances_merge_request_origin_user[1],
+        value_destination=instance_merge_request_destination_user_conflict,
         merge_request=merge_request_user,
         replacement_state=EntityConflictResolution.REPLACE,
     )
@@ -268,16 +267,16 @@ def conflict_resolution_replacement_value(
     merge_request_user,
     origin_entity_for_mr,
     destination_entity_for_mr,
-    tag_def1,
+    column1,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
 ):
     return EntityConflictResolution.objects.create(  # pylint: disable=no-member
-        tag_definition=tag_def1,
+        column=column1,
         entity_origin=origin_entity_for_mr,
         entity_destination=destination_entity_for_mr,
-        tag_instance_origin=instances_merge_request_origin_user[1],
-        tag_instance_destination=instance_merge_request_destination_user_conflict,
+        value_origin=instances_merge_request_origin_user[1],
+        value_destination=instance_merge_request_destination_user_conflict,
         merge_request=merge_request_user,
         # replacement_state=EntityConflictResolution.REPLACE,
         replacement_state=EntityConflictResolution.VALUE,
@@ -290,15 +289,15 @@ def conflict_resolution_replace_empty_destination(
     merge_request_user,
     origin_entity_for_mr,
     destination_entity_for_mr,
-    tag_def1,
+    column1,
     instances_merge_request_origin_user,
 ):
     return EntityConflictResolution.objects.create(  # pylint: disable=no-member
-        tag_definition=tag_def1,
+        column=column1,
         entity_origin=origin_entity_for_mr,
         entity_destination=destination_entity_for_mr,
-        tag_instance_origin=instances_merge_request_origin_user[1],
-        tag_instance_destination=None,
+        value_origin=instances_merge_request_origin_user[1],
+        value_destination=None,
         merge_request=merge_request_user,
         replacement_state=EntityConflictResolution.REPLACE,
     )
@@ -309,16 +308,16 @@ def conflict_resolution_keep(
     merge_request_user,
     origin_entity_for_mr,
     destination_entity_for_mr,
-    tag_def,
+    column,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
 ):
     return EntityConflictResolution.objects.create(  # pylint: disable=no-member
-        tag_definition=tag_def,
+        column=column,
         entity_origin=origin_entity_for_mr,
         entity_destination=destination_entity_for_mr,
-        tag_instance_origin=instances_merge_request_origin_user[0],
-        tag_instance_destination=None,
+        value_origin=instances_merge_request_origin_user[0],
+        value_destination=None,
         merge_request=merge_request_user,
         replacement_state=EntityConflictResolution.KEEP,
     )
@@ -326,10 +325,10 @@ def conflict_resolution_keep(
 
 @pytest.fixture
 def instance_destination_same_value(merge_request_user):
-    return TagInstanceHistory.objects.create(  # pylint: disable=no-member
+    return ValueHistory.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_entity_destination_persistent,
         id_entity_persistent=c.id_entity_destination_persistent,
-        id_tag_definition_persistent=merge_request_user.id_destination_persistent,
+        id_column_persistent=merge_request_user.id_destination_persistent,
         value=c.value_origin,
         time_edit=c.time_instance_destination_same_value,
         written_by_session=merge_request_user.created_by.edit_session,
@@ -344,10 +343,10 @@ def instance_destination_updated_same_value1(
 ):
     old_instance = instance_merge_request_destination_user_conflict
     tag_instance, _ = (
-        TagInstanceHistory.change_or_create_versioned(  # pylint: disable=no-member
+        ValueHistory.change_or_create_versioned(  # pylint: disable=no-member
             id_persistent=old_instance.id_persistent,
             id_entity_persistent=old_instance.id_entity_persistent,
-            id_tag_definition_persistent=old_instance.id_tag_definition_persistent,
+            id_column_persistent=old_instance.id_column_persistent,
             value=c.value_origin1,
             written_by_session=user.edit_session,
             time_edit=c.time_instance_destination_same_value,
@@ -361,11 +360,11 @@ def instance_destination_updated_same_value1(
 @pytest.fixture
 def instance_curated_updated(instances_merge_request_origin_user, user_commissioner):
     instance_curated = instances_merge_request_origin_user[2]
-    updated, _ = TagInstanceHistory.change_or_create_versioned(
+    updated, _ = ValueHistory.change_or_create_versioned(
         id_persistent=instance_curated.id_persistent,
         version=instance_curated.id,
         id_entity_persistent=instance_curated.id_entity_persistent,
-        id_tag_definition_persistent=instance_curated.id_tag_definition_persistent,
+        id_column_persistent=instance_curated.id_column_persistent,
         written_by_session=user_commissioner.edit_session,
         value=c.value_origin_curated_changed,
         time_edit=c.time_instance_destination_changed,

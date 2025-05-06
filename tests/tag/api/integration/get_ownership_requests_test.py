@@ -13,7 +13,7 @@ def test_unknown_user(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
-    with patch("cosmae.tag.api.permissions.check_user", mock):
+    with patch("cosmae.column.api_permissions.check_user", mock):
         rsp = req.get_ownership_requests(server.url, cookies)
     assert rsp.status_code == 401
 
@@ -54,12 +54,12 @@ def test_get_request(
                         "permission_group": "CONTRIBUTOR",
                     },
                     "tag_definition": {
-                        "id_persistent": c.id_tag_def_curated_test,
-                        "name": c.name_tag_def_curated_test,
+                        "id_persistent": c.id_column_curated_test,
+                        "name": c.name_column_curated_test,
                         "type": "BOOL",
                         "curated": True,
                         "id_parent_persistent": None,
-                        "name_path": [c.name_tag_def_curated_test],
+                        "name_path": [c.name_column_curated_test],
                         "description": None,
                         "owner": None,
                         "hidden": False,
@@ -81,7 +81,7 @@ def test_get_request(
                         "permission_group": "CONTRIBUTOR",
                     },
                     "tag_definition": {
-                        "id_persistent": c.id_tag_def_persistent_test_user,
+                        "id_persistent": c.id_column_persistent_test_user,
                         "name": c.name_tag_def_test_user,
                         "type": "FLOAT",
                         "curated": False,
@@ -129,12 +129,12 @@ def test_get_request_commissioner(
                         "permission_group": "CONTRIBUTOR",
                     },
                     "tag_definition": {
-                        "id_persistent": c.id_tag_def_curated_test,
-                        "name": c.name_tag_def_curated_test,
+                        "id_persistent": c.id_column_curated_test,
+                        "name": c.name_column_curated_test,
                         "type": "BOOL",
                         "curated": True,
                         "id_parent_persistent": None,
-                        "name_path": [c.name_tag_def_curated_test],
+                        "name_path": [c.name_column_curated_test],
                         "description": None,
                         "owner": None,
                         "hidden": False,

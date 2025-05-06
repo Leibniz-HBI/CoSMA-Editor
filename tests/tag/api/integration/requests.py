@@ -10,7 +10,7 @@ def post_tag_def(url, tag_def, cookies=None):
 
 def post_tag_defs(url, tag_defs, cookies=None):
     return requests.post(
-        urljoin(url, "/cosmae/api/tags/definitions"),
+        urljoin(url, "/cosmae/api/columns"),
         json={"tag_definitions": tag_defs},
         cookies=cookies,
         timeout=900,
@@ -19,7 +19,7 @@ def post_tag_defs(url, tag_defs, cookies=None):
 
 def get_tagdefs(url, cookies=None):
     return requests.get(
-        urljoin(url, "/cosmae/api/tags/definitions"),
+        urljoin(url, "/cosmae/api/columns"),
         cookies=cookies,
         timeout=900,
     )
@@ -31,7 +31,7 @@ def post_tag_instance(url, tag, **kwargs):
 
 def post_tag_instances(url, tags, cookies=None):
     return requests.post(
-        urljoin(url, "/cosmae/api/tags"),
+        urljoin(url, "/cosmae/api/values"),
         json={"tag_instances": tags},
         cookies=cookies,
         timeout=900,
@@ -40,7 +40,7 @@ def post_tag_instances(url, tags, cookies=None):
 
 def post_tag_instance_chunks(url, tag_def_id, offset, limit, cookies=None):
     return requests.post(
-        urljoin(url, "/cosmae/api/tags/chunk"),
+        urljoin(url, "/cosmae/api/values/chunk"),
         json={
             "id_tag_definition_persistent": tag_def_id,
             "offset": offset,
@@ -51,9 +51,9 @@ def post_tag_instance_chunks(url, tag_def_id, offset, limit, cookies=None):
     )
 
 
-def post_tag_def_children(url, id_persistent, cookies=None):
+def post_column_children(url, id_persistent, cookies=None):
     return requests.post(
-        urljoin(url, "cosmae/api/tags/definitions/children"),
+        urljoin(url, "cosmae/api/columns/children"),
         json={"id_parent_persistent": id_persistent},
         timeout=900,
         cookies=cookies,
@@ -70,7 +70,7 @@ def post_tag_instance_values(
 
 def post_tag_instances_values(url, id_persistent_pairs, cookies):
     return requests.post(
-        urljoin(url, "cosmae/api/tags/values"),
+        urljoin(url, "cosmae/api/values/values"),
         json={
             "value_requests": [
                 {
@@ -94,7 +94,7 @@ def post_tag_instances_for_entities(
     cookies=None,
 ):
     return requests.post(
-        urljoin(url, "cosmae/api/tags/entities"),
+        urljoin(url, "cosmae/api/values/entities"),
         json={
             "id_tag_definition_persistent_list": id_tag_definition_persistent_list,
             "id_entity_persistent_list": id_entity_persistent_list,
@@ -108,8 +108,7 @@ def post_tag_instances_for_entities(
 
 def post_curation(url, id_tag_definition_persistent, cookies=None):
     return requests.post(
-        url
-        + f"/cosmae/api/tags/definitions/permissions/{id_tag_definition_persistent}/curate",
+        url + f"/cosmae/api/columns/permissions/{id_tag_definition_persistent}/curate",
         cookies=cookies,
         timeout=900,
     )
@@ -117,7 +116,7 @@ def post_curation(url, id_tag_definition_persistent, cookies=None):
 
 def post_owner(url, id_tag_definition_persistent, id_user_persistent, cookies=None):
     return requests.post(
-        url + "/cosmae/api/tags/definitions/permissions/"
+        url + "/cosmae/api/columns/permissions/"
         f"{id_tag_definition_persistent}/owner/{id_user_persistent}",
         cookies=cookies,
         timeout=900,
@@ -126,7 +125,7 @@ def post_owner(url, id_tag_definition_persistent, id_user_persistent, cookies=No
 
 def post_accept(url, id_request_persistent, cookies=None):
     return requests.post(
-        url + "/cosmae/api/tags/definitions/permissions/owner/"
+        url + "/cosmae/api/columns/permissions/owner/"
         f"{id_request_persistent}/accept",
         cookies=cookies,
         timeout=900,
@@ -135,7 +134,7 @@ def post_accept(url, id_request_persistent, cookies=None):
 
 def get_ownership_requests(url, cookies=None):
     return requests.get(
-        url + "/cosmae/api/tags/definitions/permissions/ownership_requests",
+        url + "/cosmae/api/columns/permissions/ownership_requests",
         cookies=cookies,
         timeout=900,
     )
@@ -143,8 +142,7 @@ def get_ownership_requests(url, cookies=None):
 
 def delete_ownership(url, id_request_persistent, cookies=None):
     return requests.delete(
-        url + "/cosmae/api/tags/definitions/permissions/owner/"
-        f"{id_request_persistent}",
+        url + "/cosmae/api/columns/permissions/owner/" f"{id_request_persistent}",
         cookies=cookies,
         timeout=900,
     )
@@ -152,7 +150,7 @@ def delete_ownership(url, id_request_persistent, cookies=None):
 
 def post_details(url, id_persistent_list, cookies=None):
     return requests.post(
-        url + "/cosmae/api/tags/definitions/details",
+        url + "/cosmae/api/columns/details",
         json={"id_persistent_list": id_persistent_list},
         cookies=cookies,
         timeout=900,
@@ -161,7 +159,7 @@ def post_details(url, id_persistent_list, cookies=None):
 
 def purge_tag(url, id_tag_definition_persistent, cookies=None):
     return requests.delete(
-        url + f"/cosmae/api/tags/definitions/{id_tag_definition_persistent}",
+        url + f"/cosmae/api/columns/{id_tag_definition_persistent}",
         cookies=cookies,
         timeout=900,
     )
@@ -169,7 +167,7 @@ def purge_tag(url, id_tag_definition_persistent, cookies=None):
 
 def get_descendants(url, id_tag_definition_persistent, cookies=None):
     return requests.get(
-        url + f"/cosmae/api/tags/definitions/{id_tag_definition_persistent}/descendants",
+        url + f"/cosmae/api/columns/{id_tag_definition_persistent}/descendants",
         cookies=cookies,
         timeout=900,
     )

@@ -19,7 +19,12 @@ class Versioned(models.Model):
 
     id_persistent = models.CharField(max_length=36)
     previous_version = models.ForeignKey(
-        "self", blank=True, null=True, on_delete=models.PROTECT, unique=True
+        "self",
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+        unique=True,
+        related_name="next_version+",
     )
     written_by_session = models.ForeignKey(
         "editsession", null=True, related_name="edits+", on_delete=models.PROTECT
@@ -68,7 +73,7 @@ class HistoryMixin:
         return True
 
     @classmethod
-    def change_or_create_versioned(  # pylint: disable=too-many-arguments, too-many-branches,  too-many-locals
+    def change_or_create_versioned(  # pylint: disable=too-many-arguments, too-many-branches, too-many-locals, too-many-positional-arguments
         cls,
         id_persistent: str,
         time_edit: datetime,

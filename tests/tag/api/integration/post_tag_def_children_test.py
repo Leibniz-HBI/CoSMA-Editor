@@ -10,7 +10,7 @@ from cosmae.exception import NotAuthenticatedException
 
 def test_no_cookies(auth_server):
     server, _ = auth_server
-    req = r.post_tag_def_children(server.url, None)
+    req = r.post_column_children(server.url, None)
     assert req.status_code == 401
 
 
@@ -18,20 +18,20 @@ def test_unauthenticated(auth_server):
     server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
-    with patch("cosmae.tag.api.definitions.check_user", mock):
-        req = r.post_tag_def_children(server.url, None, cookies=cookies)
+    with patch("cosmae.column.api.check_user", mock):
+        req = r.post_column_children(server.url, None, cookies=cookies)
     assert req.status_code == 401
 
 
 def test_applicant(auth_server_applicant):
     server, cookies = auth_server_applicant
-    req = r.post_tag_def_children(server.url, None, cookies=cookies)
+    req = r.post_column_children(server.url, None, cookies=cookies)
     assert req.status_code == 403
 
 
 def test_empty_db(auth_server):
     live_server, cookies = auth_server
-    req = r.post_tag_def_children(live_server.url, None, cookies=cookies)
+    req = r.post_column_children(live_server.url, None, cookies=cookies)
     assert req.status_code == 200
     assert req.json()["tag_definitions"] == []
 
@@ -41,7 +41,7 @@ def test_single_root_none(auth_server, root_tag_def):
     req = r.post_tag_def(live_server.url, root_tag_def, cookies=cookies)
     assert req.status_code == 200
     root_tag_def_rsp = req.json()["tag_definitions"][0]
-    req = r.post_tag_def_children(live_server.url, None, cookies=cookies)
+    req = r.post_column_children(live_server.url, None, cookies=cookies)
     assert req.status_code == 200
     tag_definitions = req.json()["tag_definitions"]
     assert len(tag_definitions) == 1
@@ -56,7 +56,7 @@ def test_multi_root(auth_server, root_tag_def):
     )
     assert req.status_code == 200
     root_tag_def_rsps = req.json()["tag_definitions"]
-    req = r.post_tag_def_children(live_server.url, None, cookies=cookies)
+    req = r.post_column_children(live_server.url, None, cookies=cookies)
     assert req.status_code == 200
     tag_definitions = req.json()["tag_definitions"]
     assert_versioned(
@@ -75,7 +75,7 @@ def test_single_child(auth_server, root_tag_def, child_tag_def):
     req = r.post_tag_def(live_server.url, child_tag_def, cookies=cookies)
     assert req.status_code == 200
     child_tag_def_rsp = req.json()["tag_definitions"][0]
-    req = r.post_tag_def_children(
+    req = r.post_column_children(
         live_server.url, root_tag_def_rsp_id_persistent, cookies=cookies
     )
     assert req.status_code == 200
@@ -96,7 +96,7 @@ def test_multi_child(auth_server, root_tag_def, child_tag_def):
     )
     assert req.status_code == 200
     child_tag_def_rsps = req.json()["tag_definitions"]
-    req = r.post_tag_def_children(
+    req = r.post_column_children(
         live_server.url, root_tag_def_rsp_id_persistent, cookies=cookies
     )
     assert req.status_code == 200
@@ -104,9 +104,9 @@ def test_multi_child(auth_server, root_tag_def, child_tag_def):
     assert sort_versioned(tag_definitions) == sort_versioned(child_tag_def_rsps)
 
 
-def test_does_not_include_disabled(auth_server, tag_def_disabled):
+def test_does_not_include_disabled(auth_server, column_disabled):
     live_server, cookies = auth_server
-    rsp = r.post_tag_def_children(live_server.url, None, cookies=cookies)
+    rsp = r.post_column_children(live_server.url, None, cookies=cookies)
     assert rsp.status_code == 200
     assert rsp.json() == {"tag_definitions": []}
 
@@ -125,7 +125,7 @@ def test_multi_child_include_hidden_for_owner(auth_server, root_tag_def, child_t
     assert req.status_code == 200
     child_tag_def_rsps = req.json()["tag_definitions"]
     assert len(child_tag_def_rsps) == 2
-    req = r.post_tag_def_children(
+    req = r.post_column_children(
         live_server.url, root_tag_def_rsp_id_persistent, cookies=cookies
     )
     assert req.status_code == 200
@@ -151,7 +151,7 @@ def test_multi_child_exclude_hidden_for_non_owner(
     assert req.status_code == 200
     child_tag_def_rsps = req.json()["tag_definitions"]
     assert len(child_tag_def_rsps) == 2
-    req = r.post_tag_def_children(
+    req = r.post_column_children(
         live_server.url, root_tag_def_rsp_id_persistent, cookies=cookies1
     )
     assert req.status_code == 200
@@ -163,7 +163,7 @@ def test_bad_db(auth_server):
     live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = DatabaseError()
-    with patch("cosmae.tag.models_django.TagDefinition.children_query_set", mock):
-        req = r.post_tag_def_children(live_server.url, None, cookies=cookies)
+    with patch("cosmae.column.models_django.Column.children_query_set", mock):
+        req = r.post_column_children(live_server.url, None, cookies=cookies)
     assert req.status_code == 500
     assert req.json()["msg"] == "Database Error."

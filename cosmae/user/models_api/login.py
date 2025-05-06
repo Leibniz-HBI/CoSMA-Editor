@@ -5,8 +5,8 @@ from typing import List, Optional, Union
 from ninja import Schema
 from pydantic import Field
 
+from cosmae.column.models_api import TagDefinitionResponse
 from cosmae.edit_session.api import EditSession
-from cosmae.tag.api.models_api import TagDefinitionResponse
 from cosmae.user.models_api.public import PublicUserInfo
 
 

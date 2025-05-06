@@ -97,7 +97,7 @@ def test_no_mr(auth_server_commissioner):
 
 def test_resolve_conflicts(
     auth_server_commissioner,
-    tag_def_curated,
+    column_curated,
     origin_entity_for_mr,
     destination_entity_for_mr,
     merge_request_user,
@@ -108,8 +108,8 @@ def test_resolve_conflicts(
     rsp = req.post_resolution(
         server.url,
         c.id_merge_request_persistent,
-        id_tag_definition_persistent=tag_def_curated.id_persistent,
-        id_tag_definition_version=tag_def_curated.id,
+        id_tag_definition_persistent=column_curated.id_persistent,
+        id_tag_definition_version=column_curated.id,
         id_entity_origin_persistent=origin_entity_for_mr.id_persistent,
         id_entity_origin_version=origin_entity_for_mr.id,
         id_entity_destination_persistent=destination_entity_for_mr.id_persistent,
@@ -162,9 +162,9 @@ def test_resolve_conflicts(
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_curated_test],
+                    "name_path": [ct.name_column_curated_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_curated_test,
+                    "id_persistent": ct.id_column_curated_test,
                     "curated": True,
                     "hidden": False,
                 },
@@ -183,9 +183,9 @@ def test_resolve_conflicts(
                 "replacement_state": None,
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test],
+                    "name_path": [ct.name_column_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test,
+                    "id_persistent": ct.id_column_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },
@@ -199,9 +199,9 @@ def test_resolve_conflicts(
                 "replacement_state": None,
                 "replacement_value": None,
                 "tag_definition": {
-                    "name_path": [ct.name_tag_def_test1],
+                    "name_path": [ct.name_column_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_tag_def_persistent_test_user1,
+                    "id_persistent": ct.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
@@ -221,7 +221,7 @@ def test_resolve_conflicts(
 
 def test_can_not_write_tag_def(
     auth_server_commissioner,
-    tag_def,
+    column,
     merge_request_user,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
@@ -230,8 +230,8 @@ def test_can_not_write_tag_def(
     rsp = req.post_resolution(
         server.url,
         c.id_merge_request_persistent,
-        id_tag_definition_persistent=tag_def.id_persistent,
-        id_tag_definition_version=tag_def.id,
+        id_tag_definition_persistent=column.id_persistent,
+        id_tag_definition_version=column.id,
         id_entity_origin_persistent=merge_request_user.id_origin_persistent,
         id_entity_origin_version=1,
         id_entity_destination_persistent=merge_request_user.id_destination_persistent,

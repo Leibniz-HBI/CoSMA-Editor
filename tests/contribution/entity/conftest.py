@@ -7,7 +7,7 @@ from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import EntityHistory
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import TagInstanceHistory
+from cosmae.value.models_django import ValueHistory
 
 
 @pytest.fixture
@@ -74,41 +74,37 @@ def duplicate_assignment_no_match(contribution_candidate):
 
 
 @pytest.fixture()
-def tag_instances_match(tag_def_curated, tag_def1):
+def tag_instances_match(column_curated, column1):
     value = "Same Value"
-    tag_instance_destination = (
-        TagInstanceHistory.objects.create(  # pylint: disable=no-member
-            id_persistent=c.id_tag_instance_match_destination,
-            id_entity_persistent=ce.id_persistent_test_1,
-            id_tag_definition_persistent=tag_def_curated.id_persistent,
-            time_edit=c.time_edit_tag_instance_match_destination,
-            value=value,
-            written_by_session=tag_def1.owner.edit_session,
-            approved_by=tag_def1.owner.id_persistent,
-        )
+    tag_instance_destination = ValueHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=c.id_tag_instance_match_destination,
+        id_entity_persistent=ce.id_persistent_test_1,
+        id_column_persistent=column_curated.id_persistent,
+        time_edit=c.time_edit_tag_instance_match_destination,
+        value=value,
+        written_by_session=column1.owner.edit_session,
+        approved_by=column1.owner.id_persistent,
     )
-    tag_instance_origin = (
-        TagInstanceHistory.objects.create(  # pylint: disable=no-member
-            id_persistent=c.id_tag_instance_match_origin,
-            id_entity_persistent=c.id_persistent_entity_duplicate_test,
-            id_tag_definition_persistent=tag_def1.id_persistent,
-            time_edit=c.time_edit_tag_instance_match_origin,
-            value=value,
-            written_by_session=tag_def1.owner.edit_session,
-            approved_by=tag_def1.owner.id_persistent,
-        )
+    tag_instance_origin = ValueHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=c.id_tag_instance_match_origin,
+        id_entity_persistent=c.id_persistent_entity_duplicate_test,
+        id_column_persistent=column1.id_persistent,
+        time_edit=c.time_edit_tag_instance_match_origin,
+        value=value,
+        written_by_session=column1.owner.edit_session,
+        approved_by=column1.owner.id_persistent,
     )
     return [tag_instance_origin, tag_instance_destination]
 
 
 @pytest.fixture
-def tag_merge_request(tag_def_curated, tag_def1, contribution_candidate):
+def tag_merge_request(column_curated, column1, contribution_candidate):
     return TagMergeRequest.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_tag_merge_request_persistent,
-        id_origin_persistent=tag_def1.id_persistent,
-        id_destination_persistent=tag_def_curated.id_persistent,
+        id_origin_persistent=column1.id_persistent,
+        id_destination_persistent=column_curated.id_persistent,
         contribution_candidate=contribution_candidate,
         state=TagMergeRequest.OPEN,
-        created_by=tag_def1.owner,
+        created_by=column1.owner,
         created_at=c.time_edit_tag_merge_request,
     )

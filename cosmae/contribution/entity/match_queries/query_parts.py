@@ -1,4 +1,5 @@
 "Parts of raw queries for entity matching"
+
 SCORED_SINGLE_PAIR_PREFIX = """
         with "entity_pairs" as (
 			select *
@@ -85,7 +86,7 @@ MATCHES_QUERY_STRING_WITHOUT_PAIRS = """
 				id_entity_origin
 				, id_entity_destination
 				, count (case when "value_origin" = "value_destination" then 1 end) equal_instance_count
-				, array_agg (case when "value_origin" = "value_destination" then "id_destination_persistent" end) equal_tag_definition_list
+				, array_agg (case when "value_origin" = "value_destination" then "id_destination_persistent" end) equal_column_list
 				, count(*) total_instance_count
 			from (
 				select "id_entity_origin", "value_origin", "id_entity_destination" ,"value_destination", "id_destination_persistent"
@@ -97,29 +98,29 @@ MATCHES_QUERY_STRING_WITHOUT_PAIRS = """
 					) tagmergerequest
 					inner join (
 						select "id_persistent"
-						from cosmae_tagdefinition
+						from cosmae_column
 						where "curated"
-					) tag_definition_curated
-					on "id_destination_persistent" = "tag_definition_curated"."id_persistent"
+					) column_curated
+					on "id_destination_persistent" = "column_curated"."id_persistent"
 				) merge_requests
 				left join (
-					select "id_entity_persistent" "id_entity_destination", "value" "value_destination", "id_tag_definition_persistent"
-                    from cosmae_taginstance
+					select "id_entity_persistent" "id_entity_destination", "value" "value_destination", "id_column_persistent"
+                    from cosmae_value
 					where id_entity_persistent in (
 						select existing_id_persistent
 						from entity_pairs
 					)
 				) instances_destination
-				on "merge_requests"."id_destination_persistent" = "instances_destination"."id_tag_definition_persistent"
+				on "merge_requests"."id_destination_persistent" = "instances_destination"."id_column_persistent"
 				left join (
-						select "id_entity_persistent" "id_entity_origin", "value" "value_origin", "id_tag_definition_persistent"
-                        from cosmae_taginstance
+						select "id_entity_persistent" "id_entity_origin", "value" "value_origin", "id_column_persistent"
+                        from cosmae_value
 						where id_entity_persistent in (
 							select contribution_id_persistent
 							from entity_pairs
                         )
 				) instances_origin
-				on "merge_requests"."id_origin_persistent" = "instances_origin"."id_tag_definition_persistent"
+				on "merge_requests"."id_origin_persistent" = "instances_origin"."id_column_persistent"
 				where "value_origin"="value_destination"
 			) instance_pairs
 			group by id_entity_origin, id_entity_destination
@@ -130,8 +131,8 @@ MATCHES_QUERY_STRING_WITHOUT_PAIRS = """
 				, jsonb_build_object(
 					'levenshtein_similarity'::text,
 	                "levenshtein_similarity"::float,
-	                'equal_tag_definition_list'::text,
-	                "equal_tag_definition_list",
+	                'equal_column_list'::text,
+	                "equal_column_list",
 	                'equal_instance_count'::text,
 	                "equal_instance_count"::int,
 	                'total_instance_count'::text,

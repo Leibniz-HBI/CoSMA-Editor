@@ -7,24 +7,23 @@ from uuid import uuid4
 
 from django.db import models, transaction
 
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.entity.models_django import Entity, EntityHistory, EntityJustification
 from cosmae.exception import (
+    ColumnExistsException,
     EntityUpdatedException,
     PermissionException,
-    TagDefinitionExistsException,
 )
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,
 )
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import (
-    TagDefinition,
-    TagDefinitionHistory,
-    TagInstanceAbstract,
-    TagInstanceHistory,
-)
 from cosmae.util import CosmaeUser, timestamp
+from cosmae.value.models_django import (
+    ValueAbstract,
+    ValueHistory,
+)
 
 
 def apply_entity_merge_request(
@@ -56,11 +55,9 @@ def apply_entity_merge_request(
             unresolved_conflict_query_set = merge_request.instance_conflicts_all(
                 include_resolved=False, resolution_values=recent_resolutions
             ).annotate(
-                tag_definition_dict=models.Subquery(
-                    TagDefinition.query_set()
-                    .filter(
-                        id_persistent=models.OuterRef("id_tag_definition_persistent")
-                    )[:1]
+                column_dict=models.Subquery(
+                    Column.query_set()
+                    .filter(id_persistent=models.OuterRef("id_column_persistent"))[:1]
                     .values(
                         json=models.functions.JSONObject(
                             type="type",
@@ -76,7 +73,7 @@ def apply_entity_merge_request(
                     merge_request,
                     unresolved,
                     merge_request.id_destination_persistent,
-                    unresolved.tag_definition_dict,
+                    unresolved.column_dict,
                     user,
                     time_edit,
                 )
@@ -125,9 +122,9 @@ def apply_entity_merge_request(
 
 def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     entity_merge_request: EntityMergeRequest,
-    tag_instance_origin: TagInstanceAbstract,
+    tag_instance_origin: ValueAbstract,
     id_entity_destination_persistent: str,
-    tag_definition_existing_dict: Dict[str, object],
+    column_existing_dict: Dict[str, object],
     user: CosmaeUser,
     time_edit: datetime,
 ):
@@ -137,29 +134,25 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
     # Create temporary i.e. disabled tag definition
     while True:
         try:
-            tag_definition_new, _do_write = (
-                TagDefinitionHistory.change_or_create_versioned(
-                    id_persistent=uuid4(),
-                    name=f"from entity merge {entity_merge_request.id_persistent}_{count}",
-                    id_parent_persistent=tag_definition_existing_dict[
-                        "id_parent_persistent"
-                    ],
-                    type=tag_definition_existing_dict["type"],
-                    time_edit=time_edit,
-                    owner=user,
-                    hidden=True,
-                    written_by_session=user.edit_session,
-                    approved_by_id_persistent=user.id_persistent,
-                )
+            tag_definition_new, _do_write = ColumnHistory.change_or_create_versioned(
+                id_persistent=uuid4(),
+                name=f"from entity merge {entity_merge_request.id_persistent}_{count}",
+                id_parent_persistent=column_existing_dict["id_parent_persistent"],
+                type=column_existing_dict["type"],
+                time_edit=time_edit,
+                owner=user,
+                hidden=True,
+                written_by_session=user.edit_session,
+                approved_by_id_persistent=user.id_persistent,
             )
             tag_definition_new.save()
             break
-        except TagDefinitionExistsException:
+        except ColumnExistsException:
             count += 1
         # Create Tag Instance for that tag definition
-    tag_instance, _ = TagInstanceHistory.change_or_create_versioned(
+    tag_instance, _ = ValueHistory.change_or_create_versioned(
         id_persistent=uuid4(),
-        id_tag_definition_persistent=tag_definition_new.id_persistent,
+        id_column_persistent=tag_definition_new.id_persistent,
         id_entity_persistent=id_entity_destination_persistent,
         value=tag_instance_origin.value,
         time_edit=time_edit,
@@ -170,8 +163,8 @@ def create_tag_definition_merge_request_for_unresolved_conflict(  # pylint: disa
     # Create tag definition merge request.
     TagMergeRequest.objects.create(  # pylint: disable=no-member
         id_origin_persistent=tag_definition_new.id_persistent,
-        id_destination_persistent=tag_definition_existing_dict["id_persistent"],
-        assigned_to_id=tag_definition_existing_dict["owner_id"],
+        id_destination_persistent=column_existing_dict["id_persistent"],
+        assigned_to_id=column_existing_dict["owner_id"],
         created_by=user,
         state=TagMergeRequest.OPEN,
         created_at=time_edit,
@@ -193,10 +186,10 @@ def apply_resolution(
         return
     value = None
     if resolution.replacement_state == EntityConflictResolution.REPLACE:
-        value = resolution.tag_instance_origin.value
+        value = resolution.value_origin.value
     elif resolution.replacement_state == EntityConflictResolution.VALUE:
         value = resolution.replacement_value
-    tag_instance_destination = resolution.tag_instance_destination
+    tag_instance_destination = resolution.value_destination
     if tag_instance_destination is None:
         id_destination_persistent = uuid4()
         version = None
@@ -204,13 +197,13 @@ def apply_resolution(
         id_destination_persistent = tag_instance_destination.id_persistent
         version = tag_instance_destination.id
     try:
-        instance, _do_write = TagInstanceHistory.change_or_create_versioned(
+        instance, _do_write = ValueHistory.change_or_create_versioned(
             id_persistent=id_destination_persistent,
             version=version,
             id_entity_persistent=resolution.entity_destination.id_persistent,
-            id_tag_definition_persistent=resolution.tag_definition.id_persistent,
+            id_column_persistent=resolution.column.id_persistent,
             time_edit=time_edit,
-            written_by_session=resolution.tag_instance_origin.written_by_session,
+            written_by_session=resolution.value_origin.written_by_session,
             approved_by_id_persistent=user.id_persistent,
             value=value,
         )
@@ -218,9 +211,9 @@ def apply_resolution(
     except (EntityUpdatedException, PermissionException):
         create_tag_definition_merge_request_for_unresolved_conflict(
             resolution.merge_request,
-            resolution.tag_instance_origin,
+            resolution.value_origin,
             resolution.entity_destination.id_persistent,
-            resolution.tag_definition.__dict__,
+            resolution.column.__dict__,
             user,
             time_edit,
         )

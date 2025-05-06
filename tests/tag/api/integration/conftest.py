@@ -7,12 +7,12 @@ import tests.tag.common as c
 
 @pytest.fixture
 def root_tag_def():
-    return {"name": c.name_tag_def_test, "type": "INNER"}
+    return {"name": c.name_column_test, "type": "INNER"}
 
 
 @pytest.fixture
 def child_tag_def():
-    return {"name": c.name_tag_def_test, "type": "FLOAT"}
+    return {"name": c.name_column_test, "type": "FLOAT"}
 
 
 @pytest.fixture

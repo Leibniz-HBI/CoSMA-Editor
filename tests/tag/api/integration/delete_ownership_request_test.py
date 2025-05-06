@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import tests.tag.api.integration.requests as req
 import tests.tag.common as c
+from cosmae.column.models_django import OwnershipRequest
 from cosmae.exception import NotAuthenticatedException
-from cosmae.tag.models_django import OwnershipRequest
 
 
 def test_unknown_user(auth_server):
@@ -12,7 +12,7 @@ def test_unknown_user(auth_server):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
-    with patch("cosmae.tag.api.permissions.check_user", mock):
+    with patch("cosmae.column.api_permissions.check_user", mock):
         rsp = req.delete_ownership(server.url, c.id_ownership_request_test, cookies)
     assert rsp.status_code == 401
 

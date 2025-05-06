@@ -15,16 +15,15 @@ from tests.edit_session import common as cs
 from tests.entity import common as ce
 from tests.tag import common as ct
 from tests.user import common as cu
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.entity.models_django import EntityHistory, EntityJustification
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
 from cosmae.management.models_django import ConfigValue
-from cosmae.tag.models_django import (
-    TagDefinition,
-    TagDefinitionHistory,
-    TagInstanceHistory,
-)
 from cosmae.util import CosmaeUser
+from cosmae.value.models_django import (
+    ValueHistory,
+)
 
 
 @pytest.fixture
@@ -98,12 +97,12 @@ def justification1(user1):
 
 
 @pytest.fixture()
-def tag_def(user):
-    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=ct.id_tag_def_persistent_test,
-        name=ct.name_tag_def_test,
+def column(user):
+    return ColumnHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=ct.id_column_persistent_test,
+        name=ct.name_column_test,
         time_edit=ct.time_edit_test,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         owner=user,
         curated=False,
         written_by_session=user.edit_session,
@@ -112,12 +111,12 @@ def tag_def(user):
 
 
 @pytest.fixture()
-def tag_def_disabled(user):
-    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=ct.id_tag_def_disabled_test,
-        name=ct.name_tag_def_disabled_test,
+def column_disabled(user):
+    return ColumnHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=ct.id_column_disabled_test,
+        name=ct.name_column_disabled_test,
         time_edit=ct.time_edit_test,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         owner=user,
         curated=False,
         disabled=True,
@@ -127,12 +126,12 @@ def tag_def_disabled(user):
 
 
 @pytest.fixture()
-def tag_def1(user1):
-    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=ct.id_tag_def_persistent_test_user1,
-        name=ct.name_tag_def_test1,
+def column1(user1):
+    return ColumnHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=ct.id_column_persistent_test_user1,
+        name=ct.name_column_test1,
         time_edit=ct.time_edit_test1,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         owner=user1,
         curated=False,
         written_by_session=user1.edit_session,
@@ -141,12 +140,12 @@ def tag_def1(user1):
 
 
 @pytest.fixture()
-def tag_def_curated(user):
-    return TagDefinitionHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=ct.id_tag_def_curated_test,
-        name=ct.name_tag_def_curated_test,
+def column_curated(user):
+    return ColumnHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=ct.id_column_curated_test,
+        name=ct.name_column_curated_test,
         time_edit=ct.time_edit_curated_test,
-        type=TagDefinition.STRING,
+        type=Column.STRING,
         owner=None,
         curated=True,
         written_by_session=user.edit_session,
@@ -408,39 +407,39 @@ def super_user(db):  # pylint: disable=unused-argument
 
 @pytest.fixture
 def tag_instances_user(user, user1):
-    tag_inst = TagInstanceHistory(
+    tag_inst = ValueHistory(
         id_persistent=ct.id_instance_test0,
         time_edit=ct.time_edit_instance_test,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
-        id_tag_definition_persistent=ct.id_tag_def_persistent_test_user,
+        id_column_persistent=ct.id_column_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_0,
         value="value",
     )
-    tag_inst1 = TagInstanceHistory(
+    tag_inst1 = ValueHistory(
         id_persistent=ct.id_instance_test1,
         time_edit=ct.time_edit_instance_test,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
-        id_tag_definition_persistent=ct.id_tag_def_persistent_test_user,
+        id_column_persistent=ct.id_column_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_1,
         value="value 1",
     )
-    tag_inst2 = TagInstanceHistory(
+    tag_inst2 = ValueHistory(
         id_persistent=ct.id_instance_test2,
         time_edit=ct.time_edit_instance_test,
         written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
-        id_tag_definition_persistent=ct.id_tag_def_persistent_test_user1,
+        id_column_persistent=ct.id_column_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_0,
         value="value 2",
     )
-    tag_inst3 = TagInstanceHistory(
+    tag_inst3 = ValueHistory(
         id_persistent=ct.id_instance_test3,
         time_edit=ct.time_edit_instance_test,
         written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
-        id_tag_definition_persistent=ct.id_tag_def_persistent_test_user1,
+        id_column_persistent=ct.id_column_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_1,
         value="value 3",
     )
@@ -460,16 +459,16 @@ def redis(redis_fixture):
 
 
 @pytest.fixture
-def display_txt_order_0(tag_def):
-    ConfigValue.append_to_list(DISPLAY_TXT_ORDER_CONFIG_KEY, tag_def.id_persistent)
+def display_txt_order_0(column):
+    ConfigValue.append_to_list(DISPLAY_TXT_ORDER_CONFIG_KEY, column.id_persistent)
 
 
 @pytest.fixture
-def display_txt_order_0_1_curated(tag_def, tag_def1, tag_def_curated):
-    ConfigValue.append_to_list(DISPLAY_TXT_ORDER_CONFIG_KEY, tag_def.id_persistent)
-    ConfigValue.append_to_list(DISPLAY_TXT_ORDER_CONFIG_KEY, tag_def1.id_persistent)
+def display_txt_order_0_1_curated(column, column1, column_curated):
+    ConfigValue.append_to_list(DISPLAY_TXT_ORDER_CONFIG_KEY, column.id_persistent)
+    ConfigValue.append_to_list(DISPLAY_TXT_ORDER_CONFIG_KEY, column1.id_persistent)
     ConfigValue.append_to_list(
-        DISPLAY_TXT_ORDER_CONFIG_KEY, tag_def_curated.id_persistent
+        DISPLAY_TXT_ORDER_CONFIG_KEY, column_curated.id_persistent
     )
 
 

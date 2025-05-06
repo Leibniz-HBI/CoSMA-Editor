@@ -8,18 +8,17 @@ from uuid import uuid4
 from django.db import transaction
 from django.db.utils import OperationalError
 
+from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.contribution.tag_definition.queue.util import read_csv_of_candidate
 from cosmae.entity.models_django import EntityHistory, EntityJustification
-from cosmae.exception import TagDefinitionExistsException
+from cosmae.exception import ColumnExistsException
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.models_django import (
-    TagDefinition,
-    TagDefinitionHistory,
-    TagInstanceHistory,
-)
 from cosmae.util import CosmaeUser, timestamp
+from cosmae.value.models_django import (
+    ValueHistory,
+)
 
 
 def mk_display_txt_extractor(idx):
@@ -69,7 +68,7 @@ def is_value_empty(value: str, empty_strings: Set[str]):
 def is_row_empty(
     display_txt,
     row_tpl,
-    column_assignment: List[Tuple[int, TagDefinition]],
+    column_assignment: List[Tuple[int, Column]],
     empty_strings: Set[str],
 ):
     "Check if the entries of a row are empty for a given column assignment."
@@ -119,7 +118,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                 elif column_assignment.id_existing_persistent == "justification":
                     justification_idx = column_assignment.index_in_file
                 else:
-                    tag_definition_destination = TagDefinition.most_recent_by_id(
+                    tag_definition_destination = Column.most_recent_by_id(
                         column_assignment.id_existing_persistent
                     )
                     merge_request_base_name = (
@@ -136,7 +135,7 @@ def ingest_values_from_csv(id_contribution_persistent):
                             (
                                 tag_definition_origin,
                                 _,
-                            ) = TagDefinitionHistory.change_or_create_versioned(
+                            ) = ColumnHistory.change_or_create_versioned(
                                 id_persistent=id_tag_definition_origin_persistent,
                                 name=merge_request_name,
                                 written_by_session=contribution.edit_session,
@@ -149,11 +148,11 @@ def ingest_values_from_csv(id_contribution_persistent):
                             )
                             tag_definition_origin.save()
                             break
-                        except TagDefinitionExistsException:
+                        except ColumnExistsException:
                             tag_definition_origin = None
                             merge_request_name = merge_request_base_name + f" {idx}"
                     if tag_definition_origin is None:
-                        raise TagDefinitionExistsException(
+                        raise ColumnExistsException(
                             merge_request_name,
                             id_tag_definition_origin_persistent,
                             tag_definition_destination.id_parent_persistent,
@@ -195,10 +194,10 @@ def ingest_values_from_csv(id_contribution_persistent):
                     value = str(row_tpl[int(idx_in_file)])
                     if is_value_empty(value, empty_strings):
                         continue
-                    tag_instance, _ = TagInstanceHistory.change_or_create_versioned(
+                    tag_instance, _ = ValueHistory.change_or_create_versioned(
                         id_persistent=id_tag_instance_persistent,
                         id_entity_persistent=id_entity_persistent,
-                        id_tag_definition_persistent=tag_definition.id_persistent,
+                        id_column_persistent=tag_definition.id_persistent,
                         written_by_session=contribution.edit_session,
                         time_edit=time_add,
                         value=value,

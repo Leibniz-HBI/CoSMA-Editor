@@ -3,15 +3,16 @@
 from django.http import HttpRequest
 from ninja import Router, Schema
 
+from cosmae.column.api import TagDefinitionResponseList
+from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_conversion import tag_definition_db_to_api
+from cosmae.column.models_django import Column
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.management.display_txt.util import (
     DISPLAY_TXT_ORDER_CONFIG_KEY,
     get_display_txt_order_tag_definitions,
 )
 from cosmae.management.models_django import AlreadyInListException, ConfigValue
-from cosmae.tag.api.definitions import TagDefinitionResponse, TagDefinitionResponseList
-from cosmae.tag.api.models_conversion import tag_definition_db_to_api
-from cosmae.tag.models_django import TagDefinition
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
 
@@ -76,7 +77,7 @@ def append(request: HttpRequest, request_data: DisplayTxtOrderAppend):
     if user.permission_group != CosmaeUser.COMMISSIONER:
         return 403, ApiError(msg="Insufficient permissions.")
     try:
-        tag_definition = TagDefinition.most_recent_by_id(
+        tag_definition = Column.most_recent_by_id(
             request_data.id_tag_definition_persistent
         )
         if not tag_definition.curated:
@@ -89,7 +90,7 @@ def append(request: HttpRequest, request_data: DisplayTxtOrderAppend):
         return 200, tag_definition_db_to_api(tag_definition)
     except AlreadyInListException:
         return 400, ApiError(msg="Can not add tag definition that is already in list.")
-    except TagDefinition.DoesNotExist:  # pylint: disable=no-member
+    except Column.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Tag definition does not exist.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(
@@ -120,7 +121,7 @@ def remove(request: HttpRequest, id_tag_definition_persistent: str):
             DISPLAY_TXT_ORDER_CONFIG_KEY, id_tag_definition_persistent
         )
         return 200, None
-    except TagDefinition.DoesNotExist:  # pylint: disable=no-member
+    except Column.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Tag definition does not exist.")
     except ValueError:
         return 200, None

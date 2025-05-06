@@ -8,8 +8,8 @@ from django_rq import enqueue
 
 from cosmae.entity.models_django import Entity
 from cosmae.management.display_txt.util import get_display_txt_order_tag_definitions
-from cosmae.tag.models_django import TagInstance
 from cosmae.user.model_conversion.public import user_db_to_public_user_info_dict
+from cosmae.value.models_django import Value
 
 entity_display_txt_information_cache = caches["entity_display_txt_information"]
 
@@ -42,21 +42,21 @@ def update_display_txt_cache(id_entity_persistent):
                 entity.contribution_candidate_id
             )
             with_tag_instance_value_query = tag_definition_order_query.annotate(
-                tag_instance_value=Subquery(
-                    TagInstance.objects.filter(  # pylint: disable=no-member
+                value=Subquery(
+                    Value.objects.filter(  # pylint: disable=no-member
                         id_entity_persistent=id_entity_persistent,
-                        id_tag_definition_persistent=OuterRef("id_persistent"),
+                        id_column_persistent=OuterRef("id_persistent"),
                     ).values("value")
                 )
             )
             for tag_definition in with_tag_instance_value_query:
-                if tag_definition.tag_instance_value is not None:
+                if tag_definition.value is not None:
                     tag_def_dict = tag_def_db_to_dict(tag_definition)
 
                     entity_display_txt_information_cache.set(
                         id_entity_persistent,
                         (
-                            tag_definition.tag_instance_value,
+                            tag_definition.value,
                             tag_def_dict,
                         ),
                     )

@@ -7,15 +7,15 @@ from django.db import transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
-from cosmae.exception import ApiError, NotAuthenticatedException, PermissionException
-from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.api.models_api import TagDefinitionResponse
-from cosmae.tag.api.models_conversion import (
+from cosmae.column.models_api import TagDefinitionResponse
+from cosmae.column.models_conversion import (
     tag_definition_db_dict_to_api,
     tag_definition_db_to_api,
 )
-from cosmae.tag.models_django import OwnershipRequest as OwnershipRequestDb
-from cosmae.tag.models_django import TagDefinition as TagDefinitionDb
+from cosmae.column.models_django import Column as TagDefinitionDb
+from cosmae.column.models_django import OwnershipRequest as OwnershipRequestDb
+from cosmae.exception import ApiError, NotAuthenticatedException, PermissionException
+from cosmae.merge_request.models_django import TagMergeRequest
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util import CosmaeUser, timestamp
@@ -68,10 +68,10 @@ def post_curation(request: HttpRequest, id_tag_definition_persistent):
             tag_definition, do_write = tag_definition.set_curated(user, time_edit)
             if do_write:
                 tag_definition.save()
-            OwnershipRequestDb.by_id_tag_definition_persistent_query_set(
+            OwnershipRequestDb.by_id_column_persistent_query_set(
                 id_tag_definition_persistent
             ).delete()
-            TagMergeRequest.change_owner_for_tag_def(tag_definition.id_persistent, None)
+            TagMergeRequest.change_owner_for_column(tag_definition.id_persistent, None)
         return 200, tag_definition_db_to_api(tag_definition)
     except TagDefinitionDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Tag Definition does not exist.")
@@ -115,7 +115,7 @@ def post_ownership_request(  # pylint:: disable=too-many-return-statements
         return 400, ApiError(msg="You already own that tag.")
     try:
         with transaction.atomic():
-            OwnershipRequestDb.by_id_tag_definition_persistent_query_set(
+            OwnershipRequestDb.by_id_column_persistent_query_set(
                 id_tag_definition_persistent
             ).delete()
             if str(user.id_persistent) == id_user_persistent:
@@ -126,13 +126,13 @@ def post_ownership_request(  # pylint:: disable=too-many-return-statements
                 if do_save:
                     with transaction.atomic():
                         tag_definition_new.save()
-                        TagMergeRequest.change_owner_for_tag_def(
+                        TagMergeRequest.change_owner_for_column(
                             id_tag_definition_persistent, user
                         )
                 return 200, tag_definition_db_to_api(tag_definition_new)
             receiver = CosmaeUser.objects.filter(id_persistent=id_user_persistent).get()
             OwnershipRequestDb.objects.create(  # pylint: disable = no-member
-                id_tag_definition_persistent=id_tag_definition_persistent,
+                id_column_persistent=id_tag_definition_persistent,
                 receiver=receiver,
                 petitioner=user,
                 id_persistent=uuid4(),
@@ -173,7 +173,7 @@ def post_accept_ownership_request(
             )
         time_edit = timestamp()
         tag_definition = TagDefinitionDb.most_recent_by_id(
-            ownership_request.id_tag_definition_persistent
+            ownership_request.id_column_persistent
         )
         tag_definition_new, do_save = tag_definition.set_owner(
             user, ownership_request.petitioner, time_edit
@@ -181,7 +181,7 @@ def post_accept_ownership_request(
         if do_save:
             with transaction.atomic():
                 tag_definition_new.save()
-                TagMergeRequest.change_owner_for_tag_def(
+                TagMergeRequest.change_owner_for_column(
                     tag_definition_new.id_persistent, ownership_request.receiver
                 )
                 ownership_request.delete()
@@ -216,7 +216,7 @@ def delete_ownership_request(request: HttpRequest, id_ownership_request_persiste
             is_owner = False
             if user.permission_group in {CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER}:
                 tag_definition = TagDefinitionDb.most_recent_by_id(
-                    ownership_request.id_tag_definition_persistent
+                    ownership_request.id_column_persistent
                 )
                 is_owner = tag_definition.curated
             if not is_owner:
@@ -258,12 +258,12 @@ def get_ownership_requests(request: HttpRequest):
             received=[
                 ownership_request_db_to_api(req)
                 for req in received_db
-                if req.tag_definition is not None
+                if req.column is not None
             ],
             petitioned=[
                 ownership_request_db_to_api(req)
                 for req in petitioned_db
-                if req.tag_definition is not None
+                if req.column is not None
             ],
         )
     except Exception:  # pylint: disable=broad-except
@@ -275,6 +275,6 @@ def ownership_request_db_to_api(ownership_request: OwnershipRequestDb):
     return OwnershipRequest(
         petitioner=user_db_to_public_user_info(ownership_request.petitioner),
         receiver=user_db_to_public_user_info(ownership_request.receiver),
-        tag_definition=tag_definition_db_dict_to_api(ownership_request.tag_definition),
+        tag_definition=tag_definition_db_dict_to_api(ownership_request.column),
         id_persistent=str(ownership_request.id_persistent),
     )

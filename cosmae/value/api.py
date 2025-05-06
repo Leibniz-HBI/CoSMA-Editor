@@ -11,25 +11,25 @@ from ninja import Router, Schema
 
 from cosmae.exception import (
     ApiError,
+    ColumnDisabledException,
+    ColumnMissingException,
     DbObjectExistsException,
     EntityMissingException,
     EntityUpdatedException,
-    InvalidTagValueException,
+    InvalidValueException,
     NotAuthenticatedException,
-    TagDefinitionDisabledException,
-    TagDefinitionMissingException,
     TagDefinitionPermissionException,
     ValidationException,
 )
 from cosmae.merge_request.models_django import TagMergeRequest
-from cosmae.tag.api.models_api import TagInstancePost
-from cosmae.tag.api.models_conversion import tag_instance_db_to_api
-from cosmae.tag.models_django import TagInstance as TagInstanceDb
-from cosmae.tag.models_django import TagInstanceAbstract as TagInstanceAbstractDb
-from cosmae.tag.models_django import TagInstanceHistory as TagInstanceHistoryDb
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 from cosmae.util.django import save_many_atomic
+from cosmae.value.models_api import TagInstancePost
+from cosmae.value.models_conversion import tag_instance_db_to_api
+from cosmae.value.models_django import Value as TagInstanceDb
+from cosmae.value.models_django import ValueAbstract as TagInstanceAbstractDb
+from cosmae.value.models_django import ValueHistory as TagInstanceHistoryDb
 
 router = Router()
 
@@ -143,18 +143,18 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
         return 500, ApiError(
             msg="Could not generate id_persistent for tag instance with "
             f"id_entity_persistent {exc.values['id_entity_persistent']}, "
-            f"id_tag_definition_persistent {exc.values['id_tag_definition_persistent']} and "
+            f"id_tag_definition_persistent {exc.values['id_column_persistent']} and "
             f"value {exc.values['value']}."
         )
     except EntityMissingException as exc:
         return 400, ApiError(
             msg=f"There is no entity with id_persistent {exc.id_persistent}."
         )
-    except TagDefinitionMissingException as exc:
+    except ColumnMissingException as exc:
         return 400, ApiError(
             msg=f"There is no tag definition with id_persistent {exc.id_persistent}."
         )
-    except InvalidTagValueException as exc:
+    except InvalidValueException as exc:
         return 400, ApiError(
             msg=f"Value {exc.value} should be of type {exc.type_name} "
             f"for tag with id_persistent {exc.tag_id_persistent}."
@@ -164,7 +164,7 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
             msg="Your are not allowed to change the tag definition with id_persistent: "
             f"{exc.id_persistent}"
         )
-    except TagDefinitionDisabledException as exc:
+    except ColumnDisabledException as exc:
         return 403, ApiError(
             msg=f"Tag definition with with id_persistent: {exc.id_persistent} is disabled."
         )
@@ -183,22 +183,37 @@ def post_tag_instance(request: HttpRequest, tag_list: TagInstancePostList):
     return 200, TagInstancePostList(tag_instances=response_tag_instances)
 
 
-@router.post("chunk", response={200: TagInstancePostList, 400: ApiError, 500: ApiError})
+@router.post(
+    "chunk",
+    response={
+        200: TagInstancePostList,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
+)
 def post_tag_instance_chunks(
     request, chunk_req: TagInstancePostChunkRequest  # pylint: disable=unused-argument
 ):
     "API method for retrieving a chunk of tag instances."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group in {CosmaeUser.APPLICANT, CosmaeUser.READER}:
+        return 403, ApiError(msg="Insufficient permissions.")
     if chunk_req.limit > MAX_TAG_INSTANCE_CHUNK_LIMIT:
         return 400, ApiError(
             msg=f"Please specify limit smaller than {MAX_TAG_INSTANCE_CHUNK_LIMIT}."
         )
     try:
-        instance_dbs = TagInstanceDb.by_tag_chunked_queryset(
+        instance_dbs = TagInstanceDb.by_column_chunked_queryset(
             chunk_req.id_tag_definition_persistent, chunk_req.offset, chunk_req.limit
         )
         instance_apis = [tag_instance_db_to_api(tag) for tag in instance_dbs]
         return 200, TagInstancePostList(tag_instances=instance_apis)
-    except TagDefinitionMissingException as exc:
+    except ColumnMissingException as exc:
         return 400, ApiError(
             msg=f"Tag definition with id_persistent {exc.id_persistent} does not exist."
         )
@@ -273,7 +288,7 @@ def post_tag_instances_for_entities(
         for (
             id_tag_definition_persistent
         ) in request_data.id_tag_definition_persistent_list:
-            tag_definitions = TagMergeRequest.get_tag_definitions_for_entities_request(
+            tag_definitions = TagMergeRequest.get_columns_for_entities_request(
                 id_tag_definition_persistent,
                 request_data.id_contribution_persistent,
                 request_data.id_merge_request_persistent,
@@ -323,7 +338,7 @@ def tag_instance_api_to_db(tag_api: TagInstancePost, user: CosmaeUser, time: dat
     return TagInstanceHistoryDb.change_or_create_versioned(
         id_persistent=persistent_id,
         id_entity_persistent=tag_api.id_entity_persistent,
-        id_tag_definition_persistent=tag_api.id_tag_definition_persistent,
+        id_column_persistent=tag_api.id_tag_definition_persistent,
         written_by_session=user.edit_session,
         value=tag_api.value,
         time_edit=time,
@@ -338,7 +353,7 @@ def tag_instance_with_existing_db_to_api(
     return TagInstanceValueWithExistingFlagResponse(
         id_persistent=tag_db.id_persistent,
         id_entity_persistent=tag_db.id_entity_persistent,
-        id_tag_definition_persistent=tag_db.id_tag_definition_persistent,
+        id_tag_definition_persistent=tag_db.id_column_persistent,
         value=tag_db.value,
         version=tag_db.id,
         is_existing=tag_db.is_existing,

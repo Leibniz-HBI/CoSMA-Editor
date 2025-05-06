@@ -129,7 +129,7 @@ def contribution_get(request, id_persistent: str):
     try:
         try:
             check_user(request)
-            contribution_db = TagMergeRequest.contribution_with_match_tag_definitions(
+            contribution_db = TagMergeRequest.contribution_with_match_columns(
                 id_persistent
             ).get()
         except NotAuthenticatedException:

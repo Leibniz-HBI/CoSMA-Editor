@@ -50,7 +50,7 @@ def test_get(auth_server):
     assert contribution == c.contribution_test_upload0
 
 
-def test_get_with_match_tag_definition_list(auth_server, tag_def1, tag_def_curated):
+def test_get_with_match_tag_definition_list(auth_server, column1, column_curated):
     live_server, cookies = auth_server
     rsp = req_contrib.post_contribution(
         live_server.url, c.contribution_post0, cookies=cookies
@@ -59,11 +59,11 @@ def test_get_with_match_tag_definition_list(auth_server, tag_def1, tag_def_curat
     id_persistent = rsp.json()["id_persistent"]
     TagMergeRequest.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_tag_merge_request_persistent,
-        id_origin_persistent=tag_def1.id_persistent,
-        id_destination_persistent=tag_def_curated.id_persistent,
+        id_origin_persistent=column1.id_persistent,
+        id_destination_persistent=column_curated.id_persistent,
         contribution_candidate_id=id_persistent,
         state=TagMergeRequest.OPEN,
-        created_by=tag_def1.owner,
+        created_by=column1.owner,
         created_at=c.time_edit_tag_merge_request,
     )
     rsp = req_contrib.get_contribution(
@@ -75,16 +75,16 @@ def test_get_with_match_tag_definition_list(auth_server, tag_def1, tag_def_curat
     contribution.pop("id_persistent")
     assert contribution["match_tag_definition_list"] == [
         {
-            "id_persistent": tag_def_curated.id_persistent,
-            "name": tag_def_curated.name,
-            "curated": tag_def_curated.curated,
+            "id_persistent": column_curated.id_persistent,
+            "name": column_curated.name,
+            "curated": column_curated.curated,
             "description": None,
-            "id_parent_persistent": tag_def_curated.id_parent_persistent,
-            "version": tag_def_curated.id,
-            "name_path": [tag_def_curated.name],
+            "id_parent_persistent": column_curated.id_parent_persistent,
+            "version": column_curated.id,
+            "name_path": [column_curated.name],
             "type": "STRING",
-            "hidden": tag_def_curated.hidden,
-            "disabled": tag_def_curated.disabled,
+            "hidden": column_curated.hidden,
+            "disabled": column_curated.disabled,
             "owner": None,
         }
     ]

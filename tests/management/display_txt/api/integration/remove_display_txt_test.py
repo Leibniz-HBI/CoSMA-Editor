@@ -38,7 +38,7 @@ def test_unknown_tag_def(auth_server_commissioner):
 def test_remove_only(auth_server_commissioner, display_txt_order_0):
     server, cookies = auth_server_commissioner
     rsp = req.delete_tag_definition(
-        server.url, ct.id_tag_def_persistent_test, cookies=cookies
+        server.url, ct.id_column_persistent_test, cookies=cookies
     )
     assert rsp.status_code == 200
     default = "default for test"
@@ -48,34 +48,34 @@ def test_remove_only(auth_server_commissioner, display_txt_order_0):
 def test_remove_start(auth_server_commissioner, display_txt_order_0_1_curated):
     server, cookies = auth_server_commissioner
     rsp = req.delete_tag_definition(
-        server.url, ct.id_tag_def_persistent_test, cookies=cookies
+        server.url, ct.id_column_persistent_test, cookies=cookies
     )
     assert rsp.status_code == 200
     assert ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY) == [
-        ct.id_tag_def_persistent_test_user1,
-        ct.id_tag_def_curated_test,
+        ct.id_column_persistent_test_user1,
+        ct.id_column_curated_test,
     ]
 
 
 def test_remove_middle(auth_server_commissioner, display_txt_order_0_1_curated):
     server, cookies = auth_server_commissioner
     rsp = req.delete_tag_definition(
-        server.url, ct.id_tag_def_persistent_test_user1, cookies=cookies
+        server.url, ct.id_column_persistent_test_user1, cookies=cookies
     )
     assert rsp.status_code == 200
     assert ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY) == [
-        ct.id_tag_def_persistent_test,
-        ct.id_tag_def_curated_test,
+        ct.id_column_persistent_test,
+        ct.id_column_curated_test,
     ]
 
 
 def test_remove_end(auth_server_commissioner, display_txt_order_0_1_curated):
     server, cookies = auth_server_commissioner
     rsp = req.delete_tag_definition(
-        server.url, ct.id_tag_def_curated_test, cookies=cookies
+        server.url, ct.id_column_curated_test, cookies=cookies
     )
     assert rsp.status_code == 200
     assert ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY) == [
-        ct.id_tag_def_persistent_test,
-        ct.id_tag_def_persistent_test_user1,
+        ct.id_column_persistent_test,
+        ct.id_column_persistent_test_user1,
     ]
