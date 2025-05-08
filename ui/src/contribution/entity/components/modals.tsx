@@ -174,7 +174,7 @@ export function AddTagDefinitionsModal({
                     hideColumnDataCallback={(tagDef) => {
                         dispatch(removeAdditionalTagByIdPersistent(tagDef.idPersistent))
                     }}
-                    loadColumnDataCallback={(tagDef) => {
+                    loadColumnDataCallback={async (tagDef) => {
                         const chunkSize = 50
                         for (
                             let startIdx = 0;
@@ -203,7 +203,7 @@ export function AddTagDefinitionsModal({
                                     )
                                 ]
                             }
-                            dispatch(
+                            await dispatch(
                                 getContributionTagInstances({
                                     entitiesGroupMap: entitiesMap,
                                     tagDefinitionList: [tagDef],

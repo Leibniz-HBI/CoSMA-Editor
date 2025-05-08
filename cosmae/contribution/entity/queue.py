@@ -37,34 +37,34 @@ def eliminate_duplicates(id_contribution_persistent):
                 contribution = contribution_query.get()
             except OperationalError:
                 return
-        time_edit = timestamp()
-        duplicates = EntityDuplicate.objects.filter(  # pylint: disable=no-member
-            contribution_candidate=contribution
-        )
-        tag_instances_with_duplicates = annotate_with_replacement_info(
-            Value.objects.all(),  # pylint: disable=no-member
-            duplicates,
-            "id_entity_persistent",
-        )
-        update_tag_instances(
-            tag_instances_with_duplicates, contribution.created_by, time_edit
-        )
-
-        replaced_entities_with_duplicates = annotate_with_replacement_info(
-            EntityHistory.objects.filter(  # pylint: disable=no-member
+            time_edit = timestamp()
+            duplicates = EntityDuplicate.objects.filter(  # pylint: disable=no-member
                 contribution_candidate=contribution
-            ),
-            duplicates,
-            "id_persistent",
-        )
-        update_entities(replaced_entities_with_duplicates, contribution, time_edit)
-        for merge_request in contribution.tagmergerequest_set.all():
-            django_rq.enqueue(
-                merge_request_fast_forward,
-                merge_request.id_persistent,
             )
-        contribution.set_state(ContributionCandidate.MERGED)
-        contribution.save()
+            tag_instances_with_duplicates = annotate_with_replacement_info(
+                Value.objects.all(),  # pylint: disable=no-member
+                duplicates,
+                "id_entity_persistent",
+            )
+            update_tag_instances(
+                tag_instances_with_duplicates, contribution.created_by, time_edit
+            )
+
+            replaced_entities_with_duplicates = annotate_with_replacement_info(
+                EntityHistory.objects.filter(  # pylint: disable=no-member
+                    contribution_candidate=contribution
+                ),
+                duplicates,
+                "id_persistent",
+            )
+            update_entities(replaced_entities_with_duplicates, contribution, time_edit)
+            for merge_request in contribution.columnmergerequest_set.all():
+                django_rq.enqueue(
+                    merge_request_fast_forward,
+                    merge_request.id_persistent,
+                )
+            contribution.set_state(ContributionCandidate.MERGED)
+            contribution.save()
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
@@ -136,7 +136,7 @@ def update_entities(
             ).values("text")
         )
     ).filter(justification__isnull=True)
-    if len(missing_justification) >= 0:
+    if len(missing_justification) > 0:
         if contribution.justification is None:
             raise MissingJustificationException()
         for entity in missing_justification:

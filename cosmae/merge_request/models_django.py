@@ -169,7 +169,7 @@ class ColumnMergeRequest(AbstractMergeRequest):
                 id_contribution_persistent, user
             ).get()
         if contribution is not None:
-            merge_requests_manager = contribution.tagmergerequest_set
+            merge_requests_manager = contribution.columnmergerequest_set
             for merge_request in merge_requests_manager.iterator():
                 if (
                     # pylint:disable-next=consider-using-in

@@ -151,7 +151,7 @@ export function EntitiesStepBody({
                         />
                     </Row>
                 </Col>
-                <Col className="h-100 overflow-hidden d-flex flex-column">
+                <Col className="h-95 overflow-hidden d-flex flex-column">
                     <Row className="h-100 w-100 ms-2 mt-3">
                         <div id="portal">
                             <EntityConflictBody
@@ -211,7 +211,7 @@ export function EntityConflictBody({
     } else {
         return (
             <>
-                <Col className="h-100">
+                <Col className="h-100 d-flex flex-column">
                     <Row className="ps-4 justify-content-between align-middle">
                         <Col>
                             <div className="w-400px">
@@ -409,7 +409,7 @@ export function EntitySimilarityItem({
     }
     return (
         <>
-            <div
+            <Row
                 className="h-100 w-100 mb-2 ms-3 me-3"
                 data-testid="table-container-outer"
             >
@@ -489,7 +489,7 @@ export function EntitySimilarityItem({
                             </div>
                         )}
                 </div>
-            </div>
+            </Row>
             <JustificationModal putDuplicateCallback={putDuplicateCallback} />
         </>
     )
