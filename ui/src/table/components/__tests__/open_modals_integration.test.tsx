@@ -225,7 +225,7 @@ test('show and hide add entity modal', async () => {
 test('show and hide add column modal', async () => {
     const fetchMock = vi.fn()
     addInitialTable(fetchMock)
-    addResponseSequence(fetchMock, [[200, [{ tag_definitions: [] }]]])
+    addResponseSequence(fetchMock, [[200, [{ column_list: [] }]]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
         const addButton = screen.getByRole('button', { name: '+' })
@@ -246,7 +246,7 @@ test('show and hide add column modal', async () => {
 test('show and hide entity merging modal', async () => {
     const fetchMock = vi.fn()
     addInitialTable(fetchMock)
-    addResponseSequence(fetchMock, [[200, [{ tag_definitions: [] }]]])
+    addResponseSequence(fetchMock, [[200, [{ column_list: [] }]]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
         const addButton = screen.getByRole('button', { name: 'Merge Entities' })
@@ -293,7 +293,7 @@ const test_entity_rsp_1 = {
 function addInitialTable(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }],
-        [200, { tag_instances: [] }]
+        [200, { value_list: [] }]
     ])
 }
 

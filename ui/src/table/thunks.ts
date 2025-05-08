@@ -104,7 +104,7 @@ export function getColumnAsync(
             try {
                 const rsp = await fetch(
                     config.api_path +
-                        `/tags/definitions/${columnDefinition.idPersistent}/descendants`,
+                        `/columns/${columnDefinition.idPersistent}/descendants`,
                     { credentials: 'include' }
                 )
                 const json = await rsp.json()
@@ -129,11 +129,11 @@ export function getColumnAsync(
                 let offset = 0
                 for (let i = 0; ; i += 5000) {
                     const rsp = await fetch_chunk({
-                        api_path: config.api_path + '/tags/chunk',
+                        api_path: config.api_path + '/values/chunk',
                         offset,
                         limit: 5000,
                         payload: {
-                            id_tag_definition_persistent: idPersistent
+                            id_column_persistent: idPersistent
                         },
                         fetchMethod: fetch
                     })
@@ -149,7 +149,7 @@ export function getColumnAsync(
                         return []
                     }
                     const json = await rsp.json()
-                    const tags = json['tag_instances']
+                    const tags = json['value_list']
                     for (const tag of tags) {
                         const id_entity_persistent: string = tag['id_entity_persistent']
                         const valueString = tag['value']
@@ -197,15 +197,15 @@ export function submitValuesAsync(
     return async (dispatch, _getState, fetch) => {
         dispatch(submitValuesStart())
         try {
-            const rsp = await fetch(config.api_path + '/tags', {
+            const rsp = await fetch(config.api_path + '/values', {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    tag_instances: [
+                    value_list: [
                         {
                             id_entity_persistent: edit[0],
-                            id_tag_definition_persistent: edit[1],
+                            id_column_persistent: edit[1],
                             value: edit[2].value,
                             id_persistent: edit[2].idPersistent,
                             version: edit[2].version
@@ -215,7 +215,7 @@ export function submitValuesAsync(
             })
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const tagInstance = json['tag_instances'][0]
+                const tagInstance = json['value_list'][0]
 
                 dispatch(
                     submitValuesSuccess([extractEdit(edit, columnType, tagInstance)])
@@ -223,7 +223,7 @@ export function submitValuesAsync(
                 return
             }
             if (rsp.status == 409) {
-                const tagInstance = json['tag_instances'][0]
+                const tagInstance = json['value_list'][0]
                 dispatch(
                     submitValuesSuccess([extractEdit(edit, columnType, tagInstance)])
                 )

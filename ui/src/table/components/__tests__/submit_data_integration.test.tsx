@@ -241,10 +241,10 @@ test('edit tag value success', async () => {
         [
             200,
             {
-                tag_instances: [
+                value_list: [
                     {
                         id_persistent: idValue0,
-                        id_tag_definition_persistent: idTagDefPersistent,
+                        id_column_persistent: idTagDefPersistent,
                         id_entity_persistent: idPersistent0,
                         value: valueChanged,
                         version: versionChanged
@@ -278,16 +278,16 @@ test('edit tag value success', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(3)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/tags',
+        'http://127.0.0.1:8000/cosmae/api/values',
         {
             credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                tag_instances: [
+                value_list: [
                     {
                         id_entity_persistent: idPersistent0,
-                        id_tag_definition_persistent: idTagDefPersistent,
+                        id_column_persistent: idTagDefPersistent,
                         value: valueChanged,
                         id_persistent: idValue0,
                         version: versionValue0
@@ -351,10 +351,10 @@ test('edit tag value changed in backend', async () => {
         [
             409,
             {
-                tag_instances: [
+                value_list: [
                     {
                         id_persistent: idValue0,
-                        id_tag_definition_persistent: idTagDefPersistent,
+                        id_column_persistent: idTagDefPersistent,
                         id_entity_persistent: idPersistent0,
                         value: valueChangedByOther,
                         version: versionChangedByOther
@@ -475,7 +475,7 @@ function addTagInstanceResponse(fetchMock: vi.mock) {
     const tagResponse = {
         id_entity_persistent: idPersistent0,
 
-        id_tag_definition_persistent: idTagDefPersistent,
+        id_column_persistent: idTagDefPersistent,
         value: value0,
         id_persistent: idValue0,
         owner: {
@@ -487,7 +487,7 @@ function addTagInstanceResponse(fetchMock: vi.mock) {
     }
     const tagResponse1 = {
         id_entity_persistent: idPersistent1,
-        id_tag_definition_persistent: idTagDefPersistent,
+        id_column_persistent: idTagDefPersistent,
         value: value1,
         id_persistent: idValue1,
         owner: {
@@ -501,7 +501,7 @@ function addTagInstanceResponse(fetchMock: vi.mock) {
         [
             200,
             {
-                tag_instances: [tagResponse, tagResponse1]
+                value_list: [tagResponse, tagResponse1]
             }
         ]
     ])

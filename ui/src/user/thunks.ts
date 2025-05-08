@@ -138,7 +138,7 @@ export function remoteUserProfileColumnAppend(
             return
         }
         await fetch(
-            config.api_path + `/user/tag_definitions/append/${idTagPersistent}`,
+            config.api_path + `/user/columns/append/${idTagPersistent}`,
             {
                 credentials: 'include',
                 method: 'POST'
@@ -154,7 +154,7 @@ export function remoteUserProfileColumnDeleteAsync(
             return
         }
         const rsp = await fetch(
-            config.api_path + `/user/tag_definitions/${idTagPersistent}`,
+            config.api_path + `/user/columns/${idTagPersistent}`,
             {
                 credentials: 'include',
                 method: 'DELETE'
@@ -171,7 +171,7 @@ export function remoteUserProfileChangeColumIndex(
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         await fetch(
-            config.api_path + `/user/tag_definitions/swap/${idxStart}/${idxEnd}`,
+            config.api_path + `/user/columns/swap/${idxStart}/${idxEnd}`,
             {
                 credentials: 'include',
                 method: 'POST'
@@ -198,7 +198,7 @@ export function parseUserInfoFromJson(json: any): UserInfo {
         namesFamily: json['names_family'],
         columns:
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (json['tag_definition_list'] as Array<any>).map((tagDefinitionApi) =>
+            (json['column_list'] as Array<any>).map((tagDefinitionApi) =>
                 parseColumnDefinitionsFromApi(tagDefinitionApi, undefined)
             ),
         permissionGroup: permissionGroupApiMap[json['permission_group']]

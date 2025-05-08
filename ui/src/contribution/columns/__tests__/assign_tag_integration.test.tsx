@@ -126,7 +126,7 @@ test('assign existing', async () => {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     contributionColumnActiveRsp0,
                     contributionColumnActiveRsp1
                 ]
@@ -136,7 +136,7 @@ test('assign existing', async () => {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef0,
                         name_path: [nameTagDef0],
@@ -148,8 +148,8 @@ test('assign existing', async () => {
                 ]
             }
         ],
+        [200, { column_list: [] }],
         [200, { contribution_values: [], destination_values: [] }],
-        [200, { tag_definitions: [] }],
         [
             200,
             { ...contributionColumnActiveRsp1, id_existing_persistent: 'display_txt' }
@@ -192,7 +192,7 @@ test('assign existing', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags`,
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns`,
             { credentials: 'include' }
         ],
         [
@@ -200,9 +200,18 @@ test('assign existing', async () => {
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 body: '{}',
+                credentials: 'include',
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
+            {
+                body: JSON.stringify({ id_parent_persistent: idTagDef0 }),
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
@@ -213,16 +222,7 @@ test('assign existing', async () => {
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
-            {
-                body: JSON.stringify({ id_parent_persistent: idTagDef0 }),
-                credentials: 'include',
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            }
-        ],
-        [
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp1.id_persistent}`,
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns/${contributionColumnActiveRsp1.id_persistent}`,
             {
                 method: 'PATCH',
                 credentials: 'include',

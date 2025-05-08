@@ -126,14 +126,14 @@ function initialResponseSequence(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     contributionColumnActiveRsp0,
                     contributionColumnActiveRsp1
                 ]
             }
         ],
         [200, { contribution_values: [], destination_values: [] }],
-        [200, { tag_definitions: [] }]
+        [200, { column_list: [] }]
     ])
 }
 
@@ -153,19 +153,19 @@ test('create, select and assign tag definition', async () => {
         [
             200,
             {
-                tag_definitions: [tagDefJson]
+                column_list: [tagDefJson]
             }
         ],
         [
             200,
             {
-                tag_definitions: [tagDefJson]
+                column_list: [tagDefJson]
             }
         ],
         [
             200,
             {
-                tag_definitions: []
+                column_list: []
             }
         ],
         [200, { ...contributionColumnActiveRsp1, id_existing_persistent: idTagDef0 }],
@@ -222,7 +222,7 @@ test('create, select and assign tag definition', async () => {
         ).toEqual(idTagDef0)
     })
     expect(fetchMock.mock.calls.at(-2)).toEqual([
-        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp1.id_persistent}`,
+        `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns/${contributionColumnActiveRsp1.id_persistent}`,
         {
             method: 'PATCH',
             credentials: 'include',

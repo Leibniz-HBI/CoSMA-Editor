@@ -128,7 +128,7 @@ function initialResponseSequence(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     contributionColumnActiveRsp0,
                     contributionColumnActiveRsp1
                 ]
@@ -138,7 +138,7 @@ function initialResponseSequence(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef0,
                         name_path: [nameTagDef0],
@@ -150,7 +150,7 @@ function initialResponseSequence(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }]
+        [200, { column_list: [] }]
     ])
 }
 
@@ -208,7 +208,7 @@ test('finish error', async () => {
     const errorMsg = 'Not Complete'
     addResponseSequence(fetchMock, [
         [500, { msg: errorMsg }],
-        [200, { tag_definitions: [] }]
+        [200, { column_list: [] }]
     ])
     const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
     let button: HTMLElement | undefined

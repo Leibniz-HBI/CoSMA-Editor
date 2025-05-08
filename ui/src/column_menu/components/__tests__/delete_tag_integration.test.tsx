@@ -69,14 +69,14 @@ describe('disable', () => {
             [
                 200,
                 {
-                    tag_definitions: [
+                    column_list: [
                         {
                             id_persistent: idTagDef,
                             disabled: true,
                             hidden: false,
                             id_parent_persistent: null,
                             name: nameTag,
-                            name_path: ['name_tag'],
+                            name_path: ['name_column'],
                             description: '',
                             type: 'STRING',
                             owner: null
@@ -114,13 +114,13 @@ describe('disable', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/columns',
                 {
                     credentials: 'include',
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        tag_definitions: [
+                        column_list: [
                             {
                                 name: nameTag,
                                 id_parent_persistent: idParentPersistent,
@@ -212,7 +212,7 @@ describe('purge', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/tags/definitions/${idTagDef}`,
+                `http://127.0.0.1:8000/cosmae/api/columns/${idTagDef}`,
                 {
                     credentials: 'include',
                     method: 'DELETE'

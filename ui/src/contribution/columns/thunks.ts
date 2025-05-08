@@ -30,7 +30,7 @@ export function loadColumnDefinitionsContribution(
         dispatch(loadColumnDefinitionsContributionStart())
         try {
             const rsp = await fetch(
-                config.api_path + `/contributions/${idPersistent}/tags`,
+                config.api_path + `/contributions/${idPersistent}/columns`,
                 { credentials: 'include' }
             )
             if (rsp.status == 200) {
@@ -38,7 +38,7 @@ export function loadColumnDefinitionsContribution(
                 const discardedDefinitionsList: ColumnDefinitionContribution[] = []
                 const json = await rsp.json()
                 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-                json['tag_definitions'].forEach((tagDefinition: any) => {
+                json['column_list'].forEach((tagDefinition: any) => {
                     const columnDefinition =
                         parseTagDefinitionContribution(tagDefinition)
                     if (columnDefinition.discard) {
@@ -96,7 +96,7 @@ export function patchColumnDefinitionContribution({
             }
             const rsp = await fetch(
                 config.api_path +
-                    `/contributions/${idContributionPersistent}/tags/${idPersistent}`,
+                    `/contributions/${idContributionPersistent}/columns/${idPersistent}`,
                 {
                     method: 'PATCH',
                     credentials: 'include',
@@ -180,8 +180,8 @@ function parsePreviewFromApi(
     previewJson: any //eslint-disable-line @typescript-eslint/no-explicit-any
 ) {
     return newValuePreview(
-        previewJson['contribution_values'],
-        previewJson['destination_values']
+        previewJson['contribution_values'] ?? [],
+        previewJson['destination_values'] ?? []
     )
 }
 

@@ -671,7 +671,7 @@ const userInfoApiResponse = {
         names_personal: namesPersonalTest,
         email: emailTest,
         names_family: '',
-        tag_definition_list: [],
+        column_list: [],
         id_persistent: idPersistentTest,
         permission_group: 'CONTRIBUTOR',
         edit_session: {

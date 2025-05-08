@@ -157,7 +157,7 @@ function newSearchResultApi(
 ) {
     return {
         match_value: matchValue,
-        id_tag_definition_persistent: idTagDefinitionPersistent,
+        id_column_persistent: idTagDefinitionPersistent,
         id_entity_persistent: idEntityPersistent
     }
 }

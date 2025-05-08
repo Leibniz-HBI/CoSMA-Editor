@@ -179,19 +179,19 @@ function addSuccessResponse(fetchMock: vi.mock) {
         state: 'OPEN'
     }
     const resolvableConflict1 = {
-        tag_definition: {
+        column: {
             name_path: namePathResolvable1,
             id_persistent: idTagDefResolvable1,
             id_parent_persistent: idTagDefParentResolvable1,
             version: versionTagDefResolvable1,
             curated: false
         },
-        tag_instance_origin: {
+        value_origin: {
             id_persistent: idTagInstanceOriginResolvable1,
             value: valueTagInstanceOriginResolvable1,
             version: versionTagInstanceOriginResolvable1
         },
-        tag_instance_destination: {
+        value_destination: {
             id_persistent: idTagInstanceDestinationResolvable1,
             value: valueTagInstanceDestinationResolvable1,
             version: versionTagInstanceDestinationResolvable1
@@ -204,19 +204,19 @@ function addSuccessResponse(fetchMock: vi.mock) {
                 merge_request: entityMergeRequestApi,
                 resolvable_conflicts: [
                     {
-                        tag_definition: {
+                        column: {
                             name_path: namePathResolvable0,
                             id_persistent: idTagDefResolvable0,
                             id_parent_persistent: idTagDefParentResolvable0,
                             version: versionTagDefResolvable0,
                             curated: false
                         },
-                        tag_instance_origin: {
+                        value_origin: {
                             id_persistent: idTagInstanceOriginResolvable0,
                             value: valueTagInstanceOriginResolvable0,
                             version: versionTagInstanceOriginResolvable0
                         },
-                        tag_instance_destination: {
+                        value_destination: {
                             id_persistent: idTagInstanceDestinationResolvable0,
                             value: valueTagInstanceDestinationResolvable0,
                             version: versionTagInstanceDestinationResolvable0
@@ -225,19 +225,19 @@ function addSuccessResponse(fetchMock: vi.mock) {
                     },
                     resolvableConflict1,
                     {
-                        tag_definition: {
+                        column: {
                             name_path: namePathResolvable2,
                             id_persistent: idTagDefResolvable2,
                             id_parent_persistent: idTagDefParentResolvable2,
                             version: versionTagDefResolvable2,
                             curated: false
                         },
-                        tag_instance_origin: {
+                        value_origin: {
                             id_persistent: idTagInstanceOriginResolvable2,
                             value: valueTagInstanceOriginResolvable2,
                             version: versionTagInstanceOriginResolvable2
                         },
-                        tag_instance_destination: {
+                        value_destination: {
                             id_persistent: idTagInstanceDestinationResolvable2,
                             value: valueTagInstanceDestinationResolvable2,
                             version: versionTagInstanceDestinationResolvable2
@@ -248,38 +248,38 @@ function addSuccessResponse(fetchMock: vi.mock) {
                 updated: [resolvableConflict1],
                 unresolvable_conflicts: [
                     {
-                        tag_definition: {
+                        column: {
                             name_path: namePathUnresolvable0,
                             id_persistent: idTagDefUnresolvable0,
                             id_parent_persistent: idTagDefParentUnresolvable0,
                             version: versionTagDefUnresolvable0,
                             curated: false
                         },
-                        tag_instance_origin: {
+                        value_origin: {
                             id_persistent: idTagInstanceOriginUnresolvable0,
                             value: valueTagInstanceOriginUnresolvable0,
                             version: versionTagInstanceOriginUnresolvable0
                         },
-                        tag_instance_destination: {
+                        value_destination: {
                             id_persistent: idTagInstanceDestinationUnresolvable0,
                             value: valueTagInstanceDestinationUnresolvable0,
                             version: versionTagInstanceDestinationUnresolvable0
                         }
                     },
                     {
-                        tag_definition: {
+                        column: {
                             name_path: namePathUnresolvable1,
                             id_persistent: idTagDefUnresolvable1,
                             id_parent_persistent: idTagDefParentUnresolvable1,
                             version: versionTagDefUnresolvable1,
                             curated: false
                         },
-                        tag_instance_origin: {
+                        value_origin: {
                             id_persistent: idTagInstanceOriginUnresolvable1,
                             value: valueTagInstanceOriginUnresolvable1,
                             version: versionTagInstanceOriginUnresolvable1
                         },
-                        tag_instance_destination: {
+                        value_destination: {
                             id_persistent: idTagInstanceDestinationUnresolvable1,
                             value: valueTagInstanceDestinationUnresolvable1,
                             version: versionTagInstanceDestinationUnresolvable1

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import {vi, Mock} from 'vitest'
+import { vi, Mock } from 'vitest'
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
 import {
     TagSelectionState,
@@ -238,7 +238,7 @@ describe('Ownership search', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
+                `http://127.0.0.1:8000/cosmae/api/columns/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
                 { credentials: 'include', method: 'POST' }
             ]
         ])
@@ -284,7 +284,7 @@ describe('Ownership search', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
+                `http://127.0.0.1:8000/cosmae/api/columns/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
                 { credentials: 'include', method: 'POST' }
             ]
         ])

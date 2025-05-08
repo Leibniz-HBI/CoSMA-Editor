@@ -447,7 +447,6 @@ export function PreviewConnector({
                 dispatch(loadPreview(idContributionPersistent, idColumnPersistent))
             }
         },
-        //eslint-disable-next-line react-hooks/exhaustive-deps
         [idColumnPersistent, idContributionPersistent, idExistingPersistent]
     )
     return <PreviewComponent />

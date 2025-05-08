@@ -60,7 +60,7 @@ test('success', async () => {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         name_path: [nameTagDef],
                         id_persistent: idTagDef,
@@ -86,7 +86,7 @@ test('success', async () => {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/details',
+            'http://127.0.0.1:8000/cosmae/api/columns/details',
             {
                 method: 'POST',
                 credentials: 'include',

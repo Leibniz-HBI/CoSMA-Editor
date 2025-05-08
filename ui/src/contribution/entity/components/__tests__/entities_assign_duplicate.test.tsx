@@ -190,7 +190,7 @@ function mkMatches(
                 matches: [
                     {
                         similarity: idx / 100.0,
-                        id_match_tag_definition_persistent_list: [],
+                        id_match_column_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 0`,
                             display_txt_details: 'display_txt_detail',
@@ -200,7 +200,7 @@ function mkMatches(
                     },
                     {
                         similarity: idx / 100.0 + 0.001,
-                        id_match_tag_definition_persistent_list: [],
+                        id_match_column_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 1`,
                             display_txt_details: 'display_txt_detail',
@@ -231,7 +231,7 @@ function initialResponses(
     addResponseSequence(fetchMock, [
         [200, { entity_list: personList }],
         [200, { entity_list: [] }],
-        [200, { tag_definitions: [] }],
+        [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, numIncludedMatches)) }]
     ])
 }
@@ -247,7 +247,7 @@ test('merge with existing', async () => {
             {
                 assigned_duplicate: {
                     similarity: 0.8,
-                    id_match_tag_definition_persistent_list: [],
+                    id_match_column_persistent_list: [],
                     entity: {
                         id_persistent: 'id-entity-1-0',
                         display_txt: 'entity-1 match 0',
@@ -264,7 +264,7 @@ test('merge with existing', async () => {
             {
                 assigned_duplicate: {
                     similarity: 0.9,
-                    id_match_tag_definition_persistent_list: [],
+                    id_match_column_persistent_list: [],
                     entity: {
                         id_persistent: 'id-entity-2-1',
                         display_txt: 'entity-2 match 1',

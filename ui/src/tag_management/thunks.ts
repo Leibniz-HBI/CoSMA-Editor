@@ -26,7 +26,7 @@ export function getOwnershipRequests(): ThunkWithFetch<void> {
         dispatch(getOwnershipRequestsStart())
         try {
             const rsp = await fetch(
-                config.api_path + '/tags/definitions/permissions/ownership_requests',
+                config.api_path + '/columns/permissions/ownership_requests',
                 { method: 'GET', credentials: 'include' }
             )
             const json = await rsp.json()
@@ -58,7 +58,7 @@ export function putOwnershipRequest(
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/tags/definitions/permissions/${args.idTagDefinitionPersistent}/owner/${args.idUserPersistent}`,
+                    `/columns/permissions/${args.idTagDefinitionPersistent}/owner/${args.idUserPersistent}`,
                 { credentials: 'include', method: 'POST' }
             )
             const json = await rsp.json()
@@ -85,7 +85,7 @@ export function acceptOwnershipRequest(
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/tags/definitions/permissions/owner/${idPersistent}/accept`,
+                    `/columns/permissions/owner/${idPersistent}/accept`,
                 { credentials: 'include', method: 'POST' }
             )
             const json = await rsp.json()
@@ -106,7 +106,7 @@ export function deleteOwnershipRequest(idPersistent: string): ThunkWithFetch<voi
         dispatch(deleteOwnershipRequestStart(idPersistent))
         try {
             const rsp = await fetch(
-                config.api_path + `/tags/definitions/permissions/owner/${idPersistent}`,
+                config.api_path + `/columns/permissions/owner/${idPersistent}`,
                 { credentials: 'include', method: 'DELETE' }
             )
             if (rsp.status == 200) {
@@ -129,7 +129,7 @@ export function parseOwnershipRequestFromJson(json: {
     return {
         petitioner: parsePublicUserInfoFromJson(json['petitioner']),
         receiver: parsePublicUserInfoFromJson(json['receiver']),
-        tagDefinition: parseColumnDefinitionsFromApi(json['tag_definition']),
+        tagDefinition: parseColumnDefinitionsFromApi(json['column']),
         idPersistent: json['id_persistent'] as string
     }
 }

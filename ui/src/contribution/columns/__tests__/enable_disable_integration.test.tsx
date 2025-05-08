@@ -19,9 +19,12 @@ import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
 import { PropsWithChildren } from 'react'
 import { ColumnDefinitionStep } from '../components'
-import { ToolkitStore } from '@reduxjs/toolkit/dist/configureStore'
 import { ContributionStep, newContribution } from '../../state'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
+import {
+    TagDefinition,
+    TagSelectionState,
+    newTagSelectionState
+} from '../../../column_menu/state'
 import { tagSelectionSlice } from '../../../column_menu/slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 import { vi, Mock } from 'vitest'
@@ -207,7 +210,7 @@ describe('beginning', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags`,
+                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns`,
                 { credentials: 'include' }
             ],
             [
@@ -215,7 +218,7 @@ describe('beginning', () => {
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+                'http://127.0.0.1:8000/cosmae/api/columns/children',
                 {
                     body: '{}',
                     credentials: 'include',
@@ -224,7 +227,7 @@ describe('beginning', () => {
                 }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+                'http://127.0.0.1:8000/cosmae/api/columns/children',
                 {
                     body: JSON.stringify({ id_parent_persistent: idTagDef0 }),
                     credentials: 'include',
@@ -233,7 +236,7 @@ describe('beginning', () => {
                 }
             ],
             [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp0.id_persistent}`,
+                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns/${contributionColumnActiveRsp0.id_persistent}`,
                 {
                     method: 'PATCH',
                     credentials: 'include',
@@ -241,7 +244,7 @@ describe('beginning', () => {
                 }
             ],
             [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/tags/${contributionColumnActiveRsp0.id_persistent}`,
+                `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns/${contributionColumnActiveRsp0.id_persistent}`,
                 {
                     method: 'PATCH',
                     credentials: 'include',
@@ -398,7 +401,7 @@ function initialResponseSequence(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     contributionColumnActiveRsp0,
                     contributionColumnDiscardRsp1,
                     contributionColumnActiveRsp2,
@@ -411,7 +414,7 @@ function initialResponseSequence(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef0,
                         name_path: [nameTagDef0],
@@ -423,7 +426,7 @@ function initialResponseSequence(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }]
+        [200, { column_list: [] }]
     ])
 }
 
@@ -440,14 +443,14 @@ function expectActiveDiscardedIds(
         store
             .getState()
             .contributionColumnDefinition.columns.value?.activeDefinitionsList.map(
-                (col) => col.idPersistent
+                (col: TagDefinition) => col.idPersistent
             )
     ).toEqual(expectedActiveIdList)
     expect(
         store
             .getState()
             .contributionColumnDefinition.columns.value?.discardedDefinitionsList.map(
-                (col) => col.idPersistent
+                (col: TagDefinition) => col.idPersistent
             )
     ).toEqual(expectedDiscardedIdList)
 }

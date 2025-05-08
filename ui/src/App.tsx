@@ -96,7 +96,7 @@ const router = createBrowserRouter([
                 element: <ReviewList />
             },
             {
-                path: 'review/tags/:idPersistent',
+                path: 'review/columns/:idPersistent',
                 element: <MergeRequestConflictView />,
                 loader: ({ params }) => params.idPersistent ?? ''
             },
@@ -106,7 +106,7 @@ const router = createBrowserRouter([
                 loader: ({ params }) => params.idPersistent ?? ''
             },
             {
-                path: 'tags',
+                path: 'columns',
                 element: <TagManagementPage />
             },
             {

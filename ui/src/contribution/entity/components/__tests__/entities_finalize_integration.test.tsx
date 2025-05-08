@@ -176,7 +176,7 @@ function initialResponses(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef0,
                         name_path: [nameTagDef0],
@@ -188,7 +188,7 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }],
+        [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
         [200, { matches: mkMatches(personList.slice(50)) }]
     ])

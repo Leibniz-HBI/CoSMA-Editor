@@ -173,7 +173,7 @@ test('remove column from header menu', async () => {
     // TODO check menu entries
     expect(fetchMock.mock.calls.length).toEqual(3)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/user/tag_definitions/column_id_test',
+        'http://127.0.0.1:8000/cosmae/api/user/columns/column_id_test',
         { credentials: 'include', method: 'DELETE' }
     ])
 })
@@ -219,7 +219,7 @@ function addEntitiesResponse(fetchMock: Mock) {
 }
 
 function addTagInstanceResponse(fetchMock: Mock) {
-    addResponseSequence(fetchMock, [[200, { tag_instances: [] }]])
+    addResponseSequence(fetchMock, [[200, { value_list: [] }]])
 }
 
 const columnNameTest = 'column name test'

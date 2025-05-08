@@ -107,7 +107,7 @@ export function MergeRequestListItem({
         <ListGroup.Item
             as="li"
             onClick={() =>
-                navigateCallback('/review/tags/' + mergeRequest.idPersistent)
+                navigateCallback('/review/columns/' + mergeRequest.idPersistent)
             }
             role="button"
         >

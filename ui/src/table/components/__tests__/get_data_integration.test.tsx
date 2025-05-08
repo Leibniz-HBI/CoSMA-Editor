@@ -218,13 +218,13 @@ test('get entities success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            'http://127.0.0.1:8000/cosmae/api/values/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id_tag_definition_persistent: idTagDefPersistent,
+                    id_column_persistent: idTagDefPersistent,
                     offset: 0,
                     limit: 5000
                 })
@@ -267,13 +267,13 @@ test('get entities and inner tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            'http://127.0.0.1:8000/cosmae/api/values/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id_tag_definition_persistent: idTagDefPersistent,
+                    id_column_persistent: idTagDefPersistent,
                     offset: 0,
                     limit: 5000
                 })
@@ -309,7 +309,7 @@ test('get chunked', async () => {
     const version = 12
     const tagResponse = {
         id_entity_persistent: 'test-id-0',
-        id_tag_definition_persistent: idTagDefPersistent,
+        id_column_persistent: idTagDefPersistent,
         value: displayTxt0,
         id_persistent: idValueChunk,
         owner: {
@@ -321,7 +321,7 @@ test('get chunked', async () => {
     }
     const tagResponse1 = {
         id_entity_persistent: 'test-id-1',
-        id_tag_definition_persistent: idTagDefPersistent,
+        id_column_persistent: idTagDefPersistent,
         value: displayTxt1,
         id_persistent: 'test-value-id-1',
         owner: {
@@ -341,11 +341,11 @@ test('get chunked', async () => {
         })
     }
     addResponseSequence(fetchMock, [
-        [200, { tag_instances: tags }],
+        [200, { value_list: tags }],
         [
             200,
             {
-                tag_instances: [tagResponse1]
+                value_list: [tagResponse1]
             }
         ]
     ])
@@ -491,7 +491,7 @@ function addTagInstanceResponse(fetchMock: Mock) {
     const tagResponse = {
         id_entity_persistent: idPersistent0,
 
-        id_tag_definition_persistent: idTagDefPersistent,
+        id_column_persistent: idTagDefPersistent,
         value: value0,
         id_persistent: idValue0,
         owner: {
@@ -503,7 +503,7 @@ function addTagInstanceResponse(fetchMock: Mock) {
     }
     const tagResponse1 = {
         id_entity_persistent: idPersistent1,
-        id_tag_definition_persistent: idTagDefPersistent,
+        id_column_persistent: idTagDefPersistent,
         value: value1,
         id_persistent: idValue1,
         owner: {
@@ -517,7 +517,7 @@ function addTagInstanceResponse(fetchMock: Mock) {
         [
             200,
             {
-                tag_instances: [tagResponse, tagResponse1]
+                value_list: [tagResponse, tagResponse1]
             }
         ]
     ])

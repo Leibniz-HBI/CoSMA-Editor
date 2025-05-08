@@ -155,12 +155,12 @@ const entity = newEntity({
     disabled: false
 })
 const sharedConflictJson = {
-    tag_instance_origin: {
+    value_origin: {
         id_persistent: sharedConflict.value.tagInstanceOrigin.idPersistent,
         version: sharedConflict.value.tagInstanceOrigin.version,
         value: sharedConflict.value.tagInstanceOrigin.value
     },
-    tag_instance_destination: {
+    value_destination: {
         id_persistent: sharedConflict.value.tagInstanceDestination?.idPersistent,
         version: sharedConflict.value.tagInstanceDestination?.version,
         value: sharedConflict.value.tagInstanceDestination?.value
@@ -175,12 +175,12 @@ const sharedConflictJson = {
     replacement_state: sharedConflict.value.replacementState
 }
 const sharedConflictJson1 = {
-    tag_instance_origin: {
+    value_origin: {
         id_persistent: sharedConflict1.value.tagInstanceOrigin.idPersistent,
         version: sharedConflict1.value.tagInstanceOrigin.version,
         value: sharedConflict1.value.tagInstanceOrigin.value
     },
-    tag_instance_destination: {
+    value_destination: {
         id_persistent: sharedConflict1.value.tagInstanceDestination?.idPersistent,
         version: sharedConflict1.value.tagInstanceDestination?.version,
         value: sharedConflict1.value.tagInstanceDestination?.value
@@ -389,15 +389,15 @@ describe('resolve conflicts', () => {
         )
         const replaceBody = {
             id_entity_version: 81,
-            id_tag_definition_origin_version: 84,
-            id_tag_instance_origin_version: 12,
-            id_tag_definition_destination_version: 841,
-            id_tag_instance_destination_version: 121,
+            id_column_origin_version: 84,
+            id_value_origin_version: 12,
+            id_column_destination_version: 841,
+            id_value_destination_version: 121,
             id_entity_persistent: 'id-entity-test1',
-            id_tag_definition_origin_persistent: 'id-tag-def-origin-test',
-            id_tag_instance_origin_persistent: 'id-instance-origin-test1',
-            id_tag_definition_destination_persistent: 'id-tag-def-destination-test',
-            id_tag_instance_destination_persistent: 'id-instance-destination-test1',
+            id_column_origin_persistent: 'id-tag-def-origin-test',
+            id_value_origin_persistent: 'id-instance-origin-test1',
+            id_column_destination_persistent: 'id-tag-def-destination-test',
+            id_value_destination_persistent: 'id-instance-destination-test1',
             replacement_state: 'REPLACE',
             replacement_value: undefined
         }
@@ -742,12 +742,12 @@ function initialResponseSequence(fetchMock: Mock) {
                             version: 82,
                             disabled: false
                         },
-                        tag_instance_origin: {
+                        value_origin: {
                             id_persistent: 'id-instance-origin-test2',
                             version: 122,
                             value: 'value test origin2'
                         },
-                        tag_instance_destination: {
+                        value_destination: {
                             id_persistent: 'id-instance-destination-test2',
                             version: 122,
                             value: 'value test destination2'
@@ -763,12 +763,12 @@ function initialResponseSequence(fetchMock: Mock) {
                             version: 83,
                             disabled: false
                         },
-                        tag_instance_origin: {
+                        value_origin: {
                             id_persistent: 'id-instance-origin-test3',
                             version: 123,
                             value: 'value test origin3'
                         },
-                        tag_instance_destination: {
+                        value_destination: {
                             id_persistent: 'id-instance-destination-test3',
                             version: 123,
                             value: 'value test destination3'

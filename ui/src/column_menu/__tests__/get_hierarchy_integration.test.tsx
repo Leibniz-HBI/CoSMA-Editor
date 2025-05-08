@@ -23,7 +23,7 @@ import {
     NotificationType,
     notificationReducer
 } from '../../util/notification/slice'
-import {vi, Mock} from 'vitest'
+import { vi, Mock } from 'vitest'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -97,7 +97,7 @@ function initialResponseSequence(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef0,
                         name_path: [nameTagDef0],
@@ -129,7 +129,7 @@ function initialResponseSequence(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef00,
                         name_path: [nameTagDef0, nameTagDef00],
@@ -141,11 +141,11 @@ function initialResponseSequence(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }],
+        [200, { column_list: [] }],
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef20,
                         namePath: [nameTagDef2, nameTagDef20],
@@ -166,12 +166,12 @@ function initialResponseSequence(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }],
-        [200, { tag_definitions: [] }],
+        [200, { column_list: [] }],
+        [200, { column_list: [] }],
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef210,
                         name_path: [nameTagDef2, nameTagDef21, nameTagDef210],
@@ -183,7 +183,7 @@ function initialResponseSequence(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }]
+        [200, { column_list: [] }]
     ])
 }
 describe('get hierarchy', () => {
@@ -293,7 +293,7 @@ describe('create tag definition', () => {
     test('no parent', async () => {
         const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
-        addResponseSequence(fetchMock, [[200, { tag_definitions: [tagDefinitionRsp] }]])
+        addResponseSequence(fetchMock, [[200, { column_list: [tagDefinitionRsp] }]])
         initialResponseSequence(fetchMock)
         renderWithProviders(
             <ColumnMenu
@@ -311,12 +311,12 @@ describe('create tag definition', () => {
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(9)
             expect(fetchMock.mock.calls[8]).toEqual([
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/columns',
                 {
                     method: 'POST',
                     credentials: 'include',
                     body: JSON.stringify({
-                        tag_definitions: [
+                        column_list: [
                             {
                                 name: 'new tag def',
                                 type: 'STRING',
@@ -333,7 +333,7 @@ describe('create tag definition', () => {
     test('with parent', async () => {
         const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
-        addResponseSequence(fetchMock, [[200, { tag_definitions: [tagDefinitionRsp] }]])
+        addResponseSequence(fetchMock, [[200, { column_list: [tagDefinitionRsp] }]])
         initialResponseSequence(fetchMock)
         renderWithProviders(
             <ColumnMenu
@@ -356,12 +356,12 @@ describe('create tag definition', () => {
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(9)
             expect(fetchMock.mock.calls[8]).toEqual([
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/columns',
                 {
                     method: 'POST',
                     credentials: 'include',
                     body: JSON.stringify({
-                        tag_definitions: [
+                        column_list: [
                             {
                                 name: 'new tag def',
                                 id_parent_persistent: idTagDef1,

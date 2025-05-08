@@ -178,18 +178,18 @@ function addDetailsResponseSequence(fetchMock: Mock) {
             200,
             {
                 entity: test_entity_rsp,
-                tag_instance_list: [
+                value_list: [
                     {
                         id_persistent: idInstance,
                         id_entity_persistent: idEntityPersistent,
-                        id_tag_definition_persistent: idTagDefPersistent,
+                        id_column_persistent: idTagDefPersistent,
                         value: value0,
                         version: versionInstance0
                     },
                     {
                         id_persistent: idInstance1,
                         id_entity_persistent: idEntityPersistent,
-                        id_tag_definition_persistent: idTagDefPersistent1,
+                        id_column_persistent: idTagDefPersistent1,
                         value: value1,
                         version: versionInstance1
                     }

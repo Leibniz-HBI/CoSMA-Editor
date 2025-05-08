@@ -228,7 +228,7 @@ function mkMatches(
                 matches: [
                     {
                         similarity: idx / 100.0,
-                        id_match_tag_definition_persistent_list: [],
+                        id_match_column_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 0`,
                             display_txt_details: 'Display Text',
@@ -238,7 +238,7 @@ function mkMatches(
                     },
                     {
                         similarity: idx / 100.0 + 0.001,
-                        id_match_tag_definition_persistent_list: [],
+                        id_match_column_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 1`,
                             display_txt_details: 'Display Text',
@@ -271,7 +271,7 @@ function initialResponses(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef0,
                         name_path: [nameTagDef0],
@@ -291,8 +291,8 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }],
-        [200, { tag_definitions: [] }],
+        [200, { column_list: [] }],
+        [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
         [200, { matches: mkMatches(personList.slice(50)) }],
         // empty response because no match tags.
@@ -316,12 +316,12 @@ function addSearchResultResponses(fetchMock: Mock) {
                     {
                         match_value: matchValue0,
                         id_entity_persistent: idEntitySearch0,
-                        id_tag_definition_persistent: null
+                        id_column_persistent: null
                     },
                     {
                         match_value: matchValue1,
                         id_entity_persistent: idEntitySearch1,
-                        id_tag_definition_persistent: null
+                        id_column_persistent: null
                     }
                 ]
             }

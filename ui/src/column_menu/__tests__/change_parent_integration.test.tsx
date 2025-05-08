@@ -137,7 +137,7 @@ function dragTagDefinition(startName: string | RegExp, endName: string | undefin
     fireEvent.dragEnd(start)
 }
 
-function mkTailElement(_tagDefinition: TagDefinition) {
+function mkTailElement(_column: TagDefinition) {
     return <div />
 }
 
@@ -149,7 +149,7 @@ test('success', async function () {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         name_path: [nameTagDef1, nameTagDef],
                         id_persistent: idTagDef,
@@ -165,7 +165,7 @@ test('success', async function () {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         name_path: [nameTagDef],
                         id_persistent: idTagDef,
@@ -242,12 +242,12 @@ test('success', async function () {
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+            'http://127.0.0.1:8000/cosmae/api/columns',
             {
                 method: 'POST',
                 credentials: 'include',
                 body: JSON.stringify({
-                    tag_definitions: [
+                    column_list: [
                         {
                             id_persistent: tagDefTest.idPersistent,
                             name: nameTagDef,
@@ -260,12 +260,12 @@ test('success', async function () {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+            'http://127.0.0.1:8000/cosmae/api/columns',
             {
                 method: 'POST',
                 credentials: 'include',
                 body: JSON.stringify({
-                    tag_definitions: [
+                    column_list: [
                         {
                             id_persistent: tagDefTest.idPersistent,
                             name: nameTagDef,
@@ -279,7 +279,7 @@ test('success', async function () {
     ])
 })
 
-test('error', async function (){
+test('error', async function () {
     const fetchMock = vi.fn()
     const testError = 'Could not change parent'
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
@@ -321,12 +321,12 @@ test('error', async function (){
     })
     expect(fetchMock.mock.calls).toEqual([
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+            'http://127.0.0.1:8000/cosmae/api/columns',
             {
                 method: 'POST',
                 credentials: 'include',
                 body: JSON.stringify({
-                    tag_definitions: [
+                    column_list: [
                         {
                             id_persistent: tagDefTest.idPersistent,
                             name: nameTagDef,

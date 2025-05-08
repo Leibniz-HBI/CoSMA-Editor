@@ -86,8 +86,8 @@ export const selectLastMatchHit = createSelector(
 
 export const selectTagRowDefs = createSelector(
     selectTagDefinitions,
-    ([tagDefList, _tagDefMap]) =>
-        tagDefList.map((tagDef) => {
+    ([columnList, _columnMap]) =>
+        columnList.map((tagDef) => {
             return {
                 id: tagDef.idPersistent,
                 title: constructColumnTitle(tagDef.namePath),

@@ -273,7 +273,7 @@ export const contributionEntitySlice = createSlice({
                 return
             }
             // set cell contents for additional entity
-            action.payload.match.cellContents = state.tagDefinitions.map((_tag) =>
+            action.payload.match.cellContents = state.tagDefinitions.map((_col) =>
                 newRemote([])
             )
             // insert entity into matches

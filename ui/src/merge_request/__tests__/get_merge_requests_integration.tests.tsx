@@ -189,7 +189,7 @@ test('success', async () => {
     })
     await waitFor(() => {
         expect((useNavigate() as Mock).mock.calls).toEqual([
-            [`/review/tags/${idMergeRequest}`]
+            [`/review/columns/${idMergeRequest}`]
         ])
     })
     expect(store.getState().notification).toEqual(newNotificationManager({}))

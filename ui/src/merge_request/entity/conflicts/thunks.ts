@@ -193,19 +193,19 @@ export function resolveEntityConflict({
                     method: 'POST',
                     credentials: 'include',
                     body: JSON.stringify({
-                        id_tag_definition_version: tagDefinition.version,
+                        id_column_version: tagDefinition.version,
                         id_entity_origin_version: entityOrigin.version,
-                        id_tag_instance_origin_version: tagInstanceOrigin.version,
+                        id_value_origin_version: tagInstanceOrigin.version,
                         id_entity_destination_version: entityDestination.version,
-                        id_tag_instance_destination_version:
+                        id_value_destination_version:
                             tagInstanceDestination?.version,
-                        id_tag_definition_persistent: tagDefinition.idPersistent,
+                        id_column_persistent: tagDefinition.idPersistent,
                         id_entity_origin_persistent: entityOrigin.idPersistent,
-                        id_tag_instance_origin_persistent:
+                        id_value_origin_persistent:
                             tagInstanceOrigin.idPersistent,
                         id_entity_destination_persistent:
                             entityDestination.idPersistent,
-                        id_tag_instance_destination_persistent:
+                        id_value_destination_persistent:
                             tagInstanceDestination?.idPersistent,
                         replacement_state: replacementState,
                         replacement_value: replacementValue
@@ -289,14 +289,14 @@ function parseEntityMergeRequestConflictFromJson(conflictJson: {
     [key: string]: any
 }): EntityMergeRequestConflict {
     let tagInstanceDestination = undefined
-    const destinationJson = conflictJson['tag_instance_destination']
+    const destinationJson = conflictJson['value_destination']
     if (!(destinationJson === null || destinationJson === undefined)) {
         tagInstanceDestination = parseTagInstanceFromJson(destinationJson)
     }
     return newEntityMergeRequestConflict({
-        tagDefinition: parseTagDefinitionFromJson(conflictJson['tag_definition']),
+        tagDefinition: parseTagDefinitionFromJson(conflictJson['column']),
         tagInstanceOrigin: parseTagInstanceFromJson(
-            conflictJson['tag_instance_origin']
+            conflictJson['value_origin']
         ),
         tagInstanceDestination,
         replacementState:

@@ -182,20 +182,20 @@ test('add justification', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            'http://127.0.0.1:8000/cosmae/api/values/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id_tag_definition_persistent: idTagDefPersistent,
+                    id_column_persistent: idTagDefPersistent,
                     offset: 0,
                     limit: 5000
                 })
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 method: 'POST',
                 credentials: 'include',
@@ -424,8 +424,8 @@ async function openModalForEntity0() {
 function addEntitiesAndInstancesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }],
-        [200, { tag_instances: [] }],
-        [200, { tag_definitions: [] }]
+        [200, { value_list: [] }],
+        [200, { column_list: [] }]
     ])
 }
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {

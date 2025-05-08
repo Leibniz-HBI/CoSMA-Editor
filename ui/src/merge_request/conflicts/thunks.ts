@@ -100,20 +100,20 @@ export function resolveConflict({
                     credentials: 'include',
                     body: JSON.stringify({
                         id_entity_version: entity.version,
-                        id_tag_definition_origin_version: tagDefinitionOrigin.version,
-                        id_tag_instance_origin_version: tagInstanceOrigin.version,
-                        id_tag_definition_destination_version:
+                        id_column_origin_version: tagDefinitionOrigin.version,
+                        id_value_origin_version: tagInstanceOrigin.version,
+                        id_column_destination_version:
                             tagDefinitionDestination.version,
-                        id_tag_instance_destination_version:
+                        id_value_destination_version:
                             tagInstanceDestination?.version,
                         id_entity_persistent: entity.idPersistent,
-                        id_tag_definition_origin_persistent:
+                        id_column_origin_persistent:
                             tagDefinitionOrigin.idPersistent,
-                        id_tag_instance_origin_persistent:
+                        id_value_origin_persistent:
                             tagInstanceOrigin.idPersistent,
-                        id_tag_definition_destination_persistent:
+                        id_column_destination_persistent:
                             tagDefinitionDestination.idPersistent,
-                        id_tag_instance_destination_persistent:
+                        id_value_destination_persistent:
                             tagInstanceDestination?.idPersistent,
                         replacement_state: replacementState,
                         replacement_value: replacementValue
@@ -142,14 +142,14 @@ export function resolveConflict({
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseMergeRequestConflictFromApi(json: any): MergeRequestConflict {
-    const tagInstanceDestinationJson = json['tag_instance_destination']
+    const tagInstanceDestinationJson = json['value_destination']
     const tagInstanceDestination =
         tagInstanceDestinationJson === null
             ? undefined
             : parseTagInstanceFromJson(tagInstanceDestinationJson)
     return newMergeRequestConflict({
         entity: parseEntityObjectFromJson(json['entity']),
-        tagInstanceOrigin: parseTagInstanceFromJson(json['tag_instance_origin']),
+        tagInstanceOrigin: parseTagInstanceFromJson(json['value_origin']),
         tagInstanceDestination: tagInstanceDestination,
         replacementState: replacementStateJsonToAppDict[json['replacement_state']],
         replacementValue: json['replacement_value'] ?? undefined

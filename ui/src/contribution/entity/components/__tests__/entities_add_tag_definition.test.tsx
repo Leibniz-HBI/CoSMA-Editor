@@ -123,7 +123,7 @@ function mkMatches(
                 matches: [
                     {
                         similarity: idx / 100.0,
-                        id_match_tag_definition_persistent_list: [],
+                        id_match_column_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 0`,
                             display_txt_details: 'display_txt_detail',
@@ -133,7 +133,7 @@ function mkMatches(
                     },
                     {
                         similarity: idx / 100.0 + 0.001,
-                        id_match_tag_definition_persistent_list: [],
+                        id_match_column_persistent_list: [],
                         entity: {
                             display_txt: entity.display_txt + ` match 1`,
                             display_txt_details: 'display_txt_detail',
@@ -146,7 +146,7 @@ function mkMatches(
                     idx % 10 == 0
                         ? {
                               similarity: idx / 10,
-                              id_match_tag_definition_persistent_list: [],
+                              id_match_column_persistent_list: [],
                               entity: {
                                   display_txt: entity.display_txt + ' match 1',
                                   display_txt_details: 'display_txt_detail',
@@ -171,7 +171,7 @@ function initialResponses(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef0,
                         name_path: [nameTagDef0],
@@ -191,8 +191,8 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }],
-        [200, { tag_definitions: [] }],
+        [200, { column_list: [] }],
+        [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
         [200, { matches: mkMatches(personList.slice(50)) }],
         // empty response because no match tags.
@@ -385,8 +385,8 @@ function addValueResponses(
                     // contributed instance
                     {
                         id_entity_persistent: entity.id_persistent,
-                        id_tag_definition: idTagDefContribution0,
-                        id_tag_definition_requested_persistent: idTagDef,
+                        id_column: idTagDefContribution0,
+                        id_column_requested_persistent: idTagDef,
                         is_existing: false,
                         version: idx,
                         value: `val-${suffix}-` + idx,
@@ -395,8 +395,8 @@ function addValueResponses(
                     //existing instance for first match
                     {
                         id_entity_persistent: entity.id_persistent + '-0',
-                        id_tag_definition_requested_persistent: idTagDef,
-                        id_tag_definition: idTagDef,
+                        id_column_requested_persistent: idTagDef,
+                        id_column: idTagDef,
                         is_existing: true,
                         version: idx,
                         value: `val-${suffix}-0-` + idx,
@@ -405,8 +405,8 @@ function addValueResponses(
                     // existing instance for second match
                     {
                         id_entity_persistent: entity.id_persistent + '-1',
-                        id_tag_definition: idTagDef,
-                        id_tag_definition_requested_persistent: idTagDef,
+                        id_column: idTagDef,
+                        id_column_requested_persistent: idTagDef,
                         is_existing: true,
                         version: idx,
                         value: `val-${suffix}-1-` + idx,
@@ -423,12 +423,12 @@ function addValueResponses(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function checkTagValueCalls(fetchMock: Mock<any, any>, idTagDef: string) {
     expect(fetchMock.mock.calls.at(-2)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/tags/entities',
+        'http://127.0.0.1:8000/cosmae/api/values/entities',
         {
             credentials: 'include',
             method: 'POST',
             body: JSON.stringify({
-                id_tag_definition_persistent_list: [idTagDef],
+                id_column_persistent_list: [idTagDef],
                 id_entity_persistent_list: personList
                     .slice(0, 50)
                     .flatMap((entity) => [
@@ -441,12 +441,12 @@ function checkTagValueCalls(fetchMock: Mock<any, any>, idTagDef: string) {
         }
     ])
     expect(fetchMock.mock.calls.at(-1)).toEqual([
-        'http://127.0.0.1:8000/cosmae/api/tags/entities',
+        'http://127.0.0.1:8000/cosmae/api/values/entities',
         {
             credentials: 'include',
             method: 'POST',
             body: JSON.stringify({
-                id_tag_definition_persistent_list: [idTagDef],
+                id_column_persistent_list: [idTagDef],
                 id_entity_persistent_list: personList
                     .slice(50)
                     .flatMap((entity) => [

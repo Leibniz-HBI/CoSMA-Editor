@@ -27,8 +27,8 @@ export function CosmaeNavbar() {
                         <Nav.Link as={NavLink} to="/review">
                             Review
                         </Nav.Link>
-                        <Nav.Link as={NavLink} to="/tags">
-                            Tags
+                        <Nav.Link as={NavLink} to="/columns">
+                            Columns
                         </Nav.Link>
                     </Nav>
                     <Nav className="me-2">

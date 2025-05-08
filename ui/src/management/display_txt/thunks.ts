@@ -24,7 +24,7 @@ export function getDisplayTxtTagDefinitions(): ThunkWithFetch<void> {
                 dispatch(addError(errorMessageFromApi(json)))
                 dispatch(getDisplayTxtTagDefinitionsError())
             } else {
-                const tagDefinitions = json['tag_definitions'].map(
+                const tagDefinitions = json['column_list'].map(
                     (tagDefJson: unknown) => parseColumnDefinitionsFromApi(tagDefJson)
                 )
                 dispatch(getDisplayTxtTagDefinitionsSuccess(tagDefinitions))
@@ -46,7 +46,7 @@ export function appendTagDefinitionThunk(
                 {
                     credentials: 'include',
                     body: JSON.stringify({
-                        id_tag_definition_persistent: tagDefinition.idPersistent
+                        id_column_persistent: tagDefinition.idPersistent
                     }),
                     method: 'POST'
                 }

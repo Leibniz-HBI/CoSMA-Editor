@@ -35,7 +35,7 @@ export function loadTagDefinitionHierarchy({
         dispatch(loadTagHierarchyStart(idParentPersistent))
         const tagDefinitions: TagDefinition[] = []
         try {
-            const rsp = await fetch(config.api_path + '/tags/definitions/children', {
+            const rsp = await fetch(config.api_path + '/columns/children', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -53,7 +53,7 @@ export function loadTagDefinitionHierarchy({
                 )
                 return
             }
-            const tagDefinitionsApi = await json['tag_definitions']
+            const tagDefinitionsApi = json['column_list']
             for (const tagDefinitionApi of tagDefinitionsApi) {
                 const columnDefinition = parseColumnDefinitionsFromApi(
                     tagDefinitionApi,
@@ -125,20 +125,20 @@ export function submitTagDefinition({
                 body.id_persistent = idPersistent
                 body.version = version
             }
-            const rsp = await fetch(config.api_path + '/tags/definitions', {
+            const rsp = await fetch(config.api_path + '/columns', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    tag_definitions: [body]
+                    column_list: [body]
                 })
             })
             if (rsp.status == 200) {
                 const json = await rsp.json()
                 const tagDefinition = parseColumnDefinitionsFromApi(
-                    json['tag_definitions'][0]
+                    json['column_list'][0]
                 )
                 dispatch(
                     submitTagDefinitionSuccess({
@@ -188,14 +188,14 @@ export function changeTagDefinitionParent({
                 type: tagTypeMapAppToApi.get(tagDefinition.columnType),
                 version: tagDefinition.version
             }
-            const rsp = await fetch(config.api_path + '/tags/definitions', {
+            const rsp = await fetch(config.api_path + '/columns', {
                 credentials: 'include',
                 method: 'POST',
-                body: JSON.stringify({ tag_definitions: [payload] })
+                body: JSON.stringify({ column_list: [payload] })
             })
             if (rsp.status == 200) {
                 const json = await rsp.json()
-                const tagDefinitionJson = json['tag_definitions'][0]
+                const tagDefinitionJson = json['column_list'][0]
                 const tagDefinitionRsp =
                     parseColumnDefinitionsFromApi(tagDefinitionJson)
                 dispatch(
@@ -223,14 +223,14 @@ export function getTagDefinitionDetailsThunk(
         }
         dispatch(getTagDefinitionDetailsStart(idPersistentList))
         try {
-            const rsp = await fetch(config.api_path + '/tags/definitions/details', {
+            const rsp = await fetch(config.api_path + '/columns/details', {
                 credentials: 'include',
                 method: 'POST',
                 body: JSON.stringify({ id_persistent_list: idPersistentList })
             })
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const tagDefinitionList = json['tag_definitions'].map((json: unknown) =>
+                const tagDefinitionList = json['column_list'].map((json: unknown) =>
                     parseColumnDefinitionsFromApi(json)
                 )
                 dispatch(getTagDefinitionDetailsSuccess(tagDefinitionList))
@@ -249,7 +249,7 @@ export function purgeTagDefinition(tagDefinition: TagDefinition): ThunkWithFetch
         dispatch(submitTagDefinitionStart())
         try {
             const rsp = await fetch(
-                config.api_path + `/tags/definitions/${tagDefinition.idPersistent}`,
+                config.api_path + `/columns/${tagDefinition.idPersistent}`,
                 {
                     credentials: 'include',
                     method: 'DELETE'
@@ -282,7 +282,7 @@ export function curateAsync(idTagDefinitionPersistent: string): ThunkWithFetch<v
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/tags/definitions/permissions/${idTagDefinitionPersistent}/curate`,
+                    `/columns/permissions/${idTagDefinitionPersistent}/curate`,
                 {
                     credentials: 'include',
                     method: 'POST'

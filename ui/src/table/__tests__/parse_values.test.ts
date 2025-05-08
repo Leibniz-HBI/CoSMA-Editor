@@ -30,13 +30,13 @@ describe('parse Values', () => {
     })
 })
 
-test('parses entity_with tag_definition details', () => {
+test('parses entity_with column details', () => {
     const idPersistent0 = 'test-id-0'
     const version0 = 0
     const displayTxt0 = 'test display txt 0'
     const tagDefName = 'Display Text'
     const idTagDefPersistent = 'display_txt_id'
-    const test_entity_rsp_with_tag_def_details = {
+    const test_entity_rsp_with_column_details = {
         display_txt: displayTxt0,
         id_persistent: idPersistent0,
         display_txt_details: {
@@ -58,7 +58,7 @@ test('parses entity_with tag_definition details', () => {
         version: 0,
         hidden: false
     })
-    const parsedValue = parseEntityObjectFromJson(test_entity_rsp_with_tag_def_details)
+    const parsedValue = parseEntityObjectFromJson(test_entity_rsp_with_column_details)
     expect(parsedValue).toEqual(
         newEntity({
             displayTxt: displayTxt0,

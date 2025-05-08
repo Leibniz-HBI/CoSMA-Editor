@@ -103,7 +103,7 @@ describe('Ownership Request List', () => {
                         {
                             petitioner: userInfoApiTest,
                             receiver: userInfoApiTest1,
-                            tag_definition: {
+                            column: {
                                 name_path: namePathTest,
                                 name: namePathTest[2],
                                 id_persistent: idTagDefinitionTest,
@@ -118,7 +118,7 @@ describe('Ownership Request List', () => {
                         {
                             petitioner: userInfoApiTest1,
                             receiver: userInfoApiTest,
-                            tag_definition: {
+                            column: {
                                 name_path: namePathTest1,
                                 name: namePathTest1[2],
                                 id_persistent: idTagDefinitionTest1,
@@ -161,7 +161,7 @@ describe('Ownership Request List', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/ownership_requests',
+                'http://127.0.0.1:8000/cosmae/api/columns/permissions/ownership_requests',
                 { credentials: 'include', method: 'GET' }
             ]
         ])
@@ -180,11 +180,11 @@ describe('Ownership Request List', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/ownership_requests',
+                'http://127.0.0.1:8000/cosmae/api/columns/permissions/ownership_requests',
                 { credentials: 'include', method: 'GET' }
             ],
             [
-                `http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/owner/${idOwnershipTest}/accept`,
+                `http://127.0.0.1:8000/cosmae/api/columns/permissions/owner/${idOwnershipTest}/accept`,
                 { credentials: 'include', method: 'POST' }
             ]
         ])
@@ -203,11 +203,11 @@ describe('Ownership Request List', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/ownership_requests',
+                'http://127.0.0.1:8000/cosmae/api/columns/permissions/ownership_requests',
                 { credentials: 'include', method: 'GET' }
             ],
             [
-                `http://127.0.0.1:8000/cosmae/api/tags/definitions/permissions/owner/${idOwnershipTest1}`,
+                `http://127.0.0.1:8000/cosmae/api/columns/permissions/owner/${idOwnershipTest1}`,
                 { credentials: 'include', method: 'DELETE' }
             ]
         ])

@@ -111,7 +111,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 body: '{}',
                 credentials: 'include',
@@ -120,7 +120,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 body: JSON.stringify({
                     id_parent_persistent: idTagDefParentPersistent
@@ -131,7 +131,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 body: JSON.stringify({
                     id_parent_persistent: idTagDefPersistent
@@ -142,24 +142,24 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/tags/definitions/${idTagDefParentPersistent}/descendants`,
+            `http://127.0.0.1:8000/cosmae/api/columns/${idTagDefParentPersistent}/descendants`,
             { credentials: 'include' }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/tags/chunk',
+            'http://127.0.0.1:8000/cosmae/api/values/chunk',
             {
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id_tag_definition_persistent: idTagDefPersistent,
+                    id_column_persistent: idTagDefPersistent,
                     offset: 0,
                     limit: 5000
                 })
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/user/tag_definitions/append/column_id_test',
+            'http://127.0.0.1:8000/cosmae/api/user/columns/append/column_id_test',
             {
                 credentials: 'include',
                 method: 'POST'
@@ -276,7 +276,7 @@ function addHierarchyAndDescendantsResponse(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDefParentPersistent,
                         name_path: [columnNameParent],
@@ -292,7 +292,7 @@ function addHierarchyAndDescendantsResponse(fetchMock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDefPersistent,
                         id_parent_persistent: idTagDefParentPersistent,
@@ -306,7 +306,7 @@ function addHierarchyAndDescendantsResponse(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }],
+        [200, { column_list: [] }],
         [200, { id_descendants_persistent_list: [idTagDefPersistent] }]
     ])
 }
@@ -315,7 +315,7 @@ function addTagInstanceResponse(fetchMock: Mock) {
     const tagResponse = {
         id_entity_persistent: idPersistent0,
 
-        id_tag_definition_persistent: idTagDefPersistent,
+        id_column_persistent: idTagDefPersistent,
         value: value0,
         id_persistent: idValue0,
         owner: {
@@ -327,7 +327,7 @@ function addTagInstanceResponse(fetchMock: Mock) {
     }
     const tagResponse1 = {
         id_entity_persistent: idPersistent1,
-        id_tag_definition_persistent: idTagDefPersistent,
+        id_column_persistent: idTagDefPersistent,
         value: value1,
         id_persistent: idValue1,
         owner: {
@@ -341,7 +341,7 @@ function addTagInstanceResponse(fetchMock: Mock) {
         [
             200,
             {
-                tag_instances: [tagResponse, tagResponse1]
+                value_list: [tagResponse, tagResponse1]
             }
         ]
     ])

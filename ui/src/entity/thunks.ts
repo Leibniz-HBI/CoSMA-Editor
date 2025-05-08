@@ -93,7 +93,7 @@ export function getEntitySearchResultsThunk(searchTerm: string): ThunkWithFetch<
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseEntityDetailsFromApi(json: any): EntityDetails {
     const entity = parseEntityObjectFromJson(json['entity'])
-    const tagInstanceList = json['tag_instance_list'].map((instanceJson: unknown) =>
+    const tagInstanceList = json['value_list'].map((instanceJson: unknown) =>
         parseTagInstanceFromJson(instanceJson)
     )
     return { entity, tagInstanceList }
@@ -103,7 +103,7 @@ export function parseEntityDetailsFromApi(json: any): EntityDetails {
 export function parseEntitySearchResultsFromApi(json: any): EntitySearchResult {
     return newEntitySearchResult({
         idEntityPersistent: json['id_entity_persistent'],
-        idTagDefinitionPersistent: json['id_tag_definition_persistent'] ?? undefined,
+        idTagDefinitionPersistent: json['id_column_persistent'] ?? undefined,
         matchValue: json['match_value']
     })
 }

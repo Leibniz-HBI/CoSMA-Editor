@@ -77,13 +77,13 @@ describe('form tests', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                'http://127.0.0.1:8000/cosmae/api/tags/definitions',
+                'http://127.0.0.1:8000/cosmae/api/columns',
                 {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        tag_definitions: [
+                        column_list: [
                             {
                                 name: inputTest,
                                 type: 'STRING',

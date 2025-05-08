@@ -316,11 +316,11 @@ export function getContributionTagInstances({
                     entitiesSet.add(idEntity)
                 }
             }
-            const rsp = await fetch(config.api_path + '/tags/entities', {
+            const rsp = await fetch(config.api_path + '/values/entities', {
                 method: 'POST',
                 credentials: 'include',
                 body: JSON.stringify({
-                    id_tag_definition_persistent_list: tagDefinitionList.map(
+                    id_column_persistent_list: tagDefinitionList.map(
                         (tagDef) => tagDef.idPersistent
                     ),
                     id_entity_persistent_list: Array.from(entitiesSet),
@@ -407,20 +407,20 @@ export function parseScoredEntityFromJson(json: any): ScoredEntity {
         ...parseEntityObjectFromJson(json['entity']),
         similarity: json['similarity'],
         idMatchTagDefinitionPersistentList:
-            json['id_match_tag_definition_persistent_list'] ?? []
+            json['id_match_column_persistent_list'] ?? []
     })
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseTagInstanceFromJson(json: any) {
-    const idTagDefinitionPersistent =
-        json['id_tag_definition_requested_persistent'] ??
-        json['id_tag_definition_persistent']
-    return newTagInstance(json['id_entity_persistent'], idTagDefinitionPersistent, {
+    const idColumnPersistent =
+        json['id_column_requested_persistent'] ??
+        json['id_column_persistent']
+    return newTagInstance(json['id_entity_persistent'], idColumnPersistent, {
         value: json['value'],
         idPersistent: json['id_persistent'],
         version: json['version'],
         isExisting: json['is_existing'],
-        isRequested: json['id_tag_definition_persistent'] == idTagDefinitionPersistent
+        isRequested: json['id_column_persistent'] == idColumnPersistent
     })
 }

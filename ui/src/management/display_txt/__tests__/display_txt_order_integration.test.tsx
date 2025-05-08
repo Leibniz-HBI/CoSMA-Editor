@@ -80,7 +80,7 @@ function initialResponseSequence(mock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef2,
                         name_path: [nameTagDef2],
@@ -95,7 +95,7 @@ function initialResponseSequence(mock: Mock) {
         [
             200,
             {
-                tag_definitions: [
+                column_list: [
                     {
                         id_persistent: idTagDef0,
                         name_path: [nameTagDef0],
@@ -123,9 +123,9 @@ function initialResponseSequence(mock: Mock) {
                 ]
             }
         ],
-        [200, { tag_definitions: [] }],
-        [200, { tag_definitions: [] }],
-        [200, { tag_definitions: [] }]
+        [200, { column_list: [] }],
+        [200, { column_list: [] }],
+        [200, { column_list: [] }]
     ])
 }
 
@@ -135,11 +135,7 @@ const expectedGetRequests = [
         { credentials: 'include' }
     ],
     [
-        'http://127.0.0.1:8000/cosmae/api/manage/display_txt/order',
-        { credentials: 'include' }
-    ],
-    [
-        'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+        'http://127.0.0.1:8000/cosmae/api/columns/children',
         {
             credentials: 'include',
             method: 'POST',
@@ -148,7 +144,7 @@ const expectedGetRequests = [
         }
     ],
     [
-        'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+        'http://127.0.0.1:8000/cosmae/api/columns/children',
         {
             credentials: 'include',
             method: 'POST',
@@ -157,7 +153,7 @@ const expectedGetRequests = [
         }
     ],
     [
-        'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+        'http://127.0.0.1:8000/cosmae/api/columns/children',
         {
             credentials: 'include',
             method: 'POST',
@@ -166,7 +162,7 @@ const expectedGetRequests = [
         }
     ],
     [
-        'http://127.0.0.1:8000/cosmae/api/tags/definitions/children',
+        'http://127.0.0.1:8000/cosmae/api/columns/children',
         {
             credentials: 'include',
             method: 'POST',
@@ -208,10 +204,10 @@ test('append and remove', async () => {
         const tagDef0Texts = screen.getAllByText(nameTagDef2)
         expect(tagDef0Texts.length).toEqual(2)
         const listElement = tagDef0Texts[0]?.parentElement?.parentElement?.parentElement
-        expect(listElement?.className).toEqual('justify-content-between row'),
-            (
-                listElement?.children[listElement.children.length - 1] as HTMLElement
-            )?.click()
+        expect(listElement?.className).toEqual('justify-content-between row')
+        ;(
+            listElement?.children[listElement.children.length - 1] as HTMLElement
+        )?.click()
     })
     await waitFor(() => {
         screen.getByText(nameTagDef2)
@@ -223,7 +219,7 @@ test('append and remove', async () => {
             {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({ id_tag_definition_persistent: idTagDef0 })
+                body: JSON.stringify({ id_column_persistent: idTagDef0 })
             }
         ],
         [
