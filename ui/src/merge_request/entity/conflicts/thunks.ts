@@ -6,10 +6,10 @@ import { errorMessageFromApi, exceptionMessage } from '../../../util/exception'
 import { RemoteInterface, newRemote } from '../../../util/state'
 import { ThunkWithFetch } from '../../../util/type'
 import {
-    parseTagInstanceFromJson,
+    parseValueFromJson,
     replacementStateJsonToAppDict
 } from '../../conflicts/thunks'
-import { ReplacementState, TagInstance } from '../../conflicts/state'
+import { ReplacementState, Value } from '../../conflicts/state'
 import { EntityMergeRequest } from '../state'
 import { parseEntityMergeRequestFromJson } from '../thunks'
 import {
@@ -34,7 +34,7 @@ import {
 } from './slice'
 import {
     EntityMergeRequestConflict,
-    TagDefinition,
+    Column,
     newEntityMergeRequestConflict
 } from './state'
 
@@ -136,20 +136,20 @@ export function getEntityMergeRequestConflicts(
                         resolvableConflicts,
                         unresolvableConflicts,
                         updated,
-                        resolvableConflictsTagDefinitionIdMap: Object.fromEntries(
+                        resolvableConflictsColumnIdMap: Object.fromEntries(
                             resolvableConflicts.map(
                                 (
                                     conflict: RemoteInterface<EntityMergeRequestConflict>,
                                     idx: number
-                                ) => [conflict.value.tagDefinition.idPersistent, idx]
+                                ) => [conflict.value.column.idPersistent, idx]
                             )
                         ),
-                        updatedTagDefinitionIdMap: Object.fromEntries(
+                        updatedColumnIdMap: Object.fromEntries(
                             updated.map(
                                 (
                                     conflict: RemoteInterface<EntityMergeRequestConflict>,
                                     idx: number
-                                ) => [conflict.value.tagDefinition.idPersistent, idx]
+                                ) => [conflict.value.column.idPersistent, idx]
                             )
                         )
                     })
@@ -166,25 +166,25 @@ export function getEntityMergeRequestConflicts(
 }
 export function resolveEntityConflict({
     idMergeRequestPersistent,
-    tagDefinition,
-    tagInstanceOrigin,
+    column,
+    valueOrigin,
     entityOrigin,
-    tagInstanceDestination,
+    valueDestination,
     entityDestination,
     replacementState,
     replacementValue
 }: {
     idMergeRequestPersistent: string
-    tagDefinition: TagDefinition
-    tagInstanceOrigin: TagInstance
+    column: Column
+    valueOrigin: Value
     entityOrigin: Entity
-    tagInstanceDestination?: TagInstance
+    valueDestination?: Value
     entityDestination: Entity
     replacementState?: ReplacementState
     replacementValue: string | undefined
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(resolveEntityConflictStart(tagDefinition.idPersistent))
+        dispatch(resolveEntityConflictStart(column.idPersistent))
         try {
             const rsp = await fetch(
                 config.api_path +
@@ -193,20 +193,20 @@ export function resolveEntityConflict({
                     method: 'POST',
                     credentials: 'include',
                     body: JSON.stringify({
-                        id_column_version: tagDefinition.version,
+                        id_column_version: column.version,
                         id_entity_origin_version: entityOrigin.version,
-                        id_value_origin_version: tagInstanceOrigin.version,
+                        id_value_origin_version: valueOrigin.version,
                         id_entity_destination_version: entityDestination.version,
                         id_value_destination_version:
-                            tagInstanceDestination?.version,
-                        id_column_persistent: tagDefinition.idPersistent,
+                            valueDestination?.version,
+                        id_column_persistent: column.idPersistent,
                         id_entity_origin_persistent: entityOrigin.idPersistent,
                         id_value_origin_persistent:
-                            tagInstanceOrigin.idPersistent,
+                            valueOrigin.idPersistent,
                         id_entity_destination_persistent:
                             entityDestination.idPersistent,
                         id_value_destination_persistent:
-                            tagInstanceDestination?.idPersistent,
+                            valueDestination?.idPersistent,
                         replacement_state: replacementState,
                         replacement_value: replacementValue
                     })
@@ -215,18 +215,18 @@ export function resolveEntityConflict({
             if (rsp.status == 200) {
                 dispatch(
                     resolveEntityConflictSuccess({
-                        idTagDefinitionPersistent: tagDefinition.idPersistent,
+                        idColumnPersistent: column.idPersistent,
                         replacementState,
                         replacementValue
                     })
                 )
             } else {
                 const json = await rsp.json()
-                dispatch(resolveEntityConflictError(tagDefinition.idPersistent))
+                dispatch(resolveEntityConflictError(column.idPersistent))
                 dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(resolveEntityConflictError(tagDefinition.idPersistent))
+            dispatch(resolveEntityConflictError(column.idPersistent))
             dispatch(addError(exceptionMessage(e)))
         }
     }
@@ -288,32 +288,32 @@ function parseEntityMergeRequestConflictFromJson(conflictJson: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any
 }): EntityMergeRequestConflict {
-    let tagInstanceDestination = undefined
+    let valueDestination = undefined
     const destinationJson = conflictJson['value_destination']
     if (!(destinationJson === null || destinationJson === undefined)) {
-        tagInstanceDestination = parseTagInstanceFromJson(destinationJson)
+        valueDestination = parseValueFromJson(destinationJson)
     }
     return newEntityMergeRequestConflict({
-        tagDefinition: parseTagDefinitionFromJson(conflictJson['column']),
-        tagInstanceOrigin: parseTagInstanceFromJson(
+        column: parseColumnFromJson(conflictJson['column']),
+        valueOrigin: parseValueFromJson(
             conflictJson['value_origin']
         ),
-        tagInstanceDestination,
+        valueDestination: valueDestination,
         replacementState:
             replacementStateJsonToAppDict[conflictJson['replacement_state']],
         replacementValue: conflictJson['replacement_value'] ?? undefined
     })
 }
 
-function parseTagDefinitionFromJson(tagDefJson: {
+function parseColumnFromJson(columnJson: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any
-}): TagDefinition {
+}): Column {
     return {
-        idPersistent: tagDefJson['id_persistent'],
-        idParentPersistent: tagDefJson['id_parent_persistent'],
-        namePath: tagDefJson['name_path'],
-        version: tagDefJson['version'],
-        curated: tagDefJson['curated']
+        idPersistent: columnJson['id_persistent'],
+        idParentPersistent: columnJson['id_parent_persistent'],
+        namePath: columnJson['name_path'],
+        version: columnJson['version'],
+        curated: columnJson['curated']
     }
 }

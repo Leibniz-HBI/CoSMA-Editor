@@ -13,7 +13,10 @@ vi.mock('@glideapps/glide-data-grid', async () => {
 })
 import { vi, Mock } from 'vitest'
 import { Button } from 'react-bootstrap'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
+import {
+    ColumnSelectionState,
+    newColumnSelectionState
+} from '../../../column_menu/state'
 import {
     UserPermissionGroup,
     UserState,
@@ -55,16 +58,16 @@ import {
 import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { useAppDispatch } from '../../../hooks'
 import { AuthState, newAuthState } from '../../../auth/state'
 import { authReducer } from '../../../auth/slice'
 
-test('get descendant tag success', async () => {
+test('get descendant column success', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addHierarchyAndDescendantsResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
         const button = screen.getByRole('button', { name: 'Modal' })
@@ -94,9 +97,9 @@ test('get descendant tag success', async () => {
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
-                    [idTagDefPersistent]: 1
+                    [idColumnPersistent]: 1
                 },
-                columnStates: [displayTxtColumnState, tagDefColumnState]
+                columnStates: [displayTxtColumnState, columnColumnState]
             })
         )
     })
@@ -123,7 +126,7 @@ test('get descendant tag success', async () => {
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 body: JSON.stringify({
-                    id_parent_persistent: idTagDefParentPersistent
+                    id_parent_persistent: idColumnParentPersistent
                 }),
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -134,7 +137,7 @@ test('get descendant tag success', async () => {
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 body: JSON.stringify({
-                    id_parent_persistent: idTagDefPersistent
+                    id_parent_persistent: idColumnPersistent
                 }),
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -142,7 +145,7 @@ test('get descendant tag success', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/columns/${idTagDefParentPersistent}/descendants`,
+            `http://127.0.0.1:8000/cosmae/api/columns/${idColumnParentPersistent}/descendants`,
             { credentials: 'include' }
         ],
         [
@@ -152,7 +155,7 @@ test('get descendant tag success', async () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id_column_persistent: idTagDefPersistent,
+                    id_column_persistent: idColumnPersistent,
                     offset: 0,
                     limit: 5000
                 })
@@ -225,9 +228,9 @@ const entities_test = [
     })
 ]
 const columnNameParent = 'column parent test'
-const idTagDefParentPersistent = 'column-id-parent-test'
+const idColumnParentPersistent = 'column-id-parent-test'
 const columnNameTest = 'column name test'
-const idTagDefPersistent = 'column_id_test'
+const idColumnPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -241,8 +244,8 @@ const idValue0 = 'test-value-id-0'
 const idValue1 = 'test-value-id-1'
 const value0 = 'value 0',
     value1 = 'value 1'
-const tagDefColumnState = newColumnState({
-    idTagDefinitionPersistent: idTagDefPersistent,
+const columnColumnState = newColumnState({
+    idColumnPersistent: idColumnPersistent,
     cellContents: newRemote([
         [
             {
@@ -261,7 +264,7 @@ const tagDefColumnState = newColumnState({
     ])
 })
 const displayTxtColumnState = newColumnState({
-    idTagDefinitionPersistent: displayTxtColumnId,
+    idColumnPersistent: displayTxtColumnId,
     cellContents: newRemote([])
 })
 
@@ -278,7 +281,7 @@ function addHierarchyAndDescendantsResponse(fetchMock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDefParentPersistent,
+                        id_persistent: idColumnParentPersistent,
                         name_path: [columnNameParent],
                         name: columnNameParent,
                         curated: true,
@@ -294,8 +297,8 @@ function addHierarchyAndDescendantsResponse(fetchMock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDefPersistent,
-                        id_parent_persistent: idTagDefParentPersistent,
+                        id_persistent: idColumnPersistent,
+                        id_parent_persistent: idColumnParentPersistent,
                         name_path: [columnNameParent, columnNameTest],
                         name: columnNameTest,
                         curated: true,
@@ -307,15 +310,15 @@ function addHierarchyAndDescendantsResponse(fetchMock: Mock) {
             }
         ],
         [200, { column_list: [] }],
-        [200, { id_descendants_persistent_list: [idTagDefPersistent] }]
+        [200, { id_descendants_persistent_list: [idColumnPersistent] }]
     ])
 }
 
-function addTagInstanceResponse(fetchMock: Mock) {
-    const tagResponse = {
+function addValueResponse(fetchMock: Mock) {
+    const valueResponse = {
         id_entity_persistent: idPersistent0,
 
-        id_column_persistent: idTagDefPersistent,
+        id_column_persistent: idColumnPersistent,
         value: value0,
         id_persistent: idValue0,
         owner: {
@@ -325,9 +328,9 @@ function addTagInstanceResponse(fetchMock: Mock) {
         },
         version: 12
     }
-    const tagResponse1 = {
+    const valueResponse1 = {
         id_entity_persistent: idPersistent1,
-        id_column_persistent: idTagDefPersistent,
+        id_column_persistent: idColumnPersistent,
         value: value1,
         id_persistent: idValue1,
         owner: {
@@ -341,7 +344,7 @@ function addTagInstanceResponse(fetchMock: Mock) {
         [
             200,
             {
-                value_list: [tagResponse, tagResponse1]
+                value_list: [valueResponse, valueResponse1]
             }
         ]
     ])
@@ -366,7 +369,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         user: UserState
         auth: AuthState
         editSession: EditSessionState
@@ -382,8 +385,8 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            tagSelection: newTagSelectionState({
-                tagDefinitionsByIdPersistent: {
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
                     [displayTxtColumnId]: newRemote(displayTextColumn),
                     [justificationColumnId]: newRemote(justificationColumn)
                 }
@@ -424,7 +427,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             user: userSlice.reducer,
             auth: authReducer,
             editSession: editSessionReducer,

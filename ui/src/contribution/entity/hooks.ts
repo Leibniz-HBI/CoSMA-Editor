@@ -6,13 +6,13 @@ import {
     LoadingCell,
     Theme
 } from '@glideapps/glide-data-grid'
-import { TagDefinition, TagType } from '../../column_menu/state'
+import { Column, ColumnType } from '../../column_menu/state'
 import { EntityWithDuplicates } from './state'
 import { CellValue } from '../../table/state'
 import { newReplaceButtonCellData, ReplaceButtonCell } from '../../table/draw'
 import { RemoteInterface } from '../../util/state'
 
-export type GridColumWithType = GridColumn & { columnType: TagType }
+export type GridColumWithType = GridColumn & { columnType: ColumnType }
 
 export function constructColumnTitle(namePath: string[]): string {
     if (namePath === undefined || namePath.length == 0) {
@@ -46,7 +46,7 @@ const loadingCell = {
 } as LoadingCell
 
 export function mkComparisonCell(
-    columnType: TagType,
+    columnType: ColumnType,
     cellValues: CellValue[],
     themeOverride?: Partial<Theme>
 ): GridCell {
@@ -54,7 +54,7 @@ export function mkComparisonCell(
     let cellKind = 'text' as GridCellKind
     let cellContent
     let displayData: string | undefined = undefined
-    if (columnType == TagType.Boolean) {
+    if (columnType == ColumnType.Boolean) {
         // workaround for typescript jest compatibility
         cellKind = 'boolean' as GridCellKind
         if (cellValues.length == 0) {
@@ -63,7 +63,7 @@ export function mkComparisonCell(
             cellContent = cellValues[0].value?.toString().toLowerCase() == 'true'
             displayData = cellContent?.toString()
         }
-    } else if (columnType == TagType.Float) {
+    } else if (columnType == ColumnType.Float) {
         // workaround for typescript jest compatibility
         cellKind = 'number' as GridCellKind
         if (cellValues.length == 0) {
@@ -73,7 +73,7 @@ export function mkComparisonCell(
             cellContent = cellValues[0].value
             displayData = cellContent?.toString()
         }
-    } else if (columnType == TagType.String) {
+    } else if (columnType == ColumnType.String) {
         if (cellValues.length == 0) {
             cellContent = ''
             displayData = ''
@@ -91,7 +91,7 @@ export function mkComparisonCell(
                 displayData = ''
             }
         }
-    } else if (columnType == TagType.Inner) {
+    } else if (columnType == ColumnType.Inner) {
         displayData = ''
         cellContent = ''
     }
@@ -107,9 +107,9 @@ export function mkComparisonCell(
 
 export function mkCellContentCallback(
     entityGroup: EntityWithDuplicates,
-    tagTypes: GridColumWithType[],
-    numMatchTags: number,
-    tagDefinitions: TagDefinition[]
+    columnTypes: GridColumWithType[],
+    numMatchColumns: number,
+    columns: Column[]
 ): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
@@ -118,7 +118,7 @@ export function mkCellContentCallback(
         let themeOverride = {}
         let style = 'normal'
         if (row_idx < 4) {
-            // special case, not tag value
+            // special case, not column value
             if (row_idx == 0) {
                 // row with assignment buttons
                 let replaceInfo = undefined
@@ -164,8 +164,8 @@ export function mkCellContentCallback(
                 if (col_idx > 1) {
                     displayTxt = `${
                         entityGroup.similarEntities.value[col_idx - 2]
-                            .idMatchTagDefinitionPersistentList.length
-                    }/${numMatchTags}`
+                            .idMatchColumnPersistentList.length
+                    }/${numMatchColumns}`
                 } else if (col_idx == 0) {
                     displayTxt = 'Match Count'
                     contentAlign = 'left'
@@ -196,13 +196,13 @@ export function mkCellContentCallback(
                 style
             } as GridCell
         }
-        // case tag value
+        // case column value
         let cellContents: RemoteInterface<CellValue[]> | undefined = undefined
         if (col_idx == 0) {
             return {
                 kind: 'text' as GridCellKind,
                 allowOverlay: false,
-                displayData: tagTypes[row_idx - 4].title,
+                displayData: columnTypes[row_idx - 4].title,
                 data: row_idx.toString(),
                 contentAlign: 'left'
             } as GridCell
@@ -212,8 +212,8 @@ export function mkCellContentCallback(
             if (
                 entityGroup.similarEntities.value[
                     col_idx - 2
-                ].idMatchTagDefinitionPersistentList.includes(
-                    tagDefinitions[row_idx - 4]?.idPersistent ?? ''
+                ].idMatchColumnPersistentList.includes(
+                    columns[row_idx - 4]?.idPersistent ?? ''
                 )
             ) {
                 themeOverride = { bgCell: '#d1e3e3', baseFontStyle: '600 13px' }
@@ -231,7 +231,7 @@ export function mkCellContentCallback(
             return loadingCell
         }
         return mkComparisonCell(
-            tagTypes[row_idx - 4].columnType,
+            columnTypes[row_idx - 4].columnType,
             cellContents?.value ?? [],
             themeOverride
         )

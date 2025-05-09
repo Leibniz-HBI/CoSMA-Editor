@@ -2,12 +2,12 @@ import { Entity } from '../../entity/state'
 import { RemoteInterface, newRemote } from '../../util/state'
 import { MergeRequest } from '../state'
 
-export interface TagInstance {
+export interface Value {
     idPersistent: string
     version: number
     value: string
 }
-export function newTagInstance({
+export function newValue({
     idPersistent,
     version,
     value
@@ -31,28 +31,28 @@ export enum ReplacementState {
 
 export interface MergeRequestConflict {
     entity: Entity
-    tagInstanceOrigin: TagInstance
-    tagInstanceDestination?: TagInstance
+    valueOrigin: Value
+    valueDestination?: Value
     replacementState?: ReplacementState
     replacementValue?: string
 }
 export function newMergeRequestConflict({
     entity,
-    tagInstanceOrigin,
-    tagInstanceDestination,
+    valueOrigin,
+    valueDestination,
     replacementState,
     replacementValue = undefined
 }: {
     entity: Entity
-    tagInstanceOrigin: TagInstance
-    tagInstanceDestination?: TagInstance
+    valueOrigin: Value
+    valueDestination?: Value
     replacementState?: ReplacementState
     replacementValue?: string
 }) {
     return {
         entity: entity,
-        tagInstanceOrigin: tagInstanceOrigin,
-        tagInstanceDestination: tagInstanceDestination,
+        valueOrigin,
+        valueDestination,
         replacementState,
         replacementValue
     }

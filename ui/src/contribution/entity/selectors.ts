@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
-import { TagDefinition, TagType } from '../../column_menu/state'
+import { Column, ColumnType } from '../../column_menu/state'
 import { GridColumWithType, constructColumnTitle } from './hooks'
 import { selectContribution } from '../selectors'
 import { newRemote } from '../../util/state'
@@ -31,20 +31,20 @@ export const selectIsLoading = createSelector(
     (state, contribution) => contribution.isLoading || state.entities.isLoading
 )
 
-export const selectShowTagDefinitionsMenu = createSelector(
+export const selectShowColumnsMenu = createSelector(
     selectContributionEntity,
-    (state) => state.showTagDefinitionMenu
+    (state) => state.showColumnMenu
 )
-export const selectMatchTagDefinitionList = createSelector(
+export const selectMatchColumnList = createSelector(
     selectContribution,
-    (contribution) => contribution.value?.matchTagDefinitionList ?? []
+    (contribution) => contribution.value?.matchColumnList ?? []
 )
 
-export const selectTagDefinitions = createSelector(
+export const selectColumns = createSelector(
     selectContributionEntity,
-    (state): [TagDefinition[], { [key: string]: number }] => [
-        state.tagDefinitions,
-        state.tagDefinitionMap
+    (state): [Column[], { [key: string]: number }] => [
+        state.columnList,
+        state.columnMap
     ]
 )
 export const selectEntities = createSelector(
@@ -84,15 +84,15 @@ export const selectLastMatchHit = createSelector(
     (state) => state.hitLastMatch
 )
 
-export const selectTagRowDefs = createSelector(
-    selectTagDefinitions,
+export const selectColumnRowDefs = createSelector(
+    selectColumns,
     ([columnList, _columnMap]) =>
-        columnList.map((tagDef) => {
+        columnList.map((column) => {
             return {
-                id: tagDef.idPersistent,
-                title: constructColumnTitle(tagDef.namePath),
+                id: column.idPersistent,
+                title: constructColumnTitle(column.namePath),
                 width: 200,
-                columnType: TagType.String
+                columnType: ColumnType.String
             } as GridColumWithType
         })
 )
@@ -108,15 +108,15 @@ export const selectEntityColumnDefs = createSelector(
     (entity, widths) => [
         {
             id: 'Description',
-            title: 'Tag Name',
+            title: 'Column',
             width: widths[0],
-            columnType: TagType.String
+            columnType: ColumnType.String
         },
         {
             id: entity?.idPersistent,
             title: 'Uploaded Entity',
             width: widths[1],
-            columnType: TagType.String,
+            columnType: ColumnType.String,
             themeOverride: { textDark: '#197374' }
         },
         ...(entity?.similarEntities.value ?? []).map((similar, idx) => {
@@ -124,7 +124,7 @@ export const selectEntityColumnDefs = createSelector(
                 id: similar.idPersistent,
                 title: `Match ${idx + 1}`,
                 width: widths[idx + 2],
-                columnType: TagType.String
+                columnType: ColumnType.String
             } as GridColumWithType
         })
     ]

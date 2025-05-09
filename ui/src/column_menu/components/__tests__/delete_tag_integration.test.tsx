@@ -3,14 +3,14 @@
  */
 import { act, render, waitFor, screen, RenderOptions } from '@testing-library/react'
 import userEvent, { UserEvent } from '@testing-library/user-event'
-import { TagDeleteForm } from '../form'
+import { ColumnDeleteForm } from '../form'
 import { Provider } from 'react-redux'
 import {
-    newTagDefinition,
-    newTagHierarchyNode,
-    newTagSelectionState,
-    TagSelectionState,
-    TagType
+    newColumn,
+    newColumnHierarchyNode,
+    newColumnSelectionState,
+    ColumnSelectionState,
+    ColumnType
 } from '../../state'
 import {
     newNotification,
@@ -20,21 +20,21 @@ import {
     NotificationType
 } from '../../../util/notification/slice'
 import { configureStore } from '@reduxjs/toolkit'
-import { tagSelectionSlice } from '../../slice'
+import { columnSelectionReducer} from '../../slice'
 import { PropsWithChildren } from 'react'
 import { vi, Mock } from 'vitest'
 
-const idTagDef = 'id-tag-def'
+const idColumn = 'id-column-def'
 const idParentPersistent = 'id-parent'
 const idChild = 'id-child'
-const nameTag = 'name tag',
+const nameColumn = 'name column',
     nameParent = 'name parent',
     nameChild = 'name child'
-const tagDefTest = newTagDefinition({
-    idPersistent: idTagDef,
+const columnTest = newColumn({
+    idPersistent: idColumn,
     idParentPersistent,
-    namePath: [nameParent, nameTag],
-    columnType: TagType.String,
+    namePath: [nameParent, nameColumn],
+    columnType: ColumnType.String,
     curated: false,
     disabled: false,
     hidden: false,
@@ -56,7 +56,7 @@ describe('disable', () => {
     test('wrong input', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, {}]])
-        renderWithProviders(<TagDeleteForm tagDefinition={tagDefTest} />, fetchMock)
+        renderWithProviders(<ColumnDeleteForm column={columnTest} />, fetchMock)
         const user = userEvent.setup()
         await submitDisable(user, 'other')
         await waitFor(() => {
@@ -71,11 +71,11 @@ describe('disable', () => {
                 {
                     column_list: [
                         {
-                            id_persistent: idTagDef,
+                            id_persistent: idColumn,
                             disabled: true,
                             hidden: false,
                             id_parent_persistent: null,
-                            name: nameTag,
+                            name: nameColumn,
                             name_path: ['name_column'],
                             description: '',
                             type: 'STRING',
@@ -86,7 +86,7 @@ describe('disable', () => {
             ]
         ])
         const { store } = renderWithProviders(
-            <TagDeleteForm tagDefinition={tagDefTest} />,
+            <ColumnDeleteForm column={columnTest} />,
             fetchMock
         )
         const user = userEvent.setup()
@@ -94,18 +94,18 @@ describe('disable', () => {
         await waitFor(() => {
             expect(store.getState().notification.notificationList).toEqual([
                 newNotification({
-                    msg: 'Successfully disabled tag definition.',
+                    msg: 'Successfully disabled column definition.',
                     type: NotificationType.Success,
                     id: expect.anything()
                 })
             ])
-            expect(store.getState().tagSelection.children).toEqual([
-                newTagHierarchyNode({
-                    idTagDefinitionPersistent: idParentPersistent,
+            expect(store.getState().columnSelection.children).toEqual([
+                newColumnHierarchyNode({
+                    idColumnPersistent: idParentPersistent,
                     name: nameParent,
                     children: [
-                        newTagHierarchyNode({
-                            idTagDefinitionPersistent: idChild,
+                        newColumnHierarchyNode({
+                            idColumnPersistent: idChild,
                             name: nameChild
                         })
                     ]
@@ -122,12 +122,12 @@ describe('disable', () => {
                     body: JSON.stringify({
                         column_list: [
                             {
-                                name: nameTag,
+                                name: nameColumn,
                                 id_parent_persistent: idParentPersistent,
                                 type: 'STRING',
                                 description: '',
                                 disabled: true,
-                                id_persistent: idTagDef,
+                                id_persistent: idColumn,
                                 version: 1
                             }
                         ]
@@ -139,10 +139,10 @@ describe('disable', () => {
     })
     test('failure', async () => {
         const fetchMock = vi.fn()
-        const testError = 'Could not disable tag in test.'
+        const testError = 'Could not disable column in test.'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
-            <TagDeleteForm tagDefinition={tagDefTest} />,
+            <ColumnDeleteForm column={columnTest} />,
             fetchMock
         )
         const user = userEvent.setup()
@@ -173,7 +173,7 @@ describe('purge', () => {
     test('wrong input', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, {}]])
-        renderWithProviders(<TagDeleteForm tagDefinition={tagDefTest} />, fetchMock)
+        renderWithProviders(<ColumnDeleteForm column={columnTest} />, fetchMock)
         const user = userEvent.setup()
         await submitPurge(user, 'other')
         await waitFor(() => {
@@ -184,7 +184,7 @@ describe('purge', () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
-            <TagDeleteForm tagDefinition={tagDefTest} />,
+            <ColumnDeleteForm column={columnTest} />,
             fetchMock
         )
         const user = userEvent.setup()
@@ -192,18 +192,18 @@ describe('purge', () => {
         await waitFor(() => {
             expect(store.getState().notification.notificationList).toEqual([
                 newNotification({
-                    msg: 'Successfully purged tag definition.',
+                    msg: 'Successfully purged column definition.',
                     type: NotificationType.Success,
                     id: expect.anything()
                 })
             ])
-            expect(store.getState().tagSelection.children).toEqual([
-                newTagHierarchyNode({
-                    idTagDefinitionPersistent: idParentPersistent,
+            expect(store.getState().columnSelection.children).toEqual([
+                newColumnHierarchyNode({
+                    idColumnPersistent: idParentPersistent,
                     name: nameParent,
                     children: [
-                        newTagHierarchyNode({
-                            idTagDefinitionPersistent: idChild,
+                        newColumnHierarchyNode({
+                            idColumnPersistent: idChild,
                             name: nameChild
                         })
                     ]
@@ -212,7 +212,7 @@ describe('purge', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/columns/${idTagDef}`,
+                `http://127.0.0.1:8000/cosmae/api/columns/${idColumn}`,
                 {
                     credentials: 'include',
                     method: 'DELETE'
@@ -223,10 +223,10 @@ describe('purge', () => {
     })
     test('failure', async () => {
         const fetchMock = vi.fn()
-        const testError = 'Could not disable tag in test.'
+        const testError = 'Could not disable column in test.'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
-            <TagDeleteForm tagDefinition={tagDefTest} />,
+            <ColumnDeleteForm column={columnTest} />,
             fetchMock
         )
         const user = userEvent.setup()
@@ -245,7 +245,7 @@ describe('purge', () => {
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         notification: NotificationManager
     }
 }
@@ -255,18 +255,18 @@ export function renderWithProviders(
     fetchMock: Mock,
     {
         preloadedState = {
-            tagSelection: newTagSelectionState({
+            columnSelection: newColumnSelectionState({
                 children: [
-                    newTagHierarchyNode({
-                        idTagDefinitionPersistent: idParentPersistent,
+                    newColumnHierarchyNode({
+                        idColumnPersistent: idParentPersistent,
                         name: nameParent,
                         children: [
-                            newTagHierarchyNode({
-                                idTagDefinitionPersistent: idTagDef,
-                                name: nameTag,
+                            newColumnHierarchyNode({
+                                idColumnPersistent: idColumn,
+                                name: nameColumn,
                                 children: [
-                                    newTagHierarchyNode({
-                                        idTagDefinitionPersistent: idChild,
+                                    newColumnHierarchyNode({
+                                        idColumnPersistent: idChild,
                                         name: nameChild
                                     })
                                 ]
@@ -282,7 +282,7 @@ export function renderWithProviders(
 ) {
     const store = configureStore({
         reducer: {
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>

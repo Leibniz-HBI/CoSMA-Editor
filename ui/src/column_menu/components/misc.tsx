@@ -1,8 +1,8 @@
 import { ReactElement } from 'react'
-import { TagDefinition } from '../state'
+import { Column } from '../state'
 import { OverlayTrigger, ProgressBar, Tooltip } from 'react-bootstrap'
 import { PatchCheckFill } from 'react-bootstrap-icons'
-import { useTagDefinition } from '../hooks'
+import { useColumn } from '../hooks'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function ColumnAddButton(props: any) {
@@ -10,34 +10,34 @@ export function ColumnAddButton(props: any) {
         <div
             className="cosmae-column-add-button"
             onClick={props.onClick}
-            aria-label="show additional tags"
+            aria-label="show additional columns"
         >
             {props.children}
         </div>
     )
 }
 
-export function TagDefinitionNamePathFromId({
-    idTagDefinitionPersistent
+export function ColumnNamePathFromId({
+    idColumnPersistent
 }: {
-    idTagDefinitionPersistent: string
+    idColumnPersistent: string
 }) {
-    const tagDefinition = useTagDefinition(idTagDefinitionPersistent)
-    if (tagDefinition.isLoading) {
+    const column = useColumn(idColumnPersistent)
+    if (column.isLoading) {
         return <ProgressBar animated={true} />
     }
-    if (tagDefinition.value === undefined) {
+    if (column.value === undefined) {
         return <span></span>
     }
-    return <TagDefinitionNamePath tagDefinition={tagDefinition.value} />
+    return <ColumnNamePath column={column.value} />
 }
 
-export function TagDefinitionNamePath({
-    tagDefinition
+export function ColumnNamePath({
+    column
 }: {
-    tagDefinition: TagDefinition
+    column: Column
 }) {
-    const allSpans = constructFullColumnTitleSpans(tagDefinition.namePath)
+    const allSpans = constructFullColumnTitleSpans(column.namePath)
     const partialSpans =
         allSpans.length > 3
             ? [
@@ -53,7 +53,7 @@ export function TagDefinitionNamePath({
                   ...allSpans.slice(-2)
               ]
             : [...allSpans]
-    if (tagDefinition.curated) {
+    if (column.curated) {
         partialSpans.push(
             <span className="icon test-primary pre-wrap" key="curated">
                 <span className="pre-wrap" key="space">

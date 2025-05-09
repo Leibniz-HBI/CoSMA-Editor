@@ -14,11 +14,11 @@ vi.mock('@glideapps/glide-data-grid', async () => {
 import { vi, Mock } from 'vitest'
 import { configureStore } from '@reduxjs/toolkit'
 import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../../column_menu/state'
 import {
     UserPermissionGroup,
@@ -60,8 +60,8 @@ import { newRemote } from '../../util/state'
 import { editSessionReducer } from '../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../entity/state'
 import { entityDetailsReducer } from '../../entity/slice'
-import { tagSelectionSlice } from '../../column_menu/slice'
-import { useTagDefinitionList } from '../../column_menu/hooks'
+import { columnSelectionReducer, columnSelectionSlice } from '../../column_menu/slice'
+import { useColumnDefinitionList } from '../../column_menu/hooks'
 import { AuthState, newAuthState } from '../../auth/state'
 import { authReducer } from '../../auth/slice'
 
@@ -69,8 +69,8 @@ const rectangle = { x: 0, y: 1, width: 2, height: 4 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
     const columnStates = useAppSelector(selectColumnStates)
-    const columnDefinitions = useTagDefinitionList(
-        columnStates.map((columnState) => columnState.idTagDefinitionPersistent)
+    const columnDefinitions = useColumnDefinitionList(
+        columnStates.map((columnState) => columnState.idColumnPersistent)
     )
     return (
         <div className="mock">
@@ -90,7 +90,7 @@ function MockTable(props: any) {
 test('renders all menu entries', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
@@ -101,7 +101,7 @@ test('renders all menu entries', async () => {
     await waitFor(() => {
         screen.getByRole('button', { name: 'Hide Column' })
         screen.getByRole('button', { name: 'Change Owner' })
-        screen.getByRole('button', { name: 'Curate Tag Definition' })
+        screen.getByRole('button', { name: 'Curate Column' })
         screen.getByRole('button', { name: 'close header menu' })
     })
 })
@@ -109,7 +109,7 @@ test('renders all menu entries', async () => {
 test('no curation for unprivileged user', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, {
         preloadedState: {
             auth: newAuthState({
@@ -119,13 +119,13 @@ test('no curation for unprivileged user', async () => {
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR,
                         email: 'mail@test.de',
                         namesPersonal: 'names',
-                        columns: [tagDefTest]
+                        columns: [columnTest]
                     })
                 )
             }),
             user: newUserState({}),
             table: newTableState({}),
-            tagSelection: initialTagSelectionState,
+            columnSelection: initialColumnSelectionState,
             notification: newNotificationManager({}),
             tableSelection: { cols: [], rows: [], rowSelectionOrder: [] },
             editSession: newEditSessionState({}),
@@ -141,7 +141,7 @@ test('no curation for unprivileged user', async () => {
     await waitFor(() => {
         screen.getByRole('button', { name: 'Hide Column' })
         screen.getByRole('button', { name: 'Change Owner' })
-        const curate = screen.queryByRole('button', { name: 'Curate Tag Definition' })
+        const curate = screen.queryByRole('button', { name: 'Curate Column' })
         expect(curate).toBeNull()
         screen.getByRole('button', { name: 'close header menu' })
     })
@@ -150,7 +150,7 @@ test('no curation for unprivileged user', async () => {
 test('remove column from header menu', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     addResponseSequence(fetchMock, [[200, {}]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
@@ -181,7 +181,7 @@ test('remove column from header menu', async () => {
 test('change owner shows modal', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
@@ -192,10 +192,10 @@ test('change owner shows modal', async () => {
         owner.click()
     })
     await waitFor(() => {
-        screen.getByText('Change Tag Ownership')
+        screen.getByText('Change Column Ownership')
     })
     expect(
-        store.getState().table.ownershipChangeTagDefinitionIdPersistent
+        store.getState().table.ownershipChangeColumnIdPersistent
     ).not.toBeUndefined()
 })
 
@@ -218,12 +218,12 @@ function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [[200, { entity_list: [] }]])
 }
 
-function addTagInstanceResponse(fetchMock: Mock) {
+function addValueResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [[200, { value_list: [] }]])
 }
 
 const columnNameTest = 'column name test'
-const idTagDefPersistent = 'column_id_test'
+const idColumnPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -231,27 +231,27 @@ const userTest = newPublicUserInfo({
     username: nameUserTest,
     permissionGroup: UserPermissionGroup.COMMISSIONER
 })
-const tagDefTest: TagDefinition = newTagDefinition({
+const columnTest: Column = newColumn({
     namePath: [columnNameTest],
-    idPersistent: idTagDefPersistent,
+    idPersistent: idColumnPersistent,
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 2,
     hidden: false
 })
 const displayTxtColumnState = newColumnState({
-    idTagDefinitionPersistent: displayTxtColumnId
+    idColumnPersistent: displayTxtColumnId
 })
-const columnState = newColumnState({ idTagDefinitionPersistent: idTagDefPersistent })
+const columnState = newColumnState({ idColumnPersistent: idColumnPersistent })
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         user: UserState
         auth: AuthState
         editSession: EditSessionState
@@ -259,9 +259,9 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     }
 }
 
-const initialTagSelectionState = newTagSelectionState({
-    tagDefinitionsByIdPersistent: {
-        [idTagDefPersistent]: newRemote(tagDefTest),
+const initialColumnSelectionState = newColumnSelectionState({
+    columnsByIdPersistent: {
+        [idColumnPersistent]: newRemote(columnTest),
         [displayTxtColumnId]: newRemote(displayTextColumn)
     }
 })
@@ -273,14 +273,14 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            tagSelection: initialTagSelectionState,
+            columnSelection: initialColumnSelectionState,
             auth: newAuthState({
                 user: newRemote(
                     newUserInfo({
                         ...userTest,
                         email: 'mail@test.org',
                         namesPersonal: 'names personal',
-                        columns: [tagDefTest]
+                        columns: [columnTest]
                     })
                 )
             }),
@@ -310,7 +310,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             auth: authReducer,
             user: userSlice.reducer,
             editSession: editSessionReducer,

@@ -1,105 +1,105 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
-    TagHierarchyNode,
-    newTagSelectionState,
-    TagSelectionState,
-    TagDefinition,
-    newTagHierarchyNode
+    ColumnIdHierarchyNode,
+    newColumnSelectionState,
+    ColumnSelectionState,
+    Column,
+    newColumnHierarchyNode
 } from './state'
 import { newRemote, RemoteInterface } from '../util/state'
 
-const initialState = newTagSelectionState({})
+const initialState = newColumnSelectionState({})
 
-export const tagSelectionSlice = createSlice({
-    name: 'tagSelection',
+const columnSelectionSlice = createSlice({
+    name: 'columnSelection',
     initialState,
     reducers: {
-        loadTagHierarchyError(state: TagSelectionState) {
+        loadColumnHierarchyError(state: ColumnSelectionState) {
             state.isLoading = false
         },
-        startSearch(state: TagSelectionState) {
+        startSearch(state: ColumnSelectionState) {
             state.isSearching = true
         },
-        loadTagHierarchyStart(
-            state: TagSelectionState,
+        loadColumnHierarchyStart(
+            state: ColumnSelectionState,
             action: PayloadAction<string | undefined>
         ) {
             if (action.payload === undefined) {
                 state.isLoading = true
                 return
             }
-            const existing = state.tagDefinitionsByIdPersistent[action.payload]
+            const existing = state.columnsByIdPersistent[action.payload]
             if (existing == undefined) {
-                state.tagDefinitionsByIdPersistent[action.payload] =
+                state.columnsByIdPersistent[action.payload] =
                     newRemote(undefined)
             } else {
                 existing.isLoading = true
             }
         },
-        loadTagHierarchySuccess(
-            state: TagSelectionState,
+        loadColumnHierarchySuccess(
+            state: ColumnSelectionState,
             action: PayloadAction<{
-                entries: TagDefinition[]
+                entries: Column[]
                 path: number[]
                 forceExpand: boolean
             }>
         ) {
             const path = action.payload.path
             const selectionEntries = []
-            for (const tagDef of action.payload.entries) {
+            for (const column of action.payload.entries) {
                 selectionEntries.push(
-                    newTagHierarchyNode({
-                        idTagDefinitionPersistent: tagDef.idPersistent,
-                        name: tagDef.namePath.at(-1) ?? '',
+                    newColumnHierarchyNode({
+                        idColumnPersistent: column.idPersistent,
+                        name: column.namePath.at(-1) ?? '',
                         isExpanded: action.payload.forceExpand
                     })
                 )
-                state.tagDefinitionsByIdPersistent[tagDef.idPersistent] =
-                    newRemote(tagDef)
+                state.columnsByIdPersistent[column.idPersistent] =
+                    newRemote(column)
             }
             if (path.length == 0) {
                 state.isLoading = false
                 updateNodesFromExisting(state.children, selectionEntries)
                 state.children = selectionEntries
             } else {
-                const entry = pickTagHierarchyNode(state.children, path)
+                const entry = pickColumnHierarchyNode(state.children, path)
                 if (entry !== undefined) {
-                    state.tagDefinitionsByIdPersistent[
-                        entry.idTagDefinitionPersistent
+                    state.columnsByIdPersistent[
+                        entry.idColumnPersistent
                     ].isLoading = false
                     updateNodesFromExisting(entry.children, selectionEntries)
                     entry.children = selectionEntries
                 }
             }
         },
-        toggleExpansion(state: TagSelectionState, action: PayloadAction<number[]>) {
-            const entry = pickTagHierarchyNode(state.children, action.payload)
+        toggleExpansion(state: ColumnSelectionState, action: PayloadAction<number[]>) {
+            const entry = pickColumnHierarchyNode(state.children, action.payload)
             if (entry !== undefined) {
                 entry.isExpanded = !entry.isExpanded
             }
         },
-        curateTagDefinitionStart(_state: TagSelectionState) {
+        curateColumnStart(_state: ColumnSelectionState) {
             return
         },
-        curateTagDefinitionError(_state: TagSelectionState) {
+        curateColumnError(_state: ColumnSelectionState) {
             return
         },
-        curateTagDefinitionSuccess(
-            state: TagSelectionState,
+        curateColumnSuccess(
+            state: ColumnSelectionState,
             action: PayloadAction<string>
         ) {
-            const tagDefinition = state.tagDefinitionsByIdPersistent[action.payload]
-            if (!(tagDefinition === undefined || tagDefinition.value === undefined)) {
-                tagDefinition.value.curated = true
+            const column = state.columnsByIdPersistent[action.payload]
+            if (!(column === undefined || column.value === undefined)) {
+                column.value.curated = true
             }
         },
-        submitTagDefinitionStart(state: TagSelectionState) {
+        submitColumnStart(state: ColumnSelectionState) {
             state.isSubmittingDefinition = true
         },
-        submitTagDefinitionSuccess(
-            state: TagSelectionState,
+        submitColumnSuccess(
+            state: ColumnSelectionState,
             action: PayloadAction<{
-                tagDefinition: TagDefinition
+                column: Column
                 parentNamePath: string[]
                 namePath?: string[]
             }>
@@ -107,14 +107,14 @@ export const tagSelectionSlice = createSlice({
             state.isSubmittingDefinition = false
             const parentNamePath = action.payload.parentNamePath
             const oldNamePath = action.payload.namePath
-            const tagDefinition = action.payload.tagDefinition
-            state.tagDefinitionsByIdPersistent[tagDefinition.idPersistent] =
-                newRemote(tagDefinition)
-            if (tagDefinition.disabled) {
-                delete state.tagDefinitionsByIdPersistent[tagDefinition.idPersistent]
-                let parent: { children: TagHierarchyNode[] } | undefined = state
+            const column= action.payload.column
+            state.columnsByIdPersistent[column.idPersistent] =
+                newRemote(column)
+            if (column.disabled) {
+                delete state.columnsByIdPersistent[column.idPersistent]
+                let parent: { children: ColumnIdHierarchyNode[] } | undefined = state
                 if (parentNamePath.length > 0) {
-                    parent = pickTagHierarchyNodeByNamePath(
+                    parent = pickColumnHierarchyNodeByNamePath(
                         parent.children,
                         parentNamePath
                     )
@@ -122,8 +122,8 @@ export const tagSelectionSlice = createSlice({
                 if (parent !== undefined) {
                     for (let idx = 0; idx < parent.children.length; idx++) {
                         if (
-                            parent.children[idx].idTagDefinitionPersistent ==
-                            tagDefinition.idPersistent
+                            parent.children[idx].idColumnPersistent ==
+                            column.idPersistent
                         ) {
                             parent.children.splice(
                                 idx,
@@ -139,9 +139,9 @@ export const tagSelectionSlice = createSlice({
             }
             if (oldNamePath !== undefined) {
                 // remove previous entry, if existing
-                let entries: TagHierarchyNode[] | undefined = state.children
+                let entries: ColumnIdHierarchyNode[] | undefined = state.children
                 if (oldNamePath.length > 0) {
-                    entries = pickTagHierarchyNodeByNamePath(
+                    entries = pickColumnHierarchyNodeByNamePath(
                         entries,
                         oldNamePath
                     )?.children
@@ -149,8 +149,8 @@ export const tagSelectionSlice = createSlice({
                 if (entries !== undefined) {
                     for (const idx in entries) {
                         if (
-                            entries[idx].idTagDefinitionPersistent ==
-                            tagDefinition.idPersistent
+                            entries[idx].idColumnPersistent ==
+                            column.idPersistent
                         ) {
                             entries.splice(parseInt(idx), 1)
                             break
@@ -158,187 +158,187 @@ export const tagSelectionSlice = createSlice({
                     }
                 }
             }
-            const tagHierarchyNode = newTagHierarchyNode({
-                idTagDefinitionPersistent: tagDefinition.idPersistent,
-                name: tagDefinition.namePath[-1],
+            const columnHierarchyNode = newColumnHierarchyNode({
+                idColumnPersistent: column.idPersistent,
+                name: column.namePath[-1],
                 children: []
             })
             if (parentNamePath.length == 0) {
-                state.children.push(tagHierarchyNode)
+                state.children.push(columnHierarchyNode)
             } else {
-                const parentEntry = pickTagHierarchyNodeByNamePath(
+                const parentEntry = pickColumnHierarchyNodeByNamePath(
                     state.children,
                     parentNamePath
                 )
-                parentEntry?.children.push(tagHierarchyNode)
+                parentEntry?.children.push(columnHierarchyNode)
             }
         },
-        submitTagDefinitionError(state: TagSelectionState) {
+        submitColumnError(state: ColumnSelectionState) {
             state.isSubmittingDefinition = false
         },
-        setEditTagDefinition(
-            state: TagSelectionState,
-            action: PayloadAction<TagDefinition>
+        setEditColumn(
+            state: ColumnSelectionState,
+            action: PayloadAction<Column>
         ) {
-            state.editTagDefinition.value = action.payload
+            state.editColumn.value = action.payload
         },
-        clearEditTagDefinition(state: TagSelectionState) {
-            state.editTagDefinition.value = undefined
+        clearEditColumn(state: ColumnSelectionState) {
+            state.editColumn.value = undefined
         },
-        editTagDefinitionStart(
-            state: TagSelectionState,
+        editColumnStart(
+            state: ColumnSelectionState,
             action: PayloadAction<string>
         ) {
-            if (state.editTagDefinition.value?.idPersistent == action.payload) {
-                state.editTagDefinition.isLoading = true
+            if (state.editColumn.value?.idPersistent == action.payload) {
+                state.editColumn.isLoading = true
             }
         },
-        editTagDefinitionError(
-            state: TagSelectionState,
+        editColumnError(
+            state: ColumnSelectionState,
             action: PayloadAction<string>
         ) {
-            if (state.editTagDefinition.value?.idPersistent == action.payload) {
-                state.editTagDefinition.isLoading = false
+            if (state.editColumn.value?.idPersistent == action.payload) {
+                state.editColumn.isLoading = false
             }
         },
-        dragTagDefinitionStart(state: TagSelectionState) {
+        dragColumnStart(state: ColumnSelectionState) {
             state.isDragging = true
         },
-        dragTagDefinitionEnd(state: TagSelectionState) {
+        dragColumnEnd(state: ColumnSelectionState) {
             state.isDragging = false
         },
-        getTagDefinitionDetailsError(
-            state: TagSelectionState,
+        getColumnDetailsError(
+            state: ColumnSelectionState,
             action: PayloadAction<string[]>
         ) {
             for (const idPersistent of action.payload) {
-                const remoteTagDefinition =
-                    state.tagDefinitionsByIdPersistent[idPersistent]
-                if (remoteTagDefinition === undefined) {
-                    state.tagDefinitionsByIdPersistent[idPersistent] = newRemote(
+                const remoteColumn =
+                    state.columnsByIdPersistent[idPersistent]
+                if (remoteColumn === undefined) {
+                    state.columnsByIdPersistent[idPersistent] = newRemote(
                         undefined,
                         false
                     )
                 } else {
-                    remoteTagDefinition.isLoading = false
+                    remoteColumn.isLoading = false
                 }
             }
         },
-        getTagDefinitionDetailsStart(
-            state: TagSelectionState,
+        getColumnDetailsStart(
+            state: ColumnSelectionState,
             action: PayloadAction<string[]>
         ) {
             for (const idPersistent of action.payload) {
-                const remoteTagDefinition =
-                    state.tagDefinitionsByIdPersistent[idPersistent]
-                if (remoteTagDefinition === undefined) {
-                    state.tagDefinitionsByIdPersistent[idPersistent] = newRemote(
+                const remoteColumn =
+                    state.columnsByIdPersistent[idPersistent]
+                if (remoteColumn === undefined) {
+                    state.columnsByIdPersistent[idPersistent] = newRemote(
                         undefined,
                         true
                     )
                 } else {
-                    remoteTagDefinition.isLoading = true
+                    remoteColumn.isLoading = true
                 }
             }
         },
-        getTagDefinitionDetailsSuccess(
-            state: TagSelectionState,
-            action: PayloadAction<TagDefinition[]>
+        getColumnDetailsSuccess(
+            state: ColumnSelectionState,
+            action: PayloadAction<Column[]>
         ) {
-            for (const tagDefinition of action.payload) {
-                state.tagDefinitionsByIdPersistent[tagDefinition.idPersistent] =
-                    newRemote(tagDefinition)
+            for (const column of action.payload) {
+                state.columnsByIdPersistent[column.idPersistent] =
+                    newRemote(column)
             }
         },
         changeParentSuccess(
-            state: TagSelectionState,
+            state: ColumnSelectionState,
             action: PayloadAction<{
-                oldPathToTagDefinition: number[]
+                oldPathToColumn: number[]
                 pathToNewParent: number[]
-                tagDefinition: TagDefinition
+                column: Column
             }>
         ) {
-            const tagDefinitionsByIdPersistent = state.tagDefinitionsByIdPersistent
-            if (tagDefinitionsByIdPersistent === undefined) {
-                throw Error('Tag definitions cache not populated.')
+            const columnsByIdPersistent = state.columnsByIdPersistent
+            if (columnsByIdPersistent === undefined) {
+                throw Error('Column definitions cache not populated.')
             }
-            const tagDefinition = action.payload.tagDefinition
-            const oldPathToTagDefinition = action.payload.oldPathToTagDefinition
+            const column = action.payload.column
+            const oldPathToColumn = action.payload.oldPathToColumn
             let originHierarchyArray = state.children
             let oldNamePathPrefixLength = 0
-            if (oldPathToTagDefinition.length > 1) {
+            if (oldPathToColumn.length > 1) {
                 // get old parent information
-                const oldParentHierarchyNode = pickTagHierarchyNode(
+                const oldParentHierarchyNode = pickColumnHierarchyNode(
                     state.children,
-                    oldPathToTagDefinition.slice(0, -1)
+                    oldPathToColumn.slice(0, -1)
                 )
                 if (oldParentHierarchyNode === undefined) {
-                    throw Error('Could not find parent in tag hierarchy.')
+                    throw Error('Could not find parent in column hierarchy.')
                 }
                 originHierarchyArray = oldParentHierarchyNode.children
-                oldNamePathPrefixLength = oldPathToTagDefinition.length - 1
+                oldNamePathPrefixLength = oldPathToColumn.length - 1
             }
-            const tagDefinitionHierarchyNode =
+            const columnHierarchyNode =
                 originHierarchyArray[
-                    oldPathToTagDefinition[oldPathToTagDefinition.length - 1]
+                    oldPathToColumn[oldPathToColumn.length - 1]
                 ]
-            if (tagDefinitionHierarchyNode === undefined) {
-                throw new Error('could not find tag hierarchy node')
+            if (columnHierarchyNode === undefined) {
+                throw new Error('could not find column hierarchy node')
             }
             let namePath: string[] = []
-            let destinationHierarchyArray: TagHierarchyNode[] | undefined =
+            let destinationHierarchyArray: ColumnIdHierarchyNode[] | undefined =
                 state.children
             // get new parent information
-            if (tagDefinition.idParentPersistent !== undefined) {
-                const newParentHierarchyNode = pickTagHierarchyNode(
+            if (column.idParentPersistent !== undefined) {
+                const newParentHierarchyNode = pickColumnHierarchyNode(
                     state.children,
                     action.payload.pathToNewParent
                 )
                 if (newParentHierarchyNode === undefined) {
-                    throw Error('Could not find new parent in tag hierarchy')
+                    throw Error('Could not find new parent in column hierarchy')
                 }
                 destinationHierarchyArray = newParentHierarchyNode?.children
                 namePath =
-                    state.tagDefinitionsByIdPersistent[
-                        newParentHierarchyNode?.idTagDefinitionPersistent ?? ''
+                    state.columnsByIdPersistent[
+                        newParentHierarchyNode?.idColumnPersistent ?? ''
                     ]?.value?.namePath ?? namePath
             }
             if (destinationHierarchyArray === undefined) {
-                throw Error('Could not find destination array for moved tag.')
+                throw Error('Could not find destination array for moved column.')
             }
             updateNamePaths(
-                tagDefinitionHierarchyNode,
-                tagDefinitionsByIdPersistent,
+                columnHierarchyNode,
+                columnsByIdPersistent,
                 oldNamePathPrefixLength,
                 namePath
             )
-            tagDefinitionsByIdPersistent[tagDefinition.idPersistent] =
-                newRemote(tagDefinition)
-            destinationHierarchyArray.push(tagDefinitionHierarchyNode)
+            columnsByIdPersistent[column.idPersistent] =
+                newRemote(column)
+            destinationHierarchyArray.push(columnHierarchyNode)
             // remove hierarchy node from old parent's child array
             for (let idx = 0; idx < originHierarchyArray.length; idx++) {
                 if (
-                    originHierarchyArray[idx].idTagDefinitionPersistent ==
-                    action.payload.tagDefinition.idPersistent
+                    originHierarchyArray[idx].idColumnPersistent ==
+                    action.payload.column.idPersistent
                 ) {
                     originHierarchyArray.splice(idx, 1)
                     break
                 }
             }
             if (
-                state.editTagDefinition.value?.idPersistent ==
-                action.payload.tagDefinition.idPersistent
+                state.editColumn.value?.idPersistent ==
+                action.payload.column.idPersistent
             ) {
-                state.editTagDefinition = newRemote(undefined)
+                state.editColumn = newRemote(undefined)
             }
         }
     }
 })
 
-function pickTagHierarchyNode(
-    entries: TagHierarchyNode[],
+function pickColumnHierarchyNode(
+    entries: ColumnIdHierarchyNode[],
     path: number[]
-): TagHierarchyNode | undefined {
+): ColumnIdHierarchyNode | undefined {
     let ret = entries[path[0]]
     for (let idx = 1; idx < path.length; ++idx) {
         ret = ret?.children[path[idx]]
@@ -346,8 +346,8 @@ function pickTagHierarchyNode(
     return ret
 }
 
-function pickTagHierarchyNodeByNamePath(
-    entries: TagHierarchyNode[],
+function pickColumnHierarchyNodeByNamePath(
+    entries: ColumnIdHierarchyNode[],
     namePath: string[]
 ) {
     let entriesTmp = entries
@@ -365,8 +365,8 @@ function pickTagHierarchyNodeByNamePath(
 }
 
 function updateNamePaths(
-    rootEntry: TagHierarchyNode,
-    tagDefinitions: { [key: string]: RemoteInterface<TagDefinition | undefined> },
+    rootEntry: ColumnIdHierarchyNode,
+    columns: { [key: string]: RemoteInterface<Column | undefined> },
     oldPrefixLength: number,
     newPrefix: string[]
 ) {
@@ -377,48 +377,50 @@ function updateNamePaths(
             break
         }
         queue.push(...entry.children)
-        const tagDefinition = tagDefinitions[entry.idTagDefinitionPersistent].value
-        if (tagDefinition !== undefined) {
-            tagDefinition.namePath.splice(0, oldPrefixLength, ...newPrefix)
+        const column = columns[entry.idColumnPersistent].value
+        if (column !== undefined) {
+            column.namePath.splice(0, oldPrefixLength, ...newPrefix)
         }
     }
 }
 
 function updateNodesFromExisting(
-    existingNodes: TagHierarchyNode[],
-    newNodes: TagHierarchyNode[]
+    existingNodes: ColumnIdHierarchyNode[],
+    newNodes: ColumnIdHierarchyNode[]
 ) {
     const existingIndices = Object.fromEntries(
-        existingNodes.map((node, idx) => [node.idTagDefinitionPersistent, idx])
+        existingNodes.map((node, idx) => [node.idColumnPersistent, idx])
     )
     for (const node of newNodes) {
-        const existingIdx = existingIndices[node.idTagDefinitionPersistent]
+        const existingIdx = existingIndices[node.idColumnPersistent]
         if (existingIdx !== undefined) {
             node.isExpanded = existingNodes[existingIdx].isExpanded
         }
     }
 }
 
+export const columnSelectionReducer = columnSelectionSlice.reducer
+
 export const {
-    loadTagHierarchyError,
-    loadTagHierarchyStart,
-    loadTagHierarchySuccess,
+    loadColumnHierarchyError,
+    loadColumnHierarchyStart,
+    loadColumnHierarchySuccess,
     startSearch,
-    submitTagDefinitionError,
-    submitTagDefinitionStart,
-    submitTagDefinitionSuccess,
+    submitColumnError,
+    submitColumnStart,
+    submitColumnSuccess,
     toggleExpansion,
-    setEditTagDefinition,
-    clearEditTagDefinition,
-    editTagDefinitionStart,
-    editTagDefinitionError,
+    setEditColumn,
+    clearEditColumn,
+    editColumnStart,
+    editColumnError,
     changeParentSuccess,
-    dragTagDefinitionStart,
-    dragTagDefinitionEnd,
-    curateTagDefinitionError,
-    curateTagDefinitionStart,
-    curateTagDefinitionSuccess,
-    getTagDefinitionDetailsError,
-    getTagDefinitionDetailsStart,
-    getTagDefinitionDetailsSuccess
-} = tagSelectionSlice.actions
+    dragColumnStart,
+    dragColumnEnd,
+    curateColumnError,
+    curateColumnStart,
+    curateColumnSuccess,
+    getColumnDetailsError,
+    getColumnDetailsStart,
+    getColumnDetailsSuccess
+} = columnSelectionSlice.actions

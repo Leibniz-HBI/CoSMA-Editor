@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { AppDispatch, RootState } from '../store'
 import { selectPermissionGroup } from '../auth/selectors'
-import { removeSelectedColumn, tagChangeOwnerShipShow } from './slice'
+import { removeSelectedColumn, columnChangeOwnershipShow } from './slice'
 import { remoteUserProfileColumnDeleteAsync } from '../user/thunks'
 import { UserPermissionGroup } from '../user/state'
 import { curateAsync } from '../column_menu/thunks'
@@ -84,13 +84,13 @@ export const selectSelectedColumnHeaderBounds = createSelector(
     (state) => state.selectedColumnHeaderBounds
 )
 
-export const selectSelectedTagDefinitionIdPersistent = createSelector(
+export const selectSelectedColumnIdPersistent = createSelector(
     selectTableState,
-    (state) => state.selectedTagDefinitionId
+    (state) => state.selectedColumnId
 )
 
 export const selectColumnHeaderMenu = createSelector(
-    selectSelectedTagDefinitionIdPersistent,
+    selectSelectedColumnIdPersistent,
     selectPermissionGroup,
     (idPersistent, permissionGroup) => {
         return (dispatch: AppDispatch) => {
@@ -113,14 +113,14 @@ export const selectColumnHeaderMenu = createSelector(
             ret.push({
                 label: 'Change Owner',
                 labelClassName: '',
-                onClick: () => dispatch(tagChangeOwnerShipShow(idPersistent))
+                onClick: () => dispatch(columnChangeOwnershipShow(idPersistent))
             })
             if (
                 permissionGroup == UserPermissionGroup.EDITOR ||
                 permissionGroup == UserPermissionGroup.COMMISSIONER
             ) {
                 ret.push({
-                    label: 'Curate Tag Definition',
+                    label: 'Curate Column',
                     labelClassName: '',
                     onClick: () => {
                         dispatch(curateAsync(idPersistent))
@@ -132,9 +132,9 @@ export const selectColumnHeaderMenu = createSelector(
     }
 )
 
-export const selectOwnershipChangeTagDefinitionIdPersistent = createSelector(
+export const selectOwnershipChangeColumnIdPersistent = createSelector(
     selectTableState,
-    (state) => state.ownershipChangeTagDefinitionIdPersistent
+    (state) => state.ownershipChangeColumnIdPersistent
 )
 
 export const selectIsSubmittingValues = createSelector(

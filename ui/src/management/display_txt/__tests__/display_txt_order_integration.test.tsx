@@ -3,7 +3,10 @@
  */
 import { vi, Mock } from 'vitest'
 import { configureStore } from '@reduxjs/toolkit'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
+import {
+    ColumnSelectionState,
+    newColumnSelectionState
+} from '../../../column_menu/state'
 import {
     NotificationManager,
     notificationReducer
@@ -12,7 +15,7 @@ import { newRemote } from '../../../util/state'
 import { DisplayTxtManagementState } from '../state'
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
 import { displayTxtManagementReducer } from '../slice'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { DisplayTxtManagementComponent } from '../components'
@@ -20,7 +23,7 @@ import { DisplayTxtManagementComponent } from '../components'
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         displayTxtManagement: DisplayTxtManagementState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         notification: NotificationManager
     }
 }
@@ -30,8 +33,8 @@ export function renderWithProviders(
     fetchMock: Mock,
     {
         preloadedState = {
-            displayTxtManagement: { tagDefinitions: newRemote([]) },
-            tagSelection: newTagSelectionState({}),
+            displayTxtManagement: { columns: newRemote([]) },
+            columnSelection: newColumnSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
@@ -40,7 +43,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             displayTxtManagement: displayTxtManagementReducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             error: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -68,12 +71,12 @@ function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
         )
     }
 }
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
-const idTagDef1 = 'id-tag-test-1'
-const nameTagDef1 = 'tag def 1'
-const idTagDef2 = 'id-tag-test-2'
-const nameTagDef2 = 'tag def 2'
+const idColumn0 = 'id-column-test-0'
+const nameColumn0 = 'column def 0'
+const idColumn1 = 'id-column-test-1'
+const nameColumn1 = 'column def 1'
+const idColumn2 = 'id-column-test-2'
+const nameColumn2 = 'column def 2'
 
 function initialResponseSequence(mock: Mock) {
     addResponseSequence(mock, [
@@ -82,9 +85,9 @@ function initialResponseSequence(mock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDef2,
-                        name_path: [nameTagDef2],
-                        name: nameTagDef2,
+                        id_persistent: idColumn2,
+                        name_path: [nameColumn2],
+                        name: nameColumn2,
                         curated: true,
                         version: 2,
                         type: 'STRING'
@@ -97,25 +100,25 @@ function initialResponseSequence(mock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDef0,
-                        name_path: [nameTagDef0],
-                        name: nameTagDef0,
+                        id_persistent: idColumn0,
+                        name_path: [nameColumn0],
+                        name: nameColumn0,
                         curated: true,
                         version: 0,
                         type: 'STRING'
                     },
                     {
-                        id_persistent: idTagDef1,
-                        name_path: [nameTagDef1],
-                        name: nameTagDef1,
+                        id_persistent: idColumn1,
+                        name_path: [nameColumn1],
+                        name: nameColumn1,
                         curated: false,
                         version: 1,
                         type: 'STRING'
                     },
                     {
-                        id_persistent: idTagDef2,
-                        name_path: [nameTagDef2],
-                        name: nameTagDef2,
+                        id_persistent: idColumn2,
+                        name_path: [nameColumn2],
+                        name: nameColumn2,
                         curated: true,
                         version: 2,
                         type: 'STRING'
@@ -149,7 +152,7 @@ const expectedGetRequests = [
             credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_parent_persistent: idTagDef0 })
+            body: JSON.stringify({ id_parent_persistent: idColumn0 })
         }
     ],
     [
@@ -158,7 +161,7 @@ const expectedGetRequests = [
             credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_parent_persistent: idTagDef1 })
+            body: JSON.stringify({ id_parent_persistent: idColumn1 })
         }
     ],
     [
@@ -167,7 +170,7 @@ const expectedGetRequests = [
             credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_parent_persistent: idTagDef2 })
+            body: JSON.stringify({ id_parent_persistent: idColumn2 })
         }
     ]
 ]
@@ -176,10 +179,10 @@ test('get', async () => {
     initialResponseSequence(fetchMock)
     renderWithProviders(<DisplayTxtManagementComponent />, fetchMock)
     await waitFor(() => {
-        screen.getByText(nameTagDef0)
-        screen.getByText(nameTagDef1)
-        const tagDef2Texts = screen.getAllByText(nameTagDef2)
-        expect(tagDef2Texts.length).toEqual(2)
+        screen.getByText(nameColumn0)
+        screen.getByText(nameColumn1)
+        const column2Texts = screen.getAllByText(nameColumn2)
+        expect(column2Texts.length).toEqual(2)
     })
     expect(fetchMock.mock.calls).toEqual(expectedGetRequests)
 })
@@ -190,9 +193,9 @@ test('append and remove', async () => {
     addResponseSequence(fetchMock, [[200, {}]])
     renderWithProviders(<DisplayTxtManagementComponent />, fetchMock)
     await waitFor(() => {
-        const tagDef0Text = screen.getByText(nameTagDef0)
+        const column0Text = screen.getByText(nameColumn0)
         const listEntry =
-            tagDef0Text.parentElement?.parentElement?.parentElement?.parentElement
+            column0Text.parentElement?.parentElement?.parentElement?.parentElement
                 ?.parentElement
         expect(listEntry?.className).toEqual(
             'd-flex flex-row justify-content-between list-group-item'
@@ -201,16 +204,16 @@ test('append and remove', async () => {
     })
 
     await waitFor(() => {
-        const tagDef0Texts = screen.getAllByText(nameTagDef2)
-        expect(tagDef0Texts.length).toEqual(2)
-        const listElement = tagDef0Texts[0]?.parentElement?.parentElement?.parentElement
+        const column0Texts = screen.getAllByText(nameColumn2)
+        expect(column0Texts.length).toEqual(2)
+        const listElement = column0Texts[0]?.parentElement?.parentElement?.parentElement
         expect(listElement?.className).toEqual('justify-content-between row')
         ;(
             listElement?.children[listElement.children.length - 1] as HTMLElement
         )?.click()
     })
     await waitFor(() => {
-        screen.getByText(nameTagDef2)
+        screen.getByText(nameColumn2)
     })
     expect(fetchMock.mock.calls).toEqual([
         ...expectedGetRequests,
@@ -219,11 +222,11 @@ test('append and remove', async () => {
             {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({ id_column_persistent: idTagDef0 })
+                body: JSON.stringify({ id_column_persistent: idColumn0 })
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/manage/display_txt/order/${idTagDef2}`,
+            `http://127.0.0.1:8000/cosmae/api/manage/display_txt/order/${idColumn2}`,
             {
                 method: 'DELETE',
                 credentials: 'include'

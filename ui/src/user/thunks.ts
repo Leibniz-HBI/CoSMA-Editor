@@ -12,11 +12,11 @@ import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
-import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { parseColumnsFromApi } from '../column_menu/thunks'
 import { justificationColumnId } from '../table/state'
 import { setCurrentEditSession } from '../session/slice'
 import { parseEditSessionFromApi } from '../session/thunks'
-import { removeUserTagDefinition } from '../auth/slice'
+import { removeUserColumn } from '../auth/slice'
 import { handleAllauthResponse } from '../util/api'
 
 export function setCurrentEditSessionThunk(
@@ -131,14 +131,14 @@ export function getUserInfoThunk(idUserPersistent: string): ThunkWithFetch<void>
 }
 
 export function remoteUserProfileColumnAppend(
-    idTagPersistent: string
+    idColumnPersistent: string
 ): ThunkWithFetch<void> {
     return async (_dispatch, _getState, fetch) => {
-        if (idTagPersistent == justificationColumnId) {
+        if (idColumnPersistent == justificationColumnId) {
             return
         }
         await fetch(
-            config.api_path + `/user/columns/append/${idTagPersistent}`,
+            config.api_path + `/user/columns/append/${idColumnPersistent}`,
             {
                 credentials: 'include',
                 method: 'POST'
@@ -147,21 +147,21 @@ export function remoteUserProfileColumnAppend(
     }
 }
 export function remoteUserProfileColumnDeleteAsync(
-    idTagPersistent: string
+    idColumnPersistent: string
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        if (idTagPersistent == justificationColumnId) {
+        if (idColumnPersistent == justificationColumnId) {
             return
         }
         const rsp = await fetch(
-            config.api_path + `/user/columns/${idTagPersistent}`,
+            config.api_path + `/user/columns/${idColumnPersistent}`,
             {
                 credentials: 'include',
                 method: 'DELETE'
             }
         )
         if (rsp.status == 200) {
-            dispatch(removeUserTagDefinition(idTagPersistent))
+            dispatch(removeUserColumn(idColumnPersistent))
         }
     }
 }
@@ -198,8 +198,8 @@ export function parseUserInfoFromJson(json: any): UserInfo {
         namesFamily: json['names_family'],
         columns:
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (json['column_list'] as Array<any>).map((tagDefinitionApi) =>
-                parseColumnDefinitionsFromApi(tagDefinitionApi, undefined)
+            (json['column_list'] as Array<any>).map((columnApi) =>
+                parseColumnsFromApi(columnApi, undefined)
             ),
         permissionGroup: permissionGroupApiMap[json['permission_group']]
     }

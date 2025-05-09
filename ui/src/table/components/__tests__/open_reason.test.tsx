@@ -14,11 +14,11 @@ vi.mock('@glideapps/glide-data-grid', async () => {
 import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
@@ -52,7 +52,7 @@ import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { act } from 'react-dom/test-utils'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { newRemote } from '../../../util/state'
 import {
     EditSessionParticipantType,
@@ -188,7 +188,7 @@ test('add justification', async () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id_column_persistent: idTagDefPersistent,
+                    id_column_persistent: idColumnPersistent,
                     offset: 0,
                     limit: 5000
                 })
@@ -332,7 +332,7 @@ const test_entity_rsp_1 = {
     justification_txt: justification1
 }
 const columnNameTest = 'column name test'
-const idTagDefPersistent = 'column_id_test'
+const idColumnPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -343,17 +343,17 @@ const userTest = newPublicUserInfo({
 async function toggleJustifications() {
     await waitFor(() => {
         expect(screen.queryByText(modalHeading)).toBeNull()
-        const button = screen.getByLabelText('show additional tags')
+        const button = screen.getByLabelText('show additional columns')
         ;(button?.childNodes[0] as HTMLInputElement)?.click()
     })
     await waitFor(() => {
-        const tagDefLabel = screen.getByText('Justification')
-        const tagListItem =
-            tagDefLabel.parentElement?.parentElement?.parentElement?.parentElement
+        const columnLabel = screen.getByText('Justification')
+        const columnListItem =
+            columnLabel.parentElement?.parentElement?.parentElement?.parentElement
                 ?.parentElement
-        const tagButton = tagListItem?.children[1]
-        expect(tagButton?.className).toEqual('icon')
-        ;(tagButton as HTMLElement)?.click()
+        const columnButton = columnListItem?.children[1]
+        expect(columnButton?.className).toEqual('icon')
+        ;(columnButton as HTMLElement)?.click()
 
         screen.getByRole('button', { name: /close/i }).click()
     })
@@ -433,7 +433,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         user: UserState
         auth: AuthState
         entityDetails: EntityDetailsState
@@ -441,11 +441,11 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     }
 }
 
-const tagDefTest: TagDefinition = newTagDefinition({
+const columnTest: Column = newColumn({
     namePath: [columnNameTest],
-    idPersistent: idTagDefPersistent,
+    idPersistent: idColumnPersistent,
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 2,
@@ -460,11 +460,11 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            tagSelection: newTagSelectionState({
-                tagDefinitionsByIdPersistent: {
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
                     [displayTxtColumnId]: newRemote(displayTextColumn),
                     [justificationColumnId]: newRemote(justificationColumn),
-                    [idTagDefPersistent]: newRemote(tagDefTest)
+                    [idColumnPersistent]: newRemote(columnTest)
                 }
             }),
             user: newUserState({}),
@@ -474,7 +474,7 @@ export function renderWithProviders(
                         ...userTest,
                         email: 'mail@test.org',
                         namesPersonal: 'names personal',
-                        columns: [tagDefTest]
+                        columns: [columnTest]
                     })
                 )
             }),
@@ -502,7 +502,7 @@ export function renderWithProviders(
         reducer: {
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             table: tableReducer,
             user: userSlice.reducer,
             auth: authReducer,

@@ -1,4 +1,4 @@
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import { Entity } from '../../entity/state'
 import { CellValue } from '../../table/state'
 import { RemoteInterface, newRemote } from '../../util/state'
@@ -6,11 +6,11 @@ import { RemoteInterface, newRemote } from '../../util/state'
 export interface ScoredEntity {
     idPersistent: string
     displayTxt?: string
-    displayTxtDetails: string | TagDefinition
+    displayTxtDetails: string | Column
     version: number
     similarity: number
     cellContents: RemoteInterface<CellValue[]>[]
-    idMatchTagDefinitionPersistentList: string[]
+    idMatchColumnPersistentList: string[]
 }
 export function newScoredEntity({
     idPersistent,
@@ -19,15 +19,15 @@ export function newScoredEntity({
     version,
     similarity,
     cellContents = [],
-    idMatchTagDefinitionPersistentList = []
+    idMatchColumnPersistentList = []
 }: {
     idPersistent: string
     displayTxt?: string
-    displayTxtDetails: string | TagDefinition
+    displayTxtDetails: string | Column
     version: number
     similarity: number
     cellContents?: RemoteInterface<CellValue[]>[]
-    idMatchTagDefinitionPersistentList?: string[]
+    idMatchColumnPersistentList?: string[]
 }): ScoredEntity {
     return {
         idPersistent: idPersistent,
@@ -36,7 +36,7 @@ export function newScoredEntity({
         version,
         similarity: similarity,
         cellContents: cellContents,
-        idMatchTagDefinitionPersistentList: idMatchTagDefinitionPersistentList
+        idMatchColumnPersistentList
     }
 }
 
@@ -61,7 +61,7 @@ export function newEntityWithDuplicates({
 }: {
     idPersistent: string
     displayTxt?: string
-    displayTxtDetails?: string | TagDefinition
+    displayTxtDetails?: string | Column
     version: number
     disabled?: boolean
     similarEntities: RemoteInterface<ScoredEntity[]>
@@ -93,19 +93,19 @@ export function newEntityWithDuplicates({
     }
 }
 
-export interface TagInstance {
+export interface Value {
     idEntityPersistent: string
-    idTagDefinitionPersistent: string
+    idColumnPersistent: string
     cellValue: CellValue
 }
-export function newTagInstance(
+export function newValue(
     idEntityPersistent: string,
-    idTagDefinitionPersistent: string,
+    idColumnPersistent: string,
     cellValue: CellValue
-): TagInstance {
+): Value {
     return {
-        idEntityPersistent: idEntityPersistent,
-        idTagDefinitionPersistent: idTagDefinitionPersistent,
+        idEntityPersistent,
+        idColumnPersistent,
         cellValue: cellValue
     }
 }
@@ -114,9 +114,9 @@ export interface ContributionEntityState {
     entities: RemoteInterface<EntityWithDuplicates[]>
     entityMap: { [key: string]: number }
     completeEntityAssignment: RemoteInterface<boolean>
-    tagDefinitions: TagDefinition[]
-    tagDefinitionMap: { [key: string]: number }
-    showTagDefinitionMenu: boolean
+    columnList: Column[]
+    columnMap: { [key: string]: number }
+    showColumnMenu: boolean
     selectedEntityIdx?: number
     hitLastMatch: boolean
     matchWidths: number[]
@@ -126,9 +126,9 @@ export function newContributionEntityState({
     entities = newRemote([]),
     entityMap,
     completeEntityAssignment = newRemote(false),
-    tagDefinitions = [],
-    tagDefinitionMap: columnDefinitionMap,
-    showTagDefinitionMenu = false,
+     columnList = [],
+    columnMap,
+    showColumnMenu = false,
     selectedEntityIdx = undefined,
     hitLastMatch = false,
     matchWidths = [200, 200],
@@ -137,16 +137,16 @@ export function newContributionEntityState({
     entities?: RemoteInterface<EntityWithDuplicates[]>
     entityMap?: { [key: string]: number }
     completeEntityAssignment?: RemoteInterface<boolean>
-    tagDefinitions?: TagDefinition[]
-    tagDefinitionMap?: { [key: string]: number }
-    showTagDefinitionMenu?: boolean
+    columnList?: Column[]
+    columnMap?: { [key: string]: number }
+    showColumnMenu?: boolean
     selectedEntityIdx?: number
     hitLastMatch?: boolean
     matchWidths?: number[]
     showJustificationDialog?: boolean
 }): ContributionEntityState {
     let newEntityMap: { [key: string]: number },
-        newTagDefinitionMap: { [key: string]: number }
+        newColumnMap: { [key: string]: number }
     if (entityMap === undefined || entityMap.size != entities.value.length) {
         newEntityMap = {}
         for (let idx = 0; idx < entities.value.length; ++idx) {
@@ -156,23 +156,23 @@ export function newContributionEntityState({
         newEntityMap = entityMap
     }
     if (
-        columnDefinitionMap === undefined ||
-        columnDefinitionMap.size != tagDefinitions.length
+        columnMap === undefined ||
+        columnMap.size != columnList.length
     ) {
-        newTagDefinitionMap = {}
-        for (let idx = 0; idx < tagDefinitions.length; ++idx) {
-            newTagDefinitionMap[tagDefinitions[idx].idPersistent] = idx
+        newColumnMap = {}
+        for (let idx = 0; idx < columnList.length; ++idx) {
+            newColumnMap[columnList[idx].idPersistent] = idx
         }
     } else {
-        newTagDefinitionMap = columnDefinitionMap
+        newColumnMap = columnMap
     }
     return {
         entities: entities,
         completeEntityAssignment: completeEntityAssignment,
-        tagDefinitions: tagDefinitions,
-        showTagDefinitionMenu: showTagDefinitionMenu,
+        columnList: columnList,
+        showColumnMenu: showColumnMenu,
         entityMap: newEntityMap,
-        tagDefinitionMap: newTagDefinitionMap,
+        columnMap: newColumnMap,
         selectedEntityIdx: selectedEntityIdx,
         hitLastMatch: hitLastMatch,
         matchWidths: matchWidths,

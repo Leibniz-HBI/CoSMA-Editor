@@ -1,5 +1,5 @@
-import { TagDefinition } from '../column_menu/state'
-import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { Column } from '../column_menu/state'
+import { parseColumnsFromApi } from '../column_menu/thunks'
 import { config } from '../config'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
@@ -52,20 +52,20 @@ export function getOwnershipRequests(): ThunkWithFetch<void> {
 
 export function putOwnershipRequest(
     args: PutOwnershipRequest
-): ThunkWithFetch<TagDefinition | undefined> {
+): ThunkWithFetch<Column | undefined> {
     return async (dispatch, _getState, fetch) => {
         dispatch(putOwnershipRequestStart(args))
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/columns/permissions/${args.idTagDefinitionPersistent}/owner/${args.idUserPersistent}`,
+                    `/columns/permissions/${args.idColumnPersistent}/owner/${args.idUserPersistent}`,
                 { credentials: 'include', method: 'POST' }
             )
             const json = await rsp.json()
             if (rsp.status == 200) {
                 dispatch(putOwnershipRequestSuccess(args))
                 if (json !== undefined && json !== null) {
-                    return parseColumnDefinitionsFromApi(json)
+                    return parseColumnsFromApi(json)
                 }
             } else {
                 dispatch(putOwnerShipRequestError(args))
@@ -79,7 +79,7 @@ export function putOwnershipRequest(
 }
 export function acceptOwnershipRequest(
     idPersistent: string
-): ThunkWithFetch<TagDefinition | undefined> {
+): ThunkWithFetch<Column | undefined> {
     return async (dispatch, _getState, fetch) => {
         dispatch(acceptOwnershipRequestStart(idPersistent))
         try {
@@ -91,7 +91,7 @@ export function acceptOwnershipRequest(
             const json = await rsp.json()
             if (rsp.status == 200) {
                 dispatch(acceptOwnershipRequestSuccess(idPersistent))
-                return parseColumnDefinitionsFromApi(json)
+                return parseColumnsFromApi(json)
             }
             dispatch(acceptOwnershipRequestError(idPersistent))
             dispatch(addError(errorMessageFromApi(json)))
@@ -129,7 +129,7 @@ export function parseOwnershipRequestFromJson(json: {
     return {
         petitioner: parsePublicUserInfoFromJson(json['petitioner']),
         receiver: parsePublicUserInfoFromJson(json['receiver']),
-        tagDefinition: parseColumnDefinitionsFromApi(json['column']),
+        column: parseColumnsFromApi(json['column']),
         idPersistent: json['id_persistent'] as string
     }
 }

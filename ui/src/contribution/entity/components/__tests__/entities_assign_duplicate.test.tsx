@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-vi.mock('@glideapps/glide-data-grid', async() => {
+vi.mock('@glideapps/glide-data-grid', async () => {
     const actual = await vi.importActual('@glideapps/glide-data-grid')
     return {
         __esmodule: true,
@@ -29,8 +29,11 @@ import {
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { EntitiesStep } from '../../components'
-import { TagSelectionState, newTagSelectionState } from '../../../../column_menu/state'
-import { tagSelectionSlice } from '../../../../column_menu/slice'
+import {
+    ColumnSelectionState,
+    newColumnSelectionState
+} from '../../../../column_menu/state'
+import { columnSelectionReducer } from '../../../../column_menu/slice'
 import { Button, Col, Row } from 'react-bootstrap'
 import {
     CompactSelection,
@@ -107,7 +110,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionEntity: ContributionEntityState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
     }
 }
 
@@ -133,7 +136,7 @@ export function renderWithProviders(
                     justification: 'justification'
                 })
             }),
-            tagSelection: newTagSelectionState({})
+            columnSelection: newColumnSelectionState({})
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -142,7 +145,7 @@ export function renderWithProviders(
         reducer: {
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer
+            columnSelection: columnSelectionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -305,7 +308,7 @@ test('merge with existing', async () => {
             newRemote(
                 newScoredEntity({
                     similarity: 0.8,
-                    idMatchTagDefinitionPersistentList: [],
+                    idMatchColumnPersistentList: [],
                     idPersistent: 'id-entity-1-0',
                     displayTxt: 'entity-1 match 0',
                     displayTxtDetails: 'display_txt_detail',
@@ -320,7 +323,7 @@ test('merge with existing', async () => {
             newRemote(
                 newScoredEntity({
                     similarity: 0.9,
-                    idMatchTagDefinitionPersistentList: [],
+                    idMatchColumnPersistentList: [],
                     idPersistent: 'id-entity-2-1',
                     displayTxt: 'entity-2 match 1',
                     displayTxtDetails: 'display_txt_detail',
@@ -411,7 +414,7 @@ test('open justification modal', async () => {
                 selectedContribution: newRemote(contribution)
             }),
             contributionEntity: newContributionEntityState({}),
-            tagSelection: newTagSelectionState({})
+            columnSelection: newColumnSelectionState({})
         }
     })
     await waitFor(() => {

@@ -9,8 +9,8 @@ import {
 import { newRemote, RemoteInterface } from '../../util/state'
 import { MergeRequest } from '../state'
 
-const tagMergeRequestConflictsSlice = createSlice({
-    name: 'tagMergeRequestConflicts',
+const columnMergeRequestConflictsSlice = createSlice({
+    name: 'columnMergeRequestConflicts',
     initialState: newMergeRequestConflictResolutionState({}),
     reducers: {
         getMergeRequestConflictStart: (state: MergeRequestConflictResolutionState) => {
@@ -141,7 +141,7 @@ function processConflicts(
         }
     }
 }
-export const tagMergeRequestConflictsReducer = tagMergeRequestConflictsSlice.reducer
+export const columnMergeRequestConflictsReducer = columnMergeRequestConflictsSlice.reducer
 
 export const {
     getMergeRequestConflictStart,
@@ -156,4 +156,4 @@ export const {
     toggleDisableOnMergeStart,
     toggleDisableOnMergeSuccess,
     toggleDisableOnMergeError
-} = tagMergeRequestConflictsSlice.actions
+} = columnMergeRequestConflictsSlice.actions

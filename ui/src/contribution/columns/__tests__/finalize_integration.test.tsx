@@ -14,8 +14,11 @@ import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import {
+    ColumnSelectionState,
+    newColumnSelectionState
+} from '../../../column_menu/state'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 import {
     NotificationManager,
@@ -43,7 +46,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionColumnDefinition: ColumnDefinitionsContributionState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         notification: NotificationManager
     }
 }
@@ -69,7 +72,7 @@ export function renderWithProviders(
                     })
                 )
             }),
-            tagSelection: newTagSelectionState({}),
+            columnSelection: newColumnSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
@@ -79,7 +82,7 @@ export function renderWithProviders(
         reducer: {
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -120,8 +123,8 @@ export const contributionColumnActiveRsp1 = {
     index_in_file: 2,
     discard: false
 }
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
+const idColumn = 'id-column-test-0'
+const nameColumn0 = 'column 0'
 
 function initialResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
@@ -140,9 +143,9 @@ function initialResponseSequence(fetchMock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDef0,
-                        name_path: [nameTagDef0],
-                        name: nameTagDef0,
+                        id_persistent: idColumn,
+                        name_path: [nameColumn0],
+                        name: nameColumn0,
                         curated: true,
                         version: 0,
                         type: 'STRING'

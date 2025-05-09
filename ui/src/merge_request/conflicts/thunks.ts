@@ -3,13 +3,13 @@ import { config } from '../../config'
 import {
     MergeRequestConflict,
     ReplacementState,
-    TagInstance,
+    Value,
     newMergeRequestConflict,
-    newTagInstance
+    newValue
 } from './state'
 import { parseEntityObjectFromJson } from '../../table/thunks'
 import { Entity } from '../../entity/state'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import { parseMergeRequestFromJson } from '../thunks'
 import { addError, addSuccessVanish } from '../../util/notification/slice'
 import { ThunkWithFetch } from '../../util/type'
@@ -74,19 +74,19 @@ export function getMergeRequestConflicts(
 export function resolveConflict({
     idMergeRequestPersistent,
     entity,
-    tagInstanceOrigin,
-    tagDefinitionOrigin,
-    tagInstanceDestination,
-    tagDefinitionDestination,
+    valueOrigin,
+    columnOrigin,
+    valueDestination,
+    columnDestination,
     replacementState,
     replacementValue
 }: {
     idMergeRequestPersistent: string
     entity: Entity
-    tagInstanceOrigin: TagInstance
-    tagDefinitionOrigin: TagDefinition
-    tagInstanceDestination?: TagInstance
-    tagDefinitionDestination: TagDefinition
+    valueOrigin: Value
+    columnOrigin: Column
+    valueDestination?: Value
+    columnDestination: Column
     replacementState?: ReplacementState
     replacementValue: string | undefined
 }): ThunkWithFetch<void> {
@@ -100,21 +100,21 @@ export function resolveConflict({
                     credentials: 'include',
                     body: JSON.stringify({
                         id_entity_version: entity.version,
-                        id_column_origin_version: tagDefinitionOrigin.version,
-                        id_value_origin_version: tagInstanceOrigin.version,
+                        id_column_origin_version: columnOrigin.version,
+                        id_value_origin_version: valueOrigin.version,
                         id_column_destination_version:
-                            tagDefinitionDestination.version,
+                            columnDestination.version,
                         id_value_destination_version:
-                            tagInstanceDestination?.version,
+                            valueDestination?.version,
                         id_entity_persistent: entity.idPersistent,
                         id_column_origin_persistent:
-                            tagDefinitionOrigin.idPersistent,
+                            columnOrigin.idPersistent,
                         id_value_origin_persistent:
-                            tagInstanceOrigin.idPersistent,
+                            valueOrigin.idPersistent,
                         id_column_destination_persistent:
-                            tagDefinitionDestination.idPersistent,
+                            columnDestination.idPersistent,
                         id_value_destination_persistent:
-                            tagInstanceDestination?.idPersistent,
+                            valueDestination?.idPersistent,
                         replacement_state: replacementState,
                         replacement_value: replacementValue
                     })
@@ -142,15 +142,15 @@ export function resolveConflict({
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseMergeRequestConflictFromApi(json: any): MergeRequestConflict {
-    const tagInstanceDestinationJson = json['value_destination']
-    const tagInstanceDestination =
-        tagInstanceDestinationJson === null
+    const valueDestinationJson = json['value_destination']
+    const valueDestination =
+        valueDestinationJson === null
             ? undefined
-            : parseTagInstanceFromJson(tagInstanceDestinationJson)
+            : parseValueFromJson(valueDestinationJson)
     return newMergeRequestConflict({
         entity: parseEntityObjectFromJson(json['entity']),
-        tagInstanceOrigin: parseTagInstanceFromJson(json['value_origin']),
-        tagInstanceDestination: tagInstanceDestination,
+        valueOrigin: parseValueFromJson(json['value_origin']),
+        valueDestination: valueDestination,
         replacementState: replacementStateJsonToAppDict[json['replacement_state']],
         replacementValue: json['replacement_value'] ?? undefined
     })
@@ -165,8 +165,8 @@ export const replacementStateJsonToAppDict: {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseTagInstanceFromJson(json: any) {
-    return newTagInstance({
+export function parseValueFromJson(json: any) {
+    return newValue({
         idPersistent: json['id_persistent'],
         version: json['version'],
         value: json['value']

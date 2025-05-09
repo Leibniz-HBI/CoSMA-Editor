@@ -1,4 +1,4 @@
-import { TagDefinition } from '../column_menu/state'
+import { Column } from '../column_menu/state'
 import { PublicUserInfo } from '../user/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
@@ -15,8 +15,8 @@ export interface MergeRequest {
     idPersistent: string
     createdBy: PublicUserInfo
     assignedTo: PublicUserInfo
-    originTagDefinition: TagDefinition
-    destinationTagDefinition: TagDefinition
+    originColumn: Column
+    destinationColumn: Column
     disableOriginOnMerge: boolean
     step: MergeRequestStep
 }
@@ -24,16 +24,16 @@ export function newMergeRequest({
     idPersistent,
     createdBy,
     assignedTo,
-    originTagDefinition,
-    destinationTagDefinition,
+    originColumn,
+    destinationColumn,
     disableOriginOnMerge,
     step
 }: {
     idPersistent: string
     createdBy: PublicUserInfo
     assignedTo: PublicUserInfo
-    originTagDefinition: TagDefinition
-    destinationTagDefinition: TagDefinition
+    originColumn: Column
+    destinationColumn: Column
     disableOriginOnMerge: boolean
     step: MergeRequestStep
 }) {
@@ -41,8 +41,8 @@ export function newMergeRequest({
         idPersistent: idPersistent,
         createdBy: createdBy,
         assignedTo: assignedTo,
-        originTagDefinition: originTagDefinition,
-        destinationTagDefinition: destinationTagDefinition,
+        originColumn,
+        destinationColumn,
         disableOriginOnMerge,
         step: step
     }

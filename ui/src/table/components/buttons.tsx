@@ -12,7 +12,7 @@ import { Entity } from '../../entity/state'
 import { toggleRowSelection } from '../selection/slice'
 import { selectRowSelectionOrder } from '../selection/selectors'
 import { downloadWorkAround } from './table'
-import { useTagDefinitionList } from '../../column_menu/hooks'
+import { useColumnDefinitionList } from '../../column_menu/hooks'
 
 export function AddEntityButton({ dispatch }: { dispatch: AppDispatch }) {
     return <Button onClick={() => dispatch(showEntityAdd())}>Add Entity</Button>
@@ -81,8 +81,8 @@ export function DownloadButton({
     columnStates: ColumnState[]
     showJustifications: boolean
 }) {
-    const tagDefinitions = useTagDefinitionList(
-        columnStates.map((columnState) => columnState.idTagDefinitionPersistent)
+    const columnList = useColumnDefinitionList(
+        columnStates.map((columnState) => columnState.idColumnPersistent)
     )
     return (
         <Button
@@ -90,7 +90,7 @@ export function DownloadButton({
                 downloadWorkAround(
                     csvLinesFromTable({
                         entities,
-                        tagDefinitions,
+                        columns: columnList,
                         columnStates,
                         showJustifications
                     })

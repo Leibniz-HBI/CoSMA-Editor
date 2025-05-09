@@ -23,16 +23,16 @@ import { Provider } from 'react-redux'
 import { MergeRequestConflictResolutionView } from '../components'
 import { newRemote } from '../../../util/state'
 import { UserPermissionGroup, newPublicUserInfo } from '../../../user/state'
-import { TagType, newTagDefinition } from '../../../column_menu/state'
+import { ColumnType, newColumn } from '../../../column_menu/state'
 import {
     MergeRequestConflictResolutionState,
     newMergeRequestConflict,
     newMergeRequestConflictResolutionState,
     newMergeRequestConflictsByState,
-    newTagInstance,
+    newValue,
     ReplacementState
 } from '../state'
-import { tagMergeRequestConflictsReducer } from '../slice'
+import { columnMergeRequestConflictsReducer } from '../slice'
 import { newEntity } from '../../../entity/state'
 import { MergeRequestStep, newMergeRequest } from '../../state'
 import { act } from 'react-dom/test-utils'
@@ -41,7 +41,7 @@ import userEvent from '@testing-library/user-event'
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         notification: NotificationManager
-        tagMergeRequestConflicts: MergeRequestConflictResolutionState
+        columnMergeRequestConflicts: MergeRequestConflictResolutionState
     }
 }
 
@@ -50,7 +50,7 @@ export function renderWithProviders(
     fetchMock: vi.mock,
     {
         preloadedState = {
-            tagMergeRequestConflicts: newMergeRequestConflictResolutionState({}),
+            columnMergeRequestConflicts: newMergeRequestConflictResolutionState({}),
             notification: newNotificationManager({})
         },
         ...renderOptions
@@ -59,7 +59,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             notification: notificationReducer,
-            tagMergeRequestConflicts: tagMergeRequestConflictsReducer
+            columnMergeRequestConflicts: columnMergeRequestConflictsReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -86,28 +86,28 @@ function addResponseSequence(mock: vi.mock, responses: [number, unknown][]) {
     }
 }
 const replacementValue = 'test replacement value'
-const tagDefOrigin = newTagDefinition({
-    namePath: ['tag def origin test'],
-    idPersistent: 'id-tag-def-origin-test',
+const columnOrigin = newColumn({
+    namePath: ['column origin test'],
+    idPersistent: 'id-column-origin-test',
     curated: false,
     version: 84,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     hidden: false
 })
-const tagDefDestination = newTagDefinition({
-    namePath: ['tag def destination test'],
-    idPersistent: 'id-tag-def-destination-test',
+const columnDestination = newColumn({
+    namePath: ['column destination test'],
+    idPersistent: 'id-column-destination-test',
     curated: false,
     version: 841,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     hidden: false
 })
-const tagInstanceOrigin = newTagInstance({
+const valueOrigin = newValue({
     idPersistent: 'id-instance-origin-test1',
     version: 12,
     value: 'value test origin'
 })
-const tagInstanceDestination = newTagInstance({
+const valueDestination = newValue({
     idPersistent: 'id-instance-destination-test1',
     version: 121,
     value: 'value test destination1'
@@ -121,8 +121,8 @@ const sharedConflict1 = newRemote(
             version: 81,
             disabled: false
         }),
-        tagInstanceOrigin: tagInstanceOrigin,
-        tagInstanceDestination: tagInstanceDestination
+        valueOrigin: valueOrigin,
+        valueDestination: valueDestination
     })
 )
 const sharedConflict = newRemote(
@@ -134,12 +134,12 @@ const sharedConflict = newRemote(
             version: 8,
             disabled: false
         }),
-        tagInstanceOrigin: newTagInstance({
+        valueOrigin: newValue({
             idPersistent: 'id-instance-origin-test',
             version: 12,
             value: 'value test origin'
         }),
-        tagInstanceDestination: newTagInstance({
+        valueDestination: newValue({
             idPersistent: 'id-instance-destination-test',
             version: 12,
             value: 'value test destination'
@@ -156,14 +156,14 @@ const entity = newEntity({
 })
 const sharedConflictJson = {
     value_origin: {
-        id_persistent: sharedConflict.value.tagInstanceOrigin.idPersistent,
-        version: sharedConflict.value.tagInstanceOrigin.version,
-        value: sharedConflict.value.tagInstanceOrigin.value
+        id_persistent: sharedConflict.value.valueOrigin.idPersistent,
+        version: sharedConflict.value.valueOrigin.version,
+        value: sharedConflict.value.valueOrigin.value
     },
     value_destination: {
-        id_persistent: sharedConflict.value.tagInstanceDestination?.idPersistent,
-        version: sharedConflict.value.tagInstanceDestination?.version,
-        value: sharedConflict.value.tagInstanceDestination?.value
+        id_persistent: sharedConflict.value.valueDestination?.idPersistent,
+        version: sharedConflict.value.valueDestination?.version,
+        value: sharedConflict.value.valueDestination?.value
     },
     entity: {
         id_persistent: sharedConflict.value.entity.idPersistent,
@@ -176,14 +176,14 @@ const sharedConflictJson = {
 }
 const sharedConflictJson1 = {
     value_origin: {
-        id_persistent: sharedConflict1.value.tagInstanceOrigin.idPersistent,
-        version: sharedConflict1.value.tagInstanceOrigin.version,
-        value: sharedConflict1.value.tagInstanceOrigin.value
+        id_persistent: sharedConflict1.value.valueOrigin.idPersistent,
+        version: sharedConflict1.value.valueOrigin.version,
+        value: sharedConflict1.value.valueOrigin.value
     },
     value_destination: {
-        id_persistent: sharedConflict1.value.tagInstanceDestination?.idPersistent,
-        version: sharedConflict1.value.tagInstanceDestination?.version,
-        value: sharedConflict1.value.tagInstanceDestination?.value
+        id_persistent: sharedConflict1.value.valueDestination?.idPersistent,
+        version: sharedConflict1.value.valueDestination?.version,
+        value: sharedConflict1.value.valueDestination?.value
     },
     entity: {
         id_persistent: sharedConflict1.value.entity.idPersistent,
@@ -204,12 +204,12 @@ const conflicts = [
                 version: 82,
                 disabled: false
             }),
-            tagInstanceOrigin: newTagInstance({
+            valueOrigin: newValue({
                 idPersistent: 'id-instance-origin-test2',
                 version: 122,
                 value: 'value test origin2'
             }),
-            tagInstanceDestination: newTagInstance({
+            valueDestination: newValue({
                 idPersistent: 'id-instance-destination-test2',
                 version: 122,
                 value: 'value test destination2'
@@ -220,12 +220,12 @@ const conflicts = [
     newRemote(
         newMergeRequestConflict({
             entity: entity,
-            tagInstanceOrigin: newTagInstance({
+            valueOrigin: newValue({
                 idPersistent: 'id-instance-origin-test3',
                 version: 123,
                 value: 'value test origin3'
             }),
-            tagInstanceDestination: newTagInstance({
+            valueDestination: newValue({
                 idPersistent: 'id-instance-destination-test3',
                 version: 123,
                 value: 'value test destination3'
@@ -247,7 +247,7 @@ describe('get tests', () => {
         })
         expect(store.getState()).toEqual({
             notification: newNotificationManager({}),
-            tagMergeRequestConflicts: newMergeRequestConflictResolutionState({
+            columnMergeRequestConflicts: newMergeRequestConflictResolutionState({
                 conflicts: newRemote(
                     newMergeRequestConflictsByState({
                         updated: updatedConflicts,
@@ -281,7 +281,7 @@ describe('get tests', () => {
                 ],
                 notificationMap: expect.anything()
             }),
-            tagMergeRequestConflicts: newMergeRequestConflictResolutionState({})
+            columnMergeRequestConflicts: newMergeRequestConflictResolutionState({})
         })
     })
 })
@@ -313,7 +313,7 @@ describe('resolve conflicts', () => {
         await waitFor(() => {
             expect(store.getState()).toEqual({
                 notification: newNotificationManager({}),
-                tagMergeRequestConflicts: newMergeRequestConflictResolutionState({
+                columnMergeRequestConflicts: newMergeRequestConflictResolutionState({
                     conflicts: newRemote(
                         newMergeRequestConflictsByState({
                             updated: updatedConflicts.slice(0, 1),
@@ -349,7 +349,7 @@ describe('resolve conflicts', () => {
         await waitFor(async () => {
             expect(store.getState()).toEqual({
                 notification: newNotificationManager({}),
-                tagMergeRequestConflicts: newMergeRequestConflictResolutionState({
+                columnMergeRequestConflicts: newMergeRequestConflictResolutionState({
                     conflicts: newRemote(
                         newMergeRequestConflictsByState({
                             updated: updatedConflicts.slice(0, 1),
@@ -394,9 +394,9 @@ describe('resolve conflicts', () => {
             id_column_destination_version: 841,
             id_value_destination_version: 121,
             id_entity_persistent: 'id-entity-test1',
-            id_column_origin_persistent: 'id-tag-def-origin-test',
+            id_column_origin_persistent: 'id-column-origin-test',
             id_value_origin_persistent: 'id-instance-origin-test1',
-            id_column_destination_persistent: 'id-tag-def-destination-test',
+            id_column_destination_persistent: 'id-column-destination-test',
             id_value_destination_persistent: 'id-instance-destination-test1',
             replacement_state: 'REPLACE',
             replacement_value: undefined
@@ -595,7 +595,7 @@ describe('toggle disable origin on merge', () => {
             toggle.click()
         })
         expect(
-            store.getState().tagMergeRequestConflicts.conflicts.value?.mergeRequest
+            store.getState().columnMergeRequestConflicts.conflicts.value?.mergeRequest
                 .disableOriginOnMerge
         ).toEqual(false)
         expect(store.getState().notification).toEqual(newNotificationManager({}))
@@ -628,7 +628,7 @@ describe('toggle disable origin on merge', () => {
             toggle.click()
         })
         expect(
-            store.getState().tagMergeRequestConflicts.conflicts.value?.mergeRequest
+            store.getState().columnMergeRequestConflicts.conflicts.value?.mergeRequest
                 .disableOriginOnMerge
         ).toEqual(true)
         expect(store.getState().notification).toEqual(
@@ -673,8 +673,8 @@ const mergeRequest = newMergeRequest({
         permissionGroup: UserPermissionGroup.CONTRIBUTOR
     }),
     step: MergeRequestStep.Open,
-    originTagDefinition: tagDefOrigin,
-    destinationTagDefinition: tagDefDestination,
+    originColumn: columnOrigin,
+    destinationColumn: columnDestination,
     disableOriginOnMerge: true
 })
 
@@ -712,22 +712,22 @@ function initialResponseSequence(fetchMock: Mock) {
                     state: 'OPEN',
                     disable_origin_on_merge: true,
                     origin: {
-                        name: tagDefOrigin.namePath[0],
-                        name_path: tagDefOrigin.namePath,
-                        id_persistent: tagDefOrigin.idPersistent,
+                        name: columnOrigin.namePath[0],
+                        name_path: columnOrigin.namePath,
+                        id_persistent: columnOrigin.idPersistent,
                         type: 'STRING',
                         curated: false,
-                        version: tagDefOrigin.version,
+                        version: columnOrigin.version,
                         hidden: false,
                         disabled: false
                     },
                     destination: {
-                        name: tagDefDestination.namePath[0],
-                        name_path: tagDefDestination.namePath,
-                        id_persistent: tagDefDestination.idPersistent,
+                        name: columnDestination.namePath[0],
+                        name_path: columnDestination.namePath,
+                        id_persistent: columnDestination.idPersistent,
                         type: 'STRING',
                         curated: false,
-                        version: tagDefDestination.version,
+                        version: columnDestination.version,
                         hidden: false,
                         disabled: false
                     }

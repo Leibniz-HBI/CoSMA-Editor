@@ -12,7 +12,7 @@ import { IBounds, useLayer } from 'react-laag'
 import { ColumnAddButton } from '../../column_menu/components/misc'
 import { HeaderMenu } from '../../header_menu'
 import { loadingCellRenderer } from '../draw'
-import { ChangeOwnershipModal } from '../../tag_management/components'
+import { ChangeOwnershipModal } from '../../column_management/components'
 import { MergeEntitiesButton } from './buttons'
 import { mkGridSelectionCallback } from '../selection/slice'
 import { useDispatch, useSelector } from 'react-redux'
@@ -28,7 +28,7 @@ import {
     selectFrozenColumns,
     selectIsLoadingEntities,
     selectIsSubmittingValues,
-    selectOwnershipChangeTagDefinitionIdPersistent,
+    selectOwnershipChangeColumnIdPersistent,
     selectSelectedColumnHeaderBounds,
     selectShowEntityJustifications,
     selectShowSearch
@@ -43,7 +43,7 @@ import {
     showColumnAddMenu,
     showEntityJustificationHistory,
     showHeaderMenu,
-    tagChangeOwnershipHide,
+    columnChangeOwnershipHide,
     toggleEntityMergingModal,
     toggleSearch
 } from '../slice'
@@ -54,7 +54,7 @@ import {
     getTableAsync,
     submitValuesAsync
 } from '../thunks'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import {
     ColumnState,
     displayTxtColumnIdx,
@@ -76,7 +76,7 @@ import { EditSessionEditorButton } from '../../session/components'
 import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
 import { EntityDetailsModal } from './modals'
 import { InfoCircle } from 'react-bootstrap-icons'
-import { useTagDefinitionList } from '../../column_menu/hooks'
+import { useColumnDefinitionList } from '../../column_menu/hooks'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -104,8 +104,8 @@ export function RemoteDataTable() {
     const showJustifications = useAppSelector(selectShowEntityJustifications)
     const columnIndices = useAppSelector(selectColumnIndices)
     const columnStates = useAppSelector(selectColumnStates)
-    const tagDefinitionChangeOwnership = useAppSelector(
-        selectOwnershipChangeTagDefinitionIdPersistent
+    const columnChangeOwnership = useAppSelector(
+        selectOwnershipChangeColumnIdPersistent
     )
     const dispatch = useAppDispatch()
     useEffect(
@@ -122,7 +122,7 @@ export function RemoteDataTable() {
                 if (!success) {
                     return
                 }
-                userInfo.value?.columns.forEach(async (col: TagDefinition) => {
+                userInfo.value?.columns.forEach(async (col: Column) => {
                     const idPersistent = col.idPersistent
                     const colStateIdx = columnIndices[idPersistent]
                     const colState = columnStates[colStateIdx ?? -1]
@@ -193,8 +193,8 @@ export function RemoteDataTable() {
                         <EntityAddModal />
                         <EntityMergingModal />
                         <ChangeOwnershipModal
-                            idTagDefinitionPersistent={tagDefinitionChangeOwnership}
-                            onClose={() => dispatch(tagChangeOwnershipHide())}
+                            idColumnPersistent={columnChangeOwnership}
+                            onClose={() => dispatch(columnChangeOwnershipHide())}
                         />
                         <EntityJustificationModal />
                         <EntityDetailsModal />
@@ -239,8 +239,8 @@ export function DataTable({
     const dispatch: AppDispatch = useDispatch()
     const tableSelection = useSelector(selectTableSelection)
     const frozenColumns = useAppSelector(selectFrozenColumns),
-        tagDefinitions = useTagDefinitionList(
-            columnStates.map((columnState) => columnState.idTagDefinitionPersistent)
+        columns = useColumnDefinitionList(
+            columnStates.map((columnState) => columnState.idColumnPersistent)
         ),
         selectedColumnHeaderBounds = useAppSelector(selectSelectedColumnHeaderBounds),
         isLoading = useAppSelector(selectIsLoadingEntities),
@@ -253,7 +253,7 @@ export function DataTable({
             createCellContentCallback({
                 entities,
                 columnStates,
-                tagDefinitions,
+                columns,
                 showEntityJustifications: showEntityJustifications
             }),
             [entities, columnStates, showEntityJustifications]
@@ -283,16 +283,16 @@ export function DataTable({
                     })
                 )
             } else {
-                const tagDefinition = tagDefinitions[colIdx]
-                if (tagDefinition === undefined || tagDefinition.value === undefined) {
+                const column = columns[colIdx]
+                if (column === undefined || column.value === undefined) {
                     dispatch(
-                        addError('Can not change data for unloaded tag definition.')
+                        addError('Can not change data for unloaded column.')
                     )
                 } else {
                     dispatch(
-                        submitValuesAsync(tagDefinition.value.columnType, [
+                        submitValuesAsync(column.value.columnType, [
                             entities[rowIdx].idPersistent,
-                            tagDefinition.value.idPersistent,
+                            column.value.idPersistent,
                             {
                                 ...columnStates[colIdx].cellContents.value[rowIdx][0],
                                 value: newValue.data?.toString()
@@ -428,15 +428,15 @@ export function DataTable({
         for (let i = 0; i < columnStates.length; ++i) {
             const columnState = columnStates[i]
             let title = 'loading ...'
-            const tagDefinition = tagDefinitions[i]
-            if (!(tagDefinition === undefined || tagDefinition.value === undefined)) {
-                title = constructColumnTitle(tagDefinition.value.namePath)
-                if (tagDefinition.value.curated) {
+            const column = columns[i]
+            if (!(column === undefined || column.value === undefined)) {
+                title = constructColumnTitle(column.value.namePath)
+                if (column.value.curated) {
                     title = '☑ ' + title
                 }
             }
             columnDefs.push({
-                id: columnState.idTagDefinitionPersistent,
+                id: columnState.idColumnPersistent,
                 title,
                 width: columnState.width,
                 hasMenu: i > 1

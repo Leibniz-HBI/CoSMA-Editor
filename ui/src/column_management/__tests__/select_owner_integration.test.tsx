@@ -4,10 +4,10 @@
 import { vi, Mock } from 'vitest'
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
 import {
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../../column_menu/state'
 import {
     UserPermissionGroup,
@@ -16,20 +16,20 @@ import {
     newPublicUserInfo
 } from '../../user/state'
 import userReducer from '../../user/slice'
-import tagManagementReducer from '../slice'
+import columnManagementReducer from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ChangeOwnershipModal } from '../components'
 import userEvent from '@testing-library/user-event'
-import { TagManagementState } from '../state'
+import { ColumnManagementState } from '../state'
 import { newRemote } from '../../util/state'
 import {
     NotificationManager,
     NotificationType,
     notificationReducer
 } from '../../util/notification/slice'
-import { tagSelectionSlice } from '../../column_menu/slice'
+import { columnSelectionReducer } from '../../column_menu/slice'
 import {
     displayTextColumn,
     displayTxtColumnId,
@@ -40,8 +40,8 @@ import {
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         user: UserState
-        tagManagement: TagManagementState
-        tagSelection: TagSelectionState
+        columnManagement: ColumnManagementState
+        columnSelection: ColumnSelectionState
         notification: NotificationManager
     }
 }
@@ -51,11 +51,11 @@ export function renderWithProviders(
     {
         preloadedState = {
             user: newUserState({}),
-            tagManagement: {
+            columnManagement: {
                 ownershipRequests: newRemote({ petitioned: [], received: [] }),
                 putOwnershipRequest: newRemote(undefined)
             },
-            tagSelection: initialTagSelectionState,
+            columnSelection: initialColumnSelectionState,
             notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
@@ -64,8 +64,8 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             user: userReducer,
-            tagManagement: tagManagementReducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnManagement: columnManagementReducer,
+            columnSelection: columnSelectionReducer,
             notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -95,17 +95,17 @@ function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
 const idUserTest = 'id-user-test'
 const usernameTest = 'user test'
 const permissionGroupTest = UserPermissionGroup.CONTRIBUTOR
-const idTagDefinitionTest = 'id-tag-def-test'
-const tagTypeTest = TagType.Inner
-const namePathTest = ['tag', 'path', 'test']
+const idTColumnTest = 'id-column-test'
+const columnTypeTest = ColumnType.Inner
+const namePathTest = ['column', 'path', 'test']
 const ownerTest = {
     username: usernameTest,
     idPersistent: idUserTest,
     permissionGroup: permissionGroupTest
 }
-const tagDefinitionTest = newTagDefinition({
-    columnType: tagTypeTest,
-    idPersistent: idTagDefinitionTest,
+const columnTest = newColumn({
+    columnType: columnTypeTest,
+    idPersistent: idTColumnTest,
     idParentPersistent: undefined,
     curated: false,
     namePath: namePathTest,
@@ -113,11 +113,11 @@ const tagDefinitionTest = newTagDefinition({
     owner: ownerTest,
     hidden: false
 })
-const initialTagSelectionState = newTagSelectionState({
-    tagDefinitionsByIdPersistent: {
+const initialColumnSelectionState = newColumnSelectionState({
+    columnsByIdPersistent: {
         [displayTxtColumnId]: newRemote(displayTextColumn),
         [justificationColumnId]: newRemote(justificationColumn),
-        [idTagDefinitionTest]: newRemote(tagDefinitionTest)
+        [idTColumnTest]: newRemote(columnTest)
     }
 })
 
@@ -139,14 +139,14 @@ describe('Ownership search', () => {
         user: newUserState({
             userSearchResults: newRemote([userInfoTest, userInfoTest1])
         }),
-        tagManagement: {
+        columnManagement: {
             ownershipRequests: newRemote({ petitioned: [], received: [] }),
             putOwnershipRequest: newRemote(undefined)
         },
-        tagSelection: initialTagSelectionState,
+        columnSelection: initialColumnSelectionState,
         notification: { notificationList: [], notificationMap: {} }
     }
-    const testError = 'You do not own this tag.'
+    const testError = 'You do not own this column.'
     test('search', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
@@ -171,7 +171,7 @@ describe('Ownership search', () => {
         ])
         renderWithProviders(
             <ChangeOwnershipModal
-                idTagDefinitionPersistent={idTagDefinitionTest}
+                idColumnPersistent={idTColumnTest}
                 onClose={vi.fn()}
             />,
             fetchMock
@@ -196,7 +196,7 @@ describe('Ownership search', () => {
             [
                 200,
                 {
-                    id_persistent: idTagDefinitionTest,
+                    id_persistent: idTColumnTest,
                     name_path: namePathTest,
                     name: namePathTest[2],
                     owner: {
@@ -214,7 +214,7 @@ describe('Ownership search', () => {
         ])
         renderWithProviders(
             <ChangeOwnershipModal
-                idTagDefinitionPersistent={idTagDefinitionTest}
+                idColumnPersistent={idTColumnTest}
                 onClose={vi.fn()}
             />,
             fetchMock,
@@ -238,7 +238,7 @@ describe('Ownership search', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/columns/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
+                `http://127.0.0.1:8000/cosmae/api/columns/permissions/${idTColumnTest}/owner/${idUserTest1}`,
                 { credentials: 'include', method: 'POST' }
             ]
         ])
@@ -255,7 +255,7 @@ describe('Ownership search', () => {
         ])
         const { store } = renderWithProviders(
             <ChangeOwnershipModal
-                idTagDefinitionPersistent={idTagDefinitionTest}
+                idColumnPersistent={idTColumnTest}
                 onClose={vi.fn()}
             />,
             fetchMock,
@@ -284,7 +284,7 @@ describe('Ownership search', () => {
         })
         expect(fetchMock.mock.calls).toEqual([
             [
-                `http://127.0.0.1:8000/cosmae/api/columns/permissions/${idTagDefinitionTest}/owner/${idUserTest1}`,
+                `http://127.0.0.1:8000/cosmae/api/columns/permissions/${idTColumnTest}/owner/${idUserTest1}`,
                 { credentials: 'include', method: 'POST' }
             ]
         ])
@@ -294,7 +294,7 @@ describe('Ownership search', () => {
         const closeMock = vi.fn()
         renderWithProviders(
             <ChangeOwnershipModal
-                idTagDefinitionPersistent={idTagDefinitionTest}
+                idColumnPersistent={idTColumnTest}
                 onClose={closeMock}
             />,
             fetchMock

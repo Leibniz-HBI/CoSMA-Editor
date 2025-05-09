@@ -15,11 +15,11 @@ vi.mock('@glideapps/glide-data-grid', async () => {
 import { vi } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
@@ -67,7 +67,7 @@ import { newRemote } from '../../../util/state'
 import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { AuthState, newAuthState } from '../../../auth/state'
 import { authReducer } from '../../../auth/slice'
 
@@ -129,7 +129,7 @@ function MockTable(props: any) {
 test('edit display text success', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     addResponseSequence(fetchMock, [
         [
             200,
@@ -192,7 +192,7 @@ test('edit display text success', async () => {
 test('edit display text error', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     const msg = 'could not edit entity for test'
     addResponseSequence(fetchMock, [[500, { msg }]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
@@ -233,10 +233,10 @@ test('edit display text error', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(3)
 })
-test('edit tag value success', async () => {
+test('edit value success', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     addResponseSequence(fetchMock, [
         [
             200,
@@ -244,7 +244,7 @@ test('edit tag value success', async () => {
                 value_list: [
                     {
                         id_persistent: idValue0,
-                        id_column_persistent: idTagDefPersistent,
+                        id_column_persistent: idColumnPersistent,
                         id_entity_persistent: idPersistent0,
                         value: valueChanged,
                         version: versionChanged
@@ -287,7 +287,7 @@ test('edit tag value success', async () => {
                 value_list: [
                     {
                         id_entity_persistent: idPersistent0,
-                        id_column_persistent: idTagDefPersistent,
+                        id_column_persistent: idColumnPersistent,
                         value: valueChanged,
                         id_persistent: idValue0,
                         version: versionValue0
@@ -298,11 +298,11 @@ test('edit tag value success', async () => {
     ])
 })
 
-test('edit tag value api msg error', async () => {
+test('edit value api msg error', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
-    const msg = 'Could not change tag instance'
+    addValueResponse(fetchMock)
+    const msg = 'Could not change value'
     addResponseSequence(fetchMock, [[500, { msg }]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     const user = userEvent.setup()
@@ -341,10 +341,10 @@ test('edit tag value api msg error', async () => {
     expect(fetchMock.mock.calls.length).toEqual(3)
 })
 
-test('edit tag value changed in backend', async () => {
+test('edit value changed in backend', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     const valueChangedByOther = 'already changed'
     const versionChangedByOther = 947
     addResponseSequence(fetchMock, [
@@ -354,7 +354,7 @@ test('edit tag value changed in backend', async () => {
                 value_list: [
                     {
                         id_persistent: idValue0,
-                        id_column_persistent: idTagDefPersistent,
+                        id_column_persistent: idColumnPersistent,
                         id_entity_persistent: idPersistent0,
                         value: valueChangedByOther,
                         version: versionChangedByOther
@@ -439,7 +439,7 @@ const test_entity_rsp_1 = {
 }
 
 const columnNameTest = 'column name test'
-const idTagDefPersistent = 'column_id_test'
+const idColumnPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -449,11 +449,11 @@ const userTest = newPublicUserInfo({
 })
 const nameUserTest1 = 'user_test1'
 const idUserTest1 = 'id-user-test-1'
-const tagDefTest: TagDefinition = newTagDefinition({
+const columnTest: Column = newColumn({
     namePath: [columnNameTest],
-    idPersistent: idTagDefPersistent,
+    idPersistent: idColumnPersistent,
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 2,
@@ -471,11 +471,11 @@ const versionValue0 = 12
 const value0 = 'value 0',
     value1 = 'value 1',
     valueChanged = 'changed'
-function addTagInstanceResponse(fetchMock: vi.mock) {
-    const tagResponse = {
+function addValueResponse(fetchMock: vi.mock) {
+    const valueResponse = {
         id_entity_persistent: idPersistent0,
 
-        id_column_persistent: idTagDefPersistent,
+        id_column_persistent: idColumnPersistent,
         value: value0,
         id_persistent: idValue0,
         owner: {
@@ -485,9 +485,9 @@ function addTagInstanceResponse(fetchMock: vi.mock) {
         },
         version: versionValue0
     }
-    const tagResponse1 = {
+    const valueResponse1 = {
         id_entity_persistent: idPersistent1,
-        id_column_persistent: idTagDefPersistent,
+        id_column_persistent: idColumnPersistent,
         value: value1,
         id_persistent: idValue1,
         owner: {
@@ -501,7 +501,7 @@ function addTagInstanceResponse(fetchMock: vi.mock) {
         [
             200,
             {
-                value_list: [tagResponse, tagResponse1]
+                value_list: [valueResponse, valueResponse1]
             }
         ]
     ])
@@ -512,7 +512,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         auth: AuthState
         user: UserState
         editSession: EditSessionState
@@ -528,11 +528,11 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            tagSelection: newTagSelectionState({
-                tagDefinitionsByIdPersistent: {
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
                     [displayTxtColumnId]: newRemote(displayTextColumn),
                     [justificationColumnId]: newRemote(justificationColumn),
-                    [idTagDefPersistent]: newRemote(tagDefTest)
+                    [idColumnPersistent]: newRemote(columnTest)
                 }
             }),
             user: newUserState({}),
@@ -542,7 +542,7 @@ export function renderWithProviders(
                         ...userTest,
                         email: 'mail@test.org',
                         namesPersonal: 'names personal',
-                        columns: [tagDefTest]
+                        columns: [columnTest]
                     })
                 )
             }),
@@ -571,7 +571,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             user: userSlice.reducer,
             auth: authReducer,
             entityDetails: entityDetailsReducer,

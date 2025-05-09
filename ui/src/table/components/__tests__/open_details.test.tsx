@@ -26,11 +26,11 @@ vi.mock('../../../entity/components', async () => {
 import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
@@ -60,7 +60,7 @@ import { Provider } from 'react-redux'
 import { RemoteDataTable } from '../table'
 import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { newRemote } from '../../../util/state'
 import {
     EditSessionParticipantType,
@@ -184,8 +184,8 @@ const test_entities_rsp_1 = {
 }
 const columnNameTest = 'column name test'
 const columnNameTest1 = 'column name test 1'
-const idTagDefPersistent = 'column_id_test'
-const idTagDefPersistent1 = 'column_id_test1'
+const idColumnPersistent = 'column_id_test'
+const idColumnPersistent1 = 'column_id_test1'
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -231,14 +231,14 @@ function addDetailsResponseSequence(fetchMock: Mock) {
                     {
                         id_persistent: idInstance,
                         id_entity_persistent: idPersistent1,
-                        id_column_persistent: idTagDefPersistent,
+                        id_column_persistent: idColumnPersistent,
                         value: value0,
                         version: versionInstance0
                     },
                     {
                         id_persistent: idInstance1,
                         id_entity_persistent: idPersistent1,
-                        id_column_persistent: idTagDefPersistent1,
+                        id_column_persistent: idColumnPersistent1,
                         value: value1,
                         version: versionInstance1
                     }
@@ -252,7 +252,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         user: UserState
         auth: AuthState
         entityDetails: EntityDetailsState
@@ -260,22 +260,22 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     }
 }
 
-const tagDefTest: TagDefinition = newTagDefinition({
+const columnTest: Column = newColumn({
     namePath: [columnNameTest],
-    idPersistent: idTagDefPersistent,
+    idPersistent: idColumnPersistent,
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 2,
     hidden: false
 })
 
-const tagDefTest1: TagDefinition = newTagDefinition({
+const columnTest1: Column = newColumn({
     namePath: [columnNameTest1],
-    idPersistent: idTagDefPersistent1,
+    idPersistent: idColumnPersistent1,
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 4,
@@ -290,12 +290,12 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            tagSelection: newTagSelectionState({
-                tagDefinitionsByIdPersistent: {
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
                     [displayTxtColumnId]: newRemote(displayTextColumn),
                     [justificationColumnId]: newRemote(justificationColumn),
-                    [idTagDefPersistent]: newRemote(tagDefTest),
-                    [idTagDefPersistent1]: newRemote(tagDefTest1)
+                    [idColumnPersistent]: newRemote(columnTest),
+                    [idColumnPersistent1]: newRemote(columnTest1)
                 }
             }),
             user: newUserState({}),
@@ -305,7 +305,7 @@ export function renderWithProviders(
                         ...userTest,
                         email: 'mail@test.org',
                         namesPersonal: 'names personal',
-                        columns: [tagDefTest]
+                        columns: [columnTest]
                     })
                 )
             }),
@@ -333,7 +333,7 @@ export function renderWithProviders(
         reducer: {
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             table: tableReducer,
             user: userSlice.reducer,
             auth: authReducer,

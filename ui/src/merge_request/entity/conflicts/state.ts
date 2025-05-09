@@ -1,8 +1,8 @@
 import { RemoteInterface, newRemote } from '../../../util/state'
-import { TagInstance, ReplacementState } from '../../conflicts/state'
+import { Value, ReplacementState } from '../../conflicts/state'
 import { EntityMergeRequest } from '../state'
 
-export interface TagDefinition {
+export interface Column {
     curated: boolean
     idPersistent: string
     idParentPersistent: string
@@ -11,30 +11,30 @@ export interface TagDefinition {
 }
 
 export interface EntityMergeRequestConflict {
-    tagDefinition: TagDefinition
-    tagInstanceOrigin: TagInstance
-    tagInstanceDestination?: TagInstance
+    column: Column
+    valueOrigin: Value
+    valueDestination?: Value
     replacementState?: ReplacementState
     replacementValue?: string
 }
 
 export function newEntityMergeRequestConflict({
-    tagDefinition,
-    tagInstanceOrigin,
-    tagInstanceDestination = undefined,
+    column: column,
+    valueOrigin,
+    valueDestination = undefined,
     replacementState,
     replacementValue = undefined
 }: {
-    tagDefinition: TagDefinition
-    tagInstanceOrigin: TagInstance
-    tagInstanceDestination?: TagInstance
+    column: Column
+    valueOrigin: Value
+    valueDestination?: Value
     replacementState?: ReplacementState
     replacementValue?: string
 }): EntityMergeRequestConflict {
     return {
-        tagDefinition,
-        tagInstanceOrigin,
-        tagInstanceDestination,
+        column: column,
+        valueOrigin,
+        valueDestination,
         replacementState,
         replacementValue
     }
@@ -44,8 +44,8 @@ export interface EntityMergeRequestConflicts {
     resolvableConflicts: RemoteInterface<EntityMergeRequestConflict>[]
     unresolvableConflicts: RemoteInterface<EntityMergeRequestConflict>[]
     updated: RemoteInterface<EntityMergeRequestConflict>[]
-    updatedTagDefinitionIdMap: { [key: string]: number }
-    resolvableConflictsTagDefinitionIdMap: { [key: string]: number }
+    updatedColumnIdMap: { [key: string]: number }
+    resolvableConflictsColumnIdMap: { [key: string]: number }
 }
 
 export interface EntityMergeRequestConflictsState {

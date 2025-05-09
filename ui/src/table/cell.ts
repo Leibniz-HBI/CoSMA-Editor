@@ -1,5 +1,5 @@
 import { GridCell, GridCellKind, Item } from '@glideapps/glide-data-grid'
-import { TagDefinition, TagType } from '../column_menu/state'
+import { Column, ColumnType } from '../column_menu/state'
 import {
     CellValue,
     ColumnState,
@@ -17,7 +17,7 @@ const emptyCell = {
     data: ''
 } as GridCell
 
-export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell {
+export function mkCell(columnType: ColumnType, cellValues?: CellValue[]): GridCell {
     // workaround for typescript jest compatibility
     let cellKind = 'text' as GridCellKind
     let allowOverlay = true
@@ -31,7 +31,7 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
             data: ''
         } as GridCell
     }
-    if (columnType == TagType.Boolean) {
+    if (columnType == ColumnType.Boolean) {
         // workaround for typescript jest compatibility
         allowOverlay = false
         cellKind = 'boolean' as GridCellKind
@@ -40,7 +40,7 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
         } else {
             cellContent = cellValues[0].value?.toString().toLowerCase() == 'true'
         }
-    } else if (columnType == TagType.Float) {
+    } else if (columnType == ColumnType.Float) {
         // workaround for typescript jest compatibility
         cellKind = 'number' as GridCellKind
         if (cellValues.length == 0) {
@@ -50,7 +50,7 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
             cellContent = cellValues[0].value
             displayData = cellContent?.toString()
         }
-    } else if (columnType == TagType.String) {
+    } else if (columnType == ColumnType.String) {
         if (cellValues.length == 0) {
             cellContent = ''
             displayData = ''
@@ -68,7 +68,7 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
                 displayData = ''
             }
         }
-    } else if (columnType == TagType.Inner) {
+    } else if (columnType == ColumnType.Inner) {
         allowOverlay = false
         displayData = ''
         cellContent = ''
@@ -84,12 +84,12 @@ export function mkCell(columnType: TagType, cellValues?: CellValue[]): GridCell 
 export function createCellContentCallback({
     entities,
     columnStates,
-    tagDefinitions,
+    columns,
     showEntityJustifications
 }: {
     entities?: Entity[]
     columnStates: ColumnState[]
-    tagDefinitions: RemoteInterface<TagDefinition | undefined>[]
+    columns: RemoteInterface<Column | undefined>[]
     showEntityJustifications: boolean
 }): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
@@ -99,7 +99,7 @@ export function createCellContentCallback({
             return emptyCell
         }
         if (col_idx == displayTxtColumnIdx) {
-            return mkCell(TagType.String, [
+            return mkCell(ColumnType.String, [
                 {
                     idPersistent: entity.idPersistent,
                     value: entity.displayTxt,
@@ -111,7 +111,7 @@ export function createCellContentCallback({
             showEntityJustifications &&
             col_idx == optionalEntityJustificationColumnIdx
         ) {
-            return mkCell(TagType.String, [
+            return mkCell(ColumnType.String, [
                 {
                     idPersistent: entity.idPersistent,
                     value: entity.justificationTxt,
@@ -120,21 +120,21 @@ export function createCellContentCallback({
             ])
         }
         const col = columnStates[col_idx]
-        const tagDefinition = tagDefinitions[col_idx]
+        const column = columns[col_idx]
         if (
             col === undefined ||
-            tagDefinition === undefined ||
-            tagDefinition.value === undefined
+            column === undefined ||
+            column.value === undefined
         ) {
             return emptyCell
         }
-        if (col.cellContents.isLoading || tagDefinition.isLoading) {
+        if (col.cellContents.isLoading || column.isLoading) {
             return {
                 kind: 'custom' as GridCellKind,
                 allowOverlay: true,
                 data: { kind: 'custom-loading-cell', rowIdx: row_idx, colIdx: col_idx }
             } as LoadingCell
         }
-        return mkCell(tagDefinition.value.columnType, col.cellContents.value[row_idx])
+        return mkCell(column.value.columnType, col.cellContents.value[row_idx])
     }
 }

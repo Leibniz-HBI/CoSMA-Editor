@@ -23,11 +23,8 @@ import * as yup from 'yup'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { getEntityValuesThunk, getEntitySearchResultsThunk } from './thunks'
 import { selectEntityDetails, selectEntitySearchResultEntries } from './selectors'
-import { useTagDefinition } from '../column_menu/hooks'
-import {
-    TagDefinitionNamePath,
-    TagDefinitionNamePathFromId
-} from '../column_menu/components/misc'
+import { useColumn } from '../column_menu/hooks'
+import { ColumnNamePath, ColumnNamePathFromId } from '../column_menu/components/misc'
 import { Entity, EntitySearchResult } from './state'
 import { AppDispatch } from '../store'
 import { debounce } from 'debounce'
@@ -141,9 +138,9 @@ function EntityDetailsComponent() {
     return (
         <Col>
             <DisplayTextComponent entity={entityDetails.value.entity} />
-            {entityDetails.value.tagInstanceList?.map((instance, idx) => (
-                <TagInstanceComponent
-                    idTagDefinitionPersistent={instance.idTagDefinitionPersistent}
+            {entityDetails.value.valueList?.map((instance, idx) => (
+                <ValueComponent
+                    idColumnPersistent={instance.idColumnPersistent}
                     value={instance.cellValue.value?.toString() ?? ''}
                     alternateBackground={idx % 2 == 0}
                     key={idx}
@@ -162,29 +159,27 @@ function DisplayTextComponent({ entity }: { entity: Entity }) {
     )
 }
 
-function TagInstanceComponent({
-    idTagDefinitionPersistent,
+function ValueComponent({
+    idColumnPersistent,
     value,
     alternateBackground
 }: {
-    idTagDefinitionPersistent: string
+    idColumnPersistent: string
     value: string
     alternateBackground?: boolean
 }) {
-    const tagDefinition = useTagDefinition(idTagDefinitionPersistent)
+    const column = useColumn(idColumnPersistent)
     let colorClass = ''
     if (alternateBackground) {
         colorClass = ' bg-primary-subtle'
     }
-    let tagDefinitionComponent = <Spinner />
-    if (tagDefinition.value !== undefined) {
-        tagDefinitionComponent = (
-            <TagDefinitionNamePath tagDefinition={tagDefinition.value} />
-        )
+    let columnComponent = <Spinner />
+    if (column.value !== undefined) {
+        columnComponent = <ColumnNamePath column={column.value} />
     }
     return (
         <Row className={'pt-2 ms-2 me-2' + colorClass}>
-            <Col xs={8}>{tagDefinitionComponent}</Col>
+            <Col xs={8}>{columnComponent}</Col>
             <Col xs={4}>{value}</Col>
         </Row>
     )
@@ -314,11 +309,9 @@ export function EntitySearchResultItem({
                 <Row className="fw-light">
                     <Col>
                         <span>Found by: </span>
-                        {result.idTagDefinitionPersistent !== undefined ? (
-                            <TagDefinitionNamePathFromId
-                                idTagDefinitionPersistent={
-                                    result.idTagDefinitionPersistent
-                                }
+                        {result.idColumnPersistent !== undefined ? (
+                            <ColumnNamePathFromId
+                                idColumnPersistent={result.idColumnPersistent}
                             />
                         ) : (
                             <span>Display Text</span>

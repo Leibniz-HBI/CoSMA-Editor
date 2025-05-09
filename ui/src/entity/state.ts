@@ -1,5 +1,5 @@
-import { TagDefinition } from '../column_menu/state'
-import { TagInstance } from '../contribution/entity/state'
+import { Column } from '../column_menu/state'
+import { Value } from '../contribution/entity/state'
 import { newRemote, RemoteInterface } from '../util/state'
 
 export interface BaseEntity {
@@ -11,7 +11,7 @@ export interface BaseEntity {
 export interface Entity extends BaseEntity {
     disabled: boolean
     justificationTxt: string | undefined
-    displayTxtDetails: string | TagDefinition
+    displayTxtDetails: string | Column
 }
 
 export function newEntity({
@@ -27,7 +27,7 @@ export function newEntity({
     version: number
     disabled: boolean
     justificationTxt?: string | undefined
-    displayTxtDetails?: string | TagDefinition
+    displayTxtDetails?: string | Column
 }) {
     return {
         idPersistent: idPersistent,
@@ -40,37 +40,37 @@ export function newEntity({
 }
 export interface EntityDetails {
     entity: Entity
-    tagInstanceList: TagInstance[]
+    valueList: Value[]
 }
 
 export interface EntitySearchResult {
     idEntityPersistent: string
-    idTagDefinitionPersistent: string | undefined
+    idColumnPersistent: string | undefined
     matchValue: string
 }
 
 export function newEntitySearchResult({
     idEntityPersistent,
-    idTagDefinitionPersistent = undefined,
+    idColumnPersistent = undefined,
     matchValue
 }: {
     idEntityPersistent: string
-    idTagDefinitionPersistent?: string | undefined
+    idColumnPersistent?: string | undefined
     matchValue: string
 }): EntitySearchResult {
-    return { idEntityPersistent, idTagDefinitionPersistent, matchValue }
+    return { idEntityPersistent, idColumnPersistent: idColumnPersistent, matchValue }
 }
 
 export function newEntityDetails({
     entity,
-    tagInstanceList = []
+    valueList = []
 }: {
     entity: Entity
-    tagInstanceList?: TagInstance[]
+    valueList?: Value[]
 }): EntityDetails {
     return {
         entity,
-        tagInstanceList
+        valueList: valueList
     }
 }
 

@@ -1,22 +1,22 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
 
-function selectTagMergeRequestConflicts(state: RootState) {
-    return state.tagMergeRequestConflicts
+function selectColumnMergeRequestConflicts(state: RootState) {
+    return state.columnMergeRequestConflicts
 }
 
-export const selectTagMergeRequestConflictsByCategory = createSelector(
-    selectTagMergeRequestConflicts,
+export const selectColumnMergeRequestConflictsByCategory = createSelector(
+    selectColumnMergeRequestConflicts,
     (state) => state.conflicts
 )
 
 export const selectStartMerge = createSelector(
-    selectTagMergeRequestConflicts,
+    selectColumnMergeRequestConflicts,
     (state) => state.startMerge
 )
 
 export const selectResolvedCount = createSelector(
-    selectTagMergeRequestConflicts,
+    selectColumnMergeRequestConflicts,
     (state) => {
         let numResolved
         if (state.conflicts.value !== undefined) {
@@ -35,7 +35,7 @@ export const selectResolvedCount = createSelector(
 )
 
 export const selectConflictsMergeRequest = createSelector(
-    selectTagMergeRequestConflictsByCategory,
+    selectColumnMergeRequestConflictsByCategory,
     (state) => state.value?.mergeRequest
 )
 

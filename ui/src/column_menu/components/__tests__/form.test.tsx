@@ -3,7 +3,7 @@
  */
 import { render, waitFor, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { TagCreateForm, ColumnTypeCreateFormProps } from '../form'
+import { ColumnCreateForm, ColumnTypeCreateFormProps } from '../form'
 import { useDispatch } from 'react-redux'
 import { vi, Mock } from 'vitest'
 vi.mock('react-redux', () => {
@@ -24,7 +24,7 @@ describe('form tests', () => {
         return <li className={testClassName}>{formProps?.selectedParent}</li>
     }
     test('empty submit will result in red text labels', async () => {
-        const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
+        const { container } = render(<ColumnCreateForm>{childTest}</ColumnCreateForm>)
         expectErrorsEmpty(container)
         const buttons = container.getElementsByTagName('button')
         const user = userEvent.setup()
@@ -32,7 +32,7 @@ describe('form tests', () => {
         await expectErrorsHaveContent(container)
     })
     test('type only submit will result in red name label', async () => {
-        const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
+        const { container } = render(<ColumnCreateForm>{childTest}</ColumnCreateForm>)
         const errorClasses = container.getElementsByClassName('text-danger fs-6')
         expect(errorClasses.length).toEqual(0)
         const radioButtons = container.getElementsByClassName('form-check-input')
@@ -43,7 +43,7 @@ describe('form tests', () => {
         await expectErrorsHaveContent(container)
     })
     test('name only submit will result in red type label', async () => {
-        const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
+        const { container } = render(<ColumnCreateForm>{childTest}</ColumnCreateForm>)
         expectErrorsEmpty(container)
         const textInput = screen.getAllByRole('textbox')[0]
         const buttons = container.getElementsByTagName('button')
@@ -53,7 +53,7 @@ describe('form tests', () => {
         await expectErrorsHaveContent(container)
     })
     test('submit handled for complete form', async () => {
-        const { container } = render(<TagCreateForm>{childTest}</TagCreateForm>)
+        const { container } = render(<ColumnCreateForm>{childTest}</ColumnCreateForm>)
         const dispatchMock = useDispatch() as Mock
         dispatchMock.mockReset().mockReturnValue(Promise.resolve(true))
         expectErrorsEmpty(container)

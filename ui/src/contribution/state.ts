@@ -1,4 +1,4 @@
-import { TagDefinition } from '../column_menu/state'
+import { Column } from '../column_menu/state'
 
 export enum ContributionStep {
     Uploaded = 'Uploaded',
@@ -24,7 +24,7 @@ export interface Contribution {
     step: ContributionStep
     hasHeader: boolean
     author: string
-    matchTagDefinitionList: TagDefinition[]
+    matchColumnList: Column[]
     emptyValues: string
     justification: string | undefined
 }
@@ -36,7 +36,7 @@ export function newContribution({
     hasHeader,
     author,
     emptyValues,
-    matchTagDefinitionList = [],
+    matchColumnList = [],
     justification = undefined
 }: {
     name: string
@@ -46,7 +46,7 @@ export function newContribution({
     hasHeader: boolean
     author: string
     emptyValues: string
-    matchTagDefinitionList?: TagDefinition[]
+    matchColumnList?: Column[]
     justification?: string | undefined
 }): Contribution {
     return {
@@ -57,7 +57,7 @@ export function newContribution({
         hasHeader,
         author,
         emptyValues,
-        matchTagDefinitionList,
+        matchColumnList: matchColumnList,
         justification
     }
 }

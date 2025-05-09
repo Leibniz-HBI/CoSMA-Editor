@@ -17,20 +17,20 @@ import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import {
-    newTagDefinition,
-    newTagSelectionState,
-    TagSelectionState,
-    TagType
+    newColumn,
+    newColumnSelectionState,
+    ColumnSelectionState,
+    ColumnType
 } from '../../column_menu/state'
 import { newRemote } from '../../util/state'
-import { tagSelectionSlice } from '../../column_menu/slice'
+import { columnSelectionReducer} from '../../column_menu/slice'
 import { newTableState, TableState } from '../../table/state'
 import { tableReducer } from '../../table/slice'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         entityDetails: EntityDetailsState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         table: TableState
     }
 }
@@ -42,9 +42,9 @@ test('search and click result', async () => {
             200,
             {
                 search_result_list: [
-                    newSearchResultApi(resultMatchValue00, resultIdTag00, resultId00),
-                    newSearchResultApi(resultMatchValue01, resultIdTag01, resultId01),
-                    newSearchResultApi(resultMatchValue02, resultIdTag02, resultId02)
+                    newSearchResultApi(resultMatchValue00, resultIdColumn00, resultId00),
+                    newSearchResultApi(resultMatchValue01, resultIdColumn01, resultId01),
+                    newSearchResultApi(resultMatchValue02, resultIdColumn02, resultId02)
                 ]
             }
         ],
@@ -52,8 +52,8 @@ test('search and click result', async () => {
             200,
             {
                 search_result_list: [
-                    newSearchResultApi(resultMatchValue10, resultIdTag10, resultId10),
-                    newSearchResultApi(resultMatchValue11, resultIdTag11, resultId11)
+                    newSearchResultApi(resultMatchValue10, resultIdColumn10, resultId10),
+                    newSearchResultApi(resultMatchValue11, resultIdColumn11, resultId11)
                 ]
             }
         ]
@@ -74,17 +74,17 @@ test('search and click result', async () => {
         newRemote([
             newEntitySearchResult({
                 idEntityPersistent: resultId00,
-                idTagDefinitionPersistent: resultIdTag00,
+                idColumnPersistent: resultIdColumn00,
                 matchValue: resultMatchValue00
             }),
             newEntitySearchResult({
                 idEntityPersistent: resultId01,
-                idTagDefinitionPersistent: resultIdTag01,
+                idColumnPersistent: resultIdColumn01,
                 matchValue: resultMatchValue01
             }),
             newEntitySearchResult({
                 idEntityPersistent: resultId02,
-                idTagDefinitionPersistent: resultIdTag02,
+                idColumnPersistent: resultIdColumn02,
                 matchValue: resultMatchValue02
             })
         ])
@@ -107,11 +107,11 @@ test('search and click result', async () => {
     )
 })
 
-const nameTag0 = 'tag 0'
-const nameTag1 = 'tag 1'
-const nameTagParent = 'tag parent'
-const idTagDef0 = 'id-tag-0'
-const idTagDef1 = 'id-tag-1'
+const nameColumn0 = 'column 0'
+const nameColumn1 = 'column 1'
+const nameColumnParent = 'column parent'
+const idColumn0 = 'id-column-0'
+const idColumn1 = 'id-column-1'
 const resultId00 = 'id-result-0-0'
 const resultId01 = 'id-result-0-1'
 const resultId02 = 'id-result-0-2'
@@ -122,20 +122,20 @@ const resultMatchValue01 = 'match 0 1'
 const resultMatchValue02 = 'match 0 2'
 const resultMatchValue10 = 'match 1 0'
 const resultMatchValue11 = 'match 1 1'
-const resultIdTag00 = undefined
-const resultIdTag01 = idTagDef0
-const resultIdTag02 = idTagDef1
-const resultIdTag10 = undefined
-const resultIdTag11 = idTagDef1
+const resultIdColumn00 = undefined
+const resultIdColumn01 = idColumn0
+const resultIdColumn02 = idColumn1
+const resultIdColumn10 = undefined
+const resultIdColumn11 = idColumn1
 const displayTxt00 = 'Entity 00'
 const displayTxt01 = 'Entity 01'
 const displayTxt02 = 'Entity 02'
 const displayTxt10 = 'Entity 10'
 const displayTxt11 = 'Entity 11'
 
-const tagCommon = {
+const columnCommon = {
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     owner: undefined,
     curated: false,
     version: 0,
@@ -152,12 +152,12 @@ async function typeInSearchField(user: UserEvent) {
 
 function newSearchResultApi(
     matchValue: string,
-    idTagDefinitionPersistent: string | undefined,
+    idColumnPersistent: string | undefined,
     idEntityPersistent: string
 ) {
     return {
         match_value: matchValue,
-        id_column_persistent: idTagDefinitionPersistent,
+        id_column_persistent: idColumnPersistent,
         id_entity_persistent: idEntityPersistent
     }
 }
@@ -211,20 +211,20 @@ export function renderWithProviders(
                     )
                 }
             }),
-            tagSelection: newTagSelectionState({
-                tagDefinitionsByIdPersistent: {
-                    [idTagDef0]: newRemote(
-                        newTagDefinition({
-                            ...tagCommon,
-                            idPersistent: idTagDef0,
-                            namePath: [nameTag0]
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
+                    [idColumn0]: newRemote(
+                        newColumn({
+                            ...columnCommon,
+                            idPersistent: idColumn0,
+                            namePath: [nameColumn0]
                         })
                     ),
-                    [idTagDef1]: newRemote(
-                        newTagDefinition({
-                            ...tagCommon,
-                            idPersistent: idTagDef1,
-                            namePath: [nameTagParent, nameTag1]
+                    [idColumn1]: newRemote(
+                        newColumn({
+                            ...columnCommon,
+                            idPersistent: idColumn1,
+                            namePath: [nameColumnParent, nameColumn1]
                         })
                     )
                 }
@@ -237,7 +237,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             entityDetails: entityDetailsReducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             table: tableReducer
         },
         middleware: (getDefaultMiddleware) =>

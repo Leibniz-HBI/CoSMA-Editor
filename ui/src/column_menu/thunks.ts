@@ -1,26 +1,26 @@
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
-import { TagDefinition, TagType, newTagDefinition } from './state'
+import { Column, ColumnType, newColumn } from './state'
 import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
 import {
     changeParentSuccess,
-    curateTagDefinitionSuccess,
-    getTagDefinitionDetailsError,
-    getTagDefinitionDetailsStart,
-    getTagDefinitionDetailsSuccess,
-    loadTagHierarchyError,
-    loadTagHierarchyStart,
-    loadTagHierarchySuccess,
-    submitTagDefinitionError,
-    submitTagDefinitionStart,
-    submitTagDefinitionSuccess
+    curateColumnSuccess,
+    getColumnDetailsError,
+    getColumnDetailsStart,
+    getColumnDetailsSuccess,
+    loadColumnHierarchyError,
+    loadColumnHierarchyStart,
+    loadColumnHierarchySuccess,
+    submitColumnError,
+    submitColumnStart,
+    submitColumnSuccess
 } from './slice'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { PublicUserInfo } from '../user/state'
-import { curateTagDefinitionError, curateTagDefinitionStart } from './slice'
+import { curateColumnError, curateColumnStart } from './slice'
 
-export function loadTagDefinitionHierarchy({
+export function loadColumnHierarchy({
     idParentPersistent = undefined,
     expand = false,
     indexPath = [],
@@ -32,8 +32,8 @@ export function loadTagDefinitionHierarchy({
     namePath?: string[]
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(loadTagHierarchyStart(idParentPersistent))
-        const tagDefinitions: TagDefinition[] = []
+        dispatch(loadColumnHierarchyStart(idParentPersistent))
+        const columns: Column[] = []
         try {
             const rsp = await fetch(config.api_path + '/columns/children', {
                 method: 'POST',
@@ -45,7 +45,7 @@ export function loadTagDefinitionHierarchy({
             })
             const json = await rsp.json()
             if (rsp.status != 200) {
-                dispatch(loadTagHierarchyError())
+                dispatch(loadColumnHierarchyError())
                 dispatch(
                     addError(
                         `Could not load column definitions. Reason: "${json['msg']}"`
@@ -53,25 +53,25 @@ export function loadTagDefinitionHierarchy({
                 )
                 return
             }
-            const tagDefinitionsApi = json['column_list']
-            for (const tagDefinitionApi of tagDefinitionsApi) {
-                const columnDefinition = parseColumnDefinitionsFromApi(
-                    tagDefinitionApi,
+            const columnsApi = json['column_list']
+            for (const columnApi of columnsApi) {
+                const columnDefinition = parseColumnsFromApi(
+                    columnApi,
                     namePath
                 )
-                tagDefinitions.push(columnDefinition)
+                columns.push(columnDefinition)
             }
             dispatch(
-                loadTagHierarchySuccess({
-                    entries: tagDefinitions,
+                loadColumnHierarchySuccess({
+                    entries: columns,
                     path: indexPath,
                     forceExpand: expand
                 })
             )
             const promises: Promise<void>[] = []
-            tagDefinitions.forEach(async (entry: TagDefinition, index: number) => {
+            columns.forEach(async (entry: Column, index: number) => {
                 promises.push(
-                    loadTagDefinitionHierarchy({
+                    loadColumnHierarchy({
                         idParentPersistent: entry.idPersistent,
                         indexPath: [...indexPath, index],
                         namePath: entry.namePath,
@@ -83,13 +83,13 @@ export function loadTagDefinitionHierarchy({
 
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
-            dispatch(loadTagHierarchyError())
+            dispatch(loadColumnHierarchyError())
             dispatch(addError(exceptionMessage(e)))
         }
     }
 }
 
-export function submitTagDefinition({
+export function submitColumn({
     name,
     description,
     idParentPersistent,
@@ -103,7 +103,7 @@ export function submitTagDefinition({
     name: string
     description: string
     idParentPersistent?: string
-    type: TagType
+    type: ColumnType
     idPersistent?: string
     version?: number
     disabled?: boolean
@@ -111,7 +111,7 @@ export function submitTagDefinition({
     parentNamePath: string[]
 }): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(submitTagDefinitionStart())
+        dispatch(submitColumnStart())
         try {
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
             const body: { [key: string]: any } = {
@@ -137,13 +137,11 @@ export function submitTagDefinition({
             })
             if (rsp.status == 200) {
                 const json = await rsp.json()
-                const tagDefinition = parseColumnDefinitionsFromApi(
-                    json['column_list'][0]
-                )
+                const column = parseColumnsFromApi(json['column_list'][0])
                 dispatch(
-                    submitTagDefinitionSuccess({
+                    submitColumnSuccess({
                         parentNamePath,
-                        tagDefinition,
+                        column,
                         namePath
                     })
                 )
@@ -151,12 +149,12 @@ export function submitTagDefinition({
             }
             const msg = (await rsp.json())['msg']
 
-            dispatch(submitTagDefinitionError())
+            dispatch(submitColumnError())
             dispatch(addError(msg))
 
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
-            dispatch(submitTagDefinitionError())
+            dispatch(submitColumnError())
             dispatch(
                 addError(
                     'Submitting the column definition failed: ' + exceptionMessage(e)
@@ -166,15 +164,15 @@ export function submitTagDefinition({
         return false
     }
 }
-export function changeTagDefinitionParent({
-    tagDefinition,
+export function changeColumnParent({
+    column,
     idParentNewPersistent,
-    oldPathToTagDefinition,
+    oldPathToColumn,
     pathToNewParent
 }: {
-    tagDefinition: TagDefinition
+    column: Column
     idParentNewPersistent: string | undefined
-    oldPathToTagDefinition: number[]
+    oldPathToColumn: number[]
     pathToNewParent: number[]
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
@@ -182,11 +180,11 @@ export function changeTagDefinitionParent({
             idParentNewPersistent == '' ? undefined : idParentNewPersistent
         try {
             const payload = {
-                id_persistent: tagDefinition.idPersistent,
-                name: tagDefinition.namePath.at(-1),
+                id_persistent: column.idPersistent,
+                name: column.namePath.at(-1),
                 id_parent_persistent: idParentRequestPersistent,
-                type: tagTypeMapAppToApi.get(tagDefinition.columnType),
-                version: tagDefinition.version
+                type: columnTypeMapAppToApi.get(column.columnType),
+                version: column.version
             }
             const rsp = await fetch(config.api_path + '/columns', {
                 credentials: 'include',
@@ -195,13 +193,12 @@ export function changeTagDefinitionParent({
             })
             if (rsp.status == 200) {
                 const json = await rsp.json()
-                const tagDefinitionJson = json['column_list'][0]
-                const tagDefinitionRsp =
-                    parseColumnDefinitionsFromApi(tagDefinitionJson)
+                const columnJson = json['column_list'][0]
+                const columnRsp = parseColumnsFromApi(columnJson)
                 dispatch(
                     changeParentSuccess({
-                        tagDefinition: tagDefinitionRsp,
-                        oldPathToTagDefinition,
+                        column: columnRsp,
+                        oldPathToColumn: oldPathToColumn,
                         pathToNewParent
                     })
                 )
@@ -214,14 +211,14 @@ export function changeTagDefinitionParent({
         }
     }
 }
-export function getTagDefinitionDetailsThunk(
+export function getColumnDetailsThunk(
     idPersistentList: string[]
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         if (idPersistentList.length == 0) {
             return
         }
-        dispatch(getTagDefinitionDetailsStart(idPersistentList))
+        dispatch(getColumnDetailsStart(idPersistentList))
         try {
             const rsp = await fetch(config.api_path + '/columns/details', {
                 credentials: 'include',
@@ -230,26 +227,26 @@ export function getTagDefinitionDetailsThunk(
             })
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const tagDefinitionList = json['column_list'].map((json: unknown) =>
-                    parseColumnDefinitionsFromApi(json)
+                const columnList = json['column_list'].map((json: unknown) =>
+                    parseColumnsFromApi(json)
                 )
-                dispatch(getTagDefinitionDetailsSuccess(tagDefinitionList))
+                dispatch(getColumnDetailsSuccess(columnList))
             } else {
-                dispatch(getTagDefinitionDetailsError(idPersistentList))
+                dispatch(getColumnDetailsError(idPersistentList))
                 dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(getTagDefinitionDetailsError(idPersistentList))
+            dispatch(getColumnDetailsError(idPersistentList))
             dispatch(addError(exceptionMessage(e)))
         }
     }
 }
-export function purgeTagDefinition(tagDefinition: TagDefinition): ThunkWithFetch<void> {
+export function purgeColumn(column: Column): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(submitTagDefinitionStart())
+        dispatch(submitColumnStart())
         try {
             const rsp = await fetch(
-                config.api_path + `/columns/${tagDefinition.idPersistent}`,
+                config.api_path + `/columns/${column.idPersistent}`,
                 {
                     credentials: 'include',
                     method: 'DELETE'
@@ -257,32 +254,32 @@ export function purgeTagDefinition(tagDefinition: TagDefinition): ThunkWithFetch
             )
             if (rsp.status == 200) {
                 dispatch(
-                    submitTagDefinitionSuccess({
-                        tagDefinition: { ...tagDefinition, disabled: true },
-                        namePath: tagDefinition.namePath,
-                        parentNamePath: tagDefinition.namePath.slice(0, -1)
+                    submitColumnSuccess({
+                        column: { ...column, disabled: true },
+                        namePath: column.namePath,
+                        parentNamePath: column.namePath.slice(0, -1)
                     })
                 )
-                dispatch(addSuccessVanish('Successfully purged tag definition.'))
+                dispatch(addSuccessVanish('Successfully purged column definition.'))
             } else {
                 const json = await rsp.json()
-                dispatch(submitTagDefinitionError())
+                dispatch(submitColumnError())
                 dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(submitTagDefinitionError())
+            dispatch(submitColumnError())
             dispatch(addError(exceptionMessage(e)))
         }
     }
 }
 
-export function curateAsync(idTagDefinitionPersistent: string): ThunkWithFetch<void> {
+export function curateAsync(idColumnPersistent: string): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(curateTagDefinitionStart())
+        dispatch(curateColumnStart())
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/columns/permissions/${idTagDefinitionPersistent}/curate`,
+                    `/columns/permissions/${idColumnPersistent}/curate`,
                 {
                     credentials: 'include',
                     method: 'POST'
@@ -290,75 +287,75 @@ export function curateAsync(idTagDefinitionPersistent: string): ThunkWithFetch<v
             )
             const json = await rsp.json()
             if (rsp.status == 200) {
-                dispatch(curateTagDefinitionSuccess(idTagDefinitionPersistent))
+                dispatch(curateColumnSuccess(idColumnPersistent))
             } else {
-                dispatch(curateTagDefinitionError())
+                dispatch(curateColumnError())
                 dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(curateTagDefinitionError())
+            dispatch(curateColumnError())
             dispatch(addError(exceptionMessage(e)))
         }
     }
 }
 
-export const columnTypeMapApiToApp = new Map<string, TagType>([
-    ['INNER', TagType.Inner],
-    ['STRING', TagType.String],
-    ['FLOAT', TagType.Float],
-    ['BOOL', TagType.Boolean]
+export const columnTypeMapApiToApp = new Map<string, ColumnType>([
+    ['INNER', ColumnType.Inner],
+    ['STRING', ColumnType.String],
+    ['FLOAT', ColumnType.Float],
+    ['BOOL', ColumnType.Boolean]
 ])
 
 export const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
 
-export function parseColumnDefinitionsFromApi(
+export function parseColumnsFromApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tagDefinitionApi: any,
+    columnApi: any,
     parentNamePath?: string[]
-): TagDefinition {
+): Column {
     const columnType =
-        columnTypeMapApiToApp.get(tagDefinitionApi['type']) ?? TagType.String
+        columnTypeMapApiToApp.get(columnApi['type']) ?? ColumnType.String
     let namePath
     if (parentNamePath === undefined) {
-        namePath = tagDefinitionApi['name_path']
+        namePath = columnApi['name_path']
     } else {
-        namePath = [...parentNamePath, tagDefinitionApi['name']]
+        namePath = [...parentNamePath, columnApi['name']]
     }
     let owner: PublicUserInfo | undefined = undefined
-    const ownerJson = tagDefinitionApi['owner']
+    const ownerJson = columnApi['owner']
     if (ownerJson !== undefined && ownerJson !== null) {
         owner = parsePublicUserInfoFromJson(ownerJson)
     }
-    return newTagDefinition({
-        idPersistent: tagDefinitionApi['id_persistent'],
-        idParentPersistent: tagDefinitionApi['id_parent_persistent'] ?? undefined,
+    return newColumn({
+        idPersistent: columnApi['id_persistent'],
+        idParentPersistent: columnApi['id_parent_persistent'] ?? undefined,
         namePath,
-        version: tagDefinitionApi['version'],
-        curated: tagDefinitionApi['curated'],
+        version: columnApi['version'],
+        curated: columnApi['curated'],
         columnType: columnType,
         owner: owner,
-        description: tagDefinitionApi['description'],
-        hidden: tagDefinitionApi['hidden'],
-        disabled: tagDefinitionApi['disabled']
+        description: columnApi['description'],
+        hidden: columnApi['hidden'],
+        disabled: columnApi['disabled']
     })
 }
-export const tagTypeMapAppToApi = new Map<TagType, string>([
-    [TagType.Inner, 'INNER'],
-    [TagType.String, 'STRING'],
-    [TagType.Float, 'FLOAT'],
-    [TagType.Boolean, 'BOOL']
+export const columnTypeMapAppToApi = new Map<ColumnType, string>([
+    [ColumnType.Inner, 'INNER'],
+    [ColumnType.String, 'STRING'],
+    [ColumnType.Float, 'FLOAT'],
+    [ColumnType.Boolean, 'BOOL']
 ])
 
-export function tagDefinitionToApi(tagDef: TagDefinition) {
+export function columnToApi(column: Column) {
     return {
-        id_persistent: tagDef.idPersistent,
-        name: tagDef.namePath.at(-1),
-        id_parent_persistent: tagDef.idParentPersistent,
-        type: tagTypeMapAppToApi.get(tagDef.columnType),
-        version: tagDef.version,
-        curated: tagDef.curated,
-        owner: tagDef.owner,
-        hidden: tagDef.hidden,
-        disabled: tagDef.disabled
+        id_persistent: column.idPersistent,
+        name: column.namePath.at(-1),
+        id_parent_persistent: column.idParentPersistent,
+        type: columnTypeMapAppToApi.get(column.columnType),
+        version: column.version,
+        curated: column.curated,
+        owner: column.owner,
+        hidden: column.hidden,
+        disabled: column.disabled
     }
 }

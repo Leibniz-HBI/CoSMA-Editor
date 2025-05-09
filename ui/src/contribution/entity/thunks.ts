@@ -5,10 +5,10 @@ import {
     ScoredEntity,
     newEntityWithDuplicates,
     newScoredEntity,
-    newTagInstance
+    newValue
 } from './state'
 import { fetch_chunk_get } from '../../util/fetch'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import { parseEntityObjectFromJson } from '../../table/thunks'
 import { ThunkWithFetch } from '../../util/type'
 import {
@@ -21,9 +21,9 @@ import {
     getContributionEntitiesError,
     getContributionEntitiesStart,
     getContributionEntitiesSuccess,
-    getContributionTagInstancesError,
-    getContributionTagInstancesStart,
-    getContributionTagInstancesSuccess,
+    getContributionValuesError,
+    getContributionValuesStart,
+    getContributionValuesSuccess,
     getDuplicatesError,
     getDuplicatesStart,
     getDuplicatesSuccess,
@@ -288,23 +288,23 @@ export function completeEntityAssignment(
     }
 }
 
-export function getContributionTagInstances({
+export function getContributionValues({
     entitiesGroupMap,
-    tagDefinitionList,
+    columnList,
     idContributionPersistent = undefined,
     idMergeRequestPersistent = undefined
 }: {
     entitiesGroupMap: { [key: string]: string[] }
-    tagDefinitionList: TagDefinition[]
+    columnList: Column[]
     idContributionPersistent?: string
     idMergeRequestPersistent?: string
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         try {
             dispatch(
-                getContributionTagInstancesStart({
+                getContributionValuesStart({
                     idEntityPersistentGroupMap: entitiesGroupMap,
-                    tagDefinitionList,
+                    columnList,
                     details: undefined
                 })
             )
@@ -320,8 +320,8 @@ export function getContributionTagInstances({
                 method: 'POST',
                 credentials: 'include',
                 body: JSON.stringify({
-                    id_column_persistent_list: tagDefinitionList.map(
-                        (tagDef) => tagDef.idPersistent
+                    id_column_persistent_list: columnList.map(
+                        (column) => column.idPersistent
                     ),
                     id_entity_persistent_list: Array.from(entitiesSet),
                     id_contribution_persistent: idContributionPersistent,
@@ -331,20 +331,20 @@ export function getContributionTagInstances({
             const json = await rsp.json()
             if (rsp.status == 200) {
                 dispatch(
-                    getContributionTagInstancesSuccess({
+                    getContributionValuesSuccess({
                         idEntityPersistentGroupMap: entitiesGroupMap,
-                        tagDefinitionList,
+                        columnList,
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         details: json['value_responses'].map((instance: any) =>
-                            parseTagInstanceFromJson(instance)
+                            parseValueFromJson(instance)
                         )
                     })
                 )
             } else {
                 dispatch(
-                    getContributionTagInstancesError({
+                    getContributionValuesError({
                         idEntityPersistentGroupMap: entitiesGroupMap,
-                        tagDefinitionList,
+                        columnList,
                         details: undefined
                     })
                 )
@@ -352,9 +352,9 @@ export function getContributionTagInstances({
             }
         } catch (e: unknown) {
             dispatch(
-                getContributionTagInstancesError({
+                getContributionValuesError({
                     idEntityPersistentGroupMap: entitiesGroupMap,
-                    tagDefinitionList,
+                    columnList,
                     details: undefined
                 })
             )
@@ -406,17 +406,17 @@ export function parseScoredEntityFromJson(json: any): ScoredEntity {
     return newScoredEntity({
         ...parseEntityObjectFromJson(json['entity']),
         similarity: json['similarity'],
-        idMatchTagDefinitionPersistentList:
+        idMatchColumnPersistentList:
             json['id_match_column_persistent_list'] ?? []
     })
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseTagInstanceFromJson(json: any) {
+export function parseValueFromJson(json: any) {
     const idColumnPersistent =
         json['id_column_requested_persistent'] ??
         json['id_column_persistent']
-    return newTagInstance(json['id_entity_persistent'], idColumnPersistent, {
+    return newValue(json['id_entity_persistent'], idColumnPersistent, {
         value: json['value'],
         idPersistent: json['id_persistent'],
         version: json['version'],

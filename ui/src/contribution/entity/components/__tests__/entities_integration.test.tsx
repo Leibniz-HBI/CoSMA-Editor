@@ -21,8 +21,11 @@ import {
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { EntitiesStep } from '../../components'
-import { TagSelectionState, newTagSelectionState } from '../../../../column_menu/state'
-import { tagSelectionSlice } from '../../../../column_menu/slice'
+import {
+    ColumnSelectionState,
+    newColumnSelectionState
+} from '../../../../column_menu/state'
+import { columnSelectionReducer } from '../../../../column_menu/slice'
 import {
     NotificationManager,
     notificationReducer
@@ -42,7 +45,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionEntity: ContributionEntityState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         notification: NotificationManager
     }
 }
@@ -66,7 +69,7 @@ export function renderWithProviders(
                     })
                 )
             }),
-            tagSelection: newTagSelectionState({}),
+            columnSelection: newColumnSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
@@ -76,7 +79,7 @@ export function renderWithProviders(
         reducer: {
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             error: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -112,8 +115,8 @@ const entityList = Array.from({ length: 60 }, (_val, idx) => {
         id_persistent: `id-entity-${idx}`
     }
 })
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
+const idColumn0 = 'id-column-test-0'
+const nameColumn0 = 'column def 0'
 
 function mkMatches(
     entities: {
@@ -168,9 +171,9 @@ function initialResponses(fetchMock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDef0,
-                        name_path: [nameTagDef0],
-                        name: nameTagDef0,
+                        id_persistent: idColumn0,
+                        name_path: [nameColumn0],
+                        name: nameColumn0,
                         curated: true,
                         version: 0,
                         type: 'STRING'

@@ -24,8 +24,11 @@ import {
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { EntitiesStep } from '../../components'
-import { TagSelectionState, newTagSelectionState } from '../../../../column_menu/state'
-import { tagSelectionSlice } from '../../../../column_menu/slice'
+import {
+    ColumnSelectionState,
+    newColumnSelectionState
+} from '../../../../column_menu/state'
+import { columnSelectionReducer } from '../../../../column_menu/slice'
 import { ContributionStep, newContribution } from '../../../state'
 
 vi.mock('react-router-dom', () => {
@@ -42,7 +45,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionEntity: ContributionEntityState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
     }
 }
 
@@ -65,7 +68,7 @@ export function renderWithProviders(
                     })
                 )
             }),
-            tagSelection: newTagSelectionState({})
+            columnSelection: newColumnSelectionState({})
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -74,7 +77,7 @@ export function renderWithProviders(
         reducer: {
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer
+            columnSelection: columnSelectionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -159,11 +162,11 @@ function mkMatches(
         ])
     )
 }
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
-const idTagDefContribution0 = 'id-tag-def-contribution-0'
-const idTagDef1 = 'id-tag-test-1'
-const nameTagDef1 = 'tag def 1'
+const idColumn0 = 'id-column-test-0'
+const nameColumn0 = 'column def 0'
+const idColumnContribution0 = 'id-column-def-contribution-0'
+const idColumn1 = 'id-column-test-1'
+const nameColumn1 = 'column def 1'
 function initialResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: personList }],
@@ -173,17 +176,17 @@ function initialResponses(fetchMock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDef0,
-                        name_path: [nameTagDef0],
-                        name: nameTagDef0,
+                        id_persistent: idColumn0,
+                        name_path: [nameColumn0],
+                        name: nameColumn0,
                         curated: true,
                         version: 0,
                         type: 'STRING'
                     },
                     {
-                        id_persistent: idTagDef1,
-                        name_path: [nameTagDef1],
-                        name: nameTagDef1,
+                        id_persistent: idColumn1,
+                        name_path: [nameColumn1],
+                        name: nameColumn1,
                         curated: true,
                         version: 0,
                         type: 'STRING'
@@ -195,38 +198,38 @@ function initialResponses(fetchMock: Mock) {
         [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
         [200, { matches: mkMatches(personList.slice(50)) }],
-        // empty response because no match tags.
+        // empty response because no match columns.
         [200, { value_responses: [] }]
     ])
 }
-test('add tag values', async () => {
+test('add column values', async () => {
     const fetchMock = vi.fn()
     initialResponses(fetchMock)
-    addValueResponses(fetchMock, idTagDef0, '1')
+    addValueResponses(fetchMock, idColumn0, '1')
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(7)
         const entity0 = screen.getByText('entity-1')
         entity0.click()
     })
-    await addTagDefinitionByName(nameTagDef0)
-    checkTagValueCalls(fetchMock, idTagDef0)
+    await addColumnByName(nameColumn0)
+    checkValueCalls(fetchMock, idColumn0)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(10)
     })
-    addValueResponses(fetchMock, idTagDef1, '2')
-    await addTagDefinitionByName(nameTagDef1)
+    addValueResponses(fetchMock, idColumn1, '2')
+    await addColumnByName(nameColumn1)
     // check calls for additional values
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(12)
     })
-    checkTagValueCalls(fetchMock, idTagDef1)
+    checkValueCalls(fetchMock, idColumn1)
     // check final values!
     await waitFor(() => {
         const state = store.getState()
         expect(
-            state.contributionEntity.tagDefinitions.map((tag) => tag.idPersistent)
-        ).toEqual([idTagDef0, idTagDef1])
+            state.contributionEntity.columnList.map((column) => column.idPersistent)
+        ).toEqual([idColumn0, idColumn1])
     })
     await waitFor(() => {
         const state = store.getState().contributionEntity
@@ -322,7 +325,7 @@ test('add tag values', async () => {
                         idPersistent: entity.idPersistent + '-0',
                         version: 0,
                         similarity: (idx - 50) / 100.0,
-                        idMatchTagDefinitionPersistentList: [],
+                        idMatchColumnPersistentList: [],
                         cellContents: [newRemote([]), newRemote([])]
                     }),
                     newScoredEntity({
@@ -331,7 +334,7 @@ test('add tag values', async () => {
                         idPersistent: entity.idPersistent + '-1',
                         version: 0,
                         similarity: (idx - 50) / 100.0 + 0.001,
-                        idMatchTagDefinitionPersistentList: [],
+                        idMatchColumnPersistentList: [],
                         cellContents: [newRemote([]), newRemote([])]
                     })
                 ])
@@ -342,24 +345,24 @@ test('add tag values', async () => {
 test('remove values', async () => {
     const fetchMock = vi.fn()
     initialResponses(fetchMock)
-    addValueResponses(fetchMock, idTagDef0, '1')
+    addValueResponses(fetchMock, idColumn0, '1')
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(7)
         const entity0 = screen.getByText('entity-0')
         entity0.click()
     })
-    await addTagDefinitionByName(nameTagDef0)
+    await addColumnByName(nameColumn0)
     await waitFor(() => {
         const state = store.getState()
-        expect(state.contributionEntity.tagDefinitions.length).toEqual(1)
+        expect(state.contributionEntity.columnList.length).toEqual(1)
     })
-    await addTagDefinitionByName(nameTagDef0)
+    await addColumnByName(nameColumn0)
     await waitFor(
         () => {
             const state = store.getState()
-            expect(state.contributionEntity.tagDefinitions.length).toEqual(0)
-            expect(state.contributionEntity.tagDefinitionMap).toEqual({})
+            expect(state.contributionEntity.columnList.length).toEqual(0)
+            expect(state.contributionEntity.columnMap).toEqual({})
             for (const entity of state.contributionEntity.entities.value) {
                 expect(entity.cellContents.length).toEqual(0)
                 for (const match of entity.similarEntities.value) {
@@ -373,8 +376,8 @@ test('remove values', async () => {
 
 function addValueResponses(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fetchMock: Mock<any, any>,
-    idTagDef: string,
+    fetchMock: Mock<any>,
+    idColumn: string,
     suffix: string
 ) {
     addResponseSequence(fetchMock, [
@@ -385,8 +388,8 @@ function addValueResponses(
                     // contributed instance
                     {
                         id_entity_persistent: entity.id_persistent,
-                        id_column: idTagDefContribution0,
-                        id_column_requested_persistent: idTagDef,
+                        id_column: idColumnContribution0,
+                        id_column_requested_persistent: idColumn,
                         is_existing: false,
                         version: idx,
                         value: `val-${suffix}-` + idx,
@@ -395,8 +398,8 @@ function addValueResponses(
                     //existing instance for first match
                     {
                         id_entity_persistent: entity.id_persistent + '-0',
-                        id_column_requested_persistent: idTagDef,
-                        id_column: idTagDef,
+                        id_column_requested_persistent: idColumn,
+                        id_column: idColumn,
                         is_existing: true,
                         version: idx,
                         value: `val-${suffix}-0-` + idx,
@@ -405,8 +408,8 @@ function addValueResponses(
                     // existing instance for second match
                     {
                         id_entity_persistent: entity.id_persistent + '-1',
-                        id_column: idTagDef,
-                        id_column_requested_persistent: idTagDef,
+                        id_column: idColumn,
+                        id_column_requested_persistent: idColumn,
                         is_existing: true,
                         version: idx,
                         value: `val-${suffix}-1-` + idx,
@@ -421,14 +424,14 @@ function addValueResponses(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function checkTagValueCalls(fetchMock: Mock<any, any>, idTagDef: string) {
+function checkValueCalls(fetchMock: Mock<any>, idColumn: string) {
     expect(fetchMock.mock.calls.at(-2)).toEqual([
         'http://127.0.0.1:8000/cosmae/api/values/entities',
         {
             credentials: 'include',
             method: 'POST',
             body: JSON.stringify({
-                id_column_persistent_list: [idTagDef],
+                id_column_persistent_list: [idColumn],
                 id_entity_persistent_list: personList
                     .slice(0, 50)
                     .flatMap((entity) => [
@@ -446,7 +449,7 @@ function checkTagValueCalls(fetchMock: Mock<any, any>, idTagDef: string) {
             credentials: 'include',
             method: 'POST',
             body: JSON.stringify({
-                id_column_persistent_list: [idTagDef],
+                id_column_persistent_list: [idColumn],
                 id_entity_persistent_list: personList
                     .slice(50)
                     .flatMap((entity) => [
@@ -460,23 +463,23 @@ function checkTagValueCalls(fetchMock: Mock<any, any>, idTagDef: string) {
     ])
 }
 
-async function addTagDefinitionByName(nameTagDef: string) {
+async function addColumnByName(nameColumn: string) {
     await waitFor(() => {
-        const additionalTagButtons = screen.getByRole('button', {
-            name: /show additional tag values/i
+        const additionalColumnButtons = screen.getByRole('button', {
+            name: /show additional column/i
         })
-        additionalTagButtons.click()
+        additionalColumnButtons.click()
     })
-    let tagDefLabel: HTMLElement | undefined
+    let columnLabel: HTMLElement | undefined
     await waitFor(() => {
-        tagDefLabel = screen.getByText(nameTagDef)
+        columnLabel = screen.getByText(nameColumn)
     })
-    const tagListItem =
-        tagDefLabel?.parentElement?.parentElement?.parentElement?.parentElement
+    const columnListItem =
+        columnLabel?.parentElement?.parentElement?.parentElement?.parentElement
             ?.parentElement
-    const tagButton = tagListItem?.children[1]
-    expect(tagButton?.className).toEqual('icon')
-    ;(tagButton as HTMLElement)?.click()
+    const columnButton = columnListItem?.children[1]
+    expect(columnButton?.className).toEqual('icon')
+    ;(columnButton as HTMLElement)?.click()
 
     screen.getByRole('button', { name: /close/i }).click()
 }

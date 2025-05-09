@@ -15,15 +15,15 @@ import {
     selectEntitiesWithMatches,
     selectIsLoading,
     selectSelectedEntity,
-    selectTagDefinitions,
-    selectMatchTagDefinitionList,
-    selectTagRowDefs
+    selectColumns,
+    selectMatchColumnList,
+    selectColumnRowDefs
 } from './selectors'
 import {
     getAdditionalEntityScoreThunk,
     getContributionEntitiesAction,
     getContributionEntityDuplicateCandidatesAction,
-    getContributionTagInstances,
+    getContributionValues,
     putDuplicateAction
 } from './thunks'
 import { AppDispatch } from '../../store'
@@ -32,14 +32,14 @@ import {
     openJustificationInput,
     setColumnWidth,
     setSelectedEntityIdx,
-    toggleTagDefinitionMenu
+    toggleColumnMenu
 } from './slice'
 import { selectContribution, selectContributionJustification } from '../selectors'
-import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
+import { loadColumnHierarchy } from '../../column_menu/thunks'
 import { IBounds, useLayer } from 'react-laag'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import {
-    AddTagDefinitionsModal,
+    AddColumnsModal,
     JustificationModal,
     LastMatchModal
 } from './components/modals'
@@ -85,7 +85,7 @@ export function EntitiesStepBody({
     useEffect(() => {
         dispatch(getContributionEntitiesAction(idContributionPersistent))
             .then(async (entities) => {
-                dispatch(loadTagDefinitionHierarchy({}))
+                dispatch(loadColumnHierarchy({}))
                 return entities
             })
             .then(async (entities) => {
@@ -175,34 +175,30 @@ export function EntityConflictBody({
     putDuplicateCallback: PutDuplicateCallback
 }) {
     const selectedEntity = useSelector(selectSelectedEntity)
-    const [tagDefinitionList, tagDefinitionIndices] = useSelector(selectTagDefinitions)
-    const matchTags = useSelector(selectMatchTagDefinitionList)
+    const [columnList, columnIndices] = useSelector(selectColumns)
+    const matchColumns = useSelector(selectMatchColumnList)
     const dispatch: AppDispatch = useDispatch()
-    useEffect(
-        () => {
-            if (selectedEntity === undefined) {
-                return
-            }
-            const entityMap: { [key: string]: string[] } = {}
-            entityMap[selectedEntity.idPersistent] = [
-                selectedEntity.idPersistent,
-                ...new Set(
-                    selectedEntity.similarEntities.value.map(
-                        (entity) => entity.idPersistent
-                    )
+    useEffect(() => {
+        if (selectedEntity === undefined) {
+            return
+        }
+        const entityMap: { [key: string]: string[] } = {}
+        entityMap[selectedEntity.idPersistent] = [
+            selectedEntity.idPersistent,
+            ...new Set(
+                selectedEntity.similarEntities.value.map(
+                    (entity) => entity.idPersistent
                 )
-            ]
-            dispatch(
-                getContributionTagInstances({
-                    idContributionPersistent: idContributionPersistent,
-                    entitiesGroupMap: entityMap,
-                    tagDefinitionList: [...matchTags, ...tagDefinitionList]
-                })
             )
-        },
-        //eslint-disable-next-line react-hooks/exhaustive-deps
-        [idContributionPersistent, selectedEntity?.idPersistent, matchTags]
-    )
+        ]
+        dispatch(
+            getContributionValues({
+                idContributionPersistent: idContributionPersistent,
+                entitiesGroupMap: entityMap,
+                columnList: [...matchColumns, ...columnList]
+            })
+        )
+    }, [idContributionPersistent, selectedEntity?.idPersistent, matchColumns])
     if (selectedEntity === undefined) {
         return <span>Please select an entity</span>
     }
@@ -229,7 +225,7 @@ export function EntityConflictBody({
                                         ).then((result) => {
                                             if (result) {
                                                 dispatch(
-                                                    getContributionTagInstances({
+                                                    getContributionValues({
                                                         idContributionPersistent:
                                                             idContributionPersistent,
                                                         entitiesGroupMap: {
@@ -239,9 +235,9 @@ export function EntityConflictBody({
                                                                     idSearchedEntityPersistent
                                                                 ]
                                                         },
-                                                        tagDefinitionList: [
-                                                            ...matchTags,
-                                                            ...tagDefinitionList
+                                                        columnList: [
+                                                            ...matchColumns,
+                                                            ...columnList
                                                         ]
                                                     })
                                                 )
@@ -256,13 +252,11 @@ export function EntityConflictBody({
                                 <Col xs="auto" key="change-justification-button">
                                     <ChangeJustificationButton />
                                 </Col>
-                                <Col xs="auto" key="entities-step-add-tag-button">
+                                <Col xs="auto" key="entities-step-add-column-button">
                                     <Button
-                                        onClick={() =>
-                                            dispatch(toggleTagDefinitionMenu())
-                                        }
+                                        onClick={() => dispatch(toggleColumnMenu())}
                                     >
-                                        Show Additional Tag Values
+                                        Show Additional Columns
                                     </Button>
                                 </Col>
                             </Row>
@@ -272,14 +266,14 @@ export function EntityConflictBody({
                         <EntitySimilarityItem
                             entity={selectedEntity}
                             putDuplicateCallback={putDuplicateCallback}
-                            numMatchTags={matchTags.length}
-                            numTags={tagDefinitionList.length}
+                            numMatchColumns={matchColumns.length}
+                            numColumns={columnList.length}
                         />
                     </Row>
                 </Col>
-                <AddTagDefinitionsModal
+                <AddColumnsModal
                     idContributionPersistent={idContributionPersistent}
-                    tagDefinitionIndices={tagDefinitionIndices}
+                    columnIndices={columnIndices}
                 />
             </>
         )
@@ -320,18 +314,18 @@ const zeroBounds = {
 export function EntitySimilarityItem({
     entity,
     putDuplicateCallback,
-    numMatchTags,
-    numTags
+    numMatchColumns,
+    numColumns
 }: {
     entity: EntityWithDuplicates
     putDuplicateCallback: PutDuplicateCallback
-    numMatchTags: number
-    numTags: number
+    numMatchColumns: number
+    numColumns: number
 }) {
     const entityColumnDefs = useSelector(selectEntityColumnDefs)
-    const tagRowDefs = useSelector(selectTagRowDefs)
+    const columnRowDefs = useSelector(selectColumnRowDefs)
     const contributionJustification = useSelector(selectContributionJustification)
-    const matchTagDefinitionList = useSelector(selectMatchTagDefinitionList)
+    const matchColumnList = useSelector(selectMatchColumnList)
     const { similarEntities, displayTxtDetails: entityDisplayTxtDetails } = entity
     const dispatch = useDispatch()
     const [tooltip, setTooltip] = useState<
@@ -367,7 +361,7 @@ export function EntitySimilarityItem({
                     tooltipValue = displayTxtDetails as string
                 } else {
                     tooltipValue = constructColumnTitle(
-                        (displayTxtDetails as TagDefinition).namePath
+                        (displayTxtDetails as Column).namePath
                     )
                 }
                 timeoutRef.current = window.setTimeout(() => {
@@ -422,12 +416,12 @@ export function EntitySimilarityItem({
                             loadingCellRenderer,
                             ReplaceButtonCellRenderer
                         ]}
-                        rows={4 + numTags}
+                        rows={4 + numColumns}
                         getCellContent={mkCellContentCallback(
                             entity,
-                            tagRowDefs,
-                            numMatchTags,
-                            matchTagDefinitionList
+                            columnRowDefs,
+                            numMatchColumns,
+                            matchColumnList
                         )}
                         freezeColumns={2}
                         columns={entityColumnDefs}

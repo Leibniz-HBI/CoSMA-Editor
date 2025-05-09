@@ -1,26 +1,26 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { newRemote } from '../util/state'
-import { OwnershipRequest, PutOwnershipRequest, TagManagementState } from './state'
+import { OwnershipRequest, PutOwnershipRequest, ColumnManagementState } from './state'
 
 export interface OwnershipRequestsPayload {
     petitioned: OwnershipRequest[]
     received: OwnershipRequest[]
 }
 
-const initialState: TagManagementState = {
+const initialState: ColumnManagementState = {
     ownershipRequests: { value: { petitioned: [], received: [] }, isLoading: false },
     putOwnershipRequest: { value: undefined, isLoading: false }
 }
 
-export const tagManagementSlice = createSlice({
-    name: 'tagManagement',
+const columnManagementSlice = createSlice({
+    name: 'columnManagement',
     initialState,
     reducers: {
-        getOwnershipRequestsStart(state: TagManagementState) {
+        getOwnershipRequestsStart(state: ColumnManagementState) {
             state.ownershipRequests = newRemote(state.ownershipRequests.value, true)
         },
         getOwnershipRequestsSuccess(
-            state: TagManagementState,
+            state: ColumnManagementState,
             action: PayloadAction<OwnershipRequestsPayload>
         ) {
             state.ownershipRequests = newRemote({
@@ -30,11 +30,11 @@ export const tagManagementSlice = createSlice({
                 received: action.payload.received.map((request) => newRemote(request))
             })
         },
-        getOwnershipRequestsError(state: TagManagementState) {
+        getOwnershipRequestsError(state: ColumnManagementState) {
             state.ownershipRequests.isLoading = false
         },
         putOwnershipRequestStart(
-            state: TagManagementState,
+            state: ColumnManagementState,
             action: PayloadAction<PutOwnershipRequest>
         ) {
             state.putOwnershipRequest = { value: action.payload, isLoading: true }
@@ -125,6 +125,8 @@ export const tagManagementSlice = createSlice({
     }
 })
 
+export const columnManagementReducer = columnManagementSlice.reducer
+
 export const {
     getOwnershipRequestsStart,
     getOwnershipRequestsSuccess,
@@ -140,17 +142,17 @@ export const {
     deleteOwnershipRequestStart,
     deleteOwnershipRequestSuccess,
     deleteOwnershipRequestError
-} = tagManagementSlice.actions
+} = columnManagementSlice.actions
 
-export default tagManagementSlice.reducer
+export default columnManagementSlice.reducer
 function checkOwnershipRequestMatch(
-    state: TagManagementState,
+    state: ColumnManagementState,
     action: { payload: PutOwnershipRequest; type: string }
 ) {
     const stateOwnerShipRequestValue = state.putOwnershipRequest.value
     return (
-        stateOwnerShipRequestValue?.idTagDefinitionPersistent ==
-            action.payload.idTagDefinitionPersistent &&
+        stateOwnerShipRequestValue?.idColumnPersistent ==
+            action.payload.idColumnPersistent &&
         stateOwnerShipRequestValue.idUserPersistent == action.payload.idUserPersistent
     )
 }

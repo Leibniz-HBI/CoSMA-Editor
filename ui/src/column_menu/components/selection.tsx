@@ -10,69 +10,69 @@ import {
 } from 'react-bootstrap'
 
 import { DashLg, PencilSquare, PlusLg, RecordFill } from 'react-bootstrap-icons'
-import { TagDefinition, TagType, newTagDefinition } from '../state'
+import { Column, ColumnType, newColumn } from '../state'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import {
-    clearEditTagDefinition,
-    dragTagDefinitionEnd,
-    dragTagDefinitionStart,
-    setEditTagDefinition,
+    clearEditColumn,
+    dragColumnEnd,
+    dragColumnStart,
+    setEditColumn,
     toggleExpansion
 } from '../slice'
 import {
-    selectEditTagDefinition,
+    selectEditColumnDefinition,
     selectIsDragging,
-    selectTagDefinitionHierarchy,
-    TagDefinitionHierarchyNode
+    selectColumnHierarchy,
+    ColumnHierarchyNode
 } from '../selectors'
-import { changeTagDefinitionParent } from '../thunks'
+import { changeColumnParent } from '../thunks'
 import { CreateTabBody } from './menu'
 import { newRemote } from '../../util/state'
-import { TagDefinitionNamePath } from './misc'
+import { ColumnNamePath } from './misc'
 
 export function ColumnSelector({
     mkTailElement,
     additionalEntries = [],
     allowEdit = true
 }: {
-    mkTailElement: (def: TagDefinition) => ReactElement
+    mkTailElement: (def: Column) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
     allowEdit?: boolean
 }) {
-    const tagDefinitionHierarchy = useAppSelector(selectTagDefinitionHierarchy)
+    const columnHierarchy = useAppSelector(selectColumnHierarchy)
     const dispatch = useAppDispatch()
     const toggleExpansionCallback = (path: number[]) => dispatch(toggleExpansion(path))
-    const setEditTagDefinitionCallback = allowEdit
-        ? (tagDef: TagDefinition) => dispatch(setEditTagDefinition(tagDef))
+    const setEditColumnCallback = allowEdit
+        ? (column: Column) => dispatch(setEditColumn(column))
         : undefined
     const changeParentCallback = ({
-        tagDefinition,
+        column,
         idParentNewPersistent,
-        oldPathToTagDefinition,
+        oldPathToColumn,
         pathToNewParent
     }: {
-        tagDefinition: TagDefinition
+        column: Column
         idParentNewPersistent: string | undefined
-        oldPathToTagDefinition: number[]
+        oldPathToColumn: number[]
         pathToNewParent: number[]
     }) =>
         dispatch(
-            changeTagDefinitionParent({
-                tagDefinition,
+            changeColumnParent({
+                column,
                 idParentNewPersistent,
-                oldPathToTagDefinition,
+                oldPathToColumn,
                 pathToNewParent
             })
         )
-    const dragTagDefinitionStartCallback = () => dispatch(dragTagDefinitionStart())
-    const dragTagDefinitionEndCallback = () => dispatch(dragTagDefinitionEnd())
-    // if (editTagDefinition !== undefined) {
+    const dragColumnStartCallback = () => dispatch(dragColumnStart())
+    const dragColumnEndCallback = () => dispatch(dragColumnEnd())
+    // if (editColumn !== undefined) {
     //     return (
     //         <Col className="overflow-y-hidden pb-3 d-flex flex-column scroll-gutter">
     //             <Row className="overflow-y-scroll flex-grow-1 flex-shrink-1 pe-2">
     //                 <EditTabBody
-    //                     tagDefinition={editTagDefinition}
-    //                     closeEditCallback={() => setEditTagDefinition(undefined)}
+    //                     column={editColumn}
+    //                     closeEditCallback={() => setEditColumn(undefined)}
     //                 />
     //             </Row>
     //         </Col>
@@ -93,16 +93,16 @@ export function ColumnSelector({
             <Row className="overflow-y-auto flex-grow-1 flex-shrink-1 ms-2 me-1 scroll-gutter">
                 <ListGroup>
                     {mkListItems({
-                        tagSelectionEntries: tagDefinitionHierarchy,
+                        columnSelectionEntries: columnHierarchy,
                         level: 0,
                         path: [],
                         mkTailElement,
                         toggleExpansionCallback,
-                        startEditCallback: setEditTagDefinitionCallback,
+                        startEditCallback: setEditColumnCallback,
                         additionalEntries,
                         changeParentCallback,
-                        dragTagDefinitionStartCallback,
-                        dragTagDefinitionEndCallback,
+                        dragColumnStartCallback,
+                        dragColumnEndCallback,
                         allowEdit
                     })}
                 </ListGroup>
@@ -112,22 +112,22 @@ export function ColumnSelector({
 }
 
 export function EditModal() {
-    const editTagDefinition = useAppSelector(selectEditTagDefinition)
+    const editColumn = useAppSelector(selectEditColumnDefinition)
     const dispatch = useAppDispatch()
-    const closeEditCallback = () => dispatch(clearEditTagDefinition())
+    const closeEditCallback = () => dispatch(clearEditColumn())
     return (
         <Modal
-            show={editTagDefinition.value !== undefined}
+            show={editColumn.value !== undefined}
             size="xl"
             onHide={closeEditCallback}
             className="overflow-hidden"
             contentClassName="vh-95 d-flex flex-column bg-secondary flex-sm-wrap flex-md-nowrap"
         >
             <Modal.Header closeButton className="flex-grow-0 flex-shrink-0 bg-white">
-                <div className="modal-title h4">Edit Tag Definition</div>
+                <div className="modal-title h4">Edit Column</div>
             </Modal.Header>
             <Modal.Body className="bg-secondary d-contents">
-                {<CreateTabBody existingTagDefinition={editTagDefinition.value} />}
+                {<CreateTabBody existingColumn={editColumn.value} />}
             </Modal.Body>
         </Modal>
     )
@@ -137,9 +137,9 @@ function NoParentEntry({
     changeParentCallback
 }: {
     changeParentCallback: (props: {
-        tagDefinition: TagDefinition
+        column: Column
         idParentNewPersistent: string | undefined
-        oldPathToTagDefinition: number[]
+        oldPathToColumn: number[]
         pathToNewParent: number[]
     }) => void
 }) {
@@ -153,7 +153,7 @@ function NoParentEntry({
     return (
         <OverlayTrigger
             placement="bottom"
-            overlay={<Tooltip>Drop here to set no parent for tag definition</Tooltip>}
+            overlay={<Tooltip>Drop here to set no parent for column</Tooltip>}
             show={showOverlay && isDragging}
         >
             <div
@@ -166,16 +166,16 @@ function NoParentEntry({
                     setShowOverlay(false)
                 }}
                 onDrop={(event) => {
-                    const tagDefinition = JSON.parse(
-                        event.dataTransfer.getData('tagDefinition')
-                    ) as TagDefinition
-                    const oldPathToTagDefinition = JSON.parse(
+                    const column = JSON.parse(
+                        event.dataTransfer.getData('column')
+                    ) as Column
+                    const oldPathToColumn = JSON.parse(
                         event.dataTransfer.getData('path')
                     ) as number[]
                     changeParentCallback({
-                        tagDefinition,
+                        column,
                         idParentNewPersistent: undefined,
-                        oldPathToTagDefinition,
+                        oldPathToColumn,
                         pathToNewParent: []
                     })
                 }}
@@ -212,7 +212,7 @@ export function ColumnExplorerExpandIcon(props: {
 }
 
 export function ColumnExplorerItem({
-    tagDefinitionNode,
+    columnNode,
     path,
     toggleExpansionCallback = undefined,
     expansionGroup,
@@ -220,68 +220,68 @@ export function ColumnExplorerItem({
     mkTailElement,
     startEditCallback,
     changeParentCallback = undefined,
-    dragTagDefinitionStartCallback = undefined,
-    dragTagDefinitionEndCallback = undefined
+    dragColumnStartCallback = undefined,
+    dragColumnEndCallback = undefined
 }: {
-    tagDefinitionNode: TagDefinitionHierarchyNode
+    columnNode: ColumnHierarchyNode
     path: number[]
     toggleExpansionCallback?: (path: number[], group?: string) => void
     expansionGroup?: string
     level: number
-    mkTailElement: (def: TagDefinition) => ReactElement
-    startEditCallback: ((TagDefinition: TagDefinition) => void) | undefined
+    mkTailElement: (def: Column) => ReactElement
+    startEditCallback: ((column: Column) => void) | undefined
     changeParentCallback?: (props: {
-        tagDefinition: TagDefinition
+        column: Column
         idParentNewPersistent: string
-        oldPathToTagDefinition: number[]
+        oldPathToColumn: number[]
         pathToNewParent: number[]
     }) => void
-    dragTagDefinitionStartCallback?: VoidFunction
-    dragTagDefinitionEndCallback?: VoidFunction
+    dragColumnStartCallback?: VoidFunction
+    dragColumnEndCallback?: VoidFunction
 }) {
-    const tagDefinition = tagDefinitionNode.tagDefinition?.value
-    if (tagDefinition === undefined) {
+    const column = columnNode.column?.value
+    if (column === undefined) {
         return <Spinner />
     }
-    const tailElement = mkTailElement(tagDefinition)
-    const expandable = tagDefinitionNode.children.length > 0
+    const tailElement = mkTailElement(column)
+    const expandable = columnNode.children.length > 0
     let expandCallback = undefined
     if (expandable && toggleExpansionCallback !== undefined) {
         expandCallback = () => toggleExpansionCallback(path, expansionGroup)
     }
     let editButton = <div />
     if (startEditCallback !== undefined) {
-        editButton = <PencilSquare onClick={() => startEditCallback(tagDefinition)} />
+        editButton = <PencilSquare onClick={() => startEditCallback(column)} />
     }
     return (
         <ListGroup.Item
             className="d-flex flex-row justify-content-between"
-            key={tagDefinition.idPersistent}
+            key={column.idPersistent}
             role="button"
-            draggable={dragTagDefinitionStartCallback !== undefined}
+            draggable={dragColumnStartCallback !== undefined}
             onDragStart={(event) => {
                 event.dataTransfer.setData(
-                    'tagDefinition',
-                    JSON.stringify(tagDefinition)
+                    'column',
+                    JSON.stringify(column)
                 )
                 event.dataTransfer.setData('path', JSON.stringify(path))
-                dragTagDefinitionStartCallback?.()
+                dragColumnStartCallback?.()
             }}
             onDragEnd={(_event) => {
-                dragTagDefinitionEndCallback?.()
+                dragColumnEndCallback?.()
             }}
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
-                const tagDefinitionDropped = JSON.parse(
-                    event.dataTransfer.getData('tagDefinition')
-                ) as TagDefinition
-                const oldPathToTagDefinition = JSON.parse(
+                const columnDropped = JSON.parse(
+                    event.dataTransfer.getData('column')
+                ) as Column
+                const oldPathToColumn = JSON.parse(
                     event.dataTransfer.getData('path')
                 ) as number[]
                 changeParentCallback?.({
-                    tagDefinition: tagDefinitionDropped,
-                    idParentNewPersistent: tagDefinition.idPersistent,
-                    oldPathToTagDefinition,
+                    column: columnDropped,
+                    idParentNewPersistent: column.idPersistent,
+                    oldPathToColumn,
                     pathToNewParent: path
                 })
             }}
@@ -299,9 +299,9 @@ export function ColumnExplorerItem({
                             <span className="indent" key={`indent-${idx}`} />
                         ))}
                         <ColumnExplorerExpandIcon
-                            isLoading={tagDefinitionNode.tagDefinition.isLoading}
+                            isLoading={columnNode.column.isLoading}
                             isExpandable={expandable}
-                            isExpanded={tagDefinitionNode.isExpanded}
+                            isExpanded={columnNode.isExpanded}
                             expandCallback={expandCallback}
                         />
                     </Col>
@@ -312,7 +312,7 @@ export function ColumnExplorerItem({
                         onDragOver={(event) => event.preventDefault()}
                         onDrop={(event) => event.preventDefault()}
                     >
-                        <TagDefinitionNamePath tagDefinition={tagDefinition} />
+                        <ColumnNamePath column={column} />
                     </Col>
                     <Col xs="auto" className="me-2">
                         {editButton}
@@ -325,26 +325,26 @@ export function ColumnExplorerItem({
 }
 
 export function mkListItems(args: {
-    tagSelectionEntries: TagDefinitionHierarchyNode[]
+    columnSelectionEntries: ColumnHierarchyNode[]
     path: number[]
     toggleExpansionCallback: (path: number[], group?: string) => void
     level: number
-    mkTailElement: (def: TagDefinition) => ReactElement
+    mkTailElement: (def: Column) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
     expansionGroup?: string
-    startEditCallback?: (tagDef: TagDefinition) => void
+    startEditCallback?: (column: Column) => void
     changeParentCallback: (props: {
-        tagDefinition: TagDefinition
+        column: Column
         idParentNewPersistent: string | undefined
-        oldPathToTagDefinition: number[]
+        oldPathToColumn: number[]
         pathToNewParent: number[]
     }) => void
-    dragTagDefinitionStartCallback: VoidFunction
-    dragTagDefinitionEndCallback: VoidFunction
+    dragColumnStartCallback: VoidFunction
+    dragColumnEndCallback: VoidFunction
     allowEdit: boolean
 }): ReactElement[] {
     const {
-        tagSelectionEntries,
+        columnSelectionEntries: columnSelectionEntries,
         path,
         toggleExpansionCallback,
         expansionGroup,
@@ -353,21 +353,21 @@ export function mkListItems(args: {
         additionalEntries,
         startEditCallback,
         changeParentCallback,
-        dragTagDefinitionStartCallback,
-        dragTagDefinitionEndCallback
+        dragColumnStartCallback,
+        dragColumnEndCallback
     } = args
     if (additionalEntries !== undefined) {
         const additionalItems = additionalEntries.map((entry, idx) =>
             //TODO split selector logic from component to allow additional items.
             ColumnExplorerItem({
-                tagDefinitionNode: {
+                columnNode: {
                     name: entry.name,
-                    idTagDefinitionPersistent: entry.idPersistent,
-                    tagDefinition: newRemote(
-                        newTagDefinition({
+                    idColumnPersistent: entry.idPersistent,
+                    column: newRemote(
+                        newColumn({
                             namePath: [entry.name],
                             idPersistent: entry.idPersistent,
-                            columnType: TagType.Inner,
+                            columnType: ColumnType.Inner,
                             curated: true,
                             version: 0,
                             hidden: false
@@ -388,11 +388,11 @@ export function mkListItems(args: {
             ...mkListItems({ ...args, level: 0, additionalEntries: undefined })
         ]
     }
-    return tagSelectionEntries.flatMap(
-        (entry: TagDefinitionHierarchyNode, idx: number) => {
+    return columnSelectionEntries.flatMap(
+        (entry: ColumnHierarchyNode, idx: number) => {
             const newPath = [...path, idx]
             const item = ColumnExplorerItem({
-                tagDefinitionNode: entry,
+                columnNode: entry,
                 path: newPath,
                 toggleExpansionCallback: toggleExpansionCallback,
                 expansionGroup: expansionGroup,
@@ -400,15 +400,15 @@ export function mkListItems(args: {
                 mkTailElement: mkTailElement,
                 startEditCallback,
                 changeParentCallback,
-                dragTagDefinitionStartCallback,
-                dragTagDefinitionEndCallback
+                dragColumnStartCallback,
+                dragColumnEndCallback
             })
             if (entry.isExpanded) {
                 return [
                     item,
                     ...mkListItems({
                         ...args,
-                        tagSelectionEntries: entry.children,
+                        columnSelectionEntries: entry.children,
                         level: level + 1,
                         path: newPath
                     })

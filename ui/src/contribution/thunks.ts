@@ -1,4 +1,4 @@
-import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { parseColumnsFromApi } from '../column_menu/thunks'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { exceptionMessage } from '../util/exception'
@@ -214,8 +214,8 @@ export function parseContributionFromApi(contribution_json: any): Contribution {
         step: contributionStepApiToUiMap[contribution_json['state']],
         hasHeader: contribution_json['has_header'],
         emptyValues: contribution_json['empty_values'],
-        matchTagDefinitionList: contribution_json['match_column_list']?.map(
-            (tagDefJson: unknown) => parseColumnDefinitionsFromApi(tagDefJson)
+        matchColumnList: contribution_json['match_column_list']?.map(
+            (columnJson: unknown) => parseColumnsFromApi(columnJson)
         ),
         justification: contribution_json['justification_txt'] ?? undefined
     })

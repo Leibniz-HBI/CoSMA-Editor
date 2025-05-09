@@ -12,8 +12,8 @@ import { configureStore } from '@reduxjs/toolkit'
 import { contributionColumnDefinitionSlice } from '../columns/slice'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { TagSelectionState, newTagSelectionState } from '../../column_menu/state'
-import { tagSelectionSlice } from '../../column_menu/slice'
+import { ColumnSelectionState, newColumnSelectionState } from '../../column_menu/state'
+import { columnSelectionReducer } from '../../column_menu/slice'
 import {
     NotificationManager,
     NotificationType,
@@ -38,7 +38,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionColumnDefinition: ColumnDefinitionsContributionState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         notification: NotificationManager
     }
 }
@@ -54,7 +54,7 @@ export function renderWithProviders(
             contribution: newContributionState({
                 selectedContribution: newRemote(undefined)
             }),
-            tagSelection: newTagSelectionState({}),
+            columnSelection: newColumnSelectionState({}),
             notification: { notificationList: [], notificationMap: {} }
         },
         ...renderOptions
@@ -64,7 +64,7 @@ export function renderWithProviders(
         reducer: {
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>

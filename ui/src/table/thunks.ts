@@ -1,13 +1,13 @@
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { fetch_chunk } from '../util/fetch'
-import { TagDefinition, TagType } from '../column_menu/state'
+import { Column, ColumnType } from '../column_menu/state'
 import { CellValue, displayTxtColumnId, justificationColumnId } from './state'
 import { Entity } from '../entity/state'
 import { newEntity } from '../entity/state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { constructColumnTitle } from '../contribution/entity/hooks'
-import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { parseColumnsFromApi } from '../column_menu/thunks'
 import { ThunkWithFetch } from '../util/type'
 import {
     Edit,
@@ -91,7 +91,7 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
 }
 
 export function getColumnAsync(
-    columnDefinition: TagDefinition
+    columnDefinition: Column
 ): ThunkWithFetch<string[]> {
     return async (dispatch, _getState, fetch) => {
         const id_persistent = columnDefinition.idPersistent
@@ -100,7 +100,7 @@ export function getColumnAsync(
             return []
         }
         let idPersistentList = [columnDefinition.idPersistent]
-        if (columnDefinition.columnType === TagType.Inner) {
+        if (columnDefinition.columnType === ColumnType.Inner) {
             try {
                 const rsp = await fetch(
                     config.api_path +
@@ -115,7 +115,7 @@ export function getColumnAsync(
                     return []
                 }
             } catch (_e: unknown) {
-                dispatch(addError('Could not fetch descendant tags.'))
+                dispatch(addError('Could not fetch descendant columns.'))
                 return []
             } finally {
                 dispatch(removeColumnByIdPersistent(columnDefinition.idPersistent))
@@ -149,12 +149,12 @@ export function getColumnAsync(
                         return []
                     }
                     const json = await rsp.json()
-                    const tags = json['value_list']
-                    for (const tag of tags) {
-                        const id_entity_persistent: string = tag['id_entity_persistent']
-                        const valueString = tag['value']
-                        const valueIdPersistent = tag['id_persistent']
-                        const valueVersion = Number.parseInt(tag['version'])
+                    const columns = json['value_list']
+                    for (const column of columns) {
+                        const id_entity_persistent: string = column['id_entity_persistent']
+                        const valueString = column['value']
+                        const valueIdPersistent = column['id_persistent']
+                        const valueVersion = Number.parseInt(column['version'])
                         const versionedValue = {
                             value: valueString,
                             idPersistent: valueIdPersistent,
@@ -162,14 +162,14 @@ export function getColumnAsync(
                         }
                         column_data[id_entity_persistent] = [versionedValue]
                     }
-                    if (tags.length < 5000) {
+                    if (columns.length < 5000) {
                         break
                     } else {
                         offset =
                             Math.max(
-                                ...tags.map(
-                                    (tagJson: { [key: string]: unknown }) =>
-                                        tagJson['version']
+                                ...columns.map(
+                                    (columnJson: { [key: string]: unknown }) =>
+                                        columnJson['version']
                                 )
                             ) + 1
                     }
@@ -191,7 +191,7 @@ export function getColumnAsync(
 }
 
 export function submitValuesAsync(
-    columnType: TagType,
+    columnType: ColumnType,
     edit: Edit
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
@@ -215,17 +215,17 @@ export function submitValuesAsync(
             })
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const tagInstance = json['value_list'][0]
+                const value = json['value_list'][0]
 
                 dispatch(
-                    submitValuesSuccess([extractEdit(edit, columnType, tagInstance)])
+                    submitValuesSuccess([extractEdit(edit, columnType, value)])
                 )
                 return
             }
             if (rsp.status == 409) {
-                const tagInstance = json['value_list'][0]
+                const value = json['value_list'][0]
                 dispatch(
-                    submitValuesSuccess([extractEdit(edit, columnType, tagInstance)])
+                    submitValuesSuccess([extractEdit(edit, columnType, value)])
                 )
                 dispatch(submitValuesError())
                 dispatch(
@@ -243,7 +243,7 @@ export function submitValuesAsync(
                 dispatch(submitValuesError())
                 dispatch(
                     addError(
-                        `You do not have sufficient permissions to change values for tag ${namePath}`
+                        `You do not have sufficient permissions to change values for column ${namePath}`
                     )
                 )
                 return
@@ -258,17 +258,17 @@ export function submitValuesAsync(
 }
 function extractEdit(
     edit: Edit,
-    columnType: TagType,
+    columnType: ColumnType,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tagInstance: { [key: string]: any }
+    value: { [key: string]: any }
 ): Edit {
     return [
         edit[0],
         edit[1],
         {
-            value: parseValue(columnType, tagInstance['value']),
-            version: tagInstance['version'],
-            idPersistent: tagInstance['id_persistent']
+            value: parseValue(columnType, value['value']),
+            version: value['version'],
+            idPersistent: value['id_persistent']
         }
     ]
 }
@@ -384,14 +384,14 @@ export function submitEntityJustificationThunk(
 }
 
 export function parseValue(
-    columnType: TagType,
+    columnType: ColumnType,
     valueString: string
 ): number | boolean | string | undefined {
     try {
-        if (columnType === TagType.Float) {
+        if (columnType === ColumnType.Float) {
             return Number.parseFloat(valueString)
         }
-        if (columnType === TagType.Inner) {
+        if (columnType === ColumnType.Inner) {
             return valueString.toLowerCase() == 'true'
         }
         return valueString
@@ -413,12 +413,12 @@ export function parseEntityObjectFromJson(json: any): Entity {
 }
 export function parseDisplayTxtDetails(
     arg: { [key: string]: unknown } | string
-): string | TagDefinition | undefined {
+): string | Column | undefined {
     if (arg === null) {
         return undefined
     }
     if (typeof arg == 'string') {
         return arg
     }
-    return parseColumnDefinitionsFromApi(arg)
+    return parseColumnsFromApi(arg)
 }

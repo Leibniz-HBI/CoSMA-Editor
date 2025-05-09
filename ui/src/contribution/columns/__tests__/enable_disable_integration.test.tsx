@@ -21,11 +21,11 @@ import { PropsWithChildren } from 'react'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
 import {
-    TagDefinition,
-    TagSelectionState,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    newColumnSelectionState
 } from '../../../column_menu/state'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 import { vi, Mock } from 'vitest'
 vi.mock('react-router-dom', () => {
@@ -46,7 +46,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionColumnDefinition: ColumnDefinitionsContributionState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
     }
 }
 export function renderWithProviders(
@@ -70,7 +70,7 @@ export function renderWithProviders(
                     })
                 )
             }),
-            tagSelection: newTagSelectionState({})
+            columnSelection: newColumnSelectionState({})
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -79,7 +79,7 @@ export function renderWithProviders(
         reducer: {
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer
+            columnSelection: columnSelectionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -137,8 +137,8 @@ export const contributionColumnDiscardRsp3 = {
     index_in_file: 3,
     discard: true
 }
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
+const idColumn0 = 'id-column-test-0'
+const nameColumn0 = 'column def 0'
 
 describe('beginning', () => {
     test('discard, enable', async () => {
@@ -151,7 +151,7 @@ describe('beginning', () => {
         const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
         let columnLabel0: HTMLElement | undefined
         await waitFor(() => {
-            screen.getByText(nameTagDef0)
+            screen.getByText(nameColumn0)
             columnLabel0 = screen.getByText(contributionColumnActiveRsp0.name)
         })
 
@@ -229,7 +229,7 @@ describe('beginning', () => {
             [
                 'http://127.0.0.1:8000/cosmae/api/columns/children',
                 {
-                    body: JSON.stringify({ id_parent_persistent: idTagDef0 }),
+                    body: JSON.stringify({ id_parent_persistent: idColumn0 }),
                     credentials: 'include',
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
@@ -267,7 +267,7 @@ describe('middle', () => {
         let columnLabel2: HTMLElement | undefined
         await waitFor(() => {
             columnLabel2 = screen.getByText(contributionColumnActiveRsp2.name)
-            screen.getByText(nameTagDef0)
+            screen.getByText(nameColumn0)
         })
 
         expectActiveDiscardedIds(
@@ -338,7 +338,7 @@ describe('end', () => {
         let columnLabel4: HTMLElement | undefined
         await waitFor(() => {
             columnLabel4 = screen.getByText(contributionColumnActiveRsp4.name)
-            screen.getByText(nameTagDef0)
+            screen.getByText(nameColumn0)
         })
 
         expectActiveDiscardedIds(
@@ -416,9 +416,9 @@ function initialResponseSequence(fetchMock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDef0,
-                        name_path: [nameTagDef0],
-                        name: nameTagDef0,
+                        id_persistent: idColumn0,
+                        name_path: [nameColumn0],
+                        name: nameColumn0,
                         curated: true,
                         version: 0,
                         type: 'STRING'
@@ -434,7 +434,7 @@ function expectActiveDiscardedIds(
     store: ToolkitStore<{
         contributionColumnDefinition: ColumnDefinitionsContributionState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
     }>,
     expectedActiveIdList: string[],
     expectedDiscardedIdList: string[]
@@ -443,14 +443,14 @@ function expectActiveDiscardedIds(
         store
             .getState()
             .contributionColumnDefinition.columns.value?.activeDefinitionsList.map(
-                (col: TagDefinition) => col.idPersistent
+                (col: Column) => col.idPersistent
             )
     ).toEqual(expectedActiveIdList)
     expect(
         store
             .getState()
             .contributionColumnDefinition.columns.value?.discardedDefinitionsList.map(
-                (col: TagDefinition) => col.idPersistent
+                (col: Column) => col.idPersistent
             )
     ).toEqual(expectedDiscardedIdList)
 }

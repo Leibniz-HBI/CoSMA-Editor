@@ -4,13 +4,13 @@
 
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import {
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../state'
 import { configureStore } from '@reduxjs/toolkit'
-import { tagSelectionSlice } from '../slice'
+import { columnSelectionReducer} from '../slice'
 import React, { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import {
@@ -22,7 +22,7 @@ import {
 } from '../../util/notification/slice'
 import { newRemote } from '../../util/state'
 
-import { useTagDefinition } from '../hooks'
+import { useColumn } from '../hooks'
 import {
     displayTextColumn,
     displayTxtColumnId,
@@ -31,24 +31,24 @@ import {
 } from '../../table/state'
 
 function TestComponent({ idPersistent }: { idPersistent: string }) {
-    const tagDefinition = useTagDefinition(idPersistent)
+    const column = useColumn(idPersistent)
     let label = 'undefined'
 
-    if (tagDefinition.isLoading) {
+    if (column.isLoading) {
         label = 'loading'
     }
-    if (tagDefinition.value !== undefined) {
-        label = tagDefinition.value.namePath.at(-1) ?? 'empty name'
+    if (column.value !== undefined) {
+        label = column.value.namePath.at(-1) ?? 'empty name'
     }
     return <div>{label}</div>
 }
 
-const idTagDef = 'id-tag-test'
-const nameTagDef = 'tag name'
-const tagDefTest = newTagDefinition({
-    namePath: [nameTagDef],
-    idPersistent: idTagDef,
-    columnType: TagType.String,
+const idColumn = 'id-column-test'
+const nameColumn = 'column name'
+const columnTest = newColumn({
+    namePath: [nameColumn],
+    idPersistent: idColumn,
+    columnType: ColumnType.String,
     idParentPersistent: undefined,
     hidden: false,
     version: 0,
@@ -62,8 +62,8 @@ test('success', async () => {
             {
                 column_list: [
                     {
-                        name_path: [nameTagDef],
-                        id_persistent: idTagDef,
+                        name_path: [nameColumn],
+                        id_persistent: idColumn,
                         id_parent_persistent: undefined,
                         type: 'STRING',
                         curated: true,
@@ -75,14 +75,14 @@ test('success', async () => {
         ]
     ])
     const { store } = renderWithProviders(
-        <TestComponent idPersistent={idTagDef} />,
+        <TestComponent idPersistent={idColumn} />,
         fetchMock
     )
     await waitFor(() => {
         screen.getByText('loading')
     })
     await waitFor(() => {
-        screen.getByText(nameTagDef)
+        screen.getByText(nameColumn)
     })
     expect(fetchMock.mock.calls).toEqual([
         [
@@ -90,16 +90,16 @@ test('success', async () => {
             {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({ id_persistent_list: [idTagDef] })
+                body: JSON.stringify({ id_persistent_list: [idColumn] })
             }
         ]
     ])
-    expect(store.getState().tagSelection).toEqual(
-        newTagSelectionState({
-            tagDefinitionsByIdPersistent: {
+    expect(store.getState().columnSelection).toEqual(
+        newColumnSelectionState({
+            columnsByIdPersistent: {
                 [displayTxtColumnId]: newRemote(displayTextColumn),
                 [justificationColumnId]: newRemote(justificationColumn),
-                [idTagDef]: newRemote(tagDefTest)
+                [idColumn]: newRemote(columnTest)
             }
         })
     )
@@ -107,10 +107,10 @@ test('success', async () => {
 
 test('error', async () => {
     const fetchMock = vi.fn()
-    const testError = 'Could not get tag definition details.'
+    const testError = 'Could not get column definition details.'
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(
-        <TestComponent idPersistent={idTagDef} />,
+        <TestComponent idPersistent={idColumn} />,
         fetchMock
     )
     await waitFor(() => {
@@ -120,12 +120,12 @@ test('error', async () => {
         screen.getByText('undefined')
     })
     const state = store.getState()
-    expect(state.tagSelection).toEqual(
-        newTagSelectionState({
-            tagDefinitionsByIdPersistent: {
+    expect(state.columnSelection).toEqual(
+        newColumnSelectionState({
+            columnsByIdPersistent: {
                 [displayTxtColumnId]: newRemote(displayTextColumn),
                 [justificationColumnId]: newRemote(justificationColumn),
-                [idTagDef]: newRemote(undefined)
+                [idColumn]: newRemote(undefined)
             }
         })
     )
@@ -140,7 +140,7 @@ test('error', async () => {
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         notification: NotificationManager
     }
 }
@@ -150,7 +150,7 @@ export function renderWithProviders(
     fetchMock: Mock,
     {
         preloadedState = {
-            tagSelection: newTagSelectionState({}),
+            columnSelection: newColumnSelectionState({}),
             notification: newNotificationManager({})
         },
         ...renderOptions
@@ -158,7 +158,7 @@ export function renderWithProviders(
 ) {
     const store = configureStore({
         reducer: {
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>

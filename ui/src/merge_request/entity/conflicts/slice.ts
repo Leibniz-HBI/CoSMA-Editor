@@ -60,31 +60,31 @@ export const entityMergeRequestConflictSlice = createSlice({
         resolveEntityConflictSuccess(
             state: EntityMergeRequestConflictsState,
             action: PayloadAction<{
-                idTagDefinitionPersistent: string
+                idColumnPersistent: string
                 replacementState: ReplacementState | undefined
                 replacementValue: string | undefined
             }>
         ) {
-            const { idTagDefinitionPersistent, replacementState, replacementValue } =
+            const { idColumnPersistent, replacementState, replacementValue } =
                 action.payload
             const conflicts = state.conflicts.value
             if (conflicts === undefined) {
                 return
             }
             const updatedIdx =
-                conflicts.updatedTagDefinitionIdMap[idTagDefinitionPersistent]
+                conflicts.updatedColumnIdMap[idColumnPersistent]
             if (updatedIdx !== undefined) {
                 conflicts.updated.splice(updatedIdx, 1)
             }
-            conflicts.updatedTagDefinitionIdMap = Object.fromEntries(
+            conflicts.updatedColumnIdMap = Object.fromEntries(
                 conflicts.updated.map((updatedConflict, idx) => [
-                    updatedConflict.value.tagDefinition.idPersistent,
+                    updatedConflict.value.column.idPersistent,
                     idx
                 ])
             )
             updateRelevantEntityConflict(
                 state,
-                idTagDefinitionPersistent,
+                idColumnPersistent,
                 (conflict) => {
                     conflict.isLoading = false
                     conflict.value.replacementState = replacementState
@@ -173,15 +173,15 @@ export const entityMergeRequestConflictSlice = createSlice({
 
 function updateRelevantEntityConflict(
     state: EntityMergeRequestConflictsState,
-    idTagDefinitionPersistent: string,
+    idColumnPersistent: string,
     strategy: (conflict: RemoteInterface<EntityMergeRequestConflict>) => void
 ) {
     if (state.conflicts.value === undefined) {
         return
     }
     const conflictIdx =
-        state.conflicts.value.resolvableConflictsTagDefinitionIdMap[
-            idTagDefinitionPersistent
+        state.conflicts.value.resolvableConflictsColumnIdMap[
+            idColumnPersistent
         ]
     if (conflictIdx !== undefined) {
         strategy(state.conflicts.value.resolvableConflicts[conflictIdx])

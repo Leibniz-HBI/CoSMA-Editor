@@ -17,14 +17,14 @@ import {
     newNotificationManager,
     notificationReducer
 } from '../../util/notification/slice'
-import { tagMergeRequestsReducer } from '../slice'
+import { columnMergeRequestsReducer } from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ReviewList } from '../components'
 import { newRemote } from '../../util/state'
 import { UserPermissionGroup, newPublicUserInfo, newUserInfo } from '../../user/state'
-import { TagType, newTagDefinition } from '../../column_menu/state'
+import { ColumnType, newColumn } from '../../column_menu/state'
 import { useNavigate } from 'react-router-dom'
 import { AuthState, newAuthState } from '../../auth/state'
 import { authReducer } from '../../auth/slice'
@@ -38,7 +38,7 @@ vi.mock('react-router-dom', () => {
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         notification: NotificationManager
-        tagMergeRequests: MergeRequestState
+        columnMergeRequests: MergeRequestState
         auth: AuthState
     }
 }
@@ -48,7 +48,7 @@ export function renderWithProviders(
     fetchMock: Mock,
     {
         preloadedState = {
-            tagMergeRequests: newMergeRequestState({}),
+            columnMergeRequests: newMergeRequestState({}),
             notification: { notificationList: [], notificationMap: {} },
             auth: newAuthState({
                 user: newRemote(
@@ -69,7 +69,7 @@ export function renderWithProviders(
     const store = configureStore({
         reducer: {
             notification: notificationReducer,
-            tagMergeRequests: tagMergeRequestsReducer,
+            columnMergeRequests: columnMergeRequestsReducer,
             auth: authReducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -101,12 +101,12 @@ const nameUser = 'user name'
 const idUser1 = 'id-user-1'
 const nameUser1 = 'name user 1'
 
-const namePathTagDef = ['name', 'path']
-const idTagDef = 'id-tag'
-const versionTag = 46
-const namePathTagDef1 = ['name', 'path', 'tag 1']
-const idTagDef1 = 'id-tag-1'
-const versionTag1 = 57
+const namePathColumn = ['name', 'path']
+const idColumn = 'id-column'
+const versionColumn = 46
+const namePathColumn1 = ['name', 'path', 'column 1']
+const idColumn1 = 'id-Column-1'
+const versionColumn1 = 57
 
 const idMergeRequest = 'id-mr-test'
 
@@ -125,20 +125,20 @@ const mergeRequest = {
         permission_group: 'CONTRIBUTOR'
     },
     destination: {
-        name_path: namePathTagDef,
-        id_persistent: idTagDef,
+        name_path: namePathColumn,
+        id_persistent: idColumn,
         type: 'STRING',
         hidden: false,
         curated: false,
-        version: versionTag
+        version: versionColumn
     },
     origin: {
-        name_path: namePathTagDef1,
-        id_persistent: idTagDef1,
+        name_path: namePathColumn1,
+        id_persistent: idColumn1,
         type: 'FLOAT',
         hidden: false,
         curated: false,
-        version: versionTag1
+        version: versionColumn1
     }
 }
 const mergeRequest1 = {
@@ -156,20 +156,20 @@ const mergeRequest1 = {
         permission_group: 'CONTRIBUTOR'
     },
     origin: {
-        name_path: namePathTagDef,
-        id_persistent: idTagDef,
+        name_path: namePathColumn,
+        id_persistent: idColumn,
         type: 'STRING',
         hidden: false,
         curated: false,
-        version: versionTag
+        version: versionColumn
     },
     destination: {
-        name_path: namePathTagDef1,
-        id_persistent: idTagDef1,
+        name_path: namePathColumn1,
+        id_persistent: idColumn1,
         type: 'FLOAT',
         hidden: false,
         curated: false,
-        version: versionTag1
+        version: versionColumn1
     }
 }
 
@@ -182,7 +182,7 @@ test('success', async () => {
 
     await waitFor(() => {
         const items = screen.getAllByText(
-            (_, element) => element?.textContent === 'tag 1'
+            (_, element) => element?.textContent === 'column 1'
         )
         expect(items.length).toEqual(2)
         items[0].click()
@@ -193,7 +193,7 @@ test('success', async () => {
         ])
     })
     expect(store.getState().notification).toEqual(newNotificationManager({}))
-    expect(store.getState().tagMergeRequests).toEqual({
+    expect(store.getState().columnMergeRequests).toEqual({
         byCategory: newRemote({
             created: [
                 newMergeRequest({
@@ -208,21 +208,21 @@ test('success', async () => {
                         username: nameUser1,
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     }),
-                    destinationTagDefinition: newTagDefinition({
-                        namePath: namePathTagDef,
-                        idPersistent: idTagDef,
-                        columnType: TagType.String,
+                    destinationColumn: newColumn({
+                        namePath: namePathColumn,
+                        idPersistent: idColumn,
+                        columnType: ColumnType.String,
                         curated: false,
                         hidden: false,
-                        version: versionTag
+                        version: versionColumn
                     }),
-                    originTagDefinition: newTagDefinition({
-                        namePath: namePathTagDef1,
-                        idPersistent: idTagDef1,
-                        columnType: TagType.Float,
+                    originColumn: newColumn({
+                        namePath: namePathColumn1,
+                        idPersistent: idColumn1,
+                        columnType: ColumnType.Float,
                         curated: false,
                         hidden: false,
-                        version: versionTag1
+                        version: versionColumn1
                     }),
                     step: MergeRequestStep.Open,
                     disableOriginOnMerge: true
@@ -241,21 +241,21 @@ test('success', async () => {
                         username: nameUser1,
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     }),
-                    originTagDefinition: newTagDefinition({
-                        namePath: namePathTagDef,
-                        idPersistent: idTagDef,
-                        columnType: TagType.String,
+                    originColumn: newColumn({
+                        namePath: namePathColumn,
+                        idPersistent: idColumn,
+                        columnType: ColumnType.String,
                         curated: false,
                         hidden: false,
-                        version: versionTag
+                        version: versionColumn
                     }),
-                    destinationTagDefinition: newTagDefinition({
-                        namePath: namePathTagDef1,
-                        idPersistent: idTagDef1,
-                        columnType: TagType.Float,
+                    destinationColumn: newColumn({
+                        namePath: namePathColumn1,
+                        idPersistent: idColumn1,
+                        columnType: ColumnType.Float,
                         curated: false,
                         hidden: false,
-                        version: versionTag1
+                        version: versionColumn1
                     }),
                     step: MergeRequestStep.Open,
                     disableOriginOnMerge: false
@@ -267,12 +267,12 @@ test('success', async () => {
 
 test('error', async () => {
     const fetchMock = vi.fn()
-    const testError = 'test error tag mr'
+    const testError = 'test error column mr'
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(<ReviewList />, fetchMock)
     await waitFor(() => {
         expect(store.getState()).toEqual({
-            tagMergeRequests: newMergeRequestState({}),
+            columnMergeRequests: newMergeRequestState({}),
             notification: newNotificationManager({
                 notificationList: [
                     newNotification({

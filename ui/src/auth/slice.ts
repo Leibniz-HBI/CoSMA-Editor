@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { AuthState, AuthStep, EmailAllauth, newAuthState, UserAllAuth } from './state'
 import { newRemote } from '../util/state'
 import { UserInfo } from '../user/state'
-import { TagDefinition } from '../column_menu/state'
+import { Column } from '../column_menu/state'
 
 const authSlice = createSlice({
     name: 'auth',
@@ -66,7 +66,7 @@ const authSlice = createSlice({
             state.user = newRemote(undefined)
         },
         postEmailVerificationError(state: AuthState) {
-            state.emailVerified=newRemote(false)
+            state.emailVerified = newRemote(false)
         },
         postEmailVerificationStart(state: AuthState) {
             state.emailVerified.isLoading = true
@@ -137,10 +137,7 @@ const authSlice = createSlice({
         resetEmailVerification(state: AuthState) {
             state.emailVerified = newRemote(undefined)
         },
-        updateUserTagDefinition(
-            state: AuthState,
-            action: PayloadAction<TagDefinition>
-        ) {
+        updateUserColumn(state: AuthState, action: PayloadAction<Column>) {
             if (state.user.value === undefined) {
                 return
             }
@@ -149,7 +146,7 @@ const authSlice = createSlice({
                 state.user.value.columns[idx] = action.payload
             }
         },
-        removeUserTagDefinition(state: AuthState, action: PayloadAction<string>) {
+        removeUserColumn(state: AuthState, action: PayloadAction<string>) {
             const idx = findUserColumnIndex(state, action.payload)
             if (idx >= 0) {
                 state.user.value?.columns.splice(idx, 1)
@@ -163,7 +160,7 @@ export const authReducer = authSlice.reducer
 function findUserColumnIndex(state: AuthState, idPersistent: string) {
     return (
         state.user.value?.columns.findIndex(
-            (tagDefinition) => tagDefinition.idPersistent == idPersistent
+            (column) => column.idPersistent == idPersistent
         ) ?? -1
     )
 }
@@ -201,6 +198,6 @@ export const {
     setReauthenticateMfa,
     setVerifyEmail,
     setPartiallyAuthenticated,
-    removeUserTagDefinition,
-    updateUserTagDefinition
+    removeUserColumn,
+    updateUserColumn
 } = authSlice.actions

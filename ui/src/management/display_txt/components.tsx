@@ -1,29 +1,25 @@
 import { useDispatch, useSelector } from 'react-redux'
 import {
-    selectDisplayTxtTagDefinitions,
-    selectDisplayTxtTagIdPersistentSet
+    selectDisplayTxtColumn,
+    selectDisplayTxtColumnIdPersistentSet
 } from './selectors'
 import { Col, ListGroup, Row } from 'react-bootstrap'
 import { AppDispatch } from '../../store'
 import { CosmaeLoading } from '../../util/components/misc'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import { ColumnSelector } from '../../column_menu/components/selection'
-import { TagDefinitionNamePath } from '../../column_menu/components/misc'
+import { ColumnNamePath } from '../../column_menu/components/misc'
 import { PlusLg, XLg } from 'react-bootstrap-icons'
 import { useEffect } from 'react'
-import {
-    appendTagDefinitionThunk,
-    getDisplayTxtTagDefinitions,
-    removeTagDefinitionThunk
-} from './thunks'
-import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
+import { appendColumnThunk, getDisplayTxtColumns, removeColumnThunk } from './thunks'
+import { loadColumnHierarchy } from '../../column_menu/thunks'
 
 export function DisplayTxtManagementComponent() {
     const dispatch: AppDispatch = useDispatch()
     useEffect(
         () => {
-            dispatch(getDisplayTxtTagDefinitions())
-            dispatch(loadTagDefinitionHierarchy({ expand: true }))
+            dispatch(getDisplayTxtColumns())
+            dispatch(loadColumnHierarchy({ expand: true }))
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []
@@ -33,7 +29,7 @@ export function DisplayTxtManagementComponent() {
             <Col className="pt-2" xs={6}>
                 <DisplayTxtOrder />
             </Col>
-            <Col xs={6} className='h-100'>
+            <Col xs={6} className="h-100">
                 <DisplayTxtAddMenu />
             </Col>
         </Row>
@@ -41,20 +37,19 @@ export function DisplayTxtManagementComponent() {
 }
 
 function DisplayTxtOrder() {
-    const tagDefinitions = useSelector(selectDisplayTxtTagDefinitions)
+    const columns = useSelector(selectDisplayTxtColumn)
     const dispatch: AppDispatch = useDispatch()
-    const removeTagDefinitionCallback = (tagDef: TagDefinition) =>
-        dispatch(removeTagDefinitionThunk(tagDef))
-    if (tagDefinitions.isLoading) {
+    const removeColumnCallback = (column: Column) => dispatch(removeColumnThunk(column))
+    if (columns.isLoading) {
         return <CosmaeLoading />
     }
     return (
         <ListGroup>
-            {tagDefinitions.value.map((tagDefinition, idx) => (
+            {columns.value.map((column, idx) => (
                 <DisplayTxtOrderItem
                     key={idx}
-                    tagDefinition={tagDefinition}
-                    removeTagDefinitionCallback={removeTagDefinitionCallback}
+                    column={column}
+                    removeColumnCallback={removeColumnCallback}
                 />
             ))}
         </ListGroup>
@@ -62,22 +57,22 @@ function DisplayTxtOrder() {
 }
 
 function DisplayTxtOrderItem({
-    tagDefinition,
-    removeTagDefinitionCallback
+    column,
+    removeColumnCallback
 }: {
-    tagDefinition: TagDefinition
-    removeTagDefinitionCallback: (tagDef: TagDefinition) => void
+    column: Column
+    removeColumnCallback: (column: Column) => void
 }) {
     return (
         <ListGroup.Item>
             <Row className="justify-content-between">
                 <Col>
-                    <TagDefinitionNamePath tagDefinition={tagDefinition} />
+                    <ColumnNamePath column={column} />
                 </Col>
                 <Col
                     xs="auto"
                     className="ms-1 me-1 align-top"
-                    onClick={() => removeTagDefinitionCallback(tagDefinition)}
+                    onClick={() => removeColumnCallback(column)}
                     role="button"
                 >
                     <XLg />
@@ -89,20 +84,19 @@ function DisplayTxtOrderItem({
 
 function DisplayTxtAddMenu() {
     const dispatch: AppDispatch = useDispatch()
-    const alreadyPresentTagDefIdPersistentList = useSelector(
-        selectDisplayTxtTagIdPersistentSet
+    const alreadyPresentColumnIdPersistentList = useSelector(
+        selectDisplayTxtColumnIdPersistentSet
     )
-    const appendTagDefinitionCallback = (tagDef: TagDefinition) =>
-        dispatch(appendTagDefinitionThunk(tagDef))
+    const appendColumnCallback = (column: Column) => dispatch(appendColumnThunk(column))
     return (
         <ColumnSelector
-            mkTailElement={(tagDef) => (
+            mkTailElement={(column) => (
                 <DisplayTxtAddTailElement
-                    tagDefinition={tagDef}
+                    column={column}
                     alreadyPresent={
-                        alreadyPresentTagDefIdPersistentList[tagDef.idPersistent]
+                        alreadyPresentColumnIdPersistentList[column.idPersistent]
                     }
-                    appendTagDefinitionCallback={appendTagDefinitionCallback}
+                    appendColumnCallback={appendColumnCallback}
                 />
             )}
         />
@@ -110,21 +104,21 @@ function DisplayTxtAddMenu() {
 }
 
 function DisplayTxtAddTailElement({
-    tagDefinition,
+    column: column,
     alreadyPresent,
-    appendTagDefinitionCallback
+    appendColumnCallback: appendColumnCallback
 }: {
-    tagDefinition: TagDefinition
+    column: Column
     alreadyPresent: boolean
-    appendTagDefinitionCallback: (tagDef: TagDefinition) => void
+    appendColumnCallback: (column: Column) => void
 }) {
-    if (!tagDefinition.curated || alreadyPresent) {
+    if (!column.curated || alreadyPresent) {
         return <></>
     }
     return (
         <div
             className="ms-1 me-1 align-text-top"
-            onClick={() => appendTagDefinitionCallback(tagDefinition)}
+            onClick={() => appendColumnCallback(column)}
         >
             <PlusLg />
         </div>

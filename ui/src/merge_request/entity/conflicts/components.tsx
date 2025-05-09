@@ -13,10 +13,10 @@ import {
     Row,
     Tooltip
 } from 'react-bootstrap'
-import { EntityMergeRequestConflict, TagDefinition } from './state'
+import { EntityMergeRequestConflict, Column } from './state'
 import { EntityMergeRequest } from '../state'
 import { RemoteInterface } from '../../../util/state'
-import { TagDefinitionNamePath } from '../../../column_menu/components/misc'
+import { ColumnNamePath } from '../../../column_menu/components/misc'
 import { ChoiceButton, RemoteTriggerButton } from '../../../util/components/misc'
 import { ChangeEvent, useEffect, useMemo } from 'react'
 import { AppDispatch } from '../../../store'
@@ -30,9 +30,9 @@ import {
 } from './thunks'
 import { useLoaderData } from 'react-router-dom'
 import { clearEntityMergeState } from './slice'
-import { TagType } from '../../../column_menu/state'
+import { ColumnType } from '../../../column_menu/state'
 import { ResolutionFormArgs } from '../../conflicts/components'
-import { ReplacementState, TagInstance } from '../../conflicts/state'
+import { ReplacementState, Value } from '../../conflicts/state'
 import { Entity } from '../../../entity/state'
 import { Formik } from 'formik'
 import { debounce } from 'debounce'
@@ -57,10 +57,10 @@ export function EntityMergeRequestConflictView() {
 }
 
 type ResolveEntityConflictArg = {
-    tagDefinition: TagDefinition
-    tagInstanceOrigin: TagInstance
+    column: Column
+    valueOrigin: Value
     entityOrigin: Entity
-    tagInstanceDestination?: TagInstance
+    valueDestination?: Value
     entityDestination: Entity
     replacementState?: ReplacementState
     replacementValue: string | undefined
@@ -96,10 +96,10 @@ export function EntityMergeRequestConflictComponent({
         return <div className=" shimmer" />
     }
     const resolveConflictCallback = ({
-        tagDefinition,
-        tagInstanceOrigin,
+        column,
+        valueOrigin,
         entityOrigin,
-        tagInstanceDestination,
+        valueDestination,
         entityDestination,
         replacementState,
         replacementValue
@@ -107,10 +107,10 @@ export function EntityMergeRequestConflictComponent({
         dispatch(
             resolveEntityConflict({
                 idMergeRequestPersistent: mergeRequestValue.idPersistent,
-                tagDefinition: tagDefinition,
-                tagInstanceOrigin,
+                column,
+                valueOrigin,
                 entityOrigin,
-                tagInstanceDestination,
+                valueDestination,
                 entityDestination,
                 replacementState,
                 replacementValue
@@ -322,21 +322,21 @@ export function EntityMergeRequestConflictListItem({
     resolveConflictCallback: (args: ResolveEntityConflictArg) => void
 }) {
     const debouncedCallback = useMemo(mkDebouncedResolveCallback, [
-        conflict.value.tagInstanceOrigin.idPersistent,
-        conflict.value.tagInstanceDestination?.idPersistent
+        conflict.value.valueOrigin.idPersistent,
+        conflict.value.valueDestination?.idPersistent
     ])
     return (
         <ListGroup.Item className="mb-1">
-            <Col key="tag-column">
-                <Row key="tag-def-row">
-                    <Col key="tag-description" xs="auto">
-                        Tag Definition:
+            <Col key="column-column">
+                <Row key="column-def-row">
+                    <Col key="column-description" xs="auto">
+                        Column:
                     </Col>
-                    <Col className="fw-bold text-start" key="tag-name-path">
-                        <TagDefinitionNamePath
-                            tagDefinition={{
-                                ...conflict.value.tagDefinition,
-                                columnType: TagType.String,
+                    <Col className="fw-bold text-start" key="column-name-path">
+                        <ColumnNamePath
+                            column={{
+                                ...conflict.value.column,
+                                columnType: ColumnType.String,
                                 hidden: false,
                                 disabled: false
                             }}
@@ -351,11 +351,11 @@ export function EntityMergeRequestConflictListItem({
                     onSubmit={(formValues) => {
                         debouncedCallback(
                             {
-                                tagDefinition: conflict.value.tagDefinition,
-                                tagInstanceOrigin: conflict.value.tagInstanceOrigin,
+                                column: conflict.value.column,
+                                valueOrigin: conflict.value.valueOrigin,
                                 entityOrigin: mergeRequest.entityOrigin,
-                                tagInstanceDestination:
-                                    conflict.value.tagInstanceDestination,
+                                valueDestination:
+                                    conflict.value.valueDestination,
                                 entityDestination: mergeRequest.entityDestination,
                                 replacementValue: formValues.replacementValue,
                                 replacementState: formValues.replacementState
@@ -369,8 +369,8 @@ export function EntityMergeRequestConflictListItem({
                             values={values}
                             setValues={setValues}
                             submitForm={submitForm}
-                            keepValue={conflict.value?.tagInstanceDestination?.value}
-                            replaceValue={conflict.value?.tagInstanceOrigin?.value}
+                            keepValue={conflict.value?.valueDestination?.value}
+                            replaceValue={conflict.value?.valueOrigin?.value}
                         />
                     )}
                 </Formik>
@@ -416,7 +416,7 @@ function ResolutionFormBody({
     }
     const keepValueSpan = <span className={keepStyle}>{keepValueDisplay}</span>
     return (
-        <Row key="tag-instance-row">
+        <Row key="column-instance-row">
             <Col>
                 <Row key="existing-row">
                     <Col xs="auto" key="button-column">

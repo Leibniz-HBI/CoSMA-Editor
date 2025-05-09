@@ -21,8 +21,11 @@ import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
-import { TagSelectionState, newTagSelectionState } from '../../../column_menu/state'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import {
+    ColumnSelectionState,
+    newColumnSelectionState
+} from '../../../column_menu/state'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { ContributionState, contributionSlice, newContributionState } from '../../slice'
 import { vi, Mock } from 'vitest'
 
@@ -44,7 +47,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionColumnDefinition: ColumnDefinitionsContributionState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
     }
 }
 
@@ -69,7 +72,7 @@ export function renderWithProviders(
                     })
                 )
             }),
-            tagSelection: newTagSelectionState({})
+            columnSelection: newColumnSelectionState({})
         },
         ...renderOptions
     }: ExtendedRenderOptions = {}
@@ -78,7 +81,7 @@ export function renderWithProviders(
         reducer: {
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer
+            columnSelection: columnSelectionReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
@@ -118,8 +121,8 @@ export const contributionColumnActiveRsp1 = {
     index_in_file: 2,
     discard: false
 }
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
+const idColumn0 = 'id-column-test-0'
+const nameColumn0 = 'column 0'
 test('assign existing', async () => {
     const fetchMock = vi.fn()
     addResponseSequence(fetchMock, [
@@ -138,9 +141,9 @@ test('assign existing', async () => {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDef0,
-                        name_path: [nameTagDef0],
-                        name: nameTagDef0,
+                        id_persistent: idColumn0,
+                        name_path: [nameColumn0],
+                        name: nameColumn0,
                         curated: true,
                         version: 0,
                         type: 'STRING'
@@ -211,7 +214,7 @@ test('assign existing', async () => {
         [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
-                body: JSON.stringify({ id_parent_persistent: idTagDef0 }),
+                body: JSON.stringify({ id_parent_persistent: idColumn0 }),
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }

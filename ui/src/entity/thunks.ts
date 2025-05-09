@@ -15,7 +15,7 @@ import {
 import { config } from '../config'
 import { parseEntityObjectFromJson } from '../table/thunks'
 import { EntityDetails, EntitySearchResult, newEntitySearchResult } from './state'
-import { parseTagInstanceFromJson } from '../contribution/entity/thunks'
+import { parseValueFromJson } from '../contribution/entity/thunks'
 
 export function getEntityThunk(idEntityPersistent: string): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
@@ -93,17 +93,17 @@ export function getEntitySearchResultsThunk(searchTerm: string): ThunkWithFetch<
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseEntityDetailsFromApi(json: any): EntityDetails {
     const entity = parseEntityObjectFromJson(json['entity'])
-    const tagInstanceList = json['value_list'].map((instanceJson: unknown) =>
-        parseTagInstanceFromJson(instanceJson)
+    const valueList = json['value_list'].map((instanceJson: unknown) =>
+        parseValueFromJson(instanceJson)
     )
-    return { entity, tagInstanceList }
+    return { entity, valueList: valueList }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseEntitySearchResultsFromApi(json: any): EntitySearchResult {
     return newEntitySearchResult({
         idEntityPersistent: json['id_entity_persistent'],
-        idTagDefinitionPersistent: json['id_column_persistent'] ?? undefined,
+        idColumnPersistent: json['id_column_persistent'] ?? undefined,
         matchValue: json['match_value']
     })
 }

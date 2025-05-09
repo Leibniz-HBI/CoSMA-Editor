@@ -1,12 +1,12 @@
 import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { ChangeEvent, ChangeEventHandler, FormEvent, ReactNode } from 'react'
 import { Button, Col, Row, Form, OverlayTrigger, Tooltip } from 'react-bootstrap'
-import { TagDefinition, TagType } from '../state'
+import { Column, ColumnType } from '../state'
 import * as yup from 'yup'
 import {
-    submitTagDefinition,
-    loadTagDefinitionHierarchy,
-    purgeTagDefinition
+    submitColumn,
+    loadColumnHierarchy,
+    purgeColumn
 } from '../thunks'
 import { AppDispatch } from '../../store'
 import { useAppDispatch } from '../../hooks'
@@ -33,7 +33,7 @@ export type ColumnTypeCreateFormProps = {
     setParent: (idPersistent: string, namePath: string[]) => Promise<void>
     errors: FormikErrors<ColumnTypeCreateArgs>
 }
-const emptyTagValues = {
+const emptyColumnValues = {
     columnType: '',
     name: '',
     parent: '',
@@ -41,17 +41,17 @@ const emptyTagValues = {
     parentNamePath: [] as string[]
 }
 
-export function TagCreateForm({
-    existingTagDefinition = undefined,
+export function ColumnCreateForm({
+    existingColumn = undefined,
     children
 }: {
-    existingTagDefinition?: TagDefinition
+    existingColumn?: Column
     children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }) {
     const createForm = (
-        <TagEditor existingTagDefinition={existingTagDefinition}>{children}</TagEditor>
+        <ColumnEditor existingColumn={existingColumn}>{children}</ColumnEditor>
     )
-    if (existingTagDefinition === undefined) {
+    if (existingColumn === undefined) {
         return createForm
     }
     return (
@@ -62,13 +62,13 @@ export function TagCreateForm({
                 //     name: 'Permissions',
                 //     component: (
                 //         <PermissionManager
-                //             idResourcePersistent={existingTagDefinition.idPersistent}
+                //             idResourcePersistent={existingColumn.idPersistent}
                 //         />
                 //     )
                 // },
                 {
                     name: 'Delete',
-                    component: <TagDeleteForm tagDefinition={existingTagDefinition} />
+                    component: <ColumnDeleteForm column={existingColumn} />
                 }
             ]}
             initialTabIdx={0}
@@ -76,22 +76,22 @@ export function TagCreateForm({
     )
 }
 
-export function TagEditor({
-    existingTagDefinition = undefined,
+export function ColumnEditor({
+    existingColumn = undefined,
     children
 }: {
-    existingTagDefinition?: TagDefinition
+    existingColumn?: Column
     children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }) {
     const dispatch: AppDispatch = useAppDispatch()
-    let initialValues = emptyTagValues
-    if (existingTagDefinition !== undefined) {
+    let initialValues = emptyColumnValues
+    if (existingColumn !== undefined) {
         initialValues = {
-            columnType: existingTagDefinition.columnType as string,
-            name: existingTagDefinition.namePath.at(-1) ?? '',
-            parent: existingTagDefinition.idParentPersistent ?? '',
-            description: existingTagDefinition.description ?? '',
-            parentNamePath: existingTagDefinition?.namePath.slice(0, -1) ?? []
+            columnType: existingColumn.columnType as string,
+            name: existingColumn.namePath.at(-1) ?? '',
+            parent: existingColumn.idParentPersistent ?? '',
+            description: existingColumn.description ?? '',
+            parentNamePath: existingColumn?.namePath.slice(0, -1) ?? []
         }
     }
     return (
@@ -100,21 +100,21 @@ export function TagEditor({
             validationSchema={schema}
             onSubmit={(values) => {
                 dispatch(
-                    submitTagDefinition({
-                        version: existingTagDefinition?.version,
-                        idPersistent: existingTagDefinition?.idPersistent,
-                        namePath: existingTagDefinition?.namePath,
+                    submitColumn({
+                        version: existingColumn?.version,
+                        idPersistent: existingColumn?.idPersistent,
+                        namePath: existingColumn?.namePath,
                         name: values.name,
                         description: values.description,
                         idParentPersistent:
                             values.parent == '' ? undefined : values.parent,
-                        type: values.columnType as TagType,
-                        disabled: existingTagDefinition?.disabled ?? false,
+                        type: values.columnType as ColumnType,
+                        disabled: existingColumn?.disabled ?? false,
                         parentNamePath: values.parentNamePath
                     })
                 ).then((success) => {
                     if (success) {
-                        dispatch(loadTagDefinitionHierarchy({ expand: true }))
+                        dispatch(loadColumnHierarchy({ expand: true }))
                     }
                 })
             }}
@@ -138,7 +138,7 @@ export function TagEditor({
                         setFieldValue('parent', idPersistent)
                         setFieldValue('parentNamePath', namePath)
                     }}
-                    alreadyExists={existingTagDefinition !== undefined}
+                    alreadyExists={existingColumn !== undefined}
                 />
             )}
         </Formik>
@@ -198,10 +198,10 @@ function ColumnTypeCreateFormBody(props: {
                                                 type="radio"
                                                 name="columnType"
                                                 label="boolean"
-                                                value={TagType.Boolean}
+                                                value={ColumnType.Boolean}
                                                 checked={
                                                     props.formValues.columnType ===
-                                                    TagType.Boolean
+                                                    ColumnType.Boolean
                                                 }
                                                 onChange={props.handleChange}
                                                 disabled={props.alreadyExists}
@@ -217,10 +217,10 @@ function ColumnTypeCreateFormBody(props: {
                                                 type="radio"
                                                 label="string"
                                                 name="columnType"
-                                                value={TagType.String}
+                                                value={ColumnType.String}
                                                 checked={
                                                     props.formValues.columnType ===
-                                                    TagType.String
+                                                    ColumnType.String
                                                 }
                                                 onChange={props.handleChange}
                                                 disabled={props.alreadyExists}
@@ -236,10 +236,10 @@ function ColumnTypeCreateFormBody(props: {
                                                 type="radio"
                                                 name="columnType"
                                                 label="number"
-                                                value={TagType.Float}
+                                                value={ColumnType.Float}
                                                 checked={
                                                     props.formValues.columnType ===
-                                                    TagType.Float
+                                                    ColumnType.Float
                                                 }
                                                 onChange={props.handleChange}
                                                 disabled={props.alreadyExists}
@@ -253,7 +253,7 @@ function ColumnTypeCreateFormBody(props: {
                                             <NavigationTypeLabel
                                                 checked={
                                                     props.formValues.columnType ===
-                                                    TagType.Inner
+                                                    ColumnType.Inner
                                                 }
                                                 onChange={props.handleChange}
                                                 disabled={props.alreadyExists}
@@ -324,7 +324,7 @@ function NavigationTypeLabel({
             delay={{ show: 250, hide: 400 }}
             overlay={(props) => (
                 <Tooltip className="z-3000" id="navigation-type-explanation" {...props}>
-                    Navigational tags are used to structure the column tree. They are
+                    Navigational columns are used to structure the column tree. They are
                     not allowed to contain any data.
                 </Tooltip>
             )}
@@ -343,7 +343,7 @@ function NavigationTypeLabel({
                             </span>
                         </>
                     }
-                    value={TagType.Inner}
+                    value={ColumnType.Inner}
                     checked={checked}
                     onChange={onChange}
                     disabled={disabled}
@@ -354,7 +354,7 @@ function NavigationTypeLabel({
     )
 }
 
-export function TagDeleteForm({ tagDefinition }: { tagDefinition: TagDefinition }) {
+export function ColumnDeleteForm({ column }: { column: Column }) {
     const dispatch = useAppDispatch()
     return (
         <Col className="d-contents h-100 ms-3 me-3">
@@ -374,7 +374,7 @@ export function TagDeleteForm({ tagDefinition }: { tagDefinition: TagDefinition 
                                             <span>in the </span>
                                             <span className="fst-italic">Confirm </span>
                                             <span>
-                                                text box and submit to disable the tag.
+                                                text box and submit to disable the column.
                                                 This will make it and the contained data
                                                 inaccessible from now on but the data
                                                 will still be available in the history.
@@ -385,27 +385,27 @@ export function TagDeleteForm({ tagDefinition }: { tagDefinition: TagDefinition 
                                         requiredInput="DISABLE"
                                         onSubmit={() =>
                                             dispatch(
-                                                submitTagDefinition({
-                                                    ...tagDefinition,
-                                                    type: tagDefinition.columnType,
+                                                submitColumn({
+                                                    ...column,
+                                                    type: column.columnType,
                                                     parentNamePath:
-                                                        tagDefinition.namePath.slice(
+                                                        column.namePath.slice(
                                                             0,
                                                             -1
                                                         ),
                                                     name:
-                                                        tagDefinition.namePath.at(-1) ??
+                                                        column.namePath.at(-1) ??
                                                         '',
-                                                    namePath: tagDefinition.namePath,
+                                                    namePath: column.namePath,
                                                     description:
-                                                        tagDefinition.description ?? '',
+                                                        column.description ?? '',
                                                     disabled: true
                                                 })
                                             ).then((success) => {
                                                 if (success) {
                                                     dispatch(
                                                         addSuccessVanish(
-                                                            'Successfully disabled tag definition.'
+                                                            'Successfully disabled column definition.'
                                                         )
                                                     )
                                                 }
@@ -429,7 +429,7 @@ export function TagDeleteForm({ tagDefinition }: { tagDefinition: TagDefinition 
                                         <span>in the </span>
                                         <span className="fst-italic">Confirm </span>
                                         <span>
-                                            text box and submit to purge the tag and all
+                                            text box and submit to purge the column and all
                                             contained data from the history.
                                         </span>
                                     </Col>
@@ -437,7 +437,7 @@ export function TagDeleteForm({ tagDefinition }: { tagDefinition: TagDefinition 
                                 <TextConfirmedSubmit
                                     requiredInput="PURGE"
                                     onSubmit={() =>
-                                        dispatch(purgeTagDefinition(tagDefinition))
+                                        dispatch(purgeColumn(column))
                                     }
                                 />
                             </CosmaeCard>

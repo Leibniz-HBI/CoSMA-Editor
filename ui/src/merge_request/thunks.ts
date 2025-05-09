@@ -2,7 +2,7 @@ import { config } from '../config'
 import { MergeRequestStep, newMergeRequest } from './state'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { exceptionMessage } from '../util/exception'
-import { parseColumnDefinitionsFromApi } from '../column_menu/thunks'
+import { parseColumnsFromApi } from '../column_menu/thunks'
 import { addError } from '../util/notification/slice'
 import { ThunkWithFetch } from '../util/type'
 import {
@@ -11,7 +11,7 @@ import {
     getMergeRequestsSuccess
 } from './slice'
 
-export function getTagMergeRequests(): ThunkWithFetch<void> {
+export function getColumnMergeRequests(): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(getMergeRequestsStart())
         try {
@@ -49,22 +49,16 @@ export function parseMergeRequestFromJson(mrJson: any) {
         assignedTo = parsePublicUserInfoFromJson(assignedTo)
     }
     const createdBy = parsePublicUserInfoFromJson(mrJson['created_by'])
-    const originTagDefinition = parseColumnDefinitionsFromApi(
-        mrJson['origin'],
-        undefined
-    )
-    const destinationTagDefinition = parseColumnDefinitionsFromApi(
-        mrJson['destination'],
-        undefined
-    )
+    const originColumn = parseColumnsFromApi(mrJson['origin'], undefined)
+    const destinationColumn = parseColumnsFromApi(mrJson['destination'], undefined)
     const step = mergeRequestStateFromApiMap[mrJson['state']]
     const disableOriginOnMerge = mrJson['disable_origin_on_merge']
     return newMergeRequest({
         idPersistent,
         assignedTo,
         createdBy,
-        destinationTagDefinition,
-        originTagDefinition,
+        destinationColumn,
+        originColumn,
         step,
         disableOriginOnMerge
     })

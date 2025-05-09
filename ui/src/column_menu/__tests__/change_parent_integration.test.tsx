@@ -10,15 +10,15 @@ import {
     fireEvent
 } from '@testing-library/react'
 import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagHierarchyNode,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnHierarchyNode,
+    newColumnSelectionState
 } from '../state'
 import { configureStore } from '@reduxjs/toolkit'
-import { tagSelectionSlice } from '../slice'
+import { columnSelectionReducer } from '../slice'
 import React, { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import {
@@ -34,29 +34,29 @@ import { vi, Mock } from 'vitest'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         notification: NotificationManager
     }
 }
 
-const nameTagDef = 'tag name'
-const nameTagDef1 = 'tag name 1'
+const nameCol = 'column name'
+const nameCol1 = 'column name 1'
 
-const idTagDef = 'id-tag-test'
-const tagDefTest = newTagDefinition({
-    namePath: [nameTagDef],
-    idPersistent: idTagDef,
-    columnType: TagType.String,
+const idCol = 'id-column-test'
+const columnTest = newColumn({
+    namePath: [nameCol],
+    idPersistent: idCol,
+    columnType: ColumnType.String,
     idParentPersistent: undefined,
     hidden: false,
     version: 4,
     curated: true
 })
-const idTagDef1 = 'id-tag-test-1'
-const tagDefTest1 = newTagDefinition({
-    namePath: [nameTagDef1],
-    idPersistent: idTagDef1,
-    columnType: TagType.String,
+const idColumn1 = 'id-column-test-1'
+const columnTest1 = newColumn({
+    namePath: [nameCol1],
+    idPersistent: idColumn1,
+    columnType: ColumnType.String,
     idParentPersistent: undefined,
     hidden: false,
     version: 4,
@@ -68,21 +68,21 @@ export function renderWithProviders(
     fetchMock: Mock,
     {
         preloadedState = {
-            tagSelection: newTagSelectionState({
+            columnSelection: newColumnSelectionState({
                 children: [
-                    newTagHierarchyNode({
-                        name: nameTagDef,
-                        idTagDefinitionPersistent: idTagDef
+                    newColumnHierarchyNode({
+                        name: nameCol,
+                        idColumnPersistent: idCol
                     }),
-                    newTagHierarchyNode({
-                        idTagDefinitionPersistent: idTagDef1,
-                        name: nameTagDef1,
+                    newColumnHierarchyNode({
+                        idColumnPersistent: idColumn1,
+                        name: nameCol1,
                         isExpanded: true
                     })
                 ],
-                tagDefinitionsByIdPersistent: {
-                    [idTagDef]: newRemote(tagDefTest),
-                    [idTagDef1]: newRemote(tagDefTest1)
+                columnsByIdPersistent: {
+                    [idCol]: newRemote(columnTest),
+                    [idColumn1]: newRemote(columnTest1)
                 }
             }),
             notification: newNotificationManager({})
@@ -92,7 +92,7 @@ export function renderWithProviders(
 ) {
     const store = configureStore({
         reducer: {
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             notification: notificationReducer
         },
         middleware: (getDefaultMiddleware) =>
@@ -120,7 +120,7 @@ function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     }
 }
 
-function dragTagDefinition(startName: string | RegExp, endName: string | undefined) {
+function dragColumn(startName: string | RegExp, endName: string | undefined) {
     const start = screen.getByRole('button', { name: startName })
     let end = screen.getByTestId('no-parent-drop-zone')
     if (endName !== undefined) {
@@ -137,7 +137,7 @@ function dragTagDefinition(startName: string | RegExp, endName: string | undefin
     fireEvent.dragEnd(start)
 }
 
-function mkTailElement(_column: TagDefinition) {
+function mkTailElement(_column: Column) {
     return <div />
 }
 
@@ -151,9 +151,9 @@ test('success', async function () {
             {
                 column_list: [
                     {
-                        name_path: [nameTagDef1, nameTagDef],
-                        id_persistent: idTagDef,
-                        id_parent_persistent: idTagDef1,
+                        name_path: [nameCol1, nameCol],
+                        id_persistent: idCol,
+                        id_parent_persistent: idColumn1,
                         type: 'STRING',
                         curated: true,
                         hidden: false,
@@ -167,8 +167,8 @@ test('success', async function () {
             {
                 column_list: [
                     {
-                        name_path: [nameTagDef],
-                        id_persistent: idTagDef,
+                        name_path: [nameCol],
+                        id_persistent: idCol,
                         id_parent_persistent: undefined,
                         type: 'STRING',
                         curated: true,
@@ -183,58 +183,58 @@ test('success', async function () {
         <ColumnSelector mkTailElement={mkTailElement} />,
         fetchMock
     )
-    await waitFor(() => dragTagDefinition(nameTagDef, nameTagDef1))
+    await waitFor(() => dragColumn(nameCol, nameCol1))
     await waitFor(() => {
         expect(store.getState()).toEqual({
-            tagSelection: newTagSelectionState({
+            columnSelection: newColumnSelectionState({
                 children: [
-                    newTagHierarchyNode({
-                        idTagDefinitionPersistent: idTagDef1,
-                        name: nameTagDef1,
+                    newColumnHierarchyNode({
+                        idColumnPersistent: idColumn1,
+                        name: nameCol1,
                         isExpanded: true,
                         children: [
-                            newTagHierarchyNode({
-                                name: nameTagDef,
-                                idTagDefinitionPersistent: idTagDef
+                            newColumnHierarchyNode({
+                                name: nameCol,
+                                idColumnPersistent: idCol
                             })
                         ]
                     })
                 ],
-                tagDefinitionsByIdPersistent: {
-                    [idTagDef]: newRemote({
-                        ...tagDefTest,
-                        namePath: [nameTagDef1, nameTagDef],
-                        idParentPersistent: idTagDef1,
+                columnsByIdPersistent: {
+                    [idCol]: newRemote({
+                        ...columnTest,
+                        namePath: [nameCol1, nameCol],
+                        idParentPersistent: idColumn1,
                         version: newVersion
                     }),
-                    [idTagDef1]: newRemote(tagDefTest1)
+                    [idColumn1]: newRemote(columnTest1)
                 }
             }),
             notification: newNotificationManager({})
         })
     })
-    await waitFor(() => dragTagDefinition(/-> tag name/i, undefined))
+    await waitFor(() => dragColumn(/-> column name/i, undefined))
     await waitFor(() => {
         expect(store.getState()).toEqual({
-            tagSelection: newTagSelectionState({
+            columnSelection: newColumnSelectionState({
                 children: [
-                    newTagHierarchyNode({
-                        idTagDefinitionPersistent: idTagDef1,
-                        name: nameTagDef1,
+                    newColumnHierarchyNode({
+                        idColumnPersistent: idColumn1,
+                        name: nameCol1,
                         isExpanded: true
                     }),
-                    newTagHierarchyNode({
-                        name: nameTagDef,
-                        idTagDefinitionPersistent: idTagDef
+                    newColumnHierarchyNode({
+                        name: nameCol,
+                        idColumnPersistent: idCol
                     })
                 ],
-                tagDefinitionsByIdPersistent: {
-                    [idTagDef]: newRemote({
-                        ...tagDefTest,
-                        namePath: [nameTagDef],
+                columnsByIdPersistent: {
+                    [idCol]: newRemote({
+                        ...columnTest,
+                        namePath: [nameCol],
                         version: newVersion1
                     }),
-                    [idTagDef1]: newRemote(tagDefTest1)
+                    [idColumn1]: newRemote(columnTest1)
                 }
             }),
             notification: newNotificationManager({})
@@ -249,11 +249,11 @@ test('success', async function () {
                 body: JSON.stringify({
                     column_list: [
                         {
-                            id_persistent: tagDefTest.idPersistent,
-                            name: nameTagDef,
-                            id_parent_persistent: tagDefTest1.idPersistent,
+                            id_persistent: columnTest.idPersistent,
+                            name: nameCol,
+                            id_parent_persistent: columnTest1.idPersistent,
                             type: 'STRING',
-                            version: tagDefTest.version
+                            version: columnTest.version
                         }
                     ]
                 })
@@ -267,8 +267,8 @@ test('success', async function () {
                 body: JSON.stringify({
                     column_list: [
                         {
-                            id_persistent: tagDefTest.idPersistent,
-                            name: nameTagDef,
+                            id_persistent: columnTest.idPersistent,
+                            name: nameCol,
                             type: 'STRING',
                             version: newVersion
                         }
@@ -287,24 +287,24 @@ test('error', async function () {
         <ColumnSelector mkTailElement={mkTailElement} />,
         fetchMock
     )
-    await waitFor(() => dragTagDefinition(nameTagDef, nameTagDef1))
+    await waitFor(() => dragColumn(nameCol, nameCol1))
     await waitFor(() => {
         expect(store.getState()).toEqual({
-            tagSelection: newTagSelectionState({
+            columnSelection: newColumnSelectionState({
                 children: [
-                    newTagHierarchyNode({
-                        name: nameTagDef,
-                        idTagDefinitionPersistent: idTagDef
+                    newColumnHierarchyNode({
+                        name: nameCol,
+                        idColumnPersistent: idCol
                     }),
-                    newTagHierarchyNode({
-                        idTagDefinitionPersistent: idTagDef1,
-                        name: nameTagDef1,
+                    newColumnHierarchyNode({
+                        idColumnPersistent: idColumn1,
+                        name: nameCol1,
                         isExpanded: true
                     })
                 ],
-                tagDefinitionsByIdPersistent: {
-                    [idTagDef]: newRemote(tagDefTest),
-                    [idTagDef1]: newRemote(tagDefTest1)
+                columnsByIdPersistent: {
+                    [idCol]: newRemote(columnTest),
+                    [idColumn1]: newRemote(columnTest1)
                 }
             }),
             notification: newNotificationManager({
@@ -328,11 +328,11 @@ test('error', async function () {
                 body: JSON.stringify({
                     column_list: [
                         {
-                            id_persistent: tagDefTest.idPersistent,
-                            name: nameTagDef,
-                            id_parent_persistent: tagDefTest1.idPersistent,
+                            id_persistent: columnTest.idPersistent,
+                            name: nameCol,
+                            id_parent_persistent: columnTest1.idPersistent,
                             type: 'STRING',
-                            version: tagDefTest.version
+                            version: columnTest.version
                         }
                     ]
                 })

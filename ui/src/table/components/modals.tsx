@@ -28,7 +28,7 @@ import {
 } from '../thunks'
 import { AddEntityForm, EntityDetails } from '../../entity/components'
 import { ColumnMenu } from '../../column_menu/components/menu'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import {
     remoteUserProfileColumnAppend,
     remoteUserProfileColumnDeleteAsync
@@ -118,7 +118,7 @@ export function ColumnModal({
         >
             <Modal.Header closeButton className="flex-grow-0 flex-shrink-0 bg-white">
                 <Modal.Title className="text-dark">
-                    Show Additional Tag Values
+                    Show Additional Values
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body className="bg-secondary d-contents">
@@ -128,10 +128,10 @@ export function ColumnModal({
                     ]}
                     additionalIndices={additionalIndices}
                     columnIndices={columnIndices}
-                    loadColumnDataCallback={(columnDefinition: TagDefinition) =>
+                    loadColumnDataCallback={(columnDefinition: Column) =>
                         dispatch(getColumnAsync(columnDefinition)).then(
-                            async (idTagDefinitionList) => {
-                                for (const idPersistent of idTagDefinitionList) {
+                            async (idColumnList) => {
+                                for (const idPersistent of idColumnList) {
                                     await dispatch(
                                         remoteUserProfileColumnAppend(idPersistent)
                                     )
@@ -139,7 +139,7 @@ export function ColumnModal({
                             }
                         )
                     }
-                    hideColumnDataCallback={(columnDefinition: TagDefinition) =>
+                    hideColumnDataCallback={(columnDefinition: Column) =>
                         dispatch(
                             remoteUserProfileColumnDeleteAsync(
                                 columnDefinition.idPersistent

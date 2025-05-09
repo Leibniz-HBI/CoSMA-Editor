@@ -5,7 +5,7 @@ import { FormField } from '../../../util/form'
 import { PutDuplicateCallback } from '../components'
 import {
     selectLastMatchHit,
-    selectShowTagDefinitionsMenu,
+    selectShowColumnsMenu,
     selectEntities,
     selectSelectedEntity,
     selectShowJustificationInput
@@ -14,14 +14,14 @@ import {
 import {
     clearHitLastMatch,
     closeJustificationInput,
-    removeAdditionalTagByIdPersistent,
-    toggleTagDefinitionMenu
+    removeAdditionalColumnByIdPersistent,
+    toggleColumnMenu
 } from '../slice'
 import { ModalBody } from 'react-bootstrap'
 import { selectContributionJustification } from '../../selectors'
 import { CompleteAssignmentButton } from './buttons'
 import { ColumnMenuBody } from '../../../column_menu/components/menu'
-import { getContributionTagInstances } from '../thunks'
+import { getContributionValues } from '../thunks'
 import { EntityWithDuplicates } from '../state'
 
 export function JustificationModal({
@@ -149,32 +149,32 @@ export function LastMatchModal({
     )
 }
 
-export function AddTagDefinitionsModal({
+export function AddColumnsModal({
     idContributionPersistent,
-    tagDefinitionIndices
+    columnIndices
 }: {
     idContributionPersistent: string
-    tagDefinitionIndices: { [key: string]: number }
+    columnIndices: { [key: string]: number }
 }) {
     const dispatch = useAppDispatch()
-    const showTagDefinitionsMenu = useAppSelector(selectShowTagDefinitionsMenu)
+    const showColumnsMenu = useAppSelector(selectShowColumnsMenu)
     const entities = useAppSelector(selectEntities)
     return (
         <Modal
-            show={showTagDefinitionsMenu}
-            onHide={() => dispatch(toggleTagDefinitionMenu())}
+            show={showColumnsMenu}
+            onHide={() => dispatch(toggleColumnMenu())}
             data-testid="create-column-modal"
             key="entities-step-modal"
         >
             <Modal.Header closeButton>
-                <Modal.Title>Create a new tag</Modal.Title>
+                <Modal.Title>Create a new column</Modal.Title>
             </Modal.Header>
             <Modal.Body className="vh-85 bg-secondary">
                 <ColumnMenuBody
-                    hideColumnDataCallback={(tagDef) => {
-                        dispatch(removeAdditionalTagByIdPersistent(tagDef.idPersistent))
+                    hideColumnDataCallback={(column) => {
+                        dispatch(removeAdditionalColumnByIdPersistent(column.idPersistent))
                     }}
-                    loadColumnDataCallback={async (tagDef) => {
+                    loadColumnDataCallback={(column) => {
                         const chunkSize = 50
                         for (
                             let startIdx = 0;
@@ -203,16 +203,16 @@ export function AddTagDefinitionsModal({
                                     )
                                 ]
                             }
-                            await dispatch(
-                                getContributionTagInstances({
+                            dispatch(
+                                getContributionValues({
                                     entitiesGroupMap: entitiesMap,
-                                    tagDefinitionList: [tagDef],
+                                    columnList: [column],
                                     idContributionPersistent: idContributionPersistent
                                 })
                             )
                         }
                     }}
-                    columnIndices={tagDefinitionIndices}
+                    columnIndices={columnIndices}
                 />
             </Modal.Body>
         </Modal>

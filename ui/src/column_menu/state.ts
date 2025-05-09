@@ -7,18 +7,18 @@ import {
 import { PublicUserInfo } from '../user/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
-export enum TagType {
+export enum ColumnType {
     String = 'STRING',
     Float = 'FLOAT',
     Boolean = 'BOOL',
     Inner = 'INNER'
 }
 
-export interface TagDefinition {
+export interface Column {
     namePath: string[]
     idPersistent: string
     idParentPersistent?: string
-    columnType: TagType
+    columnType: ColumnType
     curated: boolean
     version: number
     owner?: PublicUserInfo
@@ -27,7 +27,7 @@ export interface TagDefinition {
     disabled: boolean
 }
 
-export function newTagDefinition({
+export function newColumn({
     namePath,
     idPersistent,
     idParentPersistent = undefined,
@@ -42,14 +42,14 @@ export function newTagDefinition({
     namePath: string[]
     idPersistent: string
     idParentPersistent?: string
-    columnType: TagType
+    columnType: ColumnType
     curated: boolean
     owner?: PublicUserInfo
     version: number
     description?: string
     hidden: boolean
     disabled?: boolean
-}): TagDefinition {
+}): Column {
     return {
         namePath: namePath,
         idPersistent,
@@ -64,72 +64,72 @@ export function newTagDefinition({
     }
 }
 
-export interface TagHierarchyNode {
-    idTagDefinitionPersistent: string
+export interface ColumnIdHierarchyNode {
+    idColumnPersistent: string
     name: string
     isExpanded: boolean
-    children: TagHierarchyNode[]
+    children: ColumnIdHierarchyNode[]
 }
-export function newTagHierarchyNode({
-    idTagDefinitionPersistent,
+export function newColumnHierarchyNode({
+    idColumnPersistent,
     name,
     isExpanded = false,
     children = []
 }: {
-    idTagDefinitionPersistent: string
+    idColumnPersistent: string
     name: string
     isExpanded?: boolean
-    children?: TagHierarchyNode[]
+    children?: ColumnIdHierarchyNode[]
 }) {
     return {
-        idTagDefinitionPersistent,
+        idColumnPersistent,
         name,
         isExpanded,
         children
     }
 }
 
-export interface TagSelectionState {
-    children: TagHierarchyNode[]
-    tagDefinitionsByIdPersistent: {
-        [key: string]: RemoteInterface<TagDefinition | undefined>
+export interface ColumnSelectionState {
+    children: ColumnIdHierarchyNode[]
+    columnsByIdPersistent: {
+        [key: string]: RemoteInterface<Column | undefined>
     }
     isLoading: boolean
     isSearching: boolean
     isSubmittingDefinition: boolean
-    editTagDefinition: RemoteInterface<TagDefinition | undefined>
+    editColumn: RemoteInterface<Column | undefined>
     isDragging: boolean
 }
-export function newTagSelectionState({
+export function newColumnSelectionState({
     children = [],
-    tagDefinitionsByIdPersistent = {
+    columnsByIdPersistent = {
         [displayTxtColumnId]: newRemote(displayTextColumn),
         [justificationColumnId]: newRemote(justificationColumn)
     },
     isLoading = false,
     isSearching = false,
     isSubmittingDefinition = false,
-    editTagDefinition = newRemote(undefined),
+    editColumn = newRemote(undefined),
     isDragging = false
 }: {
-    children?: TagHierarchyNode[]
-    tagDefinitionsByIdPersistent?: {
-        [key: string]: RemoteInterface<TagDefinition | undefined>
+    children?: ColumnIdHierarchyNode[]
+    columnsByIdPersistent?: {
+        [key: string]: RemoteInterface<Column | undefined>
     }
     isLoading?: boolean
     isSearching?: boolean
     isSubmittingDefinition?: boolean
-    editTagDefinition?: RemoteInterface<TagDefinition | undefined>
-    draggedSelectionEntry?: TagHierarchyNode
+    editColumn?: RemoteInterface<Column | undefined>
+    draggedSelectionEntry?: ColumnIdHierarchyNode
     isDragging?: boolean
-}): TagSelectionState {
+}): ColumnSelectionState {
     return {
         children,
-        tagDefinitionsByIdPersistent,
+        columnsByIdPersistent: columnsByIdPersistent,
         isLoading,
         isSearching,
         isSubmittingDefinition,
-        editTagDefinition,
+        editColumn: editColumn,
         isDragging
     }
 }

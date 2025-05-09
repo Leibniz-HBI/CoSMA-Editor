@@ -4,30 +4,30 @@ import { Badge, Col, ListGroup, OverlayTrigger, Row, Tooltip } from 'react-boots
 import { MergeRequest } from './state'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
-import { TagDefinitionNamePath } from '../column_menu/components/misc'
+import { ColumnNamePath } from '../column_menu/components/misc'
 import { AppDispatch } from '../store'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectPermissionGroup } from '../auth/selectors'
 import { UserPermissionGroup } from '../user/state'
 import { getEntityMergeRequests } from './entity/thunks'
 import { EntityMergeRequests } from './entity/components'
-import { getTagMergeRequests } from './thunks'
+import { getColumnMergeRequests } from './thunks'
 import {
-    selectTagMergeRequestByCategory,
-    selectTagMergeRequestsIsLoading
+    selectColumnMergeRequestByCategory,
+    selectColumnMergeRequestsIsLoading
 } from './selectors'
 import { useAppSelector } from '../hooks'
 
 export function ReviewList() {
     const dispatch: AppDispatch = useDispatch()
     const permissionGroup = useSelector(selectPermissionGroup)
-    const isLoading = useAppSelector(selectTagMergeRequestsIsLoading)
-    const { assigned, created } = useAppSelector(selectTagMergeRequestByCategory)
+    const isLoading = useAppSelector(selectColumnMergeRequestsIsLoading)
+    const { assigned, created } = useAppSelector(selectColumnMergeRequestByCategory)
     useLayoutEffect(() => {
         if (isLoading) {
             return
         }
-        dispatch(getTagMergeRequests())
+        dispatch(getColumnMergeRequests())
         if (
             permissionGroup === UserPermissionGroup.EDITOR ||
             permissionGroup === UserPermissionGroup.COMMISSIONER
@@ -46,9 +46,7 @@ export function ReviewList() {
                 className="d-grid grid-row-1 grid-col-1 overflow-hidden pe-1 ps-1"
                 key="merge-request-assigned-list"
             >
-                <CosmaeCard
-                    header={<h5>Tag Definition Merge Requests Assigned to You</h5>}
-                >
+                <CosmaeCard header={<h5>Column Merge Requests Assigned to You</h5>}>
                     <div className="overflow-y-scroll mb-3">
                         <ListGroup>
                             {assigned.map((mergeRequest) => (
@@ -66,9 +64,7 @@ export function ReviewList() {
                 className="d-grid grid-row-2 grid-col-1 overflow-hidden pe-1 ps-1"
                 key="merge-request-created-list"
             >
-                <CosmaeCard
-                    header={<h5>Tag Definition Merge Requests Opened by You</h5>}
-                >
+                <CosmaeCard header={<h5>Column Merge Requests Opened by You</h5>}>
                     <div className="overflow-y-scroll mb-1">
                         <ListGroup as="ol">
                             {created.map((mergeRequest) => (
@@ -142,8 +138,7 @@ export function MergeRequestListItemBody({
                     placement="bottom"
                     overlay={
                         <Tooltip>
-                            The destination tag definition, to where data will be
-                            written.
+                            The destination column, to where data will be written.
                         </Tooltip>
                     }
                 >
@@ -153,10 +148,8 @@ export function MergeRequestListItemBody({
                         </Col>
                         <Col className="ps-0">
                             <span className="fw-bold">
-                                <TagDefinitionNamePath
-                                    tagDefinition={
-                                        mergeRequest.destinationTagDefinition
-                                    }
+                                <ColumnNamePath
+                                    column={mergeRequest.destinationColumn}
                                 />
                             </span>
                         </Col>
@@ -165,9 +158,7 @@ export function MergeRequestListItemBody({
                 <OverlayTrigger
                     placement="bottom"
                     overlay={
-                        <Tooltip>
-                            The origin tag definition, from where data is used.
-                        </Tooltip>
+                        <Tooltip>The origin column, from where data is used.</Tooltip>
                     }
                 >
                     <Row>
@@ -175,9 +166,7 @@ export function MergeRequestListItemBody({
                             <ArrowLeftCircle />
                         </Col>
                         <Col className="ps-0">
-                            <TagDefinitionNamePath
-                                tagDefinition={mergeRequest.originTagDefinition}
-                            />
+                            <ColumnNamePath column={mergeRequest.originColumn} />
                         </Col>
                     </Row>
                 </OverlayTrigger>

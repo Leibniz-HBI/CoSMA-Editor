@@ -7,8 +7,8 @@ import {
 } from './state'
 import { newRemote } from '../util/state'
 
-const tagMergeRequestSlice = createSlice({
-    name: 'tagMergeRequest',
+const columnMergeRequestSlice = createSlice({
+    name: 'columnMergeRequest',
     initialState: newMergeRequestState({}),
     reducers: {
         getMergeRequestsSuccess: (
@@ -31,7 +31,7 @@ const tagMergeRequestSlice = createSlice({
     }
 })
 
-export const tagMergeRequestsReducer = tagMergeRequestSlice.reducer
+export const columnMergeRequestsReducer = columnMergeRequestSlice.reducer
 
 export const { getMergeRequestsStart, getMergeRequestsSuccess, getMergeRequestsError } =
-    tagMergeRequestSlice.actions
+    columnMergeRequestSlice.actions

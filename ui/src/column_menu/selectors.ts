@@ -1,110 +1,107 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../store'
-import { TagDefinition, TagHierarchyNode } from './state'
+import { Column, ColumnIdHierarchyNode } from './state'
 import { RemoteInterface } from '../util/state'
 
-function selectTagSelection(state: RootState) {
-    return state.tagSelection
+function selectColumnSelection(state: RootState) {
+    return state.columnSelection
 }
 
 export const selectNavigationEntries = createSelector(
-    selectTagSelection,
+    selectColumnSelection,
     (state) => state.children
 )
 
-export const selectTagSelectionLoading = createSelector(
-    selectTagSelection,
+export const selectColumnSelectionLoading = createSelector(
+    selectColumnSelection,
     (state) => state.isLoading
 )
 
-export const selectEditTagDefinition = createSelector(
-    selectTagSelection,
-    (state) => state.editTagDefinition
+export const selectEditColumnDefinition = createSelector(
+    selectColumnSelection,
+    (state) => state.editColumn
 )
 
 export const selectIsDragging = createSelector(
-    selectTagSelection,
+    selectColumnSelection,
     (state) => state.isDragging
 )
 
-const selectTagDefinitionByIdPersistentMap = createSelector(
-    selectTagSelection,
-    (state) => state.tagDefinitionsByIdPersistent
+const selectColumnByIdPersistentMap = createSelector(
+    selectColumnSelection,
+    (state) => state.columnsByIdPersistent
 )
 
-export const makeSelectTagDefinitionByIdPersistent = () => {
+export const makeSelectColumnByIdPersistent = () => {
     const selector = createSelector(
-        [
-            selectTagDefinitionByIdPersistentMap,
-            (_state, idPersistent: string) => idPersistent
-        ],
+        [selectColumnByIdPersistentMap, (_state, idPersistent: string) => idPersistent],
         (state, idPersistent) => state[idPersistent]
     )
     return selector
 }
 
-export const makeSelectTagDefinitionsByIdPersistentList = () => {
+export const makeSelectColumnByIdPersistentList = () => {
     const selector = createSelector(
         [
-            selectTagDefinitionByIdPersistentMap,
+            selectColumnByIdPersistentMap,
             (_state, idPersistentList: string[]) => idPersistentList
         ],
         (state, idPersistentList) =>
-            idPersistentList.map((idPersistent) => state[idPersistent])
+            idPersistentList.map((idPersistent: string) => state[idPersistent])
     )
     return selector
 }
 
-export interface TagDefinitionHierarchyNode extends TagHierarchyNode {
-    tagDefinition: RemoteInterface<TagDefinition | undefined>
-    children: TagDefinitionHierarchyNode[]
+export interface ColumnHierarchyNode extends ColumnIdHierarchyNode {
+    column: RemoteInterface<Column | undefined>
+    children: ColumnHierarchyNode[]
 }
 
-export function newTagDefinitionHierarchyNode({
-    idTagDefinitionPersistent,
-    tagDefinition,
+export function newColumnIdHierarchyNode({
+    idColumnPersistent,
+    column,
     name,
     isExpanded = false,
     children = []
 }: {
-    idTagDefinitionPersistent: string
-    tagDefinition: RemoteInterface<TagDefinition>
+    idColumnPersistent: string
+    column: RemoteInterface<Column>
     name: string
     isExpanded?: boolean
-    children?: TagDefinitionHierarchyNode[]
-}): TagDefinitionHierarchyNode {
+    children?: ColumnHierarchyNode[]
+}): ColumnHierarchyNode {
     return {
-        idTagDefinitionPersistent,
-        tagDefinition,
+        idColumnPersistent,
+        column: column,
         name,
         isExpanded,
         children
     }
 }
 
-function addTagDefinitionToHierarchy(
-    tagDefinitionByIdPersistentMap: {
-        [key: string]: RemoteInterface<TagDefinition | undefined>
+function addColumnToHierarchy(
+    columnByIdPersistentMap: {
+        [key: string]: RemoteInterface<Column| undefined>
     },
-    tagHierarchyNodeList: TagHierarchyNode[]
-): TagDefinitionHierarchyNode[] {
-    const ret: TagDefinitionHierarchyNode[] = []
+    columnHierarchyNodeList: ColumnIdHierarchyNode[]
+): ColumnHierarchyNode[] {
+    const ret: ColumnHierarchyNode[] = []
     const queue: {
-        node: TagHierarchyNode
-        targetArray: TagDefinitionHierarchyNode[]
+        node: ColumnIdHierarchyNode
+        targetArray: ColumnHierarchyNode[]
     }[] = []
-    for (let idx = tagHierarchyNodeList.length - 1; idx >= 0; idx--) {
-        queue.push({ node: tagHierarchyNodeList[idx], targetArray: ret })
+    for (let idx = columnHierarchyNodeList.length - 1; idx >= 0; idx--) {
+        queue.push({ node: columnHierarchyNodeList[idx], targetArray: ret })
     }
     while (queue.length > 0) {
         const queueNode = queue.pop()
         if (queueNode !== undefined) {
             const { targetArray, node } = queueNode
-            const childTargetArray: TagDefinitionHierarchyNode[] = []
+            const childTargetArray: ColumnHierarchyNode[] = []
             targetArray.push({
                 ...node,
-                tagDefinition:
-                    tagDefinitionByIdPersistentMap[node.idTagDefinitionPersistent],
+                column:
+                    columnByIdPersistentMap[node.idColumnPersistent],
                 children: childTargetArray
             })
             for (let idx = node.children.length - 1; idx >= 0; idx--) {
@@ -115,12 +112,12 @@ function addTagDefinitionToHierarchy(
     return ret
 }
 
-export const selectTagDefinitionHierarchy = createSelector(
-    [selectTagDefinitionByIdPersistentMap, selectNavigationEntries],
+export const selectColumnHierarchy = createSelector(
+    [selectColumnByIdPersistentMap, selectNavigationEntries],
     (
-        tagDefinitionsByIdPersistent: {
-            [key: string]: RemoteInterface<TagDefinition | undefined>
+        columnsByIdPersistent: {
+            [key: string]: RemoteInterface<Column | undefined>
         },
-        hierarchy: TagHierarchyNode[]
-    ) => addTagDefinitionToHierarchy(tagDefinitionsByIdPersistent, hierarchy)
+        hierarchy: ColumnIdHierarchyNode[]
+    ) => addColumnToHierarchy(columnsByIdPersistent, hierarchy)
 )

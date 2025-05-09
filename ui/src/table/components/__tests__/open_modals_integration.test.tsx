@@ -15,11 +15,11 @@ vi.mock('@glideapps/glide-data-grid', async () => {
 import { vi, Mock } from 'vitest'
 import { Button, Col, Row } from 'react-bootstrap'
 import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
@@ -50,7 +50,7 @@ import { RemoteDataTable } from '../table'
 import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { selectShowSearch } from '../../selectors'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { useAppSelector } from '../../../hooks'
 import { EntityMergeRequestState } from '../../../merge_request/entity/state'
 import { newRemote } from '../../../util/state'
@@ -99,7 +99,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         tableSelection: TableSelectionState
         user: UserState
         auth: AuthState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         entityMergeRequests: EntityMergeRequestState
         entityMergeRequestConflicts: EntityMergeRequestConflictsState
         entityDetails: EntityDetailsState
@@ -115,11 +115,11 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [0, 1], cols: [], rowSelectionOrder: [0, 1] },
-            tagSelection: newTagSelectionState({
-                tagDefinitionsByIdPersistent: {
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
                     [displayTxtColumnId]: newRemote(displayTextColumn),
                     [justificationColumnId]: newRemote(justificationColumn),
-                    [idTagDefPersistent]: newRemote(tagDefTest)
+                    [idColumnPersistent]: newRemote(columnTest)
                 }
             }),
             entityMergeRequests: { entityMergeRequests: newRemote([]) },
@@ -131,7 +131,7 @@ export function renderWithProviders(
                         ...userTest,
                         email: 'mail@test.org',
                         namesPersonal: 'names personal',
-                        columns: [tagDefTest]
+                        columns: [columnTest]
                     })
                 )
             }),
@@ -162,7 +162,7 @@ export function renderWithProviders(
             table: tableReducer,
             user: userSlice.reducer,
             auth: authReducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             entityMergeRequests: entityMergeRequestsReducer,
             entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
             entityDetails: entityDetailsReducer,
@@ -313,7 +313,7 @@ function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
 }
 
 const columnNameTest = 'column name test'
-const idTagDefPersistent = 'column_id_test'
+const idColumnPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -321,11 +321,11 @@ const userTest = newPublicUserInfo({
     username: nameUserTest,
     permissionGroup: UserPermissionGroup.EDITOR
 })
-const tagDefTest: TagDefinition = newTagDefinition({
+const columnTest: Column = newColumn({
     namePath: [columnNameTest],
-    idPersistent: idTagDefPersistent,
+    idPersistent: idColumnPersistent,
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 2,

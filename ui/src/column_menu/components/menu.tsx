@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
 import { Form } from 'react-bootstrap'
-import { TagDefinition } from '../state'
-import { TagCreateForm, ColumnTypeCreateFormProps } from './form'
+import { Column } from '../state'
+import { ColumnCreateForm, ColumnTypeCreateFormProps } from './form'
 import { ColumnSelector, EditModal } from './selection'
 import { Eye, EyeFill } from 'react-bootstrap-icons'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectTagSelectionLoading } from '../selectors'
-import { loadTagDefinitionHierarchy } from '../thunks'
+import { selectColumnSelectionLoading } from '../selectors'
+import { loadColumnHierarchy } from '../thunks'
 import { AppDispatch } from '../../store'
 import { TabView } from '../../util/components/tabs'
 import { useAppSelector } from '../../hooks'
@@ -21,15 +21,15 @@ export function ColumnMenu({
     columnIndices: { [key: string]: number }
     additionalEntries?: { idPersistent: string; name: string }[]
     additionalIndices?: { [key: string]: number }
-    loadColumnDataCallback: (columnDefinition: TagDefinition) => void
-    hideColumnDataCallback: (columnDefinition: TagDefinition) => void
+    loadColumnDataCallback: (columnDefinition: Column) => void
+    hideColumnDataCallback: (columnDefinition: Column) => void
 }) {
-    const isLoading = useSelector(selectTagSelectionLoading)
+    const isLoading = useSelector(selectColumnSelectionLoading)
     const dispatch: AppDispatch = useDispatch()
     useEffect(
         () => {
             if (!isLoading) {
-                dispatch(loadTagDefinitionHierarchy({ expand: true }))
+                dispatch(loadColumnHierarchy({ expand: true }))
             }
         },
         //eslint-disable-next-line
@@ -56,10 +56,10 @@ export function ColumnMenuBody({
     columnIndices: { [key: string]: number }
     additionalEntries?: { idPersistent: string; name: string }[]
     additionalIndices?: { [key: string]: number }
-    loadColumnDataCallback: (columnDefinition: TagDefinition) => void
-    hideColumnDataCallback: (columnDefinition: TagDefinition) => void
+    loadColumnDataCallback: (columnDefinition: Column) => void
+    hideColumnDataCallback: (columnDefinition: Column) => void
 }) {
-    const isLoading = useAppSelector(selectTagSelectionLoading)
+    const isLoading = useAppSelector(selectColumnSelectionLoading)
 
     return (
         <>
@@ -96,19 +96,19 @@ export function ColumnMenuBody({
 }
 export function CreateTabBody({
     additionalEntries = [],
-    existingTagDefinition
+    existingColumn
 }: {
     additionalEntries?: { idPersistent: string; name: string }[]
-    existingTagDefinition?: TagDefinition
+    existingColumn?: Column
 }) {
     return (
         <div className="d-contents overflow-hidden">
-            <TagCreateForm existingTagDefinition={existingTagDefinition}>
+            <ColumnCreateForm existingColumn={existingColumn}>
                 {(columnTypeCreateFormProps: ColumnTypeCreateFormProps) => (
                     <ColumnSelector
                         allowEdit={false}
                         additionalEntries={additionalEntries}
-                        mkTailElement={(columnDefinition: TagDefinition) => (
+                        mkTailElement={(columnDefinition: Column) => (
                             <Form.Check
                                 type="radio"
                                 name="parent"
@@ -127,7 +127,7 @@ export function CreateTabBody({
                         )}
                     />
                 )}
-            </TagCreateForm>
+            </ColumnCreateForm>
         </div>
     )
 }
@@ -142,14 +142,14 @@ function ShowTabBody({
     columnIndices: { [key: string]: number }
     additionalEntries: { idPersistent: string; name: string }[]
     additionalIndices: { [key: string]: number }
-    loadColumnDataCallback: (columnDefinition: TagDefinition) => void
-    hideColumnDataCallback: (columnDefinition: TagDefinition) => void
+    loadColumnDataCallback: (columnDefinition: Column) => void
+    hideColumnDataCallback: (columnDefinition: Column) => void
 }) {
     return (
         <div className="ps-2 pe-2 d-contents overflow-hidden">
             <ColumnSelector
                 additionalEntries={additionalEntries}
-                mkTailElement={(columnDefinition: TagDefinition) => {
+                mkTailElement={(columnDefinition: Column) => {
                     const isDisplayedInTable =
                         columnIndices[columnDefinition.idPersistent] !== undefined ||
                         additionalIndices[columnDefinition.idPersistent] !== undefined

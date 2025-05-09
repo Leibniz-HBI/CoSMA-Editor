@@ -1,4 +1,4 @@
-import { TagHierarchyNode, TagType } from '../../column_menu/state'
+import { ColumnIdHierarchyNode, ColumnType } from '../../column_menu/state'
 import { RemoteInterface, newRemote } from '../../util/state'
 
 export interface ColumnDefinitionContribution {
@@ -6,7 +6,7 @@ export interface ColumnDefinitionContribution {
     idPersistent: string
     idExistingPersistent?: string
     idParentPersistent?: string
-    type?: TagType
+    type?: ColumnType
     indexInFile: number
     discard: boolean
 }
@@ -23,7 +23,7 @@ export function newColumnDefinitionContribution({
     idPersistent: string
     idExistingPersistent?: string
     idParentPersistent?: string
-    type?: TagType
+    type?: ColumnType
     indexInFile: number
     discard: boolean
 }): ColumnDefinitionContribution {
@@ -75,7 +75,7 @@ export function newColumnDefinitionsContributionState({
     columns?: RemoteInterface<ColumnsTuple | undefined>
     selectedColumnDefinition?: RemoteInterface<ColumnDefinitionContribution | undefined>
     createTabSelected?: boolean
-    existingColumnSelectionEntries?: RemoteInterface<TagHierarchyNode[]>
+    existingColumnSelectionEntries?: RemoteInterface<ColumnIdHierarchyNode[]>
     finalizeColumnAssignment?: RemoteInterface<boolean>
     preview?: RemoteInterface<ValuePreview | undefined>
 }): ColumnDefinitionsContributionState {

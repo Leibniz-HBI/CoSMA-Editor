@@ -14,11 +14,11 @@ vi.mock('@glideapps/glide-data-grid', async () => {
 import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
@@ -63,7 +63,7 @@ import {
 import { editSessionReducer } from '../../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
 import { entityDetailsReducer } from '../../../entity/slice'
-import { tagSelectionSlice } from '../../../column_menu/slice'
+import { columnSelectionReducer } from '../../../column_menu/slice'
 import { AuthState, newAuthState } from '../../../auth/state'
 import { authReducer } from '../../../auth/slice'
 
@@ -151,9 +151,9 @@ const entities_test = [
     })
 ]
 const columnNameParent = 'column parent test'
-const idTagDefParentPersistent = 'column-id-parent-test'
+const idColumnParentPersistent = 'column-id-parent-test'
 const columnNameTest = 'column name test'
-const idTagDefPersistent = 'column_id_test'
+const idColumnPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -163,20 +163,20 @@ const userTest = newPublicUserInfo({
 })
 const nameUserTest1 = 'user_test1'
 const idUserTest1 = 'id-user-test-1'
-const tagDefTest: TagDefinition = newTagDefinition({
+const columnTest: Column = newColumn({
     namePath: [columnNameTest],
-    idPersistent: idTagDefPersistent,
-    idParentPersistent: idTagDefParentPersistent,
-    columnType: TagType.String,
+    idPersistent: idColumnPersistent,
+    idParentPersistent: idColumnParentPersistent,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 2,
     hidden: false
 })
-const tagDefParentTest = newTagDefinition({
+const columnParentTest = newColumn({
     namePath: [columnNameParent],
-    idPersistent: idTagDefParentPersistent,
-    columnType: TagType.Inner,
+    idPersistent: idColumnParentPersistent,
+    columnType: ColumnType.Inner,
     curated: false,
     owner: userTest,
     version: 3,
@@ -186,7 +186,7 @@ const tagDefParentTest = newTagDefinition({
 test('get entities success', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
         screen.getByText(displayTxt0)
@@ -202,9 +202,9 @@ test('get entities success', async () => {
             isLoading: false,
             columnIndices: {
                 display_txt_id: 0,
-                [idTagDefPersistent]: 1
+                [idColumnPersistent]: 1
             },
-            columnStates: [displayTxtColumnState, tagDefColumnState]
+            columnStates: [displayTxtColumnState, columnColumnState]
         })
     )
     expect(fetchMock.mock.calls).toEqual([
@@ -224,7 +224,7 @@ test('get entities success', async () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id_column_persistent: idTagDefPersistent,
+                    id_column_persistent: idColumnPersistent,
                     offset: 0,
                     limit: 5000
                 })
@@ -232,10 +232,10 @@ test('get entities success', async () => {
         ]
     ])
 })
-test('get entities and inner tag success', async () => {
+test('get entities and inner column success', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
-    addTagInstanceResponse(fetchMock)
+    addValueResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     await waitFor(() => {
         screen.getByText(displayTxt0)
@@ -251,9 +251,9 @@ test('get entities and inner tag success', async () => {
             isLoading: false,
             columnIndices: {
                 display_txt_id: 0,
-                [idTagDefPersistent]: 1
+                [idColumnPersistent]: 1
             },
-            columnStates: [displayTxtColumnState, tagDefColumnState]
+            columnStates: [displayTxtColumnState, columnColumnState]
         })
     )
     expect(fetchMock.mock.calls).toEqual([
@@ -273,7 +273,7 @@ test('get entities and inner tag success', async () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    id_column_persistent: idTagDefPersistent,
+                    id_column_persistent: idColumnPersistent,
                     offset: 0,
                     limit: 5000
                 })
@@ -307,9 +307,9 @@ test('get chunked', async () => {
     ])
     const idValueChunk = 'test-value-id-0'
     const version = 12
-    const tagResponse = {
+    const valueResponse = {
         id_entity_persistent: 'test-id-0',
-        id_column_persistent: idTagDefPersistent,
+        id_column_persistent: idColumnPersistent,
         value: displayTxt0,
         id_persistent: idValueChunk,
         owner: {
@@ -319,9 +319,9 @@ test('get chunked', async () => {
         },
         version: version
     }
-    const tagResponse1 = {
+    const valueResponse1 = {
         id_entity_persistent: 'test-id-1',
-        id_column_persistent: idTagDefPersistent,
+        id_column_persistent: idColumnPersistent,
         value: displayTxt1,
         id_persistent: 'test-value-id-1',
         owner: {
@@ -332,20 +332,20 @@ test('get chunked', async () => {
         version: 1
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tags: any[] = []
+    const columns: any[] = []
     for (let i = 0; i < 5000; ++i) {
-        tags.push({
-            ...tagResponse,
+        columns.push({
+            ...valueResponse,
             id_entity_persistent: i % 1000,
             version: i * 2 + 2
         })
     }
     addResponseSequence(fetchMock, [
-        [200, { value_list: tags }],
+        [200, { value_list: columns }],
         [
             200,
             {
-                value_list: [tagResponse1]
+                value_list: [valueResponse1]
             }
         ]
     ])
@@ -401,7 +401,7 @@ test('get entities error', async () => {
                 columnIndices: { display_txt_id: 0 },
                 columnStates: [
                     newColumnState({
-                        idTagDefinitionPersistent: displayTxtColumnId,
+                        idColumnPersistent: displayTxtColumnId,
                         cellContents: newRemote([], true)
                     })
                 ]
@@ -437,12 +437,12 @@ test('get instances error', async () => {
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
-                    [idTagDefPersistent]: 1
+                    [idColumnPersistent]: 1
                 },
                 columnStates: [
                     displayTxtColumnState,
                     newColumnState({
-                        idTagDefinitionPersistent: idTagDefPersistent,
+                        idColumnPersistent: idColumnPersistent,
                         cellContents: newRemote([], true)
                     })
                 ]
@@ -453,7 +453,7 @@ test('get instances error', async () => {
 })
 
 const displayTxtColumnState = newColumnState({
-    idTagDefinitionPersistent: displayTxtColumnId,
+    idColumnPersistent: displayTxtColumnId,
     cellContents: newRemote([])
 })
 
@@ -461,8 +461,8 @@ const idValue0 = 'test-value-id-0'
 const idValue1 = 'test-value-id-1'
 const value0 = 'value 0',
     value1 = 'value 1'
-const tagDefColumnState = newColumnState({
-    idTagDefinitionPersistent: idTagDefPersistent,
+const columnColumnState = newColumnState({
+    idColumnPersistent: idColumnPersistent,
     cellContents: newRemote([
         [
             {
@@ -487,11 +487,11 @@ function addEntitiesResponse(fetchMock: Mock) {
     ])
 }
 
-function addTagInstanceResponse(fetchMock: Mock) {
-    const tagResponse = {
+function addValueResponse(fetchMock: Mock) {
+    const valueResponse = {
         id_entity_persistent: idPersistent0,
 
-        id_column_persistent: idTagDefPersistent,
+        id_column_persistent: idColumnPersistent,
         value: value0,
         id_persistent: idValue0,
         owner: {
@@ -501,9 +501,9 @@ function addTagInstanceResponse(fetchMock: Mock) {
         },
         version: 12
     }
-    const tagResponse1 = {
+    const valueResponse1 = {
         id_entity_persistent: idPersistent1,
-        id_column_persistent: idTagDefPersistent,
+        id_column_persistent: idColumnPersistent,
         value: value1,
         id_persistent: idValue1,
         owner: {
@@ -517,7 +517,7 @@ function addTagInstanceResponse(fetchMock: Mock) {
         [
             200,
             {
-                value_list: [tagResponse, tagResponse1]
+                value_list: [valueResponse, valueResponse1]
             }
         ]
     ])
@@ -528,7 +528,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         user: UserState
         auth: AuthState
         editSession: EditSessionState
@@ -544,12 +544,12 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            tagSelection: newTagSelectionState({
-                tagDefinitionsByIdPersistent: {
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
                     [displayTxtColumnId]: newRemote(displayTextColumn),
                     [justificationColumnId]: newRemote(justificationColumn),
-                    [idTagDefPersistent]: newRemote(tagDefTest),
-                    [idTagDefParentPersistent]: newRemote(tagDefParentTest)
+                    [idColumnPersistent]: newRemote(columnTest),
+                    [idColumnParentPersistent]: newRemote(columnParentTest)
                 }
             }),
             user: newUserState({}),
@@ -559,7 +559,7 @@ export function renderWithProviders(
                         ...userTest,
                         email: 'mail@test.org',
                         namesPersonal: 'names personal',
-                        columns: [tagDefTest]
+                        columns: [columnTest]
                     })
                 )
             }),
@@ -588,7 +588,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             user: userSlice.reducer,
             auth: authReducer,
             editSession: editSessionReducer,

@@ -1,8 +1,5 @@
 import { Col, ListGroup, Modal, Row, Spinner } from 'react-bootstrap'
-import {
-    TagDefinitionNamePath,
-    TagDefinitionNamePathFromId
-} from '../column_menu/components/misc'
+import { ColumnNamePath, ColumnNamePathFromId } from '../column_menu/components/misc'
 import { FormField } from '../util/form'
 import { useDispatch, useSelector } from 'react-redux'
 import { userSearch } from '../user/thunks'
@@ -16,7 +13,7 @@ import {
     getOwnershipRequests,
     putOwnershipRequest
 } from './thunks'
-import { selectPutTagOwnership, selectTagOwnershipRequests } from './selectors'
+import { selectPutColumnOwnership, selectColumnOwnershipRequests } from './selectors'
 import { RemoteTriggerButton, CosmaeLoading, CosmaeCard } from '../util/components/misc'
 import { PublicUserInfo } from '../user/state'
 import { CheckCircle, XCircleFill } from 'react-bootstrap-icons'
@@ -24,18 +21,14 @@ import { putOwnershipRequestClear } from './slice'
 import { OwnershipRequest } from './state'
 import { RemoteInterface } from '../util/state'
 import { userSearchClear } from '../user/slice'
-import { updateUserTagDefinition } from '../auth/slice'
+import { updateUserColumn } from '../auth/slice'
 
-export function TagManagementPage() {
+export function ColumnManagementPage() {
     const dispatch: AppDispatch = useDispatch()
-    useEffect(
-        () => {
-            dispatch(getOwnershipRequests())
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        []
-    )
-    const ownershipRequests = useSelector(selectTagOwnershipRequests)
+    useEffect(() => {
+        dispatch(getOwnershipRequests())
+    }, [])
+    const ownershipRequests = useSelector(selectColumnOwnershipRequests)
     if (ownershipRequests.isLoading) {
         return <CosmaeLoading />
     }
@@ -51,7 +44,7 @@ export function TagManagementPage() {
                     header={
                         <span>
                             You were petitioned to accept the ownership for the
-                            following tags:
+                            following columns:
                         </span>
                     }
                 >
@@ -63,7 +56,7 @@ export function TagManagementPage() {
                                         <ListGroup.Item
                                             key={`ownership-received-${idx}`}
                                         >
-                                            <TagOwnershipRequestListItemBody
+                                            <ColumnOwnershipRequestListItemBody
                                                 request={request}
                                                 isReceiver={true}
                                             />
@@ -79,7 +72,7 @@ export function TagManagementPage() {
                     className="h-50 d-flex flex-column overflow-hidden"
                     header={
                         <span>
-                            You requested a new owner for the following tag definitions:
+                            You requested a new owner for the following columns:
                         </span>
                     }
                 >
@@ -91,7 +84,7 @@ export function TagManagementPage() {
                                         <ListGroup.Item
                                             key={`ownership-petitioned-${idx}`}
                                         >
-                                            <TagOwnershipRequestListItemBody
+                                            <ColumnOwnershipRequestListItemBody
                                                 request={request}
                                                 isReceiver={false}
                                             />
@@ -107,7 +100,7 @@ export function TagManagementPage() {
     )
 }
 
-export function TagOwnershipRequestListItemBody({
+export function ColumnOwnershipRequestListItemBody({
     request,
     isReceiver
 }: {
@@ -127,9 +120,9 @@ export function TagOwnershipRequestListItemBody({
                     onClick={() =>
                         dispatch(
                             acceptOwnershipRequest(request.value.idPersistent)
-                        ).then((tagDefinition) => {
-                            if (tagDefinition !== undefined) {
-                                dispatch(updateUserTagDefinition(tagDefinition))
+                        ).then((columnDefinition) => {
+                            if (columnDefinition !== undefined) {
+                                dispatch(updateUserColumn(columnDefinition))
                             }
                         })
                     }
@@ -156,9 +149,7 @@ export function TagOwnershipRequestListItemBody({
             <Col>
                 <Row>
                     <Col>
-                        <TagDefinitionNamePath
-                            tagDefinition={request.value.tagDefinition}
-                        />
+                        <ColumnNamePath column={request.value.column} />
                     </Col>
                 </Row>
                 <Row>
@@ -182,10 +173,10 @@ const debouncedSearchDispatchThunk = (searchTerm: string) => (dispatch: AppDispa
     debouncedSearchDispatch(searchTerm, dispatch)
 
 export function ChangeOwnershipModal({
-    idTagDefinitionPersistent,
+    idColumnPersistent,
     onClose
 }: {
-    idTagDefinitionPersistent?: string
+    idColumnPersistent?: string
     onClose: VoidFunction
 }) {
     const [searchTerm, setSearchTerm] = useState('')
@@ -197,21 +188,19 @@ export function ChangeOwnershipModal({
     }
     const searchResults = useSelector(selectSearchResults)
     return (
-        <Modal show={idTagDefinitionPersistent !== undefined} onHide={closeCallback}>
+        <Modal show={idColumnPersistent !== undefined} onHide={closeCallback}>
             <Modal.Header closeButton={true} closeVariant="white">
-                Change Tag Ownership
+                Change Column Ownership
             </Modal.Header>
             <Modal.Body>
-                {idTagDefinitionPersistent === undefined ? (
+                {idColumnPersistent === undefined ? (
                     <div />
                 ) : (
                     <Col>
                         <Row>
-                            <span>
-                                Change ownership of tag definition with name path
-                            </span>
-                            <TagDefinitionNamePathFromId
-                                idTagDefinitionPersistent={idTagDefinitionPersistent}
+                            <span>Change ownership of column with name path</span>
+                            <ColumnNamePathFromId
+                                idColumnPersistent={idColumnPersistent}
                             />
                         </Row>
                         <Row>
@@ -234,9 +223,7 @@ export function ChangeOwnershipModal({
                                         <ListGroup.Item key={`search-result-${idx}`}>
                                             <OwnershipSearchResultsItem
                                                 userInfo={userInfo}
-                                                idTagDefinitionPersistent={
-                                                    idTagDefinitionPersistent
-                                                }
+                                                idColumnPersistent={idColumnPersistent}
                                             />
                                         </ListGroup.Item>
                                     ))}
@@ -252,13 +239,13 @@ export function ChangeOwnershipModal({
 
 export function OwnershipSearchResultsItem({
     userInfo,
-    idTagDefinitionPersistent
+    idColumnPersistent
 }: {
     userInfo: PublicUserInfo
-    idTagDefinitionPersistent: string
+    idColumnPersistent: string
 }) {
     const dispatch: AppDispatch = useDispatch()
-    const putOwnershipRequestState = useSelector(selectPutTagOwnership)
+    const putOwnershipRequestState = useSelector(selectPutColumnOwnership)
     const callback = () => {
         if (putOwnershipRequestState.isLoading) {
             return
@@ -266,7 +253,7 @@ export function OwnershipSearchResultsItem({
         dispatch(
             putOwnershipRequest({
                 idUserPersistent: userInfo.idPersistent,
-                idTagDefinitionPersistent: idTagDefinitionPersistent
+                idColumnPersistent: idColumnPersistent
             })
         )
     }

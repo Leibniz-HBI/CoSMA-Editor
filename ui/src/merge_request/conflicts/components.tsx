@@ -14,11 +14,11 @@ import {
     Row,
     Tooltip
 } from 'react-bootstrap'
-import { MergeRequestConflict, ReplacementState, TagInstance } from './state'
+import { MergeRequestConflict, ReplacementState, Value } from './state'
 import { RemoteInterface } from '../../util/state'
 import { ChangeEvent, useEffect, useMemo } from 'react'
 import { Entity } from '../../entity/state'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import { MergeRequest } from '../state'
 import { MergeRequestListItemBody } from '../components'
 import { useAppDispatch, useAppSelector } from '../../hooks'
@@ -32,7 +32,7 @@ import {
     selectDisableOriginOnMerge,
     selectResolvedCount,
     selectStartMerge,
-    selectTagMergeRequestConflictsByCategory
+    selectColumnMergeRequestConflictsByCategory
 } from './selectors'
 import { ArrowLeftCircle } from 'react-bootstrap-icons'
 import { TabView } from '../../util/components/tabs'
@@ -70,10 +70,10 @@ export function MergeRequestConflictView() {
 }
 type ResolveConflictArg = {
     entity: Entity
-    tagInstanceOrigin: TagInstance
-    tagDefinitionOrigin: TagDefinition
-    tagInstanceDestination?: TagInstance
-    tagDefinitionDestination: TagDefinition
+    valueOrigin: Value
+    columnOrigin: Column
+    valueDestination?: Value
+    columnDestination: Column
     replacementState?: ReplacementState
     replacementValue: string | undefined
 }
@@ -83,15 +83,15 @@ export function MergeRequestConflictResolutionView({
     idMergeRequestPersistent: string
 }) {
     const dispatch = useAppDispatch()
-    const conflictsByCategory = useAppSelector(selectTagMergeRequestConflictsByCategory)
+    const conflictsByCategory = useAppSelector(selectColumnMergeRequestConflictsByCategory)
     const startMergeValue = useAppSelector(selectStartMerge)
     const [resolvedCount, conflictsCount] = useAppSelector(selectResolvedCount)
     const resolveConflictCallback = ({
         entity,
-        tagInstanceOrigin,
-        tagDefinitionOrigin,
-        tagInstanceDestination,
-        tagDefinitionDestination,
+        valueOrigin,
+        columnOrigin,
+        valueDestination,
+        columnDestination,
         replacementState,
         replacementValue
     }: ResolveConflictArg) => {
@@ -99,10 +99,10 @@ export function MergeRequestConflictResolutionView({
             resolveConflict({
                 idMergeRequestPersistent,
                 entity,
-                tagInstanceOrigin,
-                tagDefinitionOrigin,
-                tagInstanceDestination,
-                tagDefinitionDestination,
+                valueOrigin,
+                columnOrigin,
+                valueDestination,
+                columnDestination,
                 replacementState,
                 replacementValue
             })
@@ -139,7 +139,7 @@ export function MergeRequestConflictResolutionView({
                     overlay={
                         <Tooltip id="disable-origin-on-merge-tooltip">
                             <span>
-                                When this toggle is enabled, the origin tag definition,
+                                When this toggle is enabled, the origin column,
                                 marked with
                             </span>
                             <span> </span>
@@ -148,8 +148,8 @@ export function MergeRequestConflictResolutionView({
                             </span>
                             <span> </span>
                             <span>
-                                will be disabled. I.e., the tag definition will not
-                                appear anymore in the the tag definition explorer but is
+                                will be disabled. I.e., the column will not
+                                appear anymore in the the column explorer but is
                                 still kept in the history.
                             </span>
                         </Tooltip>
@@ -258,8 +258,8 @@ export function MergeRequestConflictItem({
     resolveConflictCallback: (args: ResolveConflictArg) => void
 }) {
     const debouncedCallback = useMemo(mkDebouncedResolveCallback, [
-        conflict.value.tagInstanceOrigin.idPersistent,
-        conflict.value.tagInstanceDestination?.idPersistent
+        conflict.value.valueOrigin.idPersistent,
+        conflict.value.valueDestination?.idPersistent
     ])
     return (
         <ListGroup.Item className="mb-1" data-testid="conflict-item">
@@ -277,12 +277,12 @@ export function MergeRequestConflictItem({
                         debouncedCallback(
                             {
                                 entity: conflict.value.entity,
-                                tagInstanceOrigin: conflict.value.tagInstanceOrigin,
-                                tagDefinitionOrigin: mergeRequest.originTagDefinition,
-                                tagInstanceDestination:
-                                    conflict.value.tagInstanceDestination,
-                                tagDefinitionDestination:
-                                    mergeRequest.destinationTagDefinition,
+                                valueOrigin: conflict.value.valueOrigin,
+                                columnOrigin: mergeRequest.originColumn,
+                                valueDestination:
+                                    conflict.value.valueDestination,
+                                columnDestination:
+                                    mergeRequest.destinationColumn,
                                 replacementValue: formValues.replacementValue,
                                 replacementState: formValues.replacementState
                             },
@@ -295,8 +295,8 @@ export function MergeRequestConflictItem({
                             values={values}
                             setValues={setValues}
                             submitForm={submitForm}
-                            keepValue={conflict.value?.tagInstanceDestination?.value}
-                            replaceValue={conflict.value?.tagInstanceOrigin?.value}
+                            keepValue={conflict.value?.valueDestination?.value}
+                            replaceValue={conflict.value?.valueOrigin?.value}
                         />
                     )}
                 </Formik>
@@ -342,7 +342,7 @@ function ResolutionFormBody({
     }
     const keepValueSpan = <span className={keepStyle}>{keepValueDisplay}</span>
     return (
-        <Col key="tag-instance-column">
+        <Col key="value-column">
             <Row key="existing-row">
                 <Col xs="auto" key="button-column">
                     <ChoiceButton
@@ -469,7 +469,7 @@ export function DisableOriginOnMergeToggle({
                         <ArrowLeftCircle />
                     </span>
                     <span> </span>
-                    <span>Tag on Merge</span>
+                    <span>Column on Merge</span>
                 </>
             }
             checked={disableOriginOnMerge}

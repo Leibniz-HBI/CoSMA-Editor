@@ -1,50 +1,50 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { newRemote } from '../../util/state'
 import { DisplayTxtManagementState } from './state'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 
-const initialState: DisplayTxtManagementState = { tagDefinitions: newRemote([]) }
+const initialState: DisplayTxtManagementState = { columns: newRemote([]) }
 
 const displayTxtManagementSlice = createSlice({
     name: 'displayTxtManagement',
     initialState,
     reducers: {
-        getDisplayTxtTagDefinitionsStart(state: DisplayTxtManagementState) {
-            state.tagDefinitions.isLoading = true
+        getDisplayTxtColumnsStart(state: DisplayTxtManagementState) {
+            state.columns.isLoading = true
         },
-        getDisplayTxtTagDefinitionsSuccess(
+        getDisplayTxtColumnsSuccess(
             state: DisplayTxtManagementState,
-            action: PayloadAction<TagDefinition[]>
+            action: PayloadAction<Column[]>
         ) {
-            state.tagDefinitions = newRemote(action.payload)
+            state.columns = newRemote(action.payload)
         },
-        getDisplayTxtTagDefinitionsError(state: DisplayTxtManagementState) {
-            state.tagDefinitions.isLoading = false
+        getDisplayTxtColumnsError(state: DisplayTxtManagementState) {
+            state.columns.isLoading = false
         },
-        appendTagDefinition(
+        appendColumn(
             state: DisplayTxtManagementState,
-            action: PayloadAction<TagDefinition>
+            action: PayloadAction<Column>
         ) {
-            state.tagDefinitions.value.push(action.payload)
+            state.columns.value.push(action.payload)
         },
-        removeTagDefinition(
+        removeColumn(
             state: DisplayTxtManagementState,
-            action: PayloadAction<TagDefinition>
+            action: PayloadAction<Column>
         ) {
-            const idx = state.tagDefinitions.value.findIndex(
-                (tagDef: TagDefinition) =>
-                    tagDef.idPersistent == action.payload.idPersistent
+            const idx = state.columns.value.findIndex(
+                (column: Column) =>
+                    column.idPersistent == action.payload.idPersistent
             )
-            state.tagDefinitions.value.splice(idx, 1)
+            state.columns.value.splice(idx, 1)
         }
     }
 })
 export const displayTxtManagementReducer = displayTxtManagementSlice.reducer
 
 export const {
-    getDisplayTxtTagDefinitionsStart,
-    getDisplayTxtTagDefinitionsSuccess,
-    getDisplayTxtTagDefinitionsError,
-    appendTagDefinition,
-    removeTagDefinition
+    getDisplayTxtColumnsStart,
+    getDisplayTxtColumnsSuccess,
+    getDisplayTxtColumnsError,
+    appendColumn,
+    removeColumn
 } = displayTxtManagementSlice.actions

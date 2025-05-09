@@ -103,55 +103,55 @@ const idUser0 = 'user-id-0'
 const permissionGroup0 = 'COMMISSIONER'
 
 const namePathResolvable0 = ['name path', 'resolvable 0']
-const idTagDefResolvable0 = 'id-tag-def-resolvable-0'
-const idTagDefParentResolvable0 = 'id-tag-def-parent-resolvable-0'
-const versionTagDefResolvable0 = 7770
-const idTagInstanceOriginResolvable0 = 'id-instance-origin-resolvable-0'
-const versionTagInstanceOriginResolvable0 = 7780
-const valueTagInstanceOriginResolvable0 = 'resolvable value origin 0'
-const idTagInstanceDestinationResolvable0 = 'id-instance-resolvable-destination-0'
-const versionTagInstanceDestinationResolvable0 = 7740
-const valueTagInstanceDestinationResolvable0 = 'resolvable value destination 0'
+const idColumnResolvable0 = 'id-column-resolvable-0'
+const idColumnParentResolvable0 = 'id-column-parent-resolvable-0'
+const versionColumnResolvable0 = 7770
+const idValueOriginResolvable0 = 'id-instance-origin-resolvable-0'
+const versionValueOriginResolvable0 = 7780
+const valueValueOriginResolvable0 = 'resolvable value origin 0'
+const idValueDestinationResolvable0 = 'id-instance-resolvable-destination-0'
+const versionValueDestinationResolvable0 = 7740
+const valueValueDestinationResolvable0 = 'resolvable value destination 0'
 const namePathResolvable1 = ['name path', 'resolvable 1']
-const idTagDefResolvable1 = 'id-tag-def-resolvable-1'
-const idTagDefParentResolvable1 = 'id-tag-def-parent-resolvable-1'
-const versionTagDefResolvable1 = 7771
-const idTagInstanceOriginResolvable1 = 'id-instance-origin-resolvable-1'
-const versionTagInstanceOriginResolvable1 = 7781
-const valueTagInstanceOriginResolvable1 = 'resolvable value origin 1'
-const idTagInstanceDestinationResolvable1 = 'id-instance-resolvable-destination-1'
-const versionTagInstanceDestinationResolvable1 = 7741
-const valueTagInstanceDestinationResolvable1 = 'resolvable value destination 1'
+const idColumnResolvable1 = 'id-column-resolvable-1'
+const idColumnParentResolvable1 = 'id-column-parent-resolvable-1'
+const versionColumnResolvable1 = 7771
+const idValueOriginResolvable1 = 'id-instance-origin-resolvable-1'
+const versionValueOriginResolvable1 = 7781
+const valueValueOriginResolvable1 = 'resolvable value origin 1'
+const idValueDestinationResolvable1 = 'id-instance-resolvable-destination-1'
+const versionValueDestinationResolvable1 = 7741
+const valueValueDestinationResolvable1 = 'resolvable value destination 1'
 const namePathResolvable2 = ['name path', 'resolvable 2']
-const idTagDefResolvable2 = 'id-tag-def-resolvable-2'
-const idTagDefParentResolvable2 = 'id-tag-def-parent-resolvable-2'
-const versionTagDefResolvable2 = 7772
-const idTagInstanceOriginResolvable2 = 'id-instance-origin-resolvable-2'
-const versionTagInstanceOriginResolvable2 = 7782
-const valueTagInstanceOriginResolvable2 = 'resolvable value origin 2'
-const idTagInstanceDestinationResolvable2 = 'id-instance-resolvable-destination-2'
-const versionTagInstanceDestinationResolvable2 = 7742
-const valueTagInstanceDestinationResolvable2 = 'resolvable value destination 2'
+const idColumnResolvable2 = 'id-column-resolvable-2'
+const idColumnParentResolvable2 = 'id-column-parent-resolvable-2'
+const versionColumnResolvable2 = 7772
+const idValueOriginResolvable2 = 'id-instance-origin-resolvable-2'
+const versionValueOriginResolvable2 = 7782
+const valueValueOriginResolvable2 = 'resolvable value origin 2'
+const idValueDestinationResolvable2 = 'id-instance-resolvable-destination-2'
+const versionValueDestinationResolvable2 = 7742
+const valueValueDestinationResolvable2 = 'resolvable value destination 2'
 const namePathUnresolvable0 = ['name path', 'unresolvable 0']
-const idTagDefUnresolvable0 = 'id-tag-def-unresolvable-0'
-const idTagDefParentUnresolvable0 = 'id-tag-def-parent-unresolvable-0'
-const versionTagDefUnresolvable0 = 7770
-const idTagInstanceOriginUnresolvable0 = 'id-instance-origin-unresolvable-0'
-const versionTagInstanceOriginUnresolvable0 = 7780
-const valueTagInstanceOriginUnresolvable0 = 'unresolvable value origin 0'
-const idTagInstanceDestinationUnresolvable0 = 'id-instance-unresolvable-destination-0'
-const versionTagInstanceDestinationUnresolvable0 = 7740
-const valueTagInstanceDestinationUnresolvable0 = 'unresolvable value destination 0'
+const idColumnUnresolvable0 = 'id-column-unresolvable-0'
+const idColumnParentUnresolvable0 = 'id-column-parent-unresolvable-0'
+const versionColumnUnresolvable0 = 7770
+const idValueOriginUnresolvable0 = 'id-instance-origin-unresolvable-0'
+const versionValueOriginUnresolvable0 = 7780
+const valueValueOriginUnresolvable0 = 'unresolvable value origin 0'
+const idValueDestinationUnresolvable0 = 'id-instance-unresolvable-destination-0'
+const versionValueDestinationUnresolvable0 = 7740
+const valueValueDestinationUnresolvable0 = 'unresolvable value destination 0'
 const namePathUnresolvable1 = ['name path', 'unresolvable 1']
-const idTagDefUnresolvable1 = 'id-tag-def-unresolvable-1'
-const idTagDefParentUnresolvable1 = 'id-tag-def-parent-unresolvable-1'
-const versionTagDefUnresolvable1 = 7771
-const idTagInstanceOriginUnresolvable1 = 'id-instance-origin-unresolvable-1'
-const versionTagInstanceOriginUnresolvable1 = 7781
-const valueTagInstanceOriginUnresolvable1 = 'unresolvable value origin 1'
-const idTagInstanceDestinationUnresolvable1 = 'id-instance-unresolvable-destination-1'
-const versionTagInstanceDestinationUnresolvable1 = 7741
-const valueTagInstanceDestinationUnresolvable1 = 'unresolvable value destination 1'
+const idColumnUnresolvable1 = 'id-column-unresolvable-1'
+const idColumnParentUnresolvable1 = 'id-column-parent-unresolvable-1'
+const versionColumnUnresolvable1 = 7771
+const idValueOriginUnresolvable1 = 'id-instance-origin-unresolvable-1'
+const versionValueOriginUnresolvable1 = 7781
+const valueValueOriginUnresolvable1 = 'unresolvable value origin 1'
+const idValueDestinationUnresolvable1 = 'id-instance-unresolvable-destination-1'
+const versionValueDestinationUnresolvable1 = 7741
+const valueValueDestinationUnresolvable1 = 'unresolvable value destination 1'
 
 function addSuccessResponse(fetchMock: Mock) {
     const entityMergeRequestApi = {
@@ -182,20 +182,20 @@ function addSuccessResponse(fetchMock: Mock) {
     const resolvableConflict1 = {
         column: {
             name_path: namePathResolvable1,
-            id_persistent: idTagDefResolvable1,
-            id_parent_persistent: idTagDefParentResolvable1,
-            version: versionTagDefResolvable1,
+            id_persistent: idColumnResolvable1,
+            id_parent_persistent: idColumnParentResolvable1,
+            version: versionColumnResolvable1,
             curated: false
         },
         value_origin: {
-            id_persistent: idTagInstanceOriginResolvable1,
-            value: valueTagInstanceOriginResolvable1,
-            version: versionTagInstanceOriginResolvable1
+            id_persistent: idValueOriginResolvable1,
+            value: valueValueOriginResolvable1,
+            version: versionValueOriginResolvable1
         },
         value_destination: {
-            id_persistent: idTagInstanceDestinationResolvable1,
-            value: valueTagInstanceDestinationResolvable1,
-            version: versionTagInstanceDestinationResolvable1
+            id_persistent: idValueDestinationResolvable1,
+            value: valueValueDestinationResolvable1,
+            version: versionValueDestinationResolvable1
         }
     }
     addResponseSequence(fetchMock, [
@@ -208,20 +208,20 @@ function addSuccessResponse(fetchMock: Mock) {
                     {
                         column: {
                             name_path: namePathResolvable0,
-                            id_persistent: idTagDefResolvable0,
-                            id_parent_persistent: idTagDefParentResolvable0,
-                            version: versionTagDefResolvable0,
+                            id_persistent: idColumnResolvable0,
+                            id_parent_persistent: idColumnParentResolvable0,
+                            version: versionColumnResolvable0,
                             curated: false
                         },
                         value_origin: {
-                            id_persistent: idTagInstanceOriginResolvable0,
-                            value: valueTagInstanceOriginResolvable0,
-                            version: versionTagInstanceOriginResolvable0
+                            id_persistent: idValueOriginResolvable0,
+                            value: valueValueOriginResolvable0,
+                            version: versionValueOriginResolvable0
                         },
                         value_destination: {
-                            id_persistent: idTagInstanceDestinationResolvable0,
-                            value: valueTagInstanceDestinationResolvable0,
-                            version: versionTagInstanceDestinationResolvable0
+                            id_persistent: idValueDestinationResolvable0,
+                            value: valueValueDestinationResolvable0,
+                            version: versionValueDestinationResolvable0
                         },
                         replacement_state: 'REPLACE'
                     },
@@ -229,20 +229,20 @@ function addSuccessResponse(fetchMock: Mock) {
                     {
                         column: {
                             name_path: namePathResolvable2,
-                            id_persistent: idTagDefResolvable2,
-                            id_parent_persistent: idTagDefParentResolvable2,
-                            version: versionTagDefResolvable2,
+                            id_persistent: idColumnResolvable2,
+                            id_parent_persistent: idColumnParentResolvable2,
+                            version: versionColumnResolvable2,
                             curated: false
                         },
                         value_origin: {
-                            id_persistent: idTagInstanceOriginResolvable2,
-                            value: valueTagInstanceOriginResolvable2,
-                            version: versionTagInstanceOriginResolvable2
+                            id_persistent: idValueOriginResolvable2,
+                            value: valueValueOriginResolvable2,
+                            version: versionValueOriginResolvable2
                         },
                         value_destination: {
-                            id_persistent: idTagInstanceDestinationResolvable2,
-                            value: valueTagInstanceDestinationResolvable2,
-                            version: versionTagInstanceDestinationResolvable2
+                            id_persistent: idValueDestinationResolvable2,
+                            value: valueValueDestinationResolvable2,
+                            version: versionValueDestinationResolvable2
                         },
                         replacement_state: 'KEEP'
                     }
@@ -252,39 +252,39 @@ function addSuccessResponse(fetchMock: Mock) {
                     {
                         column: {
                             name_path: namePathUnresolvable0,
-                            id_persistent: idTagDefUnresolvable0,
-                            id_parent_persistent: idTagDefParentUnresolvable0,
-                            version: versionTagDefUnresolvable0,
+                            id_persistent: idColumnUnresolvable0,
+                            id_parent_persistent: idColumnParentUnresolvable0,
+                            version: versionColumnUnresolvable0,
                             curated: false
                         },
                         value_origin: {
-                            id_persistent: idTagInstanceOriginUnresolvable0,
-                            value: valueTagInstanceOriginUnresolvable0,
-                            version: versionTagInstanceOriginUnresolvable0
+                            id_persistent: idValueOriginUnresolvable0,
+                            value: valueValueOriginUnresolvable0,
+                            version: versionValueOriginUnresolvable0
                         },
                         value_destination: {
-                            id_persistent: idTagInstanceDestinationUnresolvable0,
-                            value: valueTagInstanceDestinationUnresolvable0,
-                            version: versionTagInstanceDestinationUnresolvable0
+                            id_persistent: idValueDestinationUnresolvable0,
+                            value: valueValueDestinationUnresolvable0,
+                            version: versionValueDestinationUnresolvable0
                         }
                     },
                     {
                         column: {
                             name_path: namePathUnresolvable1,
-                            id_persistent: idTagDefUnresolvable1,
-                            id_parent_persistent: idTagDefParentUnresolvable1,
-                            version: versionTagDefUnresolvable1,
+                            id_persistent: idColumnUnresolvable1,
+                            id_parent_persistent: idColumnParentUnresolvable1,
+                            version: versionColumnUnresolvable1,
                             curated: false
                         },
                         value_origin: {
-                            id_persistent: idTagInstanceOriginUnresolvable1,
-                            value: valueTagInstanceOriginUnresolvable1,
-                            version: versionTagInstanceOriginUnresolvable1
+                            id_persistent: idValueOriginUnresolvable1,
+                            value: valueValueOriginUnresolvable1,
+                            version: versionValueOriginUnresolvable1
                         },
                         value_destination: {
-                            id_persistent: idTagInstanceDestinationUnresolvable1,
-                            value: valueTagInstanceDestinationUnresolvable1,
-                            version: versionTagInstanceDestinationUnresolvable1
+                            id_persistent: idValueDestinationUnresolvable1,
+                            value: valueValueDestinationUnresolvable1,
+                            version: versionValueDestinationUnresolvable1
                         }
                     }
                 ]
@@ -343,22 +343,22 @@ test('swap origin and destination', async () => {
         button.click()
     })
     const conflictResolvable1 = newEntityMergeRequestConflict({
-        tagDefinition: {
+        column: {
             namePath: namePathResolvable1,
-            idPersistent: idTagDefResolvable1,
-            idParentPersistent: idTagDefParentResolvable1,
+            idPersistent: idColumnResolvable1,
+            idParentPersistent: idColumnParentResolvable1,
             curated: false,
-            version: versionTagDefResolvable1
+            version: versionColumnResolvable1
         },
-        tagInstanceOrigin: {
-            idPersistent: idTagInstanceOriginResolvable1,
-            value: valueTagInstanceOriginResolvable1,
-            version: versionTagInstanceOriginResolvable1
+        valueOrigin: {
+            idPersistent: idValueOriginResolvable1,
+            value: valueValueOriginResolvable1,
+            version: versionValueOriginResolvable1
         },
-        tagInstanceDestination: {
-            idPersistent: idTagInstanceDestinationResolvable1,
-            value: valueTagInstanceDestinationResolvable1,
-            version: versionTagInstanceDestinationResolvable1
+        valueDestination: {
+            idPersistent: idValueDestinationResolvable1,
+            value: valueValueDestinationResolvable1,
+            version: versionValueDestinationResolvable1
         },
         replacementState: undefined
     })
@@ -367,22 +367,22 @@ test('swap origin and destination', async () => {
             resolvableConflicts: [
                 newRemote(
                     newEntityMergeRequestConflict({
-                        tagDefinition: {
+                        column: {
                             namePath: namePathResolvable0,
-                            idPersistent: idTagDefResolvable0,
-                            idParentPersistent: idTagDefParentResolvable0,
+                            idPersistent: idColumnResolvable0,
+                            idParentPersistent: idColumnParentResolvable0,
                             curated: false,
-                            version: versionTagDefResolvable0
+                            version: versionColumnResolvable0
                         },
-                        tagInstanceOrigin: {
-                            idPersistent: idTagInstanceOriginResolvable0,
-                            value: valueTagInstanceOriginResolvable0,
-                            version: versionTagInstanceOriginResolvable0
+                        valueOrigin: {
+                            idPersistent: idValueOriginResolvable0,
+                            value: valueValueOriginResolvable0,
+                            version: versionValueOriginResolvable0
                         },
-                        tagInstanceDestination: {
-                            idPersistent: idTagInstanceDestinationResolvable0,
-                            value: valueTagInstanceDestinationResolvable0,
-                            version: versionTagInstanceDestinationResolvable0
+                        valueDestination: {
+                            idPersistent: idValueDestinationResolvable0,
+                            value: valueValueDestinationResolvable0,
+                            version: versionValueDestinationResolvable0
                         },
                         replacementState: ReplacementState.REPLACE
                     })
@@ -390,22 +390,22 @@ test('swap origin and destination', async () => {
                 newRemote(conflictResolvable1),
                 newRemote(
                     newEntityMergeRequestConflict({
-                        tagDefinition: {
+                        column: {
                             namePath: namePathResolvable2,
-                            idPersistent: idTagDefResolvable2,
-                            idParentPersistent: idTagDefParentResolvable2,
+                            idPersistent: idColumnResolvable2,
+                            idParentPersistent: idColumnParentResolvable2,
                             curated: false,
-                            version: versionTagDefResolvable2
+                            version: versionColumnResolvable2
                         },
-                        tagInstanceOrigin: {
-                            idPersistent: idTagInstanceOriginResolvable2,
-                            value: valueTagInstanceOriginResolvable2,
-                            version: versionTagInstanceOriginResolvable2
+                        valueOrigin: {
+                            idPersistent: idValueOriginResolvable2,
+                            value: valueValueOriginResolvable2,
+                            version: versionValueOriginResolvable2
                         },
-                        tagInstanceDestination: {
-                            idPersistent: idTagInstanceDestinationResolvable2,
-                            value: valueTagInstanceDestinationResolvable2,
-                            version: versionTagInstanceDestinationResolvable2
+                        valueDestination: {
+                            idPersistent: idValueDestinationResolvable2,
+                            value: valueValueDestinationResolvable2,
+                            version: versionValueDestinationResolvable2
                         },
                         replacementState: ReplacementState.KEEP
                     })
@@ -414,53 +414,53 @@ test('swap origin and destination', async () => {
             unresolvableConflicts: [
                 newRemote(
                     newEntityMergeRequestConflict({
-                        tagDefinition: {
+                        column: {
                             namePath: namePathUnresolvable0,
-                            idPersistent: idTagDefUnresolvable0,
-                            idParentPersistent: idTagDefParentUnresolvable0,
+                            idPersistent: idColumnUnresolvable0,
+                            idParentPersistent: idColumnParentUnresolvable0,
                             curated: false,
-                            version: versionTagDefUnresolvable0
+                            version: versionColumnUnresolvable0
                         },
-                        tagInstanceOrigin: {
-                            idPersistent: idTagInstanceOriginUnresolvable0,
-                            value: valueTagInstanceOriginUnresolvable0,
-                            version: versionTagInstanceOriginUnresolvable0
+                        valueOrigin: {
+                            idPersistent: idValueOriginUnresolvable0,
+                            value: valueValueOriginUnresolvable0,
+                            version: versionValueOriginUnresolvable0
                         },
-                        tagInstanceDestination: {
-                            idPersistent: idTagInstanceDestinationUnresolvable0,
-                            value: valueTagInstanceDestinationUnresolvable0,
-                            version: versionTagInstanceDestinationUnresolvable0
+                        valueDestination: {
+                            idPersistent: idValueDestinationUnresolvable0,
+                            value: valueValueDestinationUnresolvable0,
+                            version: versionValueDestinationUnresolvable0
                         }
                     })
                 ),
                 newRemote(
                     newEntityMergeRequestConflict({
-                        tagDefinition: {
+                        column: {
                             namePath: namePathUnresolvable1,
-                            idPersistent: idTagDefUnresolvable1,
-                            idParentPersistent: idTagDefParentUnresolvable1,
-                            version: versionTagDefUnresolvable1,
+                            idPersistent: idColumnUnresolvable1,
+                            idParentPersistent: idColumnParentUnresolvable1,
+                            version: versionColumnUnresolvable1,
                             curated: false
                         },
-                        tagInstanceOrigin: {
-                            idPersistent: idTagInstanceOriginUnresolvable1,
-                            value: valueTagInstanceOriginUnresolvable1,
-                            version: versionTagInstanceOriginUnresolvable1
+                        valueOrigin: {
+                            idPersistent: idValueOriginUnresolvable1,
+                            value: valueValueOriginUnresolvable1,
+                            version: versionValueOriginUnresolvable1
                         },
-                        tagInstanceDestination: {
-                            idPersistent: idTagInstanceDestinationUnresolvable1,
-                            value: valueTagInstanceDestinationUnresolvable1,
-                            version: versionTagInstanceDestinationUnresolvable1
+                        valueDestination: {
+                            idPersistent: idValueDestinationUnresolvable1,
+                            value: valueValueDestinationUnresolvable1,
+                            version: versionValueDestinationUnresolvable1
                         }
                     })
                 )
             ],
             updated: [newRemote(conflictResolvable1)],
-            updatedTagDefinitionIdMap: { 'id-tag-def-resolvable-1': 0 },
-            resolvableConflictsTagDefinitionIdMap: {
-                'id-tag-def-resolvable-0': 0,
-                'id-tag-def-resolvable-1': 1,
-                'id-tag-def-resolvable-2': 2
+            updatedColumnIdMap: { 'id-column-resolvable-1': 0 },
+            resolvableConflictsColumnIdMap: {
+                'id-column-resolvable-0': 0,
+                'id-column-resolvable-1': 1,
+                'id-column-resolvable-2': 2
             }
         }),
         mergeRequest: newRemote(

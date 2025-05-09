@@ -38,9 +38,9 @@ export function loadColumnDefinitionsContribution(
                 const discardedDefinitionsList: ColumnDefinitionContribution[] = []
                 const json = await rsp.json()
                 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-                json['column_list'].forEach((tagDefinition: any) => {
+                json['column_list'].forEach((column: any) => {
                     const columnDefinition =
-                        parseTagDefinitionContribution(tagDefinition)
+                        parseColumnContribution(column)
                     if (columnDefinition.discard) {
                         discardedDefinitionsList.push(columnDefinition)
                     } else {
@@ -105,7 +105,7 @@ export function patchColumnDefinitionContribution({
             )
             if (rsp.status == 200) {
                 const json = await rsp.json()
-                const changedColumnDefinition = parseTagDefinitionContribution(json)
+                const changedColumnDefinition = parseColumnContribution(json)
 
                 dispatch(
                     patchColumnDefinitionContributionSuccess(changedColumnDefinition)
@@ -185,16 +185,16 @@ function parsePreviewFromApi(
     )
 }
 
-export function parseTagDefinitionContribution(
-    tagDefinition: any //eslint-disable-line @typescript-eslint/no-explicit-any
+export function parseColumnContribution(
+    column: any //eslint-disable-line @typescript-eslint/no-explicit-any
 ): ColumnDefinitionContribution {
-    const name = tagDefinition['name']
-    const idPersistent = tagDefinition['id_persistent']
-    const idExistingPersistent = tagDefinition['id_existing_persistent']
-    const idParentPersistent = tagDefinition['id_parent_persistent']
-    const type = columnTypeMapApiToApp.get(tagDefinition['type'])
-    const indexInFile = tagDefinition['index_in_file']
-    const discard = tagDefinition['discard']
+    const name = column['name']
+    const idPersistent = column['id_persistent']
+    const idExistingPersistent = column['id_existing_persistent']
+    const idParentPersistent = column['id_parent_persistent']
+    const type = columnTypeMapApiToApp.get(column['type'])
+    const indexInFile = column['index_in_file']
+    const discard = column['discard']
     return newColumnDefinitionContribution({
         name: name,
         idPersistent: idPersistent,

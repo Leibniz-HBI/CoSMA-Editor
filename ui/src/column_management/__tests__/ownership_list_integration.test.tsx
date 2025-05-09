@@ -9,24 +9,24 @@ import {
     screen,
     waitFor
 } from '@testing-library/react'
-import { TagType } from '../../column_menu/state'
-import tagManagementReducer from '../slice'
+import { ColumnType } from '../../column_menu/state'
+import columnManagementReducer from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
-import { TagManagementPage } from '../components'
-import { TagManagementState } from '../state'
+import { ColumnManagementPage } from '../components'
+import { ColumnManagementState } from '../state'
 import { newRemote } from '../../util/state'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: { tagManagement: TagManagementState }
+    preloadedState?: { columnManagement: ColumnManagementState }
 }
 export function renderWithProviders(
     ui: React.ReactElement,
     fetchMock: Mock,
     {
         preloadedState = {
-            tagManagement: {
+            columnManagement: {
                 ownershipRequests: newRemote({ petitioned: [], received: [] }),
                 putOwnershipRequest: newRemote(undefined)
             }
@@ -35,7 +35,7 @@ export function renderWithProviders(
     }: ExtendedRenderOptions = {}
 ) {
     const store = configureStore({
-        reducer: { tagManagement: tagManagementReducer },
+        reducer: { columnManagement: columnManagementReducer },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
         preloadedState
@@ -75,17 +75,17 @@ describe('Ownership Request List', () => {
         username: usernameTest1,
         permission_group: 'EDITOR'
     }
-    const idTagDefinitionTest = 'id-tag-def-test'
-    const tagTypeTest = TagType.Inner
-    const namePathTest = ['tag', 'path', 'test']
+    const idColumnTest = 'id-column-test'
+    const columnTypeTest = ColumnType.Inner
+    const namePathTest = ['column', 'path', 'test']
     const ownerTest = 'owner test'
-    const idTagDefinitionTest1 = 'id-tag-def-test1'
-    const tagTypeTest1 = TagType.Inner
-    const namePathTest1 = ['tag', 'path', 'test1']
+    const idColumnTest1 = 'id-column-test1'
+    const columnTypeTest1 = ColumnType.Inner
+    const namePathTest1 = ['column', 'path', 'test1']
     const ownerTest1 = 'owner test 1'
-    const tagDefinitionApiTest = {
-        type: tagTypeTest,
-        id_persistent: idTagDefinitionTest,
+    const columnDefinitionApiTest = {
+        type: columnTypeTest,
+        id_persistent: idColumnTest,
         id_parent_persistent: undefined,
         curated: false,
         name_path: namePathTest,
@@ -106,10 +106,10 @@ describe('Ownership Request List', () => {
                             column: {
                                 name_path: namePathTest,
                                 name: namePathTest[2],
-                                id_persistent: idTagDefinitionTest,
+                                id_persistent: idColumnTest,
                                 version: 4,
                                 owner: ownerTest,
-                                type: tagTypeTest
+                                type: columnTypeTest
                             },
                             id_persistent: idOwnershipTest
                         }
@@ -121,10 +121,10 @@ describe('Ownership Request List', () => {
                             column: {
                                 name_path: namePathTest1,
                                 name: namePathTest1[2],
-                                id_persistent: idTagDefinitionTest1,
+                                id_persistent: idColumnTest1,
                                 version: 4,
                                 owner: ownerTest1,
-                                type: tagTypeTest1
+                                type: columnTypeTest1
                             },
                             id_persistent: idOwnershipTest1
                         }
@@ -136,7 +136,7 @@ describe('Ownership Request List', () => {
     test('get requests', async () => {
         const fetchMock = vi.fn()
         addOwnershipRequestsQuery(fetchMock)
-        renderWithProviders(<TagManagementPage />, fetchMock)
+        renderWithProviders(<ColumnManagementPage />, fetchMock)
         await waitFor(() => {
             const receivedLabel = screen.getByText(namePathTest[2])
             const receivedEntry =
@@ -169,8 +169,8 @@ describe('Ownership Request List', () => {
     test('can accept', async () => {
         const fetchMock = vi.fn()
         addOwnershipRequestsQuery(fetchMock)
-        addResponseSequence(fetchMock, [[200, tagDefinitionApiTest]])
-        renderWithProviders(<TagManagementPage />, fetchMock)
+        addResponseSequence(fetchMock, [[200, columnDefinitionApiTest]])
+        renderWithProviders(<ColumnManagementPage />, fetchMock)
         const acceptButton = await waitFor(() => {
             return screen.getByText('Accept')
         })
@@ -193,7 +193,7 @@ describe('Ownership Request List', () => {
         const fetchMock = vi.fn()
         addOwnershipRequestsQuery(fetchMock)
         addResponseSequence(fetchMock, [[200, {}]])
-        renderWithProviders(<TagManagementPage />, fetchMock)
+        renderWithProviders(<ColumnManagementPage />, fetchMock)
         const acceptButton = await waitFor(() => {
             return screen.getByText('Withdraw')
         })

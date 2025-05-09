@@ -1,4 +1,4 @@
-import { TagDefinition } from '../column_menu/state'
+import { Column } from '../column_menu/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
 export enum UserPermissionGroup {
@@ -34,7 +34,7 @@ export interface UserInfo extends PublicUserInfo {
     email: string
     namesPersonal: string
     namesFamily?: string
-    columns: TagDefinition[]
+    columns: Column[]
 }
 export function newUserInfo({
     username,
@@ -51,7 +51,7 @@ export function newUserInfo({
     namesPersonal: string
     namesFamily?: string
     permissionGroup: UserPermissionGroup
-    columns?: TagDefinition[]
+    columns?: Column[]
 }): UserInfo {
     return {
         username: username,

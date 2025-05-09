@@ -1,20 +1,20 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../store'
 
-function selectTagMergeRequestsState(state: RootState) {
-    return state.tagMergeRequests
+function selectColumnMergeRequestsState(state: RootState) {
+    return state.columnMergeRequests
 }
 const selectRemoteByCategory = createSelector(
-    selectTagMergeRequestsState,
+    selectColumnMergeRequestsState,
     (state) => state.byCategory
 )
 
-export const selectTagMergeRequestsIsLoading = createSelector(
+export const selectColumnMergeRequestsIsLoading = createSelector(
     selectRemoteByCategory,
     (state) => state.isLoading
 )
 
-export const selectTagMergeRequestByCategory = createSelector(
+export const selectColumnMergeRequestByCategory = createSelector(
     selectRemoteByCategory,
     (state) => state.value
 )

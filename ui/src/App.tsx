@@ -15,7 +15,7 @@ import { MergeRequestConflictView } from './merge_request/conflicts/components'
 import { HelpModal, NotificationToastList } from './util/notification/components'
 import { Provider } from 'react-redux'
 import store from './store'
-import { TagManagementPage } from './tag_management/components'
+import { ColumnManagementPage } from './column_management/components'
 import { EntityMergeRequestConflictView } from './merge_request/entity/conflicts/components'
 import { ManagementPage } from './management/components'
 import { contributionStepApiToUiMap } from './contribution/thunks'
@@ -107,7 +107,7 @@ const router = createBrowserRouter([
             },
             {
                 path: 'columns',
-                element: <TagManagementPage />
+                element: <ColumnManagementPage />
             },
             {
                 path: 'management/',

@@ -7,9 +7,9 @@ import {
     CosmaeLoading,
     CosmaeCard
 } from '../../util/components/misc'
-import { TagDefinition } from '../../column_menu/state'
+import { Column } from '../../column_menu/state'
 import {
-    TagCreateForm,
+    ColumnCreateForm,
     ColumnTypeCreateFormProps
 } from '../../column_menu/components/form'
 import { useDispatch, useSelector } from 'react-redux'
@@ -28,8 +28,8 @@ import {
     selectPreview,
     selectSelectedColumnDefinition
 } from './selectors'
-import { selectTagSelectionLoading } from '../../column_menu/selectors'
-import { loadTagDefinitionHierarchy } from '../../column_menu/thunks'
+import { selectColumnSelectionLoading } from '../../column_menu/selectors'
+import { loadColumnHierarchy } from '../../column_menu/thunks'
 import { RemoteInterface } from '../../util/state'
 import { selectContribution } from '../selectors'
 import { useNavigate } from 'react-router-dom'
@@ -42,7 +42,7 @@ export function ColumnDefinitionStep() {
     const definitions = useAppSelector(selectColumnDefinitionsContributionTriple)
     const selectedColumnDefinition = useAppSelector(selectSelectedColumnDefinition)
     const createTabSelected = useAppSelector(selectCreateTabSelected)
-    const isLoadingTags = useAppSelector(selectTagSelectionLoading)
+    const isLoadingColumns = useAppSelector(selectColumnSelectionLoading)
     const contributionCandidate = useAppSelector(selectContribution)
     useEffect(() => {
         if (contributionCandidate.value != undefined && !definitions.isLoading) {
@@ -51,8 +51,8 @@ export function ColumnDefinitionStep() {
                     contributionCandidate.value.idPersistent
                 )
             ).then(async () => {
-                if (!isLoadingTags) {
-                    await dispatch(loadTagDefinitionHierarchy({ expand: true }))
+                if (!isLoadingColumns) {
+                    await dispatch(loadColumnHierarchy({ expand: true }))
                 }
             })
         }
@@ -223,7 +223,8 @@ export function ContributionColumnAssignmentForm({
             >
                 <div className="ps-2 flex-grow-0 flex-shrink-0 d-block">
                     <span key="hint-note">
-                        Please select the tag that should receive the data of column "
+                        Please select the column that should receive the data of column
+                        "
                     </span>
                     <span key="hint-column-definition">{columnDefinition.name}":</span>
                 </div>
@@ -241,7 +242,7 @@ export function ContributionColumnAssignmentForm({
                         onClick={() => dispatch(setColumnDefinitionFormTab(true))}
                         variant="outline-primary"
                     >
-                        Create new tag
+                        Create new column
                     </Button>
                 </Row>
             </div>
@@ -261,7 +262,7 @@ export function ContributionColumnAssignmentForm({
                 contentClassName="vh-95 d-flex flex-column bg-secondary flex-sm-wrap flex-md-nowrap"
             >
                 <Modal.Header closeButton className="overflow-hidden text-dark">
-                    <Modal.Title>Create a new tag</Modal.Title>
+                    <Modal.Title>Create a new column</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="bg-secondary d-contents">
                     <NewColumnModalBody />
@@ -280,19 +281,19 @@ export function ExistingColumnForm({
     idContributionPersistent: string
 }) {
     const dispatch = useAppDispatch()
-    function assignColumnCallback(idExistingTagDefPersistent: string) {
+    function assignColumnCallback(idExistingColumnPersistent: string) {
         dispatch(
             patchColumnDefinitionContribution({
                 idPersistent: columnDefinitionContribution.idPersistent,
                 idContributionPersistent,
-                idExistingPersistent: idExistingTagDefPersistent
+                idExistingPersistent: idExistingColumnPersistent
             })
         )
     }
-    const tagIsLoading: boolean = useSelector(selectTagSelectionLoading)
+    const columnIsLoading: boolean = useSelector(selectColumnSelectionLoading)
     return (
         <div className="ps-1 pe-1 flex-column d-flex flex-grow-1 overflow-hidden">
-            {tagIsLoading ? (
+            {columnIsLoading ? (
                 <CosmaeLoading />
             ) : (
                 <ColumnSelector
@@ -332,9 +333,9 @@ function AssignmentStatusButton({
     columnDefinitionContribution,
     assignColumnCallback
 }: {
-    columnDefinitionExisting: TagDefinition
+    columnDefinitionExisting: Column
     columnDefinitionContribution: ColumnDefinitionContribution
-    assignColumnCallback: (idTagDefinitionExistingPersistent: string) => void
+    assignColumnCallback: (idColumnExistingPersistent: string) => void
 }) {
     const paddingClass = 'pt-1 pb-1 ps-2 pe-2'
     if (
@@ -355,18 +356,18 @@ function AssignmentStatusButton({
 }
 
 export function NewColumnModalBody() {
-    const isLoading = useSelector(selectTagSelectionLoading)
+    const isLoading = useSelector(selectColumnSelectionLoading)
     const additionalEntries = [{ idPersistent: '', name: 'No parent' }]
     if (isLoading) {
         return <CosmaeLoading />
     }
     return (
-        <TagCreateForm>
+        <ColumnCreateForm>
             {(columnTypeCreateFormProps: ColumnTypeCreateFormProps) => (
                 <ColumnSelector
                     allowEdit={false}
                     additionalEntries={additionalEntries}
-                    mkTailElement={(columnDefinition: TagDefinition) => (
+                    mkTailElement={(columnDefinition: Column) => (
                         <Form.Check
                             type="radio"
                             name="parent"
@@ -385,7 +386,7 @@ export function NewColumnModalBody() {
                     )}
                 />
             )}
-        </TagCreateForm>
+        </ColumnCreateForm>
     )
 }
 
@@ -441,14 +442,11 @@ export function PreviewConnector({
     idExistingPersistent: string | undefined
 }) {
     const dispatch = useAppDispatch()
-    useEffect(
-        () => {
-            if (idColumnPersistent !== undefined) {
-                dispatch(loadPreview(idContributionPersistent, idColumnPersistent))
-            }
-        },
-        [idColumnPersistent, idContributionPersistent, idExistingPersistent]
-    )
+    useEffect(() => {
+        if (idColumnPersistent !== undefined) {
+            dispatch(loadPreview(idContributionPersistent, idColumnPersistent))
+        }
+    }, [idColumnPersistent, idContributionPersistent, idExistingPersistent])
     return <PreviewComponent />
 }
 
@@ -474,7 +472,7 @@ export function PreviewComponent() {
             <Col xs={6} className="h-100">
                 <CosmaeCard
                     className="h-100"
-                    header="Values of Existing Tag"
+                    header="Values of Existing Column"
                     bodyClassName="h-100 d-flex flex-column"
                 >
                     <PreviewColumn values={preview.value.destinationValues} />

@@ -3,11 +3,11 @@
  */
 import { vi, Mock } from 'vitest'
 import {
-    TagDefinition,
-    TagSelectionState,
-    TagType,
-    newTagDefinition,
-    newTagSelectionState
+    Column,
+    ColumnSelectionState,
+    ColumnType,
+    newColumn,
+    newColumnSelectionState
 } from '../../column_menu/state'
 import { UserPermissionGroup, newPublicUserInfo, newUserInfo } from '../../user/state'
 import { TableState, newTableState } from '../../table/state'
@@ -25,7 +25,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { TableSelectionState, tableSelectionSlice } from '../../table/selection/slice'
-import { tagSelectionSlice } from '../../column_menu/slice'
+import { columnSelectionReducer } from '../../column_menu/slice'
 import { newRemote } from '../../util/state'
 import {
     EditSessionParticipantType,
@@ -42,7 +42,7 @@ import {
     newEntityDetailsState
 } from '../../entity/state'
 import { EntityDetails } from '../components'
-import { newTagInstance } from '../../contribution/entity/state'
+import { newValue } from '../../contribution/entity/state'
 import { AuthState, newAuthState } from '../../auth/state'
 import { authReducer } from '../../auth/slice'
 
@@ -73,15 +73,15 @@ test('success', async () => {
                         disabled: false,
                         justificationTxt: justification
                     }),
-                    tagInstanceList: [
-                        newTagInstance(idEntityPersistent, idTagDefPersistent, {
+                    valueList: [
+                        newValue(idEntityPersistent, idColumnPersistent, {
                             idPersistent: idInstance,
                             value: value0,
                             version: versionInstance0,
                             isExisting: undefined,
                             isRequested: true
                         }),
-                        newTagInstance(idEntityPersistent, idTagDefPersistent1, {
+                        newValue(idEntityPersistent, idColumnPersistent1, {
                             idPersistent: idInstance1,
                             value: value1,
                             version: versionInstance1,
@@ -141,8 +141,8 @@ const test_entity_rsp = {
 }
 const columnNameTest = 'column name test'
 const columnNameTest1 = 'column name test 1'
-const idTagDefPersistent = 'column_id_test'
-const idTagDefPersistent1 = 'column_id_test1'
+const idColumnPersistent = 'column_id_test'
+const idColumnPersistent1 = 'column_id_test1'
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -182,14 +182,14 @@ function addDetailsResponseSequence(fetchMock: Mock) {
                     {
                         id_persistent: idInstance,
                         id_entity_persistent: idEntityPersistent,
-                        id_column_persistent: idTagDefPersistent,
+                        id_column_persistent: idColumnPersistent,
                         value: value0,
                         version: versionInstance0
                     },
                     {
                         id_persistent: idInstance1,
                         id_entity_persistent: idEntityPersistent,
-                        id_column_persistent: idTagDefPersistent1,
+                        id_column_persistent: idColumnPersistent1,
                         value: value1,
                         version: versionInstance1
                     }
@@ -203,29 +203,29 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         auth: AuthState
         entityDetails: EntityDetailsState
         editSession: EditSessionState
     }
 }
 
-const tagDefTest: TagDefinition = newTagDefinition({
+const columnTest: Column = newColumn({
     namePath: [columnNameTest],
-    idPersistent: idTagDefPersistent,
+    idPersistent: idColumnPersistent,
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 2,
     hidden: false
 })
 
-const tagDefTest1: TagDefinition = newTagDefinition({
+const columnTest1: Column = newColumn({
     namePath: [columnNameTest1],
-    idPersistent: idTagDefPersistent1,
+    idPersistent: idColumnPersistent1,
     idParentPersistent: undefined,
-    columnType: TagType.String,
+    columnType: ColumnType.String,
     curated: false,
     owner: userTest,
     version: 4,
@@ -240,10 +240,10 @@ export function renderWithProviders(
             notification: newNotificationManager({}),
             table: newTableState({}),
             tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            tagSelection: newTagSelectionState({
-                tagDefinitionsByIdPersistent: {
-                    [idTagDefPersistent]: newRemote(tagDefTest),
-                    [idTagDefPersistent1]: newRemote(tagDefTest1)
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
+                    [idColumnPersistent]: newRemote(columnTest),
+                    [idColumnPersistent1]: newRemote(columnTest1)
                 }
             }),
             auth: newAuthState({
@@ -252,7 +252,7 @@ export function renderWithProviders(
                         ...userTest,
                         email: 'mail@test.org',
                         namesPersonal: 'names personal',
-                        columns: [tagDefTest]
+                        columns: [columnTest]
                     })
                 )
             }),
@@ -282,7 +282,7 @@ export function renderWithProviders(
         reducer: {
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             table: tableReducer,
             auth: authReducer,
             entityDetails: entityDetailsReducer,

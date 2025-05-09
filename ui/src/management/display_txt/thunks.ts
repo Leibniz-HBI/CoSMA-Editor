@@ -1,20 +1,20 @@
-import { TagDefinition } from '../../column_menu/state'
-import { parseColumnDefinitionsFromApi } from '../../column_menu/thunks'
+import { Column } from '../../column_menu/state'
+import { parseColumnsFromApi } from '../../column_menu/thunks'
 import { config } from '../../config'
 import { addError } from '../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
 import { ThunkWithFetch } from '../../util/type'
 import {
-    appendTagDefinition,
-    getDisplayTxtTagDefinitionsError,
-    getDisplayTxtTagDefinitionsStart,
-    getDisplayTxtTagDefinitionsSuccess,
-    removeTagDefinition
+    appendColumn,
+    getDisplayTxtColumnsError,
+    getDisplayTxtColumnsStart,
+    getDisplayTxtColumnsSuccess,
+    removeColumn
 } from './slice'
 
-export function getDisplayTxtTagDefinitions(): ThunkWithFetch<void> {
+export function getDisplayTxtColumns(): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(getDisplayTxtTagDefinitionsStart())
+        dispatch(getDisplayTxtColumnsStart())
         try {
             const rsp = await fetch(config.api_path + '/manage/display_txt/order', {
                 credentials: 'include'
@@ -22,23 +22,21 @@ export function getDisplayTxtTagDefinitions(): ThunkWithFetch<void> {
             const json = await rsp.json()
             if (rsp.status != 200) {
                 dispatch(addError(errorMessageFromApi(json)))
-                dispatch(getDisplayTxtTagDefinitionsError())
+                dispatch(getDisplayTxtColumnsError())
             } else {
-                const tagDefinitions = json['column_list'].map(
-                    (tagDefJson: unknown) => parseColumnDefinitionsFromApi(tagDefJson)
+                const columnList = json['column_list'].map((columnJson: unknown) =>
+                    parseColumnsFromApi(columnJson)
                 )
-                dispatch(getDisplayTxtTagDefinitionsSuccess(tagDefinitions))
+                dispatch(getDisplayTxtColumnsSuccess(columnList))
             }
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
-            dispatch(getDisplayTxtTagDefinitionsError())
+            dispatch(getDisplayTxtColumnsError())
         }
     }
 }
 
-export function appendTagDefinitionThunk(
-    tagDefinition: TagDefinition
-): ThunkWithFetch<void> {
+export function appendColumnThunk(column: Column): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         try {
             const rsp = await fetch(
@@ -46,13 +44,13 @@ export function appendTagDefinitionThunk(
                 {
                     credentials: 'include',
                     body: JSON.stringify({
-                        id_column_persistent: tagDefinition.idPersistent
+                        id_column_persistent: column.idPersistent
                     }),
                     method: 'POST'
                 }
             )
             if (rsp.status == 200) {
-                dispatch(appendTagDefinition(tagDefinition))
+                dispatch(appendColumn(column))
             } else {
                 const json = await rsp.json()
                 dispatch(addError(errorMessageFromApi(json)))
@@ -63,21 +61,19 @@ export function appendTagDefinitionThunk(
     }
 }
 
-export function removeTagDefinitionThunk(
-    tagDefinition: TagDefinition
-): ThunkWithFetch<void> {
+export function removeColumnThunk(column: Column): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         try {
             const rsp = await fetch(
                 config.api_path +
-                    `/manage/display_txt/order/${tagDefinition.idPersistent}`,
+                    `/manage/display_txt/order/${column.idPersistent}`,
                 {
                     credentials: 'include',
                     method: 'DELETE'
                 }
             )
             if (rsp.status == 200) {
-                dispatch(removeTagDefinition(tagDefinition))
+                dispatch(removeColumn(column))
             } else {
                 const json = await rsp.json()
                 dispatch(addError(errorMessageFromApi(json)))

@@ -25,8 +25,11 @@ import {
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { EntitiesStep } from '../../components'
-import { TagSelectionState, newTagSelectionState } from '../../../../column_menu/state'
-import { tagSelectionSlice } from '../../../../column_menu/slice'
+import {
+    ColumnSelectionState,
+    newColumnSelectionState
+} from '../../../../column_menu/state'
+import { columnSelectionReducer } from '../../../../column_menu/slice'
 import { ContributionStep, newContribution } from '../../../state'
 import userEvent from '@testing-library/user-event'
 import {
@@ -76,7 +79,7 @@ test('add searched entity', async () => {
                     idPersistent: 'id-entity-1-0',
                     displayTxt: 'entity 1 match 0',
                     displayTxtDetails: 'Display Text',
-                    idMatchTagDefinitionPersistentList: [],
+                    idMatchColumnPersistentList: [],
                     similarity: 0.01,
                     version: 0,
                     cellContents: []
@@ -85,7 +88,7 @@ test('add searched entity', async () => {
                     idPersistent: 'id-entity-1-1',
                     displayTxt: 'entity 1 match 1',
                     displayTxtDetails: 'Display Text',
-                    idMatchTagDefinitionPersistentList: [],
+                    idMatchColumnPersistentList: [],
                     similarity: 0.011,
                     version: 0,
                     cellContents: []
@@ -101,7 +104,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         contributionEntity: ContributionEntityState
         contribution: ContributionState
-        tagSelection: TagSelectionState
+        columnSelection: ColumnSelectionState
         entityDetails: EntityDetailsState
         table: TableState
     }
@@ -145,7 +148,7 @@ export function renderWithProviders(
                     })
                 )
             }),
-            tagSelection: newTagSelectionState({}),
+            columnSelection: newColumnSelectionState({}),
             entityDetails: newEntityDetailsState({
                 entityByIdPersistentMap: {
                     [idEntitySearch0]: newRemote(
@@ -177,7 +180,7 @@ export function renderWithProviders(
         reducer: {
             contributionEntity: contributionEntitySlice.reducer,
             contribution: contributionSlice.reducer,
-            tagSelection: tagSelectionSlice.reducer,
+            columnSelection: columnSelectionReducer,
             entityDetails: entityDetailsReducer,
             table: tableReducer
         },
@@ -260,10 +263,10 @@ function mkMatches(
         ])
     )
 }
-const idTagDef0 = 'id-tag-test-0'
-const nameTagDef0 = 'tag def 0'
-const idTagDef1 = 'id-tag-test-1'
-const nameTagDef1 = 'tag def 1'
+const idColumn0 = 'id-column-test-0'
+const nameColumn0 = 'column def 0'
+const idColumn1 = 'id-column-test-1'
+const nameColumn1 = 'column def 1'
 function initialResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [200, { entity_list: personList }],
@@ -273,17 +276,17 @@ function initialResponses(fetchMock: Mock) {
             {
                 column_list: [
                     {
-                        id_persistent: idTagDef0,
-                        name_path: [nameTagDef0],
-                        name: nameTagDef0,
+                        id_persistent: idColumn0,
+                        name_path: [nameColumn0],
+                        name: nameColumn0,
                         curated: true,
                         version: 0,
                         type: 'STRING'
                     },
                     {
-                        id_persistent: idTagDef1,
-                        name_path: [nameTagDef1],
-                        name: nameTagDef1,
+                        id_persistent: idColumn1,
+                        name_path: [nameColumn1],
+                        name: nameColumn1,
                         curated: true,
                         version: 0,
                         type: 'STRING'
@@ -295,7 +298,7 @@ function initialResponses(fetchMock: Mock) {
         [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
         [200, { matches: mkMatches(personList.slice(50)) }],
-        // empty response because no match tags.
+        // empty response because no match columns.
         [200, { value_responses: [] }]
     ])
 }

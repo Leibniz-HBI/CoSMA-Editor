@@ -1,17 +1,17 @@
 import { PreloadedState, combineReducers, configureStore } from '@reduxjs/toolkit'
 import { notificationReducer } from './util/notification/slice'
 import { userSlice } from './user/slice'
-import { tagManagementSlice } from './tag_management/slice'
+import { columnManagementReducer} from './column_management/slice'
 import { contributionColumnDefinitionSlice } from './contribution/columns/slice'
 import { contributionEntitySlice } from './contribution/entity/slice'
 import { contributionSlice } from './contribution/slice'
-import { tagSelectionSlice } from './column_menu/slice'
+import { columnSelectionReducer } from './column_menu/slice'
 import { tableSelectionSlice } from './table/selection/slice'
 import { entityMergeRequestConflictSlice } from './merge_request/entity/conflicts/slice'
 import { entityMergeRequestsReducer } from './merge_request/entity/slice'
 import { displayTxtManagementReducer } from './management/display_txt/slice'
-import { tagMergeRequestsReducer } from './merge_request/slice'
-import { tagMergeRequestConflictsReducer } from './merge_request/conflicts/slice'
+import { columnMergeRequestsReducer } from './merge_request/slice'
+import { columnMergeRequestConflictsReducer } from './merge_request/conflicts/slice'
 import { commentsReducer } from './comments/slice'
 import { tableReducer } from './table/slice'
 import { editSessionReducer } from './session/slice'
@@ -22,15 +22,15 @@ import { authReducer } from './auth/slice'
 const rootReducer = combineReducers({
     notification: notificationReducer,
     user: userSlice.reducer,
-    tagManagement: tagManagementSlice.reducer,
-    tagSelection: tagSelectionSlice.reducer,
+    columnManagement: columnManagementReducer,
+    columnSelection: columnSelectionReducer,
     contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
     contributionEntity: contributionEntitySlice.reducer,
     contribution: contributionSlice.reducer,
     tableSelection: tableSelectionSlice.reducer,
     entityMergeRequests: entityMergeRequestsReducer,
-    tagMergeRequests: tagMergeRequestsReducer,
-    tagMergeRequestConflicts: tagMergeRequestConflictsReducer,
+    columnMergeRequests: columnMergeRequestsReducer,
+    columnMergeRequestConflicts: columnMergeRequestConflictsReducer,
     entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
     entityDetails: entityDetailsReducer,
     displayTxtManagement: displayTxtManagementReducer,

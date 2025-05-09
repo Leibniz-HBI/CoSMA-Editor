@@ -54,14 +54,14 @@ const tableSlice = createSlice({
             }
         },
         setColumnLoading(state: TableState, action: PayloadAction<string>) {
-            const idTagDefinitionPersistent = action.payload
-            const columnIdx = state.columnIndices[idTagDefinitionPersistent]
+            const idColumnPersistent = action.payload
+            const columnIdx = state.columnIndices[idColumnPersistent]
             const columnState = newColumnState({
-                idTagDefinitionPersistent: idTagDefinitionPersistent,
+                idColumnPersistent: idColumnPersistent,
                 cellContents: newRemote([], true)
             })
             if (columnIdx === undefined) {
-                state.columnIndices[idTagDefinitionPersistent] =
+                state.columnIndices[idColumnPersistent] =
                     state.columnStates.length
                 state.columnStates.push(columnState)
             } else {
@@ -78,18 +78,18 @@ const tableSlice = createSlice({
             state: TableState,
             action: PayloadAction<{ columnIdx: number; bounds: Rectangle }>
         ) {
-            state.selectedTagDefinitionId =
-                state.columnStates[action.payload.columnIdx].idTagDefinitionPersistent
+            state.selectedColumnId =
+                state.columnStates[action.payload.columnIdx].idColumnPersistent
             state.selectedColumnHeaderBounds = action.payload.bounds
         },
         hideHeaderMenu(state: TableState) {
             clearSelectedColumn(state)
         },
         removeSelectedColumn(state: TableState) {
-            if (state.selectedTagDefinitionId === undefined) {
+            if (state.selectedColumnId === undefined) {
                 state.selectedColumnHeaderBounds = undefined
             } else {
-                removeColumnByIdPersistentHelper(state, state.selectedTagDefinitionId)
+                removeColumnByIdPersistentHelper(state, state.selectedColumnId)
             }
         },
         showEntityJustification(state: TableState) {
@@ -97,7 +97,7 @@ const tableSlice = createSlice({
                 return
             }
             const columnState = newColumnState({
-                idTagDefinitionPersistent: justificationColumnId,
+                idColumnPersistent: justificationColumnId,
                 cellContents: newRemote([])
             })
             state.columnStates.splice(
@@ -132,10 +132,10 @@ const tableSlice = createSlice({
             state.columnStates[action.payload.endIdx] =
                 state.columnStates[action.payload.startIdx]
             state.columnIndices[
-                state.columnStates[action.payload.endIdx].idTagDefinitionPersistent
+                state.columnStates[action.payload.endIdx].idColumnPersistent
             ] = action.payload.endIdx
             state.columnStates[action.payload.startIdx] = tmp
-            state.columnIndices[tmp.idTagDefinitionPersistent] = action.payload.startIdx
+            state.columnIndices[tmp.idColumnPersistent] = action.payload.startIdx
         },
         setLoadDataError(state: TableState) {
             state.isLoading = false
@@ -162,11 +162,11 @@ const tableSlice = createSlice({
             }
             state.columnStates[idxColumn].cellContents.value[idxEntity] = [value]
         },
-        tagChangeOwnerShipShow(state: TableState, action: PayloadAction<string>) {
-            state.ownershipChangeTagDefinitionIdPersistent = action.payload
+        columnChangeOwnershipShow(state: TableState, action: PayloadAction<string>) {
+            state.ownershipChangeColumnIdPersistent = action.payload
         },
-        tagChangeOwnershipHide(state: TableState) {
-            state.ownershipChangeTagDefinitionIdPersistent = undefined
+        columnChangeOwnershipHide(state: TableState) {
+            state.ownershipChangeColumnIdPersistent = undefined
         },
         showEntityAdd(state: TableState) {
             state.showEntityAddDialog = true
@@ -277,7 +277,7 @@ export const tableReducer = tableSlice.reducer
 
 function generateColumnStateIndices(state: TableState) {
     state.columnIndices = Object.fromEntries(
-        state.columnStates.map((state, idx) => [state.idTagDefinitionPersistent, idx])
+        state.columnStates.map((state, idx) => [state.idColumnPersistent, idx])
     )
 }
 
@@ -294,7 +294,7 @@ function removeColumnByIdPersistentHelper(state: TableState, idPersistent: strin
 }
 function clearSelectedColumn(state: TableState) {
     state.selectedColumnHeaderBounds = undefined
-    state.selectedTagDefinitionId = undefined
+    state.selectedColumnId = undefined
 }
 
 export const {
@@ -319,8 +319,8 @@ export const {
     submitValuesError,
     submitValuesStart,
     submitValuesSuccess,
-    tagChangeOwnerShipShow,
-    tagChangeOwnershipHide,
+    columnChangeOwnershipShow,
+    columnChangeOwnershipHide,
     toggleEntityMergingModal,
     showEntityJustification,
     toggleSearch,

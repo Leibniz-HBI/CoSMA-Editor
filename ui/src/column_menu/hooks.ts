@@ -2,67 +2,67 @@ import { useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { RootState } from '../store'
 import {
-    makeSelectTagDefinitionByIdPersistent,
-    makeSelectTagDefinitionsByIdPersistentList
+    makeSelectColumnByIdPersistent,
+    makeSelectColumnByIdPersistentList
 } from './selectors'
 import { newRemote } from '../util/state'
-import { getTagDefinitionDetailsThunk } from './thunks'
+import { getColumnDetailsThunk } from './thunks'
 
-export function useTagDefinition(idPersistent: string) {
-    const selectTagDefinitionByIdPersistent = useMemo(
-        makeSelectTagDefinitionByIdPersistent,
+export function useColumn(idPersistent: string) {
+    const selectColumnByIdPersistent = useMemo(
+        makeSelectColumnByIdPersistent,
         []
     )
-    const selectTagDefinition = (state: RootState) =>
-        selectTagDefinitionByIdPersistent(state, idPersistent)
-    const remoteTagDefinition = useAppSelector(selectTagDefinition)
+    const selectColumn = (state: RootState) =>
+        selectColumnByIdPersistent(state, idPersistent)
+    const remoteColumn = useAppSelector(selectColumn)
     const dispatch = useAppDispatch()
     useEffect(
         () => {
             if (
-                remoteTagDefinition === undefined ||
-                (remoteTagDefinition.value === undefined &&
-                    !remoteTagDefinition.isLoading)
+                remoteColumn === undefined ||
+                (remoteColumn.value === undefined &&
+                    !remoteColumn.isLoading)
             ) {
-                dispatch(getTagDefinitionDetailsThunk([idPersistent]))
+                dispatch(getColumnDetailsThunk([idPersistent]))
             }
         },
         //eslint-disable-next-line react-hooks/exhaustive-deps
         [idPersistent]
     )
-    return remoteTagDefinition ?? newRemote(undefined)
+    return remoteColumn ?? newRemote(undefined)
 }
 
-export function useTagDefinitionList(idPersistentList: string[]) {
-    const selectTagDefinitionsByIdPersistentList = useMemo(
-        makeSelectTagDefinitionsByIdPersistentList,
+export function useColumnDefinitionList(idPersistentList: string[]) {
+    const selectColumnDefinitionsByIdPersistentList = useMemo(
+        makeSelectColumnByIdPersistentList,
         []
     )
-    const selectTagDefinition = (state: RootState) =>
-        selectTagDefinitionsByIdPersistentList(state, idPersistentList)
-    const remoteTagDefinitionList = useAppSelector(selectTagDefinition)
+    const selectColumnDefinition = (state: RootState) =>
+        selectColumnDefinitionsByIdPersistentList(state, idPersistentList)
+    const remoteColumnDefinitionList = useAppSelector(selectColumnDefinition)
     const dispatch = useAppDispatch()
     useEffect(
         () => {
             const requestList = []
             for (let idx = 0; idx < idPersistentList.length; idx++) {
-                const remoteTagDefinition = remoteTagDefinitionList[idx]
+                const remoteColumnDefinition = remoteColumnDefinitionList[idx]
                 if (
-                    remoteTagDefinition === undefined ||
-                    (remoteTagDefinition.value === undefined &&
-                        !remoteTagDefinition.isLoading)
+                    remoteColumnDefinition === undefined ||
+                    (remoteColumnDefinition.value === undefined &&
+                        !remoteColumnDefinition.isLoading)
                 ) {
                     requestList.push(idPersistentList[idx])
                 }
             }
             if (requestList.length > 0) {
-                dispatch(getTagDefinitionDetailsThunk(requestList))
+                dispatch(getColumnDetailsThunk(requestList))
             }
         },
         //eslint-disable-next-line react-hooks/exhaustive-deps
         [idPersistentList]
     )
-    return remoteTagDefinitionList.map(
-        (remoteTagDefinition) => remoteTagDefinition ?? newRemote(undefined)
+    return remoteColumnDefinitionList.map(
+        (remoteColumnDefinition) => remoteColumnDefinition ?? newRemote(undefined)
     )
 }
