@@ -26,6 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 
 CONTRIBUTION_DIRECTORY = "/srv/cosmae/contributions"
+DOMAIN_NAME = ""
 
 
 ###################################################################
@@ -56,7 +57,7 @@ def get_docker_compose_secret(secret_name):
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "cosmae-poc.duckdns.org"]
 
 
-CORS_ALLOWED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = [DOMAIN_NAME]
 
 SESSION_COOKIE_SECURE = True
 
@@ -214,6 +215,7 @@ CACHES = {
 HOST_PIPE_PATH = "/srv/cosmae/user_pipe"
 
 IS_UNITTEST = False
+DEBUG = False
 
 ORCID_CLIENT_ID = get_docker_compose_secret("orcid_client_id")
 ORCID_CLIENT_SECRET = get_docker_compose_secret("orcid_client_secret")
@@ -222,8 +224,26 @@ HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
 SOCIALACCOUNT_ONLY = False
-ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
+
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": DOMAIN_NAME + "/account/verify-email/{key}",
+    "account_signup": DOMAIN_NAME,
+    "password_reset_url": DOMAIN_NAME,
+    # Key placeholders are automatically populated. You are free to adjust this
+    # to your own needs, e.g.
+    #
+    # "https://app.project.org/account/email/verify-email?token={key}",
+    #     "account_reset_password": "https://app.project.org/account/password/reset",
+    #     "account_reset_password_from_key":
+    #         "https://app.project.org/account/password/reset/key/{key}",
+    #     "account_signup": "https://app.project.org/account/signup",
+    #     # Fallback in case the state containing the `next` URL is lost and the handshake
+    #     # with the third-party provider fails.
+    #     "socialaccount_login_error": "https://app.project.org/account/provider/callback",
+}
 
 EMAIL_HOST = get_docker_compose_secret("email_host")
 EMAIL_PORT = 587

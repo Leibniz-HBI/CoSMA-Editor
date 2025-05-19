@@ -1,9 +1,9 @@
 FROM python:3.11
-RUN apt-get update && apt-get install -y  gcc g++ libpq-dev whois
+RUN apt-get update && apt-get install -y  gcc g++ libpq-dev whois postgresql-client-15
 
 ARG POETRY_VIRTUALENVS_CREATE=false
 RUN pip install --upgrade pip poetry --no-cache-dir && \
-		pip install uvicorn gunicorn "psycopg[c]==3.1.9" --no-cache-dir
+	pip install uvicorn gunicorn "psycopg[c]==3.2.5" --no-cache-dir
 WORKDIR /cosmae
 COPY pyproject.toml poetry.lock /cosmae/
 RUN poetry install --without=dev --no-root

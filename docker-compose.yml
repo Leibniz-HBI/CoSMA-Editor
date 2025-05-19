@@ -11,6 +11,19 @@ secrets:
     external: true
   cosmae_redis_conf:
     external: true
+  orcid_client_id:
+    external: true
+  orcid_client_secret:
+    external: true
+  email_host:
+    external: true
+  email_host_user:
+    external: true
+  email_host_password:
+    external: true
+  email_app_password:
+    external: true
+
 volumes:
   cosmae_db_volume:
   cosmae_redis_volume:
@@ -42,6 +55,12 @@ services:
       - cosmae_db_user
       - cosmae_db_password
       - cosmae_redis_password
+      - orcid_client_id
+      - orcid_client_secret
+      - email_host
+      - email_host_user
+      - email_host_password
+      - email_app_password
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /srv/cosmae/contributions:/srv/cosmae/contributions
@@ -69,8 +88,14 @@ services:
       - cosmae_db_user
       - cosmae_db_password
       - cosmae_redis_password
+      - orcid_client_id
+      - orcid_client_secret
+      - email_host
+      - email_host_user
+      - email_host_password
+      - email_app_password
     volumes:
-      - /srv/cosmae/contributions:/srv/cosmae/contributions
+      - /srv/cosmae:/srv/cosmae/
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_django
     # command: [
