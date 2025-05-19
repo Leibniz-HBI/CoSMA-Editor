@@ -61,11 +61,12 @@ you can either use the `quick_setup.py` script for setting up secrets or registe
   * `email_host_app_password` containing the password for the SMTP host
 3. From the base directory of the repository run `docker compose build` to build the containers.
 4. Run `docker compose push` to push the images to the registry.
-5. Create empty directories:
+5. Create empty directories using sudo:
     * `/srv/cosmae/ssl`
     * `/srv/cosmae/contributions`
     * `/srv/cosmae/acme-challenge`
-6. Set your user as owner of the directories: `chown -R ${USER} /srv/cosmae`
+    * `/srv/cosmae/user_home`
+6. Set your user as owner of the `acme-challenge` folder: `chown -R ${USER} /srv/cosmae/acme-challenge`
 7. Add a SSL certificate (`cosmae.crt`) and key (`cosmae.key`) while being in directory `/srv/cosmae/ssl`.
 you can create a temporary insecure certificate and key using
 ```
