@@ -67,7 +67,8 @@ you can either use the `quick_setup.py` script for setting up secrets or registe
     * `/srv/cosmae/acme-challenge`
     * `/srv/cosmae/user_home`
 6. Set your user as owner of the `acme-challenge` folder: `chown -R ${USER} /srv/cosmae/acme-challenge`
-7. Add a SSL certificate (`cosmae.crt`) and key (`cosmae.key`) while being in directory `/srv/cosmae/ssl`.
+7. Set the `DOMAIN_NAME` variable in `django_project/settings/settings_production.py` to the correct URL.
+8. Add a SSL certificate (`cosmae.crt`) and key (`cosmae.key`) while being in directory `/srv/cosmae/ssl`.
 you can create a temporary insecure certificate and key using
 ```
 openssl req -x509 -out /srv/cosmae/ssl/cosmae.crt -keyout /srv/cosmae/ssl/cosmae.key \
@@ -76,10 +77,10 @@ openssl req -x509 -out /srv/cosmae/ssl/cosmae.crt -keyout /srv/cosmae/ssl/cosmae
    printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\n[EXT]\nsubjectAltName=DNS:localhost\nkeyUsage=digitalSignature\nextendedKeyUsage=serverAuth")
 ```
 For proper credentials please use [certbot](https://certbot.eff.org/) or [getssl](https://github.com/srvrco/getssl)
-8. Run CoSMA-Editor using `docker stack deploy --compose-file docker-compose.yml cosmae`
-9. Check that CoSMA-Editor is now accessible over HTTPS's default port 443 on your machine using a browser.
-10. Navigate to `http:127.0.0.1:8000` and login using the username `admin` and the password `changeme`.
-11. Change the password and possibly the username in the django admin UI.
+9. Run CoSMA-Editor using `docker stack deploy --compose-file docker-compose.yml cosmae`
+10. Check that CoSMA-Editor is now accessible over HTTPS's default port 443 on your machine using a browser.
+11. Navigate to `http:127.0.0.1:8000` and login using the username `admin` and the password `changeme`.
+12. Change the password and possibly the username in the django admin UI.
 
 # Development
 There are two projects in this repository.
