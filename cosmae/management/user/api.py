@@ -1,5 +1,7 @@
 "API endpoints for managing users."
 
+import logging
+
 from allauth.account import signals
 from allauth.account.models import Login
 from allauth.account.stages import EmailVerificationStage
@@ -78,7 +80,8 @@ def post_create_user(request, user_request_data: CreateUserRequest):
                     user_db_to_login_response(user_created)
                 )
         return single_error_allauth_like_response(500, "Error while creating user")
-    except (IntegrityError, AccountExistsException):
+    except (IntegrityError, AccountExistsException) as exc:
+        logging.error("", exc_info=exc)
         return single_error_allauth_like_response(
             400, "Username or mail address already in use."
         )
