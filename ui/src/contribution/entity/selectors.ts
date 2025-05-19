@@ -122,7 +122,7 @@ export const selectEntityColumnDefs = createSelector(
         ...(entity?.similarEntities.value ?? []).map((similar, idx) => {
             return {
                 id: similar.idPersistent,
-                title: `Match ${idx + 1}`,
+                title: `Match ${idx + 1} from DB`,
                 width: widths[idx + 2],
                 columnType: ColumnType.String
             } as GridColumWithType
