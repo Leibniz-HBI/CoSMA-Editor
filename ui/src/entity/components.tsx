@@ -124,7 +124,6 @@ export function EntityDetails({ idEntityPersistent }: { idEntityPersistent: stri
         () => {
             dispatch(getEntityValuesThunk(idEntityPersistent))
         },
-        //eslint-disable-next-line react-hooks/exhaustive-deps
         [idEntityPersistent]
     )
     return <EntityDetailsComponent />

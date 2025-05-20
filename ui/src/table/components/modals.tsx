@@ -255,5 +255,5 @@ export function DisplayTextDetails({
             tooltipValue = constructColumnTitle(displayTxtDetails.namePath)
         }
     }
-    return <div>`Display text source: ${tooltipValue}`</div>
+    return <div>{`Display text source: ${tooltipValue}`}</div>
 }
