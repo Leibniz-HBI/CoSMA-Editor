@@ -266,4 +266,4 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = get_file_secret("email_host_user")
-EMAIL_HOST_PASSWORD = get_file_secret("email_app_password")
+EMAIL_HOST_PASSWORD = get_file_secret("email_host_password")

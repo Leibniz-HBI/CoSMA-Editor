@@ -21,8 +21,6 @@ secrets:
     external: true
   email_host_password:
     external: true
-  email_app_password:
-    external: true
 
 volumes:
   cosmae_db_volume:
@@ -60,7 +58,6 @@ services:
       - email_host
       - email_host_user
       - email_host_password
-      - email_app_password
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /srv/cosmae/contributions:/srv/cosmae/contributions
@@ -93,7 +90,6 @@ services:
       - email_host
       - email_host_user
       - email_host_password
-      - email_app_password
     volumes:
       - /srv/cosmae:/srv/cosmae/
       - /etc/localtime:/etc/localtime:ro
