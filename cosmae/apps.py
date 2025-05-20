@@ -95,6 +95,7 @@ def populate_tag_definition_name_path_cache():
     try:
         roots = Column.children_query_set(None)
         for root in roots:
-            enqueue(update_column_name_path, root.id_persistent, [])
+            if not root.disabled:
+                enqueue(update_column_name_path, root.id_persistent, [])
     except (OperationalError, DatabaseError, ProgrammingError):
         pass  #

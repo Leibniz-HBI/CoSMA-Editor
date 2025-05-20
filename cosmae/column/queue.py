@@ -55,7 +55,8 @@ def update_column_name_path(
             column_name_path_cache.set(column.id_persistent, name_path)
             children = Column.children_query_set(column.id_persistent)
             for child in children:
-                enqueue(update_column_name_path, child.id_persistent, name_path)
+                if not child.disabled:
+                    enqueue(update_column_name_path, child.id_persistent, name_path)
 
     except Exception:  # pylint: disable=broad-except
         return
