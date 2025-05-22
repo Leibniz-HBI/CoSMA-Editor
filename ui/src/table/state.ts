@@ -1,5 +1,5 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
-import { newColumn, Column, ColumnType } from '../column_menu/state'
+import { Column, ColumnType } from '../column_menu/state'
 import { RemoteInterface, newRemote } from '../util/state'
 import { Comment } from '../comments/slice'
 import { Entity } from '../entity/state'
@@ -121,7 +121,11 @@ export function newColumnState({
     cellContents?: RemoteInterface<CellValue[][]>
     width?: number
 }): ColumnState {
-    return { idColumnPersistent: idColumnPersistent, cellContents: cellContents, width: width }
+    return {
+        idColumnPersistent: idColumnPersistent,
+        cellContents: cellContents,
+        width: width
+    }
 }
 
 function columnNameFromState(column?: Column): string {
@@ -132,17 +136,26 @@ function columnNameFromState(column?: Column): string {
 }
 export function csvLinesFromTable({
     entities,
+    selectedRows,
     columns,
     columnStates,
     showJustifications
 }: {
     entities?: Entity[]
+    selectedRows: number[]
     columns: RemoteInterface<Column | undefined>[]
     columnStates: ColumnState[]
     showJustifications: boolean
 }): string[] {
     if (entities === undefined || entities.length == 0) {
         return []
+    }
+    let entityExportList = entities
+    if (selectedRows.length > 0) {
+        entityExportList = []
+        for (const idx of selectedRows) {
+            entityExportList.push(entities[idx])
+        }
     }
     let columnStartIdx = 1
     if (showJustifications) {
@@ -161,16 +174,16 @@ export function csvLinesFromTable({
         lines.push(header + '\n')
     }
 
-    for (let rowIdx = 0; rowIdx < entities.length; ++rowIdx) {
+    for (let rowIdx = 0; rowIdx < entityExportList.length; ++rowIdx) {
         const value =
             '"' +
-            entities[rowIdx].idPersistent +
+            entityExportList[rowIdx].idPersistent +
             '","' +
-            (entities[rowIdx].displayTxtDetails == 'Display Text'
-                ? entities[rowIdx].displayTxt
+            (entityExportList[rowIdx].displayTxtDetails == 'Display Text'
+                ? entityExportList[rowIdx].displayTxt
                 : '') +
             '","' +
-            (entities[rowIdx].justificationTxt ?? '') +
+            (entityExportList[rowIdx].justificationTxt ?? '') +
             '",' +
             columnStates
                 .slice(columnStartIdx)

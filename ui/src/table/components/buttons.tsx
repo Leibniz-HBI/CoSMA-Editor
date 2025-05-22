@@ -13,6 +13,7 @@ import { toggleRowSelection } from '../selection/slice'
 import { selectRowSelectionOrder } from '../selection/selectors'
 import { downloadWorkAround } from './table'
 import { useColumnDefinitionList } from '../../column_menu/hooks'
+import { useAppSelector } from '../../hooks'
 
 export function AddEntityButton({ dispatch }: { dispatch: AppDispatch }) {
     return <Button onClick={() => dispatch(showEntityAdd())}>Add Entity</Button>
@@ -84,12 +85,14 @@ export function DownloadButton({
     const columnList = useColumnDefinitionList(
         columnStates.map((columnState) => columnState.idColumnPersistent)
     )
+    const selectedRows = useAppSelector(selectRowSelectionOrder)
     return (
         <Button
             onClick={() =>
                 downloadWorkAround(
                     csvLinesFromTable({
                         entities,
+                        selectedRows,
                         columns: columnList,
                         columnStates,
                         showJustifications

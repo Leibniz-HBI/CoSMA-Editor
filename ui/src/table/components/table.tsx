@@ -140,7 +140,6 @@ export function RemoteDataTable() {
                 dispatch(clearTable())
             }
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         []
     )
 
@@ -248,7 +247,6 @@ export function DataTable({
         columnHeaderMenuEntries = useAppSelector(selectColumnHeaderMenu)(dispatch),
         showSearch = useAppSelector(selectShowSearch),
         showEntityJustifications = useAppSelector(selectShowEntityJustifications)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const cellContentCallback = useCallback(
             createCellContentCallback({
                 entities,
