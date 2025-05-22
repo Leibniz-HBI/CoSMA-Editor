@@ -50,10 +50,10 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
                 "destination": {
-                    "id_persistent": c.id_persistent_tag_def_destination1,
+                    "id_persistent": c.id_persistent_column_destination1,
                     "id_parent_persistent": None,
-                    "name": c.name_tag_def_destination1,
-                    "name_path": [c.name_tag_def_destination1],
+                    "name": c.name_column_destination1,
+                    "name_path": [c.name_column_destination1],
                     "type": "STRING",
                     "description": None,
                     "owner": {
@@ -66,10 +66,10 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "disabled": False,
                 },
                 "origin": {
-                    "name": c.name_tag_def_origin1,
-                    "name_path": [c.name_tag_def_origin1],
+                    "name": c.name_column_origin1,
+                    "name_path": [c.name_column_origin1],
                     "id_parent_persistent": None,
-                    "id_persistent": c.id_persistent_tag_def_origin1,
+                    "id_persistent": c.id_persistent_column_origin1,
                     "type": "STRING",
                     "description": None,
                     "curated": False,
@@ -103,10 +103,10 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
                 "destination": {
-                    "id_persistent": c.id_persistent_tag_def_destination,
+                    "id_persistent": c.id_persistent_column_destination,
                     "id_parent_persistent": None,
-                    "name": c.name_tag_def_destination,
-                    "name_path": [c.name_tag_def_destination],
+                    "name": c.name_column_destination,
+                    "name_path": [c.name_column_destination],
                     "type": "STRING",
                     "description": None,
                     "owner": {
@@ -119,9 +119,9 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
                     "disabled": False,
                 },
                 "origin": {
-                    "name": c.name_tag_def_origin,
-                    "name_path": [c.name_tag_def_origin],
-                    "id_persistent": c.id_persistent_tag_def_origin,
+                    "name": c.name_column_origin,
+                    "name_path": [c.name_column_origin],
+                    "id_persistent": c.id_persistent_column_origin,
                     "id_parent_persistent": None,
                     "type": "STRING",
                     "description": None,
@@ -140,21 +140,21 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
 
 
 def test_get_merge_requests_with_hidden(
-    auth_server, merge_request_user, merge_request_user1, origin_tag_def_for_mr1
+    auth_server, merge_request_user, merge_request_user1, origin_column_for_mr1
 ):
-    tag_def, _ = ColumnHistory.change_or_create_versioned(
-        id_persistent=origin_tag_def_for_mr1.id_persistent,
-        id_parent_persistent=origin_tag_def_for_mr1.id_parent_persistent,
-        name=origin_tag_def_for_mr1.name,
-        owner_id=origin_tag_def_for_mr1.owner.id,
-        curated=origin_tag_def_for_mr1.curated,
+    column, _ = ColumnHistory.change_or_create_versioned(
+        id_persistent=origin_column_for_mr1.id_persistent,
+        id_parent_persistent=origin_column_for_mr1.id_parent_persistent,
+        name=origin_column_for_mr1.name,
+        owner_id=origin_column_for_mr1.owner.id,
+        curated=origin_column_for_mr1.curated,
         hidden=True,
-        version=origin_tag_def_for_mr1.id,
-        time_edit=origin_tag_def_for_mr1.time_edit + timedelta(minutes=60),
-        written_by_session=origin_tag_def_for_mr1.owner.edit_session,
+        version=origin_column_for_mr1.id,
+        time_edit=origin_column_for_mr1.time_edit + timedelta(minutes=60),
+        written_by_session=origin_column_for_mr1.owner.edit_session,
     )
-    tag_def.save()
-    assert Column.most_recent_by_id(origin_tag_def_for_mr1.id_persistent).hidden
+    column.save()
+    assert Column.most_recent_by_id(origin_column_for_mr1.id_persistent).hidden
     server, cookies = auth_server
     rsp = req.get_merge_requests(server.url, cookies=cookies)
     assert rsp.status_code == 200
@@ -179,10 +179,10 @@ def test_get_merge_requests_with_hidden(
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
                 "destination": {
-                    "id_persistent": c.id_persistent_tag_def_destination1,
+                    "id_persistent": c.id_persistent_column_destination1,
                     "id_parent_persistent": None,
-                    "name": c.name_tag_def_destination1,
-                    "name_path": [c.name_tag_def_destination1],
+                    "name": c.name_column_destination1,
+                    "name_path": [c.name_column_destination1],
                     "type": "STRING",
                     "description": None,
                     "curated": False,
@@ -195,10 +195,10 @@ def test_get_merge_requests_with_hidden(
                     "disabled": False,
                 },
                 "origin": {
-                    "name": c.name_tag_def_origin1,
-                    "name_path": [c.name_tag_def_origin1],
+                    "name": c.name_column_origin1,
+                    "name_path": [c.name_column_origin1],
                     "id_parent_persistent": None,
-                    "id_persistent": c.id_persistent_tag_def_origin1,
+                    "id_persistent": c.id_persistent_column_origin1,
                     "type": "STRING",
                     "description": None,
                     "owner": {
@@ -232,10 +232,10 @@ def test_get_merge_requests_with_hidden(
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
                 "destination": {
-                    "id_persistent": c.id_persistent_tag_def_destination,
+                    "id_persistent": c.id_persistent_column_destination,
                     "id_parent_persistent": None,
-                    "name": c.name_tag_def_destination,
-                    "name_path": [c.name_tag_def_destination],
+                    "name": c.name_column_destination,
+                    "name_path": [c.name_column_destination],
                     "type": "STRING",
                     "description": None,
                     "curated": False,
@@ -248,9 +248,9 @@ def test_get_merge_requests_with_hidden(
                     "disabled": False,
                 },
                 "origin": {
-                    "name": c.name_tag_def_origin,
-                    "name_path": [c.name_tag_def_origin],
-                    "id_persistent": c.id_persistent_tag_def_origin,
+                    "name": c.name_column_origin,
+                    "name_path": [c.name_column_origin],
+                    "id_persistent": c.id_persistent_column_origin,
                     "id_parent_persistent": None,
                     "type": "STRING",
                     "description": None,
@@ -295,8 +295,8 @@ def test_includes_curated(
                 "destination": {
                     "id_persistent": "2ec43995-338b-4f4b-b1cc-4bfc71466fc5",
                     "id_parent_persistent": None,
-                    "name": "name curated tag test",
-                    "name_path": ["name curated tag test"],
+                    "name": "name curated column test",
+                    "name_path": ["name curated column test"],
                     "type": "STRING",
                     "description": None,
                     "owner": None,
@@ -307,8 +307,8 @@ def test_includes_curated(
                 "origin": {
                     "id_persistent": "52d5de0a-2fdb-457f-80d0-6e10131ad1b9",
                     "id_parent_persistent": None,
-                    "name": "name tag test1",
-                    "name_path": ["name tag test1"],
+                    "name": "name column test1",
+                    "name_path": ["name column test1"],
                     "owner": {
                         "username": "test-user1",
                         "id_persistent": cu.test_uuid1,

@@ -7,7 +7,7 @@ from django.db.models import Count, Subquery
 from django.db.utils import OperationalError
 
 from cosmae.column.models_django import Column
-from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
+from cosmae.contribution.column.models_django import ColumnContribution
 from cosmae.entity.models_django import Entity
 from cosmae.exception import ResourceLockedException
 from cosmae.util import CosmaeUser
@@ -97,29 +97,30 @@ class ContributionCandidate(models.Model):
                 raise ResourceLockedException() from exc
             raise exc
 
-    class InvalidTagAssignmentException(Exception):
-        "Indicates that invalid tag assignments where found when trying to complete the assignment."
+    class InvalidColumnAssignmentException(Exception):
+        """Indicates that invalid column assignments where found
+        when trying to complete the assignment."""
 
         def __init__(self, invalid_column_names_list):
             super().__init__()
             self.invalid_column_names_list = invalid_column_names_list
 
     class MissingRequiredAssignmentsException(Exception):
-        "Exception indicating that a set of column assignment misses required tag assignment"
+        "Exception indicating that a set of column assignment misses required column assignment"
 
         def __init__(self, required_fields) -> None:
             super().__init__()
             self.required_fields = required_fields
 
     class DuplicateAssignmentException(Exception):
-        "Exception indicating that more than one column is assigned to the same existing tag."
+        "Exception indicating that more than one column is assigned to the same existing column."
 
         def __init__(self, duplicate_assignments_list) -> None:
             super().__init__()
             self.duplicate_assignments_list = duplicate_assignments_list
 
-    def complete_tag_assignment(self):
-        "Lock a tag assignment for the contribution candidate."
+    def complete_column_assignment(self):
+        "Lock a column assignment for the contribution candidate."
         self.check_assignment_validity()
         self.set_state(ContributionCandidate.COLUMNS_ASSIGNED)
         self.save(update_fields=["state"])
@@ -131,7 +132,7 @@ class ContributionCandidate(models.Model):
 
     def check_assignment_validity(self):
         "Check the validity of the column assignment for the contribution candidate."
-        active = TagDefinitionContribution.objects.filter(  # pylint: disable=no-member
+        active = ColumnContribution.objects.filter(  # pylint: disable=no-member
             contribution_candidate=self, discard=False
         )
         invalid = (
@@ -146,7 +147,7 @@ class ContributionCandidate(models.Model):
             )
         )
         if len(invalid) > 0:
-            raise self.InvalidTagAssignmentException(
+            raise self.InvalidColumnAssignmentException(
                 invalid.values_list("name", flat=True)
             )
         duplicate_assignments = (
@@ -171,36 +172,32 @@ class ContributionCandidate(models.Model):
             ),
         )
 
-    def curated_tags_match_count(self, entities_manager: models.Manager[Entity]):
-        """Get numbers of matching tag instances for curated tag definitions.
-        Also includes the number of considered tag definitions."""
-        tag_definitions_curated = Column.curated_query_set()
-        tag_definition_contribution_query_set = (
-            TagDefinitionContribution.get_by_candidate_query_set(self)
+    def curated_columns_match_count(self, entities_manager: models.Manager[Entity]):
+        """Get numbers of matching values for curated columns.
+        Also includes the number of considered columns."""
+        columns_curated = Column.curated_query_set()
+        column_contribution_query_set = ColumnContribution.get_by_candidate_query_set(
+            self
         )
-        tag_definitions_relevant = tag_definitions_curated.annotate(
-            id_tag_definition_contribution=models.Subquery(
-                tag_definition_contribution_query_set.filter(  # pylint: disable=no-member
+        columns_relevant = columns_curated.annotate(
+            id_column_contribution=models.Subquery(
+                column_contribution_query_set.filter(  # pylint: disable=no-member
                     id_existing_persistent=models.OuterRef("id_persistent")
                 )
             )
-        ).filter(id_tag_definition_origin__isnull=False)
-        tag_instance_most_recent_query_set = (
-            Value.objects.filter(  # pylint: disable=no-member
-                id_entity_persistent__in=entities_manager.values("id_persistent")
-            )
+        ).filter(id_column_origin__isnull=False)
+        value_most_recent_query_set = Value.objects.filter(  # pylint: disable=no-member
+            id_entity_persistent__in=entities_manager.values("id_persistent")
         )
-        with_values = tag_definitions_relevant.annotate(
+        with_values = columns_relevant.annotate(
             value_contribution=models.Subquery(
-                tag_instance_most_recent_query_set.filter(
-                    id_tag_definition_persistent=models.OuterRef(
-                        "id_tag_definition_contribution"
-                    )
+                value_most_recent_query_set.filter(
+                    id_column_persistent=models.OuterRef("id_column_contribution")
                 )
             ),
             value_curated=models.Subquery(
-                tag_instance_most_recent_query_set.filter(
-                    id_tag_definition_persistent=models.OuterRef("id_persistent")
+                value_most_recent_query_set.filter(
+                    id_column_persistent=models.OuterRef("id_persistent")
                 )
             ),
         )
@@ -211,4 +208,4 @@ class ContributionCandidate(models.Model):
             .filter(id_entity_persistent=models.OuterRef("id_persistent"))
             .values("match_count")
         )
-        return counted_matches, tag_definitions_relevant
+        return counted_matches, columns_relevant

@@ -41,17 +41,17 @@ test_uuid_super = "608b4853-dbd6-4a47-8a25-8e0c66b910d4"
 test_login_api = {"name": test_username, "password": test_password}
 
 
-name_tag_def = "tag def user test"
-name_tag_def1 = "tag def user test1"
-name_tag_def2 = "tag def user test2"
-name_tag_def3 = "tag def user test3"
-id_tag_def_persistent = "798157ef-0220-406a-a94d-f2bac7406eb7"
-id_tag_def_persistent1 = "18a68838-6f9b-4e82-a223-3cca31fdc96a"
-id_tag_def_persistent2 = "9a90a726-78b1-4663-9ec1-3f72fca2c229"
-id_tag_def_persistent3 = "33e9f23f-83dc-453e-bf73-e038daa32952"
-time_edit_tag_def = datetime(1742, 3, 2, tzinfo=timezone.utc)
-time_edit_tag_def1 = datetime(1742, 3, 3, tzinfo=timezone.utc)
-time_edit_tag_def2 = datetime(1742, 3, 4, tzinfo=timezone.utc)
-time_edit_tag_def3 = datetime(1742, 3, 5, tzinfo=timezone.utc)
+name_column = "column user test"
+name_column1 = "column user test1"
+name_column2 = "column user test2"
+name_column3 = "column user test3"
+id_column_persistent = "798157ef-0220-406a-a94d-f2bac7406eb7"
+id_column_persistent1 = "18a68838-6f9b-4e82-a223-3cca31fdc96a"
+id_column_persistent2 = "9a90a726-78b1-4663-9ec1-3f72fca2c229"
+id_column_persistent3 = "33e9f23f-83dc-453e-bf73-e038daa32952"
+time_edit_column = datetime(1742, 3, 2, tzinfo=timezone.utc)
+time_edit_column1 = datetime(1742, 3, 3, tzinfo=timezone.utc)
+time_edit_column2 = datetime(1742, 3, 4, tzinfo=timezone.utc)
+time_edit_column3 = datetime(1742, 3, 5, tzinfo=timezone.utc)
 
 test_password_new = "5&tZfgyhu21"

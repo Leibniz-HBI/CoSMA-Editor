@@ -10,7 +10,7 @@ from tests.user import common as cu
 from tests.utils import assert_versioned, format_datetime
 from cosmae.column.models_django import ColumnHistory
 from cosmae.exception import NotAuthenticatedException
-from cosmae.merge_request.models_django import TagConflictResolution
+from cosmae.merge_request.models_django import ColumnConflictResolution
 from cosmae.value.models_django import ValueHistory
 
 
@@ -42,8 +42,8 @@ def test_no_mr(auth_server):
 def test_conflicts_no_resolution(
     auth_server,
     merge_request_user,
-    origin_tag_def_for_mr,
-    destination_tag_def_for_mr,
+    origin_column_for_mr,
+    destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
@@ -73,10 +73,10 @@ def test_conflicts_no_resolution(
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
-                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_persistent": c.id_persistent_column_origin,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_origin,
-                "name_path": [c.name_tag_def_origin],
+                "name": c.name_column_origin,
+                "name_path": [c.name_column_origin],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -89,10 +89,10 @@ def test_conflicts_no_resolution(
                 "disabled": False,
             },
             "destination": {
-                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_persistent": c.id_persistent_column_destination,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_destination,
-                "name_path": [c.name_tag_def_destination],
+                "name": c.name_column_destination,
+                "name_path": [c.name_column_destination],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -151,15 +151,15 @@ def test_conflicts_no_resolution(
 def test_conflicts_same_value(
     auth_server,
     merge_request_user,
-    origin_tag_def_for_mr,
-    destination_tag_def_for_mr,
+    origin_column_for_mr,
+    destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
 ):
     for instance_origin in instances_merge_request_origin_user:
         instance_destination = ValueHistory(
             id_entity_persistent=instance_origin.id_entity_persistent,
-            id_column_persistent=destination_tag_def_for_mr.id_persistent,
+            id_column_persistent=destination_column_for_mr.id_persistent,
             id_persistent=str(uuid4()),
             value=instance_origin.value,
             time_edit=datetime(1994, 12, 2, tzinfo=timezone.utc),
@@ -190,10 +190,10 @@ def test_conflicts_same_value(
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
-                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_persistent": c.id_persistent_column_origin,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_origin,
-                "name_path": [c.name_tag_def_origin],
+                "name": c.name_column_origin,
+                "name_path": [c.name_column_origin],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -206,10 +206,10 @@ def test_conflicts_same_value(
                 "disabled": False,
             },
             "destination": {
-                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_persistent": c.id_persistent_column_destination,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_destination,
-                "name_path": [c.name_tag_def_destination],
+                "name": c.name_column_destination,
+                "name_path": [c.name_column_destination],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -258,10 +258,10 @@ def test_conflict_resolved(
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
-                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_persistent": c.id_persistent_column_origin,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_origin,
-                "name_path": [c.name_tag_def_origin],
+                "name": c.name_column_origin,
+                "name_path": [c.name_column_origin],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -274,10 +274,10 @@ def test_conflict_resolved(
                 "disabled": False,
             },
             "destination": {
-                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_persistent": c.id_persistent_column_destination,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_destination,
-                "name_path": [c.name_tag_def_destination],
+                "name": c.name_column_destination,
+                "name_path": [c.name_column_destination],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -332,14 +332,14 @@ def test_conflict_resolved(
     assert json["updated"] == []
 
 
-def test_conflict_resolved_tag_def_origin_changed(
+def test_conflict_resolved_column_origin_changed(
     auth_server, merge_request_user, conflict_resolution_replace
 ):
-    old_tag_definition = conflict_resolution_replace.column_origin
+    old_column = conflict_resolution_replace.column_origin
     ColumnHistory.change_or_create_versioned(
-        id_persistent=old_tag_definition.id_persistent,
-        version=old_tag_definition.id,
-        name="changed tag definition test",
+        id_persistent=old_column.id_persistent,
+        version=old_column.id,
+        name="changed column test",
         time_edit=datetime(1912, 4, 8, tzinfo=timezone.utc),
         written_by_session=merge_request_user.created_by.edit_session,
         owner_id=merge_request_user.created_by.id,
@@ -369,10 +369,10 @@ def test_conflict_resolved_tag_def_origin_changed(
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
-                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_persistent": c.id_persistent_column_origin,
                 "id_parent_persistent": None,
-                "name": "changed tag definition test",
-                "name_path": ["changed tag definition test"],
+                "name": "changed column test",
+                "name_path": ["changed column test"],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -385,10 +385,10 @@ def test_conflict_resolved_tag_def_origin_changed(
                 "disabled": False,
             },
             "destination": {
-                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_persistent": c.id_persistent_column_destination,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_destination,
-                "name_path": [c.name_tag_def_destination],
+                "name": c.name_column_destination,
+                "name_path": [c.name_column_destination],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -466,31 +466,31 @@ def test_conflict_resolved_tag_def_origin_changed(
     )
 
 
-def test_tag_instance_destination_value_added(
+def test_value_destination_value_added(
     auth_server,
     merge_request_user,
-    origin_tag_def_for_mr,
-    destination_tag_def_for_mr,
+    origin_column_for_mr,
+    destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
 ):
-    TagConflictResolution.objects.create(  # pylint: disable=no-member
-        column_origin=origin_tag_def_for_mr,
-        column_destination=destination_tag_def_for_mr,
+    ColumnConflictResolution.objects.create(  # pylint: disable=no-member
+        column_origin=origin_column_for_mr,
+        column_destination=destination_column_for_mr,
         entity=entity1,
         value_origin=instances_merge_request_origin_user[1],
         merge_request=merge_request_user,
-        replacement_state=TagConflictResolution.REPLACE,
+        replacement_state=ColumnConflictResolution.REPLACE,
     )
-    id_tag_instance_destination = str(uuid4())
+    id_value_destination = str(uuid4())
     time_edit = datetime(1873, 2, 4, tzinfo=timezone.utc)
     ValueHistory.objects.create(  # pylint: disable=no-member
-        id_column_persistent=destination_tag_def_for_mr.id_persistent,
+        id_column_persistent=destination_column_for_mr.id_persistent,
         id_entity_persistent=entity1.id_persistent,
-        id_persistent=id_tag_instance_destination,
+        id_persistent=id_value_destination,
         value="new value destination test",
         time_edit=time_edit,
-        written_by_session=destination_tag_def_for_mr.owner.edit_session,
+        written_by_session=destination_column_for_mr.owner.edit_session,
     )
 
     server, cookies = auth_server
@@ -518,10 +518,10 @@ def test_tag_instance_destination_value_added(
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
-                "id_persistent": c.id_persistent_tag_def_origin,
+                "id_persistent": c.id_persistent_column_origin,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_origin,
-                "name_path": [c.name_tag_def_origin],
+                "name": c.name_column_origin,
+                "name_path": [c.name_column_origin],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -534,10 +534,10 @@ def test_tag_instance_destination_value_added(
                 "disabled": False,
             },
             "destination": {
-                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_persistent": c.id_persistent_column_destination,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_destination,
-                "name_path": [c.name_tag_def_destination],
+                "name": c.name_column_destination,
+                "name_path": [c.name_column_destination],
                 "type": "STRING",
                 "description": None,
                 "curated": False,
@@ -566,7 +566,7 @@ def test_tag_instance_destination_value_added(
             "value": c.value_origin1,
         },
         "value_destination": {
-            "id_persistent": id_tag_instance_destination,
+            "id_persistent": id_value_destination,
             "value": "new value destination test",
         },
     }

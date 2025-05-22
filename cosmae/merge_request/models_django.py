@@ -119,7 +119,7 @@ class ColumnMergeRequest(AbstractMergeRequest):
         cls, id_column_persistent: str, user: Optional[CosmaeUser]
     ):
         """Change the owner for all merge requests that have
-        a specific tag definition as destination."""
+        a specific column as destination."""
         cls.objects.filter(  # pylint: disable=no-member
             id_destination_persistent=id_column_persistent
         ).update(assigned_to=user)
@@ -129,7 +129,7 @@ class ColumnMergeRequest(AbstractMergeRequest):
 
     @classmethod
     def get_for_contribution_query_set(cls, id_contribution_persistent):
-        "Get all tag merge requests for a contribution candidate."
+        "Get all column merge requests for a contribution candidate."
         return cls.objects.filter(  # pylint: disable=no-member
             contribution_candidate_id=id_contribution_persistent
         )
@@ -142,9 +142,9 @@ class ColumnMergeRequest(AbstractMergeRequest):
         id_merge_request_persistent: Optional[str],
         user: CosmaeUser,
     ):
-        """Get the tag definitions relevant for an entities focused value request.
+        """Get the columns relevant for an entities focused value request.
         returns:
-        A set of tuples. The first element is the id of the tag definition.
+        A set of tuples. The first element is the id of the column.
         The second element indicates whether this is existing data."""
         contribution = None
         if id_contribution_persistent is None:
@@ -191,10 +191,12 @@ class ColumnMergeRequest(AbstractMergeRequest):
     def instance_conflicts_all(
         self,
         include_resolved: bool = False,
-        resolution_values: Optional[models.BaseManager[TagConflictResolution]] = None,
+        resolution_values: Optional[
+            models.BaseManager[ColumnConflictResolution]
+        ] = None,
     ):
-        """Get conflicts to merging the origin tag referenced by the merge request
-        into the destination tag"""
+        """Get conflicts to merging the origin column referenced by the merge request
+        into the destination column"""
         instance_origin_recent_query = ValueHistory.most_recent_queryset().filter(
             id_column_persistent=self.id_origin_persistent
         )
@@ -211,7 +213,7 @@ class ColumnMergeRequest(AbstractMergeRequest):
 
         if resolution_values is None:
             resolution_values = (
-                TagConflictResolution.objects.none()  # pylint: disable=no-member
+                ColumnConflictResolution.objects.none()  # pylint: disable=no-member
             )
         resolutions_sub_query = resolution_values.filter(
             column_origin__id_persistent=models.OuterRef("id_column_persistent"),
@@ -288,7 +290,7 @@ class ColumnMergeRequest(AbstractMergeRequest):
         )
 
 
-class TagConflictResolution(AbstractConflictResolution):
+class ColumnConflictResolution(AbstractConflictResolution):
     "Django ORM model for resolutions to merge request conflicts."
 
     # do not use persistent ids in order to allow change detection.
@@ -313,7 +315,7 @@ class TagConflictResolution(AbstractConflictResolution):
     @classmethod
     def non_recent(cls, manager=None):
         """Get the conflict resolutions that reference not up to date entities,
-        tag definition or tag instances."""
+        column or values."""
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
         with_version_info = cls.annotate_instance_origin_most_recent(
@@ -418,7 +420,7 @@ class TagConflictResolution(AbstractConflictResolution):
     @classmethod
     def only_recent(cls, manager=None):
         """Get the conflict resolutions that reference not up to date entities,
-        tag definition or tag instances."""
+        column or values."""
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
         with_entity_version_info = manager.annotate(

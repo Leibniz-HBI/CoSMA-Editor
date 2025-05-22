@@ -10,7 +10,7 @@ from cosmae.util import CosmaeUser
 
 def user_db_to_login_response(user: CosmaeUser):
     "Converts a django user to a login response."
-    column_db = user.tag_definitions.copy()
+    column_db = user.columns.copy()
     column_list_api = []
     for id_column_persistent in column_db:
         try:

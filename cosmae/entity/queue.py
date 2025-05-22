@@ -38,10 +38,10 @@ def update_display_txt_cache(id_entity_persistent):
                 id_entity_persistent, (entity.display_txt, "Display Text")
             )
         else:
-            tag_definition_order_query = get_display_txt_order_columns(
+            column_order_query = get_display_txt_order_columns(
                 entity.contribution_candidate_id
             )
-            with_tag_instance_value_query = tag_definition_order_query.annotate(
+            with_value_value_query = column_order_query.annotate(
                 value=Subquery(
                     Value.objects.filter(  # pylint: disable=no-member
                         id_entity_persistent=id_entity_persistent,
@@ -49,15 +49,15 @@ def update_display_txt_cache(id_entity_persistent):
                     ).values("value")
                 )
             )
-            for tag_definition in with_tag_instance_value_query:
-                if tag_definition.value is not None:
-                    tag_def_dict = tag_def_db_to_dict(tag_definition)
+            for column in with_value_value_query:
+                if column.value is not None:
+                    column_dict = column_db_to_dict(column)
 
                     entity_display_txt_information_cache.set(
                         id_entity_persistent,
                         (
-                            tag_definition.value,
-                            tag_def_dict,
+                            column.value,
+                            column_dict,
                         ),
                     )
                     return
@@ -69,22 +69,22 @@ def update_display_txt_cache(id_entity_persistent):
         )
 
 
-def tag_def_db_to_dict(tag_definition):
-    "Convert a tag definition from Django ORM to dict representation."
-    tag_def_dict = {
-        "id_persistent": tag_definition.id_persistent,
-        "id_parent_persistent": tag_definition.id_parent_persistent,
-        "name": tag_definition.name,
-        "id": tag_definition.id,
-        "type": tag_definition.type,
-        "owner": user_db_to_public_user_info_dict(tag_definition.owner),
-        "curated": tag_definition.curated,
-        "description": tag_definition.description,
-        "hidden": tag_definition.hidden,
-        "disabled": tag_definition.disabled,
+def column_db_to_dict(column):
+    "Convert a column from Django ORM to dict representation."
+    column_dict = {
+        "id_persistent": column.id_persistent,
+        "id_parent_persistent": column.id_parent_persistent,
+        "name": column.name,
+        "id": column.id,
+        "type": column.type,
+        "owner": user_db_to_public_user_info_dict(column.owner),
+        "curated": column.curated,
+        "description": column.description,
+        "hidden": column.hidden,
+        "disabled": column.disabled,
     }
 
-    return tag_def_dict
+    return column_dict
 
 
 def dispatch_display_txt_queue_process(

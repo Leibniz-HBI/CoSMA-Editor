@@ -6,24 +6,24 @@ from cosmae.merge_request.entity.models_django import EntityConflictResolution
 
 
 def test_no_change_user(merge_request_user, conflict_resolution_replace, user):
-    tag_definitions = Column.for_user(user)
+    columns = Column.for_user(user)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
 
 
 def test_no_change_user1(merge_request_user, conflict_resolution_replace, user1):
-    tag_definitions = Column.for_user(user1)
+    columns = Column.for_user(user1)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -32,12 +32,12 @@ def test_no_change_user1(merge_request_user, conflict_resolution_replace, user1)
 def test_no_change_user_commissioner(
     merge_request_user, conflict_resolution_replace, user_commissioner
 ):
-    tag_definitions = Column.for_user(user_commissioner, True)
+    columns = Column.for_user(user_commissioner, True)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -53,12 +53,12 @@ def test_includes_no_value_at_destination(
 def test_non_change_entity_origin_user(
     merge_request_user, origin_entity_for_mr_changed, conflict_resolution_replace, user
 ):
-    tag_definitions = Column.for_user(user)
+    columns = Column.for_user(user)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -67,12 +67,12 @@ def test_non_change_entity_origin_user(
 def test_non_change_entity_origin_user1(
     merge_request_user, origin_entity_for_mr_changed, conflict_resolution_replace, user1
 ):
-    tag_definitions = Column.for_user(user1)
+    columns = Column.for_user(user1)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 1
@@ -84,12 +84,12 @@ def test_non_change_entity_origin_user_commissioner(
     conflict_resolution_replace,
     user_commissioner,
 ):
-    tag_definitions = Column.for_user(user_commissioner, True)
+    columns = Column.for_user(user_commissioner, True)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -101,12 +101,12 @@ def test_non_change_entity_destination_user(
     conflict_resolution_replace,
     user,
 ):
-    tag_definitions = Column.for_user(user)
+    columns = Column.for_user(user)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -118,12 +118,12 @@ def test_non_change_entity_destination_user1(
     conflict_resolution_replace,
     user1,
 ):
-    tag_definitions = Column.for_user(user1)
+    columns = Column.for_user(user1)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 1
@@ -135,40 +135,40 @@ def test_non_change_entity_destination_user_commissioner(
     conflict_resolution_replace,
     user_commissioner,
 ):
-    tag_definitions = Column.for_user(user_commissioner, True)
+    columns = Column.for_user(user_commissioner, True)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
 
 
 def test_change_definition_user(
-    merge_request_user, tag_def_for_mr_changed, conflict_resolution_replace, user
+    merge_request_user, column_for_mr_changed, conflict_resolution_replace, user
 ):
-    tag_definitions = Column.for_user(user)
+    columns = Column.for_user(user)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
 
 
 def test_change_definition_user1(
-    merge_request_user, tag_def_for_mr_changed, conflict_resolution_replace, user1
+    merge_request_user, column_for_mr_changed, conflict_resolution_replace, user1
 ):
-    tag_definitions = Column.for_user(user1)
+    columns = Column.for_user(user1)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 1
@@ -176,44 +176,44 @@ def test_change_definition_user1(
 
 def test_change_definition_user_commissioner(
     merge_request_user,
-    tag_def_for_mr_changed,
+    column_for_mr_changed,
     conflict_resolution_replace,
     user_commissioner,
 ):
-    tag_definitions = Column.for_user(user_commissioner, True)
+    columns = Column.for_user(user_commissioner, True)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
 
 
 def test_change_definition_owner_user(
-    merge_request_user, tag_def_for_mr_changed_owner, conflict_resolution_replace, user
+    merge_request_user, column_for_mr_changed_owner, conflict_resolution_replace, user
 ):
-    tag_definitions = Column.for_user(user)
+    columns = Column.for_user(user)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
 
 
 def test_change_definition_owner_user1(
-    merge_request_user, tag_def_for_mr_changed_owner, conflict_resolution_replace, user1
+    merge_request_user, column_for_mr_changed_owner, conflict_resolution_replace, user1
 ):
-    tag_definitions = Column.for_user(user1)
+    columns = Column.for_user(user1)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 0
     assert len(unresolvable) == 3
     assert len(updated) == 0
@@ -221,16 +221,16 @@ def test_change_definition_owner_user1(
 
 def test_change_definition_owner_user_commissioner(
     merge_request_user,
-    tag_def_for_mr_changed_owner,
+    column_for_mr_changed_owner,
     conflict_resolution_replace,
     user_commissioner,
 ):
-    tag_definitions = Column.for_user(user_commissioner, True)
+    columns = Column.for_user(user_commissioner, True)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 2
     assert len(unresolvable) == 1
     assert len(updated) == 1
@@ -242,12 +242,12 @@ def test_change_instance_destination_user(
     conflict_resolution_replace,
     user,
 ):
-    tag_definitions = Column.for_user(user)
+    columns = Column.for_user(user)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -259,12 +259,12 @@ def test_change_instance_destination_user1(
     conflict_resolution_replace,
     user1,
 ):
-    tag_definitions = Column.for_user(user1)
+    columns = Column.for_user(user1)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 1
@@ -276,12 +276,12 @@ def test_non_change_instance_destination_user_commissioner(
     conflict_resolution_replace,
     user_commissioner,
 ):
-    tag_definitions = Column.for_user(user_commissioner, True)
+    columns = Column.for_user(user_commissioner, True)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -293,12 +293,12 @@ def test_change_instance_origin_user(
     conflict_resolution_replace,
     user,
 ):
-    tag_definitions = Column.for_user(user)
+    columns = Column.for_user(user)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -310,12 +310,12 @@ def test_change_instance_origin_user1(
     conflict_resolution_replace,
     user1,
 ):
-    tag_definitions = Column.for_user(user1)
+    columns = Column.for_user(user1)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 1
@@ -327,12 +327,12 @@ def test_change_instance_origin_user_commissioner(
     conflict_resolution_replace,
     user_commissioner,
 ):
-    tag_definitions = Column.for_user(user_commissioner, True)
+    columns = Column.for_user(user_commissioner, True)
     (
         resolvable,
         unresolvable,
         updated,
-    ) = merge_request_user.resolvable_unresolvable_updated(tag_definitions)
+    ) = merge_request_user.resolvable_unresolvable_updated(columns)
     assert len(resolvable) == 1
     assert len(unresolvable) == 2
     assert len(updated) == 0
@@ -344,14 +344,14 @@ def test_change_all(
     destination_entity_for_mr_changed,
     conflict_resolution_replace,
 ):
-    old_tag_def = conflict_resolution_replace.column
+    old_column = conflict_resolution_replace.column
     ColumnHistory.change_or_create_versioned(
-        id_persistent=old_tag_def.id_persistent,
+        id_persistent=old_column.id_persistent,
         time_edit=datetime(1912, 4, 7, tzinfo=timezone.utc),
-        name="edited tag definition",
-        version=old_tag_def.id,
-        owner_id=old_tag_def.owner.id,
-        written_by_session=old_tag_def.owner.edit_session,
+        name="edited column",
+        version=old_column.id,
+        owner_id=old_column.owner.id,
+        written_by_session=old_column.owner.edit_session,
     )[0].save()
 
     recent = EntityConflictResolution.only_recent()

@@ -83,10 +83,10 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "destination": {
-                "id_persistent": c.id_persistent_tag_def_destination,
+                "id_persistent": c.id_persistent_column_destination,
                 "id_parent_persistent": None,
-                "name": c.name_tag_def_destination,
-                "name_path": [c.name_tag_def_destination],
+                "name": c.name_column_destination,
+                "name_path": [c.name_column_destination],
                 "type": "STRING",
                 "description": None,
                 "owner": {
@@ -99,9 +99,9 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
                 "disabled": False,
             },
             "origin": {
-                "name": c.name_tag_def_origin,
-                "name_path": [c.name_tag_def_origin],
-                "id_persistent": c.id_persistent_tag_def_origin,
+                "name": c.name_column_origin,
+                "name_path": [c.name_column_origin],
+                "id_persistent": c.id_persistent_column_origin,
                 "id_parent_persistent": None,
                 "type": "STRING",
                 "description": None,

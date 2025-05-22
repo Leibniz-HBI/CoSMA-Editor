@@ -150,13 +150,13 @@ def test_similar_entities_with_duplicate(
     )
 
 
-def test_similar_entities_with_tag_match(
+def test_similar_entities_with_column_match(
     auth_server,
     contribution_candidate,
     entities,
     duplicate_assignment,
-    tag_instances_match,
-    tag_merge_request,
+    values_match,
+    column_merge_request,
 ):
     live_server, cookies = auth_server
     rsp = r.post_similar(
@@ -221,8 +221,8 @@ def test_similar_entities_assigned_duplicate_no_match(
     contribution_candidate,
     entities,
     duplicate_assignment_no_match,
-    tag_instances_match,
-    tag_merge_request,
+    values_match,
+    column_merge_request,
 ):
     live_server, cookies = auth_server
     rsp = r.post_similar(

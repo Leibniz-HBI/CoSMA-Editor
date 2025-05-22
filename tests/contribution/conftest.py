@@ -5,12 +5,12 @@ from django.db.models.signals import post_save
 
 import tests.contribution.common as c
 import tests.edit_session.common as cs
+from cosmae.contribution.column.models_django import ColumnContribution
+from cosmae.contribution.column.queue import dispatch_read_csv_head
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
-from cosmae.contribution.tag_definition.queue import dispatch_read_csv_head
 
 post_save.disconnect(
-    dispatch_read_csv_head, ContributionCandidate, "cosmae.start_tag_extraction"
+    dispatch_read_csv_head, ContributionCandidate, "cosmae.start_column_extraction"
 )
 
 
@@ -73,7 +73,7 @@ def contribution_error(user):
 
 @pytest.fixture
 def contribution_column(contribution_user):
-    return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
+    return ColumnContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,
         id_persistent=c.id_persistent_column_test0,
         contribution_candidate=contribution_user,
@@ -83,7 +83,7 @@ def contribution_column(contribution_user):
 
 @pytest.fixture
 def contribution_column_assigned(contribution_user, column):
-    return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
+    return ColumnContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,
         id_persistent=c.id_persistent_column_test0,
         contribution_candidate=contribution_user,
@@ -94,7 +94,7 @@ def contribution_column_assigned(contribution_user, column):
 
 @pytest.fixture
 def contribution_column_assigned_justification(contribution_user, column):
-    return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
+    return ColumnContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,
         id_persistent=c.id_persistent_column_test0,
         contribution_candidate=contribution_user,
@@ -105,7 +105,7 @@ def contribution_column_assigned_justification(contribution_user, column):
 
 @pytest.fixture
 def contribution_column_assigned_display_txt(contribution_user, column):
-    return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
+    return ColumnContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test0,
         id_persistent=c.id_persistent_column_test0,
         contribution_candidate=contribution_user,
@@ -116,7 +116,7 @@ def contribution_column_assigned_display_txt(contribution_user, column):
 
 @pytest.fixture
 def contribution_column_1(contribution_user):
-    return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
+    return ColumnContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test1,
         id_persistent=c.id_persistent_column_test1,
         contribution_candidate=contribution_user,
@@ -127,7 +127,7 @@ def contribution_column_1(contribution_user):
 
 @pytest.fixture
 def contribution_column_other(contribution_other):
-    return TagDefinitionContribution.objects.create(  # pylint:disable=no-member
+    return ColumnContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test1,
         id_persistent=c.id_persistent_column_test1,
         contribution_candidate=contribution_other,

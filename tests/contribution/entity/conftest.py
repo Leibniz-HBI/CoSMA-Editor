@@ -74,37 +74,37 @@ def duplicate_assignment_no_match(contribution_candidate):
 
 
 @pytest.fixture()
-def tag_instances_match(column_curated, column1):
+def values_match(column_curated, column1):
     value = "Same Value"
-    tag_instance_destination = ValueHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=c.id_tag_instance_match_destination,
+    value_destination = ValueHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=c.id_value_match_destination,
         id_entity_persistent=ce.id_persistent_test_1,
         id_column_persistent=column_curated.id_persistent,
-        time_edit=c.time_edit_tag_instance_match_destination,
+        time_edit=c.time_edit_value_match_destination,
         value=value,
         written_by_session=column1.owner.edit_session,
         approved_by=column1.owner.id_persistent,
     )
-    tag_instance_origin = ValueHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=c.id_tag_instance_match_origin,
+    value_origin = ValueHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=c.id_value_match_origin,
         id_entity_persistent=c.id_persistent_entity_duplicate_test,
         id_column_persistent=column1.id_persistent,
-        time_edit=c.time_edit_tag_instance_match_origin,
+        time_edit=c.time_edit_value_match_origin,
         value=value,
         written_by_session=column1.owner.edit_session,
         approved_by=column1.owner.id_persistent,
     )
-    return [tag_instance_origin, tag_instance_destination]
+    return [value_origin, value_destination]
 
 
 @pytest.fixture
-def tag_merge_request(column_curated, column1, contribution_candidate):
+def column_merge_request(column_curated, column1, contribution_candidate):
     return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
-        id_persistent=c.id_tag_merge_request_persistent,
+        id_persistent=c.id_column_merge_request_persistent,
         id_origin_persistent=column1.id_persistent,
         id_destination_persistent=column_curated.id_persistent,
         contribution_candidate=contribution_candidate,
         state=ColumnMergeRequest.OPEN,
         created_by=column1.owner,
-        created_at=c.time_edit_tag_merge_request,
+        created_at=c.time_edit_column_merge_request,
     )

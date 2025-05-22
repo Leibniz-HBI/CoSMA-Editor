@@ -17,7 +17,7 @@ class CosmaeUser(AbstractUser):
     "User Model for CoSMA-Editor"
     email = models.EmailField(unique=True)
     id_persistent = models.CharField(unique=True, max_length=36)
-    tag_definitions = models.JSONField(default=list)
+    columns = models.JSONField(default=list)
     social_provider = models.CharField(max_length=32, default="None")
     APPLICANT = "APLC"
     READER = "READ"
@@ -66,31 +66,31 @@ class CosmaeUser(AbstractUser):
             filtered_by_id = filtered_by_id.exclude(is_superuser=True)
         return filtered_by_id.order_by(models.F("id").asc())[:count]
 
-    def append_column_by_id(self, id_tag_definition_persistent):
-        """Adds the persistent id of a tag definition to the end of
-        the list containing the persistent tag definition ids for the user"""
-        tag_definitions = self.tag_definitions
-        tag_definitions.append(id_tag_definition_persistent)
+    def append_column_by_id(self, id_column_persistent):
+        """Adds the persistent id of a column to the end of
+        the list containing the persistent column ids for the user"""
+        columns = self.columns
+        columns.append(id_column_persistent)
 
-    def remove_column_by_id(self, id_tag_definition_persistent):
-        """Removes a persistent id of a tag definition from
-        the list containing the persistent tag definition ids for the user"""
-        old_tag_definitions = self.tag_definitions
-        new_tag_definitions = [
-            id_tag_def_old
-            for id_tag_def_old in old_tag_definitions
-            if id_tag_def_old != id_tag_definition_persistent
+    def remove_column_by_id(self, id_column_persistent):
+        """Removes a persistent id of a column from
+        the list containing the persistent column ids for the user"""
+        old_columns = self.columns
+        new_columns = [
+            id_column_old
+            for id_column_old in old_columns
+            if id_column_old != id_column_persistent
         ]
-        self.tag_definitions = new_tag_definitions
+        self.columns = new_columns
         self.save()
 
     def swap_column_idx(self, start_idx, end_idx):
         """Switches two positions in the list containing
-        the persistent tag definition ids for the user"""
-        tag_definitions = self.tag_definitions
-        at_start = tag_definitions[start_idx]
-        tag_definitions[start_idx] = tag_definitions[end_idx]
-        tag_definitions[end_idx] = at_start
+        the persistent column ids for the user"""
+        columns = self.columns
+        at_start = columns[start_idx]
+        columns[start_idx] = columns[end_idx]
+        columns[end_idx] = at_start
 
     def has_elevated_rights(self):
         "Method for checking if a user has elevated rights."

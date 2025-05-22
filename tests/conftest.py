@@ -10,10 +10,11 @@ from django.db import IntegrityError
 from django.test.utils import override_settings
 from pytest_redis import factories
 
+import tests.column.common as c
+import tests.value.common as cv
 from tests.allauth.api.integration.requests import get_config, post_login
 from tests.edit_session import common as cs
 from tests.entity import common as ce
-from tests.tag import common as ct
 from tests.user import common as cu
 from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
@@ -99,9 +100,9 @@ def justification1(user1):
 @pytest.fixture()
 def column(user):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=ct.id_column_persistent_test,
-        name=ct.name_column_test,
-        time_edit=ct.time_edit_test,
+        id_persistent=c.id_column_persistent_test,
+        name=c.name_column_test,
+        time_edit=c.time_edit_test,
         type=Column.STRING,
         owner=user,
         curated=False,
@@ -113,9 +114,9 @@ def column(user):
 @pytest.fixture()
 def column_disabled(user):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=ct.id_column_disabled_test,
-        name=ct.name_column_disabled_test,
-        time_edit=ct.time_edit_test,
+        id_persistent=c.id_column_disabled_test,
+        name=c.name_column_disabled_test,
+        time_edit=c.time_edit_test,
         type=Column.STRING,
         owner=user,
         curated=False,
@@ -128,9 +129,9 @@ def column_disabled(user):
 @pytest.fixture()
 def column1(user1):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=ct.id_column_persistent_test_user1,
-        name=ct.name_column_test1,
-        time_edit=ct.time_edit_test1,
+        id_persistent=c.id_column_persistent_test_user1,
+        name=c.name_column_test1,
+        time_edit=c.time_edit_test1,
         type=Column.STRING,
         owner=user1,
         curated=False,
@@ -142,9 +143,9 @@ def column1(user1):
 @pytest.fixture()
 def column_curated(user):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        id_persistent=ct.id_column_curated_test,
-        name=ct.name_column_curated_test,
-        time_edit=ct.time_edit_curated_test,
+        id_persistent=c.id_column_curated_test,
+        name=c.name_column_curated_test,
+        time_edit=c.time_edit_curated_test,
         type=Column.STRING,
         owner=None,
         curated=True,
@@ -406,47 +407,83 @@ def super_user(db):  # pylint: disable=unused-argument
 
 
 @pytest.fixture
-def tag_instances_user(user, user1):
-    tag_inst = ValueHistory(
-        id_persistent=ct.id_instance_test0,
-        time_edit=ct.time_edit_instance_test,
+def column_user_history(user):
+    column, _ = ColumnHistory.change_or_create_versioned(  # pylint: disable=no-member
+        id_persistent=c.id_column_persistent_test_user,
+        time_edit=c.time_edit_test,
+        written_by_session=user.edit_session,
+        type=Column.FLOAT,
+        id_parent_persistent=None,
+        name=c.name_column_test_user,
+        owner=user,
+    )
+    column.save()
+    return column
+
+
+@pytest.fixture
+def column_user(column_user_history):
+    return Column.objects.get(id=column_user_history.id)  # pylint: disable=no-member
+
+
+@pytest.fixture
+def column_user1(user):
+    column = ColumnHistory(  # pylint: disable=no-member
+        id_persistent=c.id_column_persistent_test_user1,
+        time_edit=c.time_edit_test,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
-        id_column_persistent=ct.id_column_persistent_test_user,
+        type=Column.FLOAT,
+        id_parent_persistent=None,
+        name=c.name_column_test1,
+        owner=user,
+    )
+    column.save()
+    return column
+
+
+@pytest.fixture
+def values_user(user, user1):
+    value = ValueHistory(
+        id_persistent=cv.id_instance_test0,
+        time_edit=cv.time_edit_instance_test,
+        written_by_session=user.edit_session,
+        approved_by=user.id_persistent,
+        id_column_persistent=c.id_column_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_0,
         value="value",
     )
-    tag_inst1 = ValueHistory(
-        id_persistent=ct.id_instance_test1,
-        time_edit=ct.time_edit_instance_test,
+    value1 = ValueHistory(
+        id_persistent=cv.id_instance_test1,
+        time_edit=cv.time_edit_instance_test,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
-        id_column_persistent=ct.id_column_persistent_test_user,
+        id_column_persistent=c.id_column_persistent_test_user,
         id_entity_persistent=ce.id_persistent_test_1,
         value="value 1",
     )
-    tag_inst2 = ValueHistory(
-        id_persistent=ct.id_instance_test2,
-        time_edit=ct.time_edit_instance_test,
+    value2 = ValueHistory(
+        id_persistent=cv.id_instance_test2,
+        time_edit=cv.time_edit_instance_test,
         written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
-        id_column_persistent=ct.id_column_persistent_test_user1,
+        id_column_persistent=c.id_column_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_0,
         value="value 2",
     )
-    tag_inst3 = ValueHistory(
-        id_persistent=ct.id_instance_test3,
-        time_edit=ct.time_edit_instance_test,
+    value3 = ValueHistory(
+        id_persistent=cv.id_instance_test3,
+        time_edit=cv.time_edit_instance_test,
         written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
-        id_column_persistent=ct.id_column_persistent_test_user1,
+        id_column_persistent=c.id_column_persistent_test_user1,
         id_entity_persistent=ce.id_persistent_test_1,
         value="value 3",
     )
-    tag_instances = [tag_inst, tag_inst1, tag_inst2, tag_inst3]
-    for inst in tag_instances:
+    values = [value, value1, value2, value3]
+    for inst in values:
         inst.save()
-    return tag_instances
+    return values
 
 
 redis_port = settings.RQ_QUEUES["default"]["PORT"]

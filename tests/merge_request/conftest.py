@@ -5,19 +5,22 @@ import tests.entity.common as ce
 import tests.merge_request.common as c
 from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.merge_request.models_django import ColumnMergeRequest, TagConflictResolution
+from cosmae.merge_request.models_django import (
+    ColumnConflictResolution,
+    ColumnMergeRequest,
+)
 from cosmae.value.models_django import (
     ValueHistory,
 )
 
 
 @pytest.fixture
-def destination_tag_def_for_mr(db, user):
+def destination_column_for_mr(db, user):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        name=c.name_tag_def_destination,
-        id_persistent=c.id_persistent_tag_def_destination,
+        name=c.name_column_destination,
+        id_persistent=c.id_persistent_column_destination,
         type=Column.STRING,
-        time_edit=c.time_tag_def_destination,
+        time_edit=c.time_column_destination,
         owner=user,
         written_by_session=user.edit_session,
         approved_by=user,
@@ -25,25 +28,25 @@ def destination_tag_def_for_mr(db, user):
 
 
 @pytest.fixture
-def destination_tag_def_for_mr_changed(destination_tag_def_for_mr):
-    tag_def, _ = ColumnHistory.change_or_create_versioned(
-        id_persistent=destination_tag_def_for_mr.id_persistent,
-        version=destination_tag_def_for_mr.id,
-        name="changed tag definition test",
-        time_edit=c.time_tag_def_destination_changed,
-        written_by_session=destination_tag_def_for_mr.owner.edit_session,
+def destination_column_for_mr_changed(destination_column_for_mr):
+    column, _ = ColumnHistory.change_or_create_versioned(
+        id_persistent=destination_column_for_mr.id_persistent,
+        version=destination_column_for_mr.id,
+        name="changed column test",
+        time_edit=c.time_column_destination_changed,
+        written_by_session=destination_column_for_mr.owner.edit_session,
     )
-    tag_def.save()
-    return tag_def
+    column.save()
+    return column
 
 
 @pytest.fixture
-def destination_tag_def_for_mr_user1(db, user1):
+def destination_column_for_mr_user1(db, user1):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        name=c.name_tag_def_destination,
-        id_persistent=c.id_persistent_tag_def_destination_fast_forward,
+        name=c.name_column_destination,
+        id_persistent=c.id_persistent_column_destination_fast_forward,
         type=Column.STRING,
-        time_edit=c.time_tag_def_destination,
+        time_edit=c.time_column_destination,
         owner=user1,
         written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
@@ -51,12 +54,12 @@ def destination_tag_def_for_mr_user1(db, user1):
 
 
 @pytest.fixture
-def origin_tag_def_for_mr(db, user1):
+def origin_column_for_mr(db, user1):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        name=c.name_tag_def_origin,
-        id_persistent=c.id_persistent_tag_def_origin,
+        name=c.name_column_origin,
+        id_persistent=c.id_persistent_column_origin,
         type=Column.STRING,
-        time_edit=c.time_tag_def_origin,
+        time_edit=c.time_column_origin,
         owner=user1,
         written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
@@ -64,16 +67,16 @@ def origin_tag_def_for_mr(db, user1):
 
 
 @pytest.fixture
-def origin_tag_def_for_mr_changed(origin_tag_def_for_mr):
-    tag_def, _ = ColumnHistory.change_or_create_versioned(
-        id_persistent=origin_tag_def_for_mr.id_persistent,
-        version=origin_tag_def_for_mr.id,
-        name="changed tag definition test",
-        time_edit=c.time_tag_def_origin_changed,
-        written_by_session=origin_tag_def_for_mr.owner.edit_session,
+def origin_column_for_mr_changed(origin_column_for_mr):
+    column, _ = ColumnHistory.change_or_create_versioned(
+        id_persistent=origin_column_for_mr.id_persistent,
+        version=origin_column_for_mr.id,
+        name="changed column test",
+        time_edit=c.time_column_origin_changed,
+        written_by_session=origin_column_for_mr.owner.edit_session,
     )
-    tag_def.save()
-    return tag_def
+    column.save()
+    return column
 
 
 @pytest.fixture
@@ -90,13 +93,13 @@ def contribution_for_mr(db, user1):
 
 @pytest.fixture
 def merge_request_user_fast_forward(
-    db, origin_tag_def_for_mr, destination_tag_def_for_mr_user1, contribution_for_mr
+    db, origin_column_for_mr, destination_column_for_mr_user1, contribution_for_mr
 ):
     return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
-        id_origin_persistent=origin_tag_def_for_mr.id_persistent,
-        id_destination_persistent=destination_tag_def_for_mr_user1.id_persistent,
-        created_by=origin_tag_def_for_mr.owner,
-        assigned_to=destination_tag_def_for_mr_user1.owner,
+        id_origin_persistent=origin_column_for_mr.id_persistent,
+        id_destination_persistent=destination_column_for_mr_user1.id_persistent,
+        created_by=origin_column_for_mr.owner,
+        assigned_to=destination_column_for_mr_user1.owner,
         created_at=c.time_merge_request,
         id_persistent=c.id_persistent_merge_request_fast_forward,
         contribution_candidate=contribution_for_mr,
@@ -105,13 +108,13 @@ def merge_request_user_fast_forward(
 
 @pytest.fixture
 def merge_request_user_fast_forward_disable_origin(
-    db, origin_tag_def_for_mr, destination_tag_def_for_mr_user1, contribution_for_mr
+    db, origin_column_for_mr, destination_column_for_mr_user1, contribution_for_mr
 ):
     return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
-        id_origin_persistent=origin_tag_def_for_mr.id_persistent,
-        id_destination_persistent=destination_tag_def_for_mr_user1.id_persistent,
-        created_by=origin_tag_def_for_mr.owner,
-        assigned_to=destination_tag_def_for_mr_user1.owner,
+        id_origin_persistent=origin_column_for_mr.id_persistent,
+        id_destination_persistent=destination_column_for_mr_user1.id_persistent,
+        created_by=origin_column_for_mr.owner,
+        assigned_to=destination_column_for_mr_user1.owner,
         created_at=c.time_merge_request,
         id_persistent=c.id_persistent_merge_request_fast_forward,
         contribution_candidate=contribution_for_mr,
@@ -121,13 +124,13 @@ def merge_request_user_fast_forward_disable_origin(
 
 @pytest.fixture
 def merge_request_user(
-    db, origin_tag_def_for_mr, destination_tag_def_for_mr, contribution_for_mr
+    db, origin_column_for_mr, destination_column_for_mr, contribution_for_mr
 ):
     return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
-        id_origin_persistent=origin_tag_def_for_mr.id_persistent,
-        id_destination_persistent=destination_tag_def_for_mr.id_persistent,
-        created_by=origin_tag_def_for_mr.owner,
-        assigned_to=destination_tag_def_for_mr.owner,
+        id_origin_persistent=origin_column_for_mr.id_persistent,
+        id_destination_persistent=destination_column_for_mr.id_persistent,
+        created_by=origin_column_for_mr.owner,
+        assigned_to=destination_column_for_mr.owner,
         created_at=c.time_merge_request,
         id_persistent=c.id_persistent_merge_request,
         contribution_candidate=contribution_for_mr,
@@ -143,13 +146,13 @@ def merge_request_user_resolved(merge_request_user):
 
 @pytest.fixture
 def merge_request_user_disable_origin(
-    db, origin_tag_def_for_mr, destination_tag_def_for_mr, contribution_for_mr
+    db, origin_column_for_mr, destination_column_for_mr, contribution_for_mr
 ):
     return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
-        id_origin_persistent=origin_tag_def_for_mr.id_persistent,
-        id_destination_persistent=destination_tag_def_for_mr.id_persistent,
-        created_by=origin_tag_def_for_mr.owner,
-        assigned_to=destination_tag_def_for_mr.owner,
+        id_origin_persistent=origin_column_for_mr.id_persistent,
+        id_destination_persistent=destination_column_for_mr.id_persistent,
+        created_by=origin_column_for_mr.owner,
+        assigned_to=destination_column_for_mr.owner,
         created_at=c.time_merge_request,
         id_persistent=c.id_persistent_merge_request,
         contribution_candidate=contribution_for_mr,
@@ -167,12 +170,12 @@ def merge_request_user_disable_origin_resolved(
 
 
 @pytest.fixture
-def destination_tag_def_for_mr1(db, user1):
+def destination_column_for_mr1(db, user1):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        name=c.name_tag_def_destination1,
-        id_persistent=c.id_persistent_tag_def_destination1,
+        name=c.name_column_destination1,
+        id_persistent=c.id_persistent_column_destination1,
         type=ColumnHistory.STRING,
-        time_edit=c.time_tag_def_destination1,
+        time_edit=c.time_column_destination1,
         owner=user1,
         written_by_session=user1.edit_session,
         approved_by=user1,
@@ -180,12 +183,12 @@ def destination_tag_def_for_mr1(db, user1):
 
 
 @pytest.fixture
-def origin_tag_def_for_mr1(db, user):
+def origin_column_for_mr1(db, user):
     return ColumnHistory.objects.create(  # pylint: disable=no-member
-        name=c.name_tag_def_origin1,
-        id_persistent=c.id_persistent_tag_def_origin1,
+        name=c.name_column_origin1,
+        id_persistent=c.id_persistent_column_origin1,
         type=Column.STRING,
-        time_edit=c.time_tag_def_origin1,
+        time_edit=c.time_column_origin1,
         owner=user,
         written_by_session=user.edit_session,
         approved_by=user,
@@ -206,13 +209,13 @@ def contribution_for_mr1(db, user):
 
 @pytest.fixture
 def merge_request_user1(
-    db, destination_tag_def_for_mr1, origin_tag_def_for_mr1, contribution_for_mr1
+    db, destination_column_for_mr1, origin_column_for_mr1, contribution_for_mr1
 ):
     return ColumnMergeRequest.objects.create(  # pylint: disable=no-member
-        id_destination_persistent=destination_tag_def_for_mr1.id_persistent,
-        id_origin_persistent=origin_tag_def_for_mr1.id_persistent,
-        created_by=origin_tag_def_for_mr1.owner,
-        assigned_to=destination_tag_def_for_mr1.owner,
+        id_destination_persistent=destination_column_for_mr1.id_persistent,
+        id_origin_persistent=origin_column_for_mr1.id_persistent,
+        created_by=origin_column_for_mr1.owner,
+        assigned_to=destination_column_for_mr1.owner,
         created_at=c.time_merge_request1,
         id_persistent=c.id_persistent_merge_request1,
         contribution_candidate=contribution_for_mr1,
@@ -234,52 +237,52 @@ def merge_request_curated(column_curated, column1, contribution_for_mr):
 
 @pytest.fixture
 def instances_merge_request_origin_user(merge_request_user, entity0, entity1):
-    id_tag_definition = merge_request_user.id_origin_persistent
-    tag_instance = ValueHistory.objects.create(  # pylint: disable=no-member
+    id_column = merge_request_user.id_origin_persistent
+    value = ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_0,
-        id_column_persistent=id_tag_definition,
+        id_column_persistent=id_column,
         value=c.value_origin,
         id_persistent=c.id_instance_origin,
         time_edit=c.time_instance_origin,
         written_by_session=merge_request_user.created_by.edit_session,
         approved_by=merge_request_user.created_by,
     )
-    tag_instance1 = ValueHistory.objects.create(  # pylint: disable=no-member
+    value1 = ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
-        id_column_persistent=id_tag_definition,
+        id_column_persistent=id_column,
         value=c.value_origin1,
         id_persistent=c.id_instance_origin1,
         time_edit=c.time_instance_origin1,
         written_by_session=merge_request_user.created_by.edit_session,
         approved_by=merge_request_user.created_by,
     )
-    return [tag_instance, tag_instance1]
+    return [value, value1]
 
 
 @pytest.fixture
 def instance_merge_request_origin_user_changed(
     user1, instances_merge_request_origin_user
 ):
-    old_tag_instance = instances_merge_request_origin_user[1]
-    tag_instance, _ = ValueHistory.change_or_create_versioned(
-        id_entity_persistent=old_tag_instance.id_entity_persistent,
-        id_column_persistent=old_tag_instance.id_column_persistent,
-        id_persistent=old_tag_instance.id_persistent,
-        version=old_tag_instance.id,
+    old_value = instances_merge_request_origin_user[1]
+    value, _ = ValueHistory.change_or_create_versioned(
+        id_entity_persistent=old_value.id_entity_persistent,
+        id_column_persistent=old_value.id_column_persistent,
+        id_persistent=old_value.id_persistent,
+        version=old_value.id,
         written_by_session=user1.edit_session,
         value=9001,
         time_edit=c.time_instance_origin1_changed,
     )
-    tag_instance.save()
-    return tag_instance
+    value.save()
+    return value
 
 
 @pytest.fixture
 def instance_merge_request_destination_user_no_conflict(merge_request_user, entity2):
-    id_tag_definition = merge_request_user.id_destination_persistent
+    id_column = merge_request_user.id_destination_persistent
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_2,
-        id_column_persistent=id_tag_definition,
+        id_column_persistent=id_column,
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
@@ -290,10 +293,10 @@ def instance_merge_request_destination_user_no_conflict(merge_request_user, enti
 
 @pytest.fixture
 def instance_merge_request_destination_user_conflict(merge_request_user, entity1):
-    id_tag_definition = merge_request_user.id_destination_persistent
+    id_column = merge_request_user.id_destination_persistent
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
-        id_column_persistent=id_tag_definition,
+        id_column_persistent=id_column,
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
@@ -307,7 +310,7 @@ def instance_merge_request_destination_user_conflict_changed(
     user,
     instance_merge_request_destination_user_conflict,
 ):
-    tag_instance, _ = ValueHistory.change_or_create_versioned(
+    value, _ = ValueHistory.change_or_create_versioned(
         id_entity_persistent=instance_merge_request_destination_user_conflict.id_entity_persistent,
         id_column_persistent=(
             instance_merge_request_destination_user_conflict.id_column_persistent
@@ -318,18 +321,18 @@ def instance_merge_request_destination_user_conflict_changed(
         value=9001,
         time_edit=c.time_instance_destination_changed,
     )
-    tag_instance.save()
-    return tag_instance
+    value.save()
+    return value
 
 
 @pytest.fixture
 def instance_merge_request_destination_user_conflict_fast_forward(
     merge_request_user_fast_forward, entity1
 ):
-    id_tag_definition = merge_request_user_fast_forward.id_destination_persistent
+    id_column = merge_request_user_fast_forward.id_destination_persistent
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
-        id_column_persistent=id_tag_definition,
+        id_column_persistent=id_column,
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
@@ -342,10 +345,10 @@ def instance_merge_request_destination_user_conflict_fast_forward(
 def instance_merge_request_destination_user_no_conflict_fast_forward(
     merge_request_user_fast_forward, entity2
 ):
-    id_tag_definition = merge_request_user_fast_forward.id_destination_persistent
+    id_column = merge_request_user_fast_forward.id_destination_persistent
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_2,
-        id_column_persistent=id_tag_definition,
+        id_column_persistent=id_column,
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
@@ -356,10 +359,10 @@ def instance_merge_request_destination_user_no_conflict_fast_forward(
 
 @pytest.fixture
 def instance_merge_request_destination_user_same_value1(merge_request_user, entity1):
-    id_tag_definition = merge_request_user.id_destination_persistent
+    id_column = merge_request_user.id_destination_persistent
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
-        id_column_persistent=id_tag_definition,
+        id_column_persistent=id_column,
         id_persistent=c.id_instance_destination,
         value=c.value_origin1,
         time_edit=c.time_instance_destination,
@@ -371,58 +374,58 @@ def instance_merge_request_destination_user_same_value1(merge_request_user, enti
 @pytest.fixture
 def conflict_resolution_replace(
     merge_request_user,
-    origin_tag_def_for_mr,
-    destination_tag_def_for_mr,
+    origin_column_for_mr,
+    destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
 ):
-    return TagConflictResolution.objects.create(  # pylint: disable=no-member
+    return ColumnConflictResolution.objects.create(  # pylint: disable=no-member
         entity=entity1,
-        column_origin=origin_tag_def_for_mr,
-        column_destination=destination_tag_def_for_mr,
+        column_origin=origin_column_for_mr,
+        column_destination=destination_column_for_mr,
         value_origin=instances_merge_request_origin_user[1],
         value_destination=instance_merge_request_destination_user_conflict,
         merge_request=merge_request_user,
-        replacement_state=TagConflictResolution.REPLACE,
+        replacement_state=ColumnConflictResolution.REPLACE,
     )
 
 
 @pytest.fixture
 def conflict_resolution_keep(
     merge_request_user,
-    origin_tag_def_for_mr,
-    destination_tag_def_for_mr,
+    origin_column_for_mr,
+    destination_column_for_mr,
     entity0,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict,
 ):
-    return TagConflictResolution.objects.create(  # pylint: disable=no-member
+    return ColumnConflictResolution.objects.create(  # pylint: disable=no-member
         entity=entity0,
-        column_origin=origin_tag_def_for_mr,
-        column_destination=destination_tag_def_for_mr,
+        column_origin=origin_column_for_mr,
+        column_destination=destination_column_for_mr,
         value_origin=instances_merge_request_origin_user[0],
         value_destination=None,
         merge_request=merge_request_user,
-        replacement_state=TagConflictResolution.KEEP,
+        replacement_state=ColumnConflictResolution.KEEP,
     )
 
 
 @pytest.fixture
 def conflict_resolution_keep_fast_forward(
     merge_request_user,
-    origin_tag_def_for_mr,
-    destination_tag_def_for_mr,
+    origin_column_for_mr,
+    destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict_fast_forward,
 ):
-    return TagConflictResolution.objects.create(  # pylint: disable=no-member
+    return ColumnConflictResolution.objects.create(  # pylint: disable=no-member
         entity=entity1,
-        tag_definition_origin=origin_tag_def_for_mr,
-        tag_definition_destination=destination_tag_def_for_mr,
-        tag_instance_origin=instances_merge_request_origin_user[0],
-        tag_instance_destination=instance_merge_request_destination_user_conflict_fast_forward,
+        column_origin=origin_column_for_mr,
+        column_destination=destination_column_for_mr,
+        value_origin=instances_merge_request_origin_user[0],
+        value_destination=instance_merge_request_destination_user_conflict_fast_forward,
         merge_request=merge_request_user,
         replace=False,
     )
@@ -447,16 +450,14 @@ def instance_destination_updated_same_value1(
     instance_merge_request_destination_user_conflict,
 ):
     old_instance = instance_merge_request_destination_user_conflict
-    tag_instance, _ = (
-        ValueHistory.change_or_create_versioned(  # pylint: disable=no-member
-            id_persistent=old_instance.id_persistent,
-            id_entity_persistent=old_instance.id_entity_persistent,
-            id_column_persistent=old_instance.id_column_persistent,
-            value=c.value_origin1,
-            written_by_session=user.edit_session,
-            time_edit=c.time_instance_destination_same_value,
-            version=old_instance.id,
-        )
+    value, _ = ValueHistory.change_or_create_versioned(  # pylint: disable=no-member
+        id_persistent=old_instance.id_persistent,
+        id_entity_persistent=old_instance.id_entity_persistent,
+        id_column_persistent=old_instance.id_column_persistent,
+        value=c.value_origin1,
+        written_by_session=user.edit_session,
+        time_edit=c.time_instance_destination_same_value,
+        version=old_instance.id,
     )
-    tag_instance.save()
-    return tag_instance
+    value.save()
+    return value

@@ -51,12 +51,12 @@ class DbObjectExistsException(Exception):
         self.values = values
 
 
-class TagInstanceExistsException(Exception):
-    "Indicates that the value for a given tag already exists."
+class ValueExistsException(Exception):
+    "Indicates that the value for a given column already exists."
 
-    def __init__(self, id_entity_persistent, id_tag_definition_persistent, value):
+    def __init__(self, id_entity_persistent, id_column_persistent, value):
         self.id_entity_persistent = id_entity_persistent
-        self.id_tag_definition_persistent = id_tag_definition_persistent
+        self.id_column_persistent = id_column_persistent
         self.value = value
 
 
@@ -68,25 +68,25 @@ class EntityUpdatedException(Exception):
 
 
 class NoChildColumnAllowedException(Exception):
-    "Indicates that a tag definition is not allowed to have children."
+    "Indicates that a column is not allowed to have children."
 
     def __init__(self, id_persistent):
         self.id_persistent = id_persistent
 
 
 class NoSelfParentColumnException(Exception):
-    "Indicates that the tag was set to have itself as parent.."
+    "Indicates that the column have itself as parent.."
 
 
 class NoParentColumnException(Exception):
-    "Indicates that the tag with the specified id_persistent does not exist."
+    "Indicates that the column with the specified id_persistent does not exist."
 
     def __init__(self, id_persistent):
         self.id_persistent = id_persistent
 
 
 class InvalidValueException(Exception):
-    "Indicates that a given value is not of the type defined by a tag."
+    "Indicates that a given value is not of the type defined by a column."
 
     def __init__(self, column_id_persistent, value, type_name):
         self.column_id_persistent = column_id_persistent
@@ -95,14 +95,14 @@ class InvalidValueException(Exception):
 
 
 class DisabledColumnHasChildrenException(Exception):
-    "Indicates that a tag definition marked for disabling still has children."
+    "Indicates that a column marked for disabling still has children."
 
 
 class ColumnExistsException(Exception):
-    "Indicates that the tag already exists."
+    "Indicates that the columnists."
 
-    def __init__(self, tag_name, id_persistent, id_parent_persistent):
-        self.column_name = tag_name
+    def __init__(self, column_name, id_persistent, id_parent_persistent):
+        self.column_name = column_name
         self.id_persistent = id_persistent
         self.id_parent_persistent = id_parent_persistent
 
@@ -115,7 +115,7 @@ class EntityMissingException(Exception):
 
 
 class ColumnMissingException(Exception):
-    "Indicates that there is no tag definition with the given persistent id."
+    "Indicates that there is no column with the given persistent id."
 
     def __init__(self, id_persistent):
         self.id_persistent = id_persistent
@@ -129,14 +129,14 @@ class PermissionException(Exception):
 
 
 class ColumnPermissionException(Exception):
-    "Indicates that there are insufficient permissions for writing to a tag definition"
+    "Indicates that there are insufficient permissions for writing to a column"
 
     def __init__(self, id_persistent) -> None:
         self.id_persistent = id_persistent
 
 
 class ColumnDisabledException(Exception):
-    "Indicates a write to a disabled tag definition."
+    "Indicates a write to a disabled column."
 
     def __init__(self, id_persistent):
         self.id_persistent = id_persistent

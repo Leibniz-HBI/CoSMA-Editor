@@ -9,24 +9,24 @@ display_txt_test_entity_duplicate_no_match = (
     "something completely different"  # different from entity [0,1] on purpose
 )
 time_edit_test_duplicate_no_match = datetime(2022, 4, 23, tzinfo=timezone.utc)
-id_tag_def_test = "a33991a8-4581-46d2-b9bd-ef6d1d71cc87"
-id_tag_def_test = "a33991a8-4581-46d2-b9bd-ef6d1d71cc87"
-name_tag_def_test = "tag def for entity-replace test"
-time_edit_tag_def_test = datetime(2020, 7, 3, tzinfo=timezone.utc)
-id_tag_def_test1 = "2117de68-e451-4a5b-935f-37fcf626bfff"
-name_tag_def_test1 = "tag def for entity-replace test1"
-time_edit_tag_def_test1 = datetime(2020, 7, 4, tzinfo=timezone.utc)
-id_instance_replace_test = "09b39d13-eae5-4bd8-ba82-7951aa0dda6e"
-id_instance_replace_test1 = "d1868cef-5cb3-45d8-b9b8-3181f881a6a7"
-id_instance_existing_test = "7dc10eb3-d916-43c5-a58d-c3cd83407d61"
-id_instance_existing_test1 = "c183948f-2f9b-4005-9855-dee2ad7b1562"
-time_edit_tag_instance_test = datetime(1990, 5, 7, tzinfo=timezone.utc)
+id_column_test = "a33991a8-4581-46d2-b9bd-ef6d1d71cc87"
+id_column_test = "a33991a8-4581-46d2-b9bd-ef6d1d71cc87"
+name_column_test = "column for entity-replace test"
+time_edit_column_test = datetime(2020, 7, 3, tzinfo=timezone.utc)
+id_column_test1 = "2117de68-e451-4a5b-935f-37fcf626bfff"
+name_column_test1 = "column for entity-replace test1"
+time_edit_column_test1 = datetime(2020, 7, 4, tzinfo=timezone.utc)
+id_value_replace_test = "09b39d13-eae5-4bd8-ba82-7951aa0dda6e"
+id_value_replace_test1 = "d1868cef-5cb3-45d8-b9b8-3181f881a6a7"
+id_value_existing_test = "7dc10eb3-d916-43c5-a58d-c3cd83407d61"
+id_value_existing_test1 = "c183948f-2f9b-4005-9855-dee2ad7b1562"
+time_edit_value_test = datetime(1990, 5, 7, tzinfo=timezone.utc)
 
 time_edit_deduplication = datetime(2021, 1, 1, tzinfo=timezone.utc)
 
-id_tag_instance_match_destination = "2ce8231e-5a58-4f43-8ef4-89efca0a6b97"
-id_tag_instance_match_origin = "db0079c1-4cbf-43e8-ad19-e5dee0ae7405"
-id_tag_merge_request_persistent = "af01c5cb-33b9-4b05-ade5-6d821a2d3075"
-time_edit_tag_instance_match_origin = datetime(2022, 1, 1, tzinfo=timezone.utc)
-time_edit_tag_instance_match_destination = datetime(2021, 12, 3, tzinfo=timezone.utc)
-time_edit_tag_merge_request = datetime(2022, 1, 2, tzinfo=timezone.utc)
+id_value_match_destination = "2ce8231e-5a58-4f43-8ef4-89efca0a6b97"
+id_value_match_origin = "db0079c1-4cbf-43e8-ad19-e5dee0ae7405"
+id_column_merge_request_persistent = "af01c5cb-33b9-4b05-ade5-6d821a2d3075"
+time_edit_value_match_origin = datetime(2022, 1, 1, tzinfo=timezone.utc)
+time_edit_value_match_destination = datetime(2021, 12, 3, tzinfo=timezone.utc)
+time_edit_column_merge_request = datetime(2022, 1, 2, tzinfo=timezone.utc)

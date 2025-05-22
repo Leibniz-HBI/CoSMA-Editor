@@ -50,7 +50,7 @@ def test_get(auth_server):
     assert contribution == c.contribution_test_upload0
 
 
-def test_get_with_match_tag_definition_list(auth_server, column1, column_curated):
+def test_get_with_match_column_list(auth_server, column1, column_curated):
     live_server, cookies = auth_server
     rsp = req_contrib.post_contribution(
         live_server.url, c.contribution_post0, cookies=cookies
@@ -58,13 +58,13 @@ def test_get_with_match_tag_definition_list(auth_server, column1, column_curated
     assert rsp.status_code == 200
     id_persistent = rsp.json()["id_persistent"]
     ColumnMergeRequest.objects.create(  # pylint: disable=no-member
-        id_persistent=c.id_tag_merge_request_persistent,
+        id_persistent=c.id_column_merge_request_persistent,
         id_origin_persistent=column1.id_persistent,
         id_destination_persistent=column_curated.id_persistent,
         contribution_candidate_id=id_persistent,
         state=ColumnMergeRequest.OPEN,
         created_by=column1.owner,
-        created_at=c.time_edit_tag_merge_request,
+        created_at=c.time_edit_column_merge_request,
     )
     rsp = req_contrib.get_contribution(
         live_server.url, id_persistent=id_persistent, cookies=cookies

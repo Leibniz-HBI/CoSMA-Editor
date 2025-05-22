@@ -112,13 +112,13 @@ def test_get_pair_similarity(
     )
 
 
-def test_get_pair_similarity_with_tag_match(
+def test_get_pair_similarity_with_column_match(
     auth_server,
     contribution_candidate,
     entities,
     duplicate_assignment,
-    tag_instances_match,
-    tag_merge_request,
+    values_match,
+    column_merge_request,
 ):
     live_server, cookies = auth_server
     rsp = r.get_score(

@@ -3,7 +3,6 @@
 from django.db import migrations, models
 
 from cosmae.index_query import (
-    CREATE_TAG_INSTANCE_VALUE_INDEX_QUERY,
     CREATE_VALUE_VALUE_INDEX_QUERY,
     DROP_TAG_INSTANCE_VALUE_INDEX_QUERY,
     DROP_VALUE_VALUE_INDEX_QUERY,
@@ -33,7 +32,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RunSQL(
             DROP_TAG_INSTANCE_VALUE_INDEX_QUERY,
-            reverse_sql=CREATE_TAG_INSTANCE_VALUE_INDEX_QUERY,
+            reverse_sql=CREATE_VALUE_VALUE_INDEX_QUERY,
         ),
         migrations.RenameModel("tagdefinition", "column"),
         migrations.RenameModel("tagdefinitionhistory", "columnhistory"),

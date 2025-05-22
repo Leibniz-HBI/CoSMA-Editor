@@ -20,25 +20,23 @@ def test_no_cookies(auth_server):
     assert rsp.status_code == 401
 
 
-def test_existing_tag_definition(
-    auth_server, tag_def_user_profile, tag_def_user_profile1
-):
+def test_existing_column(auth_server, column_user_profile, column_user_profile1):
     server, cookies = auth_server
     rsp = req.post_append_id_column_persistent(
-        server.url, tag_def_user_profile.id_persistent, cookies=cookies
+        server.url, column_user_profile.id_persistent, cookies=cookies
     )
     assert rsp.status_code == 200
     rsp = req.post_append_id_column_persistent(
-        server.url, tag_def_user_profile1.id_persistent, cookies=cookies
+        server.url, column_user_profile1.id_persistent, cookies=cookies
     )
     assert rsp.status_code == 200
     rsp = req.delete_id_column_persistent(
-        server.url, tag_def_user_profile.id_persistent, cookies
+        server.url, column_user_profile.id_persistent, cookies
     )
     assert rsp.status_code == 200
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["data"]["column_list"]] == [
-        tag_def_user_profile1.id_persistent
+    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+        column_user_profile1.id_persistent
     ]

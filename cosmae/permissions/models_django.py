@@ -16,9 +16,9 @@ class Permission(models.Model):
     @classmethod
     def is_owner(cls, id_resource_persistent, user):
         """Check whether a resource is owned by a user.
-        This currently only works for tag definitions.
+        This currently only works for columns.
         In the future the owner property should also be handled by permission objects.
-        This would require to create an initial permission for newly created tag definitions.
+        This would require to create an initial permission for newly created columns.
         """
-        tag_def = Column.objects.filter(id_persistent=id_resource_persistent).get()
-        return tag_def.owner_id == user.id
+        column = Column.objects.filter(id_persistent=id_resource_persistent).get()
+        return column.owner_id == user.id

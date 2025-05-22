@@ -3,9 +3,9 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+import tests.column.common as cc
 from tests.merge_request.entity import common as c
 from tests.merge_request.entity.api.integration import requests as req
-from tests.tag import common as ct
 from tests.user import common as cu
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
@@ -85,9 +85,9 @@ def test_conflicts_no_resolution(
                 "replacement_state": None,
                 "replacement_value": None,
                 "column": {
-                    "name_path": [ct.name_column_curated_test],
+                    "name_path": [cc.name_column_curated_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_column_curated_test,
+                    "id_persistent": cc.id_column_curated_test,
                     "curated": True,
                     "hidden": False,
                 },
@@ -106,9 +106,9 @@ def test_conflicts_no_resolution(
                 "replacement_state": None,
                 "replacement_value": None,
                 "column": {
-                    "name_path": [ct.name_column_test],
+                    "name_path": [cc.name_column_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_column_persistent_test,
+                    "id_persistent": cc.id_column_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },
@@ -122,9 +122,9 @@ def test_conflicts_no_resolution(
                 "replacement_state": None,
                 "replacement_value": None,
                 "column": {
-                    "name_path": [ct.name_column_test1],
+                    "name_path": [cc.name_column_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_column_persistent_test_user1,
+                    "id_persistent": cc.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },
@@ -240,9 +240,9 @@ def test_conflicts_resolved(
                 "replacement_state": None,
                 "replacement_value": None,
                 "column": {
-                    "name_path": [ct.name_column_curated_test],
+                    "name_path": [cc.name_column_curated_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_column_curated_test,
+                    "id_persistent": cc.id_column_curated_test,
                     "curated": True,
                     "hidden": False,
                 },
@@ -261,9 +261,9 @@ def test_conflicts_resolved(
                 "replacement_state": None,
                 "replacement_value": None,
                 "column": {
-                    "name_path": [ct.name_column_test],
+                    "name_path": [cc.name_column_test],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_column_persistent_test,
+                    "id_persistent": cc.id_column_persistent_test,
                     "curated": False,
                     "hidden": False,
                 },
@@ -277,9 +277,9 @@ def test_conflicts_resolved(
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
                 "column": {
-                    "name_path": [ct.name_column_test1],
+                    "name_path": [cc.name_column_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": ct.id_column_persistent_test_user1,
+                    "id_persistent": cc.id_column_persistent_test_user1,
                     "curated": False,
                     "hidden": False,
                 },

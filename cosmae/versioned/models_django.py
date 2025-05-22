@@ -60,7 +60,7 @@ class HistoryMixin:
 
     @classmethod
     def most_recent_by_id(cls, id_persistent):
-        """Return the most recent version of a tag_instance."""
+        """Return the most recent version of a value."""
         # pylint: disable=no-member
         return cls.objects.filter(id_persistent=id_persistent).order_by(
             models.F("previous_version").desc(nulls_last=True)

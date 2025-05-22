@@ -5,7 +5,7 @@ import pytest
 
 import tests.contribution.entity.common as c
 import tests.entity.common as ce
-import tests.tag.common as ct
+import tests.value.common as cv
 import cosmae.contribution.entity.queue as q
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
@@ -140,8 +140,8 @@ def test_exception_for_entity_update_without_justification(
 
 
 @pytest.mark.django_db
-def test_replaces_entity_of_tag_def(tag_instances_for_replace, user, entity_match):
-    q.update_tag_instances(
+def test_replaces_entity_of_column(values_for_replace, user, entity_match):
+    q.update_values(
         q.annotate_with_replacement_info(
             Value.objects,  # pylint: disable=no-member
             EntityDuplicate.objects.all(),  # pylint: disable=no-member
@@ -158,8 +158,8 @@ def test_replaces_entity_of_tag_def(tag_instances_for_replace, user, entity_matc
 
 
 @pytest.mark.django_db
-def test_keeps_entity_of_tag_def(user, tag_instances_for_replace):
-    q.update_tag_instances(
+def test_keeps_entity_of_column(user, values_for_replace):
+    q.update_values(
         q.annotate_with_replacement_info(
             Value.objects,  # pylint: disable=no-member
             EntityDuplicate.objects.all(),  # pylint: disable=no-member
@@ -175,7 +175,7 @@ def test_keeps_entity_of_tag_def(user, tag_instances_for_replace):
         assert inst.id_entity_persistent == c.id_persistent_entity_duplicate_test
 
 
-def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_match):
+def test_eliminate_duplicates(contribution_candidate, values, entity_match):
     assert 5 == len(ValueHistory.objects.all())  # pylint: disable=no-member
     q.eliminate_duplicates(contribution_candidate.id_persistent)
     assert 3 == len(
@@ -198,21 +198,21 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
     )
     # There have been two edits
     assert 7 == len(ValueHistory.objects.all())  # pylint: disable=no-member
-    for_tag = [
-        tag.__dict__
-        for tag in Value.by_column_chunked_queryset(c.id_tag_def_test, 0, 20)
+    for_column = [
+        column.__dict__
+        for column in Value.by_column_chunked_queryset(c.id_column_test, 0, 20)
     ]
-    assert for_tag[0]["previous_version_id"] is None
-    assert for_tag[1]["previous_version_id"] is not None
-    for tag in for_tag:
-        tag.pop("_state")
-        tag.pop("time_edit")
-        tag.pop("previous_version_id")
-        tag.pop("id")
-    assert for_tag == [
+    assert for_column[0]["previous_version_id"] is None
+    assert for_column[1]["previous_version_id"] is not None
+    for column in for_column:
+        column.pop("_state")
+        column.pop("time_edit")
+        column.pop("previous_version_id")
+        column.pop("id")
+    assert for_column == [
         {
-            "id_persistent": ct.id_instance_test1,
-            "id_column_persistent": c.id_tag_def_test,
+            "id_persistent": cv.id_instance_test1,
+            "id_column_persistent": c.id_column_test,
             "id_entity_persistent": ce.id_persistent_test_0,
             "value": "1.7",
             "hidden": False,
@@ -222,9 +222,9 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "merged_from": None,
         },
         {
-            "id_persistent": ct.id_instance_test0,
+            "id_persistent": cv.id_instance_test0,
             "id_entity_persistent": ce.id_persistent_test_1,
-            "id_column_persistent": c.id_tag_def_test,
+            "id_column_persistent": c.id_column_test,
             "value": "2.4",
             "hidden": False,
             "disabled": False,
@@ -233,21 +233,21 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "merged_from": None,
         },
     ]
-    for_tag = [
-        tag.__dict__
-        for tag in Value.by_column_chunked_queryset(c.id_tag_def_test1, 0, 20)
+    for_column = [
+        column.__dict__
+        for column in Value.by_column_chunked_queryset(c.id_column_test1, 0, 20)
     ]
-    assert for_tag[0]["previous_version_id"] is None
-    assert for_tag[1]["previous_version_id"] is not None
-    for tag in for_tag:
-        tag.pop("_state")
-        tag.pop("time_edit")
-        tag.pop("previous_version_id")
-        tag.pop("id")
-    assert for_tag == [
+    assert for_column[0]["previous_version_id"] is None
+    assert for_column[1]["previous_version_id"] is not None
+    for column in for_column:
+        column.pop("_state")
+        column.pop("time_edit")
+        column.pop("previous_version_id")
+        column.pop("id")
+    assert for_column == [
         {
-            "id_persistent": ct.id_instance_test3,
-            "id_column_persistent": c.id_tag_def_test1,
+            "id_persistent": cv.id_instance_test3,
+            "id_column_persistent": c.id_column_test1,
             "id_entity_persistent": ce.id_persistent_test_1,
             "value": "baz",
             "hidden": False,
@@ -257,9 +257,9 @@ def test_eliminate_duplicates(contribution_candidate, tag_instances, entity_matc
             "merged_from": None,
         },
         {
-            "id_persistent": ct.id_instance_test2,
+            "id_persistent": cv.id_instance_test2,
             "id_entity_persistent": ce.id_persistent_test_1,
-            "id_column_persistent": c.id_tag_def_test1,
+            "id_column_persistent": c.id_column_test1,
             "value": "bar",
             "hidden": False,
             "disabled": False,

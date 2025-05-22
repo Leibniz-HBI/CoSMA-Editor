@@ -41,7 +41,7 @@ def test_wrong_user(auth_server1, merge_request_user):
     )
     assert rsp.status_code == 403
     assert rsp.json() == {
-        "msg": "You do not have write permissions for the destination tag."
+        "msg": "You do not have write permissions for the destination column."
     }
 
 

@@ -124,7 +124,7 @@ class ChunkRequest(Schema):
 
 class EntityDetailsResponse(Schema):
     # pylint: disable=too-few-public-methods
-    """API Response combining an entity with its tag instances."""
+    """API Response combining an entity with its values."""
     entity: Entity
     value_list: List[ValuePost]
 
@@ -134,7 +134,7 @@ class EntitySearchResult(Schema):
     """API response for a single search result."""
     match_value: str
     id_entity_persistent: str
-    id_tag_definition_persistent: Optional[str]
+    id_column_persistent: Optional[str]
 
 
 class EntitySearchResultList(Schema):
@@ -312,17 +312,17 @@ def search(request: HttpRequest, term: str):
             .search(term)
             .values(
                 id_entity_persistent=F("id_persistent"),
-                id_tag_definition_persistent=Value(None, TextField()),
+                id_column_persistent=Value(None, TextField()),
                 value=F("display_txt"),
             )
         )
-        tag_value_results = ValueDb.objects.search(
+        value_results = ValueDb.objects.search(
             term,
             id_columns=ConfigValue.objects.filter(key=DISPLAY_TXT_ORDER_CONFIG_KEY)
             .annotate(text_value=Cast("value", TextField()))
             .values("text_value"),
         ).values("id_entity_persistent", "id_column_persistent", "value")
-        without_known = tag_value_results.exclude(
+        without_known = value_results.exclude(
             id_entity_persistent__in=display_txt_results.values("id_entity_persistent")
         )
         union_results = display_txt_results.union(without_known)
@@ -527,12 +527,12 @@ def entity_db_dict_to_api(entity: Optional[dict]) -> Optional[Entity]:
 def entity_search_result_db_to_api(entity: EntityDb) -> EntitySearchResult:
     "Transform an db entity to a search result"
     id_entity_persistent = entity["id_entity_persistent"]
-    id_tag_definition_persistent = entity["id_tag_definition_persistent"]
+    id_column_persistent = entity["id_column_persistent"]
     matched_value = entity["value"]
     return EntitySearchResult(
         match_value=matched_value,
         id_entity_persistent=id_entity_persistent,
-        id_tag_definition_persistent=id_tag_definition_persistent,
+        id_column_persistent=id_column_persistent,
     )
 
 

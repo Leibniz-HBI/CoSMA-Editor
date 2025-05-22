@@ -25,7 +25,7 @@ def test_fast_forward_destination_empty(
 def test_fast_forward_destination_empty_with_disable(
     merge_request_user_fast_forward_disable_origin, instances_merge_request_origin_user
 ):
-    "Disables the origin tag def on fast forward of a merge request."
+    "Disables the origin column on fast forward of a merge request."
     q.merge_request_fast_forward(
         merge_request_user_fast_forward_disable_origin.id_persistent
     )
@@ -42,7 +42,7 @@ def test_fast_forward_destination_empty_with_disable(
 def test_fast_forward_origin_empty(
     merge_request_user_fast_forward, instance_merge_request_destination_user_no_conflict
 ):
-    "Fast forward a merge request if the origin tag has no data."
+    "Fast forward a merge request if the origin column has no data."
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
     merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
@@ -118,7 +118,7 @@ def test_applies_resolutions(
 
 
 def test_applies_resolutions_disable_origin(merge_request_user_disable_origin_resolved):
-    """Test disable origin tag on application of resolutions.
+    """Test disable origin column on application of resolutions.
     This test does not apply any resolutions."""
     q.merge_request_resolve_conflicts(
         merge_request_user_disable_origin_resolved.id_persistent,

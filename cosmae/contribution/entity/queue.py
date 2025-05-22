@@ -41,14 +41,12 @@ def eliminate_duplicates(id_contribution_persistent):
             duplicates = EntityDuplicate.objects.filter(  # pylint: disable=no-member
                 contribution_candidate=contribution
             )
-            tag_instances_with_duplicates = annotate_with_replacement_info(
+            values_with_duplicates = annotate_with_replacement_info(
                 Value.objects.all(),  # pylint: disable=no-member
                 duplicates,
                 "id_entity_persistent",
             )
-            update_tag_instances(
-                tag_instances_with_duplicates, contribution.created_by, time_edit
-            )
+            update_values(values_with_duplicates, contribution.created_by, time_edit)
 
             replaced_entities_with_duplicates = annotate_with_replacement_info(
                 EntityHistory.objects.filter(  # pylint: disable=no-member
@@ -77,27 +75,27 @@ def eliminate_duplicates(id_contribution_persistent):
             contribution_candidate.save()
 
 
-def update_tag_instances(tag_instances_with_duplicates, user, time_edit):
-    "Update tag instances according to replacement info."
+def update_values(values_with_duplicates, user, time_edit):
+    "Update values according to replacement info."
     # no good way to keep track of updates in bulk operation for now
-    tag_instances_with_duplicates = tag_instances_with_duplicates.filter(
+    values_with_duplicates = values_with_duplicates.filter(
         replacement_id_entity_persistent__isnull=False
     )
     updated_values = [
         ValueHistory.change_or_create_versioned(
-            id_persistent=tag_instance.id_persistent,
-            id_entity_persistent=tag_instance.replacement_id_entity_persistent,
-            value=tag_instance.value,
-            id_column_persistent=tag_instance.id_column_persistent,
+            id_persistent=value.id_persistent,
+            id_entity_persistent=value.replacement_id_entity_persistent,
+            value=value.value,
+            id_column_persistent=value.id_column_persistent,
             written_by_session=user.edit_session,
-            version=tag_instance.id,
+            version=value.id,
             time_edit=time_edit,
         )[0]
-        for tag_instance in tag_instances_with_duplicates
+        for value in values_with_duplicates
     ]
     ValueHistory.objects.bulk_create(updated_values)  # pylint: disable=no-member
-    for tag_instance in updated_values:
-        django_rq.enqueue(update_display_txt_cache, tag_instance.id_entity_persistent)
+    for value in updated_values:
+        django_rq.enqueue(update_display_txt_cache, value.id_entity_persistent)
 
 
 def annotate_with_replacement_info(manager, replacements, id_entity_field_name):

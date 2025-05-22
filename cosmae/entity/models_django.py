@@ -77,7 +77,7 @@ class Entity(EntityAbstract):
 
     @classmethod
     def most_recent_queryset(cls, manager=None, include_disabled=False):
-        "Return most recent versions of all_tag_instances"
+        "Return most recent versions of all_values"
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
         if include_disabled:
@@ -161,7 +161,7 @@ class EntityJustification(models.Model):
         timestamp: datetime,
         author: CosmaeUser,
     ):
-        # pylint: disable=too-many-arguments
+        # pylint: disable=too-many-arguments,too-many-positional-arguments
         "Add a new entity justification."
         if text is None or text.strip() == "":
             raise cls.EmptyJustificationException()
@@ -230,7 +230,7 @@ class EntityHistory(EntityAbstract, HistoryMixin):
 
     @classmethod
     def most_recent_queryset(cls, manager=None, include_disabled=False):
-        "Return most recent versions of all_tag_instances"
+        "Return most recent versions of all_values"
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
         most_recent = manager.filter(

@@ -6,11 +6,11 @@ from django.http import HttpRequest
 from ninja import Router, Schema
 
 from cosmae.column.models_django import Column
-from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.contribution.tag_definition.models_django import (
-    TagDefinitionContribution,
-    TagInstanceContribution,
+from cosmae.contribution.column.models_django import (
+    ColumnContribution,
+    ValueContribution,
 )
+from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.util.auth import check_user
@@ -35,7 +35,7 @@ def get_preview(
     request: HttpRequest,
     id_column_persistent: str,
 ):
-    "Get preview for tag definition assignment"
+    "Get preview for column assignment"
     try:
         user = check_user(request)
     except NotAuthenticatedException:
@@ -47,20 +47,18 @@ def get_preview(
         contribution = ContributionCandidate.by_id_persistent(
             id_contribution_persistent, user
         ).get()
-        tag_definition_contribution = TagDefinitionContribution.get_by_id_persistent(
+        column_contribution = ColumnContribution.get_by_id_persistent(
             id_column_persistent, contribution
         )
         contribution_values = (
-            TagInstanceContribution.objects.filter(  # pylint: disable=no-member
-                tag_definition=tag_definition_contribution
+            ValueContribution.objects.filter(  # pylint: disable=no-member
+                column=column_contribution
             )
         )
-        id_tag_definition_persistent = (
-            tag_definition_contribution.id_existing_persistent
-        )
-        if id_tag_definition_persistent is None:
+        id_column_persistent = column_contribution.id_existing_persistent
+        if id_column_persistent is None:
             destination_values = []
-        elif id_tag_definition_persistent == "display_txt":
+        elif id_column_persistent == "display_txt":
             destination_values = [
                 entity.display_txt
                 for entity in Entity.get_most_recent_chunked(
@@ -69,7 +67,7 @@ def get_preview(
                     manager=Entity.objects_all().filter(display_txt__isnull=False),
                 )
             ]
-        elif id_tag_definition_persistent == "justification":
+        elif id_column_persistent == "justification":
             destination_values = list(
                 EntityJustification.objects.all()[:10].values_list("text", flat=True)
             )
@@ -77,7 +75,7 @@ def get_preview(
             destination_values = [
                 value.value
                 for value in Value.by_column_chunked_queryset(
-                    id_tag_definition_persistent, 0, 10
+                    id_column_persistent, 0, 10
                 )
             ]
 
@@ -87,9 +85,9 @@ def get_preview(
         )
     except ContributionCandidate.DoesNotExist:  # pylint: disable = no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
-    except TagDefinitionContribution.DoesNotExist:  # pylint: disable=no-member
+    except ColumnContribution.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contributed column does not exist")
     except Column.DoesNotExist:  # pylint: disable=no-member
-        return 404, ApiError(msg="Destination tag definition does not exist.")
+        return 404, ApiError(msg="Destination column does not exist.")
     except Exception:  #  pylint: disable=broad-except
         return 500, ApiError(msg="Could not get preview.")

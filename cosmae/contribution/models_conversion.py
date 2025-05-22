@@ -28,9 +28,9 @@ def contribution_db_to_api(
             match_column_list = []
         else:
             match_column_list = [
-                column_db_dict_to_api(tag_def)
-                for tag_def in contribution_db.matched_columns
-                if tag_def is not None
+                column_db_dict_to_api(column)
+                for column in contribution_db.matched_columns
+                if column is not None
             ]
     else:
         match_column_list = None

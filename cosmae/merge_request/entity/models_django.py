@@ -278,7 +278,7 @@ class EntityMergeRequest(AbstractMergeRequest):
 
     def resolvable_unresolvable_updated(
         self: EntityMergeRequest,
-        tag_definition_query_set: models.BaseManager[Column],
+        column_query_set: models.BaseManager[Column],
     ):
         "Get conflicts for a merge request"
         resolutions = EntityConflictResolution.for_merge_request_query_set(self)
@@ -287,21 +287,21 @@ class EntityMergeRequest(AbstractMergeRequest):
         conflict_query_set = Value.annotate_column(
             self.instance_conflicts_all(True, recent)
         )
-        with_user_tag_def_id = conflict_query_set.annotate(
+        with_user_column_id = conflict_query_set.annotate(
             id_column_most_recent_persistent=models.fields.json.KT(
                 "column__id_persistent"
             )
         ).annotate(
             writable_column_id=models.Subquery(
-                tag_definition_query_set.filter(
+                column_query_set.filter(
                     id_persistent=models.OuterRef("id_column_most_recent_persistent")
                 ).values("id")[:1]
             )
         )
-        resolvable_conflicts = with_user_tag_def_id.filter(
+        resolvable_conflicts = with_user_column_id.filter(
             writable_column_id__isnull=False
         )
-        unresolvable_conflicts = with_user_tag_def_id.filter(
+        unresolvable_conflicts = with_user_column_id.filter(
             writable_column_id__isnull=True
         )
         # need to filter updated for resolvable
@@ -313,7 +313,7 @@ class EntityMergeRequest(AbstractMergeRequest):
             )
             .annotate(
                 writable_column_id=models.Subquery(
-                    tag_definition_query_set.filter(
+                    column_query_set.filter(
                         id=models.OuterRef("id_column_most_recent")
                     ).values("id")[:1]
                 )
@@ -347,7 +347,7 @@ class EntityConflictResolution(AbstractConflictResolution):
     @classmethod
     def non_recent(cls, manager=None):
         """Get the conflict resolutions that reference not up to date entities,
-        tag definition or tag instances."""
+        column or values."""
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
         with_version_info = cls.annotate_instance_origin_most_recent(
@@ -408,7 +408,7 @@ class EntityConflictResolution(AbstractConflictResolution):
                     | models.Q(
                         # case when value destination is null
                         # therefore use entity information
-                        # and tag_definition information from merge request!
+                        # and column information from merge request!
                         id_entity_persistent=models.OuterRef(
                             "merge_request__id_destination_persistent"
                         ),
@@ -454,18 +454,18 @@ class EntityConflictResolution(AbstractConflictResolution):
     @classmethod
     def only_recent(cls, manager=None):
         """Get the conflict resolutions that reference not up to date entities,
-        tag definition or tag instances."""
+        column or values."""
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
-        with_tag_definition_version_info = manager.annotate(
+        with_column_version_info = manager.annotate(
             id_column_most_recent=Column.objects.filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("column__id_persistent")
             ).values("id")[:1]
         )
-        only_with_recent_tag_definitions = with_tag_definition_version_info.filter(
+        only_with_recent_columns = with_column_version_info.filter(
             column__id=models.F("id_column_most_recent")
         )
-        with_entity_origin_version_info = only_with_recent_tag_definitions.annotate(
+        with_entity_origin_version_info = only_with_recent_columns.annotate(
             id_entity_origin_most_recent=Entity.objects.filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("entity_origin__id_persistent")
             ).values(

@@ -4,7 +4,7 @@ from django.db import migrations
 
 from cosmae.index_query import (
     CREATE_ENTITY_DISPLAY_TXT_INDEX_QUERY,
-    CREATE_TAG_INSTANCE_VALUE_INDEX_QUERY,
+    CREATE_VALUE_VALUE_INDEX_QUERY,
     DROP_ENTITY_DISPLAY_TXT_INDEX_QUERY,
     DROP_TAG_INSTANCE_VALUE_INDEX_QUERY,
 )
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             reverse_sql=DROP_ENTITY_DISPLAY_TXT_INDEX_QUERY,
         ),
         migrations.RunSQL(
-            CREATE_TAG_INSTANCE_VALUE_INDEX_QUERY,
+            CREATE_VALUE_VALUE_INDEX_QUERY,
             reverse_sql=DROP_TAG_INSTANCE_VALUE_INDEX_QUERY,
         ),
     ]

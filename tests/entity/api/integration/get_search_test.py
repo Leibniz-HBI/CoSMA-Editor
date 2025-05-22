@@ -3,9 +3,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import tests.column.common as cc
 import tests.entity.api.integration.requests as req
 import tests.entity.common as c
-import tests.tag.common as ct
+import tests.value.common as ct
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
 from cosmae.value.models_django import ValueHistory
@@ -61,7 +62,7 @@ def test_single_entity(auth_server, entity1):
                 {
                     "match_value": c.display_txt_test1,
                     "id_entity_persistent": c.id_persistent_test_1,
-                    "id_tag_definition_persistent": None,
+                    "id_column_persistent": None,
                 }
             ]
         },
@@ -73,20 +74,20 @@ def instance_search(user, column):
     "A value used for testing search"
     instance, _ = ValueHistory.change_or_create_versioned(
         ct.id_instance_test0,
-        ct.time_edit_test,
+        c.time_edit_test,
         user.edit_session,
         id_entity_persistent=c.id_persistent_test_0,
-        id_column_persistent=ct.id_column_persistent_test,
+        id_column_persistent=cc.id_column_persistent_test,
         value=_instance_value,
     )
     instance.save()
     return instance
 
 
-def test_tag_value(auth_server, entity0, column, instance_search, display_txt_order_0):
-    "Test search for tag values"
+def test_value(auth_server, entity0, column, instance_search, display_txt_order_0):
+    "Test search for values"
     server, cookies = auth_server
-    # patch to make sure we get a tag result
+    # patch to make sure we get a column result
     rsp = req.get_search(server.url, _search_term_value, cookies=cookies)
     assert rsp.status_code == 200
     json = rsp.json()
@@ -97,7 +98,7 @@ def test_tag_value(auth_server, entity0, column, instance_search, display_txt_or
                 {
                     "match_value": _instance_value,
                     "id_entity_persistent": c.id_persistent_test_0,
-                    "id_tag_definition_persistent": ct.id_column_persistent_test,
+                    "id_column_persistent": cc.id_column_persistent_test,
                 },
             ]
         },

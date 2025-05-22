@@ -11,18 +11,18 @@ from django.db.models.signals import post_save
 def connect_read_csv_signal():
     "Connect the signal for reading csv files on uploads."
     # pylint: disable=import-outside-toplevel
+    from cosmae.contribution.column.queue import dispatch_read_csv_head
     from cosmae.contribution.models_django import ContributionCandidate
-    from cosmae.contribution.tag_definition.queue import dispatch_read_csv_head
 
     post_save.connect(
         dispatch_read_csv_head,
         sender=ContributionCandidate,
-        dispatch_uid="cosmae.start_tag_extraction",
+        dispatch_uid="cosmae.start_column_extraction",
     )
 
 
-def connect_tag_definition_queue_process():
-    "Connect the signal for computing tag definition name paths."
+def connect_column_queue_process():
+    "Connect the signal for computing column name paths."
     # pylint: disable=import-outside-toplevel
     from cosmae.column.models_django import Column
     from cosmae.column.queue import dispatch_column_queue_process
@@ -30,7 +30,7 @@ def connect_tag_definition_queue_process():
     post_save.connect(
         dispatch_column_queue_process,
         sender=Column,
-        dispatch_uid="cosmae_tag_definition_queue",
+        dispatch_uid="cosmae_column_queue",
     )
 
 
@@ -78,8 +78,8 @@ def connect_entity_display_txt():
     )
 
 
-def connect_tag_instance_display_txt():
-    "Connect signal for updating display txt on tag instance change."
+def connect_value_display_txt():
+    "Connect signal for updating display txt on value change."
     # pylint: disable=import-outside-toplevel
     from cosmae.column.queue import dispatch_display_txt_queue_process
     from cosmae.value.models_django import ValueHistory
@@ -87,7 +87,7 @@ def connect_tag_instance_display_txt():
     post_save.connect(
         dispatch_display_txt_queue_process,
         sender=ValueHistory,
-        dispatch_uid="cosmae.taginstancehistory_display_txt_queue_process",
+        dispatch_uid="cosmae.valuehistory_display_txt_queue_process",
     )
 
 

@@ -8,6 +8,7 @@ from django.db import DatabaseError, IntegrityError
 from django.http import HttpRequest
 from ninja import File, Form, Router, UploadedFile
 
+from cosmae.contribution.column.api import router as column_router
 from cosmae.contribution.entity.api import router as entity_router
 from cosmae.contribution.models_api import (
     ContributionCandidate,
@@ -21,7 +22,6 @@ from cosmae.contribution.models_django import (
     ContributionCandidate as ContributionCandidateDb,
 )
 from cosmae.contribution.preview.api import router as preview_router
-from cosmae.contribution.tag_definition.api import router as tag_router
 from cosmae.edit_session.models_django import EditSession
 from cosmae.exception import (
     ApiError,
@@ -33,7 +33,9 @@ from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user, cosmae_auth
 
 router = Router()
-router.add_router("/{id_contribution_persistent}/columns", tag_router, auth=cosmae_auth)
+router.add_router(
+    "/{id_contribution_persistent}/columns", column_router, auth=cosmae_auth
+)
 router.add_router(
     "/{id_contribution_persistent}/entities", entity_router, auth=cosmae_auth
 )
@@ -213,22 +215,22 @@ def post_complete_assignment(request: HttpRequest, id_persistent: str):
                     msg="Can only complete column assignment when "
                     "contribution is in columns extracted state."
                 )
-            contribution.complete_tag_assignment()
+            contribution.complete_column_assignment()
             return 200, None
         except ContributionCandidateDb.MissingRequiredAssignmentsException as exc:
             return 400, ApiError(
-                msg="At least one tag has to be assigned to one of the following values: "
+                msg="At least one column has to be assigned to one of the following values: "
                 f"{' '.join(exc.required_fields)}."
             )
-        except ContributionCandidateDb.InvalidTagAssignmentException as exc:
+        except ContributionCandidateDb.InvalidColumnAssignmentException as exc:
             return 400, ApiError(
-                msg="The following tags are neither discarded nor assigned to existing: "
+                msg="The following columns are neither discarded nor assigned to existing: "
                 f"{', '.join(exc.invalid_column_names_list)}."
             )
         except ContributionCandidateDb.DuplicateAssignmentException as exc:
             return 400, ApiError(
-                msg="Assignment to existing tags has to be unique. "
-                "Please check the following tags: "
+                msg="Assignment to existing columns has to be unique. "
+                "Please check the following columns: "
                 f"{', '.join(exc.duplicate_assignments_list)}."
             )
     except NotAuthenticatedException:

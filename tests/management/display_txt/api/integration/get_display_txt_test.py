@@ -1,8 +1,8 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,duplicate-code
 from unittest.mock import MagicMock, patch
 
+import tests.column.common as c
 import tests.management.display_txt.api.integration.requests as req
-import tests.tag.common as ct
 import tests.user.common as cu
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
@@ -45,10 +45,10 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
         {
             "column_list": [
                 {
-                    "id_persistent": ct.id_column_persistent_test,
+                    "id_persistent": c.id_column_persistent_test,
                     "id_parent_persistent": None,
-                    "name": ct.name_column_test,
-                    "name_path": [ct.name_column_test],
+                    "name": c.name_column_test,
+                    "name_path": [c.name_column_test],
                     "type": "STRING",
                     "curated": False,
                     "hidden": False,
@@ -61,10 +61,10 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     },
                 },
                 {
-                    "id_persistent": ct.id_column_persistent_test_user1,
+                    "id_persistent": c.id_column_persistent_test_user1,
                     "id_parent_persistent": None,
-                    "name": ct.name_column_test1,
-                    "name_path": [ct.name_column_test1],
+                    "name": c.name_column_test1,
+                    "name_path": [c.name_column_test1],
                     "type": "STRING",
                     "curated": False,
                     "hidden": False,
@@ -77,10 +77,10 @@ def test_three_element_order(auth_server_commissioner, display_txt_order_0_1_cur
                     },
                 },
                 {
-                    "id_persistent": ct.id_column_curated_test,
+                    "id_persistent": c.id_column_curated_test,
                     "id_parent_persistent": None,
-                    "name": ct.name_column_curated_test,
-                    "name_path": [ct.name_column_curated_test],
+                    "name": c.name_column_curated_test,
+                    "name_path": [c.name_column_curated_test],
                     "type": "STRING",
                     "description": None,
                     "curated": True,

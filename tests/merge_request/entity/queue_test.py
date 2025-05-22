@@ -11,7 +11,7 @@ from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.value.models_django import Value
 
 
-def test_creates_tag_merge_requests(conflict_resolution_replace):
+def test_creates_column_merge_requests(conflict_resolution_replace):
     merge_request = conflict_resolution_replace.merge_request
     merge_request.state = EntityMergeRequest.RESOLVED
     merge_request.save()
@@ -19,29 +19,31 @@ def test_creates_tag_merge_requests(conflict_resolution_replace):
     apply_entity_merge_request(merge_request.id_persistent, user.id_persistent)
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
-    assert len(tag_merge_requests) == 2
-    assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
-    for mr in tag_merge_requests:
+    column_merge_requests = (
+        ColumnMergeRequest.objects.all()
+    )  # pylint: disable=no-member
+    assert len(column_merge_requests) == 2
+    assert len({mr.id_destination_persistent for mr in column_merge_requests}) == 2
+    for mr in column_merge_requests:
         assert mr.disable_origin_on_merge
-    tag_defs_including_hidden = Column.query_set(include_hidden=True)
-    assert len(tag_defs_including_hidden) == 5
+    columns_including_hidden = Column.query_set(include_hidden=True)
+    assert len(columns_including_hidden) == 5
     assert len(Column.query_set()) == 3
-    hidden_tag_def_instances = (
+    hidden_column_instances = (
         Value.objects.all()  # pylint: disable=no-member
         .annotate(
-            tag_def_hidden=models.Subquery(
-                tag_defs_including_hidden.filter(
+            column_hidden=models.Subquery(
+                columns_including_hidden.filter(
                     id_persistent=models.OuterRef("id_column_persistent")
                 ).values("hidden")
             )
         )
-        .filter(tag_def_hidden=True)
+        .filter(column_hidden=True)
     )
-    assert len(hidden_tag_def_instances) == 2
+    assert len(hidden_column_instances) == 2
 
 
-def test_creates_tag_merge_requests_empty_destination(
+def test_creates_column_merge_requests_empty_destination(
     conflict_resolution_replace_empty_destination,
 ):
     merge_request = conflict_resolution_replace_empty_destination.merge_request
@@ -51,26 +53,28 @@ def test_creates_tag_merge_requests_empty_destination(
     apply_entity_merge_request(merge_request.id_persistent, user.id_persistent)
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
-    assert len(tag_merge_requests) == 2
-    assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
-    for mr in tag_merge_requests:
+    column_merge_requests = (
+        ColumnMergeRequest.objects.all()
+    )  # pylint: disable=no-member
+    assert len(column_merge_requests) == 2
+    assert len({mr.id_destination_persistent for mr in column_merge_requests}) == 2
+    for mr in column_merge_requests:
         assert mr.disable_origin_on_merge
-    tag_defs_including_hidden = Column.query_set(include_hidden=True)
-    assert len(tag_defs_including_hidden) == 5
+    columns_including_hidden = Column.query_set(include_hidden=True)
+    assert len(columns_including_hidden) == 5
     assert len(Column.query_set()) == 3
-    hidden_tag_def_instances = (
+    hidden_column_instances = (
         Value.objects.all()  # pylint: disable=no-member
         .annotate(
-            tag_def_hidden=models.Subquery(
-                tag_defs_including_hidden.filter(
+            column_hidden=models.Subquery(
+                columns_including_hidden.filter(
                     id_persistent=models.OuterRef("id_column_persistent")
                 ).values("hidden")
             )
         )
-        .filter(tag_def_hidden=True)
+        .filter(column_hidden=True)
     )
-    assert len(hidden_tag_def_instances) == 2
+    assert len(hidden_column_instances) == 2
 
 
 def test_applies_resolutions(conflict_resolution_replace, user1):
@@ -81,9 +85,11 @@ def test_applies_resolutions(conflict_resolution_replace, user1):
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.merged_from == c.id_entity_origin_persistent
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
-    assert len(tag_merge_requests) == 2
-    assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
+    column_merge_requests = (
+        ColumnMergeRequest.objects.all()
+    )  # pylint: disable=no-member
+    assert len(column_merge_requests) == 2
+    assert len({mr.id_destination_persistent for mr in column_merge_requests}) == 2
     assert len(Column.query_set(include_hidden=True)) == 5
     assert len(Column.query_set()) == 3
 
@@ -98,9 +104,11 @@ def test_applies_resolution_replacement_value(
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.merged_from == c.id_entity_origin_persistent
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
-    assert len(tag_merge_requests) == 2
-    assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 2
+    column_merge_requests = (
+        ColumnMergeRequest.objects.all()
+    )  # pylint: disable=no-member
+    assert len(column_merge_requests) == 2
+    assert len({mr.id_destination_persistent for mr in column_merge_requests}) == 2
     assert len(Column.query_set(include_hidden=True)) == 5
     assert len(Column.query_set()) == 3
 
@@ -135,7 +143,7 @@ def test_copies_justification(conflict_resolution_replace, user1):
     )
 
 
-def test_creates_tag_merge_request_for_updated(
+def test_creates_column_merge_request_for_updated(
     conflict_resolution_replace,
     user1,
     instance_merge_request_destination_user_conflict_changed,
@@ -146,21 +154,23 @@ def test_creates_tag_merge_request_for_updated(
     apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
     most_recent = Entity.most_recent_queryset().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
-    tag_merge_requests = ColumnMergeRequest.objects.all()  # pylint: disable=no-member
-    assert len(tag_merge_requests) == 3
-    assert len({mr.id_destination_persistent for mr in tag_merge_requests}) == 3
-    tag_defs_including_hidden = Column.query_set(include_hidden=True)
-    assert len(tag_defs_including_hidden) == 6
+    column_merge_requests = (
+        ColumnMergeRequest.objects.all()
+    )  # pylint: disable=no-member
+    assert len(column_merge_requests) == 3
+    assert len({mr.id_destination_persistent for mr in column_merge_requests}) == 3
+    columns_including_hidden = Column.query_set(include_hidden=True)
+    assert len(columns_including_hidden) == 6
     assert len(Column.query_set()) == 3
-    hidden_tag_def_instances = (
+    hidden_column_instances = (
         Value.objects.all()  # pylint: disable=no-member
         .annotate(
-            tag_def_hidden=models.Subquery(
-                tag_defs_including_hidden.filter(
+            column_hidden=models.Subquery(
+                columns_including_hidden.filter(
                     id_persistent=models.OuterRef("id_column_persistent")
                 ).values("hidden")
             )
         )
-        .filter(tag_def_hidden=True)
+        .filter(column_hidden=True)
     )
-    assert len(hidden_tag_def_instances) == 3
+    assert len(hidden_column_instances) == 3

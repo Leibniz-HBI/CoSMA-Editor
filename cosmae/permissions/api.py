@@ -1,4 +1,4 @@
-"API methods for managing permissions. Currently only works for tag definitions."
+"API methods for managing permissions. Currently only works for columns."
 
 from typing import List, Optional
 

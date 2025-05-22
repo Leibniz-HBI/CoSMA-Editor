@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import tests.entity.api.integration.requests as req
 import tests.entity.common as ce
-import tests.tag.common as c
+import tests.value.common as cv
 from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
 
@@ -33,16 +33,14 @@ def test_applicant(auth_server_applicant):
     assert rsp.status_code == 403
 
 
-def test_missing_entity(auth_server, tag_instances_user):
+def test_missing_entity(auth_server, values_user):
     "Test getting instances"
     server, cookies = auth_server
     rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
     assert rsp.status_code == 404
 
 
-def test_get_instances(
-    auth_server, tag_instances_user, entity0, entity1, justification0
-):
+def test_get_instances(auth_server, values_user, entity0, entity1, justification0):
     "Test getting instances"
     server, cookies = auth_server
     rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
@@ -51,7 +49,7 @@ def test_get_instances(
     instances = json["value_list"]
     assert len(instances) == 2
     id_set = {instance["id_persistent"] for instance in instances}
-    assert id_set == {c.id_instance_test0, c.id_instance_test2}
+    assert id_set == {cv.id_instance_test0, cv.id_instance_test2}
     entity = json["entity"]
     assert_versioned(
         entity,

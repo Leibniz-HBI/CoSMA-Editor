@@ -11,12 +11,12 @@ from django.db.utils import DatabaseError, OperationalError, ProgrammingError
 
 from cosmae.signals import (
     connect_add_superuser,
+    connect_column_queue_process,
     connect_entity_display_txt,
     connect_password_changed_signal,
     connect_read_csv_signal,
-    connect_tag_definition_queue_process,
-    connect_tag_instance_display_txt,
     connect_user_created_signal,
+    connect_value_display_txt,
 )
 
 logger = logging.getLogger("cosmae.app_config")
@@ -73,10 +73,10 @@ class CosmaeConfig(AppConfig):
         try:
             if not settings.IS_UNITTEST:
                 connect_read_csv_signal()
-                populate_tag_definition_name_path_cache()
-                connect_tag_definition_queue_process()
+                populate_column_name_path_cache()
+                connect_column_queue_process()
                 connect_entity_display_txt()
-                connect_tag_instance_display_txt()
+                connect_value_display_txt()
                 connect_user_created_signal()
                 connect_password_changed_signal()
         except AppRegistryNotReady:
@@ -84,7 +84,7 @@ class CosmaeConfig(AppConfig):
         super().ready()
 
 
-def populate_tag_definition_name_path_cache():
+def populate_column_name_path_cache():
     "Spawn queue processes that populate the name path cache for all"
     # pylint: disable=import-outside-toplevel
     from django_rq import enqueue

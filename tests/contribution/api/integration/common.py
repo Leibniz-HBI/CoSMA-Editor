@@ -61,5 +61,5 @@ column_test1 = {
     "discard": False,
 }
 
-id_tag_merge_request_persistent = "ab6a456e-4560-458b-9f8d-864bdcccc904"
-time_edit_tag_merge_request = datetime(2020, 2, 3, tzinfo=timezone.utc)
+id_column_merge_request_persistent = "ab6a456e-4560-458b-9f8d-864bdcccc904"
+time_edit_column_merge_request = datetime(2020, 2, 3, tzinfo=timezone.utc)

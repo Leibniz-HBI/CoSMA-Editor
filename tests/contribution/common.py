@@ -11,9 +11,9 @@ file_name_test1 = "DBOeS_Parlamentarier50.csv"
 
 file_name_test_semicolon = "DBOeS_Parlamentarier50_semicolon.csv"
 
-name_definition_test0 = "test contribution tag definition 0"
+name_definition_test0 = "test contribution column 0"
 id_persistent_column_test0 = "25600b60-6ead-43fb-aaa5-20e28ffd1ecd"
-name_definition_test1 = "test contribution tag definition 1"
+name_definition_test1 = "test contribution column 1"
 id_persistent_column_test1 = "7b2ebca7-776a-4f42-a836-82d5eae07bac"
 
 name_error_test = "contribution error"

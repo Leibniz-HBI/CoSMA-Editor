@@ -32,7 +32,7 @@ def test_applicant(auth_server_applicant):
     assert rsp.status_code == 403
 
 
-def test_missing_entity(auth_server, tag_instances_user):
+def test_missing_entity(auth_server, values_user):
     "Test getting instances"
     server, cookies = auth_server
     rsp = req.get_entity_details(server.url, ce.id_persistent_test_0, cookies)

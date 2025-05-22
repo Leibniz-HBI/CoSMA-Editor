@@ -7,8 +7,8 @@ import tests.contribution.api.integration.common as c
 import tests.contribution.api.integration.requests as req_contrib
 import tests.user.common as cu
 from cosmae.column.models_django import Column, ColumnHistory
+from cosmae.contribution.column.models_django import ColumnContribution
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.contribution.tag_definition.models_django import TagDefinitionContribution
 from cosmae.util.auth import NotAuthenticatedException, CosmaeUser
 
 
@@ -84,14 +84,14 @@ def test_with_discarded_assignment(auth_server):
             created_by=CosmaeUser.objects.get(username=cu.test_username),
         )
     )
-    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+    ColumnContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
         contribution_candidate=contribution_candidate,
         name="name",
         id_existing_persistent="display_txt",
         index_in_file=0,
     )
-    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+    ColumnContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
         contribution_candidate=contribution_candidate,
         name="column_test",
@@ -120,7 +120,7 @@ def test_incomplete_assignment(auth_server):
             created_by=CosmaeUser.objects.get(username=cu.test_username),
         )
     )
-    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+    ColumnContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
         contribution_candidate=contribution_candidate,
         name="name",
@@ -128,7 +128,7 @@ def test_incomplete_assignment(auth_server):
         index_in_file=0,
         discard=False,
     )
-    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+    ColumnContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
         contribution_candidate=contribution_candidate,
         name="column_test",
@@ -142,7 +142,8 @@ def test_incomplete_assignment(auth_server):
     )
     assert rsp.status_code == 400
     assert (
-        rsp.json()["msg"] == "The following tags are neither discarded nor assigned to "
+        rsp.json()["msg"]
+        == "The following columns are neither discarded nor assigned to "
         "existing: column_test."
     )
 
@@ -161,7 +162,7 @@ def test_duplicate_assignment(auth_server):
             created_by=CosmaeUser.objects.get(username=cu.test_username),
         )
     )
-    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+    ColumnContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
         contribution_candidate=contribution_candidate,
         name="name",
@@ -169,7 +170,7 @@ def test_duplicate_assignment(auth_server):
         index_in_file=0,
         discard=False,
     )
-    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+    ColumnContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
         contribution_candidate=contribution_candidate,
         name="column_test",
@@ -183,8 +184,8 @@ def test_duplicate_assignment(auth_server):
     )
     assert rsp.status_code == 400
     assert (
-        rsp.json()["msg"] == "Assignment to existing tags has to be unique. Please "
-        "check the following tags: name, column_test."
+        rsp.json()["msg"] == "Assignment to existing columns has to be unique. Please "
+        "check the following columns: name, column_test."
     )
 
 
@@ -203,28 +204,28 @@ def test_complete_assignment(auth_server):
             created_by=user,
         )
     )
-    id_tag_definition_persistent = str(uuid4())
+    id_column_persistent = str(uuid4())
     ColumnHistory.objects.create(  # pylint: disable=no-member
-        name="tag definition_test",
+        name="column_test",
         id_parent_persistent=None,
         type=Column.BOOL,
-        id_persistent=id_tag_definition_persistent,
+        id_persistent=id_column_persistent,
         time_edit=datetime.now(),
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
     )
-    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+    ColumnContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
         contribution_candidate=contribution_candidate,
         name="name",
         id_existing_persistent="display_txt",
         index_in_file=0,
     )
-    TagDefinitionContribution.objects.get_or_create(  # pylint: disable=no-member
+    ColumnContribution.objects.get_or_create(  # pylint: disable=no-member
         id_persistent=uuid4(),
         contribution_candidate=contribution_candidate,
         name="column_test",
-        id_existing_persistent=id_tag_definition_persistent,
+        id_existing_persistent=id_column_persistent,
         index_in_file=1,
     )
 

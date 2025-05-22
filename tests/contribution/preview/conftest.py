@@ -4,23 +4,23 @@ import pytest
 
 import tests.contribution.preview.common as c
 import tests.entity.common as ce
-from cosmae.contribution.tag_definition.models_django import TagInstanceContribution
+from cosmae.contribution.column.models_django import ValueContribution
 from cosmae.value.models_django import ValueHistory
 
 
 @pytest.fixture
 def instances_contribution(contribution_column):
-    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+    ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution,
         id_entity_persistent=ce.id_persistent_test_0,
-        tag_definition=contribution_column,
+        column=contribution_column,
         line_idx=500,
         discard=False,
     )
-    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+    ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution_1,
         id_entity_persistent=ce.id_persistent_test_1,
-        tag_definition=contribution_column,
+        column=contribution_column,
         line_idx=505,
         discard=False,
     )
@@ -30,17 +30,17 @@ def instances_contribution(contribution_column):
 def instances_contribution_assigned_justification(
     contribution_column_assigned_justification,
 ):
-    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+    ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution,
         id_entity_persistent=ce.id_persistent_test_0,
-        tag_definition=contribution_column_assigned_justification,
+        column=contribution_column_assigned_justification,
         line_idx=500,
         discard=False,
     )
-    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+    ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution_1,
         id_entity_persistent=ce.id_persistent_test_1,
-        tag_definition=contribution_column_assigned_justification,
+        column=contribution_column_assigned_justification,
         line_idx=505,
         discard=False,
     )
@@ -50,17 +50,17 @@ def instances_contribution_assigned_justification(
 def instances_contribution_assigned_display_txt(
     contribution_column_assigned_display_txt,
 ):
-    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+    ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution,
         id_entity_persistent=ce.id_persistent_test_0,
-        tag_definition=contribution_column_assigned_display_txt,
+        column=contribution_column_assigned_display_txt,
         line_idx=500,
         discard=False,
     )
-    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+    ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution_1,
         id_entity_persistent=ce.id_persistent_test_1,
-        tag_definition=contribution_column_assigned_display_txt,
+        column=contribution_column_assigned_display_txt,
         line_idx=505,
         discard=False,
     )
@@ -68,17 +68,17 @@ def instances_contribution_assigned_display_txt(
 
 @pytest.fixture
 def instances_contribution_assigned(contribution_column_assigned):
-    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+    ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution,
         id_entity_persistent=ce.id_persistent_test_0,
-        tag_definition=contribution_column_assigned,
+        column=contribution_column_assigned,
         line_idx=500,
         discard=False,
     )
-    TagInstanceContribution.objects.create(  # pylint: disable=no-member
+    ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution_1,
         id_entity_persistent=ce.id_persistent_test_1,
-        tag_definition=contribution_column_assigned,
+        column=contribution_column_assigned,
         line_idx=505,
         discard=False,
     )

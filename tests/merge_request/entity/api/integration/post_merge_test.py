@@ -65,7 +65,7 @@ def test_start_merge(
 def test_conflict_updated_merge(
     auth_server_commissioner,
     conflict_resolution_keep,
-    instance_curated_updated,
+    value_curated_updated,
 ):
     server, cookies = auth_server_commissioner
     mock = MagicMock()

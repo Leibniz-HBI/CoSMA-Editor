@@ -11,7 +11,10 @@ from django.db.utils import OperationalError
 from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.edit_session.models_django import EditSession
 from cosmae.exception import EntityUpdatedException
-from cosmae.merge_request.models_django import ColumnMergeRequest, TagConflictResolution
+from cosmae.merge_request.models_django import (
+    ColumnConflictResolution,
+    ColumnMergeRequest,
+)
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.value.models_django import (
     Value,
@@ -25,22 +28,22 @@ def disable_origin(
     id_approved_by_persistent: Optional[str],
     time_edit,
 ):
-    "If configured: disable the origin tag of a merge request."
+    "If configured: disable the origin column of a merge request."
     if merge_request.disable_origin_on_merge:
-        tag_definition = Column.most_recent_by_id(merge_request.id_origin_persistent)
+        column = Column.most_recent_by_id(merge_request.id_origin_persistent)
         disabled, _ = ColumnHistory.change_or_create_versioned(
-            tag_definition.id_persistent,
+            column.id_persistent,
             time_edit,
             # This is the disabling write it was approved and written by the approver
             written_by_session=written_by_session,
             approved_by_id_persistent=id_approved_by_persistent,
-            name=tag_definition.name,
-            id_parent_persistent=tag_definition.id_parent_persistent,
-            version=tag_definition.id,
-            owner=tag_definition.owner,
-            type=tag_definition.type,
-            curated=tag_definition.curated,
-            hidden=tag_definition.hidden,
+            name=column.name,
+            id_parent_persistent=column.id_parent_persistent,
+            version=column.id,
+            owner=column.owner,
+            type=column.type,
+            curated=column.curated,
+            hidden=column.hidden,
             disabled=True,
         )
         disabled.save()
@@ -59,35 +62,32 @@ def merge_request_fast_forward(id_merge_request_persistent):
                 merge_request = merge_request_query.get()
             except OperationalError:
                 return
-            tag_definition_destination = Column.most_recent_by_id(
+            column_destination = Column.most_recent_by_id(
                 merge_request.id_destination_persistent
             )
-            if (
-                tag_definition_destination.curated
-                or not tag_definition_destination.has_write_access(
-                    merge_request.created_by.id_persistent
-                )
+            if column_destination.curated or not column_destination.has_write_access(
+                merge_request.created_by.id_persistent
             ):
                 return
-            tag_instances_destination = Value.by_column_chunked_queryset(
+            values_destination = Value.by_column_chunked_queryset(
                 merge_request.id_destination_persistent, 0, 1
             )
             time_merge = timestamp()
-            if len(tag_instances_destination) == 0:
-                tag_instance_query = Value.objects.filter(  # pylint: disable=no-member
+            if len(values_destination) == 0:
+                value_query = Value.objects.filter(  # pylint: disable=no-member
                     id_column_persistent=merge_request.id_origin_persistent
                 )
-                for tag_instance in tag_instance_query:
-                    tag_instance, _do_write = ValueHistory.change_or_create_versioned(
+                for value in value_query:
+                    value, _do_write = ValueHistory.change_or_create_versioned(
                         id_persistent=str(uuid4()),
                         written_by_session=merge_request.created_by.edit_session,
                         time_edit=time_merge,
-                        id_entity_persistent=tag_instance.id_entity_persistent,
+                        id_entity_persistent=value.id_entity_persistent,
                         id_column_persistent=merge_request.id_destination_persistent,
-                        value=tag_instance.value,
+                        value=value.value,
                         version=None,
                     )
-                    tag_instance.save()
+                    value.save()
                 merge_request.state = ColumnMergeRequest.MERGED
                 merge_request.save()
                 disable_origin(
@@ -126,20 +126,20 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             try:
                 merge_request = merge_request_query.get()
                 if not merge_request.state == ColumnMergeRequest.RESOLVED:
-                    raise NotResolvedException("Tag Merge request is not resolved.")
+                    raise NotResolvedException("Column Merge request is not resolved.")
                 approved_by = approved_by_query.get()
             except OperationalError:
                 return
             time_merge = timestamp()
             conflicts_resolution_set = (
-                merge_request.tagconflictresolution_set.select_related()
+                merge_request.columnconflictresolution_set.select_related()
             )
-            non_recent = TagConflictResolution.non_recent(conflicts_resolution_set)
+            non_recent = ColumnConflictResolution.non_recent(conflicts_resolution_set)
             if len(non_recent) > 0:
                 merge_request.state = merge_request.OPEN
                 merge_request.save()
                 return
-            recent = TagConflictResolution.only_recent(conflicts_resolution_set)
+            recent = ColumnConflictResolution.only_recent(conflicts_resolution_set)
             conflicts = merge_request.instance_conflicts_all(False, recent)
             if len(conflicts) > 0:
                 merge_request.state = merge_request.OPEN
@@ -172,27 +172,27 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
 
 
 def perform_instance_replacement(recent_queryset, approved_by, time_merge):
-    "Perform replacement where the instance from the origin tag is selected."
+    "Perform replacement where the instance from the origin column is selected."
     replace_queryset = recent_queryset.filter(
-        models.Q(replacement_state=TagConflictResolution.REPLACE)
+        models.Q(replacement_state=ColumnConflictResolution.REPLACE)
         & ~models.Q(value_origin__value=models.F("value_destination__value"))
     )
     for resolution in replace_queryset:
-        tag_definition_destination = resolution.column_destination
+        column_destination = resolution.column_destination
         if resolution.value_destination is None:
             id_persistent = str(uuid4())
             version = None
         else:
-            tag_instance_reference = resolution.value_destination
-            id_persistent = tag_instance_reference.id_persistent
-            version = tag_instance_reference.id
+            value_reference = resolution.value_destination
+            id_persistent = value_reference.id_persistent
+            version = value_reference.id
         ValueHistory.change_or_create_versioned(
             id_persistent=id_persistent,
             time_edit=time_merge,
             written_by_session=resolution.value_origin.written_by_session,
             approved_by_id_persistent=approved_by.id_persistent,
             id_entity_persistent=resolution.value_origin.id_entity_persistent,
-            id_column_persistent=tag_definition_destination.id_persistent,
+            id_column_persistent=column_destination.id_persistent,
             merged_from=resolution.value_origin.id_persistent,
             version=version,
             value=resolution.value_origin.value,
@@ -202,25 +202,25 @@ def perform_instance_replacement(recent_queryset, approved_by, time_merge):
 def perform_value_replacement(recent_queryset, approved_by, time_merge):
     "Perform the replacement for resolutions where a replacement value is provided."
     replace_queryset = recent_queryset.filter(
-        models.Q(replacement_state=TagConflictResolution.VALUE)
+        models.Q(replacement_state=ColumnConflictResolution.VALUE)
         & ~models.Q(replacement_value=models.F("value_destination__value"))
     )
     for resolution in replace_queryset:
-        tag_definition_destination = resolution.column_destination
+        column_destination = resolution.column_destination
         if resolution.value_destination is None:
             id_persistent = str(uuid4())
             version = None
         else:
-            tag_instance_reference = resolution.value_destination
-            id_persistent = tag_instance_reference.id_persistent
-            version = tag_instance_reference.id
+            value_reference = resolution.value_destination
+            id_persistent = value_reference.id_persistent
+            version = value_reference.id
         ValueHistory.change_or_create_versioned(
             id_persistent=id_persistent,
             time_edit=time_merge,
             written_by_session=resolution.value_origin.written_by_session,
             approved_by_id_persistent=approved_by.id_persistent,
             id_entity_persistent=resolution.value_origin.id_entity_persistent,
-            id_column_persistent=tag_definition_destination.id_persistent,
+            id_column_persistent=column_destination.id_persistent,
             merged_from=resolution.value_origin.id_persistent,
             version=version,
             value=resolution.replacement_value,

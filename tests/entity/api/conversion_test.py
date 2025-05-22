@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-import tests.tag.common as ct
+import tests.column.common as cc
 from tests.entity import common as c
 from cosmae.entity import api
 from cosmae.entity.models_django import Entity as EntityDb
@@ -163,14 +163,14 @@ def test_conversion_db_to_api_UNKNOWN_in_cache_no_display_txt():
 
 
 @pytest.mark.django_db
-def test_conversion_db_to_api_tag_def_in_cache():
+def test_conversion_db_to_api_column_in_cache():
     cache_display_txt = "cache display_txt"
     id_entity_persistent = "873eccfb-cf6c-4ade-bdb4-5aae8f9668e2"
     description = "description for test"
-    cache_tag_def = {
-        "id_persistent": ct.id_column_persistent_test,
+    cache_column = {
+        "id_persistent": cc.id_column_persistent_test,
         "id_parent_persistent": None,
-        "name": ct.name_column_test,
+        "name": cc.name_column_test,
         "type": "STR",
         "description": description,
         "hidden": False,
@@ -180,7 +180,7 @@ def test_conversion_db_to_api_tag_def_in_cache():
         "id": 500,
     }
     entity_display_txt_information_cache.set(
-        id_entity_persistent, (cache_display_txt, cache_tag_def)
+        id_entity_persistent, (cache_display_txt, cache_column)
     )
     person_db = EntityDb(
         display_txt=None,
@@ -192,10 +192,10 @@ def test_conversion_db_to_api_tag_def_in_cache():
     person_api_expected = api.EntityWithJustification(
         display_txt=cache_display_txt,
         display_txt_details={
-            "id_persistent": ct.id_column_persistent_test,
+            "id_persistent": cc.id_column_persistent_test,
             "id_parent_persistent": None,
-            "name": ct.name_column_test,
-            "name_path": [ct.name_column_test],
+            "name": cc.name_column_test,
+            "name_path": [cc.name_column_test],
             "description": description,
             "type": "STRING",
             "hidden": False,

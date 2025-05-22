@@ -27,20 +27,20 @@ def test_empty_list(auth_server):
     assert rsp.status_code == 400  # pylint: disable=duplicate-code
 
 
-def test_out_of_bounds(auth_server, tag_def_user_profile, tag_def_user_profile1):
+def test_out_of_bounds(auth_server, column_user_profile, column_user_profile1):
     server, cookies = auth_server
     rsp = req.post_append_id_column_persistent(
-        server.url, tag_def_user_profile.id_persistent, cookies=cookies
+        server.url, column_user_profile.id_persistent, cookies=cookies
     )
     assert rsp.status_code == 200
     rsp = req.post_append_id_column_persistent(
-        server.url, tag_def_user_profile1.id_persistent, cookies=cookies
+        server.url, column_user_profile1.id_persistent, cookies=cookies
     )
     rsp = req.post_change_columns(server.url, 2, 4, cookies=cookies)
     assert rsp.status_code == 400
 
 
-def test_start_to_middle(auth_server, user_with_tag_defs):
+def test_start_to_middle(auth_server, user_with_columns):
     # pylint: disable=duplicate-code
     server, cookies = auth_server
     rsp = req.post_change_columns(server.url, 0, 2, cookies=cookies)
@@ -48,15 +48,15 @@ def test_start_to_middle(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["data"]["column_list"]] == [
-        c.id_tag_def_persistent2,
-        c.id_tag_def_persistent1,
-        c.id_tag_def_persistent,
-        c.id_tag_def_persistent3,
+    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+        c.id_column_persistent2,
+        c.id_column_persistent1,
+        c.id_column_persistent,
+        c.id_column_persistent3,
     ]
 
 
-def test_start_to_end(auth_server, user_with_tag_defs):
+def test_start_to_end(auth_server, user_with_columns):
     # pylint: disable=duplicate-code
     server, cookies = auth_server
     rsp = req.post_change_columns(server.url, 0, 3, cookies=cookies)
@@ -64,84 +64,84 @@ def test_start_to_end(auth_server, user_with_tag_defs):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["data"]["column_list"]] == [
-        c.id_tag_def_persistent3,
-        c.id_tag_def_persistent1,
-        c.id_tag_def_persistent2,
-        c.id_tag_def_persistent,
+    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+        c.id_column_persistent3,
+        c.id_column_persistent1,
+        c.id_column_persistent2,
+        c.id_column_persistent,
     ]
 
 
-def test_middle_to_start(auth_server, user_with_tag_defs):
+def test_middle_to_start(auth_server, user_with_columns):
     server, cookies = auth_server
     rsp = req.post_change_columns(server.url, 2, 0, cookies=cookies)
     assert rsp.status_code == 200
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["data"]["column_list"]] == [
-        c.id_tag_def_persistent2,
-        c.id_tag_def_persistent1,
-        c.id_tag_def_persistent,
-        c.id_tag_def_persistent3,
+    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+        c.id_column_persistent2,
+        c.id_column_persistent1,
+        c.id_column_persistent,
+        c.id_column_persistent3,
     ]
 
 
-def test_middle_to_middle(auth_server, user_with_tag_defs):
+def test_middle_to_middle(auth_server, user_with_columns):
     server, cookies = auth_server
     rsp = req.post_change_columns(server.url, 2, 1, cookies=cookies)
     assert rsp.status_code == 200
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["data"]["column_list"]] == [
-        c.id_tag_def_persistent,
-        c.id_tag_def_persistent2,
-        c.id_tag_def_persistent1,
-        c.id_tag_def_persistent3,
+    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+        c.id_column_persistent,
+        c.id_column_persistent2,
+        c.id_column_persistent1,
+        c.id_column_persistent3,
     ]
 
 
-def test_middle_to_end(auth_server, user_with_tag_defs):
+def test_middle_to_end(auth_server, user_with_columns):
     server, cookies = auth_server
     rsp = req.post_change_columns(server.url, 2, 3, cookies=cookies)
     assert rsp.status_code == 200
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["data"]["column_list"]] == [
-        c.id_tag_def_persistent,
-        c.id_tag_def_persistent1,
-        c.id_tag_def_persistent3,
-        c.id_tag_def_persistent2,
+    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+        c.id_column_persistent,
+        c.id_column_persistent1,
+        c.id_column_persistent3,
+        c.id_column_persistent2,
     ]
 
 
-def test_ent_to_start(auth_server, user_with_tag_defs):
+def test_ent_to_start(auth_server, user_with_columns):
     server, cookies = auth_server
     rsp = req.post_change_columns(server.url, 3, 0, cookies=cookies)
     assert rsp.status_code == 200
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["data"]["column_list"]] == [
-        c.id_tag_def_persistent3,
-        c.id_tag_def_persistent1,
-        c.id_tag_def_persistent2,
-        c.id_tag_def_persistent,
+    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+        c.id_column_persistent3,
+        c.id_column_persistent1,
+        c.id_column_persistent2,
+        c.id_column_persistent,
     ]
 
 
-def test_end_to_middle(auth_server, user_with_tag_defs):
+def test_end_to_middle(auth_server, user_with_columns):
     server, cookies = auth_server
     rsp = req.post_change_columns(server.url, 3, 1, cookies=cookies)
     assert rsp.status_code == 200
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [tag_def["id_persistent"] for tag_def in json["data"]["column_list"]] == [
-        c.id_tag_def_persistent,
-        c.id_tag_def_persistent3,
-        c.id_tag_def_persistent2,
-        c.id_tag_def_persistent1,
+    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+        c.id_column_persistent,
+        c.id_column_persistent3,
+        c.id_column_persistent2,
+        c.id_column_persistent1,
     ]

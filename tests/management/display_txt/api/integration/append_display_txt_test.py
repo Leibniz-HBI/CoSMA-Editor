@@ -1,8 +1,8 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 from unittest.mock import MagicMock, patch
 
+import tests.column.common as c
 import tests.management.display_txt.api.integration.requests as req
-import tests.tag.common as ct
 from cosmae.exception import NotAuthenticatedException
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
 from cosmae.management.models_django import ConfigValue
@@ -29,7 +29,7 @@ def test_insufficient_permissions(auth_server):
     assert rsp.status_code == 403
 
 
-def test_unknown_tag_def(auth_server_commissioner):
+def test_unknown_column(auth_server_commissioner):
     server, cookies = auth_server_commissioner
     rsp = req.post_append_column(server.url, "some-id", cookies=cookies)
     assert rsp.status_code == 404
@@ -70,6 +70,6 @@ def test_append_to_existing(
     )
     assert rsp.status_code == 200
     assert ConfigValue.get(DISPLAY_TXT_ORDER_CONFIG_KEY) == [
-        ct.id_column_persistent_test,
-        ct.id_column_curated_test,
+        c.id_column_persistent_test,
+        c.id_column_curated_test,
     ]

@@ -8,11 +8,11 @@ from cosmae.edit_session.models_django import EditSession
 
 
 @pytest.fixture
-def tag_def_user_profile(user):
+def column_user_profile(user):
     return ColumnHistory.objects.create(
-        name=c.name_tag_def,
-        id_persistent=c.id_tag_def_persistent,
-        time_edit=c.time_edit_tag_def,
+        name=c.name_column,
+        id_persistent=c.id_column_persistent,
+        time_edit=c.time_edit_column,
         type=Column.STRING,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
@@ -20,11 +20,11 @@ def tag_def_user_profile(user):
 
 
 @pytest.fixture
-def tag_def_user_profile1(user):
+def column_user_profile1(user):
     return ColumnHistory.objects.create(
-        name=c.name_tag_def1,
-        id_persistent=c.id_tag_def_persistent1,
-        time_edit=c.time_edit_tag_def1,
+        name=c.name_column1,
+        id_persistent=c.id_column_persistent1,
+        time_edit=c.time_edit_column1,
         type=Column.STRING,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
@@ -32,11 +32,11 @@ def tag_def_user_profile1(user):
 
 
 @pytest.fixture
-def tag_def_user_profile2(user):
+def column_user_profile2(user):
     return ColumnHistory.objects.create(
-        name=c.name_tag_def2,
-        id_persistent=c.id_tag_def_persistent2,
-        time_edit=c.time_edit_tag_def2,
+        name=c.name_column2,
+        id_persistent=c.id_column_persistent2,
+        time_edit=c.time_edit_column2,
         type=Column.STRING,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
@@ -44,11 +44,11 @@ def tag_def_user_profile2(user):
 
 
 @pytest.fixture
-def tag_def_user_profile3(user):
+def column_user_profile3(user):
     return ColumnHistory.objects.create(
-        name=c.name_tag_def3,
-        id_persistent=c.id_tag_def_persistent3,
-        time_edit=c.time_edit_tag_def3,
+        name=c.name_column3,
+        id_persistent=c.id_column_persistent3,
+        time_edit=c.time_edit_column3,
         type=Column.STRING,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
@@ -56,20 +56,20 @@ def tag_def_user_profile3(user):
 
 
 @pytest.fixture
-def user_with_tag_defs(
+def user_with_columns(
     user,
-    tag_def_user_profile,
-    tag_def_user_profile1,
-    tag_def_user_profile2,
-    tag_def_user_profile3,
+    column_user_profile,
+    column_user_profile1,
+    column_user_profile2,
+    column_user_profile3,
 ):
-    user.tag_definitions = [
-        tag_def.id_persistent
-        for tag_def in [
-            tag_def_user_profile,
-            tag_def_user_profile1,
-            tag_def_user_profile2,
-            tag_def_user_profile3,
+    user.columns = [
+        column.id_persistent
+        for column in [
+            column_user_profile,
+            column_user_profile1,
+            column_user_profile2,
+            column_user_profile3,
         ]
     ]
     user.save()
