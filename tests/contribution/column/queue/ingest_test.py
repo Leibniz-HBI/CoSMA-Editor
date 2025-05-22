@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,disable=unused-argument
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,disable=unused-argument,too-many-arguments,too-many-positional-arguments
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -41,6 +41,17 @@ def csv_mock_with_empty_lines():
             new_vals.append("\t\n")
             new_vals.append(None)
         new_cols[name] = new_vals
+    csv_mock = MagicMock()
+    csv_mock.return_value = pd.DataFrame(new_cols)
+    return csv_mock
+
+
+@pytest.fixture
+def csv_mock_with_empty_values():
+    new_cols = {}
+    new_cols["names"] = csv_cols["names"]
+    new_cols["verified"] = ["true", None]
+    new_cols["party"] = ["party_0", None]
     csv_mock = MagicMock()
     csv_mock.return_value = pd.DataFrame(new_cols)
     return csv_mock
@@ -122,25 +133,37 @@ def party_contribution(contribution_other, party_column, display_txt_contributio
     )[0]
 
 
-def test_ingest_columns_names_only(
-    contribution_other, display_txt_contribution, csv_mock
+def test_ingest_empty_values(
+    contribution_other,
+    display_txt_contribution,
+    verified_column,
+    party_column,
+    verified_contribution,
+    party_contribution,
+    csv_mock_with_empty_values,
 ):
+    "Make sure entities with no imported values are not created."
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
-    with patch("cosmae.contribution.column.queue.util.read_csv", csv_mock):
+    with patch(
+        "cosmae.contribution.column.queue.util.read_csv", csv_mock_with_empty_values
+    ):
         with patch(
             "cosmae.contribution.column.queue.util.find_delimiter",
             return_value=",",
         ):
             ingest_values_from_csv(contribution_other.id_persistent)
-    instances = Value.objects.all()  # pylint: disable=no-member
-    assert len(instances) == 0
+    value_queryset = Value.objects.all()  # pylint: disable=no-member
+    assert len(value_queryset) == 2
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
         )
     )
-    assert persons == {"name_0", "name_1"}
+    assert persons == {"name_0"}
+    assert {value.id_entity_persistent for value in value_queryset} == {
+        Entity.objects.get().id_persistent
+    }
     assert (
         ContributionCandidate.objects.filter(  # pylint: disable=no-member
             id_persistent=contribution_other.id_persistent
@@ -173,7 +196,7 @@ def get_value_by_mr(entity_name, id_column_persistent):
     )
 
 
-def test_ingest_inner(
+def test_ingest_boolean(
     verified_column,
     verified_contribution,
     csv_mock,

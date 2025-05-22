@@ -66,14 +66,11 @@ def is_value_empty(value: str, empty_strings: Set[str]):
 
 
 def is_row_empty(
-    display_txt,
     row_tpl,
     column_assignment: List[Tuple[int, Column]],
     empty_strings: Set[str],
 ):
     "Check if the entries of a row are empty for a given column assignment."
-    if not (display_txt is None or is_value_empty(display_txt, empty_strings)):
-        return False
     for idx, _ in column_assignment:
         val = row_tpl[idx]
         if val is None:
@@ -168,7 +165,6 @@ def ingest_values_from_csv(id_contribution_persistent):
             for row_tpl in data_frame.itertuples(index=False):
                 display_txt = display_txt_extractor(row_tpl)
                 if is_row_empty(
-                    display_txt,
                     row_tpl,
                     column_assignments,  # pylint: disable = undefined-loop-variable
                     empty_strings,
