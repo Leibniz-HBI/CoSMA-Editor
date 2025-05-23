@@ -118,25 +118,26 @@ function ContributionStepperDisplay({
     const contribution = useAppSelector(selectContribution)
     const reloadDelay = useAppSelector(selectReloadDelay)
     const dispatch = useAppDispatch()
-    let maxIdx = 1
+    let idxStepOfContribution = 1
     let processingMessage: string | undefined = undefined
+    let showReloadHint = false
     switch (contribution.value?.step) {
         case ContributionStep.Uploaded:
             processingMessage = 'Columns not yet extracted'
             break
         case ContributionStep.ColumnsAssigned:
             processingMessage = 'Values not yet extracted'
-            maxIdx = 2
+            idxStepOfContribution = 2
             break
         case ContributionStep.ValuesExtracted:
-            maxIdx = 2
+            idxStepOfContribution = 2
             break
         case ContributionStep.EntitiesAssigned:
             processingMessage = 'Entities not yet merged.'
-            maxIdx = 3
+            idxStepOfContribution = 3
             break
         case ContributionStep.Merged:
-            maxIdx = 3
+            idxStepOfContribution = 3
             break
     }
     useEffect(() => {
@@ -152,7 +153,10 @@ function ContributionStepperDisplay({
         }
         if (contribution.value === undefined) {
             dispatch(loadContributionDetails(idContributionPersistent))
-        } else if (selectedIdx == maxIdx && processingMessage !== undefined) {
+        } else if (
+            selectedIdx == idxStepOfContribution &&
+            processingMessage !== undefined
+        ) {
             if (reloadDelay == 0) {
                 dispatch(loadContributionDetails(idContributionPersistent)).then(() =>
                     dispatch(resetDelay())
@@ -165,18 +169,31 @@ function ContributionStepperDisplay({
         contribution.value?.idPersistent,
         reloadDelay,
         selectedIdx,
-        maxIdx,
+        idxStepOfContribution,
         processingMessage
     ])
+    if (processingMessage !== undefined) {
+        showReloadHint = true
+        processingMessage = `Data not yet available: "${processingMessage}".`
+    } else if (
+        selectedIdx != 0 && // can always change name and description
+        idxStepOfContribution > selectedIdx
+    ) {
+        processingMessage =
+            'This step has already been completed and can not be changed anymore.'
+    }
     let body
-    if (selectedIdx > maxIdx) {
+    if (selectedIdx > idxStepOfContribution) {
         body = (
             <Row className="justify-content-center">
                 This step is not yet available for this contribution. Please select an
                 available step.
             </Row>
         )
-    } else if (selectedIdx == maxIdx && processingMessage !== undefined) {
+    } else if (
+        selectedIdx <= idxStepOfContribution &&
+        processingMessage !== undefined
+    ) {
         if (
             contribution.isLoading ||
             contribution.value?.idPersistent != idContributionPersistent
@@ -186,8 +203,12 @@ function ContributionStepperDisplay({
             body = (
                 <Row>
                     <Col>
-                        <Row className="justify-content-center">{`Data not yet available: "${processingMessage}".`}</Row>
-                        <Row className="justify-content-center">{`Reloading in ${reloadDelay} seconds.`}</Row>
+                        <Row className="justify-content-center">
+                            {processingMessage}
+                        </Row>
+                        {showReloadHint && (
+                            <Row className="justify-content-center">{`Reloading in ${reloadDelay} seconds.`}</Row>
+                        )}
                     </Col>
                 </Row>
             )
@@ -220,7 +241,7 @@ function ContributionStepperDisplay({
             <StepHeader
                 stepNames={['Metadata', 'Columns', 'Entities', 'Complete']}
                 selectedIdx={selectedIdx ?? 0}
-                activeIdx={maxIdx}
+                activeIdx={idxStepOfContribution}
                 navigateCallback={(name: string) =>
                     navigate(
                         `/contribute/${

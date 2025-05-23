@@ -2,98 +2,73 @@
  * @vitest-environment jsdom
  */
 
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import {
-    NotificationManager,
-    NotificationType,
-    notificationReducer
-} from '../../util/notification/slice'
-import { ContributionState, contributionSlice, newContributionState } from '../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen } from '@testing-library/react'
+import { NotificationType } from '../../util/notification/slice'
 import { UploadForm } from '../components'
 import userEvent from '@testing-library/user-event'
 import { useNavigate } from 'react-router-dom'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
 } from '../../session/state'
-import { editSessionReducer } from '../../session/slice'
-import { newRemote } from '../../util/state'
 import { vi, Mock } from 'vitest'
+import { defaultState, renderWithProviders } from '../test_utils'
+import { addResponseSequence } from '../../util/tests/response'
+import { newRemote } from '../../util/state'
 
 vi.mock('react-router-dom', () => {
     const navigateMock = vi.fn()
     return { useNavigate: vi.fn().mockReturnValue(navigateMock) }
 })
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contribution: ContributionState
-        notification: NotificationManager
-        editSession: EditSessionState
-    }
-}
 
 beforeEach(() => {
     ;(useNavigate() as Mock).mockRestore()
 })
 
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contribution: newContributionState({}),
-            notification: { notificationList: [], notificationMap: {} },
-            editSession: newEditSessionState({
-                editSessionOwnerList: newRemote([
-                    newEditSession({
-                        idPersistent: idEditSession,
-                        name: nameSession,
-                        owner,
-                        participantList: [],
-                        participantMap: {}
-                    })
-                ])
+const nameTest = 'aaaaaaaaaaaa'
+const fileTest = new File([''], 'test.csv', { type: 'text.csv' })
+const idPersistentReturn = 'id-persistent-return'
+const idEditSession = '7553fa55-f11f-48a7-aebb-4dcaa3af0ae3'
+const nameSession = 'edit session for test'
+const idOwner = 'id-owner'
+const nameOwner = 'owner'
+const owner = newEditSessionParticipant({
+    id: idOwner,
+    name: nameOwner,
+    type: EditSessionParticipantType.internal
+})
+const jsonOwner = {
+    type_participant: 'INTERNAL',
+    id_participant: idOwner,
+    name_participant: nameOwner
+}
+const jsonEditSessionResponse = {
+    edit_session_list: [
+        {
+            id_persistent: idEditSession,
+            name: nameSession,
+            owner: jsonOwner,
+            participant_list: [jsonOwner]
+        }
+    ]
+}
+const preloadedState = {
+    ...defaultState,
+    editSession: newEditSessionState({
+        editSessionOwnerList: newRemote([
+            newEditSession({
+                idPersistent: idEditSession,
+                name: nameSession,
+                owner,
+                participantList: [],
+                participantMap: {}
             })
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contribution: contributionSlice.reducer,
-            notification: notificationReducer,
-            editSession: editSessionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
+        ])
     })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
+}
 
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 test('empty does not submit', async () => {
     const fetchMock = vi.fn()
     const { container } = renderWithProviders(<UploadForm />, fetchMock)
@@ -125,7 +100,9 @@ test('feedback for short name', async () => {
 })
 test('feedback for no edit session', async () => {
     const fetchMock = vi.fn()
-    const { container } = renderWithProviders(<UploadForm />, fetchMock)
+    const { container } = renderWithProviders(<UploadForm />, fetchMock, {
+        preloadedState
+    })
     checkEmptyFeedbacks(container)
     await submitFormWithValues(container, nameTest, fileTest, false)
     await waitFor(() => {
@@ -145,9 +122,11 @@ test('submit correct name', async () => {
         [200, jsonEditSessionResponse],
         [200, jsonEditSessionResponse],
         [200, jsonEditSessionResponse],
-        [200, { id_persistent: idPersistentReturn }],
+        [200, { id_persistent: idPersistentReturn }]
     ])
-    const { store, container } = renderWithProviders(<UploadForm />, fetchMock)
+    const { store, container } = renderWithProviders(<UploadForm />, fetchMock, {
+        preloadedState
+    })
     checkEmptyFeedbacks(container)
     await submitFormWithValues(container, nameTest, fileTest, true)
     checkEmptyFeedbacks(container)
@@ -184,7 +163,9 @@ test('submit with description and header', async () => {
         [200, jsonEditSessionResponse],
         [200, { id_persistent: idPersistentReturn }]
     ])
-    const { store, container } = renderWithProviders(<UploadForm />, fetchMock)
+    const { store, container } = renderWithProviders(<UploadForm />, fetchMock, {
+        preloadedState: preloadedState
+    })
     checkEmptyFeedbacks(container)
     await submitFormWithValues(container, nameTest, fileTest, true, description, true)
     checkEmptyFeedbacks(container)
@@ -221,7 +202,9 @@ test('error', async () => {
         [200, jsonEditSessionResponse],
         [500, { msg }]
     ])
-    const { store, container } = renderWithProviders(<UploadForm />, fetchMock)
+    const { store, container } = renderWithProviders(<UploadForm />, fetchMock, {
+        preloadedState
+    })
     checkEmptyFeedbacks(container)
     await submitFormWithValues(container, nameTest, fileTest, true)
     checkEmptyFeedbacks(container)
@@ -264,33 +247,6 @@ function checkEmptyFeedbacks(container: HTMLElement) {
     }
 }
 
-const nameTest = 'aaaaaaaaaaaa'
-const fileTest = new File([''], 'test.csv', { type: 'text.csv' })
-const idPersistentReturn = 'id-persistent-return'
-const idEditSession = '7553fa55-f11f-48a7-aebb-4dcaa3af0ae3'
-const nameSession = 'edit session for test'
-const idOwner = 'id-owner'
-const nameOwner = 'owner'
-const owner = newEditSessionParticipant({
-    id: idOwner,
-    name: nameOwner,
-    type: EditSessionParticipantType.internal
-})
-const jsonOwner = {
-    type_participant: 'INTERNAL',
-    id_participant: idOwner,
-    name_participant: nameOwner
-}
-const jsonEditSessionResponse = {
-    edit_session_list: [
-        {
-            id_persistent: idEditSession,
-            name: nameSession,
-            owner: jsonOwner,
-            participant_list: [jsonOwner]
-        }
-    ]
-}
 
 async function submitFormWithValues(
     container: HTMLElement,

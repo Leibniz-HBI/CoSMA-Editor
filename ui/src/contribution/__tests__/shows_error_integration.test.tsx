@@ -2,26 +2,12 @@
  * @vitest-environment jsdom
  */
 
-import { RenderOptions, render, waitFor } from '@testing-library/react'
-import {
-    ColumnDefinitionsContributionState,
-    newColumnDefinitionsContributionState
-} from '../columns/state'
-import { newRemote } from '../../util/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { contributionColumnDefinitionSlice } from '../columns/slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
-import { ColumnSelectionState, newColumnSelectionState } from '../../column_menu/state'
-import { columnSelectionReducer } from '../../column_menu/slice'
-import {
-    NotificationManager,
-    NotificationType,
-    notificationReducer
-} from '../../util/notification/slice'
-import { ContributionState, contributionSlice, newContributionState } from '../slice'
+import { waitFor } from '@testing-library/react'
+import { NotificationType } from '../../util/notification/slice'
 import { ContributionStepper } from '../components'
-import { vi, Mock } from 'vitest'
+import { vi } from 'vitest'
+import { renderWithProviders } from '../test_utils'
+import { addResponseSequence } from '../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -34,63 +20,6 @@ vi.mock('uuid', () => {
     }
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionColumnDefinition: ColumnDefinitionsContributionState
-        contribution: ContributionState
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionColumnDefinition: newColumnDefinitionsContributionState({
-                columns: newRemote(undefined)
-            }),
-            contribution: newContributionState({
-                selectedContribution: newRemote(undefined)
-            }),
-            columnSelection: newColumnSelectionState({}),
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
-            contribution: contributionSlice.reducer,
-            columnSelection: columnSelectionReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 export const idContribution = 'id-contribution-test'
 export const contributionColumnActiveRsp0 = {
     name: 'column definition contribution test active 0',
