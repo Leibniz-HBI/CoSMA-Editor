@@ -1,0 +1,2 @@
+from redis:7.4-alpine
+ADD container/resources/redis.conf /etc/redis/redis.conf

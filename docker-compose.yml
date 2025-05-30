@@ -61,7 +61,9 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /srv/cosmae/contributions:/srv/cosmae/contributions
-      - /srv/cosmae/user_pipe:/srv/cosmae_user_pipe
+      - type: bind
+        source: /srv/cosmae/user_pipe
+        target: /srv/cosmae_user_pipe
     image: 127.0.0.1:5000/cosmae_django
     command: [
       "python",
@@ -127,7 +129,10 @@ services:
 
   cosmae_redis:
     container_name: cosmae_redis
-    image: redis:7.0-alpine
+    build:
+      context: ./
+      dockerfile: container/redis_dockerfile
+    image: 127.0.0.1:5000/cosmae_redis
     expose:
       - 6379
     volumes:
@@ -137,6 +142,6 @@ services:
       - cosmae_redis_conf
     command: [
       "redis-server",
-      "/var/run/secrets/cosmae_redis_conf"
+      "/etc/redis/redis.conf"
     ]
     restart: unless-stopped
