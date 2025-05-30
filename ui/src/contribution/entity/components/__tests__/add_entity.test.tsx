@@ -7,7 +7,7 @@ vi.mock('@glideapps/glide-data-grid', () => ({
     DataEditor: vi.fn().mockImplementation((props: any) => <MockTable />)
 }))
 import { vi, Mock } from 'vitest'
-import { act, RenderOptions, render, waitFor, screen } from '@testing-library/react'
+import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import {
     ContributionEntityState,
     newContributionEntityState,
@@ -22,7 +22,7 @@ import {
     contributionSlice,
     newContributionState
 } from '../../../slice'
-import { PropsWithChildren } from 'react'
+import { act, PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { EntitiesStep } from '../../components'
 import {

@@ -3,7 +3,7 @@
  */
 
 import { vi, Mock } from 'vitest'
-import { render, RenderOptions, screen, waitFor, act } from '@testing-library/react'
+import { render, RenderOptions, screen, waitFor} from '@testing-library/react'
 import {
     EntityDetailsState,
     newEntity,
@@ -13,7 +13,7 @@ import {
 import { EntitySearch } from '../components'
 import { entityDetailsReducer } from '../slice'
 import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
+import { act, PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import {

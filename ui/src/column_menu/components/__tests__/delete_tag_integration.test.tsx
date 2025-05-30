@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { act, render, waitFor, screen, RenderOptions } from '@testing-library/react'
+import { render, waitFor, screen, RenderOptions } from '@testing-library/react'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { ColumnDeleteForm } from '../form'
 import { Provider } from 'react-redux'
@@ -21,7 +21,7 @@ import {
 } from '../../../util/notification/slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { columnSelectionReducer} from '../../slice'
-import { PropsWithChildren } from 'react'
+import { act, PropsWithChildren } from 'react'
 import { vi, Mock } from 'vitest'
 
 const idColumn = 'id-column-def'
