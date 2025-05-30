@@ -203,12 +203,14 @@ CACHES = {
         "LOCATION": "redis://cosmae_redis:6379",
         "OPTIONS": {"password": get_secret("cosmae_redis_password")},
         "KEY_PREFIX": "column_name_path",
+        "TIMEOUT": None,
     },
     "entity_display_txt_information": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://cosmae_redis:6379",
         "OPTIONS": {"password": get_secret("cosmae_redis_password")},
         "KEY_PREFIX": "entity_display_txt_information",
+        "TIMEOUT": None,
     },
 }
 
