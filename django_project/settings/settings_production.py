@@ -35,10 +35,10 @@ DOMAIN_NAME = ""
 @property
 def SECRET_KEY():  # pylint: disable=invalid-name
     "Get the secret key from environment."
-    return get_docker_compose_secret("cosmae_django_key")
+    return get_secret("cosmae_django_key")
 
 
-def get_docker_compose_secret(secret_name):
+def get_secret(secret_name):
     "Get secret as provided by docker_compose"
     try:
         with open(f"/run/secrets/{secret_name}", encoding="utf-8") as key_file:
@@ -119,9 +119,9 @@ WSGI_APPLICATION = "django_project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": get_docker_compose_secret("cosmae_db_name"),
-        "USER": get_docker_compose_secret("cosmae_db_user"),
-        "PASSWORD": get_docker_compose_secret("cosmae_db_password"),
+        "NAME": get_secret("cosmae_db_name"),
+        "USER": get_secret("cosmae_db_user"),
+        "PASSWORD": get_secret("cosmae_db_password"),
         "HOST": "cosmae_db",
         "PORT": "5432",
         # "OPTIONS": {
@@ -187,7 +187,7 @@ RQ_QUEUES = {
         "PORT": 6379,
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
-        "PASSWORD": get_docker_compose_secret("cosmae_redis_password"),
+        "PASSWORD": get_secret("cosmae_redis_password"),
     }
 }
 
@@ -196,18 +196,18 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://cosmae_redis:6379",
-        "OPTIONS": {"password": get_docker_compose_secret("cosmae_redis_password")},
+        "OPTIONS": {"password": get_secret("cosmae_redis_password")},
     },
     "column_name_paths": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://cosmae_redis:6379",
-        "OPTIONS": {"password": get_docker_compose_secret("cosmae_redis_password")},
+        "OPTIONS": {"password": get_secret("cosmae_redis_password")},
         "KEY_PREFIX": "column_name_path",
     },
     "entity_display_txt_information": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://cosmae_redis:6379",
-        "OPTIONS": {"password": get_docker_compose_secret("cosmae_redis_password")},
+        "OPTIONS": {"password": get_secret("cosmae_redis_password")},
         "KEY_PREFIX": "entity_display_txt_information",
     },
 }
@@ -217,8 +217,8 @@ HOST_PIPE_PATH = "/srv/cosmae/user_pipe"
 IS_UNITTEST = False
 DEBUG = False
 
-ORCID_CLIENT_ID = get_docker_compose_secret("orcid_client_id")
-ORCID_CLIENT_SECRET = get_docker_compose_secret("orcid_client_secret")
+ORCID_CLIENT_ID = get_secret("orcid_client_id")
+ORCID_CLIENT_SECRET = get_secret("orcid_client_secret")
 
 HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
@@ -245,11 +245,11 @@ HEADLESS_FRONTEND_URLS = {
     #     "socialaccount_login_error": "https://app.project.org/account/provider/callback",
 }
 
-EMAIL_HOST = get_docker_compose_secret("email_host")
+EMAIL_HOST = get_secret("email_host")
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = get_docker_compose_secret("email_host_user")
-EMAIL_HOST_PASSWORD = get_docker_compose_secret("email_host_password")
+EMAIL_HOST_USER = get_secret("email_host_user")
+EMAIL_HOST_PASSWORD = get_secret("email_host_password")
 
 
 LOGGING = {

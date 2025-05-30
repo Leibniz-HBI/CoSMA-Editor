@@ -38,11 +38,11 @@ CONTRIBUTION_DIRECTORY = "/srv/cosmae/contributions"
 @property
 def SECRET_KEY():  # pylint: disable=invalid-name
     "Get the secret key from environment."
-    return get_file_secret("cosmae_django_key")
+    return get_secret("cosmae_django_key")
 
 
-def get_file_secret(secret_name):
-    "Get secret as provided by docker_compose"
+def get_secret(secret_name):
+    "Get secret from file for development"
     try:
         with open(
             f"{BASE_DIR.absolute()}/.secrets_local/{secret_name}", encoding="utf-8"
@@ -139,9 +139,9 @@ WSGI_APPLICATION = "django_project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": get_file_secret("cosmae_db_name"),
-        "USER": get_file_secret("cosmae_db_user"),
-        "PASSWORD": get_file_secret("cosmae_db_password"),
+        "NAME": get_secret("cosmae_db_name"),
+        "USER": get_secret("cosmae_db_user"),
+        "PASSWORD": get_secret("cosmae_db_password"),
         "HOST": "127.0.0.1",
         "PORT": "5444",
     }
@@ -234,8 +234,8 @@ HOST_PIPE_PATH = "/srv/cosmae/user_pipe"
 IS_UNITTEST = False
 ACCOUNT_RATE_LIMITS = False
 
-ORCID_CLIENT_ID = get_file_secret("orcid_client_id")
-ORCID_CLIENT_SECRET = get_file_secret("orcid_client_secret")
+ORCID_CLIENT_ID = get_secret("orcid_client_id")
+ORCID_CLIENT_SECRET = get_secret("orcid_client_secret")
 
 HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
@@ -265,5 +265,5 @@ HEADLESS_FRONTEND_URLS = {
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = get_file_secret("email_host_user")
-EMAIL_HOST_PASSWORD = get_file_secret("email_host_password")
+EMAIL_HOST_USER = get_secret("email_host_user")
+EMAIL_HOST_PASSWORD = get_secret("email_host_password")
