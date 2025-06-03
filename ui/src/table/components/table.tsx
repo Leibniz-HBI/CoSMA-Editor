@@ -108,40 +108,37 @@ export function RemoteDataTable() {
         selectOwnershipChangeColumnIdPersistent
     )
     const dispatch = useAppDispatch()
-    useEffect(
-        () => {
-            if (entities !== undefined || isLoading) {
+    useEffect(() => {
+        if (entities !== undefined || isLoading) {
+            return
+        }
+        if (userInfo === undefined) {
+            dispatch(setLoadDataError())
+            dispatch(addError('Please refresh the page and log in'))
+            return
+        }
+        dispatch(getTableAsync()).then(async (success) => {
+            if (!success) {
                 return
             }
-            if (userInfo === undefined) {
-                dispatch(setLoadDataError())
-                dispatch(addError('Please refresh the page and log in'))
-                return
-            }
-            dispatch(getTableAsync()).then(async (success) => {
-                if (!success) {
+            userInfo.value?.columns.forEach(async (col: Column) => {
+                const idPersistent = col.idPersistent
+                const colStateIdx = columnIndices[idPersistent]
+                const colState = columnStates[colStateIdx ?? -1]
+                if (
+                    isLoading ||
+                    colState?.cellContents.isLoading ||
+                    colState?.cellContents.value.length > 0
+                ) {
                     return
                 }
-                userInfo.value?.columns.forEach(async (col: Column) => {
-                    const idPersistent = col.idPersistent
-                    const colStateIdx = columnIndices[idPersistent]
-                    const colState = columnStates[colStateIdx ?? -1]
-                    if (
-                        isLoading ||
-                        colState?.cellContents.isLoading ||
-                        colState?.cellContents.value.length > 0
-                    ) {
-                        return
-                    }
-                    await dispatch(getColumnAsync(col))
-                })
+                await dispatch(getColumnAsync(col))
             })
-            return () => {
-                dispatch(clearTable())
-            }
-        },
-        []
-    )
+        })
+        return () => {
+            dispatch(clearTable())
+        }
+    }, [])
 
     return (
         <Row className="h-100">
@@ -254,7 +251,7 @@ export function DataTable({
                 columns,
                 showEntityJustifications: showEntityJustifications
             }),
-            [entities, columnStates, showEntityJustifications]
+            [entities, columns, columnStates, showEntityJustifications]
         ),
         submitValueCallback = (cell: Item, newValue: EditableGridCell) => {
             if (entities === undefined || isSubmittingValues) {
@@ -283,9 +280,7 @@ export function DataTable({
             } else {
                 const column = columns[colIdx]
                 if (column === undefined || column.value === undefined) {
-                    dispatch(
-                        addError('Can not change data for unloaded column.')
-                    )
+                    dispatch(addError('Can not change data for unloaded column.'))
                 } else {
                     dispatch(
                         submitValuesAsync(column.value.columnType, [
