@@ -63,7 +63,7 @@ services:
       - /srv/cosmae/contributions:/srv/cosmae/contributions
       - type: bind
         source: /srv/cosmae/user_pipe
-        target: /srv/cosmae_user_pipe
+        target: /srv/cosmae/user_pipe
     image: 127.0.0.1:5000/cosmae_django
     command: [
       "python",
