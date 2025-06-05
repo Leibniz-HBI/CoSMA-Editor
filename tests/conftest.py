@@ -218,6 +218,7 @@ def auth_server_applicant_no_mfa(live_server):
         id_persistent=cu.test_uuid_applicant,
         edit_session=session,
         permission_group=CosmaeUser.APPLICANT,
+        password_changed=True,
     )
     user.set_password(cu.test_password_applicant)
     user.save()
@@ -274,6 +275,7 @@ def user(db):
             id_persistent=cu.test_uuid,
             permission_group=CosmaeUser.CONTRIBUTOR,
             edit_session=session,
+            password_changed=True,
         )
         user.set_password(cu.test_password)
         EditSessionParticipant.add(
@@ -313,6 +315,7 @@ def user1(db):
             id_persistent=cu.test_uuid1,
             edit_session=session,
             permission_group=CosmaeUser.CONTRIBUTOR,
+            password_changed=True,
         )
         user.set_password(cu.test_password1)
         EditSessionParticipant.add(
@@ -342,6 +345,7 @@ def user_commissioner(db):
             id_persistent=cu.test_uuid_commissioner,
             permission_group=CosmaeUser.COMMISSIONER,
             edit_session=session,
+            password_changed=True,
         )
         user.set_password(cu.test_password_commissioner)
         EditSessionParticipant.add(
@@ -373,6 +377,7 @@ def user_editor(db):  # pylint: disable=unused-argument
             id_persistent=cu.test_uuid_editor,
             permission_group=CosmaeUser.EDITOR,
             edit_session=session,
+            password_changed=True,
         )
         user.set_password(cu.test_password_editor)
         EditSessionParticipant.add(

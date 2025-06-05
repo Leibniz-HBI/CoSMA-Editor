@@ -3,6 +3,7 @@
 
 import tests.user.common as c
 from tests.user.api.integration.requests import post_password
+from cosmae.util import CosmaeUser
 
 
 def test_no_cookies(live_server):
@@ -35,16 +36,48 @@ def test_wrong_password(auth_server_applicant):
 def test_for_self(auth_server_applicant):
     "Make sure a user can set its own password"
     server, cookies = auth_server_applicant
+    user_query = CosmaeUser.objects.filter(id_persistent=c.test_uuid_applicant)
+    password_old = user_query.get().password
     rsp = post_password(
         server.url, c.test_password_new, c.test_password_applicant, cookies=cookies
     )
     assert rsp.status_code == 200
+    user = user_query.get()
+    assert user.password != password_old
+    assert user.password_changed
+
+
+def test_same_password(auth_server_applicant):
+    "Make sure a user can set its own password"
+    server, cookies = auth_server_applicant
+    rsp = post_password(
+        server.url,
+        c.test_password_applicant,
+        c.test_password_applicant,
+        cookies=cookies,
+    )
+    assert rsp.status_code == 400
+    assert rsp.json() == {
+        "status": 400,
+        "errors": [
+            {
+                "message": "Old password and new password have to be different.",
+                "param": "",
+                "code": "",
+            }
+        ],
+    }
 
 
 def test_set_for_other(auth_server_commissioner, user):
     "Make sure a commissioner can set others passwords."
     server, cookies = auth_server_commissioner
+    user_query = CosmaeUser.objects.filter(id_persistent=c.test_uuid)
+    password_old = user_query.get().password
     rsp = post_password(
         server.url, c.test_password_new, id_user_persistent=c.test_uuid, cookies=cookies
     )
     assert rsp.status_code == 200
+    user = user_query.get()
+    assert user.password != password_old
+    assert not user.password_changed

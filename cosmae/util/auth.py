@@ -38,7 +38,7 @@ def cosmae_auth(request: HttpRequest):
     return django_auth.authenticate(request, None)
 
 
-def check_user(request, require_2fa=True):
+def check_user(request, require_2fa=True, require_password_changed=True):
     "Checks wether a request is authenticated, otherwise throws an exception."
     user = request.user
     if isinstance(user, CosmaeUser):
@@ -46,6 +46,8 @@ def check_user(request, require_2fa=True):
             mfa_completed = check_mfa(request)
             if not mfa_completed:
                 raise NotAuthenticatedException()
+        if not user.password_changed and require_password_changed:
+            raise NotAuthenticatedException()
         return user
     raise NotAuthenticatedException()
 

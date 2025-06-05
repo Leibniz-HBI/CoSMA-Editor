@@ -93,6 +93,7 @@ def test_same_names(auth_server):
                     "email": "other@test.org",
                     "username": "other",
                     "has_usable_password": True,
+                    "password_changed": False,
                 },
             },
         },

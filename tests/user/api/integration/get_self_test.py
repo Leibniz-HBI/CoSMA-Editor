@@ -37,6 +37,7 @@ def test_success(auth_server):
             "email": c.test_email,
             "permission_group": "CONTRIBUTOR",
             "column_list": [],
+            "password_changed": True,
             "edit_session": {
                 "owner": {
                     "id_participant": c.test_uuid,
@@ -61,6 +62,20 @@ def test_no_mfa(auth_server_no_mfa, user_email_verified):
             "flows": [{"id": "mfa_register", "is_pending": True}],
         },
         "meta": {"is_authenticated": False},
+    }
+
+
+def test_password_not_changed(auth_server_pw_not_changed, user_email_verified):
+    "Check response for unchanged password"
+    live_server, cookies = auth_server_pw_not_changed
+    rsp = req.get_self(live_server.url, cookies=cookies)
+    json = rsp.json()
+    assert json == {
+        "status": 401,
+        "data": {
+            "flows": [{"id": "password_change", "is_pending": True}],
+        },
+        "meta": {"is_authenticated": True},
     }
 
 

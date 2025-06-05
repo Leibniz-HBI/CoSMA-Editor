@@ -37,6 +37,7 @@ class CosmaeUser(AbstractUser):
     edit_session = models.ForeignKey(
         "editsession", null=True, on_delete=models.RESTRICT
     )
+    password_changed = models.BooleanField(default=False)
 
     class Meta:
         unique_together = [["username", "social_provider"]]

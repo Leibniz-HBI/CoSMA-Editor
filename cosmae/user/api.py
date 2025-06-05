@@ -3,9 +3,9 @@
 from urllib.parse import unquote
 
 from allauth.account.models import EmailAddress
-from allauth.account.signals import password_changed
+from allauth.account.signals import password_changed as password_changed_signal
 from allauth.mfa.models import Authenticator
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
 
@@ -320,8 +320,11 @@ def get_self(request: HttpRequest):
 def post_set_password_for_user(request: HttpRequest, data: SetPasswordRequest):
     """Set password for user.
     Either for requesting user or with commissioner for arbitrary user."""
+    # pylint: disable=too-many-return-statements
     try:
-        request_user = check_user(request)
+        request_user = check_user(
+            request, require_password_changed=data.id_user_persistent is not None
+        )
     except NotAuthenticatedException:
         return single_error_allauth_like_response(401, "Not authenticated")
     try:
@@ -333,6 +336,7 @@ def post_set_password_for_user(request: HttpRequest, data: SetPasswordRequest):
             target_user = CosmaeUser.objects.filter(
                 id_persistent=data.id_user_persistent
             ).get()
+            password_changed = False
         else:
             if data.old_password is None or not request_user.check_password(
                 data.old_password
@@ -340,14 +344,22 @@ def post_set_password_for_user(request: HttpRequest, data: SetPasswordRequest):
                 return single_error_allauth_like_response(
                     400, "Existing password missing or incorrect."
                 )
+            if data.old_password == data.new_password:
+                return single_error_allauth_like_response(
+                    400, "Old password and new password have to be different."
+                )
             target_user = request_user
+            password_changed = True
         adapter = CosmaeAccountAdapter(request)
-        adapter.set_password(target_user, data.new_password)
-        password_changed.send(
-            sender=target_user.__class__,
-            request=request,
-            user=target_user,
-        )
+        with transaction.atomic():
+            adapter.set_password(target_user, data.new_password)
+            target_user.password_changed = password_changed
+            target_user.save()
+            password_changed_signal.send(
+                sender=target_user.__class__,
+                request=request,
+                user=target_user,
+            )
         return success_allauth_like_response(EmptyResponse())
     except CosmaeUser.DoesNotExist:
         return single_error_allauth_like_response(404, "User does not exist.")
@@ -410,6 +422,9 @@ def create_unauthorized_response(request):
 
             else:
                 flows = [FlowAllauthLikeResponse(id="mfa_register", is_pending=True)]
+        elif not user.password_changed:
+            flows = [FlowAllauthLikeResponse(id="password_change", is_pending=True)]
+            is_authenticated = True
     return UnauthorizedAllauthLikeResponse(
         meta=MetaAllauthLikeResponse(is_authenticated=is_authenticated),
         data=FlowListAllauthLikeResponse(flows=flows),
