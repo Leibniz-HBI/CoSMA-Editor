@@ -30,3 +30,8 @@ export const selectEmailVerification = createSelector(
     selectAuthState,
     (state) => state.emailVerified
 )
+
+export const selectPasswordChangeRequired = createSelector(
+    selectAuthState,
+    (state) => state.passwordChangeRequired
+)

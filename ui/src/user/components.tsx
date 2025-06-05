@@ -60,14 +60,20 @@ const passwordSchema = yup.object({
         .oneOf([yup.ref('newPassword')], 'The password fields have to be the same.')
         .required()
 })
-function ProfilePasswordComponent() {
+export function ProfilePasswordComponent({
+    onSuccess = undefined
+}: {
+    onSuccess?: VoidFunction
+}) {
     const dispatch = useAppDispatch()
     return (
         <Formik
             initialValues={{ oldPassword: '', newPassword: '', repeatPassword: '' }}
             validationSchema={passwordSchema}
             onSubmit={(values) => {
-                dispatch(setPasswordThunk(values.oldPassword, values.newPassword))
+                dispatch(
+                    setPasswordThunk(values.oldPassword, values.newPassword, onSuccess)
+                )
             }}
         >
             {({ values, errors, touched, handleChange, handleSubmit }) => {

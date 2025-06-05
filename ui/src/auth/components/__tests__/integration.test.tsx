@@ -3,7 +3,7 @@
  */
 import { configureStore } from '@reduxjs/toolkit'
 import { Provider } from 'react-redux'
-import { PropsWithChildren } from 'react'
+import { act, PropsWithChildren } from 'react'
 import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
 import {
     UserPermissionGroup,
@@ -29,7 +29,6 @@ import {
     newEditSessionParticipant,
     newEditSessionState
 } from '../../../session/state'
-import { act } from 'react-dom/test-utils'
 import { editSessionReducer } from '../../../session/slice'
 import { AuthState, AuthStep, newAuthState } from '../../state'
 import { authReducer } from '../../slice'
@@ -43,19 +42,6 @@ vi.mock('uuid', () => {
 })
 
 describe('login', () => {
-    async function performLogin(_container: HTMLElement) {
-        const user = userEvent.setup()
-        const textInput = await screen.findByRole('textbox')
-        const passwordInput = screen.getByLabelText('Password')
-        const button = screen.getByRole('button')
-        await act(async () => {
-            await user.type(textInput, 'username')
-            await user.type(passwordInput, 'password')
-            const loginButton = button
-            expect(loginButton.textContent).toEqual('Login')
-            await user.click(loginButton)
-        })
-    }
     test('login on successful refresh', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
@@ -408,6 +394,73 @@ describe('totp', () => {
         await waitFor(() => {
             expect(store.getState().auth).toEqual(reauthenticateState)
         })
+    })
+})
+
+describe('set password', () => {
+    async function fillNewPasswordFrom() {
+        await waitFor(async () => {
+            const user = userEvent.setup()
+            const oldPasswordInput = screen.getByLabelText('Old Password')
+            const newPasswordInput = screen.getByLabelText('New Password')
+            const repeatPasswordInput = screen.getByLabelText('Repeat Password')
+            await user.type(oldPasswordInput, oldPassword)
+            await user.type(newPasswordInput, newPassword)
+            await user.type(repeatPasswordInput, newPassword)
+            const submitButton = screen.getByRole('button', { name: 'Submit' })
+            user.click(submitButton)
+        })
+    }
+    const changePasswordResponse = {
+        status: 401,
+        data: { flows: [{ id: 'password_change', is_pending: true }] },
+        meta: { is_authenticated: true }
+    }
+    const oldPassword = '1x2Y3z4*',
+        newPassword = '4r5t6z8U#'
+    test('when not logged in', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [
+            [200, {}],
+            [401, notAuthenticatedRsp],
+            [200, authUserApiRsp],
+            [401, changePasswordResponse],
+            [200, { status: 200, data: {} }],
+            [200, userInfoApiResponse]
+        ])
+        const { container } = renderWithProviders(
+            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            fetchMock
+        )
+        await performLogin(container)
+        await fillNewPasswordFrom()
+
+        await waitFor(() => {})
+        await waitFor(() => {
+            screen.getByText('You are logged in')
+        })
+        expect(fetchMock.mock.calls.length).toEqual(6)
+    })
+    test('when already logged in', async () => {
+        const fetchMock = vi.fn()
+        addResponseSequence(fetchMock, [
+            [200, {}],
+            [200, authUserApiRsp],
+            [401, changePasswordResponse],
+            [200, { status: 200, data: {} }],
+            [200, userInfoApiResponse]
+        ])
+        renderWithProviders(
+            <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
+            fetchMock
+        )
+        await fillNewPasswordFrom()
+
+        await waitFor(() => {})
+        await waitFor(() => {
+            screen.getByText('You are logged in')
+        })
+        expect(fetchMock.mock.calls.length).toEqual(5)
     })
 })
 
@@ -775,3 +828,17 @@ const authStateTotp = newAuthState({
     ...authStepPartial,
     stepStack: newRemote([AuthStep.Totp])
 })
+
+async function performLogin(_container: HTMLElement) {
+    const user = userEvent.setup()
+    const textInput = await screen.findByRole('textbox')
+    const passwordInput = screen.getByLabelText('Password')
+    const button = screen.getByRole('button')
+    await act(async () => {
+        await user.type(textInput, 'username')
+        await user.type(passwordInput, 'password')
+        const loginButton = button
+        expect(loginButton.textContent).toEqual('Login')
+        await user.click(loginButton)
+    })
+}

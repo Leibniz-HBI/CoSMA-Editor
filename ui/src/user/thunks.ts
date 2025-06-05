@@ -44,7 +44,8 @@ export function setCurrentEditSessionThunk(
 
 export function setPasswordThunk(
     oldPassword: string,
-    newPassword: string
+    newPassword: string,
+    onSuccess?: VoidFunction
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         try {
@@ -61,8 +62,11 @@ export function setPasswordThunk(
                 dispatch,
                 (dispatch, _json) => {
                     dispatch(addSuccessVanish('Password changed'))
+                    if (onSuccess !== undefined) {
+                        onSuccess()
+                    }
                 },
-                json,
+                json
             )
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
@@ -137,13 +141,10 @@ export function remoteUserProfileColumnAppend(
         if (idColumnPersistent == justificationColumnId) {
             return
         }
-        await fetch(
-            config.api_path + `/user/columns/append/${idColumnPersistent}`,
-            {
-                credentials: 'include',
-                method: 'POST'
-            }
-        )
+        await fetch(config.api_path + `/user/columns/append/${idColumnPersistent}`, {
+            credentials: 'include',
+            method: 'POST'
+        })
     }
 }
 export function remoteUserProfileColumnDeleteAsync(
@@ -170,13 +171,10 @@ export function remoteUserProfileChangeColumIndex(
     idxEnd: number
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        await fetch(
-            config.api_path + `/user/columns/swap/${idxStart}/${idxEnd}`,
-            {
-                credentials: 'include',
-                method: 'POST'
-            }
-        )
+        await fetch(config.api_path + `/user/columns/swap/${idxStart}/${idxEnd}`, {
+            credentials: 'include',
+            method: 'POST'
+        })
     }
 }
 

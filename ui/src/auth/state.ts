@@ -11,7 +11,8 @@ export enum AuthStep {
     Totp,
     Authenticated,
     Reauthentication,
-    ReauthenticationMfa
+    ReauthenticationMfa,
+    PasswordChange
 }
 
 export interface UserAllAuth {
@@ -35,6 +36,7 @@ export interface AuthState {
     totpUrl: RemoteInterface<string | undefined>
     emailVerified: RemoteInterface<boolean | undefined>
     emailAddressList: RemoteInterface<EmailAllauth[]|undefined>
+    passwordChangeRequired: boolean
 }
 
 export function newAuthState({
@@ -44,7 +46,8 @@ export function newAuthState({
     registration= newRemote(false),
     totpUrl = newRemote(undefined),
     emailVerified = newRemote(undefined),
-    emailAddressList = newRemote(undefined)
+    emailAddressList = newRemote(undefined),
+    passwordChangeRequired = false
 }: {
     user?: RemoteInterface<UserInfo | undefined>
     userAuth?: UserAllAuth | undefined
@@ -53,6 +56,7 @@ export function newAuthState({
     totpUrl?: RemoteInterface<string | undefined>
     emailVerified?: RemoteInterface<boolean | undefined>
     emailAddressList?: RemoteInterface<EmailAllauth[]|undefined>
+    passwordChangeRequired?: boolean
 }): AuthState {
     return {
         user,
@@ -61,6 +65,7 @@ export function newAuthState({
         registration,
         totpUrl,
         emailVerified,
-        emailAddressList
+        emailAddressList,
+        passwordChangeRequired
     }
 }

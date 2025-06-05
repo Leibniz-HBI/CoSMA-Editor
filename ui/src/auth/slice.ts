@@ -117,6 +117,12 @@ const authSlice = createSlice({
             state.stepStack = newRemote([AuthStep.ReauthenticationMfa])
             state.userAuth = undefined
         },
+        setPasswordChange(state: AuthState) {
+            state.passwordChangeRequired = true
+        },
+        setPasswordChangeSuccess(state: AuthState) {
+            state.passwordChangeRequired = false
+        },
         setPartiallyAuthenticated(state: AuthState, action: PayloadAction<boolean>) {
             state.userAuth = undefined
             if (action.payload) {
@@ -194,6 +200,8 @@ export const {
     registrationStart,
     resetEmailVerification,
     setAuthUser,
+    setPasswordChange,
+    setPasswordChangeSuccess,
     setReauthenticate,
     setReauthenticateMfa,
     setVerifyEmail,

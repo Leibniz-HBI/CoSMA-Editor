@@ -2,15 +2,11 @@ import { ReactElement, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import {
     selectAuthStepStack,
+    selectPasswordChangeRequired,
     selectUserAuth,
     selectUserInfo
 } from '../selectors'
-import {
-    getSelfThunk,
-    getSessionThunk,
-    getTotpThunk,
-    loginThunk,
-} from '../thunks'
+import { getSelfThunk, getSessionThunk, getTotpThunk, loginThunk } from '../thunks'
 import { CosmaeLoading } from '../../util/components/misc'
 import { AuthStep } from '../state'
 import { LoginForm } from './login_form'
@@ -18,12 +14,15 @@ import { Modal } from 'react-bootstrap'
 import { MfaForm } from './mfa_form'
 import { ReauthenticationForm } from './reauthentication_form'
 import { EmailVerificationNeeded } from './email_verification'
+import { ProfilePasswordComponent } from '../../user/components'
+import { setPasswordChangeSuccess } from '../slice'
 
 export function AuthProvider(props: { children: ReactElement }) {
     const stepStack = useAppSelector(selectAuthStepStack)
     const userInfo = useAppSelector(selectUserInfo)
     const dispatch = useAppDispatch()
     const authUser = useAppSelector(selectUserAuth)
+    const passwordChangeRequired = useAppSelector(selectPasswordChangeRequired)
     useEffect(() => {
         if (stepStack.isLoading || userInfo.isLoading) {
             return
@@ -36,7 +35,7 @@ export function AuthProvider(props: { children: ReactElement }) {
                 dispatch(getTotpThunk())
                 break
             case AuthStep.Authenticated:
-                if (userInfo.value === undefined) {
+                if (userInfo.value === undefined && !passwordChangeRequired) {
                     dispatch(getSelfThunk())
                 }
                 break
@@ -53,10 +52,10 @@ export function AuthProvider(props: { children: ReactElement }) {
                 modalContent = <ReauthenticationForm />
                 break
             case AuthStep.ReauthenticationMfa:
-                modalContent =<MfaForm reauthenticate={true}/>
+                modalContent = <MfaForm reauthenticate={true} />
                 break
             case AuthStep.Totp:
-                modalContent = <MfaForm reauthenticate={false}/>
+                modalContent = <MfaForm reauthenticate={false} />
                 break
             case AuthStep.VerifyEmail:
                 modalContent = <EmailVerificationNeeded />
@@ -77,6 +76,25 @@ export function AuthProvider(props: { children: ReactElement }) {
             >
                 <Modal.Dialog>
                     <Modal.Body>{modalContent}</Modal.Body>
+                </Modal.Dialog>
+            </div>
+        )
+    }
+    if (passwordChangeRequired) {
+        return (
+            <div
+                className="modal show"
+                style={{ display: 'block', position: 'initial' }}
+            >
+                <Modal.Dialog>
+                    <Modal.Header>Password Change Required</Modal.Header>
+                    <Modal.Body>
+                        <ProfilePasswordComponent
+                            onSuccess={() => {
+                                dispatch(setPasswordChangeSuccess())
+                            }}
+                        />
+                    </Modal.Body>
                 </Modal.Dialog>
             </div>
         )
