@@ -165,7 +165,7 @@ def change_columns_by_idx(request: HttpRequest, start_idx: int, end_idx: int):
 
 
 @router.put(
-    "/{id_user_persistent}/permission_group",
+    "/id/{id_user_persistent}/permission_group",
     response={
         200: LoginResponse,
         400: ApiError,
@@ -368,7 +368,7 @@ def post_set_password_for_user(request: HttpRequest, data: SetPasswordRequest):
 
 
 @router.get(
-    "{id_user_persistent}",
+    "id/{id_user_persistent}",
     response={
         200: PublicUserInfo,
         401: ApiError,

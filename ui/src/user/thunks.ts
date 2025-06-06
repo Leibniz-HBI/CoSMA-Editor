@@ -116,7 +116,7 @@ export function getUserInfoThunk(idUserPersistent: string): ThunkWithFetch<void>
     return async (dispatch, _getState, fetch) => {
         dispatch(getUserInfoStart(idUserPersistent))
         try {
-            const rsp = await fetch(config.api_path + `/user/${idUserPersistent}`, {
+            const rsp = await fetch(config.api_path + `/user/id/${idUserPersistent}`, {
                 credentials: 'include'
             })
             const json = await rsp.json()

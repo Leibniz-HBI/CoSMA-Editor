@@ -81,7 +81,7 @@ export class SetUserPermissionAction extends AsyncAction<
         dispatch(new SetUserPermissionStartAction())
         try {
             const rsp = await fetch(
-                config.api_path + `/user/${this.idUserPersistent}/permission_group`,
+                config.api_path + `/user/id/${this.idUserPersistent}/permission_group`,
                 {
                     method: 'PUT',
                     credentials: 'include',

@@ -130,7 +130,7 @@ describe('set user permissions', () => {
             ]
         ])
         expect((fetch as Mock).mock.calls).toContainEqual([
-            `http://127.0.0.1:8000/cosmae/api/user/${idPersistentTest}/permission_group`,
+            `http://127.0.0.1:8000/cosmae/api/user/id/${idPersistentTest}/permission_group`,
             {
                 method: 'PUT',
                 credentials: 'include',

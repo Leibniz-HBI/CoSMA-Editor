@@ -48,7 +48,7 @@ describe('set password', () => {
                 { credentials: 'include', method: 'GET' }
             ],
             [
-                `http://127.0.0.1:8000/cosmae/api/user/${idUserTest}`,
+                `http://127.0.0.1:8000/cosmae/api/user/id/${idUserTest}`,
                 { credentials: 'include' }
             ],
             [
@@ -70,7 +70,7 @@ describe('set password', () => {
         addResponseSequence(fetchMock, [
             [200, userSearchResponse],
             [200, userApi],
-            [500, { status: 500, errors: [{message: testError}] }]
+            [500, { status: 500, errors: [{ message: testError }] }]
         ])
         const { store } = renderWithProviders(
             <ManagementPasswordComponent />,
@@ -93,7 +93,7 @@ describe('set password', () => {
                 { credentials: 'include', method: 'GET' }
             ],
             [
-                `http://127.0.0.1:8000/cosmae/api/user/${idUserTest}`,
+                `http://127.0.0.1:8000/cosmae/api/user/id/${idUserTest}`,
                 { credentials: 'include' }
             ],
             [

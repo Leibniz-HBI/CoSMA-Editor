@@ -45,7 +45,7 @@ def get_user_chunk(url, offset, limit, cookies=None):
 
 def put_permission_group(url, id_user_persistent, permission_group, cookies=None):
     return requests.put(
-        url + f"/cosmae/api/user/{id_user_persistent}/permission_group",
+        url + f"/cosmae/api/user/id/{id_user_persistent}/permission_group",
         json={"permission_group": permission_group},
         cookies=cookies,
         timeout=900,
@@ -63,7 +63,7 @@ def post_edit_session(url, id_edit_session_persistent, cookies=None):
 
 def get_details(url, id_user_persistent, cookies=None):
     return requests.get(
-        url + "/cosmae/api/user/" + id_user_persistent,
+        url + "/cosmae/api/user/id/" + id_user_persistent,
         cookies=cookies,
         timeout=900,
     )
