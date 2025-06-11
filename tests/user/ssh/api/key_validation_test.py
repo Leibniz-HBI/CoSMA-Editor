@@ -1,7 +1,7 @@
 "Test SSH key check"
 
 import tests.user.ssh.common as c
-from cosmae.user.ssh.api import check_key
+from cosmae.user.ssh.models_django import check_key
 
 
 def test_single_part():

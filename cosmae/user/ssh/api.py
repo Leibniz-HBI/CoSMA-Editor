@@ -1,7 +1,6 @@
 "API methods for managing SSh keys"
 
 from typing import List
-from uuid import uuid4
 
 from django.http import HttpRequest
 from ninja import Router, Schema
@@ -66,19 +65,10 @@ def put_ssh_key(request: HttpRequest, key: SshKeyPutRequest):
             ).get()
         else:
             user_target = user_request
-        uuid = str(uuid4())
-        key_verified = check_key(key.key)
-        if len(key_verified) == 1:
-            return 400, ApiError(msg=key_verified[0])
-        key_type, key_string, name = key_verified
-        key_db = SshKeyDb.objects.create(
-            id_persistent=uuid,
-            key=key_string,
-            name=name,
-            type=key_type,
-            user=user_target,
-        )
+        key_db = SshKeyDb.add_key(user_target, key)
         return 200, ssh_key_db_to_api_with_id(key_db)
+    except SshKeyDb.InvalidSshKeyException as exc:
+        return 400, ApiError(msg=exc.msg)
     except CosmaeUser.DoesNotExist:
         return 404, ApiError(msg="User does not exist.")
     except Exception:  # pylint: disable=broad-except
@@ -123,29 +113,6 @@ def delete_key(request: HttpRequest, id_key_persistent: str):
         return 404, ApiError(msg="Key not found.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not delete key.")
-
-
-def check_key(key: str):
-    """Check a user provided key.
-    Returns an array.
-    If the length is one, then it contains an error message.
-    If the length is three, then it contains the type, the key and the name."""
-    split = key.split(" ")
-    if len(split) != 3:
-        return [
-            "Could not parse key. It must consist of three parts, separated by spaces."
-        ]
-    key_type, key_string, name = split
-    for c in key_type:
-        if not (c.islower() or c.isdigit() or c == "-"):
-            return ["Key type can only contain lower case, numbers or dashes."]
-    for c in key_string:
-        if not (c.isalnum() or c in {"+", "/", "="}):
-            return ["The key has to be base64 encoded"]
-    for c in name:
-        if not (c.isalnum() or c in {"@", "+", "-", "_", "."}):
-            return [f'The character "{c}" is not allowed in key names.']
-    return split
 
 
 def ssh_key_db_to_api_with_id(key_db: SshKeyDb) -> SshKeyMetaData:

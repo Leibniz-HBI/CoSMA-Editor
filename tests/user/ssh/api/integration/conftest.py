@@ -10,7 +10,7 @@ from cosmae.user.ssh.models_django import SshKey
 def ssh_api_uuid_mock(mocker):
     "mock uuid creation for ssh key api."
     mock = mocker.MagicMock(return_value=c.id_ssh_key)
-    mocker.patch("cosmae.user.ssh.api.uuid4", mock)
+    mocker.patch("cosmae.user.ssh.models_django.uuid4", mock)
 
 
 @pytest.fixture
