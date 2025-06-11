@@ -1,48 +1,9 @@
 import * as yup from 'yup'
-import { useLoaderData } from 'react-router-dom'
-import { Subpage } from '../util/components/subpage'
 import { Formik } from 'formik'
 import { Button, Col, Form, Row } from 'react-bootstrap'
-import { useAppDispatch } from '../hooks'
-import { FormField } from '../util/form'
-import { setPasswordThunk } from './thunks'
-
-enum ProfileCategory {
-    Password = 'password'
-}
-export function ProfilePage() {
-    const loaderData = useLoaderData()
-    let category: ProfileCategory | undefined = undefined
-    try {
-        category = loaderData as ProfileCategory
-    } catch (_e: unknown) {
-        category = undefined
-    }
-    return (
-        <Subpage
-            pages={{
-                Password: ProfileCategory.Password
-            }}
-            selectedPage={category}
-            pathPrefix={'/profile/'}
-        >
-            {(category) => (
-                <ProfileCategoryBody selectedCategory={category as ProfileCategory} />
-            )}
-        </Subpage>
-    )
-}
-export function ProfileCategoryBody({
-    selectedCategory
-}: {
-    selectedCategory: ProfileCategory | undefined
-}) {
-    if (selectedCategory == ProfileCategory.Password) {
-        return <ProfilePasswordComponent />
-    }
-    return <div>Please select a management category.</div>
-}
-
+import { useAppDispatch } from '../../hooks'
+import { FormField } from '../../util/form'
+import { setPasswordThunk } from '../thunks'
 const passwordHint =
     'Passwords require at least 8 characters. They have to include ' +
     'a lower case letter, an upper case letter and a number.'

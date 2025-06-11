@@ -39,8 +39,9 @@ export function SubpageSelection<T extends string | number>({
     const navigate = useNavigate()
     return (
         <ListGroup>
-            {Object.entries(pages).map((page) => (
+            {Object.entries(pages).map((page, idx) => (
                 <ListGroup.Item
+                    key={idx}
                     active={selectedPage == page[1]}
                     role="button"
                     onClick={() => navigate(pathPrefix + page[1].toString())}

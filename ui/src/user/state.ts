@@ -64,24 +64,38 @@ export function newUserInfo({
     }
 }
 
+export interface SshKey {
+    type: string
+    name: string
+    idPersistent: string
+}
+
 export interface UserState {
     userInfoByIdPersistent: {
         [key: string]: RemoteInterface<PublicUserInfo | undefined>
     }
     userSearchResults: RemoteInterface<(PublicUserInfo | UserInfo)[]>
+    sshKeyList: RemoteInterface<SshKey[] | undefined>
+    submitSshKey: RemoteInterface<boolean | undefined>
 }
 
 export function newUserState({
     userInfoByIdPersistent = {},
-    userSearchResults = newRemote([])
+    userSearchResults = newRemote([]),
+    sshKeyList = newRemote(undefined),
+    submitSshKey = newRemote(undefined)
 }: {
     userInfoByIdPersistent?: {
         [key: string]: RemoteInterface<PublicUserInfo | undefined>
     }
     userSearchResults?: RemoteInterface<(PublicUserInfo | UserInfo)[]>
+    sshKeyList?: RemoteInterface<SshKey[] | undefined>
+    submitSshKey?: RemoteInterface<boolean | undefined>
 }): UserState {
     return {
         userInfoByIdPersistent,
-        userSearchResults
+        userSearchResults,
+        sshKeyList,
+        submitSshKey
     }
 }

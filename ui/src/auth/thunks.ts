@@ -31,7 +31,7 @@ import {
     postReauthenticateSuccess,
     postEmailVerificationStart,
     postEmailVerificationSuccess,
-    postEmailVerificationError
+    postEmailVerificationError,
 } from './slice'
 import { EmailAllauth, UserAllAuth } from './state'
 import { handleAllauthResponse } from '../util/api'

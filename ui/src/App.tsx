@@ -22,7 +22,7 @@ import { contributionStepApiToUiMap } from './contribution/thunks'
 import { AuthProvider } from './auth/components/provider'
 import { EmailVerification } from './auth/components/email_verification'
 import { CosmaeNavbar } from './navigation/components'
-import { ProfilePage } from './user/components'
+import { ProfilePage } from './user/components/profile'
 
 export function CosmaeRoot() {
     return (
@@ -121,7 +121,7 @@ const router = createBrowserRouter([
             },
             {
                 path: 'profile/',
-                element: <ProfilePage/>,
+                element: <ProfilePage />,
                 loader: ({ params }) => params.category ?? ''
             },
             {

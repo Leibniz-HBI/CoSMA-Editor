@@ -23,3 +23,8 @@ export const makeSelectUserInfoByIdPersistent = () => {
     )
     return selector
 }
+
+export const selectSshKeyList = createSelector(
+    selectUser,
+    (state) => state.sshKeyList
+)

@@ -60,7 +60,7 @@ import { newRemote } from '../../util/state'
 import { editSessionReducer } from '../../session/slice'
 import { EntityDetailsState, newEntityDetailsState } from '../../entity/state'
 import { entityDetailsReducer } from '../../entity/slice'
-import { columnSelectionReducer, columnSelectionSlice } from '../../column_menu/slice'
+import { columnSelectionReducer } from '../../column_menu/slice'
 import { useColumnDefinitionList } from '../../column_menu/hooks'
 import { AuthState, newAuthState } from '../../auth/state'
 import { authReducer } from '../../auth/slice'
@@ -194,9 +194,7 @@ test('change owner shows modal', async () => {
     await waitFor(() => {
         screen.getByText('Change Column Ownership')
     })
-    expect(
-        store.getState().table.ownershipChangeColumnIdPersistent
-    ).not.toBeUndefined()
+    expect(store.getState().table.ownershipChangeColumnIdPersistent).not.toBeUndefined()
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

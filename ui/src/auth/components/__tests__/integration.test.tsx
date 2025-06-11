@@ -537,10 +537,12 @@ describe('registration', () => {
         await waitFor(async () => {
             const state = store.getState()
             expect(state.auth.user).toEqual(newRemote(undefined))
-            expect(state.user).toEqual({
-                userSearchResults: newRemote([]),
-                userInfoByIdPersistent: {}
-            })
+            expect(state.user).toEqual(
+                newUserState({
+                    userSearchResults: newRemote([]),
+                    userInfoByIdPersistent: {}
+                })
+            )
             const notifications = state.notification.notificationList
             expect(notifications.length).toEqual(1)
             const notification = notifications[0]

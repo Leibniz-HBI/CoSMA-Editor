@@ -14,8 +14,8 @@ import { Modal } from 'react-bootstrap'
 import { MfaForm } from './mfa_form'
 import { ReauthenticationForm } from './reauthentication_form'
 import { EmailVerificationNeeded } from './email_verification'
-import { ProfilePasswordComponent } from '../../user/components'
 import { setPasswordChangeSuccess } from '../slice'
+import { ProfilePasswordComponent } from '../../user/components/password'
 
 export function AuthProvider(props: { children: ReactElement }) {
     const stepStack = useAppSelector(selectAuthStepStack)
