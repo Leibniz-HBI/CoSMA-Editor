@@ -21,5 +21,6 @@ from cosmae.merge_request.models_django import (
     ColumnMergeRequest,
 )
 from cosmae.permissions.models_django import Permission
+from cosmae.user.ssh.models_django import SshKey
 from cosmae.util import CosmaeUser
 from cosmae.value.models_django import Value

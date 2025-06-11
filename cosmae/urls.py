@@ -18,7 +18,7 @@ from cosmae.entity.api import router as person_router
 from cosmae.management import router as management_router
 from cosmae.merge_request.router import router
 from cosmae.permissions.api import router as permission_router
-from cosmae.user.api import router as user_router
+from cosmae.user.router import router as user_router
 from cosmae.util.auth import cosmae_auth
 from cosmae.value.api import router as values_router
 
