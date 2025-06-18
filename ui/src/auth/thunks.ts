@@ -31,7 +31,7 @@ import {
     postReauthenticateSuccess,
     postEmailVerificationStart,
     postEmailVerificationSuccess,
-    postEmailVerificationError,
+    postEmailVerificationError
 } from './slice'
 import { EmailAllauth, UserAllAuth } from './state'
 import { handleAllauthResponse } from '../util/api'
@@ -110,13 +110,15 @@ export function createUserThunk({
     namesPersonal,
     namesFamily,
     email,
-    password
+    password,
+    sshKey
 }: {
     username: string
     namesPersonal: string
     namesFamily?: string
     email: string
     password: string
+    sshKey: string
 }): ThunkWithFetch<void> {
     return async (dispatch: AppDispatch, _getState, fetch) => {
         dispatch(registrationStart())
@@ -126,7 +128,8 @@ export function createUserThunk({
                 username,
                 email,
                 password,
-                names_personal: namesPersonal
+                names_personal: namesPersonal,
+                ssh_key: sshKey
             }
             if (namesFamily !== undefined && namesFamily.length > 0) {
                 body['namesFamily'] = namesFamily

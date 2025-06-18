@@ -24,7 +24,7 @@ class SshKey(models.Model):
     def add_key(cls, user, key):
         "Add a new SSH key for a user."
         uuid = str(uuid4())
-        key_verified = check_key(key.key)
+        key_verified = check_key(key)
         if len(key_verified) == 1:
             raise cls.InvalidSshKeyException(msg=key_verified[0])
         key_type, key_string, name = key_verified
@@ -36,6 +36,10 @@ class SshKey(models.Model):
             user=user,
         )
         return key_db
+
+    def as_pub_key_string(self):
+        "Returns the representation of the key required for the authorized_keys file."
+        return " ".join((self.type, self.key, self.name))
 
 
 def check_key(key: str):

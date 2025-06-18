@@ -9,6 +9,7 @@ from django.db import transaction
 from django.forms import ValidationError
 
 from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
+from cosmae.user.ssh.models_django import SshKey
 from cosmae.util import CosmaeUser
 
 
@@ -59,6 +60,7 @@ class CosmaeAccountAdapter(DefaultAccountAdapter):
         names_family = data.get("names_family")
         email = data.get("email")
         username = data.get("username")
+        ssh_key = data.get("ssh_key")
 
         if names_personal:
             user.first_name = names_personal
@@ -94,6 +96,8 @@ class CosmaeAccountAdapter(DefaultAccountAdapter):
                 )
                 user.edit_session = session
                 user.save()
+                SshKey.add_key(user, ssh_key)
+
         return user
 
     def send_account_already_exists_mail(self, email: str) -> None:

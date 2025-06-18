@@ -5,6 +5,7 @@ from allauth.account.models import EmailAddress
 from django.db import DatabaseError
 
 import tests.user.common as c
+import tests.user.ssh.common as c_ssh
 from tests.management.user.api.integration.requests import post_create_user
 from cosmae.edit_session.models_django import EditSession
 from cosmae.util import CosmaeUser
@@ -97,6 +98,7 @@ def test_same_names(auth_server_commissioner):
             "email": "other@test.org",
             "names_personal": c.test_names_personal_commissioner,
             "password": c.test_password_commissioner,
+            "ssh_key": c_ssh.ssh_key,
         },
         cookies=cookies,
     )
