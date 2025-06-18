@@ -5,6 +5,7 @@ from uuid import uuid4
 from django.db import DatabaseError
 
 import tests.user.common as c
+import tests.user.ssh.common as cssh
 from tests.allauth.api.integration.requests import get_config, post_register
 from tests.utils import assert_versioned
 
@@ -20,6 +21,7 @@ def test_same_name(auth_server):
             "email": "other@test.org",
             "names_personal": c.test_names_personal,
             "password": c.test_password,
+            "ssh_key": cssh.ssh_key,
         },
         cookies=cookies,
     )
@@ -47,6 +49,7 @@ def test_same_email(auth_server):
             "email": c.test_email,
             "names_personal": c.test_names_personal,
             "password": c.test_password,
+            "ssh_key": cssh.ssh_key,
         },
         cookies=cookies,
     )
@@ -77,6 +80,7 @@ def test_same_names(auth_server):
                 "email": "other@test.org",
                 "names_personal": c.test_names_personal,
                 "password": c.test_password,
+                "ssh_key": cssh.ssh_key,
             },
             cookies=cookies,
         )
@@ -115,6 +119,7 @@ def test_bad_db(auth_server):
                 "email": "other@test.org",
                 "names_personal": c.test_names_personal,
                 "password": c.test_password,
+                "ssh_key": cssh.ssh_key,
             },
             cookies=cookies,
         )

@@ -15,6 +15,7 @@ from cosmae.signals import (
     connect_entity_display_txt,
     connect_password_changed_signal,
     connect_read_csv_signal,
+    connect_set_ssh_keys,
     connect_user_created_signal,
     connect_value_display_txt,
 )
@@ -79,6 +80,7 @@ class CosmaeConfig(AppConfig):
                 connect_value_display_txt()
                 connect_user_created_signal()
                 connect_password_changed_signal()
+                connect_set_ssh_keys()
         except AppRegistryNotReady:
             pass
         super().ready()

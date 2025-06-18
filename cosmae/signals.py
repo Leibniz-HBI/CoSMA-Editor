@@ -5,7 +5,7 @@ from uuid import uuid4
 from allauth.account.signals import password_changed, user_signed_up
 from django.apps import apps
 from django.db.backends.signals import connection_created
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 
 
 def connect_read_csv_signal():
@@ -114,4 +114,22 @@ def connect_password_changed_signal():
         dispatch_update_password,
         sender=CosmaeUser,
         dispatch_uid="cosmae.password_changed",
+    )
+
+
+def connect_set_ssh_keys():
+    "Connect signal for setting SSH keys"
+    # pylint: disable=import-outside-toplevel
+    from cosmae.management.user.queue import dispatch_set_ssh_keys
+    from cosmae.user.ssh.models_django import SshKey
+
+    post_save.connect(
+        dispatch_set_ssh_keys,
+        sender=SshKey,
+        dispatch_uid="cosmae_set_ssh_key_list_save",
+    )
+    post_delete.connect(
+        dispatch_set_ssh_keys,
+        sender=SshKey,
+        dispatch_uid="cosmae_set_ssh_key_list_delete",
     )

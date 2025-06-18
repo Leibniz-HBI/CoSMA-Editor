@@ -5,7 +5,6 @@ import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
 
-
 export type RegistrationCallback = ({
     username,
     namesPersonal,
@@ -18,6 +17,7 @@ export type RegistrationCallback = ({
     namesFamily?: string
     email: string
     password: string
+    sshKey: string
 }) => void
 
 type RegistrationFormArgs = {
@@ -27,6 +27,7 @@ type RegistrationFormArgs = {
     namesFamily: string
     password: string
     passwordRepeat: string
+    sshKey: string
 }
 
 const passwordHint =
@@ -47,11 +48,12 @@ const registrationSchema = yup.object({
     passwordRepeat: yup
         .string()
         .oneOf([yup.ref('password')], 'The password fields have to be the same.')
-        .required()
+        .required(),
+    sshKey: yup.string().required().trim()
 })
 
 export function RegistrationForm({
-    registrationCallback,
+    registrationCallback
 }: {
     registrationCallback: RegistrationCallback
 }) {
@@ -64,17 +66,19 @@ export function RegistrationForm({
                 namesPersonal: '',
                 namesFamily: '',
                 password: '',
-                passwordRepeat: ''
+                passwordRepeat: '',
+                sshKey: ''
             }}
-            onSubmit={(values: RegistrationFormArgs) =>{
+            onSubmit={(values: RegistrationFormArgs) => {
                 registrationCallback({
                     username: values.username,
                     email: values.email,
                     namesPersonal: values.namesPersonal,
                     namesFamily: values.namesFamily,
-                    password: values.password
-                })}
-            }
+                    password: values.password,
+                    sshKey: values.sshKey
+                })
+            }}
         >
             {({ handleSubmit, handleChange, touched, errors, values }) => (
                 <RegistrationFormBody
@@ -94,7 +98,7 @@ export function RegistrationFormBody({
     handleSubmit,
     handleChange,
     touched,
-    formErrors,
+    formErrors
 }: {
     values: RegistrationFormArgs
     handleSubmit: (e: FormEvent<HTMLFormElement> | undefined) => void
@@ -154,6 +158,14 @@ export function RegistrationFormBody({
                 value={values.passwordRepeat}
                 isTouched={touched.passwordRepeat}
                 error={formErrors.passwordRepeat}
+                handleChange={handleChange}
+            />
+            <FormField
+                name="sshKey"
+                label="Public SSH Key"
+                value={values.sshKey}
+                isTouched={touched.sshKey}
+                error={formErrors.sshKey}
                 handleChange={handleChange}
             />
             <Row className="justify-content-end mt-4">

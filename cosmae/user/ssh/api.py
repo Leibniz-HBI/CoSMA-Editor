@@ -65,7 +65,7 @@ def put_ssh_key(request: HttpRequest, key: SshKeyPutRequest):
             ).get()
         else:
             user_target = user_request
-        key_db = SshKeyDb.add_key(user_target, key)
+        key_db = SshKeyDb.add_key(user_target, key.key)
         return 200, ssh_key_db_to_api_with_id(key_db)
     except SshKeyDb.InvalidSshKeyException as exc:
         return 400, ApiError(msg=exc.msg)

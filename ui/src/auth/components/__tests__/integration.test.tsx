@@ -470,7 +470,7 @@ describe('registration', () => {
         await act(async () => {
             const textInputs = await waitFor(() => {
                 const textInputs = screen.getAllByRole('textbox')
-                expect(textInputs.length).toEqual(4)
+                expect(textInputs.length).toEqual(5)
                 return textInputs
             })
             await user.type(textInputs[0], userNameTest)
@@ -480,6 +480,8 @@ describe('registration', () => {
             await user.type(passwordInput, passwordTest)
             const repeatPasswordInput = screen.getByLabelText('Repeat password')
             await user.type(repeatPasswordInput, passwordTest)
+            await user.click(textInputs[4])
+            await user.paste(sshKeyTest)
             const registerButton = screen.getByRole('button', { name: 'Register' })
             await user.click(registerButton)
         })
@@ -518,7 +520,8 @@ describe('registration', () => {
                         username: userNameTest,
                         email: emailTest,
                         password: passwordTest,
-                        names_personal: namesPersonalTest
+                        names_personal: namesPersonalTest,
+                        ssh_key: sshKeyTest
                     })
                 }
             ]
@@ -697,6 +700,8 @@ function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
 const userNameTest = 'test_user'
 const emailTest = 'me@test.url'
 const passwordTest = 'pA$sw0rd-1234'
+const sshKeyTest =
+    'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOCRgyFQbGG49qSpof220k8XRD3GtsihohMkxGVuvnaU user@machine'
 const namesPersonalTest = 'names personal test'
 const testError = 'test error message'
 const idPersistentTest = 'id-user-test'
