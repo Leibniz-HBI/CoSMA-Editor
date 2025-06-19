@@ -89,7 +89,7 @@ def test_same_email(auth_server_commissioner):
     }
 
 
-def test_same_names(auth_server_commissioner):
+def test_same_personal_names(auth_server_commissioner):
     live_server, cookies = auth_server_commissioner
     rsp = post_create_user(
         live_server.url,

@@ -13,9 +13,14 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from os import environ
 from pathlib import Path
 
+from django_project.settings.settings_test import DOMAIN_NAME
+
+DOMAIN_NAME = "cosmae.test.org"
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent / "django_test_base"
 SECRET_DIR = Path(__file__).resolve().parent / ".secrets_local"
+TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "cosmae/templates"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -64,7 +69,7 @@ ROOT_URLCONF = "django_project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [TEMPLATE_DIR],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -202,8 +207,31 @@ HEADLESS_ONLY = False
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
 SOCIALACCOUNT_ENABLED = False
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
-ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_VERIFICATION = "optional"
 ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
+
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": DOMAIN_NAME + "/account/verify-email/{key}",
+    "account_signup": DOMAIN_NAME,
+    "password_reset_url": DOMAIN_NAME,
+    # Key placeholders are automatically populated. You are free to adjust this
+    # to your own needs, e.g.
+    #
+    # "https://app.project.org/account/email/verify-email?token={key}",
+    #     "account_reset_password": "https://app.project.org/account/password/reset",
+    #     "account_reset_password_from_key":
+    #         "https://app.project.org/account/password/reset/key/{key}",
+    #     "account_signup": "https://app.project.org/account/signup",
+    #     # Fallback in case the state containing the `next` URL is lost and the handshake
+    #     # with the third-party provider fails.
+    #     "socialaccount_login_error": "https://app.project.org/account/provider/callback",
+}
 
 ORCID_CLIENT_ID = get_file_secret("orcid_client_id")
 ORCID_CLIENT_SECRET = get_file_secret("orcid_client_secret")
+
+EMAIL_HOST = "email_host"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "email_host_user"
+EMAIL_HOST_PASSWORD = "email_host_password"
