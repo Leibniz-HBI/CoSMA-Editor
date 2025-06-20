@@ -12,7 +12,7 @@ from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.column.models_django import ColumnContribution
 from cosmae.contribution.column.queue.util import read_csv_of_candidate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import EntityHistory, EntityJustification
+from cosmae.entity.models_django import Entity, EntityHistory, EntityJustification
 from cosmae.exception import ColumnExistsException
 from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.util import CosmaeUser, timestamp
@@ -28,6 +28,25 @@ def mk_display_txt_extractor(idx):
     if idx is None:
         return lambda _: None
     return lambda row_tpl: row_tpl[idx]
+
+
+def mk_id_persistent_extractor(idx):
+    """Create a function to read the id persistent from csv rows.
+    If the index is None a function always returning None is the result of this function.
+    Otherwise a function tries to get the corresponding entity from the data base.
+    """
+    if idx is None:
+        return lambda _: None
+
+    def get_id_persistent(row_tpl):
+        id_persistent = str(row_tpl[idx])
+        try:
+            Entity.objects.filter(id_persistent=id_persistent).get()
+            return id_persistent
+        except Entity.DoesNotExist:
+            return None
+
+    return get_id_persistent
 
 
 def mk_justification_strategy(idx, time_edit: datetime, user: CosmaeUser):
@@ -104,6 +123,7 @@ def ingest_values_from_csv(id_contribution_persistent):
             time_add = timestamp()
             display_txt_idx = None
             justification_idx = None
+            id_persistent_idx = None
             column_assignments = []
             column_pairs = []
             empty_strings = {
@@ -114,6 +134,8 @@ def ingest_values_from_csv(id_contribution_persistent):
                     display_txt_idx = column_assignment.index_in_file
                 elif column_assignment.id_existing_persistent == "justification":
                     justification_idx = column_assignment.index_in_file
+                elif column_assignment.id_existing_persistent == "id_persistent":
+                    id_persistent_idx = column_assignment.index_in_file
                 else:
                     column_destination = Column.most_recent_by_id(
                         column_assignment.id_existing_persistent
@@ -161,6 +183,7 @@ def ingest_values_from_csv(id_contribution_persistent):
             justification_strategy = mk_justification_strategy(
                 justification_idx, time_add, user=created_by
             )
+            id_persistent_extractor = mk_id_persistent_extractor(id_persistent_idx)
             data_frame = read_csv_of_candidate(contribution)
             for row_tpl in data_frame.itertuples(index=False):
                 display_txt = display_txt_extractor(row_tpl)
@@ -170,16 +193,18 @@ def ingest_values_from_csv(id_contribution_persistent):
                     empty_strings,
                 ):
                     continue
-                id_entity_persistent = str(uuid4())
-                entity, _ = EntityHistory.change_or_create_versioned(
-                    id_persistent=id_entity_persistent,
-                    time_edit=time_add,
-                    written_by_session=contribution.edit_session,
-                    display_txt=display_txt,
-                    version=None,
-                    contribution_candidate=contribution,
-                )
-                entity.save()
+                id_entity_persistent = id_persistent_extractor(row_tpl)
+                if id_entity_persistent is None:
+                    id_entity_persistent = str(uuid4())
+                    entity, _ = EntityHistory.change_or_create_versioned(
+                        id_persistent=id_entity_persistent,
+                        time_edit=time_add,
+                        written_by_session=contribution.edit_session,
+                        display_txt=display_txt,
+                        version=None,
+                        contribution_candidate=contribution,
+                    )
+                    entity.save()
                 justification_strategy(id_entity_persistent, row_tpl)
                 for idx_in_file, column in column_assignments:
                     id_value_persistent = str(uuid4())
