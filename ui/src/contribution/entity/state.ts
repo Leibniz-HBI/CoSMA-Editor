@@ -111,7 +111,7 @@ export function newValue(
 }
 
 export interface ContributionEntityState {
-    entities: RemoteInterface<EntityWithDuplicates[]>
+    entities: RemoteInterface<EntityWithDuplicates[] | undefined>
     entityMap: { [key: string]: number }
     completeEntityAssignment: RemoteInterface<boolean>
     columnList: Column[]
@@ -123,10 +123,10 @@ export interface ContributionEntityState {
     showJustificationDialog: boolean
 }
 export function newContributionEntityState({
-    entities = newRemote([]),
+    entities = newRemote(undefined),
     entityMap,
     completeEntityAssignment = newRemote(false),
-     columnList = [],
+    columnList = [],
     columnMap,
     showColumnMenu = false,
     selectedEntityIdx = undefined,
@@ -134,7 +134,7 @@ export function newContributionEntityState({
     matchWidths = [200, 200],
     showJustificationDialog = false
 }: {
-    entities?: RemoteInterface<EntityWithDuplicates[]>
+    entities?: RemoteInterface<EntityWithDuplicates[]|undefined>
     entityMap?: { [key: string]: number }
     completeEntityAssignment?: RemoteInterface<boolean>
     columnList?: Column[]
@@ -145,9 +145,11 @@ export function newContributionEntityState({
     matchWidths?: number[]
     showJustificationDialog?: boolean
 }): ContributionEntityState {
-    let newEntityMap: { [key: string]: number },
-        newColumnMap: { [key: string]: number }
-    if (entityMap === undefined || entityMap.size != entities.value.length) {
+    let newEntityMap: { [key: string]: number }, newColumnMap: { [key: string]: number }
+    if (entities.value === undefined){
+        newEntityMap = {}
+    }
+    else if (entityMap === undefined || entityMap.size != entities.value.length) {
         newEntityMap = {}
         for (let idx = 0; idx < entities.value.length; ++idx) {
             newEntityMap[entities.value[idx].idPersistent] = idx
@@ -155,10 +157,7 @@ export function newContributionEntityState({
     } else {
         newEntityMap = entityMap
     }
-    if (
-        columnMap === undefined ||
-        columnMap.size != columnList.length
-    ) {
+    if (columnMap === undefined || columnMap.size != columnList.length) {
         newColumnMap = {}
         for (let idx = 0; idx < columnList.length; ++idx) {
             newColumnMap[columnList[idx].idPersistent] = idx
