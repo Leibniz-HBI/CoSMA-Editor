@@ -1,11 +1,11 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,disable=unused-argument,too-many-arguments,too-many-positional-arguments
-from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pandas as pd
 import pytest
 from django.db.models import Subquery
 
+import tests.entity.common as ce
 from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.column.models_django import ColumnContribution
 from cosmae.contribution.column.queue.ingest import ingest_values_from_csv
@@ -19,19 +19,26 @@ csv_cols = {
     "names": ["name_0", "name_1"],
     "verified": ["true", "false"],
     "party": ["party_0", "party_1"],
+    "id_persistent": [ce.id_persistent_test_0, "does_not_exist"],
 }
 
 
 @pytest.fixture
-def csv_mock():
-    csv_mock = MagicMock()
+def delimiter_mock(mocker):
+    delimiter_mock = mocker.MagicMock(return_value=",")
+    mocker.patch("cosmae.contribution.column.queue.util.find_delimiter", delimiter_mock)
+    return delimiter_mock
 
-    csv_mock.return_value = pd.DataFrame(csv_cols)
+
+@pytest.fixture
+def csv_mock(mocker):
+    csv_mock = mocker.MagicMock(return_value=pd.DataFrame(csv_cols))
+    mocker.patch("cosmae.contribution.column.queue.util.read_csv", csv_mock)
     return csv_mock
 
 
 @pytest.fixture
-def csv_mock_with_empty_lines():
+def csv_mock_with_empty_lines(mocker):
     new_cols = {}
     for name, vals in csv_cols.items():
         new_vals = []
@@ -41,19 +48,19 @@ def csv_mock_with_empty_lines():
             new_vals.append("\t\n")
             new_vals.append(None)
         new_cols[name] = new_vals
-    csv_mock = MagicMock()
-    csv_mock.return_value = pd.DataFrame(new_cols)
+    csv_mock = mocker.MagicMock(return_value=pd.DataFrame(new_cols))
+    mocker.patch("cosmae.contribution.column.queue.util.read_csv", csv_mock)
     return csv_mock
 
 
 @pytest.fixture
-def csv_mock_with_empty_values():
+def csv_mock_with_empty_values(mocker):
     new_cols = {}
     new_cols["names"] = csv_cols["names"]
     new_cols["verified"] = ["true", None]
     new_cols["party"] = ["party_0", None]
-    csv_mock = MagicMock()
-    csv_mock.return_value = pd.DataFrame(new_cols)
+    csv_mock = mocker.MagicMock(return_value=pd.DataFrame(new_cols))
+    mocker.patch("cosmae.contribution.column.queue.util.read_csv", csv_mock)
     return csv_mock
 
 
@@ -91,6 +98,18 @@ def display_txt_contribution(contribution_other):
         name="name",
         id_existing_persistent="display_txt",
         index_in_file=0,
+        discard=False,
+    )[0]
+
+
+@pytest.fixture
+def id_persistent_contribution(contribution_other):
+    return ColumnContribution.objects.get_or_create(
+        id_persistent=uuid4(),
+        contribution_candidate=contribution_other,
+        name="name",
+        id_existing_persistent="id_persistent",
+        index_in_file=3,
         discard=False,
     )[0]
 
@@ -141,18 +160,12 @@ def test_ingest_empty_values(
     verified_contribution,
     party_contribution,
     csv_mock_with_empty_values,
+    delimiter_mock,
 ):
     "Make sure entities with no imported values are not created."
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
-    with patch(
-        "cosmae.contribution.column.queue.util.read_csv", csv_mock_with_empty_values
-    ):
-        with patch(
-            "cosmae.contribution.column.queue.util.find_delimiter",
-            return_value=",",
-        ):
-            ingest_values_from_csv(contribution_other.id_persistent)
+    ingest_values_from_csv(contribution_other.id_persistent)
     value_queryset = Value.objects.all()  # pylint: disable=no-member
     assert len(value_queryset) == 2
     persons = set(
@@ -200,16 +213,12 @@ def test_ingest_boolean(
     verified_column,
     verified_contribution,
     csv_mock,
+    delimiter_mock,
 ):
     contribution_other = verified_contribution.contribution_candidate
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
-    with patch("cosmae.contribution.column.queue.util.read_csv", csv_mock):
-        with patch(
-            "cosmae.contribution.column.queue.util.find_delimiter",
-            return_value=",",
-        ):
-            ingest_values_from_csv(contribution_other.id_persistent)
+    ingest_values_from_csv(contribution_other.id_persistent)
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
@@ -230,20 +239,11 @@ def test_ingest_boolean(
     )
 
 
-def test_ingest_string(
-    party_column,
-    party_contribution,
-    csv_mock,
-):
+def test_ingest_string(party_column, party_contribution, csv_mock, delimiter_mock):
     contribution_other = party_contribution.contribution_candidate
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
-    with patch("cosmae.contribution.column.queue.util.read_csv", csv_mock):
-        with patch(
-            "cosmae.contribution.column.queue.util.find_delimiter",
-            return_value=",",
-        ):
-            ingest_values_from_csv(contribution_other.id_persistent)
+    ingest_values_from_csv(contribution_other.id_persistent)
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
@@ -264,16 +264,12 @@ def test_ingest_string(
     )
 
 
-def test_sets_error(party_contribution, party_column):
-    mock = MagicMock()
+def test_sets_error(party_contribution, party_column, mocker, delimiter_mock):
+    mock = mocker.MagicMock()
     mock.side_effect = Exception("error")
     contribution = party_contribution.contribution_candidate
-    with patch("cosmae.contribution.column.queue.util.read_csv", mock):
-        with patch(
-            "cosmae.contribution.column.queue.util.find_delimiter",
-            return_value=",",
-        ):
-            ingest_values_from_csv(contribution.id_persistent)
+    with mocker.patch("cosmae.contribution.column.queue.util.read_csv", mock):
+        ingest_values_from_csv(contribution.id_persistent)
     contribution = ContributionCandidate.by_id_persistent(
         contribution.id_persistent, contribution.created_by
     ).get()
@@ -286,19 +282,12 @@ def test_ingest_with_empty(
     verified_column,
     verified_contribution,
     csv_mock_with_empty_lines,
+    delimiter_mock,
 ):
     contribution_other = verified_contribution.contribution_candidate
     contribution_other.state = ContributionCandidate.COLUMNS_EXTRACTED
     contribution_other.save()
-    with patch(
-        "cosmae.contribution.column.queue.util.read_csv",
-        csv_mock_with_empty_lines,
-    ):
-        with patch(
-            "cosmae.contribution.column.queue.util.find_delimiter",
-            return_value=",",
-        ):
-            ingest_values_from_csv(contribution_other.id_persistent)
+    ingest_values_from_csv(contribution_other.id_persistent)
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
@@ -319,25 +308,35 @@ def test_ingest_with_empty(
     )
 
 
-def test_justification(verified_contribution, party_as_justification, csv_mock):
+def test_justification(
+    verified_contribution, party_as_justification, csv_mock, delimiter_mock
+):
     justifications = list(
         EntityJustification.objects.all()  # pylint: disable=no-member
     )
     assert len(justifications) == 0
-    with patch(
-        "cosmae.contribution.column.queue.util.read_csv",
-        csv_mock,
-    ):
-        with patch(
-            "cosmae.contribution.column.queue.util.find_delimiter",
-            return_value=",",
-        ):
-            ingest_values_from_csv(
-                verified_contribution.contribution_candidate.id_persistent
-            )
+    ingest_values_from_csv(verified_contribution.contribution_candidate.id_persistent)
     justifications = list(
         EntityJustification.objects.all()  # pylint: disable=no-member
     )
     assert len(justifications) == 2
     assert justifications[0].text != justifications[1].text
     assert {justification.text[:6] for justification in justifications} == {"party_"}
+
+
+def test_maps_existing_id_persistent(
+    id_persistent_contribution, csv_mock, delimiter_mock, entity0, party_contribution
+):
+    ingest_values_from_csv(
+        id_persistent_contribution.contribution_candidate.id_persistent
+    )
+    entities = Entity.objects_all()
+    assert len(entities) == 2
+    value_entity = Value.objects.filter(
+        id_entity_persistent=ce.id_persistent_test_0
+    ).get()
+    assert value_entity.value == "party_0"
+    value_other = Value.objects.exclude(
+        id_entity_persistent=ce.id_persistent_test_0
+    ).get()
+    assert value_other.value == "party_1"
