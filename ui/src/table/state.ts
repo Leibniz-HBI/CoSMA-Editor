@@ -190,8 +190,10 @@ export function csvLinesFromTable({
                 .map(
                     (colState) =>
                         '"' +
-                        (colState.cellContents.value[rowIdx][0]?.value?.toString() ??
-                            '') +
+                        escapeQuote(
+                            colState.cellContents.value[rowIdx][0]?.value?.toString() ??
+                                ''
+                        ) +
                         '"'
                 )
                 .join(',') +
@@ -199,6 +201,9 @@ export function csvLinesFromTable({
         lines.push(value)
     }
     return lines
+}
+function escapeQuote(input: string) {
+    return input.replace(/"/g, '\\"')
 }
 
 export const justificationColumnId = 'justification'
