@@ -138,10 +138,11 @@ class ContributionCandidate(models.Model):
         invalid = (
             active.exclude(id_existing_persistent="display_txt")
             .exclude(id_existing_persistent="justification")
+            .exclude(id_existing_persistent="id_persistent")
             .exclude(
                 id_existing_persistent__in=Subquery(
                     Column.objects.filter(  # pylint: disable=no-member
-                        hidden=False
+                        hidden=False, disabled=False
                     ).values("id_persistent")
                 )
             )
