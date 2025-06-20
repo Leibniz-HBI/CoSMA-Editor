@@ -54,6 +54,7 @@ def read_csv_of_candidate(contribution, nrows=None):
                 dtype=str,
                 encoding=encoding,
                 delimiter=delimiter,
+                escapechar="\\",
             )
             return data_frame
         except ValueError:
