@@ -37,7 +37,7 @@ function getEntity(
     if (idx === undefined) {
         return undefined
     }
-    return state.entities.value[idx]
+    return state.entities.value?.at(idx)
 }
 
 export const contributionEntitySlice = createSlice({
@@ -120,11 +120,13 @@ export const contributionEntitySlice = createSlice({
             state: ContributionEntityState,
             action: PayloadAction<ContributionValuesPayload<void>>
         ) {
+            if (state.entities.value === undefined) {
+                return
+            }
             for (const column of action.payload.columnList) {
                 if (state.columnMap[column.idPersistent] === undefined) {
                     state.columnList.push(column)
-                    state.columnMap[column.idPersistent] =
-                        state.columnList.length - 1
+                    state.columnMap[column.idPersistent] = state.columnList.length - 1
                     for (const entity of state.entities.value) {
                         entity.cellContents.push(newRemote([]))
                         for (const candidate of entity.similarEntities.value) {
@@ -153,6 +155,9 @@ export const contributionEntitySlice = createSlice({
             action: PayloadAction<ContributionValuesPayload<Value[]>>
         ) {
             // Need to invert the grouping of the action to correctly assign instances.
+            if (state.entities.value === undefined) {
+                return
+            }
             const reverseEntityGroupMap = mkReverseEntityGroupMap(
                 action.payload.idEntityPersistentGroupMap
             )
@@ -195,6 +200,9 @@ export const contributionEntitySlice = createSlice({
             state: ContributionEntityState,
             action: PayloadAction<ContributionValuesPayload<void>>
         ) {
+            if (state.entities.value === undefined) {
+                return
+            }
             const strategy = ({
                 cellContents
             }: {
@@ -214,6 +222,9 @@ export const contributionEntitySlice = createSlice({
             state: ContributionEntityState,
             action: PayloadAction<string>
         ) {
+            if (state.entities.value === undefined) {
+                return
+            }
             const columnId = state.columnMap[action.payload]
             if (columnId === undefined) {
                 return
@@ -265,7 +276,7 @@ export const contributionEntitySlice = createSlice({
             action: PayloadAction<{ idEntityContribution: string; match: ScoredEntity }>
         ) {
             const idx = state.entityMap[action.payload.idEntityContribution]
-            if (idx == undefined) {
+            if (idx === undefined || state.entities.value === undefined) {
                 return
             }
             const contributedEntity = state.entities.value[idx]
@@ -308,6 +319,9 @@ export const contributionEntitySlice = createSlice({
             state: ContributionEntityState,
             action: PayloadAction<string | undefined>
         ) {
+            if (state.entities.value === undefined) {
+                return
+            }
             for (
                 let idx = (state.selectedEntityIdx ?? -1) + 1;
                 idx < state.entities.value.length;
@@ -348,6 +362,9 @@ export const contributionEntitySlice = createSlice({
     }
 })
 function pushMatchWidth(state: ContributionEntityState, selectedIdx: number) {
+    if (state.entities.value === undefined) {
+        return
+    }
     for (
         let idx =
             state.entities.value[selectedIdx].similarEntities.value.length +
@@ -383,9 +400,7 @@ function mkEntityGroupMap(
                     ])
                 )
             } else {
-                const entityInstanceMap = columnMap.get(
-                    instance.idEntityPersistent
-                )
+                const entityInstanceMap = columnMap.get(instance.idEntityPersistent)
                 if (entityInstanceMap === undefined) {
                     columnMap.set(
                         instance.idEntityPersistent,
@@ -396,9 +411,7 @@ function mkEntityGroupMap(
                         instance.idColumnPersistent
                     )
                     if (instanceList === undefined) {
-                        entityInstanceMap.set(instance.idColumnPersistent, [
-                            instance
-                        ])
+                        entityInstanceMap.set(instance.idColumnPersistent, [instance])
                     } else {
                         instanceList.push(instance)
                     }
