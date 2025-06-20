@@ -115,6 +115,17 @@ def contribution_column_assigned_display_txt(contribution_user, column):
 
 
 @pytest.fixture
+def contribution_column_assigned_id_persistent(contribution_user, column):
+    return ColumnContribution.objects.create(  # pylint:disable=no-member
+        name=c.name_definition_test0,
+        id_persistent=c.id_persistent_column_test0,
+        contribution_candidate=contribution_user,
+        index_in_file=9000,
+        id_existing_persistent="id_persistent",
+    )
+
+
+@pytest.fixture
 def contribution_column_1(contribution_user):
     return ColumnContribution.objects.create(  # pylint:disable=no-member
         name=c.name_definition_test1,

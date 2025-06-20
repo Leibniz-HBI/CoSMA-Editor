@@ -63,6 +63,19 @@ def test_preview_display_txt(
     assert json["contribution_values"] == [c.value_contribution, c.value_contribution_1]
 
 
+def test_preview_id_persistent(
+    auth_server, instances_contribution_assigned_id_persistent, entity0, entity1
+):
+    server, _cookies = auth_server
+    rsp = req.get_preview(
+        server.url, cc.id_test0, cc.id_persistent_column_test0, cookies=_cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json["destination_values"] == [entity0.id_persistent, entity1.id_persistent]
+    assert json["contribution_values"] == [c.value_contribution, c.value_contribution_1]
+
+
 def test_preview_justification(
     auth_server,
     instances_contribution_assigned_justification,

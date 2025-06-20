@@ -67,6 +67,26 @@ def instances_contribution_assigned_display_txt(
 
 
 @pytest.fixture
+def instances_contribution_assigned_id_persistent(
+    contribution_column_assigned_id_persistent,
+):
+    ValueContribution.objects.create(  # pylint: disable=no-member
+        value=c.value_contribution,
+        id_entity_persistent=ce.id_persistent_test_0,
+        column=contribution_column_assigned_id_persistent,
+        line_idx=500,
+        discard=False,
+    )
+    ValueContribution.objects.create(  # pylint: disable=no-member
+        value=c.value_contribution_1,
+        id_entity_persistent=ce.id_persistent_test_1,
+        column=contribution_column_assigned_id_persistent,
+        line_idx=505,
+        discard=False,
+    )
+
+
+@pytest.fixture
 def instances_contribution_assigned(contribution_column_assigned):
     ValueContribution.objects.create(  # pylint: disable=no-member
         value=c.value_contribution,
