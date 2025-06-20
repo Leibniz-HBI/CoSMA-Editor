@@ -67,6 +67,16 @@ def get_preview(
                     manager=Entity.objects_all().filter(display_txt__isnull=False),
                 )
             ]
+        elif id_column_persistent == "id_persistent":
+            destination_values = [
+                entity.id_persistent
+                for entity in Entity.get_most_recent_chunked(
+                    0,
+                    10,
+                    manager=Entity.objects_all(),
+                )
+            ]
+
         elif id_column_persistent == "justification":
             destination_values = list(
                 EntityJustification.objects.all()[:10].values_list("text", flat=True)
