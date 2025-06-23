@@ -15,7 +15,7 @@ _column_type_mapping_db_to_api = {
     ColumnDb.STRING: "STRING",
 }
 
-_column_type_mapping_api_to_db = {
+column_type_mapping_api_to_db = {
     "BOOL": ColumnDb.BOOL,
     "INNER": ColumnDb.INNER,
     "FLOAT": ColumnDb.FLOAT,

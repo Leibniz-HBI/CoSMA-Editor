@@ -6,6 +6,7 @@ from django.core.cache import caches
 from django.db.models import OuterRef, Subquery
 from django_rq import enqueue
 
+from cosmae.column.models_django import Column as ColumnDb
 from cosmae.entity.models_django import Entity
 from cosmae.management.display_txt.util import get_display_txt_order_columns
 from cosmae.user.model_conversion.public import user_db_to_public_user_info_dict
@@ -69,6 +70,14 @@ def update_display_txt_cache(id_entity_persistent):
         )
 
 
+_column_type_mapping_db_to_api = {
+    ColumnDb.BOOL: "BOOL",
+    ColumnDb.INNER: "INNER",
+    ColumnDb.FLOAT: "FLOAT",
+    ColumnDb.STRING: "STRING",
+}
+
+
 def column_db_to_dict(column):
     "Convert a column from Django ORM to dict representation."
     column_dict = {
@@ -76,7 +85,7 @@ def column_db_to_dict(column):
         "id_parent_persistent": column.id_parent_persistent,
         "name": column.name,
         "id": column.id,
-        "type": column.type,
+        "type": _column_type_mapping_db_to_api[column.type],
         "owner": user_db_to_public_user_info_dict(column.owner),
         "curated": column.curated,
         "description": column.description,
