@@ -10,8 +10,8 @@ from ninja import Router, Schema
 
 from cosmae.column.models_api import ColumnResponse
 from cosmae.column.models_conversion import (
-    _column_type_mapping_api_to_db,
     column_db_to_api,
+    column_type_mapping_api_to_db,
 )
 from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.models_django import ColumnHistory as ColumnHistoryDb
@@ -317,7 +317,7 @@ def column_api_to_db(
         time_edit=time_edit,
         name=column.name,
         description=column.description,
-        type=_column_type_mapping_api_to_db[column.type],
+        type=column_type_mapping_api_to_db[column.type],
         written_by_session=requester.edit_session,
         hidden=column.hidden or False,
         disabled=column.disabled or False,
