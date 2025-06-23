@@ -150,12 +150,9 @@ export function csvLinesFromTable({
     if (entities === undefined || entities.length == 0) {
         return []
     }
-    let entityExportList = entities
-    if (selectedRows.length > 0) {
-        entityExportList = []
-        for (const idx of selectedRows) {
-            entityExportList.push(entities[idx])
-        }
+    let exportIdxList = selectedRows
+    if (exportIdxList.length == 0) {
+        exportIdxList = new Array(entities.length).fill(0).map((_, idx) => idx)
     }
     let columnStartIdx = 1
     if (showJustifications) {
@@ -174,16 +171,17 @@ export function csvLinesFromTable({
         lines.push(header + '\n')
     }
 
-    for (let rowIdx = 0; rowIdx < entityExportList.length; ++rowIdx) {
+    for (let exportListIdx = 0; exportListIdx < exportIdxList.length; ++exportListIdx) {
+        const rowIdx = exportIdxList[exportListIdx]
         const value =
             '"' +
-            entityExportList[rowIdx].idPersistent +
+            entities[rowIdx].idPersistent +
             '","' +
-            (entityExportList[rowIdx].displayTxtDetails == 'Display Text'
-                ? entityExportList[rowIdx].displayTxt
+            (entities[rowIdx].displayTxtDetails == 'Display Text'
+                ? entities[rowIdx].displayTxt
                 : '') +
             '","' +
-            (entityExportList[rowIdx].justificationTxt ?? '') +
+            (entities[rowIdx].justificationTxt ?? '') +
             '",' +
             columnStates
                 .slice(columnStartIdx)
