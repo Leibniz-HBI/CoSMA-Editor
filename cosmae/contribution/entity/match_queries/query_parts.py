@@ -28,12 +28,23 @@ SCORED_SINGLE_PAIR_PREFIX = """
 		"with_levenshtein" as (
 			select existing_id_persistent, contribution_id_persistent
                 , (
-					(1-levenshtein_less_equal(
-						"existing_display_txt",
-						"contribution_display_txt",
-						ceiling(
-							0.25*length("contribution_display_txt"))::int)::float/length("contribution_display_txt"))
-                   	) "levenshtein_similarity"
+					(1-levenshtein(
+						(case when "existing_display_txt" is not null
+							then "existing_display_txt"
+							else ''
+							end ),
+						(
+							case when "contribution_display_txt" is not null
+								then "contribution_display_txt"
+								else ''
+								end
+						)
+                    )/GREATEST(
+						length("contribution_display_txt"),
+						length("existing_display_txt")
+					)::float
+                   	)
+                ) "levenshtein_similarity"
 			from entity_pairs with_similarity
 		),
 """

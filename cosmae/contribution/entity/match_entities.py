@@ -39,6 +39,6 @@ def single_pair_similarity(
             "id_contribution_persistent": str(id_contribution_persistent),
             "display_txt_similarity_weight": _DISPLAY_TXT_SIMILARITY_WEIGHT,
             "match_count_weight": _MATCH_COUNT_WEIGHT,
-            "display_txt_similarity_threshold": 0.0,
+            "display_txt_similarity_threshold": -1.0,
         },
     )
