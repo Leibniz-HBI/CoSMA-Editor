@@ -494,6 +494,8 @@ def entity_db_to_api(entity: EntityDb) -> Entity:
     display_txt = entity.display_txt
     id_persistent = entity.id_persistent
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
+    if isinstance(display_txt_info, dict):
+        display_txt_info = column_db_dict_to_api(display_txt_info)
     return EntityWithJustification(
         display_txt=display_txt,
         version=entity.id,
