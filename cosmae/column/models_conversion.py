@@ -13,6 +13,12 @@ _column_type_mapping_db_to_api = {
     ColumnDb.INNER: "INNER",
     ColumnDb.FLOAT: "FLOAT",
     ColumnDb.STRING: "STRING",
+    # fallback for retrieval from display text cache
+    # where type is already converted to string
+    "STRING": "STRING",
+    "INNER": "INNER",
+    "FLOAT": "FLOAT",
+    "BOOL": "BOOL",
 }
 
 column_type_mapping_api_to_db = {

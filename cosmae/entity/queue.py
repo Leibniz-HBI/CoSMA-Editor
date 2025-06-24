@@ -85,7 +85,7 @@ def column_db_to_dict(column):
         "id_parent_persistent": column.id_parent_persistent,
         "name": column.name,
         "id": column.id,
-        "type": _column_type_mapping_db_to_api[column.type],
+        "type": column.type,
         "owner": user_db_to_public_user_info_dict(column.owner),
         "curated": column.curated,
         "description": column.description,

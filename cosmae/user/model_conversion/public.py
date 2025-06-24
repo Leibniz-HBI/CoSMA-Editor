@@ -9,6 +9,13 @@ permission_group_db_to_api = {
     CosmaeUser.CONTRIBUTOR: "CONTRIBUTOR",
     CosmaeUser.EDITOR: "EDITOR",
     CosmaeUser.COMMISSIONER: "COMMISSIONER",
+    # fallback for retrieval from display text cache
+    # where type is already converted to string
+    "APPLICANT": "APPLICANT",
+    "READER": "READER",
+    "CONTRIBUTOR": "CONTRIBUTOR",
+    "EDITOR": "EDITOR",
+    "COMMISSIONER": "COMMISSIONER",
 }
 
 
