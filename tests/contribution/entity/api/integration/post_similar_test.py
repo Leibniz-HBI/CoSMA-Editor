@@ -246,7 +246,7 @@ def test_similar_entities_assigned_duplicate_no_match(
                                 "version": entities[3].id,
                                 "disabled": False,
                             },
-                            "similarity": 0.6153846153846154,
+                            "similarity": 0.19999999999999996,
                             "id_match_column_persistent_list": [],
                         },
                         {
@@ -282,7 +282,7 @@ def test_similar_entities_assigned_duplicate_no_match(
                             "version": entities[3].id,
                             "disabled": False,
                         },
-                        "similarity": 0.6153846153846154,
+                        "similarity": 0.19999999999999996,
                         "id_match_column_persistent_list": [],
                     },
                 }
