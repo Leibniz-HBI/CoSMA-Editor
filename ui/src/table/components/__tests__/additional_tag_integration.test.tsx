@@ -114,6 +114,15 @@ test('get descendant column success', async () => {
             }
         ],
         [
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            {
+                credentials: 'include',
+                body: JSON.stringify({ offset: version1 + 1, limit: 500 }),
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 body: '{}',
@@ -270,7 +279,14 @@ const displayTxtColumnState = newColumnState({
 
 function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }]
+        [
+            200,
+            {
+                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
+                next_offset: version1 + 1
+            }
+        ],
+        [200, { entity_list: [], next_offset: 0 }]
     ])
 }
 

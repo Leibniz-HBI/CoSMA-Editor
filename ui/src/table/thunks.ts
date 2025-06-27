@@ -42,10 +42,10 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
         dispatch(setColumnLoading(displayTxtColumnId))
         try {
             const entities: Entity[] = []
-            for (let i = 0; ; i += 500) {
+            for (let offset = 0; ; ) {
                 const rsp = await fetch_chunk({
                     api_path: config.api_path + '/entities/chunk',
-                    offset: i,
+                    offset,
                     limit: 500,
                     fetchMethod: fetch
                 })
@@ -57,7 +57,7 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
                     dispatch(setLoadDataError())
                     dispatch(
                         addError(
-                            `Could not load entities chunk ${i}. Reason: "${json['msg']}"`
+                            `Could not load entities chunk with offset ${offset}. Reason: "${json['msg']}"`
                         )
                     )
                     return false
@@ -70,7 +70,8 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
                         entities.push(entity)
                     }
                 }
-                if (rowsApi.length < 500) {
+                offset = json['next_offset']
+                if (offset <= 0) {
                     break
                 }
             }
@@ -90,9 +91,7 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
     }
 }
 
-export function getColumnAsync(
-    columnDefinition: Column
-): ThunkWithFetch<string[]> {
+export function getColumnAsync(columnDefinition: Column): ThunkWithFetch<string[]> {
     return async (dispatch, _getState, fetch) => {
         const id_persistent = columnDefinition.idPersistent
         if (id_persistent == justificationColumnId) {
@@ -151,7 +150,8 @@ export function getColumnAsync(
                     const json = await rsp.json()
                     const columns = json['value_list']
                     for (const column of columns) {
-                        const id_entity_persistent: string = column['id_entity_persistent']
+                        const id_entity_persistent: string =
+                            column['id_entity_persistent']
                         const valueString = column['value']
                         const valueIdPersistent = column['id_persistent']
                         const valueVersion = Number.parseInt(column['version'])
@@ -217,16 +217,12 @@ export function submitValuesAsync(
             if (rsp.status == 200) {
                 const value = json['value_list'][0]
 
-                dispatch(
-                    submitValuesSuccess([extractEdit(edit, columnType, value)])
-                )
+                dispatch(submitValuesSuccess([extractEdit(edit, columnType, value)]))
                 return
             }
             if (rsp.status == 409) {
                 const value = json['value_list'][0]
-                dispatch(
-                    submitValuesSuccess([extractEdit(edit, columnType, value)])
-                )
+                dispatch(submitValuesSuccess([extractEdit(edit, columnType, value)]))
                 dispatch(submitValuesError())
                 dispatch(
                     addError(

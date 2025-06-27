@@ -213,7 +213,7 @@ function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
 }
 
 function addEntitiesResponse(fetchMock: Mock) {
-    addResponseSequence(fetchMock, [[200, { entity_list: [] }]])
+    addResponseSequence(fetchMock, [[200, { entity_list: [], next_offset: 0 }]])
 }
 
 function addValueResponse(fetchMock: Mock) {

@@ -182,6 +182,15 @@ test('add justification', async () => {
             }
         ],
         [
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            {
+                credentials: 'include',
+                body: JSON.stringify({ offset: version1 + 1, limit: 500 }),
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
             'http://127.0.0.1:8000/cosmae/api/values/chunk',
             {
                 credentials: 'include',
@@ -250,7 +259,7 @@ test('add justification found', async () => {
             newRemote(idPersistent0)
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(5)
+    expect(fetchMock.mock.calls.length).toEqual(6)
 })
 test('get justification error', async () => {
     const fetchMock = vi.fn()
@@ -273,7 +282,7 @@ test('get justification error', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(4)
+    expect(fetchMock.mock.calls.length).toEqual(5)
 })
 test('add justification error', async () => {
     const fetchMock = vi.fn()
@@ -302,7 +311,7 @@ test('add justification error', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(5)
+    expect(fetchMock.mock.calls.length).toEqual(6)
 })
 
 const idPersistent0 = 'test-id-0'
@@ -423,7 +432,14 @@ async function openModalForEntity0() {
 
 function addEntitiesAndInstancesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }],
+        [
+            200,
+            {
+                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
+                next_offset: version1 + 1
+            }
+        ],
+        [200, { entity_list: [], next_offset: 0 }],
         [200, { value_list: [] }],
         [200, { column_list: [] }]
     ])
