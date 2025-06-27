@@ -61,20 +61,15 @@ def get_preview(
         elif id_column_persistent == "display_txt":
             destination_values = [
                 entity.display_txt
-                for entity in Entity.get_most_recent_chunked(
-                    0,
-                    10,
-                    manager=Entity.objects_all().filter(display_txt__isnull=False),
-                )
+                for entity in Entity.objects.primary_only()
+                .exclude_contributed()
+                .filter(display_txt__isnull=False)
+                .chunk(0, 10)
             ]
         elif id_column_persistent == "id_persistent":
             destination_values = [
                 entity.id_persistent
-                for entity in Entity.get_most_recent_chunked(
-                    0,
-                    10,
-                    manager=Entity.objects_all(),
-                )
+                for entity in Entity.objects.primary_only().chunk(0, 10)
             ]
 
         elif id_column_persistent == "justification":

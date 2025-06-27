@@ -14,6 +14,22 @@ from cosmae.exception import (
 )
 
 
+class VersionedQueryset(models.QuerySet):
+    "Query set for versioned models"
+
+    def exclude_hidden(self):
+        "Exclude items from queryset that are hidden"
+        return self.filter(hidden=False)
+
+    def exclude_disabled(self):
+        "Exclude items from queryset that are disabled"
+        return self.filter(disabled=False)
+
+    def primary_only(self):
+        "Exclude items from queryset that are hidden or disabled"
+        return self.exclude_disabled().exclude_hidden()
+
+
 class Versioned(models.Model):
     "Abstract ORM for versioned models"
 

@@ -165,13 +165,9 @@ class ContributionCandidate(models.Model):
 
     def get_entities_chunked(self, start, offset):
         "Get entities in chunks"
-        return Entity.get_most_recent_chunked(
-            start,
-            offset,
-            Entity.objects.filter(  # pylint: disable=no-member
-                contribution_candidate=self
-            ),
-        )
+        return Entity.objects.filter(  # pylint: disable=no-member
+            contribution_candidate=self
+        ).chunk(start, offset)
 
     def curated_columns_match_count(self, entities_manager: models.Manager[Entity]):
         """Get numbers of matching values for curated columns.

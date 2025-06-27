@@ -123,7 +123,8 @@ def test_chunk_correctly(entity0, updated_entity0, user):
         )
         entity.save()
         entities.append(entity)
-    chunks = [Entity.get_most_recent_chunked(i * 2, 2) for i in range(6)]
+    offset = updated_entity0.id
+    chunks = [Entity.objects.chunk(offset + i * 2, 2) for i in range(6)]
     flat = [model_to_dict(x) for chunk in chunks for x in chunk if chunk]
     assert flat == [model_to_dict(entity) for entity in entities]
 

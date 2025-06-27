@@ -130,9 +130,7 @@ def test_not_signed_in(live_server, display_txt_and_justification):
 
 def test_multiple(auth_server_commissioner, display_txt_and_justification):
     live_server, cookies = auth_server_commissioner
-    count_before = len(
-        Entity.most_recent_queryset(Entity.objects)
-    )  # pylint: disable=no-member
+    count_before = len(Entity.objects.all())  # pylint: disable=no-member
     req = post_person(live_server.url, display_txt_and_justification, cookies=cookies)
     created = req.json()["entity_list"][0]
     new_display_txt = "new test display_text"
@@ -147,11 +145,7 @@ def test_multiple(auth_server_commissioner, display_txt_and_justification):
     assert person_0["display_txt"] == new_display_txt
     assert person_0["version"] > created["version"]
     # also check for correct number of persons in DB.
-    assert (
-        len(Entity.most_recent_queryset(Entity.objects))  # pylint: disable=no-member
-        - count_before
-        == 2
-    )
+    assert len(Entity.objects.all()) - count_before == 2  # pylint: disable=no-member
 
 
 def test_no_display_txt(auth_server_commissioner):

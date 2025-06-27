@@ -179,21 +179,19 @@ def test_eliminate_duplicates(contribution_candidate, values, entity_match):
     assert 5 == len(ValueHistory.objects.all())  # pylint: disable=no-member
     q.eliminate_duplicates(contribution_candidate.id_persistent)
     assert 3 == len(
-        Entity.get_most_recent_chunked(
+        Entity.objects.primary_only()
+        .exclude_contributed()
+        .chunk(
             0,
             5,
-            Entity.objects.filter(  # pylint: disable=no-member
-                contribution_candidate=None
-            ),
         )
     )
     assert 0 == len(
-        Entity.get_most_recent_chunked(
+        Entity.objects.primary_only()
+        .exclude(contribution_candidate=None)
+        .chunk(
             0,
             5,
-            Entity.objects.exclude(  # pylint: disable=no-member
-                contribution_candidate=None
-            ),
         )
     )
     # There have been two edits
