@@ -26,7 +26,6 @@ export function loadCommentsThunk(idPersistentList: string[]): ThunkWithFetch<vo
             if (rsp.status == 200) {
                 const comments = Object.fromEntries(
                     Object.entries(json['comments_by_id_persistent']).map(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (entry) => [
                             entry[0],
                             (entry[1] as unknown[]).map((comment) =>

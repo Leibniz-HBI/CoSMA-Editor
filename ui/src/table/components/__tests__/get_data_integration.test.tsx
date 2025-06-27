@@ -218,6 +218,15 @@ test('get entities success', async () => {
             }
         ],
         [
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            {
+                credentials: 'include',
+                body: JSON.stringify({ offset: version1 + 1, limit: 500 }),
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
             'http://127.0.0.1:8000/cosmae/api/values/chunk',
             {
                 credentials: 'include',
@@ -267,6 +276,15 @@ test('get entities and inner column success', async () => {
             }
         ],
         [
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            {
+                credentials: 'include',
+                body: JSON.stringify({ offset: version1 + 1, limit: 500 }),
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
             'http://127.0.0.1:8000/cosmae/api/values/chunk',
             {
                 credentials: 'include',
@@ -301,9 +319,10 @@ test('get chunked', async () => {
         display_txt_details: 'display_txt_detail'
     })
     addResponseSequence(fetchMock, [
-        [200, { entity_list: entities[0] }],
-        [200, { entity_list: entities[1] }],
-        [200, { entity_list: entities[2] }]
+        [200, { entity_list: entities[0], next_offset: 501 }],
+        [200, { entity_list: entities[1], next_offset: 1001 }],
+        [200, { entity_list: entities[2], next_offset: 1501 }],
+        [200, { entity_list: [], next_offset: 0 }]
     ])
     const idValueChunk = 'test-value-id-0'
     const version = 12
@@ -373,7 +392,7 @@ test('get chunked', async () => {
             state.table.columnStates[idxLoadedColumn].cellContents.value[1000].length
         ).toEqual(0)
     })
-    expect(fetchMock.mock.calls.length).toEqual(5)
+    expect(fetchMock.mock.calls.length).toEqual(6)
 })
 
 test('get entities error', async () => {
@@ -387,7 +406,7 @@ test('get entities error', async () => {
             newNotificationManager({
                 notificationList: [
                     newNotification({
-                        msg: `Could not load entities chunk 0. Reason: "${entityError}"`,
+                        msg: `Could not load entities chunk with offset 0. Reason: "${entityError}"`,
                         type: NotificationType.Error,
                         id: expect.anything()
                     })
@@ -449,7 +468,7 @@ test('get instances error', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(2)
+    expect(fetchMock.mock.calls.length).toEqual(3)
 })
 
 const displayTxtColumnState = newColumnState({
@@ -483,7 +502,14 @@ const columnColumnState = newColumnState({
 
 function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }]
+        [
+            200,
+            {
+                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
+                next_offset: version1 + 1
+            }
+        ],
+        [200, { entity_list: [], next_offset: 0 }]
     ])
 }
 

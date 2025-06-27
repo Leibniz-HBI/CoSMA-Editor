@@ -171,7 +171,7 @@ test('edit display text success', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(3)
+    expect(fetchMock.mock.calls.length).toEqual(4)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
         'http://127.0.0.1:8000/cosmae/api/entities',
         {
@@ -231,7 +231,7 @@ test('edit display text error', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(3)
+    expect(fetchMock.mock.calls.length).toEqual(4)
 })
 test('edit value success', async () => {
     const fetchMock = vi.fn()
@@ -276,7 +276,7 @@ test('edit value success', async () => {
             }
         ])
     })
-    expect(fetchMock.mock.calls.length).toEqual(3)
+    expect(fetchMock.mock.calls.length).toEqual(4)
     expect(fetchMock.mock.calls.at(-1)).toEqual([
         'http://127.0.0.1:8000/cosmae/api/values',
         {
@@ -338,7 +338,7 @@ test('edit value api msg error', async () => {
             }
         ])
     })
-    expect(fetchMock.mock.calls.length).toEqual(3)
+    expect(fetchMock.mock.calls.length).toEqual(4)
 })
 
 test('edit value changed in backend', async () => {
@@ -399,7 +399,7 @@ test('edit value changed in backend', async () => {
             }
         ])
     })
-    expect(fetchMock.mock.calls.length).toEqual(3)
+    expect(fetchMock.mock.calls.length).toEqual(4)
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addResponseSequence(fetchMock: vi.mock, responses: [number, any][]) {
@@ -461,7 +461,14 @@ const columnTest: Column = newColumn({
 })
 function addEntitiesResponse(fetchMock: vi.mock) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }]
+        [
+            200,
+            {
+                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
+                next_offset: version1 + 1
+            }
+        ],
+        [200, { entity_list: [], next_offset: 0 }]
     ])
 }
 

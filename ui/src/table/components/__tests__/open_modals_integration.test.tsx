@@ -292,7 +292,14 @@ const test_entity_rsp_1 = {
  */
 function addInitialTable(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: [test_entity_rsp_0, test_entity_rsp_1] }],
+        [
+            200,
+            {
+                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
+                next_offset: version1 + 1
+            }
+        ],
+        [200, { entity_list: [], next_offset: 0 }],
         [200, { value_list: [] }]
     ])
 }
