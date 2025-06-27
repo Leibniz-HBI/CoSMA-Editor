@@ -16,6 +16,7 @@ from cosmae.comments.api import Comment
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.models_django import EntityJustification as EntityJustificationDb
+from cosmae.entity.models_django import entity_objects
 from cosmae.entity.queue import get_display_txt_info
 from cosmae.exception import (
     ApiError,
@@ -98,6 +99,12 @@ class EntityWithJustificationList(Schema):
     used for responses"""
 
     entity_list: List[EntityWithJustification]
+
+
+class EntityWithJustificationOffsetList(EntityWithJustificationList):
+    # pylint: disable=too-few-public-methods
+    "Adds an offset to list with entities and justification."
+    next_offset: int
 
 
 class EntityGetRequest(Schema):
@@ -202,7 +209,7 @@ def entities_post(
 @router.post(
     "chunk",
     response={
-        200: EntityWithJustificationList,
+        200: EntityWithJustificationOffsetList,
         400: ApiError,
         403: ApiError,
         500: ApiError,
@@ -221,11 +228,20 @@ def entities_chunks_post(
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions")
     try:
-        entity_dbs = EntityJustificationDb.annotate_justification(
-            EntityDb.get_most_recent_chunked(req_data.offset, req_data.limit)
+        entity_db_list = EntityJustificationDb.annotate_justification(
+            entity_objects()
+            .primary_only()
+            .exclude_contributed()
+            .chunk(req_data.offset, req_data.limit)
         )
-        entity_apis = [entity_db_to_api(entity) for entity in entity_dbs]
-        return 200, EntityWithJustificationList(entity_list=entity_apis)
+        next_offset = -1
+        entity_api_list = []
+        for entity_db in entity_db_list:
+            entity_api_list.append(entity_db_to_api(entity_db))
+            next_offset = max(entity_db.id, next_offset)
+        return 200, EntityWithJustificationOffsetList(
+            entity_list=entity_api_list, next_offset=next_offset + 1
+        )
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get requested chunk.")
 
@@ -308,7 +324,8 @@ def search(request: HttpRequest, term: str):
         return 403, ApiError(msg="Insufficient privileges.")
     try:
         display_txt_results = (
-            EntityDb.objects.filter(contribution_candidate__isnull=True)
+            entity_objects()
+            .exclude_contributed()
             .search(term)
             .values(
                 id_entity_persistent=F("id_persistent"),

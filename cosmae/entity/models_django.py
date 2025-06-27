@@ -11,7 +11,7 @@ from django.db import models
 from django.db.models.aggregates import Max
 
 from cosmae.util import CosmaeUser
-from cosmae.versioned.models_django import HistoryMixin, Versioned
+from cosmae.versioned.models_django import HistoryMixin, Versioned, VersionedQueryset
 
 
 class EntityAbstract(Versioned):
@@ -31,7 +31,7 @@ class EntityAbstract(Versioned):
         abstract = True
 
 
-class EntityQueryset(models.QuerySet):
+class EntityQueryset(VersionedQueryset):
     "Custom queryset for recent entities"
 
     def search(self, search_term: str):
@@ -41,15 +41,19 @@ class EntityQueryset(models.QuerySet):
             query = query & models.Q(display_txt__icontains=term)
         return self.filter(query)
 
-    def chunk(self, offset: int, limit=int, do_not_include_contributed=True):
+    def chunk(self, offset: int, limit=int):
         "Get a portion of entities"
-        manager = self
-        if do_not_include_contributed:
-            manager = self.filter(
-                contribution_candidates__isnull=do_not_include_contributed
-            )
+        return self.filter(id__gte=offset).order_by("id")[:limit]
 
-        return manager.filter(id__gte=offset).order_by("id")[:limit]
+    def exclude_contributed(self):
+        "Exclude entities from queryset that belong to a contribution."
+        return self.filter(contribution_candidate__isnull=True)
+
+    def most_recent(self, include_disabled=False):
+        "Get the most recent entities"
+        if include_disabled:
+            return self
+        return self.filter(disabled=False)
 
 
 class Entity(EntityAbstract):
@@ -75,30 +79,9 @@ class Entity(EntityAbstract):
         """Return the most recent version of an entity."""
         return cls.most_recent_by_id_queryset(id_persistent).get()
 
-    @classmethod
-    def most_recent_queryset(cls, manager=None, include_disabled=False):
-        "Return most recent versions of all_values"
-        if manager is None:
-            manager = cls.objects  # pylint: disable=no-member
-        if include_disabled:
-            return manager
-        return manager.filter(disabled=False)
-
     def has_write_access(self, _user: CosmaeUser):
         "Check wether a user can change the entity."
         return True
-
-    @classmethod
-    def get_most_recent_chunked(
-        cls, offset, limit, manager=None, do_not_include_contributed=False
-    ):
-        """Get all entities in chunks"""
-        entities = cls.most_recent_queryset(manager)
-        if do_not_include_contributed:
-            entities = entities.filter(
-                contribution_candidates__isnull=do_not_include_contributed
-            )
-        return entities.order_by("id")[offset : offset + limit]
 
 
 class EntityJustification(models.Model):
@@ -221,6 +204,8 @@ class EntityJustification(models.Model):
 class EntityHistory(EntityAbstract, HistoryMixin):
     """Django ORM model for entity history."""
 
+    objects = EntityQueryset.as_manager()
+
     class Meta:
         "Meta class for entity history."
 
@@ -277,3 +262,18 @@ class EntityHistory(EntityAbstract, HistoryMixin):
             != self.contribution_candidate_id  # pylint: disable=no-member
             or self.merged_from != other.merged_from
         )
+
+
+def entity_objects(date: Optional[datetime] = None):
+    "Get correct entity query set depending on whether a time limit is set."
+    if date is None:
+        return Entity.objects
+    queryset = EntityHistory.objects.filter(edit_time__lt=date)
+    return queryset.filter(
+        id=models.Subquery(
+            queryset.filter(id_persistent=models.OuterRef("id_persistent"))
+            .values("id_persistent")
+            .annotate(max_id=Max("id"))
+            .values("max_id")
+        )
+    )

@@ -22,7 +22,7 @@ from cosmae.entity.api import (
     entity_db_to_api,
 )
 from cosmae.entity.models_django import Entity as EntityDb
-from cosmae.entity.models_django import EntityJustification
+from cosmae.entity.models_django import EntityJustification, entity_objects
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
@@ -138,8 +138,10 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
         ).get()
         if not similar_request.id_entity_persistent_list:
             return 200, ScoredMatchResponse(matches={})
-        entity_query_set = EntityDb.most_recent_queryset().filter(
-            id_persistent__in=similar_request.id_entity_persistent_list
+        entity_query_set = (
+            entity_objects()
+            .exclude_disabled()
+            .filter(id_persistent__in=similar_request.id_entity_persistent_list)
         )
         if not entity_query_set or entity_query_set.filter(
             ~Q(contribution_candidate_id=candidate.id_persistent)
