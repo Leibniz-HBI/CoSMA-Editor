@@ -23,6 +23,7 @@ export interface TableState {
     showEntityJustificationHistoryForIdPersistent: RemoteInterface<string | undefined>
     entityJustificationHistory: RemoteInterface<Comment[]>
     showSearch: boolean
+    historyDateSinceEpoch: number | undefined
 }
 
 export function newTableState({
@@ -43,7 +44,8 @@ export function newTableState({
     showEntityJustifications = false,
     showEntityJustificationHistoryForIdPersistent = newRemote(undefined),
     entityJustificationHistory = newRemote([]),
-    showSearch = false
+    showSearch = false,
+    historyDateSinceEpoch=undefined
 }: {
     columnStates?: ColumnState[]
     columnIndices?: { [key: string]: number }
@@ -65,6 +67,7 @@ export function newTableState({
     showEntityJustificationHistoryForIdPersistent?: RemoteInterface<string | undefined>
     entityJustificationHistory?: RemoteInterface<Comment[]>
     showSearch?: boolean
+    historyDateSinceEpoch?: number | undefined
 }): TableState {
     let newEntityIndices: { [key: string]: number } = {}
     if (entities !== undefined) {
@@ -95,7 +98,8 @@ export function newTableState({
         showEntityJustificationHistoryForIdPersistent:
             showEntityJustificationHistoryForIdPersistent,
         entityJustificationHistory: entityJustificationHistory,
-        showSearch: showSearch
+        showSearch: showSearch,
+        historyDateSinceEpoch
     }
 }
 

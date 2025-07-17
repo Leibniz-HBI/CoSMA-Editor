@@ -15,15 +15,23 @@ import { downloadWorkAround } from './table'
 import { useColumnDefinitionList } from '../../column_menu/hooks'
 import { useAppSelector } from '../../hooks'
 
-export function AddEntityButton({ dispatch }: { dispatch: AppDispatch }) {
-    return <Button onClick={() => dispatch(showEntityAdd())}>Add Entity</Button>
+export function AddEntityButton({
+    dispatch,
+    disabled
+}: {
+    dispatch: AppDispatch
+    disabled: boolean
+}) {
+    return <Button onClick={() => dispatch(showEntityAdd())} disabled={disabled}>Add Entity</Button>
 }
 export function MergeEntitiesButton({
     entityIdArray,
-    mergeRequestCreatedCallback
+    mergeRequestCreatedCallback,
+    disabled
 }: {
     entityIdArray?: Entity[]
     mergeRequestCreatedCallback: VoidFunction
+    disabled: boolean
 }) {
     const rowSelectionOrder = useSelector(selectRowSelectionOrder)
     const permissionGroup = useSelector(selectPermissionGroup)
@@ -35,11 +43,11 @@ export function MergeEntitiesButton({
     ) {
         return <div />
     }
-    let disabled = true
+    let canNotMerge = true
     let onClick = undefined
 
-    if (rowSelectionOrder.length == 2) {
-        disabled = false
+    if (!disabled && rowSelectionOrder.length == 2) {
+        canNotMerge = false
         onClick = () => {
             dispatch(
                 putEntityMergeRequest(
@@ -63,7 +71,7 @@ export function MergeEntitiesButton({
         >
             {/* Empty div to allow tooltip showing   */}
             <span>
-                <Button disabled={disabled} onClick={onClick}>
+                <Button disabled={canNotMerge} onClick={onClick}>
                     Merge Entities
                 </Button>
             </span>

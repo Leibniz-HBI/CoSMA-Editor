@@ -42,7 +42,7 @@ import {
     newNotificationManager,
     notificationReducer
 } from '../../../util/notification/slice'
-import { RenderOptions, waitFor, render, screen } from '@testing-library/react'
+import { RenderOptions, waitFor, render, screen, act } from '@testing-library/react'
 import { tableReducer } from '../../slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
@@ -51,7 +51,6 @@ import { RemoteDataTable } from '../table'
 import { userSlice } from '../../../user/slice'
 import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import userEvent, { UserEvent } from '@testing-library/user-event'
-import { act } from 'react-dom/test-utils'
 import { columnSelectionReducer } from '../../../column_menu/slice'
 import { newRemote } from '../../../util/state'
 import {
@@ -156,7 +155,7 @@ test('add justification', async () => {
     await openModalForEntity0()
     await fillJustificationForm(user)
     await waitFor(() => {
-        const input = screen.getByRole('textbox')
+        const input = screen.getByRole('textbox', { name: 'New Comment' })
         expect(input.textContent).toEqual('')
         screen.getByText(justification)
         // once in table, once in modal
@@ -213,7 +212,7 @@ test('add justification', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications`,
+            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications?`,
             {
                 credentials: 'include'
             }
@@ -238,7 +237,7 @@ test('add justification found', async () => {
     await openModalForEntity0()
     await fillJustificationForm(input)
     await waitFor(() => {
-        const user = screen.getByRole('textbox')
+        const user = screen.getByRole('textbox', { name: 'New Comment' })
         expect(user.textContent).toEqual('')
         expect(screen.queryByText(justificationChanged)).toBeNull()
         const state = store.getState()
@@ -295,7 +294,7 @@ test('add justification error', async () => {
     await openModalForEntity0()
     await fillJustificationForm(user)
     await waitFor(() => {
-        const input = screen.getByRole('textbox')
+        const input = screen.getByRole('textbox', { name: 'New Comment' })
         expect(input.textContent).toEqual(justificationChanged)
         expect(screen.getAllByText(justificationChanged).length).toEqual(1)
         expect(store.getState().notification).toEqual(
@@ -371,7 +370,7 @@ async function toggleJustifications() {
 async function fillJustificationForm(user: UserEvent) {
     await waitFor(
         async () => {
-            const input = screen.getByRole('textbox')
+            const input = screen.getByRole('textbox', { name: 'New Comment' })
             const button = screen.getByRole('button', { name: 'Submit' })
             await act(async () => {
                 await user.click(input)

@@ -61,8 +61,7 @@ const tableSlice = createSlice({
                 cellContents: newRemote([], true)
             })
             if (columnIdx === undefined) {
-                state.columnIndices[idColumnPersistent] =
-                    state.columnStates.length
+                state.columnIndices[idColumnPersistent] = state.columnStates.length
                 state.columnStates.push(columnState)
             } else {
                 state.columnStates[columnIdx] = columnState
@@ -269,6 +268,14 @@ const tableSlice = createSlice({
             state.columnStates = []
             state.columnIndices = {}
             state.entities = undefined
+        },
+        setHistoryDate(state: TableState, action: PayloadAction<number | undefined>) {
+            state.historyDateSinceEpoch = action.payload
+            // need to reset entities to start loading
+            state.entities = undefined
+            state.columnStates = state.columnStates.map((state) => {
+                return { ...state, cellContents: newRemote([]) }
+            })
         }
     }
 })
@@ -333,5 +340,6 @@ export const {
     submitEntityJustificationStart,
     submitEntityJustificationError,
     submitEntityJustificationSuccess,
-    clearTable
+    clearTable,
+    setHistoryDate
 } = tableSlice.actions

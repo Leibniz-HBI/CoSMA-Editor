@@ -271,6 +271,9 @@ div#layers > div > .container {
     background-color: #d1e3e3 !important;
 }
 
+.z-2000 {
+    z-index: 2000;
+}
 .z-3000 {
     z-index: 3000;
 }
@@ -311,4 +314,27 @@ div#layers > div > .container {
 
 .nav-item > .dropdown-toggle::after {
     display: none !important;
+}
+
+.react-datepicker__year-dropdown .react-datepicker__year-option:first-child::before {
+    content: '\2B9D';
+    position: absolute;
+    top: 5%;
+    left: 45%;
+    margin: auto;
+}
+
+.react-datepicker__year-dropdown .react-datepicker__year-option:last-child::before {
+    content: '\2B9F';
+    display: block;
+    position: relative;
+}
+
+.react-datepicker__close-icon::after{
+    content: '\2715' !important;
+    color:#197374 !important;
+    background-color: #ffffff00 !important;
+    font-weight: bold !important;
+    display: block;
+    position: relative;
 }

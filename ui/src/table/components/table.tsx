@@ -6,6 +6,7 @@ import {
     Item,
     Rectangle
 } from '@glideapps/glide-data-grid'
+import 'react-datepicker/dist/react-datepicker.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Col, Row } from 'react-bootstrap'
 import { IBounds, useLayer } from 'react-laag'
@@ -26,6 +27,7 @@ import {
     selectColumnStates,
     selectEntities,
     selectFrozenColumns,
+    selectHistoryDate,
     selectIsLoadingEntities,
     selectIsSubmittingValues,
     selectOwnershipChangeColumnIdPersistent,
@@ -45,7 +47,8 @@ import {
     showHeaderMenu,
     columnChangeOwnershipHide,
     toggleEntityMergingModal,
-    toggleSearch
+    toggleSearch,
+    setHistoryDate
 } from '../slice'
 import { addError } from '../../util/notification/slice'
 import {
@@ -77,6 +80,7 @@ import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
 import { EntityDetailsModal } from './modals'
 import { InfoCircle } from 'react-bootstrap-icons'
 import { useColumnDefinitionList } from '../../column_menu/hooks'
+import DatePicker from 'react-datepicker'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -98,6 +102,7 @@ export function downloadWorkAround(csvLines: string[]) {
 }
 
 export function RemoteDataTable() {
+    const date = useAppSelector(selectHistoryDate)
     const isLoading = useAppSelector(selectIsLoadingEntities)
     const entities = useAppSelector(selectEntities)
     const userInfo = useAppSelector(selectUserInfo)
@@ -117,7 +122,7 @@ export function RemoteDataTable() {
             dispatch(addError('Please refresh the page and log in'))
             return
         }
-        dispatch(getTableAsync()).then(async (success) => {
+        dispatch(getTableAsync(date)).then(async (success) => {
             if (!success) {
                 return
             }
@@ -132,25 +137,29 @@ export function RemoteDataTable() {
                 ) {
                     return
                 }
-                await dispatch(getColumnAsync(col))
+                await dispatch(getColumnAsync(col, date))
             })
         })
         return () => {
             dispatch(clearTable())
         }
-    }, [])
+    }, [date])
 
     return (
         <Row className="h-100">
             <Col className="h-100 overflow-hidden d-flex flex-column">
-                <Row className="ms-3 me-3 mb-3">
+                <Row className="ms-3 me-3 mb-3 justify-content-between">
                     <Col className="ps-0">
                         <Row className="justify-content-start">
                             <Col xs="auto">
-                                <AddEntityButton dispatch={dispatch} />
+                                <AddEntityButton
+                                    dispatch={dispatch}
+                                    disabled={date !== undefined}
+                                />
                             </Col>
                             <Col className="ps-0" xs="auto">
                                 <MergeEntitiesButton
+                                    disabled={date !== undefined}
                                     entityIdArray={entities}
                                     mergeRequestCreatedCallback={() =>
                                         dispatch(toggleEntityMergingModal(true))
@@ -164,6 +173,33 @@ export function RemoteDataTable() {
                             popoverPlacement="bottom"
                             tooltipPlacement="left"
                         />
+                    </Col>
+                    <Col xs="auto">
+                        <Row>
+                            <Col className="fw-bold primary" xs="auto">
+                                Version:{' '}
+                            </Col>
+                            <Col xs="auto">
+                                <DatePicker
+                                    name="history"
+                                    showYearDropdown={true}
+                                    selected={date ?? new Date(Date.now())}
+                                    isClearable={date !== undefined}
+                                    dateFormat={'dd MMM yyyy'}
+                                    onChange={(date) => {
+                                        console.log(date)
+                                        let resultDateSinceEpoch = undefined
+                                        if (date !== null && date !== undefined) {
+                                            date.setHours(23)
+                                            date.setMinutes(59)
+                                            resultDateSinceEpoch = date.getTime()
+                                        }
+                                        console.log(resultDateSinceEpoch)
+                                        dispatch(setHistoryDate(resultDateSinceEpoch))
+                                    }}
+                                />
+                            </Col>
+                        </Row>
                     </Col>
                     <Col xs="auto">
                         <SearchButton dispatch={dispatch} />
@@ -185,15 +221,15 @@ export function RemoteDataTable() {
                         data-testid="table-container-inner"
                     >
                         <DataTable entities={entities} columnStates={columnStates} />
-                        <ColumnModal columnIndices={columnIndices} />
+                        <ColumnModal columnIndices={columnIndices} upUntilDate={date} />
                         <EntityAddModal />
                         <EntityMergingModal />
                         <ChangeOwnershipModal
                             idColumnPersistent={columnChangeOwnership}
                             onClose={() => dispatch(columnChangeOwnershipHide())}
                         />
-                        <EntityJustificationModal />
-                        <EntityDetailsModal />
+                        <EntityJustificationModal upUntilTime={date} />
+                        <EntityDetailsModal upUntilTime={date} />
                     </div>
                 </Row>
                 <div id="portal" />
@@ -243,7 +279,8 @@ export function DataTable({
         isSubmittingValues = useAppSelector(selectIsSubmittingValues),
         columnHeaderMenuEntries = useAppSelector(selectColumnHeaderMenu)(dispatch),
         showSearch = useAppSelector(selectShowSearch),
-        showEntityJustifications = useAppSelector(selectShowEntityJustifications)
+        showEntityJustifications = useAppSelector(selectShowEntityJustifications),
+        upUntilTime = useAppSelector(selectHistoryDate)
     const cellContentCallback = useCallback(
             createCellContentCallback({
                 entities,
@@ -417,6 +454,7 @@ export function DataTable({
     if (isLoading || entities === undefined) {
         return <div className="shimmer"></div>
     } else {
+        const menuOffset = showEntityJustifications ? 1 : 0
         const columnDefs: GridColumn[] = []
         for (let i = 0; i < columnStates.length; ++i) {
             const columnState = columnStates[i]
@@ -432,7 +470,7 @@ export function DataTable({
                 id: columnState.idColumnPersistent,
                 title,
                 width: columnState.width,
-                hasMenu: i > 1
+                hasMenu: i > menuOffset
             })
         }
 
@@ -494,6 +532,7 @@ export function DataTable({
                         >
                             <DisplayTextDetails
                                 idEntityPersistent={tooltipDisplayTextDetails.val}
+                                upUntilTime={upUntilTime}
                             />
                         </div>
                     )}

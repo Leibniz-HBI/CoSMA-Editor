@@ -14,8 +14,14 @@ import { Provider } from 'react-redux'
 import { useEntity } from '../hooks'
 import { newRemote } from '../../util/state'
 
-function TestComponent({ idEntity }: { idEntity: string }) {
-    const entity = useEntity(idEntity)
+function TestComponent({
+    idEntity,
+    upUntilTime = undefined
+}: {
+    idEntity: string
+    upUntilTime?: Date | undefined
+}) {
+    const entity = useEntity(idEntity, upUntilTime)
     return <div>{entity.value?.displayTxt}</div>
 }
 
@@ -43,7 +49,7 @@ test('uses entity from details state', async () => {
         preloadedState: {
             table: newTableState({}),
             entityDetails: newEntityDetailsState({
-                entityByIdPersistentMap: { [idEntity]: newRemote(entity) }
+                entityByIdPersistentMap: { [idEntity + '@']: newRemote(entity) }
             })
         }
     })
@@ -79,13 +85,55 @@ test('loads external entity', async () => {
     expect(store.getState()).toEqual({
         table: newTableState({}),
         entityDetails: newEntityDetailsState({
-            entityByIdPersistentMap: { [idEntity]: newRemote(entity) }
+            entityByIdPersistentMap: { [idEntity + '@']: newRemote(entity) }
         })
     })
     await waitFor(() => {
         expect(fetchMock.mock.calls).toEqual([
             [
                 `http://127.0.0.1:8000/cosmae/api/entities?id_persistent=${idEntity}`,
+                { credentials: 'include' }
+            ]
+        ])
+    })
+})
+test('loads external entity with date', async () => {
+    const fetchMock = vi.fn()
+    const upUntilTime = new Date(2013, 5, 4)
+    addResponseSequence(fetchMock, [
+        [
+            200,
+            {
+                display_txt: displayTxt,
+                id_persistent: idEntity,
+                disabled: false,
+                version: 0,
+                display_txt_details: null,
+                justification_txt: null
+            }
+        ]
+    ])
+    const { store } = renderWithProviders(
+        <TestComponent idEntity={idEntity} upUntilTime={upUntilTime} />,
+        fetchMock
+    )
+    await waitFor(() => {
+        screen.getByText(displayTxt)
+    })
+    expect(store.getState()).toEqual({
+        table: newTableState({}),
+        entityDetails: newEntityDetailsState({
+            entityByIdPersistentMap: {
+                [idEntity + '@' + upUntilTime.getTime().toString()]: newRemote(entity)
+            }
+        })
+    })
+    await waitFor(() => {
+        expect(fetchMock.mock.calls).toEqual([
+            [
+                `http://127.0.0.1:8000/cosmae/api/entities?id_persistent=${idEntity}&up_until_time=${encodeURIComponent(
+                    upUntilTime.toISOString()
+                )}`,
                 { credentials: 'include' }
             ]
         ])
