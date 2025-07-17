@@ -11,7 +11,7 @@ from cosmae.exception import (
     EntityMissingException,
     PermissionException,
 )
-from cosmae.value.models_django import Value, ValueHistory
+from cosmae.value.models_django import Value, ValueHistory, value_objects
 
 
 @pytest.fixture
@@ -103,7 +103,7 @@ def test_get_most_recent_by_ids(value):
         approved_by=None,
     )
     new.save()
-    results = Value.most_recent_by_entity_and_definition_id_query_set(
+    results = value_objects().most_recent_by_entity_and_definition_id_query_set(
         ce.id_persistent_test, c.id_column_persistent_test
     )
     assert list(results) == [new]
@@ -186,7 +186,7 @@ def test_add_column_root(entity0, column_user):
 
 @pytest.mark.django_db
 def test_empty_chunk(column):
-    ret = Value.by_column_chunked_queryset(column.id_persistent, 2, 3)
+    ret = value_objects().by_column_chunked_queryset(column.id_persistent, 2, 3)
     assert not list(ret)
 
 
@@ -212,7 +212,9 @@ def test_chunk_versions(column):
             previous_version = column_tmp  # pylint: disable=no-member
         last_ids.append(column_tmp.id)  # pylint: disable=no-member
         last_values.append(column_tmp.value)
-    ret = Value.by_column_chunked_queryset(c.id_column_persistent_test, last_ids[2], 3)
+    ret = value_objects().by_column_chunked_queryset(
+        c.id_column_persistent_test, last_ids[2], 3
+    )
     ret_values = [col_tmp.value for col_tmp in ret]
     assert ret_values == last_values[2 : 2 + 3]
 
@@ -230,12 +232,12 @@ def test_chunk_filter_column_instance(column):
             approved_by=None,
         )
         column_tmp.save()
-    ret = Value.by_column_chunked_queryset(c.id_column_persistent_test, 0, 5)
+    ret = value_objects().by_column_chunked_queryset(c.id_column_persistent_test, 0, 5)
     assert len(ret) == 1
 
 
 @pytest.mark.django_db
 def test_not_existing_column():
     with pytest.raises(ColumnMissingException) as exc_info:
-        Value.by_column_chunked_queryset(c.id_column_persistent_test, 0, 5)
+        value_objects().by_column_chunked_queryset(c.id_column_persistent_test, 0, 5)
     assert exc_info.value.args[0] == c.id_column_persistent_test

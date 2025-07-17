@@ -12,7 +12,6 @@ from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.queue import get_column_name_path_from_parts
 from cosmae.entity.api import Entity, entity_db_to_api
 from cosmae.entity.models_django import Entity as EntityDb
-from cosmae.entity.models_django import EntityJustification
 from cosmae.exception import (
     ApiError,
     ApiException,
@@ -527,12 +526,12 @@ def get(request: HttpRequest, id_merge_request_persistent):
 def entity_merge_request_db_to_api(merge_request: EntityMergeRequestDb):
     "Convert basic information of an entity merge request from DB to API representation."
     try:
-        origin = EntityJustification.annotate_justification(
-            EntityDb.most_recent_by_id_queryset(merge_request.id_origin_persistent)
-        )
-        destination = EntityJustification.annotate_justification(
-            EntityDb.most_recent_by_id_queryset(merge_request.id_destination_persistent)
-        )
+        origin = EntityDb.objects.by_id_persistent(
+            merge_request.id_origin_persistent
+        ).annotate_justification()
+        destination = EntityDb.objects.by_id_persistent(
+            merge_request.id_destination_persistent
+        ).annotate_justification()
     except IndexError:
         return None
     return EntityMergeRequest(

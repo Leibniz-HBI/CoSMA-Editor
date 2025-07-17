@@ -1,12 +1,22 @@
 "Helper functions for tests."
 
-
 from datetime import datetime
 
 
-def format_datetime(dt: datetime):
+def format_datetime_response(dt: datetime):
     "Helper function for formatting dates like django+ninja"
-    return dt.strftime("%Y-%m-%d %H:%M:%S %z")
+    date_string = dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+    if date_string[-5:] == "+0000":
+        date_string = date_string[:-5] + "Z"
+    return date_string
+
+
+def format_datetime_request(dt: datetime):
+    "Helper function for formatting dates like django+ninja"
+    date_string = dt.strftime("%Y-%m-%dT%H:%M:%S.000%z")
+    if date_string[-5:] == "+0000":
+        date_string = date_string[:-5] + "Z"
+    return date_string
 
 
 def parse_datetime_cookie(date_str):

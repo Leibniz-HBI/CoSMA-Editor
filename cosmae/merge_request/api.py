@@ -24,7 +24,6 @@ from cosmae.merge_request.queue import dispatch_resolve_conflicts
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util.auth import check_user
-from cosmae.value.models_django import Value as ValueDb
 
 router = Router()
 
@@ -181,9 +180,9 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
         )
         recent = ColumnConflictResolution.only_recent(resolutions)
         updated_query_set = ColumnConflictResolution.non_recent(resolutions)
-        conflict_query_set = ValueDb.annotate_entity(
-            merge_request.instance_conflicts_all(True, recent)
-        )
+        conflict_query_set = merge_request.instance_conflicts_all(
+            True, recent
+        ).annotate_entity()
         return 200, MergeRequestConflictResponse(
             conflicts=[
                 annotated_value_db_to_api(conflict) for conflict in conflict_query_set

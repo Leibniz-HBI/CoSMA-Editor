@@ -103,9 +103,9 @@ def get_entities(request: HttpRequest, start: int, offset: int):
         candidate = ContributionCandidate.by_id_persistent(
             id_contribution_persistent, user
         ).get()
-        entities_db = EntityJustification.annotate_justification(
-            candidate.get_entities_chunked(start, offset)
-        )
+        entities_db = candidate.get_entities_chunked(
+            start, offset
+        ).annotate_justification()
         return 200, EntityWithJustificationList(
             entity_list=[entity_db_to_api(person) for person in entities_db]
         )
@@ -276,8 +276,10 @@ def put_duplicate_assignment(
         if origin.contribution_candidate != candidate:
             return 400, ApiError(msg="Origin Entity does not belong to contribution.")
         if id_entity_destination_persistent:
-            destination = EntityJustification.annotate_justification(
-                EntityDb.most_recent_by_id_queryset(id_entity_destination_persistent)
+            destination = (
+                EntityDb.objects.by_id_persistent(
+                    id_entity_destination_persistent
+                ).annotate_justification()
             ).get()
             assigned_duplicate = entity_db_to_api(destination)
             if body.justification_txt is not None:

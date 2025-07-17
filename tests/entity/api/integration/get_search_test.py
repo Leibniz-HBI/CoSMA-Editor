@@ -11,7 +11,7 @@ from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
 from cosmae.value.models_django import ValueHistory
 
-_search_term = "tes ent"
+_search_term = "ent"
 _search_term_value = "al ear"
 _instance_value = "value for entity search test"
 
@@ -49,10 +49,10 @@ def test_no_entity(auth_server):
     assert json == {"search_result_list": []}
 
 
-def test_single_entity(auth_server, entity1):
-    "Check that a single entity is successfully returned."
+def test_history(auth_server, entity1, entity1_changed):
+    "Make sure search works with history."
     server, cookies = auth_server
-    rsp = req.get_search(server.url, _search_term, cookies=cookies)
+    rsp = req.get_search(server.url, _search_term, c.time_edit_test_1, cookies=cookies)
     assert rsp.status_code == 200
     json = rsp.json()
     assert_versioned(
@@ -61,6 +61,22 @@ def test_single_entity(auth_server, entity1):
             "search_result_list": [
                 {
                     "match_value": c.display_txt_test1,
+                    "id_entity_persistent": c.id_persistent_test_1,
+                    "id_column_persistent": None,
+                }
+            ]
+        },
+    )
+    # Also check for most recent
+    rsp = req.get_search(server.url, _search_term, cookies=cookies)
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert_versioned(
+        json,
+        {
+            "search_result_list": [
+                {
+                    "match_value": c.display_txt_test1_changed,
                     "id_entity_persistent": c.id_persistent_test_1,
                     "id_column_persistent": None,
                 }

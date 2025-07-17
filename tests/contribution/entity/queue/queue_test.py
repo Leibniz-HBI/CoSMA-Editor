@@ -13,6 +13,7 @@ from cosmae.entity.models_django import Entity, EntityHistory, EntityJustificati
 from cosmae.value.models_django import (
     Value,
     ValueHistory,
+    value_objects,
 )
 
 
@@ -198,7 +199,9 @@ def test_eliminate_duplicates(contribution_candidate, values, entity_match):
     assert 7 == len(ValueHistory.objects.all())  # pylint: disable=no-member
     for_column = [
         column.__dict__
-        for column in Value.by_column_chunked_queryset(c.id_column_test, 0, 20)
+        for column in value_objects().by_column_chunked_queryset(
+            c.id_column_test, 0, 20
+        )
     ]
     assert for_column[0]["previous_version_id"] is None
     assert for_column[1]["previous_version_id"] is not None
@@ -233,7 +236,9 @@ def test_eliminate_duplicates(contribution_candidate, values, entity_match):
     ]
     for_column = [
         column.__dict__
-        for column in Value.by_column_chunked_queryset(c.id_column_test1, 0, 20)
+        for column in value_objects().by_column_chunked_queryset(
+            c.id_column_test1, 0, 20
+        )
     ]
     assert for_column[0]["previous_version_id"] is None
     assert for_column[1]["previous_version_id"] is not None

@@ -1,8 +1,11 @@
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 "Requests for testing the value API"
 
 from urllib.parse import urljoin
 
 import requests
+
+from tests.utils import format_datetime_request
 
 
 def post_value_list(url, value_list, cookies=None):
@@ -20,42 +23,50 @@ def post_value(url, value, **kwargs):
     return post_value_list(url, [value], **kwargs)
 
 
-def post_value_chunks(url, column_id, offset, limit, cookies=None):
+def post_value_chunks(url, column_id, offset, limit, up_until_time=None, cookies=None):
     "Post request for getting a chunk of values"
+    args = {
+        "id_column_persistent": column_id,
+        "offset": offset,
+        "limit": limit,
+    }
+    if up_until_time is not None:
+        args["up_until_time"] = format_datetime_request(up_until_time)
     return requests.post(
         urljoin(url, "/cosmae/api/values/chunk"),
-        json={
-            "id_column_persistent": column_id,
-            "offset": offset,
-            "limit": limit,
-        },
+        json=args,
         cookies=cookies,
         timeout=900,
     )
 
 
-def post_value_value_list(url, id_persistent_pairs, cookies):
+def post_value_value_list(url, id_persistent_pairs, up_until_time=None, cookies=None):
     "Post request for getting values for a list entity-column id pairs"
+    args = {
+        "value_requests": [
+            {
+                "id_entity_persistent": id_entity_persistent,
+                "id_column_persistent": id_column_persistent,
+            }
+            for id_entity_persistent, id_column_persistent in id_persistent_pairs
+        ]
+    }
+    if up_until_time is not None:
+        args["up_until_time"] = format_datetime_request(up_until_time)
     return requests.post(
         urljoin(url, "cosmae/api/values/values"),
-        json={
-            "value_requests": [
-                {
-                    "id_entity_persistent": id_entity_persistent,
-                    "id_column_persistent": id_column_persistent,
-                }
-                for id_entity_persistent, id_column_persistent in id_persistent_pairs
-            ]
-        },
+        json=args,
         cookies=cookies,
         timeout=900,
     )
 
 
-def post_value_value(url, id_entity_persistent, id_column_persistent, cookies=None):
+def post_value_value(
+    url, id_entity_persistent, id_column_persistent, up_until_time=None, cookies=None
+):
     "Post request for getting values for a single entity-column id pair"
     return post_value_value_list(
-        url, [(id_entity_persistent, id_column_persistent)], cookies
+        url, [(id_entity_persistent, id_column_persistent)], up_until_time, cookies
     )
 
 

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import tests.user.common as cu
 from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
-from tests.utils import assert_versioned, format_datetime
+from tests.utils import assert_versioned, format_datetime_response
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import ColumnMergeRequest
 
@@ -68,7 +68,7 @@ def test_set_disable_on_merge(auth_server, merge_request_user):
     assert_versioned(
         rsp.json(),
         {
-            "created_at": format_datetime(c.time_merge_request),
+            "created_at": format_datetime_response(c.time_merge_request),
             "id_persistent": c.id_persistent_merge_request,
             "created_by": {
                 "username": cu.test_username1,

@@ -30,6 +30,7 @@ from cosmae.value.models_conversion import value_db_to_api
 from cosmae.value.models_django import Value as ValueDb
 from cosmae.value.models_django import ValueAbstract as ValueAbstractDb
 from cosmae.value.models_django import ValueHistory as ValueHistoryDb
+from cosmae.value.models_django import value_objects
 
 router = Router()
 
@@ -47,6 +48,7 @@ class ValuePostChunkRequest(Schema):
     # pylint: disable=too-few-public-methods
     "Request body for getting instances of a column."
     id_column_persistent: str
+    up_until_time: datetime | None = None
     offset: int
     limit: int
 
@@ -77,6 +79,7 @@ class ValueValueRequestList(Schema):
     # pylint: disable=too-few-public-methods
     "Request body for multiple value request"
     value_requests: List[ValueValueRequest]
+    up_until_time: datetime | None = None
 
 
 class ValueValueResponse(Schema):
@@ -208,7 +211,9 @@ def post_value_chunks(
             msg=f"Please specify limit smaller than {MAX_VALUE_CHUNK_LIMIT}."
         )
     try:
-        instance_dbs = ValueDb.by_column_chunked_queryset(
+        instance_dbs = value_objects(
+            chunk_req.up_until_time
+        ).by_column_chunked_queryset(
             chunk_req.id_column_persistent, chunk_req.offset, chunk_req.limit
         )
         instance_apis = [value_db_to_api(value) for value in instance_dbs]
@@ -243,7 +248,9 @@ def post_value_values(
         for req in values_req.value_requests:
             id_entity_persistent = req.id_entity_persistent
             id_column_persistent = req.id_column_persistent
-            vals = ValueDb.most_recent_by_entity_and_definition_id_query_set(
+            vals = value_objects(
+                values_req.up_until_time
+            ).most_recent_by_entity_and_definition_id_query_set(
                 id_entity_persistent, id_column_persistent
             )
             ret.append(
@@ -293,12 +300,16 @@ def post_values_for_entities(
                 user,
             )
             for id_column, is_existing in columns:
-                instances_for_column = ValueDb.for_entities(
-                    id_column,
-                    request_data.id_entity_persistent_list,
-                ).annotate(
-                    is_existing=Value(is_existing),
-                    id_column_requested_persistent=Value(id_column_persistent),
+                instances_for_column = (
+                    value_objects()
+                    .for_entities(
+                        id_column,
+                        request_data.id_entity_persistent_list,
+                    )
+                    .annotate(
+                        is_existing=Value(is_existing),
+                        id_column_requested_persistent=Value(id_column_persistent),
+                    )
                 )
                 instances_all = instances_all.union(instances_for_column)
         return 200, ValueForEntitiesPostResponse(

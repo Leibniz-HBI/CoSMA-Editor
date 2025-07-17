@@ -55,6 +55,28 @@ class EntityQueryset(VersionedQueryset):
             return self
         return self.filter(disabled=False)
 
+    def by_id_persistent(self, id_persistent: str):
+        "Filter entity by id_persistent"
+        return self.filter(id_persistent=id_persistent)
+
+    def annotate_justification(
+        self,
+        up_until_time: datetime | None = None,
+    ):
+        "Annotate the most recent justification for being in the db to a query set of entities."
+        inner_query = models.Q(id_entity_persistent=models.OuterRef("id_persistent"))
+        if up_until_time is not None:
+            inner_query &= models.Q(timestamp__lte=up_until_time)
+        return self.annotate(
+            justification_txt=models.Subquery(
+                EntityJustification.objects.filter(
+                    inner_query
+                )  # pylint: disable=no-member
+                .order_by(models.F("timestamp").desc())[:1]
+                .values("text")
+            )
+        )
+
 
 class Entity(EntityAbstract):
     "Django ORM model for entities"
@@ -115,22 +137,27 @@ class EntityJustification(models.Model):
         "Indicates that there is no justification stored."
 
     @classmethod
-    def for_id_entity_persistent_unordered(cls, id_entity_persistent):
+    def for_id_entity_persistent_unordered(
+        cls, id_entity_persistent, until_time: datetime | None = None
+    ):
         "Get all justifications for an entity unordered"
-        return cls.objects.filter(  # pylint: disable=no-member
-            id_entity_persistent=id_entity_persistent
-        )
+        query = models.Q(id_entity_persistent=id_entity_persistent)
+        if until_time is not None:
+            query &= models.Q(timestamp__lte=until_time)
+        return cls.objects.filter(query)  # pylint: disable=no-member
 
     @classmethod
-    def for_id_entity_persistent_asc(cls, id_entity_persistent):
+    def for_id_entity_persistent_asc(
+        cls, id_entity_persistent, up_until_time: datetime | None = None
+    ):
         "Get all justifications for an entity ordered ascending by date."
-        return cls.for_id_entity_persistent_unordered(id_entity_persistent).order_by(
-            models.F("timestamp").asc()
-        )
+        return cls.for_id_entity_persistent_unordered(
+            id_entity_persistent, up_until_time
+        ).order_by(models.F("timestamp").asc())
 
     @classmethod
     def for_id_entity_persistent_desc(cls, id_entity_persistent):
-        "Get all justifications for an entity ordered ascending by date."
+        "Get all justifications for an entity ordered descending by date."
         return cls.for_id_entity_persistent_unordered(id_entity_persistent).order_by(
             models.F("timestamp").desc()
         )
@@ -164,21 +191,6 @@ class EntityJustification(models.Model):
                 author=author,
             ),
             True,
-        )
-
-    @classmethod
-    def annotate_justification(cls, entities: Optional[models.BaseManager[Entity]]):
-        "Annotate the most recent justification for being in the db to a query set of entities."
-        if entities is None:
-            entities = cls.objects  # pylint: disable=no-member
-        return entities.annotate(
-            justification_txt=models.Subquery(
-                cls.objects.filter(  # pylint: disable=no-member
-                    id_entity_persistent=models.OuterRef("id_persistent")
-                )
-                .order_by(models.F("timestamp").desc())[:1]
-                .values("text")
-            )
         )
 
     @classmethod
@@ -268,7 +280,7 @@ def entity_objects(date: Optional[datetime] = None):
     "Get correct entity query set depending on whether a time limit is set."
     if date is None:
         return Entity.objects
-    queryset = EntityHistory.objects.filter(edit_time__lt=date)
+    queryset = EntityHistory.objects.filter(time_edit__lte=date)
     return queryset.filter(
         id=models.Subquery(
             queryset.filter(id_persistent=models.OuterRef("id_persistent"))

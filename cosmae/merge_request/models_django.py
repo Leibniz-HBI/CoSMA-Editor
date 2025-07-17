@@ -15,10 +15,7 @@ from cosmae.merge_request.entity.models_django import (
 )
 from cosmae.util import CosmaeUser
 from cosmae.util.django import get_json_array_agg
-from cosmae.value.models_django import (
-    Value,
-    ValueHistory,
-)
+from cosmae.value.models_django import Value, value_objects
 
 
 class ColumnMergeRequest(AbstractMergeRequest):
@@ -197,14 +194,14 @@ class ColumnMergeRequest(AbstractMergeRequest):
     ):
         """Get conflicts to merging the origin column referenced by the merge request
         into the destination column"""
-        instance_origin_recent_query = ValueHistory.most_recent_queryset().filter(
+        instance_origin_recent_query = value_objects().filter(
             id_column_persistent=self.id_origin_persistent
         )
 
         if len(instance_origin_recent_query) == 0:
             return instance_origin_recent_query
 
-        instance_destination_recent_query = ValueHistory.most_recent_queryset().filter(
+        instance_destination_recent_query = value_objects().filter(
             id_column_persistent=self.id_destination_persistent
         )
         conflicts_sub_query = instance_destination_recent_query.filter(

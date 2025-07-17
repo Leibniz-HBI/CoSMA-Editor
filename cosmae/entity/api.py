@@ -34,7 +34,7 @@ from cosmae.value.models_api import ValuePost
 from cosmae.value.models_conversion import (
     value_db_to_api,
 )
-from cosmae.value.models_django import Value as ValueDb
+from cosmae.value.models_django import value_objects
 
 router = Router()
 
@@ -127,6 +127,7 @@ class ChunkRequest(Schema):
 
     offset: int
     limit: int
+    up_until_time: datetime | None = None
 
 
 class EntityDetailsResponse(Schema):
@@ -228,11 +229,12 @@ def entities_chunks_post(
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions")
     try:
-        entity_db_list = EntityJustificationDb.annotate_justification(
-            entity_objects()
+        entity_db_list = (
+            entity_objects(req_data.up_until_time)
             .primary_only()
             .exclude_contributed()
             .chunk(req_data.offset, req_data.limit)
+            .annotate_justification()
         )
         next_offset = -1
         entity_api_list = []
@@ -257,7 +259,9 @@ def entities_chunks_post(
         500: ApiError,
     },
 )
-def get_values(request: HttpRequest, id_persistent: str):
+def get_values(
+    request: HttpRequest, id_persistent: str, up_until_time: datetime | None = None
+):
     "API method for retrieving all instances for a specific entity."
     try:
         user = check_user(request)
@@ -266,10 +270,14 @@ def get_values(request: HttpRequest, id_persistent: str):
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions.")
     try:
-        entity = EntityJustificationDb.annotate_justification(
-            EntityDb.most_recent_by_id_queryset(id_persistent=id_persistent)
+        entity = (
+            entity_objects(up_until_time)
+            .by_id_persistent(id_persistent=id_persistent)
+            .annotate_justification()
         ).get()
-        instances_db = ValueDb.for_entity_queryset(id_persistent, user)
+        instances_db = value_objects(up_until_time).for_entity_queryset(
+            id_persistent, user
+        )
         instances_api = [value_db_to_api(instance) for instance in instances_db]
         return 200, EntityDetailsResponse(
             entity=entity_db_to_api(entity), value_list=instances_api
@@ -291,7 +299,9 @@ def get_values(request: HttpRequest, id_persistent: str):
         500: ApiError,
     },
 )
-def get_details(request: HttpRequest, id_persistent: str):
+def get_details(
+    request: HttpRequest, id_persistent: str, up_until_time: datetime | None = None
+):
     "Get details for an entity"
     try:
         user = check_user(request)
@@ -300,8 +310,10 @@ def get_details(request: HttpRequest, id_persistent: str):
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions.")
     try:
-        entity = EntityJustificationDb.annotate_justification(
-            EntityDb.most_recent_by_id_queryset(id_persistent=id_persistent)
+        entity = (
+            entity_objects(up_until_time)
+            .by_id_persistent(id_persistent=id_persistent)
+            .annotate_justification(up_until_time)
         ).get()
         return 200, entity_db_to_api(entity)
     except EntityDb.DoesNotExist:
@@ -314,7 +326,7 @@ def get_details(request: HttpRequest, id_persistent: str):
     "search",
     response={200: EntitySearchResultList, 401: ApiError, 403: ApiError, 500: ApiError},
 )
-def search(request: HttpRequest, term: str):
+def search(request: HttpRequest, term: str, up_until_time: datetime | None = None):
     "Search for an entity"
     try:
         user = check_user(request)
@@ -324,7 +336,7 @@ def search(request: HttpRequest, term: str):
         return 403, ApiError(msg="Insufficient privileges.")
     try:
         display_txt_results = (
-            entity_objects()
+            entity_objects(up_until_time)
             .exclude_contributed()
             .search(term)
             .values(
@@ -333,12 +345,16 @@ def search(request: HttpRequest, term: str):
                 value=F("display_txt"),
             )
         )
-        value_results = ValueDb.objects.search(
-            term,
-            id_columns=ConfigValue.objects.filter(key=DISPLAY_TXT_ORDER_CONFIG_KEY)
-            .annotate(text_value=Cast("value", TextField()))
-            .values("text_value"),
-        ).values("id_entity_persistent", "id_column_persistent", "value")
+        value_results = (
+            value_objects(up_until_time)
+            .search(
+                term,
+                id_columns=ConfigValue.objects.filter(key=DISPLAY_TXT_ORDER_CONFIG_KEY)
+                .annotate(text_value=Cast("value", TextField()))
+                .values("text_value"),
+            )
+            .values("id_entity_persistent", "id_column_persistent", "value")
+        )
         without_known = value_results.exclude(
             id_entity_persistent__in=display_txt_results.values("id_entity_persistent")
         )
@@ -381,7 +397,9 @@ def merge_entities(
     "{id_entity_persistent}/justifications",
     response={200: JustificationList, 401: ApiError, 403: ApiError, 500: ApiError},
 )
-def get_justifications(request: HttpRequest, id_entity_persistent):
+def get_justifications(
+    request: HttpRequest, id_entity_persistent, up_until_time: datetime | None = None
+):
     "Get justifications for an entity being in the database"
     try:
         user = check_user(request)
@@ -391,7 +409,7 @@ def get_justifications(request: HttpRequest, id_entity_persistent):
         return 403, ApiError(msg="Insufficient permissions")
     try:
         justifications = EntityJustificationDb.for_id_entity_persistent_asc(
-            id_entity_persistent
+            id_entity_persistent, up_until_time=up_until_time
         )
         return 200, JustificationList(
             justifications=[
