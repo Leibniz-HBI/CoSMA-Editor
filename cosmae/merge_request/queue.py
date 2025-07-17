@@ -19,6 +19,7 @@ from cosmae.util import CosmaeUser, timestamp
 from cosmae.value.models_django import (
     Value,
     ValueHistory,
+    value_objects,
 )
 
 
@@ -69,7 +70,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                 merge_request.created_by.id_persistent
             ):
                 return
-            values_destination = Value.by_column_chunked_queryset(
+            values_destination = value_objects().by_column_chunked_queryset(
                 merge_request.id_destination_persistent, 0, 1
             )
             time_merge = timestamp()

@@ -1,5 +1,6 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 
+import tests.entity.common as ce
 from tests.entity.api.integration.requests import post_chunk, post_persons
 
 
@@ -79,6 +80,19 @@ def test_non_existent_slice(auth_server):
     entity_list = json["entity_list"]
     assert len(entity_list) == 0
     assert json["next_offset"] == 0
+
+
+def test_slice_until_date(auth_server, entity0, entity1, entity1_changed, entity2):
+    live_server, cookies = auth_server
+    rsp = post_chunk(
+        live_server.url, 0, 200, up_until_time=ce.time_edit_test_2, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    entity_list = json["entity_list"]
+    assert len(entity_list) == 3
+    entity = entity_list[1]
+    assert entity["display_txt"] == ce.display_txt_test1
 
 
 def test_request_too_large(auth_server):

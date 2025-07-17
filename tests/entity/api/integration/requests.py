@@ -3,6 +3,8 @@ from urllib.parse import urljoin
 
 import requests
 
+from tests.utils import format_datetime_request
+
 
 def post_person(url, person, **kwargs):
     return post_persons(url, [person], **kwargs)
@@ -17,18 +19,26 @@ def post_persons(url, entities, cookies=None):
     )
 
 
-def post_chunk(url, offset, limit, cookies=None):
+def post_chunk(url, offset, limit, up_until_time=None, cookies=None):
+    json = {"offset": offset, "limit": limit}
+    if up_until_time is not None:
+        json["up_until_time"] = format_datetime_request(up_until_time)
     return requests.post(
         urljoin(url, "cosmae/api/entities/chunk"),
-        json={"offset": offset, "limit": limit},
+        json=json,
         cookies=cookies,
         timeout=9,
     )
 
 
-def get_search(url, search_term, cookies=None):
+def get_search(url, search_term, up_until_time=None, cookies=None):
+    url += f"/cosmae/api/entities/search?term={search_term}"
+    if up_until_time is not None:
+        url += "&up_until_time=" + format_datetime_request(up_until_time).replace(
+            "+", "%2b"
+        )
     return requests.get(
-        url + f"/cosmae/api/entities/search?term={search_term}",
+        url,
         cookies=cookies,
         timeout=900,
     )
@@ -46,28 +56,41 @@ def put_justification(url, id_entity_persistent, text, cookies=None):
     )
 
 
-def get_justification(url, id_entity_persistent, cookies=None):
+def get_justification(url, id_entity_persistent, up_until_time=None, cookies=None):
+    url += f"/cosmae/api/entities/{id_entity_persistent}/justifications?"
+    if up_until_time is not None:
+        url += "up_until_time=" + format_datetime_request(up_until_time).replace(
+            "+", "%2b"
+        )
+
     return requests.get(
-        urljoin(
-            url,
-            f"cosmae/api/entities/{id_entity_persistent}/justifications",
-        ),
+        url,
         cookies=cookies,
         timeout=9,
     )
 
 
-def get_entity_details(url, id_entity_persistent, cookies=None):
+def get_entity_details(url, id_entity_persistent, up_until_time=None, cookies=None):
+    url += "/cosmae/api/entities?id_persistent=" + id_entity_persistent
+    if up_until_time is not None:
+        url += "&up_until_time=" + format_datetime_request(up_until_time).replace(
+            "+", "%2b"
+        )
     return requests.get(
-        url + "/cosmae/api/entities?id_persistent=" + id_entity_persistent,
+        url,
         cookies=cookies,
         timeout=900,
     )
 
 
-def get_entity_values(url, id_entity_persistent, cookies=None):
+def get_entity_values(url, id_entity_persistent, up_until_time=None, cookies=None):
+    url += "/cosmae/api/entities/values?id_persistent=" + id_entity_persistent
+    if up_until_time is not None:
+        url += "&up_until_time=" + format_datetime_request(up_until_time).replace(
+            "+", "%2b"
+        )
     return requests.get(
-        url + "/cosmae/api/entities/values?id_persistent=" + id_entity_persistent,
+        url,
         cookies=cookies,
         timeout=900,
     )

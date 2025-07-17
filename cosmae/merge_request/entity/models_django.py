@@ -10,10 +10,7 @@ from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.exception import ForbiddenException
 from cosmae.util import CosmaeUser
-from cosmae.value.models_django import (
-    Value,
-    ValueHistory,
-)
+from cosmae.value.models_django import Value, ValueHistory
 
 
 class AbstractMergeRequest(models.Model):
@@ -284,9 +281,7 @@ class EntityMergeRequest(AbstractMergeRequest):
         resolutions = EntityConflictResolution.for_merge_request_query_set(self)
         recent = EntityConflictResolution.only_recent(resolutions)
         updated_query_set = EntityConflictResolution.non_recent(resolutions)
-        conflict_query_set = Value.annotate_column(
-            self.instance_conflicts_all(True, recent)
-        )
+        conflict_query_set = self.instance_conflicts_all(True, recent).annotate_column()
         with_user_column_id = conflict_query_set.annotate(
             id_column_most_recent_persistent=models.fields.json.KT(
                 "column__id_persistent"

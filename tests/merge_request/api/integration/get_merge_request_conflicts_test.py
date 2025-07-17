@@ -7,7 +7,7 @@ import tests.entity.common as ce
 from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
 from tests.user import common as cu
-from tests.utils import assert_versioned, format_datetime
+from tests.utils import assert_versioned, format_datetime_response
 from cosmae.column.models_django import ColumnHistory
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import ColumnConflictResolution
@@ -69,7 +69,7 @@ def test_conflicts_no_resolution(
                 "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
-            "created_at": format_datetime(c.time_merge_request),
+            "created_at": format_datetime_response(c.time_merge_request),
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
@@ -186,7 +186,7 @@ def test_conflicts_same_value(
                 "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
-            "created_at": format_datetime(c.time_merge_request),
+            "created_at": format_datetime_response(c.time_merge_request),
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
@@ -254,7 +254,7 @@ def test_conflict_resolved(
                 "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
-            "created_at": format_datetime(c.time_merge_request),
+            "created_at": format_datetime_response(c.time_merge_request),
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
@@ -365,7 +365,7 @@ def test_conflict_resolved_column_origin_changed(
                 "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
-            "created_at": format_datetime(c.time_merge_request),
+            "created_at": format_datetime_response(c.time_merge_request),
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {
@@ -514,7 +514,7 @@ def test_value_destination_value_added(
                 "permission_group": "CONTRIBUTOR",
             },
             "id_persistent": c.id_persistent_merge_request,
-            "created_at": format_datetime(c.time_merge_request),
+            "created_at": format_datetime_response(c.time_merge_request),
             "state": "OPEN",
             "disable_origin_on_merge": False,
             "origin": {

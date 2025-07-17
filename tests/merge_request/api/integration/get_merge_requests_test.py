@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import tests.user.common as cu
 from tests.merge_request import common as c
 from tests.merge_request.api.integration import requests as req
-from tests.utils import assert_versioned, format_datetime
+from tests.utils import assert_versioned, format_datetime_response
 from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.exception import NotAuthenticatedException
 
@@ -35,7 +35,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
         json["created"],
         [
             {
-                "created_at": format_datetime(c.time_merge_request1),
+                "created_at": format_datetime_response(c.time_merge_request1),
                 "id_persistent": c.id_persistent_merge_request1,
                 "created_by": {
                     "username": cu.test_username,
@@ -88,7 +88,7 @@ def test_get_merge_requests(auth_server, merge_request_user, merge_request_user1
         json["assigned"],
         [
             {
-                "created_at": format_datetime(c.time_merge_request),
+                "created_at": format_datetime_response(c.time_merge_request),
                 "id_persistent": c.id_persistent_merge_request,
                 "created_by": {
                     "username": cu.test_username1,
@@ -164,7 +164,7 @@ def test_get_merge_requests_with_hidden(
         json["created"],
         [
             {
-                "created_at": format_datetime(c.time_merge_request1),
+                "created_at": format_datetime_response(c.time_merge_request1),
                 "id_persistent": c.id_persistent_merge_request1,
                 "created_by": {
                     "username": cu.test_username,
@@ -217,7 +217,7 @@ def test_get_merge_requests_with_hidden(
         json["assigned"],
         [
             {
-                "created_at": format_datetime(c.time_merge_request),
+                "created_at": format_datetime_response(c.time_merge_request),
                 "id_persistent": c.id_persistent_merge_request,
                 "created_by": {
                     "username": cu.test_username1,
@@ -289,7 +289,7 @@ def test_includes_curated(
                     "permission_group": "CONTRIBUTOR",
                 },
                 "assigned_to": None,
-                "created_at": format_datetime(c.time_merge_request_curated),
+                "created_at": format_datetime_response(c.time_merge_request_curated),
                 "state": "OPEN",
                 "disable_origin_on_merge": False,
                 "destination": {

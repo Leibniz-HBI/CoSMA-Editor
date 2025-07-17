@@ -59,7 +59,7 @@ def entity1_changed(user1, entity1):
         ce.time_edit_test_1_changed,
         user1.edit_session,
         version=entity1.id,
-        display_txt="edited_entity",
+        display_txt=ce.display_txt_test1_changed,
     )[0].save()
 
 
@@ -488,6 +488,33 @@ def values_user(user, user1):
     values = [value, value1, value2, value3]
     for inst in values:
         inst.save()
+    return values
+
+
+@pytest.fixture
+def values_entity1_changed(user):
+    value = ValueHistory(
+        id_persistent=cv.id_instance_test1,
+        time_edit=cv.time_edit_instance_test,
+        written_by_session=user.edit_session,
+        approved_by=user.id_persistent,
+        id_column_persistent=c.id_column_persistent_test_user,
+        id_entity_persistent=ce.id_persistent_test_1,
+        value="value 1",
+    )
+    value.save()
+    value_changed = ValueHistory(
+        id_persistent=cv.id_instance_test1,
+        time_edit=ce.time_edit_test_1_changed,
+        written_by_session=user.edit_session,
+        approved_by=user.id_persistent,
+        id_column_persistent=c.id_column_persistent_test_user,
+        id_entity_persistent=ce.id_persistent_test_1,
+        value="value 1 changed",
+        previous_version=value,
+    )
+    value_changed.save()
+    values = [value, value_changed]
     return values
 
 

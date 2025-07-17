@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 from unittest.mock import MagicMock, patch
 
 from django.db import IntegrityError
@@ -34,7 +34,6 @@ def test_missing_column(auth_server):
 
 def test_can_slice(auth_server, column_user, entity0):
     live_server, cookies = auth_server
-    entity0.save()
     instances = [
         {
             "value": str(float(i) + 0.3),
@@ -58,6 +57,34 @@ def test_can_slice(auth_server, column_user, entity0):
     assert len(instances) == 4
     for i in range(4):
         assert instances[i]["value"] == str(float(i) + 3.3)
+
+
+def test_history(auth_server, entity1, column_user, values_entity1_changed):
+    live_server, cookies = auth_server
+    rsp = post_value_chunks(
+        live_server.url,
+        column_user.id_persistent,
+        values_entity1_changed[0].id,
+        4,
+        up_until_time=values_entity1_changed[0].time_edit,
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+    value_list = rsp.json()["value_list"]
+    assert len(value_list) == 1
+    assert value_list[0]["value"] == values_entity1_changed[0].value
+    # No make sure can still retrieve most recent.
+    rsp = post_value_chunks(
+        live_server.url,
+        column_user.id_persistent,
+        values_entity1_changed[0].id,
+        4,
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+    value_list = rsp.json()["value_list"]
+    assert len(value_list) == 1
+    assert value_list[0]["value"] == values_entity1_changed[1].value
 
 
 def test_non_existent_slice(auth_server, column, entity0):
@@ -93,7 +120,9 @@ def test_bad_db(auth_server):
     live_server, cookies = auth_server
     mock = MagicMock()
     mock.side_effect = IntegrityError()
-    with patch("cosmae.value.models_django.Value.by_column_chunked_queryset", mock):
+    with patch(
+        "cosmae.value.models_django.ValueQuerySet.by_column_chunked_queryset", mock
+    ):
         rsp = post_value_chunks(
             live_server.url, "test_id_persistent", 0, 2, cookies=cookies
         )

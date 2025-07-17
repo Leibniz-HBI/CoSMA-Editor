@@ -1,6 +1,7 @@
 # pylint: disable=missing-module-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
 from unittest.mock import MagicMock, patch
 
+import tests.column.common as cc
 import tests.entity.api.integration.requests as req
 import tests.entity.common as ce
 import tests.value.common as cv
@@ -22,28 +23,30 @@ def test_unauthenticated(auth_server):
     mock.side_effect = NotAuthenticatedException()
     server, cookies = auth_server
     with patch("cosmae.entity.api.check_user", mock):
-        rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
+        rsp = req.get_entity_values(
+            server.url, ce.id_persistent_test_0, cookies=cookies
+        )
     assert rsp.status_code == 401
 
 
 def test_applicant(auth_server_applicant):
     "Test permissions for applicants."
     server, cookies = auth_server_applicant
-    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
+    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies=cookies)
     assert rsp.status_code == 403
 
 
 def test_missing_entity(auth_server, values_user):
     "Test getting instances"
     server, cookies = auth_server
-    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
+    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies=cookies)
     assert rsp.status_code == 404
 
 
 def test_get_instances(auth_server, values_user, entity0, entity1, justification0):
     "Test getting instances"
     server, cookies = auth_server
-    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies)
+    rsp = req.get_entity_values(server.url, ce.id_persistent_test_0, cookies=cookies)
     assert rsp.status_code == 200
     json = rsp.json()
     instances = json["value_list"]
@@ -56,6 +59,72 @@ def test_get_instances(auth_server, values_user, entity0, entity1, justification
         {
             "id_persistent": ce.id_persistent_test_0,
             "display_txt": ce.display_txt_test0,
+            "display_txt_details": "Display Text",
+            "disabled": False,
+        },
+    )
+
+
+def test_get_instances_history(
+    auth_server, values_entity1_changed, entity1, entity1_changed, justification1
+):
+    "Test getting instances from history."
+    server, cookies = auth_server
+    rsp = req.get_entity_values(
+        server.url,
+        ce.id_persistent_test_1,
+        ce.time_edit_test_1,
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    value_list = json["value_list"]
+    assert_versioned(
+        value_list,
+        [
+            {
+                "id_persistent": cv.id_instance_test1,
+                "id_entity_persistent": ce.id_persistent_test_1,
+                "id_column_persistent": cc.id_column_persistent_test_user,
+                "value": "value 1",
+            }
+        ],
+    )
+    entity = json["entity"]
+    assert_versioned(
+        entity,
+        {
+            "id_persistent": ce.id_persistent_test_1,
+            "display_txt": ce.display_txt_test1,
+            "display_txt_details": "Display Text",
+            "disabled": False,
+        },
+    )
+    rsp = req.get_entity_values(
+        server.url,
+        ce.id_persistent_test_1,
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    value_list = json["value_list"]
+    assert_versioned(
+        value_list,
+        [
+            {
+                "id_persistent": cv.id_instance_test1,
+                "id_entity_persistent": ce.id_persistent_test_1,
+                "id_column_persistent": cc.id_column_persistent_test_user,
+                "value": "value 1 changed",
+            }
+        ],
+    )
+    entity = json["entity"]
+    assert_versioned(
+        entity,
+        {
+            "id_persistent": ce.id_persistent_test_1,
+            "display_txt": ce.display_txt_test1_changed,
             "display_txt_details": "Display Text",
             "disabled": False,
         },

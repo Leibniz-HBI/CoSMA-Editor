@@ -14,7 +14,7 @@ from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity, EntityJustification
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.util.auth import check_user
-from cosmae.value.models_django import Value
+from cosmae.value.models_django import value_objects
 
 router = Router()
 
@@ -79,7 +79,7 @@ def get_preview(
         else:
             destination_values = [
                 value.value
-                for value in Value.by_column_chunked_queryset(
+                for value in value_objects().by_column_chunked_queryset(
                     id_column_persistent, 0, 10
                 )
             ]

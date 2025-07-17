@@ -1,4 +1,6 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+from datetime import timedelta
+from time import sleep
 from unittest.mock import MagicMock, patch
 
 import tests.column.common as cc
@@ -12,6 +14,7 @@ from tests.value.api.integration.requests import (
     post_value_list,
     post_value_value,
 )
+from cosmae.util import timestamp
 
 id_value_test = "id-value-test"
 id_value_test1 = "id-value-test1"
@@ -35,7 +38,7 @@ def test_empty_db(auth_server):
     }
 
 
-def test_gets_most_recent(auth_server_commissioner, person, child_column):
+def test_gets_most_recent_and_history(auth_server_commissioner, person, child_column):
     live_server, cookies = auth_server_commissioner
     rsp = post_person(live_server.url, person, cookies=cookies)
     assert rsp.status_code == 200
@@ -54,15 +57,17 @@ def test_gets_most_recent(auth_server_commissioner, person, child_column):
     )
     assert rsp.status_code == 200
     rsp_instance = rsp.json()["value_list"][0]
-    version = rsp_instance["version"]
+    version_before_change = rsp_instance["version"]
     id_instance = rsp_instance["id_persistent"]
+    time_before_change = timestamp() + timedelta(seconds=1)
+    sleep(2)
     rsp = post_value(
         live_server.url,
         {
             "id_entity_persistent": id_entity,
             "id_column_persistent": id_column,
             "value": "2",
-            "version": version,
+            "version": version_before_change,
             "id_persistent": id_instance,
         },
         cookies=cookies,
@@ -83,7 +88,29 @@ def test_gets_most_recent(auth_server_commissioner, person, child_column):
                         "id_entity_persistent": id_entity,
                         "id_column_persistent": id_column,
                         "value": "2",
-                        "version": rsp_instance["version"],
+                        "version": version,
+                    }
+                ],
+            }
+        ]
+    }
+    # now check for_history
+    rsp = post_value_value(
+        live_server.url, id_entity, id_column, time_before_change, cookies=cookies
+    )
+    assert rsp.status_code == 200
+    assert rsp.json() == {
+        "value_responses": [
+            {
+                "id_entity_persistent": id_entity,
+                "id_column_persistent": id_column,
+                "values": [
+                    {
+                        "id_persistent": id_instance,
+                        "id_entity_persistent": id_entity,
+                        "id_column_persistent": id_column,
+                        "value": "1",
+                        "version": version_before_change,
                     }
                 ],
             }
@@ -167,7 +194,7 @@ def test_bad_db(auth_server):
     mock = MagicMock()
     mock.side_effect = Exception()
     with patch(
-        "cosmae.value.models_django.Value.most_recent_by_entity_and_definition_id_query_set",
+        "cosmae.value.models_django.ValueQuerySet.most_recent_by_entity_and_definition_id_query_set",
         mock,
     ):
         req = post_value_value(
