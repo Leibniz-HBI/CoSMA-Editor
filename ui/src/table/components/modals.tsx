@@ -96,9 +96,11 @@ export function EntityAddModal() {
 }
 
 export function ColumnModal({
-    columnIndices
+    columnIndices,
+    upUntilDate = undefined
 }: {
     columnIndices: { [key: string]: number }
+    upUntilDate?: Date | undefined
 }) {
     const dispatch = useAppDispatch()
     const justificationsShown = useAppSelector(selectShowEntityJustifications)
@@ -117,9 +119,7 @@ export function ColumnModal({
             contentClassName="vh-95 d-flex flex-column bg-secondary flex-sm-wrap flex-md-nowrap"
         >
             <Modal.Header closeButton className="flex-grow-0 flex-shrink-0 bg-white">
-                <Modal.Title className="text-dark">
-                    Show Additional Values
-                </Modal.Title>
+                <Modal.Title className="text-dark">Show Additional Values</Modal.Title>
             </Modal.Header>
             <Modal.Body className="bg-secondary d-contents">
                 <ColumnMenu
@@ -129,7 +129,7 @@ export function ColumnModal({
                     additionalIndices={additionalIndices}
                     columnIndices={columnIndices}
                     loadColumnDataCallback={(columnDefinition: Column) =>
-                        dispatch(getColumnAsync(columnDefinition)).then(
+                        dispatch(getColumnAsync(columnDefinition, upUntilDate)).then(
                             async (idColumnList) => {
                                 for (const idPersistent of idColumnList) {
                                     await dispatch(
@@ -159,7 +159,11 @@ export function ColumnModal({
     )
 }
 
-export function EntityJustificationModal() {
+export function EntityJustificationModal({
+    upUntilTime
+}: {
+    upUntilTime: Date | undefined
+}) {
     const remoteIdPersistent = useAppSelector(
         selectEntityJustificationHistoryForIdPersistent
     )
@@ -177,20 +181,29 @@ export function EntityJustificationModal() {
             </Modal.Header>
             <ModalBody className="vh-85 overflow-hide">
                 {idPersistent !== undefined && (
-                    <EntityJustificationBody idPersistent={idPersistent} />
+                    <EntityJustificationBody
+                        idPersistent={idPersistent}
+                        upUntilTime={upUntilTime}
+                    />
                 )}
             </ModalBody>
         </Modal>
     )
 }
-export function EntityJustificationBody({ idPersistent }: { idPersistent: string }) {
+export function EntityJustificationBody({
+    idPersistent,
+    upUntilTime
+}: {
+    idPersistent: string
+    upUntilTime: Date | undefined
+}) {
     const comments = useAppSelector(selectEntityJustificationHistory)
     const dispatch = useAppDispatch()
     const submitCommentCallback = (commentTxt: string) =>
         dispatch(submitEntityJustificationThunk(idPersistent, commentTxt))
     useEffect(() => {
         if (comments === undefined || !comments.isLoading) {
-            dispatch(loadEntityJustificationHistoryThunk(idPersistent))
+            dispatch(loadEntityJustificationHistoryThunk(idPersistent, upUntilTime))
         }
         return () => {
             dispatch(clearEntityJustificationHistory())
@@ -210,15 +223,15 @@ export function EntityJustificationBody({ idPersistent }: { idPersistent: string
         </Row>
     )
 }
-export function EntityDetailsModal() {
+export function EntityDetailsModal({ upUntilTime }: { upUntilTime: Date | undefined }) {
     const dispatch = useAppDispatch()
     const idEntityPersistent = useAppSelector(
         selectShowDetailsForEntityWithIdPersistent
     )
-    const showEntityMergingModal = idEntityPersistent !== undefined
+    const showEntityDetailsModal = idEntityPersistent !== undefined
     return (
         <Modal
-            show={showEntityMergingModal}
+            show={showEntityDetailsModal}
             onHide={() => dispatch(setShowDetailsForEntityWithIdPersistent(undefined))}
             size="xl"
             // fullscreen={true}
@@ -228,8 +241,8 @@ export function EntityDetailsModal() {
                 <Modal.Title>Entity Details</Modal.Title>
             </Modal.Header>
             <Modal.Body className="display-block vh-95">
-                {showEntityMergingModal ? (
-                    <EntityDetails idEntityPersistent={idEntityPersistent} />
+                {showEntityDetailsModal ? (
+                    <EntityDetails idEntityPersistent={idEntityPersistent} upUntilTime={upUntilTime} />
                 ) : (
                     <div />
                 )}
@@ -239,11 +252,13 @@ export function EntityDetailsModal() {
 }
 
 export function DisplayTextDetails({
-    idEntityPersistent
+    idEntityPersistent,
+    upUntilTime
 }: {
     idEntityPersistent: string
+    upUntilTime: Date|undefined
 }) {
-    const entity = useEntity(idEntityPersistent).value
+    const entity = useEntity(idEntityPersistent, upUntilTime).value
     let tooltipValue = 'Unknown entity'
     if (entity !== undefined) {
         const displayTxtDetails = entity.displayTxtDetails

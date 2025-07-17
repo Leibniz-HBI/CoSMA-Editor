@@ -7,6 +7,7 @@ export type JsonValue =
     | boolean
     | { [x: string]: JsonValue }
     | Array<JsonValue>
+    | undefined
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type SetFieldValue = (field: string, value: any, sholdValidate?: boolean) => void

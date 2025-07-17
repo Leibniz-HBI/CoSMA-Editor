@@ -65,7 +65,7 @@ test('add searched entity', async () => {
         ])
     })
     const state = store.getState()
-    expect(state.contributionEntity.entities.value[1]).toEqual(
+    expect(state.contributionEntity.entities?.value?.at(1)).toEqual(
         newEntityWithDuplicates({
             idPersistent: 'id-entity-1',
             displayTxt: 'entity 1',
@@ -151,7 +151,7 @@ export function renderWithProviders(
             columnSelection: newColumnSelectionState({}),
             entityDetails: newEntityDetailsState({
                 entityByIdPersistentMap: {
-                    [idEntitySearch0]: newRemote(
+                    [idEntitySearch0 + '@']: newRemote(
                         newEntity({
                             displayTxt: displayTxtSearch0,
                             idPersistent: idEntitySearch0,
@@ -160,7 +160,7 @@ export function renderWithProviders(
                             version: 70
                         })
                     ),
-                    [idEntitySearch1]: newRemote(
+                    [idEntitySearch1 + '@']: newRemote(
                         newEntity({
                             displayTxt: displayTxtSearch1,
                             idPersistent: idEntitySearch1,

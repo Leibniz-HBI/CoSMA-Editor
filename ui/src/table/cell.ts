@@ -121,11 +121,7 @@ export function createCellContentCallback({
         }
         const col = columnStates[col_idx]
         const column = columns[col_idx]
-        if (
-            col === undefined ||
-            column === undefined ||
-            column.value === undefined
-        ) {
+        if (col === undefined || column === undefined || column.value === undefined) {
             return emptyCell
         }
         if (col.cellContents.isLoading || column.isLoading) {

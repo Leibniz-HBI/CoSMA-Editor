@@ -169,3 +169,11 @@ export const makeSelectEntityByIdPersistent = () => {
     )
     return selector
 }
+
+export const selectHistorySinceEpoch = createSelector(
+    selectTableState,
+    (state) => state.historyDateSinceEpoch
+)
+export const selectHistoryDate = createSelector(selectHistorySinceEpoch, (state) =>
+    state === undefined ? undefined : new Date(state)
+)

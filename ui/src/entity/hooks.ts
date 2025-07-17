@@ -6,7 +6,7 @@ import { RootState } from '../store'
 import { getEntityThunk } from './thunks'
 import { makeSelectEntityByIdPersistent } from '../table/selectors'
 
-export function useEntity(idPersistent: string) {
+export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
     const selectEntityByIdPersistent = useMemo(makeSelectEntityByIdPersistent, [])
     const selectAuxiliaryEntityByIdPersistent = useMemo(
         makeSelectAuxiliaryEntityByIdPersistent,
@@ -15,7 +15,7 @@ export function useEntity(idPersistent: string) {
     const selectEntity = (state: RootState) =>
         selectEntityByIdPersistent(state, idPersistent)
     const selectAuxiliaryEntity = (state: RootState) =>
-        selectAuxiliaryEntityByIdPersistent(state, idPersistent)
+        selectAuxiliaryEntityByIdPersistent(state, idPersistent, upUntilTime)
     const entity = useAppSelector(selectEntity)
     const auxiliaryEntity = useAppSelector(selectAuxiliaryEntity)
     const dispatch = useAppDispatch()
@@ -26,7 +26,7 @@ export function useEntity(idPersistent: string) {
                 (auxiliaryEntity === undefined ||
                     (auxiliaryEntity.value === undefined && !auxiliaryEntity.isLoading))
             ) {
-                dispatch(getEntityThunk(idPersistent))
+                dispatch(getEntityThunk(idPersistent, upUntilTime))
             }
         },
         //eslint-disable-next-line react-hooks/exhaustive-deps

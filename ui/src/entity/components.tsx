@@ -118,14 +118,17 @@ export function AddEntityFormBody({
     )
 }
 
-export function EntityDetails({ idEntityPersistent }: { idEntityPersistent: string }) {
+export function EntityDetails({
+    idEntityPersistent,
+    upUntilTime
+}: {
+    idEntityPersistent: string
+    upUntilTime: Date | undefined
+}) {
     const dispatch = useAppDispatch()
-    useEffect(
-        () => {
-            dispatch(getEntityValuesThunk(idEntityPersistent))
-        },
-        [idEntityPersistent]
-    )
+    useEffect(() => {
+        dispatch(getEntityValuesThunk(idEntityPersistent, upUntilTime))
+    }, [idEntityPersistent])
     return <EntityDetailsComponent />
 }
 
@@ -291,7 +294,7 @@ export function EntitySearchResultItem({
     result: EntitySearchResult
     onSearchResultClicked: (idEntityPersistent: string) => void
 }) {
-    const entity = useEntity(result.idEntityPersistent)
+    const entity = useEntity(result.idEntityPersistent, undefined)
     return (
         <ListGroup.Item
             onClick={() => onSearchResultClicked(result.idEntityPersistent)}

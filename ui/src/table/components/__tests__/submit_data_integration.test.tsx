@@ -12,7 +12,7 @@ vi.mock('@glideapps/glide-data-grid', async () => {
         GridCellKind: actual.GridCellKind
     }
 })
-import { vi } from 'vitest'
+import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     Column,
@@ -148,11 +148,11 @@ test('edit display text success', async () => {
     ])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     const user = userEvent.setup()
-    await waitFor(() => {
-        const inputs = screen.getAllByRole('textbox')
+    const inputs = await waitFor(() => {
+        const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
         expect(inputs.length).toEqual(4)
+        return inputs
     })
-    const inputs = screen.getAllByRole('textbox')
     const input = inputs[2] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
@@ -197,11 +197,11 @@ test('edit display text error', async () => {
     addResponseSequence(fetchMock, [[500, { msg }]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     const user = userEvent.setup()
-    await waitFor(() => {
-        const inputs = screen.getAllByRole('textbox')
+    const inputs = await waitFor(() => {
+        const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
         expect(inputs.length).toEqual(4)
+        return inputs
     })
-    const inputs = screen.getAllByRole('textbox')
     const input = inputs[2] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
@@ -255,11 +255,11 @@ test('edit value success', async () => {
     ])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     const user = userEvent.setup()
-    await waitFor(() => {
-        const inputs = screen.getAllByRole('textbox')
+    const inputs = await waitFor(() => {
+        const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
         expect(inputs.length).toEqual(4)
+        return inputs
     })
-    const inputs = screen.getAllByRole('textbox')
     const input = inputs[1] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
@@ -306,11 +306,11 @@ test('edit value api msg error', async () => {
     addResponseSequence(fetchMock, [[500, { msg }]])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     const user = userEvent.setup()
-    await waitFor(() => {
-        const inputs = screen.getAllByRole('textbox')
+    const inputs = await waitFor(() => {
+        const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
         expect(inputs.length).toEqual(4)
+        return inputs
     })
-    const inputs = screen.getAllByRole('textbox')
     const input = inputs[1] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
@@ -365,11 +365,11 @@ test('edit value changed in backend', async () => {
     ])
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
     const user = userEvent.setup()
-    await waitFor(() => {
-        const inputs = screen.getAllByRole('textbox')
+    const inputs = await waitFor(() => {
+        const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
         expect(inputs.length).toEqual(4)
+        return inputs
     })
-    const inputs = screen.getAllByRole('textbox')
     const input = inputs[1] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
@@ -402,7 +402,7 @@ test('edit value changed in backend', async () => {
     expect(fetchMock.mock.calls.length).toEqual(4)
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: vi.mock, responses: [number, any][]) {
+function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         fetchMock.mockImplementationOnce(
@@ -459,7 +459,7 @@ const columnTest: Column = newColumn({
     version: 2,
     hidden: false
 })
-function addEntitiesResponse(fetchMock: vi.mock) {
+function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
@@ -478,7 +478,7 @@ const versionValue0 = 12
 const value0 = 'value 0',
     value1 = 'value 1',
     valueChanged = 'changed'
-function addValueResponse(fetchMock: vi.mock) {
+function addValueResponse(fetchMock: Mock) {
     const valueResponse = {
         id_entity_persistent: idPersistent0,
 
@@ -529,7 +529,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: vi.mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             notification: newNotificationManager({}),

@@ -17,18 +17,28 @@ import { parseEntityObjectFromJson } from '../table/thunks'
 import { EntityDetails, EntitySearchResult, newEntitySearchResult } from './state'
 import { parseValueFromJson } from '../contribution/entity/thunks'
 
-export function getEntityThunk(idEntityPersistent: string): ThunkWithFetch<void> {
+export function getEntityThunk(
+    idEntityPersistent: string,
+    upUntilTime: Date | undefined
+): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
-        dispatch(getEntityStart(idEntityPersistent))
+        const upUntilSinceEpoch = upUntilTime?.getTime()
+        dispatch(getEntityStart({ idEntityPersistent, upUntilSinceEpoch }))
         try {
-            const rsp = await fetch(
-                config.api_path + `/entities?id_persistent=${idEntityPersistent}`,
-                { credentials: 'include' }
-            )
+            const params: { [key: string]: string } = {
+                id_persistent: idEntityPersistent
+            }
+            if (upUntilTime !== undefined) {
+                params['up_until_time'] = upUntilTime.toISOString()
+            }
+            const queryPath = '/entities?' + new URLSearchParams(params)
+            const rsp = await fetch(config.api_path + queryPath, {
+                credentials: 'include'
+            })
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const details = parseEntityObjectFromJson(json)
-                dispatch(getEntitySuccess(details))
+                const entity = parseEntityObjectFromJson(json)
+                dispatch(getEntitySuccess({ entity, upUntilSinceEpoch }))
             } else {
                 dispatch(getEntityError(idEntityPersistent))
                 dispatch(addError(errorMessageFromApi(json)))
@@ -40,15 +50,24 @@ export function getEntityThunk(idEntityPersistent: string): ThunkWithFetch<void>
     }
 }
 
-export function getEntityValuesThunk(idEntityPersistent: string): ThunkWithFetch<void> {
+export function getEntityValuesThunk(
+    idEntityPersistent: string,
+    upUntilTime: Date | undefined
+): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(getEntityDetailsStart())
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/entities/values?id_persistent=${idEntityPersistent}`,
-                { credentials: 'include' }
-            )
+            const params: { [key: string]: string } = {
+                id_persistent: idEntityPersistent
+            }
+            if (upUntilTime !== undefined) {
+                params['up_until_time'] = upUntilTime.toISOString()
+            }
+
+            const queryPath = '/entities/values?' + new URLSearchParams(params)
+            const rsp = await fetch(config.api_path + queryPath, {
+                credentials: 'include'
+            })
             const json = await rsp.json()
             if (rsp.status == 200) {
                 const details = parseEntityDetailsFromApi(json)

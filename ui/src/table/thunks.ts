@@ -8,7 +8,7 @@ import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { constructColumnTitle } from '../contribution/entity/hooks'
 import { parseColumnsFromApi } from '../column_menu/thunks'
-import { ThunkWithFetch } from '../util/type'
+import { JsonValue, ThunkWithFetch } from '../util/type'
 import {
     Edit,
     appendColumn,
@@ -36,18 +36,25 @@ import { parseCommentFromApi } from '../comments/thunks'
 /**
  * Async action for fetching table data.
  */
-export function getTableAsync(): ThunkWithFetch<boolean> {
+export function getTableAsync(
+    upUntilTime: Date | undefined = undefined
+): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, fetch) => {
         dispatch(setEntityLoading())
         dispatch(setColumnLoading(displayTxtColumnId))
         try {
+            const payload: { [key: string]: JsonValue } = {}
+            if (upUntilTime !== undefined) {
+                payload['up_until_time'] = upUntilTime.toISOString()
+            }
             const entities: Entity[] = []
             for (let offset = 0; ; ) {
                 const rsp = await fetch_chunk({
                     api_path: config.api_path + '/entities/chunk',
                     offset,
                     limit: 500,
-                    fetchMethod: fetch
+                    fetchMethod: fetch,
+                    payload
                 })
                 if (rsp.status == 404) {
                     dispatch(setEntities([]))
@@ -91,7 +98,10 @@ export function getTableAsync(): ThunkWithFetch<boolean> {
     }
 }
 
-export function getColumnAsync(columnDefinition: Column): ThunkWithFetch<string[]> {
+export function getColumnAsync(
+    columnDefinition: Column,
+    upUntilTime: Date | undefined = undefined
+): ThunkWithFetch<string[]> {
     return async (dispatch, _getState, fetch) => {
         const id_persistent = columnDefinition.idPersistent
         if (id_persistent == justificationColumnId) {
@@ -123,6 +133,12 @@ export function getColumnAsync(columnDefinition: Column): ThunkWithFetch<string[
         const successList = []
         for (const idPersistent of idPersistentList) {
             dispatch(setColumnLoading(idPersistent))
+            const payload: { [key: string]: JsonValue } = {
+                id_column_persistent: idPersistent
+            }
+            if (upUntilTime !== undefined) {
+                payload['up_until_time'] = upUntilTime.toISOString()
+            }
             try {
                 const column_data: { [key: string]: CellValue[] } = {}
                 let offset = 0
@@ -131,9 +147,7 @@ export function getColumnAsync(columnDefinition: Column): ThunkWithFetch<string[
                         api_path: config.api_path + '/values/chunk',
                         offset,
                         limit: 5000,
-                        payload: {
-                            id_column_persistent: idPersistent
-                        },
+                        payload,
                         fetchMethod: fetch
                     })
                     if (rsp.status !== 200) {
@@ -316,13 +330,18 @@ export function entityChangeOrCreate({
 }
 
 export function loadEntityJustificationHistoryThunk(
-    idEntityPersistent: string
+    idEntityPersistent: string,
+    upUntilTime: Date | undefined = undefined
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(loadEntityJustificationHistoryStart())
         try {
+            let queryPath = `/entities/${idEntityPersistent}/justifications?`
+            if(upUntilTime !== undefined){
+                queryPath += new URLSearchParams({up_until_time: upUntilTime.toISOString()})
+            }
             const rsp = await fetch(
-                config.api_path + `/entities/${idEntityPersistent}/justifications`,
+                config.api_path + queryPath,
                 { credentials: 'include' }
             )
             const json = await rsp.json()

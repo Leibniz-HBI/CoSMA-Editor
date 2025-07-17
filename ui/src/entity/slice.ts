@@ -51,21 +51,34 @@ const slice = createSlice({
                 existing.isLoading = false
             }
         },
-        getEntityStart(state: EntityDetailsState, action: PayloadAction<string>) {
-            const existing = state.entityByIdPersistentMap[action.payload]
+        getEntityStart(
+            state: EntityDetailsState,
+            action: PayloadAction<{
+                idEntityPersistent: string
+                upUntilSinceEpoch: number | undefined
+            }>
+        ) {
+            const { idEntityPersistent, upUntilSinceEpoch } = action.payload
+            const keyWithDate =
+                idEntityPersistent + ('@' + (upUntilSinceEpoch?.toString() ?? ''))
+            const existing = state.entityByIdPersistentMap[keyWithDate]
             if (existing !== undefined) {
                 existing.isLoading = true
             } else {
-                state.entityByIdPersistentMap[action.payload] = newRemote(
-                    undefined,
-                    true
-                )
+                state.entityByIdPersistentMap[keyWithDate] = newRemote(undefined, true)
             }
         },
-        getEntitySuccess(state: EntityDetailsState, action: PayloadAction<Entity>) {
-            state.entityByIdPersistentMap[action.payload.idPersistent] = newRemote(
-                action.payload
-            )
+        getEntitySuccess(
+            state: EntityDetailsState,
+            action: PayloadAction<{
+                entity: Entity
+                upUntilSinceEpoch: number | undefined
+            }>
+        ) {
+            const { entity, upUntilSinceEpoch } = action.payload
+            state.entityByIdPersistentMap[
+                entity.idPersistent + ('@' + (upUntilSinceEpoch?.toString() ?? ''))
+            ] = newRemote(entity)
         }
     }
 })
