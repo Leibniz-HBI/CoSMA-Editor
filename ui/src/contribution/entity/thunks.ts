@@ -44,12 +44,12 @@ export function getContributionEntitiesAction(
             dispatch(getContributionEntitiesStart())
             try {
                 let entities: EntityWithDuplicates[] = []
-                for (let i = 0; ; i += 500) {
+                for (let offset = 0; ;) {
                     const rsp = await fetch_chunk_get({
                         api_path:
                             config.api_path +
                             `/contributions/${idContributionPersistent}/entities/chunk`,
-                        offset: i,
+                        offset: offset,
                         limit: 500,
                         fetchMethod: fetch
                     })
@@ -68,6 +68,7 @@ export function getContributionEntitiesAction(
                             dispatch(getContributionEntitiesSuccess(entities))
                             return entities
                         }
+                        offset = json['next_offset']
                     } else {
                         dispatch(getContributionEntitiesError())
                         dispatch(addError(json.msg))

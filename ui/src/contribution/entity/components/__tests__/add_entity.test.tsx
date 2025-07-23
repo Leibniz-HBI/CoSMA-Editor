@@ -269,8 +269,8 @@ const idColumn1 = 'id-column-test-1'
 const nameColumn1 = 'column def 1'
 function initialResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: personList }],
-        [200, { entity_list: [] }],
+        [200, { entity_list: personList, next_offset: 500 }],
+        [200, { entity_list: [], next_offset: -1 }],
         [
             200,
             {
