@@ -6,7 +6,10 @@ SCORED_SINGLE_PAIR_PREFIX = """
 			from(
 				select "id" "existing_id"
                     , "id_persistent" "existing_id_persistent"
-                    , "display_txt" "existing_display_txt"
+                    , (case when "display_txt" is not null
+							then "display_txt"
+							else ''
+						end ) "existing_display_txt"
 				from cosmae_entity "entity_existing"
 	        	where not disabled
 					and contribution_candidate_id is null
@@ -15,7 +18,10 @@ SCORED_SINGLE_PAIR_PREFIX = """
             cross join (
                 select "id" "contribution_id"
                     , "id_persistent" "contribution_id_persistent"
-                    , "display_txt" "contribution_display_txt"
+                    , (case when "display_txt" is not null
+							then "display_txt"
+							else ''
+						end ) "contribution_display_txt"
                     , "disabled" "contribution_disabled"
                     , "previous_version_id" "contribution_previous_version_id"
                     , "contribution_candidate_id" "contribution_contribution_candidate_id"
@@ -25,25 +31,18 @@ SCORED_SINGLE_PAIR_PREFIX = """
                     and "id_persistent" =  %(id_entity_contribution_persistent)s
             ) contribution
 		),
-		"with_levenshtein" as (
+				"with_levenshtein" as (
 			select existing_id_persistent, contribution_id_persistent
-                , (
-					(1-levenshtein(
-						(case when "existing_display_txt" is not null
-							then "existing_display_txt"
-							else ''
-							end ),
-						(
-							case when "contribution_display_txt" is not null
-								then "contribution_display_txt"
-								else ''
-								end
-						)
-                    )/GREATEST(
-						length("contribution_display_txt"),
-						length("existing_display_txt")
-					)::float
-                   	)
+                , (1-(
+                	LEAST(
+						levenshtein(
+							"existing_display_txt",
+							"contribution_display_txt"
+						),
+						ceiling(
+							0.25*length("contribution_display_txt")
+						)::int
+                    )::float/length("contribution_display_txt"))
                 ) "levenshtein_similarity"
 			from entity_pairs with_similarity
 		),
