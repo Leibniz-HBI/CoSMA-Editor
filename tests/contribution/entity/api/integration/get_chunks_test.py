@@ -24,7 +24,7 @@ def test_no_entities(auth_server, contribution_candidate):
         live_server.url, contribution_candidate.id_persistent, 0, 2, cookies
     )
     assert rsp.status_code == 200
-    assert rsp.json() == {"entity_list": []}
+    assert rsp.json() == {"entity_list": [], "next_offset": -1}
 
 
 def test_get_chunk(auth_server, contribution_candidate, entities):
@@ -45,6 +45,7 @@ def test_get_chunk(auth_server, contribution_candidate, entities):
                     "disabled": False,
                     "justification_txt": None,
                 }
-            ]
+            ],
+            "next_offset": entities[-2].id + 1,
         },
     )

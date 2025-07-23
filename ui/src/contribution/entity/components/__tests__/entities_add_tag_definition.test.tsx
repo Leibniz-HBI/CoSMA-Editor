@@ -169,8 +169,8 @@ const idColumn1 = 'id-column-test-1'
 const nameColumn1 = 'column def 1'
 function initialResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: personList }],
-        [200, { entity_list: [] }],
+        [200, { entity_list: personList, next_offset: 500 }],
+        [200, { entity_list: [], next_offset: -1 }],
         [
             200,
             {
@@ -234,8 +234,8 @@ test('add column values', async () => {
     await waitFor(() => {
         const state = store.getState().contributionEntity
         for (let idx = 0; idx < 50; ++idx) {
-            const entity = state.entities.value[idx]
-            expect(entity.cellContents).toEqual([
+            const entity = state.entities.value?.at(idx)
+            expect(entity?.cellContents).toEqual([
                 newRemote([
                     {
                         isExisting: false,
@@ -255,12 +255,12 @@ test('add column values', async () => {
                     }
                 ])
             ])
-            expect(entity.similarEntities).toEqual(
+            expect(entity?.similarEntities).toEqual(
                 newRemote([
                     newScoredEntity({
-                        displayTxt: entity.displayTxt + ` match 0`,
+                        displayTxt: entity?.displayTxt + ` match 0`,
                         displayTxtDetails: 'display_txt_detail',
-                        idPersistent: entity.idPersistent + '-0',
+                        idPersistent: entity?.idPersistent + '-0',
                         version: 0,
                         similarity: idx / 100,
                         cellContents: [
@@ -285,8 +285,8 @@ test('add column values', async () => {
                         ]
                     }),
                     newScoredEntity({
-                        displayTxt: entity.displayTxt + ` match 1`,
-                        idPersistent: entity.idPersistent + '-1',
+                        displayTxt: entity?.displayTxt + ` match 1`,
+                        idPersistent: entity?.idPersistent + '-1',
                         displayTxtDetails: 'display_txt_detail',
                         version: 0,
                         similarity: idx / 100 + 0.001,
@@ -315,23 +315,23 @@ test('add column values', async () => {
             )
         }
         for (let idx = 50; idx < 60; ++idx) {
-            const entity = state.entities.value[idx]
-            expect(entity.cellContents[0]).toEqual(newRemote([]))
-            expect(entity.similarEntities).toEqual(
+            const entity = state.entities.value?.at(idx)
+            expect(entity?.cellContents[0]).toEqual(newRemote([]))
+            expect(entity?.similarEntities).toEqual(
                 newRemote([
                     newScoredEntity({
-                        displayTxt: entity.displayTxt + ` match 0`,
+                        displayTxt: entity?.displayTxt + ` match 0`,
                         displayTxtDetails: 'display_txt_detail',
-                        idPersistent: entity.idPersistent + '-0',
+                        idPersistent: entity?.idPersistent + '-0',
                         version: 0,
                         similarity: (idx - 50) / 100.0,
                         idMatchColumnPersistentList: [],
                         cellContents: [newRemote([]), newRemote([])]
                     }),
                     newScoredEntity({
-                        displayTxt: entity.displayTxt + ` match 1`,
+                        displayTxt: entity?.displayTxt + ` match 1`,
                         displayTxtDetails: 'display_txt_detail',
-                        idPersistent: entity.idPersistent + '-1',
+                        idPersistent: entity?.idPersistent + '-1',
                         version: 0,
                         similarity: (idx - 50) / 100.0 + 0.001,
                         idMatchColumnPersistentList: [],
@@ -363,7 +363,7 @@ test('remove values', async () => {
             const state = store.getState()
             expect(state.contributionEntity.columnList.length).toEqual(0)
             expect(state.contributionEntity.columnMap).toEqual({})
-            for (const entity of state.contributionEntity.entities.value) {
+            for (const entity of state.contributionEntity.entities.value ?? []) {
                 expect(entity.cellContents.length).toEqual(0)
                 for (const match of entity.similarEntities.value) {
                     expect(match.cellContents.length).toEqual(0)

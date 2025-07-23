@@ -17,7 +17,7 @@ from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.api import (
     Entity,
-    EntityWithJustificationList,
+    EntityWithJustificationOffsetList,
     entity_db_dict_to_api,
     entity_db_to_api,
 )
@@ -83,7 +83,7 @@ empty_match = ScoredMatchesWithDuplicateAssignment(assigned_duplicate=None, matc
 @router.get(
     "chunk/{start}/{offset}",
     response={
-        200: EntityWithJustificationList,
+        200: EntityWithJustificationOffsetList,
         401: ApiError,
         404: ApiError,
         500: ApiError,
@@ -106,8 +106,13 @@ def get_entities(request: HttpRequest, start: int, offset: int):
         entities_db = candidate.get_entities_chunked(
             start, offset
         ).annotate_justification()
-        return 200, EntityWithJustificationList(
-            entity_list=[entity_db_to_api(person) for person in entities_db]
+        next_offset = -2
+        entity_list_api = []
+        for person in entities_db:
+            entity_list_api.append(entity_db_to_api(person))
+            next_offset = max(next_offset, person.id)
+        return 200, EntityWithJustificationOffsetList(
+            entity_list=entity_list_api, next_offset=next_offset + 1
         )
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
@@ -159,7 +164,7 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
         return 200, ScoredMatchResponse(matches=scored_matches)
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
-    except IndexError:  # pylint: disable=no-member
+    except IndexError:
         return 404, ApiError(msg="Entity does not exist.")
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)

@@ -232,8 +232,8 @@ function initialResponses(
     numIncludedMatches: number
 ) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: personList }],
-        [200, { entity_list: [] }],
+        [200, { entity_list: personList, next_offset: 500 }],
+        [200, { entity_list: [], next_offset: -1 }],
         [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, numIncludedMatches)) }]
     ])
@@ -304,7 +304,7 @@ test('merge with existing', async () => {
     })
     await waitFor(() => {
         const state = store.getState().contributionEntity
-        expect(state.entities.value[1].assignedDuplicate).toEqual(
+        expect(state.entities.value?.at(1)?.assignedDuplicate).toEqual(
             newRemote(
                 newScoredEntity({
                     similarity: 0.8,
@@ -319,7 +319,7 @@ test('merge with existing', async () => {
     })
     await waitFor(() => {
         const state = store.getState().contributionEntity
-        expect(state.entities.value[2].assignedDuplicate).toEqual(
+        expect(state.entities.value?.at(2)?.assignedDuplicate).toEqual(
             newRemote(
                 newScoredEntity({
                     similarity: 0.9,
@@ -355,7 +355,7 @@ test('merge with existing', async () => {
     })
     await waitFor(() => {
         const state = store.getState().contributionEntity
-        expect(state.entities.value[3].assignedDuplicate).toEqual(newRemote(undefined))
+        expect(state.entities.value?.at(3)?.assignedDuplicate).toEqual(newRemote(undefined))
     })
     expect(fetchMock.mock.calls.at(-1)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-3/duplicate`,

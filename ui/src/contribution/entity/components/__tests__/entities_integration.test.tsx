@@ -164,8 +164,8 @@ function mkMatches(
 }
 function initialResponses(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
-        [200, { entity_list: entityList }],
-        [200, { entity_list: [] }],
+        [200, { entity_list: entityList, next_offset: 500 }],
+        [200, { entity_list: [], next_offset: -1 }],
         [
             200,
             {
@@ -194,7 +194,7 @@ test('get duplicates', async () => {
     await waitFor(() => {
         screen.getByText('entity-1')
         expect(
-            store.getState().contributionEntity.entities.value[0].similarEntities
+            store.getState().contributionEntity.entities.value?.at(0)?.similarEntities
                 .isLoading
         ).toEqual(false)
     })
@@ -207,14 +207,14 @@ test('get duplicates', async () => {
         expect(mockElements.length).toEqual(1)
         for (let idx = 0; idx < 60; ++idx) {
             expect(
-                store.getState().contributionEntity.entities.value[idx].similarEntities
-                    .value.length
+                store.getState().contributionEntity.entities.value?.at(idx)
+                    ?.similarEntities.value.length
             ).toEqual(2)
         }
         expect(
             store
                 .getState()
-                .contributionEntity.entities.value.filter(
+                .contributionEntity.entities.value?.filter(
                     (entity) => entity.similarEntities.isLoading == true
                 ).length
         ).toEqual(0)
