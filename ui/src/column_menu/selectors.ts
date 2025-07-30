@@ -2,6 +2,7 @@ import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../store'
 import { Column, ColumnIdHierarchyNode } from './state'
 import { RemoteInterface } from '../util/state'
+import { mkUpUntilDateColumnId } from '../util/misc'
 
 function selectColumnSelection(state: RootState) {
     return state.columnSelection
@@ -34,8 +35,15 @@ const selectColumnByIdPersistentMap = createSelector(
 
 export const makeSelectColumnByIdPersistent = () => {
     const selector = createSelector(
-        [selectColumnByIdPersistentMap, (_state, idPersistent: string) => idPersistent],
-        (state, idPersistent) => state[idPersistent]
+        [
+            selectColumnByIdPersistentMap,
+            (_state, idPersistent: string, upUntilDate: Date | undefined) => ({
+                idPersistent,
+                upUntilDate
+            })
+        ],
+        (state, keyParts) =>
+            state[mkUpUntilDateColumnId(keyParts.idPersistent, keyParts.upUntilDate)]
     )
     return selector
 }
@@ -44,10 +52,16 @@ export const makeSelectColumnByIdPersistentList = () => {
     const selector = createSelector(
         [
             selectColumnByIdPersistentMap,
-            (_state, idPersistentList: string[]) => idPersistentList
+            (_state, idPersistentList: string[], upUntilTime: Date | undefined) => ({
+                idPersistentList,
+                upUntilTime
+            })
         ],
-        (state, idPersistentList) =>
-            idPersistentList.map((idPersistent: string) => state[idPersistent])
+        (state, args) =>
+            args.idPersistentList.map(
+                (idPersistent: string) =>
+                    state[mkUpUntilDateColumnId(idPersistent, args.upUntilTime)]
+            )
     )
     return selector
 }
@@ -81,9 +95,10 @@ export function newColumnIdHierarchyNode({
 
 function addColumnToHierarchy(
     columnByIdPersistentMap: {
-        [key: string]: RemoteInterface<Column| undefined>
+        [key: string]: RemoteInterface<Column | undefined>
     },
-    columnHierarchyNodeList: ColumnIdHierarchyNode[]
+    columnHierarchyNodeList: ColumnIdHierarchyNode[],
+    upUntilDate: Date | undefined
 ): ColumnHierarchyNode[] {
     const ret: ColumnHierarchyNode[] = []
     const queue: {
@@ -100,8 +115,9 @@ function addColumnToHierarchy(
             const childTargetArray: ColumnHierarchyNode[] = []
             targetArray.push({
                 ...node,
-                column:
-                    columnByIdPersistentMap[node.idColumnPersistent],
+                column: columnByIdPersistentMap[
+                    mkUpUntilDateColumnId(node.idColumnPersistent, upUntilDate)
+                ],
                 children: childTargetArray
             })
             for (let idx = node.children.length - 1; idx >= 0; idx--) {
@@ -113,11 +129,16 @@ function addColumnToHierarchy(
 }
 
 export const selectColumnHierarchy = createSelector(
-    [selectColumnByIdPersistentMap, selectNavigationEntries],
+    [
+        selectColumnByIdPersistentMap,
+        selectNavigationEntries,
+        (_state: RootState, upUntilDate: Date | undefined) => upUntilDate
+    ],
     (
         columnsByIdPersistent: {
             [key: string]: RemoteInterface<Column | undefined>
         },
-        hierarchy: ColumnIdHierarchyNode[]
-    ) => addColumnToHierarchy(columnsByIdPersistent, hierarchy)
+        hierarchy: ColumnIdHierarchyNode[],
+        upUntilDate: Date | undefined
+    ) => addColumnToHierarchy(columnsByIdPersistent, hierarchy, upUntilDate)
 )

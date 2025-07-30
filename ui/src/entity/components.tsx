@@ -129,10 +129,10 @@ export function EntityDetails({
     useEffect(() => {
         dispatch(getEntityValuesThunk(idEntityPersistent, upUntilTime))
     }, [idEntityPersistent])
-    return <EntityDetailsComponent />
+    return <EntityDetailsComponent upUntilTime={upUntilTime} />
 }
 
-function EntityDetailsComponent() {
+function EntityDetailsComponent({ upUntilTime }: { upUntilTime: Date | undefined }) {
     const entityDetails = useAppSelector(selectEntityDetails)
     if (!entityDetails.value) {
         return <Spinner />
@@ -146,6 +146,7 @@ function EntityDetailsComponent() {
                     value={instance.cellValue.value?.toString() ?? ''}
                     alternateBackground={idx % 2 == 0}
                     key={idx}
+                    upUntilTime={upUntilTime}
                 />
             ))}
         </Col>
@@ -164,13 +165,15 @@ function DisplayTextComponent({ entity }: { entity: Entity }) {
 function ValueComponent({
     idColumnPersistent,
     value,
-    alternateBackground
+    alternateBackground,
+    upUntilTime
 }: {
     idColumnPersistent: string
     value: string
     alternateBackground?: boolean
+    upUntilTime: Date | undefined
 }) {
-    const column = useColumn(idColumnPersistent)
+    const column = useColumn(idColumnPersistent, upUntilTime)
     let colorClass = ''
     if (alternateBackground) {
         colorClass = ' bg-primary-subtle'

@@ -16,23 +16,24 @@ export function ColumnMenu({
     additionalEntries = [],
     additionalIndices = {},
     loadColumnDataCallback,
-    hideColumnDataCallback
+    hideColumnDataCallback,
+    upUntilDate = undefined
 }: {
     columnIndices: { [key: string]: number }
     additionalEntries?: { idPersistent: string; name: string }[]
     additionalIndices?: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: Column) => void
     hideColumnDataCallback: (columnDefinition: Column) => void
+    upUntilDate?: Date | undefined
 }) {
     const isLoading = useSelector(selectColumnSelectionLoading)
     const dispatch: AppDispatch = useDispatch()
     useEffect(
         () => {
             if (!isLoading) {
-                dispatch(loadColumnHierarchy({ expand: true }))
+                dispatch(loadColumnHierarchy({ expand: true, upUntilDate }))
             }
         },
-        //eslint-disable-next-line
         [dispatch]
     )
     return (
@@ -42,6 +43,7 @@ export function ColumnMenu({
             hideColumnDataCallback={hideColumnDataCallback}
             additionalEntries={additionalEntries}
             additionalIndices={additionalIndices}
+            upUntilDate={upUntilDate}
         />
     )
 }
@@ -51,16 +53,31 @@ export function ColumnMenuBody({
     additionalEntries = [],
     additionalIndices = {},
     loadColumnDataCallback,
-    hideColumnDataCallback
+    hideColumnDataCallback,
+    upUntilDate
 }: {
     columnIndices: { [key: string]: number }
     additionalEntries?: { idPersistent: string; name: string }[]
     additionalIndices?: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: Column) => void
     hideColumnDataCallback: (columnDefinition: Column) => void
+    upUntilDate: Date | undefined
 }) {
     const isLoading = useAppSelector(selectColumnSelectionLoading)
 
+    const showTabBody = (
+        <ShowTabBody
+            additionalIndices={additionalIndices}
+            columnIndices={columnIndices}
+            loadColumnDataCallback={loadColumnDataCallback}
+            hideColumnDataCallback={hideColumnDataCallback}
+            additionalEntries={additionalEntries}
+            upUntilDate={upUntilDate}
+        />
+    )
+    if (upUntilDate !== undefined) {
+        return showTabBody
+    }
     return (
         <>
             <TabView
@@ -68,15 +85,7 @@ export function ColumnMenuBody({
                 tabList={[
                     {
                         name: 'Load',
-                        component: (
-                            <ShowTabBody
-                                additionalIndices={additionalIndices}
-                                columnIndices={columnIndices}
-                                loadColumnDataCallback={loadColumnDataCallback}
-                                hideColumnDataCallback={hideColumnDataCallback}
-                                additionalEntries={additionalEntries}
-                            />
-                        )
+                        component: showTabBody
                     },
                     {
                         name: 'Create',
@@ -137,18 +146,21 @@ function ShowTabBody({
     additionalEntries,
     additionalIndices,
     loadColumnDataCallback,
-    hideColumnDataCallback
+    hideColumnDataCallback,
+    upUntilDate
 }: {
     columnIndices: { [key: string]: number }
     additionalEntries: { idPersistent: string; name: string }[]
     additionalIndices: { [key: string]: number }
     loadColumnDataCallback: (columnDefinition: Column) => void
     hideColumnDataCallback: (columnDefinition: Column) => void
+    upUntilDate: Date | undefined
 }) {
     return (
         <div className="ps-2 pe-2 d-contents overflow-hidden">
             <ColumnSelector
                 additionalEntries={additionalEntries}
+                upUntilDate={upUntilDate}
                 mkTailElement={(columnDefinition: Column) => {
                     const isDisplayedInTable =
                         columnIndices[columnDefinition.idPersistent] !== undefined ||

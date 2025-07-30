@@ -2,7 +2,7 @@ import { addError, addSuccessVanish } from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { Column, ColumnType, newColumn } from './state'
 import { config } from '../config'
-import { ThunkWithFetch } from '../util/type'
+import { JsonValue, ThunkWithFetch } from '../util/type'
 import {
     changeParentSuccess,
     curateColumnSuccess,
@@ -24,24 +24,32 @@ export function loadColumnHierarchy({
     idParentPersistent = undefined,
     expand = false,
     indexPath = [],
-    namePath = []
+    namePath = [],
+    upUntilDate = undefined
 }: {
     idParentPersistent?: string
     expand?: boolean
     indexPath?: number[]
     namePath?: string[]
+    upUntilDate?: Date | undefined
 }): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         dispatch(loadColumnHierarchyStart(idParentPersistent))
         const columns: Column[] = []
         try {
+            const body: { [key: string]: JsonValue } = {
+                id_parent_persistent: idParentPersistent
+            }
+            if (upUntilDate !== undefined) {
+                body['up_until_time'] = upUntilDate.toISOString()
+            }
             const rsp = await fetch(config.api_path + '/columns/children', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id_parent_persistent: idParentPersistent })
+                body: JSON.stringify(body)
             })
             const json = await rsp.json()
             if (rsp.status != 200) {
@@ -55,17 +63,15 @@ export function loadColumnHierarchy({
             }
             const columnsApi = json['column_list']
             for (const columnApi of columnsApi) {
-                const columnDefinition = parseColumnsFromApi(
-                    columnApi,
-                    namePath
-                )
+                const columnDefinition = parseColumnsFromApi(columnApi, namePath)
                 columns.push(columnDefinition)
             }
             dispatch(
                 loadColumnHierarchySuccess({
                     entries: columns,
                     path: indexPath,
-                    forceExpand: expand
+                    forceExpand: expand,
+                    upUntilSinceEpoch: upUntilDate?.getTime()
                 })
             )
             const promises: Promise<void>[] = []
@@ -75,7 +81,8 @@ export function loadColumnHierarchy({
                         idParentPersistent: entry.idPersistent,
                         indexPath: [...indexPath, index],
                         namePath: entry.namePath,
-                        expand: false
+                        expand: false,
+                        upUntilDate
                     })(dispatch, _getState, fetch)
                 )
             })
@@ -212,31 +219,75 @@ export function changeColumnParent({
     }
 }
 export function getColumnDetailsThunk(
-    idPersistentList: string[]
+    idPersistentList: string[],
+    upUntilDate: Date | undefined = undefined
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, fetch) => {
         if (idPersistentList.length == 0) {
             return
         }
-        dispatch(getColumnDetailsStart(idPersistentList))
+        dispatch(
+            getColumnDetailsStart({
+                idPersistentList,
+                upUntilSinceEpoch: upUntilDate?.getTime()
+            })
+        )
         try {
+            const body: { [key: string]: JsonValue } = {
+                id_persistent_list: idPersistentList
+            }
+            if (upUntilDate !== undefined) {
+                body['up_until_time'] = upUntilDate.toISOString()
+            }
             const rsp = await fetch(config.api_path + '/columns/details', {
                 credentials: 'include',
                 method: 'POST',
-                body: JSON.stringify({ id_persistent_list: idPersistentList })
+                body: JSON.stringify(body)
             })
             const json = await rsp.json()
             if (rsp.status == 200) {
-                const columnList = json['column_list'].map((json: unknown) =>
-                    parseColumnsFromApi(json)
+                const requestedIdSet = new Set<string>(idPersistentList)
+                const columnList: Column[] = []
+                json['column_list'].forEach((json: unknown) => {
+                    const column = parseColumnsFromApi(json)
+                    requestedIdSet.delete(column.idPersistent)
+                    columnList.push(column)
+                })
+                requestedIdSet.forEach((idPersistent: string) => {
+                    columnList.push(
+                        newColumn({
+                            idPersistent,
+                            namePath: ['Does not exist in version'],
+                            columnType: ColumnType.String,
+                            curated: false,
+                            disabled: true,
+                            hidden: true,
+                            version: -1
+                        })
+                    )
+                })
+                dispatch(
+                    getColumnDetailsSuccess({
+                        columnList,
+                        upUntilSinceEpoch: upUntilDate?.getTime()
+                    })
                 )
-                dispatch(getColumnDetailsSuccess(columnList))
             } else {
-                dispatch(getColumnDetailsError(idPersistentList))
+                dispatch(
+                    getColumnDetailsError({
+                        idPersistentList,
+                        upUntilSinceEpoch: upUntilDate?.getTime()
+                    })
+                )
                 dispatch(addError(errorMessageFromApi(json)))
             }
         } catch (e: unknown) {
-            dispatch(getColumnDetailsError(idPersistentList))
+            dispatch(
+                getColumnDetailsError({
+                    idPersistentList,
+                    upUntilSinceEpoch: upUntilDate?.getTime()
+                })
+            )
             dispatch(addError(exceptionMessage(e)))
         }
     }
@@ -278,8 +329,7 @@ export function curateAsync(idColumnPersistent: string): ThunkWithFetch<void> {
         dispatch(curateColumnStart())
         try {
             const rsp = await fetch(
-                config.api_path +
-                    `/columns/permissions/${idColumnPersistent}/curate`,
+                config.api_path + `/columns/permissions/${idColumnPersistent}/curate`,
                 {
                     credentials: 'include',
                     method: 'POST'
@@ -313,8 +363,7 @@ export function parseColumnsFromApi(
     columnApi: any,
     parentNamePath?: string[]
 ): Column {
-    const columnType =
-        columnTypeMapApiToApp.get(columnApi['type']) ?? ColumnType.String
+    const columnType = columnTypeMapApiToApp.get(columnApi['type']) ?? ColumnType.String
     let namePath
     if (parentNamePath === undefined) {
         namePath = columnApi['name_path']

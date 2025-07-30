@@ -34,9 +34,9 @@ export const makeSelectAuxiliaryEntityByIdPersistent = () => {
     const selector = createSelector(
         [
             selectEntityByIdPersistentMap,
-            (_state, idPersistent: string, upUntilTimeSinceEpoch: Date | undefined) => [
+            (_state, idPersistent: string, upUntilTime: Date | undefined) => [
                 idPersistent,
-                upUntilTimeSinceEpoch?.getTime()?.toString() ?? ''
+                upUntilTime?.getTime()?.toString() ?? ''
             ]
         ],
         (state, keyTuple) => state[keyTuple[0] + ('@' + keyTuple[1])]

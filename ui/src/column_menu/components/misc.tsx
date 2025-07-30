@@ -18,11 +18,13 @@ export function ColumnAddButton(props: any) {
 }
 
 export function ColumnNamePathFromId({
-    idColumnPersistent
+    idColumnPersistent,
+    upUntilTime = undefined
 }: {
     idColumnPersistent: string
+    upUntilTime?: Date | undefined
 }) {
-    const column = useColumn(idColumnPersistent)
+    const column = useColumn(idColumnPersistent, upUntilTime)
     if (column.isLoading) {
         return <ProgressBar animated={true} />
     }
@@ -32,11 +34,7 @@ export function ColumnNamePathFromId({
     return <ColumnNamePath column={column.value} />
 }
 
-export function ColumnNamePath({
-    column
-}: {
-    column: Column
-}) {
+export function ColumnNamePath({ column }: { column: Column }) {
     const allSpans = constructFullColumnTitleSpans(column.namePath)
     const partialSpans =
         allSpans.length > 3

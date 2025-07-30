@@ -139,6 +139,7 @@ export function ColumnModal({
                             }
                         )
                     }
+                    upUntilDate={upUntilDate}
                     hideColumnDataCallback={(columnDefinition: Column) =>
                         dispatch(
                             remoteUserProfileColumnDeleteAsync(
@@ -208,7 +209,6 @@ export function EntityJustificationBody({
         return () => {
             dispatch(clearEntityJustificationHistory())
         }
-        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idPersistent])
     return (
         <Row className="h-100 overflow-y-hide">
@@ -242,7 +242,10 @@ export function EntityDetailsModal({ upUntilTime }: { upUntilTime: Date | undefi
             </Modal.Header>
             <Modal.Body className="display-block vh-95">
                 {showEntityDetailsModal ? (
-                    <EntityDetails idEntityPersistent={idEntityPersistent} upUntilTime={upUntilTime} />
+                    <EntityDetails
+                        idEntityPersistent={idEntityPersistent}
+                        upUntilTime={upUntilTime}
+                    />
                 ) : (
                     <div />
                 )}
@@ -256,7 +259,7 @@ export function DisplayTextDetails({
     upUntilTime
 }: {
     idEntityPersistent: string
-    upUntilTime: Date|undefined
+    upUntilTime: Date | undefined
 }) {
     const entity = useEntity(idEntityPersistent, upUntilTime).value
     let tooltipValue = 'Unknown entity'

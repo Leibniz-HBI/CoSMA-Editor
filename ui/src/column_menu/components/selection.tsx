@@ -33,13 +33,17 @@ import { ColumnNamePath } from './misc'
 export function ColumnSelector({
     mkTailElement,
     additionalEntries = [],
-    allowEdit = true
+    allowEdit = true,
+    upUntilDate
 }: {
     mkTailElement: (def: Column) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
     allowEdit?: boolean
+    upUntilDate?: Date | undefined
 }) {
-    const columnHierarchy = useAppSelector(selectColumnHierarchy)
+    const columnHierarchy = useAppSelector((state) =>
+        selectColumnHierarchy(state, upUntilDate)
+    )
     const dispatch = useAppDispatch()
     const toggleExpansionCallback = (path: number[]) => dispatch(toggleExpansion(path))
     const setEditColumnCallback = allowEdit
@@ -103,7 +107,7 @@ export function ColumnSelector({
                         changeParentCallback,
                         dragColumnStartCallback,
                         dragColumnEndCallback,
-                        allowEdit
+                        allowEdit,
                     })}
                 </ListGroup>
             </Row>
@@ -260,10 +264,7 @@ export function ColumnExplorerItem({
             role="button"
             draggable={dragColumnStartCallback !== undefined}
             onDragStart={(event) => {
-                event.dataTransfer.setData(
-                    'column',
-                    JSON.stringify(column)
-                )
+                event.dataTransfer.setData('column', JSON.stringify(column))
                 event.dataTransfer.setData('path', JSON.stringify(path))
                 dragColumnStartCallback?.()
             }}
@@ -295,9 +296,12 @@ export function ColumnExplorerItem({
             >
                 <div className="d-flex flex-row justify-content-start">
                     <Col xs="auto">
-                        {Array.from({ length: level }, (value: number, idx: number) => (
-                            <span className="indent" key={`indent-${idx}`} />
-                        ))}
+                        {Array.from(
+                            { length: level },
+                            (_value: number, idx: number) => (
+                                <span className="indent" key={`indent-${idx}`} />
+                            )
+                        )}
                         <ColumnExplorerExpandIcon
                             isLoading={columnNode.column.isLoading}
                             isExpandable={expandable}
@@ -344,7 +348,7 @@ export function mkListItems(args: {
     allowEdit: boolean
 }): ReactElement[] {
     const {
-        columnSelectionEntries: columnSelectionEntries,
+        columnSelectionEntries,
         path,
         toggleExpansionCallback,
         expansionGroup,
@@ -388,33 +392,31 @@ export function mkListItems(args: {
             ...mkListItems({ ...args, level: 0, additionalEntries: undefined })
         ]
     }
-    return columnSelectionEntries.flatMap(
-        (entry: ColumnHierarchyNode, idx: number) => {
-            const newPath = [...path, idx]
-            const item = ColumnExplorerItem({
-                columnNode: entry,
-                path: newPath,
-                toggleExpansionCallback: toggleExpansionCallback,
-                expansionGroup: expansionGroup,
-                level: level,
-                mkTailElement: mkTailElement,
-                startEditCallback,
-                changeParentCallback,
-                dragColumnStartCallback,
-                dragColumnEndCallback
-            })
-            if (entry.isExpanded) {
-                return [
-                    item,
-                    ...mkListItems({
-                        ...args,
-                        columnSelectionEntries: entry.children,
-                        level: level + 1,
-                        path: newPath
-                    })
-                ]
-            }
-            return [item]
+    return columnSelectionEntries.flatMap((entry: ColumnHierarchyNode, idx: number) => {
+        const newPath = [...path, idx]
+        const item = ColumnExplorerItem({
+            columnNode: entry,
+            path: newPath,
+            toggleExpansionCallback: toggleExpansionCallback,
+            expansionGroup: expansionGroup,
+            level: level,
+            mkTailElement: mkTailElement,
+            startEditCallback,
+            changeParentCallback,
+            dragColumnStartCallback,
+            dragColumnEndCallback,
+        })
+        if (entry.isExpanded) {
+            return [
+                item,
+                ...mkListItems({
+                    ...args,
+                    columnSelectionEntries: entry.children,
+                    level: level + 1,
+                    path: newPath
+                })
+            ]
         }
-    )
+        return [item]
+    })
 }

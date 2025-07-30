@@ -171,24 +171,26 @@ export function AddColumnsModal({
             </Modal.Header>
             <Modal.Body className="vh-85 bg-secondary">
                 <ColumnMenuBody
+                    upUntilDate={undefined}
                     hideColumnDataCallback={(column) => {
-                        dispatch(removeAdditionalColumnByIdPersistent(column.idPersistent))
+                        dispatch(
+                            removeAdditionalColumnByIdPersistent(column.idPersistent)
+                        )
                     }}
                     loadColumnDataCallback={(column) => {
                         const chunkSize = 50
+                        const endIdx = entities.value?.length ?? 0
                         for (
                             let startIdx = 0;
-                            startIdx < entities.value.length;
+                            startIdx < endIdx;
                             startIdx += chunkSize
                         ) {
                             if (entities.isLoading) {
                                 return
                             }
-                            const endIdx = Math.min(
-                                entities.value.length,
-                                startIdx + chunkSize
-                            )
-                            const entitiesSlice = entities.value.slice(startIdx, endIdx)
+                            const endChunkIdx = Math.min(endIdx, startIdx + chunkSize)
+                            const entitiesSlice =
+                                entities.value?.slice(startIdx, endChunkIdx) ?? []
                             const entitiesMap: { [key: string]: string[] } = {}
                             for (const entity of entitiesSlice) {
                                 if (entity.similarEntities.isLoading) {

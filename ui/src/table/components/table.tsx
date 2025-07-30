@@ -102,7 +102,7 @@ export function downloadWorkAround(csvLines: string[]) {
 }
 
 export function RemoteDataTable() {
-    const date = useAppSelector(selectHistoryDate)
+    const upUntilTime = useAppSelector(selectHistoryDate)
     const isLoading = useAppSelector(selectIsLoadingEntities)
     const entities = useAppSelector(selectEntities)
     const userInfo = useAppSelector(selectUserInfo)
@@ -122,7 +122,7 @@ export function RemoteDataTable() {
             dispatch(addError('Please refresh the page and log in'))
             return
         }
-        dispatch(getTableAsync(date)).then(async (success) => {
+        dispatch(getTableAsync(upUntilTime)).then(async (success) => {
             if (!success) {
                 return
             }
@@ -137,13 +137,13 @@ export function RemoteDataTable() {
                 ) {
                     return
                 }
-                await dispatch(getColumnAsync(col, date))
+                await dispatch(getColumnAsync(col, upUntilTime))
             })
         })
         return () => {
             dispatch(clearTable())
         }
-    }, [date])
+    }, [upUntilTime])
 
     return (
         <Row className="h-100">
@@ -154,12 +154,12 @@ export function RemoteDataTable() {
                             <Col xs="auto">
                                 <AddEntityButton
                                     dispatch={dispatch}
-                                    disabled={date !== undefined}
+                                    disabled={upUntilTime !== undefined}
                                 />
                             </Col>
                             <Col className="ps-0" xs="auto">
                                 <MergeEntitiesButton
-                                    disabled={date !== undefined}
+                                    disabled={upUntilTime !== undefined}
                                     entityIdArray={entities}
                                     mergeRequestCreatedCallback={() =>
                                         dispatch(toggleEntityMergingModal(true))
@@ -183,18 +183,16 @@ export function RemoteDataTable() {
                                 <DatePicker
                                     name="history"
                                     showYearDropdown={true}
-                                    selected={date ?? new Date(Date.now())}
-                                    isClearable={date !== undefined}
+                                    selected={upUntilTime ?? new Date(Date.now())}
+                                    isClearable={upUntilTime !== undefined}
                                     dateFormat={'dd MMM yyyy'}
                                     onChange={(date) => {
-                                        console.log(date)
                                         let resultDateSinceEpoch = undefined
                                         if (date !== null && date !== undefined) {
                                             date.setHours(23)
                                             date.setMinutes(59)
                                             resultDateSinceEpoch = date.getTime()
                                         }
-                                        console.log(resultDateSinceEpoch)
                                         dispatch(setHistoryDate(resultDateSinceEpoch))
                                     }}
                                 />
@@ -209,6 +207,7 @@ export function RemoteDataTable() {
                             entities={entities}
                             columnStates={columnStates}
                             showJustifications={showJustifications}
+                            upUntilTime={upUntilTime}
                         />
                     </Col>
                 </Row>
@@ -221,15 +220,15 @@ export function RemoteDataTable() {
                         data-testid="table-container-inner"
                     >
                         <DataTable entities={entities} columnStates={columnStates} />
-                        <ColumnModal columnIndices={columnIndices} upUntilDate={date} />
+                        <ColumnModal columnIndices={columnIndices} upUntilDate={upUntilTime} />
                         <EntityAddModal />
                         <EntityMergingModal />
                         <ChangeOwnershipModal
                             idColumnPersistent={columnChangeOwnership}
                             onClose={() => dispatch(columnChangeOwnershipHide())}
                         />
-                        <EntityJustificationModal upUntilTime={date} />
-                        <EntityDetailsModal upUntilTime={date} />
+                        <EntityJustificationModal upUntilTime={upUntilTime} />
+                        <EntityDetailsModal upUntilTime={upUntilTime} />
                     </div>
                 </Row>
                 <div id="portal" />
@@ -271,16 +270,17 @@ export function DataTable({
     const dispatch: AppDispatch = useDispatch()
     const tableSelection = useSelector(selectTableSelection)
     const frozenColumns = useAppSelector(selectFrozenColumns),
-        columns = useColumnDefinitionList(
-            columnStates.map((columnState) => columnState.idColumnPersistent)
-        ),
         selectedColumnHeaderBounds = useAppSelector(selectSelectedColumnHeaderBounds),
         isLoading = useAppSelector(selectIsLoadingEntities),
         isSubmittingValues = useAppSelector(selectIsSubmittingValues),
         columnHeaderMenuEntries = useAppSelector(selectColumnHeaderMenu)(dispatch),
         showSearch = useAppSelector(selectShowSearch),
         showEntityJustifications = useAppSelector(selectShowEntityJustifications),
-        upUntilTime = useAppSelector(selectHistoryDate)
+        upUntilTime = useAppSelector(selectHistoryDate),
+        columns = useColumnDefinitionList(
+            columnStates.map((columnState) => columnState.idColumnPersistent),
+            upUntilTime
+        )
     const cellContentCallback = useCallback(
             createCellContentCallback({
                 entities,
@@ -336,6 +336,7 @@ export function DataTable({
             dispatch(showHeaderMenu({ columnIdx, bounds })),
         hideHeaderMenuCallback = () => dispatch(hideHeaderMenu()),
         setColumnWidthCallback = (
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             column: GridColumn,
             newSize: number,
             colIndex: number,
