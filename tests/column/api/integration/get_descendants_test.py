@@ -1,5 +1,6 @@
 # pylint: disable=missing-module-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-positional-arguments,too-many-statements
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import tests.column.api.integration.requests as r
@@ -35,7 +36,7 @@ def test_applicant(auth_server_applicant, column_user):
     assert rsp.status_code == 403
 
 
-def test_get_descendants(
+def test_get_descendants_history(
     auth_server,
     column_parent,
     column_child_0,
@@ -45,6 +46,22 @@ def test_get_descendants(
 ):
     "Make sure descendants are computed correctly."
     server, cookies = auth_server
+    rsp = r.get_descendants(
+        server.url,
+        c.id_column_parent_persistent_test,
+        up_until_time=c.time_edit_test + timedelta(seconds=15),
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert json == {
+        "id_descendants_persistent_list": [
+            column_child_0.id_persistent,
+            column_child_1.id_persistent,
+        ]
+    }
+
+    # make sure without history works
     rsp = r.get_descendants(
         server.url, c.id_column_parent_persistent_test, cookies=cookies
     )

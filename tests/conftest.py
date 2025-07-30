@@ -16,7 +16,7 @@ from tests.allauth.api.integration.requests import get_config, post_login
 from tests.edit_session import common as cs
 from tests.entity import common as ce
 from tests.user import common as cu
-from cosmae.column.models_django import Column, ColumnHistory
+from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.entity.models_django import EntityHistory, EntityJustification
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
@@ -428,7 +428,7 @@ def column_user_history(user):
 
 @pytest.fixture
 def column_user(column_user_history):
-    return Column.objects.get(id=column_user_history.id)  # pylint: disable=no-member
+    return column_objects().get(id=column_user_history.id)  # pylint: disable=no-member
 
 
 @pytest.fixture

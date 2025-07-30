@@ -8,7 +8,7 @@ from typing import List
 from django.db import models
 from django.db.models.aggregates import Max
 
-from cosmae.column.models_django import Column
+from cosmae.column.models_django import Column, column_objects
 from cosmae.entity.models_django import Entity
 from cosmae.exception import (
     ColumnDisabledException,
@@ -131,9 +131,13 @@ class ValueQuerySet(models.QuerySet):
 
     def annotate_column(self):
         "Annotate values with the most recent column and value"
-        column_sub_query = Column.objects.filter(  # pylint: disable=no-member
-            id_persistent=models.OuterRef("id_column_persistent")
-        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+        column_sub_query = (
+            column_objects()
+            .filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("id_column_persistent")
+            )
+            .order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+        )
         return self.annotate(
             column=models.Subquery(
                 # pylint: disable=duplicate-code

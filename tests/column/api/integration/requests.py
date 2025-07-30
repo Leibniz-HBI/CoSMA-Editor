@@ -1,7 +1,10 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-many-arguments,too-many-positional-arguments
+from datetime import datetime
 from urllib.parse import urljoin
 
 import requests
+
+from tests.utils import format_datetime_request
 
 
 def post_column(url, column, cookies=None):
@@ -17,18 +20,15 @@ def post_column_list(url, column_list, cookies=None):
     )
 
 
-def get_columns(url, cookies=None):
-    return requests.get(
-        urljoin(url, "/cosmae/api/columns"),
-        cookies=cookies,
-        timeout=900,
-    )
-
-
-def post_column_children(url, id_persistent, cookies=None):
+def post_column_children(
+    url, id_persistent, up_until_time: datetime | None = None, cookies=None
+):
+    body = {"id_parent_persistent": id_persistent}
+    if up_until_time is not None:
+        body["up_until_time"] = format_datetime_request(up_until_time)
     return requests.post(
         urljoin(url, "cosmae/api/columns/children"),
-        json={"id_parent_persistent": id_persistent},
+        json=body,
         timeout=900,
         cookies=cookies,
     )
@@ -76,10 +76,15 @@ def delete_ownership(url, id_request_persistent, cookies=None):
     )
 
 
-def post_details(url, id_persistent_list, cookies=None):
+def post_details(
+    url, id_persistent_list, up_until_time: datetime | None = None, cookies=None
+):
+    body = {"id_persistent_list": id_persistent_list}
+    if up_until_time is not None:
+        body["up_until_time"] = format_datetime_request(up_until_time)
     return requests.post(
         url + "/cosmae/api/columns/details",
-        json={"id_persistent_list": id_persistent_list},
+        json=body,
         cookies=cookies,
         timeout=900,
     )
@@ -93,9 +98,14 @@ def purge_column(url, id_column_persistent, cookies=None):
     )
 
 
-def get_descendants(url, id_column_persistent, cookies=None):
+def get_descendants(
+    url, id_column_persistent, up_until_time: datetime | None = None, cookies=None
+):
+    req_pth = url + f"/cosmae/api/columns/{id_column_persistent}/descendants?"
+    if up_until_time is not None:
+        req_pth += f"up_until_time={format_datetime_request(up_until_time)}"
     return requests.get(
-        url + f"/cosmae/api/columns/{id_column_persistent}/descendants",
+        req_pth,
         cookies=cookies,
         timeout=900,
     )

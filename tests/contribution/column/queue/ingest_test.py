@@ -6,7 +6,7 @@ import pytest
 from django.db.models import Subquery
 
 import tests.entity.common as ce
-from cosmae.column.models_django import Column, ColumnHistory
+from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.contribution.column.models_django import ColumnContribution
 from cosmae.contribution.column.queue.ingest import ingest_values_from_csv
 from cosmae.contribution.models_django import ContributionCandidate
@@ -188,13 +188,17 @@ def test_ingest_empty_values(
 
 
 def get_value_by_mr(entity_name, id_column_persistent):
-    origin_column = Column.objects.filter(  # pylint: disable=no-member
-        id_persistent=Subquery(
-            ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
-                id_destination_persistent=id_column_persistent
-            ).values_list("id_origin_persistent", flat=True)
+    origin_column = (
+        column_objects()
+        .filter(  # pylint: disable=no-member
+            id_persistent=Subquery(
+                ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
+                    id_destination_persistent=id_column_persistent
+                ).values_list("id_origin_persistent", flat=True)
+            )
         )
-    ).get()
+        .get()
+    )
     return (
         Value.objects.filter(  # pylint: disable=no-member
             id_entity_persistent=Entity.objects.filter(  # pylint: disable=no-member

@@ -15,6 +15,7 @@ from cosmae.column.models_conversion import (
 )
 from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.models_django import ColumnHistory as ColumnHistoryDb
+from cosmae.column.models_django import column_objects
 from cosmae.column.queue import update_column_name_path
 from cosmae.exception import (
     ApiError,
@@ -70,6 +71,7 @@ class PostGetChildrenRequest(Schema):
 
     # pylint: disable=too-few-public-methods
     id_parent_persistent: str | None = None
+    up_until_time: datetime | None = None
 
 
 class CurationPostRequest(Schema):
@@ -85,6 +87,7 @@ class ColumnDefinitionDetailsRequest(Schema):
 
     # pylint: disable=too-few-public-methods
     id_persistent_list: List[str]
+    up_until_time: datetime | None = None
 
 
 class DescendantListResponse(Schema):
@@ -190,7 +193,7 @@ def post_details(request: HttpRequest, body: ColumnDefinitionDetailsRequest):
     try:
         if len(body.id_persistent_list) > 1000:
             return 400, ApiError(msg="Requested too many column.")
-        column_db_queryset = ColumnDb.objects.filter(
+        column_db_queryset = column_objects(body.up_until_time).filter(
             id_persistent__in=body.id_persistent_list
         )
         column_api_list = [column_db_to_api(column) for column in column_db_queryset]
@@ -220,7 +223,7 @@ def post_get_column_children(
         return 403, ApiError(msg="Insufficient permissions.")
     try:
         child_definitions_db = list(
-            ColumnDb.children_query_set(
+            column_objects(post_children_request.up_until_time).children(
                 post_children_request.id_parent_persistent, user
             )
         )
@@ -273,7 +276,9 @@ def purge(request: HttpRequest, id_persistent: str):
         500: ApiError,
     },
 )
-def get_descendants(request: HttpRequest, id_persistent: str):
+def get_descendants(
+    request: HttpRequest, id_persistent: str, up_until_time: datetime | None = None
+):
     "API method for getting all descendants of a column that may contain data."
     try:
         user = check_user(request)
@@ -282,7 +287,7 @@ def get_descendants(request: HttpRequest, id_persistent: str):
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
     try:
-        descendant_id_list = ColumnDb.descendants(id_persistent, user)
+        descendant_id_list = ColumnDb.descendants(id_persistent, user, up_until_time)
         return DescendantListResponse(id_descendants_persistent_list=descendant_id_list)
     except ColumnDb.DoesNotExist:
         return 404, ApiError(msg="Column does not exist")

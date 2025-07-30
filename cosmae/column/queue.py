@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.utils import OperationalError
 from django_rq import enqueue
 
-from cosmae.column.models_django import Column
+from cosmae.column.models_django import Column, column_objects
 from cosmae.entity.queue import update_display_txt_cache
 
 column_name_path_cache = caches["column_name_paths"]
@@ -37,7 +37,7 @@ def update_column_name_path(
     """Update the name path cache entry for the column referenced by its persistent id.
     If the name path of the parent is already known it can be provided as an optional parameter.
     """
-    column_query = Column.most_recent_by_id_query_set(id_column_persistent)
+    column_query = column_objects().by_id_persistent(id_column_persistent)
     try:
         with transaction.atomic():
             try:
@@ -53,7 +53,7 @@ def update_column_name_path(
                     )
             name_path = parent_name_path + [column.name]
             column_name_path_cache.set(column.id_persistent, name_path)
-            children = Column.children_query_set(column.id_persistent)
+            children = column_objects().children(column.id_persistent)
             for child in children:
                 if not child.disabled:
                     enqueue(update_column_name_path, child.id_persistent, name_path)

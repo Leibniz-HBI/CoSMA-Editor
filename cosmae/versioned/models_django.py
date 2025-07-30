@@ -29,6 +29,22 @@ class VersionedQueryset(models.QuerySet):
         "Exclude items from queryset that are hidden or disabled"
         return self.exclude_disabled().exclude_hidden()
 
+    def most_recent(self):
+        """Return the most recent version for all instances of a queryset."""
+        # pylint: disable=no-member
+        return self.filter(
+            id=models.Subquery(
+                self.all()
+                .filter(id_persistent=models.OuterRef("id_persistent"))
+                .order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+                .values("id")
+            )
+        )
+
+    def by_id_persistent(self, id_persistent):
+        """Return a query for the most recent version of a column."""
+        return self.filter(id_persistent=id_persistent)  # pylint: disable=no-member
+
 
 class Versioned(models.Model):
     "Abstract ORM for versioned models"
@@ -73,14 +89,6 @@ class Versioned(models.Model):
 
 class HistoryMixin:
     "Mixin for History in versioned ORM models."
-
-    @classmethod
-    def most_recent_by_id(cls, id_persistent):
-        """Return the most recent version of a value."""
-        # pylint: disable=no-member
-        return cls.objects.filter(id_persistent=id_persistent).order_by(
-            models.F("previous_version").desc(nulls_last=True)
-        )[0]
 
     def has_write_access(
         self, id_user_persistent: str
