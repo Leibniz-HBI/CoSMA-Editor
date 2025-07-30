@@ -7,6 +7,7 @@ import {
     newColumnHierarchyNode
 } from './state'
 import { newRemote, RemoteInterface } from '../util/state'
+import { mkUpUntilSinceEpochColumnId } from '../util/misc'
 
 const initialState = newColumnSelectionState({})
 
@@ -30,8 +31,7 @@ const columnSelectionSlice = createSlice({
             }
             const existing = state.columnsByIdPersistent[action.payload]
             if (existing == undefined) {
-                state.columnsByIdPersistent[action.payload] =
-                    newRemote(undefined)
+                state.columnsByIdPersistent[action.payload] = newRemote(undefined)
             } else {
                 existing.isLoading = true
             }
@@ -42,6 +42,7 @@ const columnSelectionSlice = createSlice({
                 entries: Column[]
                 path: number[]
                 forceExpand: boolean
+                upUntilSinceEpoch: number | undefined
             }>
         ) {
             const path = action.payload.path
@@ -54,8 +55,12 @@ const columnSelectionSlice = createSlice({
                         isExpanded: action.payload.forceExpand
                     })
                 )
-                state.columnsByIdPersistent[column.idPersistent] =
-                    newRemote(column)
+                state.columnsByIdPersistent[
+                    mkUpUntilSinceEpochColumnId(
+                        column.idPersistent,
+                        action.payload.upUntilSinceEpoch
+                    )
+                ] = newRemote(column)
             }
             if (path.length == 0) {
                 state.isLoading = false
@@ -64,9 +69,8 @@ const columnSelectionSlice = createSlice({
             } else {
                 const entry = pickColumnHierarchyNode(state.children, path)
                 if (entry !== undefined) {
-                    state.columnsByIdPersistent[
-                        entry.idColumnPersistent
-                    ].isLoading = false
+                    state.columnsByIdPersistent[entry.idColumnPersistent].isLoading =
+                        false
                     updateNodesFromExisting(entry.children, selectionEntries)
                     entry.children = selectionEntries
                 }
@@ -107,9 +111,8 @@ const columnSelectionSlice = createSlice({
             state.isSubmittingDefinition = false
             const parentNamePath = action.payload.parentNamePath
             const oldNamePath = action.payload.namePath
-            const column= action.payload.column
-            state.columnsByIdPersistent[column.idPersistent] =
-                newRemote(column)
+            const column = action.payload.column
+            state.columnsByIdPersistent[column.idPersistent] = newRemote(column)
             if (column.disabled) {
                 delete state.columnsByIdPersistent[column.idPersistent]
                 let parent: { children: ColumnIdHierarchyNode[] } | undefined = state
@@ -148,10 +151,7 @@ const columnSelectionSlice = createSlice({
                 }
                 if (entries !== undefined) {
                     for (const idx in entries) {
-                        if (
-                            entries[idx].idColumnPersistent ==
-                            column.idPersistent
-                        ) {
+                        if (entries[idx].idColumnPersistent == column.idPersistent) {
                             entries.splice(parseInt(idx), 1)
                             break
                         }
@@ -176,27 +176,18 @@ const columnSelectionSlice = createSlice({
         submitColumnError(state: ColumnSelectionState) {
             state.isSubmittingDefinition = false
         },
-        setEditColumn(
-            state: ColumnSelectionState,
-            action: PayloadAction<Column>
-        ) {
+        setEditColumn(state: ColumnSelectionState, action: PayloadAction<Column>) {
             state.editColumn.value = action.payload
         },
         clearEditColumn(state: ColumnSelectionState) {
             state.editColumn.value = undefined
         },
-        editColumnStart(
-            state: ColumnSelectionState,
-            action: PayloadAction<string>
-        ) {
+        editColumnStart(state: ColumnSelectionState, action: PayloadAction<string>) {
             if (state.editColumn.value?.idPersistent == action.payload) {
                 state.editColumn.isLoading = true
             }
         },
-        editColumnError(
-            state: ColumnSelectionState,
-            action: PayloadAction<string>
-        ) {
+        editColumnError(state: ColumnSelectionState, action: PayloadAction<string>) {
             if (state.editColumn.value?.idPersistent == action.payload) {
                 state.editColumn.isLoading = false
             }
@@ -209,13 +200,20 @@ const columnSelectionSlice = createSlice({
         },
         getColumnDetailsError(
             state: ColumnSelectionState,
-            action: PayloadAction<string[]>
+            action: PayloadAction<{
+                idPersistentList: string[]
+                upUntilSinceEpoch: number | undefined
+            }>
         ) {
-            for (const idPersistent of action.payload) {
-                const remoteColumn =
-                    state.columnsByIdPersistent[idPersistent]
+            const { idPersistentList, upUntilSinceEpoch } = action.payload
+            for (const idPersistent of idPersistentList) {
+                const idColumnDated = mkUpUntilSinceEpochColumnId(
+                    idPersistent,
+                    upUntilSinceEpoch
+                )
+                const remoteColumn = state.columnsByIdPersistent[idColumnDated]
                 if (remoteColumn === undefined) {
-                    state.columnsByIdPersistent[idPersistent] = newRemote(
+                    state.columnsByIdPersistent[idColumnDated] = newRemote(
                         undefined,
                         false
                     )
@@ -226,16 +224,18 @@ const columnSelectionSlice = createSlice({
         },
         getColumnDetailsStart(
             state: ColumnSelectionState,
-            action: PayloadAction<string[]>
+            action: PayloadAction<{
+                idPersistentList: string[]
+                upUntilSinceEpoch: number | undefined
+            }>
         ) {
-            for (const idPersistent of action.payload) {
-                const remoteColumn =
-                    state.columnsByIdPersistent[idPersistent]
+            const { idPersistentList, upUntilSinceEpoch } = action.payload
+            for (const idPersistent of idPersistentList) {
+                const remoteColumn = state.columnsByIdPersistent[idPersistent]
                 if (remoteColumn === undefined) {
-                    state.columnsByIdPersistent[idPersistent] = newRemote(
-                        undefined,
-                        true
-                    )
+                    state.columnsByIdPersistent[
+                        mkUpUntilSinceEpochColumnId(idPersistent, upUntilSinceEpoch)
+                    ] = newRemote(undefined, true)
                 } else {
                     remoteColumn.isLoading = true
                 }
@@ -243,11 +243,16 @@ const columnSelectionSlice = createSlice({
         },
         getColumnDetailsSuccess(
             state: ColumnSelectionState,
-            action: PayloadAction<Column[]>
+            action: PayloadAction<{
+                columnList: Column[]
+                upUntilSinceEpoch: number | undefined
+            }>
         ) {
-            for (const column of action.payload) {
-                state.columnsByIdPersistent[column.idPersistent] =
-                    newRemote(column)
+            const { upUntilSinceEpoch, columnList } = action.payload
+            for (const column of columnList) {
+                state.columnsByIdPersistent[
+                    mkUpUntilSinceEpochColumnId(column.idPersistent, upUntilSinceEpoch)
+                ] = newRemote(column)
             }
         },
         changeParentSuccess(
@@ -279,9 +284,7 @@ const columnSelectionSlice = createSlice({
                 oldNamePathPrefixLength = oldPathToColumn.length - 1
             }
             const columnHierarchyNode =
-                originHierarchyArray[
-                    oldPathToColumn[oldPathToColumn.length - 1]
-                ]
+                originHierarchyArray[oldPathToColumn[oldPathToColumn.length - 1]]
             if (columnHierarchyNode === undefined) {
                 throw new Error('could not find column hierarchy node')
             }
@@ -312,8 +315,7 @@ const columnSelectionSlice = createSlice({
                 oldNamePathPrefixLength,
                 namePath
             )
-            columnsByIdPersistent[column.idPersistent] =
-                newRemote(column)
+            columnsByIdPersistent[column.idPersistent] = newRemote(column)
             destinationHierarchyArray.push(columnHierarchyNode)
             // remove hierarchy node from old parent's child array
             for (let idx = 0; idx < originHierarchyArray.length; idx++) {

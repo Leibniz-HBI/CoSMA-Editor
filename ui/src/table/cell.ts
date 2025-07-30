@@ -1,4 +1,4 @@
-import { GridCell, GridCellKind, Item } from '@glideapps/glide-data-grid'
+import { GridCell, GridCellKind, Item, Theme } from '@glideapps/glide-data-grid'
 import { Column, ColumnType } from '../column_menu/state'
 import {
     CellValue,
@@ -17,7 +17,11 @@ const emptyCell = {
     data: ''
 } as GridCell
 
-export function mkCell(columnType: ColumnType, cellValues?: CellValue[]): GridCell {
+export function mkCell(
+    columnType: ColumnType,
+    cellValues: CellValue[] | undefined,
+    themeOverride: Partial<Theme> = {}
+): GridCell {
     // workaround for typescript jest compatibility
     let cellKind = 'text' as GridCellKind
     let allowOverlay = true
@@ -77,7 +81,8 @@ export function mkCell(columnType: ColumnType, cellValues?: CellValue[]): GridCe
         kind: cellKind as GridCellKind,
         allowOverlay: allowOverlay,
         displayData: displayData,
-        data: cellContent
+        data: cellContent,
+        themeOverride
     } as GridCell
 }
 
@@ -121,6 +126,10 @@ export function createCellContentCallback({
         }
         const col = columnStates[col_idx]
         const column = columns[col_idx]
+        const themeOverride: Partial<Theme> = {}
+        if(column.value?.disabled){
+            themeOverride.bgCell = '#899696ff'
+        }
         if (col === undefined || column === undefined || column.value === undefined) {
             return emptyCell
         }
@@ -131,6 +140,6 @@ export function createCellContentCallback({
                 data: { kind: 'custom-loading-cell', rowIdx: row_idx, colIdx: col_idx }
             } as LoadingCell
         }
-        return mkCell(column.value.columnType, col.cellContents.value[row_idx])
+        return mkCell(column.value.columnType, col.cellContents.value[row_idx], themeOverride)
     }
 }

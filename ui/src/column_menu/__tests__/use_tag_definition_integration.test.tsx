@@ -29,6 +29,7 @@ import {
     justificationColumn,
     justificationColumnId
 } from '../../table/state'
+import { Mock } from 'vitest'
 
 function TestComponent({ idPersistent }: { idPersistent: string }) {
     const column = useColumn(idPersistent)

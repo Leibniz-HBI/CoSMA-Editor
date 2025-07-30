@@ -39,10 +39,10 @@ import {
     newNotificationManager,
     notificationReducer
 } from '../../../util/notification/slice'
-import { act, RenderOptions, waitFor, render, screen } from '@testing-library/react'
+import { RenderOptions, waitFor, render, screen } from '@testing-library/react'
 import { showColumnAddMenu, tableReducer } from '../../slice'
 import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
+import { PropsWithChildren, act } from 'react'
 import { Provider } from 'react-redux'
 import { RemoteDataTable } from '../table'
 import { userSlice } from '../../../user/slice'
@@ -69,25 +69,8 @@ test('get descendant column success', async () => {
     addHierarchyAndDescendantsResponse(fetchMock)
     addValueResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
-    await waitFor(() => {
-        const button = screen.getByRole('button', { name: 'Modal' })
-        act(() => {
-            button.click()
-        })
-    })
-    await waitFor(() => {
-        screen.getByText(columnNameTest)
-        const columnLabelParents = screen.getAllByText(columnNameParent)
-        const tailElement =
-            columnLabelParents[0].parentElement?.parentElement?.parentElement
-                ?.parentElement?.parentElement?.children[1]
-        expect(tailElement?.className).toEqual('icon')
-        const closeButton = screen.getByRole('button', { name: 'Close' })
-        act(() => {
-            ;(tailElement as HTMLInputElement).click()
-            closeButton.click()
-        })
-    })
+    await openColumnModal()
+    await selectColumn()
     await waitFor(() => {
         const state = store.getState()
         expect(state.notification.notificationList).toEqual([])
@@ -154,7 +137,7 @@ test('get descendant column success', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/columns/${idColumnParentPersistent}/descendants`,
+            `http://127.0.0.1:8000/cosmae/api/columns/${idColumnParentPersistent}/descendants?`,
             { credentials: 'include' }
         ],
         [
@@ -179,6 +162,157 @@ test('get descendant column success', async () => {
         ]
     ])
 })
+
+test('get descendant column with history success', async () => {
+    const fetchMock = vi.fn()
+    addEntitiesResponse(fetchMock)
+    addHierarchyAndDescendantsResponse(fetchMock)
+    addValueResponse(fetchMock)
+    const historyDate = new Date(2004, 3, 7)
+    const historyDateString = historyDate.toISOString()
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, {
+        preloadedState: {
+            ...defaultPreloadedState,
+            table: {
+                ...defaultPreloadedState.table,
+                historyDateSinceEpoch: historyDate.getTime()
+            }
+        }
+    })
+    await openColumnModal()
+    await selectColumn()
+    await waitFor(() => {
+        const state = store.getState()
+        expect(state.notification.notificationList).toEqual([])
+        expect(state.table).toEqual(
+            newTableState({
+                entities: entities_test,
+                isLoading: false,
+                columnIndices: {
+                    display_txt_id: 0,
+                    [idColumnPersistent]: 1
+                },
+                historyDateSinceEpoch: historyDate.getTime(),
+                columnStates: [displayTxtColumnState, columnColumnState]
+            })
+        )
+    })
+    expect(fetchMock.mock.calls).toEqual([
+        [
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            {
+                credentials: 'include',
+                body: JSON.stringify({
+                    up_until_time: historyDateString,
+                    offset: 0,
+                    limit: 500
+                }),
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            {
+                credentials: 'include',
+                body: JSON.stringify({
+                    up_until_time: historyDateString,
+                    offset: version1 + 1,
+                    limit: 500
+                }),
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
+            {
+                body: JSON.stringify({ up_until_time: historyDateString }),
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
+            {
+                body: JSON.stringify({
+                    id_parent_persistent: idColumnParentPersistent,
+                    up_until_time: historyDateString
+                }),
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/columns/children',
+            {
+                body: JSON.stringify({
+                    id_parent_persistent: idColumnPersistent,
+                    up_until_time: historyDateString
+                }),
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                method: 'POST'
+            }
+        ],
+        [
+            `http://127.0.0.1:8000/cosmae/api/columns/${idColumnParentPersistent}/descendants?up_until_time=${historyDateString.replaceAll(
+                ':',
+                '%3A'
+            )}`,
+            { credentials: 'include' }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/values/chunk',
+            {
+                credentials: 'include',
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_column_persistent: idColumnPersistent,
+                    up_until_time: historyDateString,
+                    offset: 0,
+                    limit: 5000
+                })
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/user/columns/append/column_id_test',
+            {
+                credentials: 'include',
+                method: 'POST'
+            }
+        ]
+    ])
+})
+
+async function openColumnModal() {
+    await waitFor(() => {
+        const button = screen.getByRole('button', { name: 'Modal' })
+        act(() => {
+            button.click()
+        })
+    })
+}
+
+async function selectColumn() {
+    await waitFor(() => {
+        screen.getByText(columnNameTest)
+        const columnLabelParents = screen.getAllByText(columnNameParent)
+        const tailElement =
+            columnLabelParents[0].parentElement?.parentElement?.parentElement
+                ?.parentElement?.parentElement?.children[1]
+        expect(tailElement?.className).toEqual('icon')
+        const closeButton = screen.getAllByRole('button', { name: 'Close' }).at(-1)
+        act(() => {
+            ;(tailElement as HTMLInputElement).click()
+            closeButton?.click()
+        })
+    })
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
     for (const tpl of responses) {
@@ -397,44 +531,7 @@ export function renderWithProviders(
     ui: React.ReactElement,
     fetchMock: Mock,
     {
-        preloadedState = {
-            notification: newNotificationManager({}),
-            table: newTableState({}),
-            tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            columnSelection: newColumnSelectionState({
-                columnsByIdPersistent: {
-                    [displayTxtColumnId]: newRemote(displayTextColumn),
-                    [justificationColumnId]: newRemote(justificationColumn)
-                }
-            }),
-            user: newUserState({}),
-            auth: newAuthState({
-                user: newRemote(
-                    newUserInfo({
-                        ...userTest,
-                        email: 'mail@test.org',
-                        namesPersonal: 'names personal',
-                        columns: []
-                    })
-                )
-            }),
-            entityDetails: newEntityDetailsState({}),
-            editSession: newEditSessionState({
-                currentEditSession: newRemote(
-                    newEditSession({
-                        idPersistent: 'id-session-test',
-                        name: 'edit session for tests',
-                        owner: newEditSessionParticipant({
-                            type: EditSessionParticipantType.internal,
-                            name: 'edit session owner test',
-                            id: idUserTest
-                        }),
-                        participantList: [],
-                        participantMap: {}
-                    })
-                )
-            })
-        },
+        preloadedState = defaultPreloadedState,
         ...renderOptions
     }: ExtendedRenderOptions = {}
 ) {
@@ -459,4 +556,42 @@ export function renderWithProviders(
 
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
+}
+const defaultPreloadedState = {
+    notification: newNotificationManager({}),
+    table: newTableState({}),
+    tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
+    columnSelection: newColumnSelectionState({
+        columnsByIdPersistent: {
+            [displayTxtColumnId]: newRemote(displayTextColumn),
+            [justificationColumnId]: newRemote(justificationColumn)
+        }
+    }),
+    user: newUserState({}),
+    auth: newAuthState({
+        user: newRemote(
+            newUserInfo({
+                ...userTest,
+                email: 'mail@test.org',
+                namesPersonal: 'names personal',
+                columns: []
+            })
+        )
+    }),
+    entityDetails: newEntityDetailsState({}),
+    editSession: newEditSessionState({
+        currentEditSession: newRemote(
+            newEditSession({
+                idPersistent: 'id-session-test',
+                name: 'edit session for tests',
+                owner: newEditSessionParticipant({
+                    type: EditSessionParticipantType.internal,
+                    name: 'edit session owner test',
+                    id: idUserTest
+                }),
+                participantList: [],
+                participantMap: {}
+            })
+        )
+    })
 }

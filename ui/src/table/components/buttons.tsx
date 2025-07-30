@@ -22,7 +22,11 @@ export function AddEntityButton({
     dispatch: AppDispatch
     disabled: boolean
 }) {
-    return <Button onClick={() => dispatch(showEntityAdd())} disabled={disabled}>Add Entity</Button>
+    return (
+        <Button onClick={() => dispatch(showEntityAdd())} disabled={disabled}>
+            Add Entity
+        </Button>
+    )
 }
 export function MergeEntitiesButton({
     entityIdArray,
@@ -84,14 +88,17 @@ export function SearchButton({ dispatch }: { dispatch: AppDispatch }) {
 export function DownloadButton({
     entities,
     columnStates,
-    showJustifications
+    showJustifications,
+    upUntilTime
 }: {
     entities: Entity[] | undefined
     columnStates: ColumnState[]
     showJustifications: boolean
+    upUntilTime: Date | undefined
 }) {
     const columnList = useColumnDefinitionList(
-        columnStates.map((columnState) => columnState.idColumnPersistent)
+        columnStates.map((columnState) => columnState.idColumnPersistent),
+        upUntilTime
     )
     const selectedRows = useAppSelector(selectRowSelectionOrder)
     return (

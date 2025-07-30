@@ -111,11 +111,15 @@ export function getColumnAsync(
         let idPersistentList = [columnDefinition.idPersistent]
         if (columnDefinition.columnType === ColumnType.Inner) {
             try {
-                const rsp = await fetch(
+                let requestPath =
                     config.api_path +
-                        `/columns/${columnDefinition.idPersistent}/descendants`,
-                    { credentials: 'include' }
-                )
+                    `/columns/${columnDefinition.idPersistent}/descendants?`
+                if (upUntilTime !== undefined) {
+                    requestPath += new URLSearchParams({
+                        up_until_time: upUntilTime.toISOString()
+                    })
+                }
+                const rsp = await fetch(requestPath, { credentials: 'include' })
                 const json = await rsp.json()
                 if (rsp.status == 200) {
                     idPersistentList = json['id_descendants_persistent_list']
@@ -337,13 +341,14 @@ export function loadEntityJustificationHistoryThunk(
         dispatch(loadEntityJustificationHistoryStart())
         try {
             let queryPath = `/entities/${idEntityPersistent}/justifications?`
-            if(upUntilTime !== undefined){
-                queryPath += new URLSearchParams({up_until_time: upUntilTime.toISOString()})
+            if (upUntilTime !== undefined) {
+                queryPath += new URLSearchParams({
+                    up_until_time: upUntilTime.toISOString()
+                })
             }
-            const rsp = await fetch(
-                config.api_path + queryPath,
-                { credentials: 'include' }
-            )
+            const rsp = await fetch(config.api_path + queryPath, {
+                credentials: 'include'
+            })
             const json = await rsp.json()
             if (rsp.status == 200) {
                 const justifications = json['justifications'].map(
