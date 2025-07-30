@@ -2,7 +2,7 @@
 
 from django.db import models
 
-from cosmae.column.models_django import Column
+from cosmae.column.models_django import column_objects
 
 
 class Permission(models.Model):
@@ -20,5 +20,5 @@ class Permission(models.Model):
         In the future the owner property should also be handled by permission objects.
         This would require to create an initial permission for newly created columns.
         """
-        column = Column.objects.filter(id_persistent=id_resource_persistent).get()
+        column = column_objects().filter(id_persistent=id_resource_persistent).get()
         return column.owner_id == user.id

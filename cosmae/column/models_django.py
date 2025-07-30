@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Optional, Type, TypeVar
+from datetime import datetime
+from typing import Optional, TypeVar
 
 from django.db import models
 
@@ -16,7 +17,7 @@ from cosmae.exception import (
     NoSelfParentColumnException,
 )
 from cosmae.util import CosmaeUser
-from cosmae.versioned.models_django import HistoryMixin, Versioned
+from cosmae.versioned.models_django import HistoryMixin, Versioned, VersionedQueryset
 
 _T = TypeVar("_T")
 
@@ -68,24 +69,71 @@ class ColumnAbstract(Versioned):
         return self.is_owner(user_id_persistent)
 
     @classmethod
-    def descendants(cls, id_column_ancestor_persistent, user: CosmaeUser):
+    def descendants(
+        cls,
+        id_column_ancestor_persistent,
+        user: CosmaeUser,
+        up_until_time: datetime | None = None,
+    ):
         "Get all descendants of a column that can contain data."
         ancestors = []
         queue = [id_column_ancestor_persistent]
         while len(queue) > 0:
             id_column_parent_persistent = queue.pop(0)
-            ids_with_type = cls.objects.filter(
-                models.Q(curated=True) | models.Q(owner_id=user.id),
-                id_parent_persistent=id_column_parent_persistent,
-                disabled=False,
-                hidden=False,
-            ).values("id_persistent", "type", "curated", "owner_id")
+            ids_with_type = (
+                column_objects(up_until_time)
+                .filter(
+                    models.Q(curated=True) | models.Q(owner_id=user.id),
+                    id_parent_persistent=id_column_parent_persistent,
+                    disabled=False,
+                    hidden=False,
+                )
+                .values("id_persistent", "type", "curated", "owner_id")
+            )
             for obj in ids_with_type:
                 if obj["type"] == cls.INNER:
                     queue.append(obj["id_persistent"])
                 else:
                     ancestors.append(obj["id_persistent"])
         return ancestors
+
+
+class ColumnQuerySet(VersionedQueryset):
+    "QuerySet for Columns and ColumHistory"
+
+    def children(self, id_persistent: Optional[str], user: Optional[CosmaeUser] = None):
+        "Get only the columns that are children of a specific column."
+        children = self.filter(  # pylint: disable=no-member
+            id_parent_persistent=id_persistent, disabled=False
+        )
+        if user is None:
+            return children.filter(hidden=False)
+        return children.filter(models.Q(hidden=False) | models.Q(owner=user))
+
+    def for_user(
+        self,
+        user: CosmaeUser,
+        include_curated: bool = False,
+        include_disabled: bool = False,
+    ) -> models.Manager[_T]:
+        "Get all columns for a user."
+        if include_curated:
+            if not user.permission_group in [
+                CosmaeUser.EDITOR,
+                CosmaeUser.COMMISSIONER,
+            ]:
+                raise ForbiddenException("Column", "")
+            return self.filter(  # pylint: disable=no-member
+                (models.Q(curated=True) | models.Q(owner=user))
+                & models.Q(disabled=include_disabled)
+            )
+        return self.filter(  # pylint: disable=no-member
+            owner=user, disabled=include_disabled
+        )
+
+    def curated_query_set(self):
+        "Get most recent curated column"
+        return self.filter(curated=True)  # pylint: disable=no-member
 
 
 class Column(ColumnAbstract):
@@ -96,6 +144,8 @@ class Column(ColumnAbstract):
 
         # pylint: disable=too-few-public-methods
         managed = False
+
+    objects = ColumnQuerySet.as_manager()
 
     @classmethod
     def query_set(cls, manager=None, include_hidden=False):
@@ -109,26 +159,7 @@ class Column(ColumnAbstract):
     @classmethod
     def most_recent_by_id(cls, id_persistent):
         """Return the most recent version of a column."""
-        return cls.most_recent_by_id_query_set(id_persistent).get()
-
-    @classmethod
-    def most_recent_by_id_query_set(cls, id_persistent):
-        """Return a query for the most recent version of a column."""
-        return cls.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        )
-
-    @classmethod
-    def children_query_set(
-        cls, id_persistent: Optional[str], user: Optional[CosmaeUser] = None
-    ):
-        "Get the most recent versions of child columns."
-        children = cls.objects.filter(  # pylint: disable=no-member
-            id_parent_persistent=id_persistent, disabled=False
-        )
-        if user is None:
-            return children.filter(hidden=False)
-        return children.filter(models.Q(hidden=False) | models.Q(owner=user))
+        return cls.objects.by_id_persistent(id_persistent).most_recent().get()
 
     def _get_history_entry(self):
         # pylint: disable=no-member
@@ -159,38 +190,13 @@ class Column(ColumnAbstract):
                 raise InvalidValueException(self.id_persistent, val, self.type) from exc
         return val
 
-    @classmethod
-    def for_user(
-        cls: Type[_T],
-        user: CosmaeUser,
-        include_curated: bool = False,
-        include_disabled: bool = False,
-    ) -> models.Manager[_T]:
-        "Get all columns for a user."
-        if include_curated:
-            if not user.permission_group in [
-                CosmaeUser.EDITOR,
-                CosmaeUser.COMMISSIONER,
-            ]:
-                raise ForbiddenException("Column", "")
-            return cls.objects.filter(  # pylint: disable=no-member
-                (models.Q(curated=True) | models.Q(owner=user))
-                & models.Q(disabled=include_disabled)
-            )
-        return cls.objects.filter(  # pylint: disable=no-member
-            owner=user, disabled=include_disabled
-        )
-
-    @classmethod
-    def curated_query_set(cls):
-        "Get most recent curated column"
-        return cls.objects.filter(curated=True)  # pylint: disable=no-member
-
 
 class ColumnHistory(ColumnAbstract, HistoryMixin):
     "Django ORM model for columns history."
 
     unmodifiable_fields = {"id_persistent", "type"}
+
+    objects = ColumnQuerySet.as_manager()
 
     @classmethod
     def most_recent_query_set(
@@ -215,16 +221,9 @@ class ColumnHistory(ColumnAbstract, HistoryMixin):
         return most_recent
 
     @classmethod
-    def most_recent_by_id_query_set(cls, id_persistent):
-        """Return a query for the most recent version of a column."""
-        return cls.most_recent_query_set().filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        )
-
-    @classmethod
     def most_recent_by_id(cls, id_persistent):
         """Return the most recent version of a column."""
-        return cls.most_recent_by_id_query_set(id_persistent).get()
+        return cls.objects.by_id_persistent(id_persistent).most_recent().get()
 
     @classmethod
     def bypass_parent(cls, id_parent_persistent):
@@ -291,7 +290,7 @@ class ColumnHistory(ColumnAbstract, HistoryMixin):
         if column_parent is not None and column_parent.type != self.INNER:
             raise NoChildColumnAllowedException(self.id_parent_persistent)
         exists = (
-            Column.objects.filter(  # pylint: disable=no-member
+            column_objects().filter(  # pylint: disable=no-member
                 name=self.name, id_parent_persistent=self.id_parent_persistent
             )
             # annotate successor in history
@@ -313,8 +312,8 @@ class ColumnHistory(ColumnAbstract, HistoryMixin):
                 ].id_persistent,
                 self.id_parent_persistent,
             )
-        if self.disabled and self.most_recent_query_set().filter(
-            id_parent_persistent=self.id_persistent
+        if self.disabled and column_objects().children(
+            id_persistent=self.id_persistent
         ):
             raise DisabledColumnHasChildrenException()
 
@@ -329,6 +328,18 @@ class ColumnHistory(ColumnAbstract, HistoryMixin):
             or other.description != self.description
             or other.disabled != self.disabled
         )
+
+
+def column_objects(date: Optional[datetime] = None, include_disabled=False):
+    "Get correct entity query set depending on whether a time limit is set."
+    if date is None:
+        ret = Column.objects
+    else:
+        queryset = ColumnHistory.objects.filter(time_edit__lte=date)
+        ret = queryset.most_recent()
+    if not include_disabled:
+        ret = ret.filter(disabled=False)
+    return ret
 
 
 class OwnershipRequest(models.Model):
@@ -365,7 +376,8 @@ class OwnershipRequest(models.Model):
     @classmethod
     def _annotate_columns(cls, manager):
         column_sub_query = (
-            Column.objects.filter(  # pylint: disable=no-member
+            column_objects()
+            .filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("id_column_persistent")
             )
             .order_by(models.F("previous_version").desc(nulls_last=True))[:1]

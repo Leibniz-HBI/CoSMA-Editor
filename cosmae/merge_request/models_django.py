@@ -6,7 +6,7 @@ from typing import Optional
 
 from django.db import models
 
-from cosmae.column.models_django import Column, ColumnHistory
+from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.merge_request.entity.models_django import (
@@ -332,9 +332,11 @@ class ColumnConflictResolution(AbstractConflictResolution):
                 ]
             ),
             column_origin_most_recent=models.Subquery(
-                Column.objects.filter(  # pylint: disable=no-member
+                column_objects()
+                .filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("column_origin__id_persistent")
-                ).values(  # pylint: disable=duplicate-code
+                )
+                .values(  # pylint: disable=duplicate-code
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",
@@ -342,14 +344,14 @@ class ColumnConflictResolution(AbstractConflictResolution):
                         name="name",
                         type="type",
                     )
-                )[
-                    :1
-                ]
+                )[:1]
             ),
             column_destination_most_recent=models.Subquery(
-                Column.objects.filter(  # pylint: disable=no-member
+                column_objects()
+                .filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("column_destination__id_persistent")
-                ).values(
+                )
+                .values(
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",
@@ -357,9 +359,7 @@ class ColumnConflictResolution(AbstractConflictResolution):
                         name="name",
                         type="type",
                     )
-                )[
-                    :1
-                ]
+                )[:1]
             ),
             value_destination_most_recent=models.Subquery(
                 Value.objects.filter(  # pylint: disable=no-member
@@ -429,25 +429,21 @@ class ColumnConflictResolution(AbstractConflictResolution):
             entity__id=models.F("id_entity_most_recent")
         )
         with_column_origin_version_info = only_with_recent_entities.annotate(
-            id_column_origin_most_recent=Column.objects.filter(  # pylint: disable=no-member
+            id_column_origin_most_recent=column_objects()
+            .filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("column_origin__id_persistent")
-            ).values(
-                "id"
-            )[
-                :1
-            ]
+            )
+            .values("id")[:1]
         )
         only_with_recent_column_origins = with_column_origin_version_info.filter(
             column_origin__id=models.F("id_column_origin_most_recent")
         )
         with_column_destination_version_info = only_with_recent_column_origins.annotate(
-            id_column_destination_most_recent=Column.objects.filter(  # pylint: disable=no-member
+            id_column_destination_most_recent=column_objects()
+            .filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("column_destination__id_persistent")
-            ).values(
-                "id"
-            )[
-                :1
-            ]
+            )
+            .values("id")[:1]
         )
         only_with_recent_column_destinations = (
             with_column_destination_version_info.filter(

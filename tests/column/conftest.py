@@ -4,7 +4,12 @@ from datetime import timedelta
 import pytest
 
 import tests.column.common as c
-from cosmae.column.models_django import Column, ColumnHistory, OwnershipRequest
+from cosmae.column.models_django import (
+    Column,
+    ColumnHistory,
+    OwnershipRequest,
+    column_objects,
+)
 
 
 @pytest.fixture
@@ -41,7 +46,7 @@ def column_no_owner_history(db, user_commissioner):
 
 @pytest.fixture
 def column(column_history):
-    return Column.objects.get(id=column_history.id)  # pylint: disable=no-member
+    return column_objects().get(id=column_history.id)  # pylint: disable=no-member
 
 
 @pytest.fixture
@@ -76,7 +81,9 @@ def column_child_0_history(user):
 
 @pytest.fixture
 def column_child_0(column_child_0_history):
-    return Column.objects.get(id=column_child_0_history.id)  # pylint: disable=no-member
+    return column_objects().get(
+        id=column_child_0_history.id
+    )  # pylint: disable=no-member
 
 
 @pytest.fixture
@@ -97,7 +104,9 @@ def column_child_1_history(user):
 
 @pytest.fixture
 def column_child_1(column_child_1_history):
-    return Column.objects.get(id=column_child_1_history.id)  # pylint: disable=no-member
+    return column_objects().get(
+        id=column_child_1_history.id
+    )  # pylint: disable=no-member
 
 
 @pytest.fixture
@@ -118,7 +127,7 @@ def column_child_parent_history(user):
 
 @pytest.fixture
 def column_child_parent(column_child_parent_history):
-    return Column.objects.get(id=column_child_parent_history.id)
+    return column_objects().get(id=column_child_parent_history.id)
 
 
 @pytest.fixture
@@ -139,7 +148,7 @@ def column_child_parent_child_history(user):
 
 @pytest.fixture
 def column_child_parent_child(column_child_parent_child_history):
-    return Column.objects.get(id=column_child_parent_child_history.id)
+    return column_objects().get(id=column_child_parent_child_history.id)
 
 
 @pytest.fixture

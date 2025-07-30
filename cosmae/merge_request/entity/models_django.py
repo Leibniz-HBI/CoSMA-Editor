@@ -6,7 +6,7 @@ from typing import Optional
 
 from django.db import models
 
-from cosmae.column.models_django import Column, ColumnHistory
+from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.exception import ForbiddenException
 from cosmae.util import CosmaeUser
@@ -217,7 +217,7 @@ class EntityMergeRequest(AbstractMergeRequest):
             Value.objects_all()
             .annotate(
                 column_disabled=models.Subquery(
-                    Column.objects_all(include_disabled=True)
+                    column_objects(include_disabled=True)
                     .filter(id_persistent=models.OuterRef("id_column_persistent"))
                     .values("disabled")
                 )
@@ -348,10 +348,12 @@ class EntityConflictResolution(AbstractConflictResolution):
         with_version_info = cls.annotate_instance_origin_most_recent(
             manager,
             column_most_recent=models.Subquery(
-                Column.objects.filter(  # pylint: disable=no-member
+                column_objects()
+                .filter(  # pylint: disable=no-member
                     id_persistent=models.OuterRef("column__id_persistent"),
                     disabled=False,
-                ).values(
+                )
+                .values(
                     json=models.functions.JSONObject(
                         id="id",
                         id_persistent="id_persistent",
@@ -363,9 +365,7 @@ class EntityConflictResolution(AbstractConflictResolution):
                         hidden="hidden",
                         disabled="disabled",
                     )
-                )[
-                    :1
-                ]
+                )[:1]
             ),
             entity_origin_most_recent=models.Subquery(
                 Entity.objects.filter(  # pylint: disable=no-member
@@ -453,9 +453,11 @@ class EntityConflictResolution(AbstractConflictResolution):
         if manager is None:
             manager = cls.objects  # pylint: disable=no-member
         with_column_version_info = manager.annotate(
-            id_column_most_recent=Column.objects.filter(  # pylint: disable=no-member
+            id_column_most_recent=column_objects()
+            .filter(  # pylint: disable=no-member
                 id_persistent=models.OuterRef("column__id_persistent")
-            ).values("id")[:1]
+            )
+            .values("id")[:1]
         )
         only_with_recent_columns = with_column_version_info.filter(
             column__id=models.F("id_column_most_recent")

@@ -49,12 +49,6 @@ class EntityQueryset(VersionedQueryset):
         "Exclude entities from queryset that belong to a contribution."
         return self.filter(contribution_candidate__isnull=True)
 
-    def most_recent(self, include_disabled=False):
-        "Get the most recent entities"
-        if include_disabled:
-            return self
-        return self.filter(disabled=False)
-
     def by_id_persistent(self, id_persistent: str):
         "Filter entity by id_persistent"
         return self.filter(id_persistent=id_persistent)
@@ -90,16 +84,9 @@ class Entity(EntityAbstract):
         managed = False
 
     @classmethod
-    def most_recent_by_id_queryset(cls, id_persistent):
-        """Return a query set containing only the most recent version of an entity."""
-        return cls.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        )
-
-    @classmethod
     def most_recent_by_id(cls, id_persistent):
         """Return the most recent version of an entity."""
-        return cls.most_recent_by_id_queryset(id_persistent).get()
+        return cls.objects.by_id_persistent(id_persistent).get()
 
     def has_write_access(self, _user: CosmaeUser):
         "Check wether a user can change the entity."
@@ -247,16 +234,9 @@ class EntityHistory(EntityAbstract, HistoryMixin):
         """Check wether the object conforms to implicit assumptions."""
 
     @classmethod
-    def most_recent_by_id_queryset(cls, id_persistent):
-        """Return a query set containing only the most recent version of an entity."""
-        return cls.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
-
-    @classmethod
     def most_recent_by_id(cls, id_persistent):
         """Return the most recent version of an entity."""
-        return cls.most_recent_by_id_queryset(id_persistent).get()
+        return cls.objects.by_id_persistent(id_persistent).most_recent().get()
 
     def check_different_before_save(self, other):
         """Checks structural equality for two entities.

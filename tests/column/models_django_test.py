@@ -4,7 +4,7 @@ from datetime import timedelta
 import pytest
 
 import tests.column.common as c
-from cosmae.column.models_django import Column, ColumnHistory
+from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.exception import (
     ColumnExistsException,
     DbObjectExistsException,
@@ -67,7 +67,9 @@ def test_same(column_history, user):
 @pytest.mark.django_db
 def test_store_and_retrieve_column(column_history):
     column_history.save()
-    retrieved = Column.objects.get(name=c.name_column_test)  # pylint: disable=no-member
+    retrieved = column_objects().get(
+        name=c.name_column_test
+    )  # pylint: disable=no-member
     assert retrieved.id == column_history.id
     assert not column_history.check_different_before_save(retrieved)
 
@@ -211,8 +213,8 @@ def test_inner_check_invalid(column):
 
 
 @pytest.mark.django_db
-def test_childrens(column_parent, column_child_0, column_child_1):
-    ret = Column.children_query_set(c.id_column_parent_persistent_test)
+def test_children(column_parent, column_child_0, column_child_1):
+    ret = column_objects().children(c.id_column_parent_persistent_test)
     assert set(ret) == {column_child_0, column_child_1}
 
 
@@ -228,28 +230,28 @@ def test_children_updated(column_parent, column_child_0, column_child_1):
         written_by_session=column_child_0.owner.edit_session,
     )
     column_child_0_updated_history.save()
-    column_child_0_updated = Column.objects.get(  # pylint: disable=no-member
+    column_child_0_updated = column_objects().get(  # pylint: disable=no-member
         id=column_child_0_updated_history.id
     )
-    ret = Column.children_query_set(c.id_column_parent_persistent_test)
+    ret = column_objects().children(c.id_column_parent_persistent_test)
     assert set(ret) == {column_child_1, column_child_0_updated}
 
 
 @pytest.mark.django_db
 def test_children_empty(column_parent):
-    ret = Column.children_query_set(c.id_column_parent_persistent_test)
+    ret = column_objects().children(c.id_column_parent_persistent_test)
     assert not ret
 
 
 @pytest.mark.django_db
 def test_children_root(column):
-    ret = Column.children_query_set(None)
+    ret = column_objects().children(None)
     assert list(ret) == [column]
 
 
 @pytest.mark.django_db
 def test_only_for_user(column_user, column_no_owner_history):
-    ret = Column.for_user(column_user.owner).get()
+    ret = column_objects().for_user(column_user.owner).get()
     assert ret == column_user
 
 
@@ -265,7 +267,7 @@ def test_most_recent_for_user(column_user):
         written_by_session=column_user.owner.edit_session,
     )
     column_edited.save()
-    ret = Column.for_user(column_user.owner).get()
+    ret = column_objects().for_user(column_user.owner).get()
     assert ret._get_history_entry() == column_edited
 
 
@@ -281,5 +283,5 @@ def test_can_create_hidden(user):
         owner=user,
     )
     column.save()
-    retrieved = Column.most_recent_by_id(c.id_column_persistent_test)
+    retrieved = column_objects().by_id_persistent(c.id_column_persistent_test).get()
     assert retrieved.hidden

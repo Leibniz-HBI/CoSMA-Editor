@@ -91,11 +91,11 @@ def populate_column_name_path_cache():
     # pylint: disable=import-outside-toplevel
     from django_rq import enqueue
 
-    from cosmae.column.models_django import Column
+    from cosmae.column.models_django import column_objects
     from cosmae.column.queue import update_column_name_path
 
     try:
-        roots = Column.children_query_set(None)
+        roots = column_objects().children(None)
         for root in roots:
             if not root.disabled:
                 enqueue(update_column_name_path, root.id_persistent, [])

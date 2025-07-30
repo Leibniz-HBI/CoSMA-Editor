@@ -6,7 +6,7 @@ from django.db import models, transaction
 from django.db.models import Count, Subquery
 from django.db.utils import OperationalError
 
-from cosmae.column.models_django import Column
+from cosmae.column.models_django import column_objects
 from cosmae.contribution.column.models_django import ColumnContribution
 from cosmae.entity.models_django import Entity
 from cosmae.exception import ResourceLockedException
@@ -141,9 +141,9 @@ class ContributionCandidate(models.Model):
             .exclude(id_existing_persistent="id_persistent")
             .exclude(
                 id_existing_persistent__in=Subquery(
-                    Column.objects.filter(  # pylint: disable=no-member
-                        hidden=False, disabled=False
-                    ).values("id_persistent")
+                    column_objects()
+                    .filter(hidden=False, disabled=False)  # pylint: disable=no-member
+                    .values("id_persistent")
                 )
             )
         )
@@ -172,7 +172,7 @@ class ContributionCandidate(models.Model):
     def curated_columns_match_count(self, entities_manager: models.Manager[Entity]):
         """Get numbers of matching values for curated columns.
         Also includes the number of considered columns."""
-        columns_curated = Column.curated_query_set()
+        columns_curated = column_objects().curated_query_set()
         column_contribution_query_set = ColumnContribution.get_by_candidate_query_set(
             self
         )

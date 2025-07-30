@@ -9,6 +9,7 @@ from django_rq import enqueue
 from ninja import Router, Schema
 
 from cosmae.column.models_django import Column as ColumnDb
+from cosmae.column.models_django import column_objects
 from cosmae.column.queue import get_column_name_path_from_parts
 from cosmae.entity.api import Entity, entity_db_to_api
 from cosmae.entity.models_django import Entity as EntityDb
@@ -129,7 +130,7 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
         merge_request = EntityMergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
         )
-        writable_columns = ColumnDb.for_user(user, True)
+        writable_columns = column_objects().for_user(user, True)
         (
             resolvable_query_set,
             unresolvable_query_set,
@@ -274,7 +275,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 or EntityMergeRequestDb.ERROR
             ):
                 return 400, ApiError(msg="Merge request not available for merging.")
-            writable_columns = ColumnDb.for_user(user, True)
+            writable_columns = column_objects().for_user(user, True)
             resolvable, _, updated = merge_request.resolvable_unresolvable_updated(
                 writable_columns
             )
