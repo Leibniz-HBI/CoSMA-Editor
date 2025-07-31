@@ -164,7 +164,15 @@ def post_columns(  # pylint: disable=too-many-branches
             for column, do_write in column_def_db_list:
                 if do_write:
                     column.save()
-                    update_column_name_path(column.id_parent_persistent)
+                    if column.id_parent_persistent is None:
+                        update_column_name_path(column.id)
+                    else:
+                        parent = (
+                            column_objects()
+                            .by_id_persistent(column.id_parent_persistent)
+                            .get()
+                        )
+                        update_column_name_path(parent.id)
     except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
 

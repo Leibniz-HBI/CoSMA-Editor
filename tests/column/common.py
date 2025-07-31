@@ -5,6 +5,7 @@ name_column_test = "name column test"
 name_column_test_user = "name column test_user"
 name_column_test1 = "name column test1"
 name_column_parent_test = "column_def_parent_test"
+name_column_parent_test_changed = "column_def_parent_test_changed"
 name_column_curated_test = "name curated column test"
 name_column_disabled_test = "name column def disabled test"
 time_edit_test = datetime(2022, 12, 20, tzinfo=timezone.utc)

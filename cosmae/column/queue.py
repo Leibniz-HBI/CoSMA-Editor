@@ -2,61 +2,71 @@
 
 from typing import List, Optional
 
-from django.core.cache import caches
 from django.db import transaction
 from django.db.utils import OperationalError
 from django_rq import enqueue
 
-from cosmae.column.models_django import Column, column_objects
+from cosmae.column.models_django import Column, ColumnHistory, ColumnNamePathCache
 from cosmae.entity.queue import update_display_txt_cache
-
-column_name_path_cache = caches["column_name_paths"]
 
 
 def get_column_name_path(column: Column):
     """Get the name path of a column.
     This will retrieve the name path from the cache if present.
     Otherwise only the name is returned and an update to the cache is triggered."""
-    return get_column_name_path_from_parts(column.id_persistent, column.name)
+    return get_column_name_path_from_parts(column.id, column.name)
 
 
-def get_column_name_path_from_parts(id_persistent: str, name: str):
+def get_column_name_path_from_parts(id_column: int, name: str):
     """Get the name path of a column using its id_persistent and name.
     This will retrieve the name path from the cache if present.
     Otherwise only the name is returned and an update to the cache is triggered."""
-    name_path = column_name_path_cache.get(id_persistent)
-    if name_path is None:
+    try:
+        name_path = (
+            ColumnNamePathCache.objects.filter(column_id=id_column)
+            .values_list("name_path", flat=True)
+            .get()
+        )
+    except ColumnNamePathCache.DoesNotExist:
         name_path = [name]
-        enqueue(update_column_name_path, id_persistent)
+        enqueue(update_column_name_path, id_column)
     return name_path
 
 
-def update_column_name_path(
-    id_column_persistent, parent_name_path: Optional[List[str]] = None
-):
+def update_column_name_path(id_column, parent_name_path: Optional[List[str]] = None):
     """Update the name path cache entry for the column referenced by its persistent id.
     If the name path of the parent is already known it can be provided as an optional parameter.
     """
-    column_query = column_objects().by_id_persistent(id_column_persistent)
+    column_query = ColumnHistory.objects.by_id_version(id_column)
     try:
         with transaction.atomic():
             try:
                 column = column_query.get()
             except OperationalError:
                 return
+            history_up_until_column = ColumnHistory.objects.up_until(
+                column.time_edit
+            ).most_recent()
             if parent_name_path is None:
                 if column.id_parent_persistent is None:
                     parent_name_path = []
                 else:
-                    parent_name_path = column_name_path_cache.get(
-                        column.id_parent_persistent
+                    parent_name_path = (
+                        history_up_until_column.by_id_persistent(
+                            column.id_parent_persistent
+                        )
+                        .values("name_path")
+                        .get()
                     )
             name_path = parent_name_path + [column.name]
-            column_name_path_cache.set(column.id_persistent, name_path)
-            children = column_objects().children(column.id_persistent)
+            ColumnNamePathCache.set_cache_entry(
+                column.id,
+                name_path,
+            )
+            children = history_up_until_column.children(column.id_persistent)
             for child in children:
                 if not child.disabled:
-                    enqueue(update_column_name_path, child.id_persistent, name_path)
+                    enqueue(update_column_name_path, child.id, name_path)
 
     except Exception:  # pylint: disable=broad-except
         return
@@ -78,7 +88,7 @@ def dispatch_column_queue_process(
         )
     ):
         return
-    enqueue(update_column_name_path, str(instance.id_persistent))
+    enqueue(update_column_name_path, str(instance))
 
 
 def dispatch_display_txt_queue_process(
