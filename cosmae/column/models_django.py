@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, TypeVar
 
+from django.contrib.postgres.indexes import GistIndex
 from django.db import models
 
 from cosmae.exception import (
@@ -134,6 +135,14 @@ class ColumnQuerySet(VersionedQueryset):
     def curated_query_set(self):
         "Get most recent curated column"
         return self.filter(curated=True)  # pylint: disable=no-member
+
+    def by_id_version(self, id_version):
+        "Get a specific column instance."
+        return self.filter(id=id_version)
+
+    def up_until(self, date: datetime):
+        "Only return columns that are edited up until the provided datetime"
+        return self.filter(time_edit__lte=date)
 
 
 class Column(ColumnAbstract):
@@ -335,7 +344,7 @@ def column_objects(date: Optional[datetime] = None, include_disabled=False):
     if date is None:
         ret = Column.objects
     else:
-        queryset = ColumnHistory.objects.filter(time_edit__lte=date)
+        queryset = ColumnHistory.objects.up_until(date)
         ret = queryset.most_recent()
     if not include_disabled:
         ret = ret.filter(disabled=False)
@@ -430,3 +439,30 @@ class OwnershipRequest(models.Model):
             )
             return petitioned_self.union(petitioned_curated)
         return petitioned_self
+
+
+class ColumnNamePathCache(models.Model):
+    "ORM Model for name path cache."
+
+    name_path = models.JSONField()
+    name_path_string = models.TextField()
+    column = models.ForeignKey(ColumnHistory, on_delete=models.CASCADE)
+
+    class Meta:
+        "Meta class for ColumNamePathCache ORM"
+
+        indexes = [
+            GistIndex(
+                models.functions.Lower("name_path_string"),
+                name="name_path_string_lower_idx",
+            )
+        ]
+
+    @classmethod
+    def set_cache_entry(cls, id_version, name_path):
+        "Create a new cache entry."
+        return cls.objects.create(
+            column_id=id_version,
+            name_path=name_path,
+            name_path_string=" -> ".join(name_path),
+        )

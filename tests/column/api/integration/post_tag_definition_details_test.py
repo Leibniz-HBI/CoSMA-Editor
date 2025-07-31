@@ -77,6 +77,7 @@ def test_get_details_history(auth_server, column, column1, column_user):
     assert_versioned(
         json["column_list"],
         [
+            column_user_dict,
             {
                 "id_persistent": column1.id_persistent,
                 "id_parent_persistent": column1.id_parent_persistent,
@@ -93,6 +94,5 @@ def test_get_details_history(auth_server, column, column1, column_user):
                 "disabled": False,
                 "hidden": False,
             },
-            column_user_dict,
         ],
     )

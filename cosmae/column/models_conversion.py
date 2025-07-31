@@ -34,6 +34,7 @@ def column_db_dict_to_api(
 ) -> ColumnResponse:
     "Convert a column from database to API model."
     id_persistent = column["id_persistent"]
+    id_version = column["id"]
     name = column["name"]
     if column["owner"] is None or column["owner"]["username"] is None:
         owner = None
@@ -47,8 +48,8 @@ def column_db_dict_to_api(
         id_parent_persistent=column["id_parent_persistent"],
         name=name,
         description=column["description"],
-        name_path=get_column_name_path_from_parts(id_persistent, name),
-        version=column["id"],
+        name_path=get_column_name_path_from_parts(id_version, name),
+        version=id_version,
         type=_column_type_mapping_db_to_api[column["type"]],
         owner=owner,
         curated=column["curated"],

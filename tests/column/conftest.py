@@ -87,6 +87,21 @@ def column_child_0(column_child_0_history):
 
 
 @pytest.fixture
+def column_parent_future(column_history):
+    column, _ = ColumnHistory.change_or_create_versioned(
+        id_persistent=c.id_column_parent_persistent_test,
+        time_edit=c.time_edit_test + timedelta(seconds=50),
+        written_by_session=column_history.written_by_session,
+        type=Column.INNER,
+        name=c.name_column_parent_test_changed,
+        owner=column_history.owner,
+        previous_version=column_history,
+    )
+    column.save()
+    return column
+
+
+@pytest.fixture
 def column_child_1_history(user):
     "Another shared child column for tests"
     column, _ = ColumnHistory.change_or_create_versioned(
