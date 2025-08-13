@@ -144,3 +144,6 @@ coverage
 .lcov
 .env
 .secrets*
+
+# openapi clients
+ui/src/openapi

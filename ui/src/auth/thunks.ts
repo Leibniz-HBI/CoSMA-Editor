@@ -1,4 +1,3 @@
-import { config } from '../config'
 import { toDataURL } from 'qrcode'
 import { setCurrentEditSession } from '../session/slice'
 import { parseEditSessionFromApi } from '../session/thunks'
@@ -34,28 +33,55 @@ import {
     postEmailVerificationError
 } from './slice'
 import { EmailAllauth, UserAllAuth } from './state'
-import { handleAllauthResponse } from '../util/api'
+import { handleAllauthResponseFromClient } from '../util/api'
+import {
+    getAllauthByClientV1AuthSession,
+    getAllauthByClientV1Config,
+    postAllauthByClientV1AuthLogin,
+    postAllauthByClientV1Auth2FaAuthenticate,
+    postAllauthByClientV1Auth2FaReauthenticate,
+    postAllauthByClientV1AccountAuthenticatorsTotp,
+    getAllauthByClientV1AccountAuthenticatorsTotp,
+    deleteAllauthByClientV1AuthSession,
+    postAllauthByClientV1AuthReauthenticate,
+    postAllauthByClientV1AuthEmailVerify
+} from '../openapi/allauth/sdk.gen'
+import {
+    cosmaeManagementUserApiPostCreateUser,
+    cosmaeUserApiGetSelf
+} from '../openapi/cosmae/sdk.gen'
+import {
+    AuthenticatedResponse,
+    AuthenticationResponse,
+    ConflictResponse,
+    ErrorResponse,
+    StatusOk,
+    TotpAuthenticator
+} from '../openapi/allauth'
+import { RequestResult } from '../openapi/allauth/client'
 
 export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _api) => {
         if (withDispatch) {
             dispatch(getSessionStart())
         }
         try {
             // get initial token
-            await fetch(config.api_path_auth + '/config')
-            const rsp = await fetch(config.api_path_auth + '/auth/session', {
-                headers: ACCEPT_JSON_HEADER,
-                credentials: 'include'
+            await getAllauthByClientV1Config({
+                path,
+                credentials: 'omit'
             })
-            const json = await rsp.json()
-            handleAllauthResponse(
+            const rsp = await getAllauthByClientV1AuthSession({
+                headers: ACCEPT_JSON_HEADER,
+                path
+            })
+            handleAllauthResponseFromClient(
                 dispatch,
                 (dispatch, json) => {
                     const user = parseUserAllauthFromJson(json['user'])
                     dispatch(setAuthUser(user))
                 },
-                json
+                rsp
             )
             return true
         } catch (_e: unknown) {
@@ -66,25 +92,23 @@ export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> 
 }
 
 export function loginThunk(username: string, password: string): ThunkWithFetch<void> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
+    return async (dispatch: AppDispatch, _getState, _fetch) => {
         dispatch(loginStart())
         try {
             const headers: { [key: string]: string } = mkPostHeaders()
-            const rsp = await fetch(config.api_path_auth + '/auth/login', {
-                method: 'POST',
-                credentials: 'include',
+            const rsp = await postAllauthByClientV1AuthLogin({
                 headers,
-                body: JSON.stringify({ username, password })
+                path,
+                body: { username, password }
             })
-            const json = await rsp.json()
-            handleAllauthResponse(
+            handleAllauthResponseFromClient(
                 dispatch,
                 (dispatch, json) => {
                     const userJson = json['user']
                     const authUser = parseUserAllauthFromJson(userJson)
                     dispatch(setAuthUser(authUser))
                 },
-                json
+                rsp
             )
         } catch (e: unknown) {
             dispatch(authStepEnd())
@@ -120,7 +144,7 @@ export function createUserThunk({
     password: string
     sshKey: string
 }): ThunkWithFetch<void> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
+    return async (dispatch: AppDispatch, _getState, _fetch) => {
         dispatch(registrationStart())
         try {
             const headers = mkPostHeaders()
@@ -134,20 +158,14 @@ export function createUserThunk({
             if (namesFamily !== undefined && namesFamily.length > 0) {
                 body['namesFamily'] = namesFamily
             }
-            const rsp = await fetch(config.api_path + '/manage/user', {
-                method: 'POST',
-                credentials: 'include',
-                headers,
-                body: JSON.stringify(body)
-            })
-            const json = await rsp.json()
-            handleAllauthResponse(
+            const rsp = await cosmaeManagementUserApiPostCreateUser({ body, headers })
+            handleAllauthResponseFromClient(
                 dispatch,
                 (dispatch, _json) => {
                     dispatch(registrationEnd())
                     dispatch(addSuccessVanish('Registration Successful'))
                 },
-                json
+                rsp
             )
         } catch (error: unknown) {
             dispatch(registrationEnd())
@@ -157,18 +175,16 @@ export function createUserThunk({
 }
 
 export function getSelfThunk(): ThunkWithFetch<void> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
+    return async (dispatch: AppDispatch, _getState, _fetch) => {
         dispatch(getSelfStart())
         try {
-            const rsp = await fetch(config.api_path + '/user/self', {
-                credentials: 'include',
+            const rsp = await cosmaeUserApiGetSelf({
                 headers: {
                     'Access-Control-Allow-Credentials': 'true',
                     'Content-Type': 'application/json'
                 }
             })
-            const json = await rsp.json()
-            handleAllauthResponse(
+            handleAllauthResponseFromClient(
                 dispatch,
                 (dispatch, json) => {
                     dispatch(getSelfSuccess(parseUserInfoFromJson(json)))
@@ -178,7 +194,7 @@ export function getSelfThunk(): ThunkWithFetch<void> {
                         )
                     )
                 },
-                json
+                rsp
             )
             dispatch(authStepEnd())
         } catch (e: unknown) {
@@ -189,26 +205,22 @@ export function getSelfThunk(): ThunkWithFetch<void> {
 }
 
 export function getTotpThunk(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         try {
             dispatch(getTotpStart())
-            const rsp = await fetch(
-                config.api_path_auth + '/account/authenticators/totp',
-                { credentials: 'include' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 404) {
-                const totpUrlString = json['meta']['totp_url']
+            const rsp = await getAllauthByClientV1AccountAuthenticatorsTotp({ path })
+            if (rsp.error?.status == 404) {
+                const totpUrlString = rsp.error.meta.totp_url
                 const totpUrlQrCodeImageSource = await toDataURL(totpUrlString)
 
                 dispatch(getTotpNotFound(totpUrlQrCodeImageSource))
             } else {
-                handleAllauthResponse(
+                handleAllauthResponseFromClient(
                     dispatch,
                     (dispatch, _json) => {
                         dispatch(getTotpSuccess())
                     },
-                    json
+                    rsp
                 )
             }
         } catch (e: unknown) {
@@ -218,30 +230,60 @@ export function getTotpThunk(): ThunkWithFetch<void> {
     }
 }
 
+type TotpResponse<ThrowOnError extends boolean = false> = RequestResult<
+    { 200: AuthenticatedResponse | { status: StatusOk; data: TotpAuthenticator } },
+    | { 400: ErrorResponse; 401: AuthenticationResponse }
+    | { 400: ErrorResponse }
+    | { 400: ErrorResponse; 409: ConflictResponse },
+    ThrowOnError,
+    'fields'
+>
+const path: { client: 'browser' | 'app' } = { client: 'browser' }
+
 export function postTotpAuthenticationThunk(code: string): ThunkWithFetch<void> {
-    return postTotpCode('/auth/2fa/authenticate', code)
+    return postTotpCode(
+        (code) =>
+            postAllauthByClientV1Auth2FaAuthenticate({
+                path,
+                body: { code },
+                headers: mkPostHeaders()
+            }),
+        code
+    )
 }
 
 export function postActivateTotpThunk(code: string): ThunkWithFetch<void> {
-    return postTotpCode('/account/authenticators/totp', code)
+    return postTotpCode(
+        (code) =>
+            postAllauthByClientV1AccountAuthenticatorsTotp({
+                path,
+                headers: mkPostHeaders(),
+                body: { code }
+            }),
+        code
+    )
 }
 
 export function postReauthenticateMfaThunk(code: string): ThunkWithFetch<void> {
-    return postTotpCode('/auth/2fa/reauthenticate', code)
+    return postTotpCode(
+        (_code) =>
+            postAllauthByClientV1Auth2FaReauthenticate({
+                path,
+                headers: mkPostHeaders()
+            }),
+        code
+    )
 }
 
-export function postTotpCode(apiSuffix: string, code: string): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+export function postTotpCode(
+    totpPromise: (code: string) => TotpResponse,
+    code: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, _fetch) => {
         try {
             dispatch(postTotpCodeStart())
-            const rsp = await fetch(config.api_path_auth + apiSuffix, {
-                credentials: 'include',
-                method: 'POST',
-                headers: mkPostHeaders(),
-                body: JSON.stringify({ code })
-            })
-            const json = await rsp.json()
-            handleAllauthResponse(
+            const rsp = await totpPromise(code)
+            handleAllauthResponseFromClient(
                 dispatch,
                 (dispatch, json) => {
                     const user = json['user']
@@ -251,7 +293,7 @@ export function postTotpCode(apiSuffix: string, code: string): ThunkWithFetch<vo
                         dispatch(postTotpCodeSuccess())
                     }
                 },
-                json
+                rsp
             )
         } catch (e: unknown) {
             dispatch(postTotpCodeEnd())
@@ -261,17 +303,15 @@ export function postTotpCode(apiSuffix: string, code: string): ThunkWithFetch<vo
 }
 
 export function logoutThunk(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         try {
             dispatch(logoutStart())
-            const rsp = await fetch(config.api_path_auth + '/auth/session', {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: mkPostHeaders()
+            const rsp = await deleteAllauthByClientV1AuthSession({
+                headers: mkPostHeaders(),
+                path
             })
-            if (rsp.status != 401) {
-                const json = await rsp.json()
-                dispatch(addError(errorMessageFromApi(json)))
+            if (rsp.error?.status != 401 && rsp.error !== undefined) {
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
             dispatch(logoutSuccess())
         } catch (e: unknown) {
@@ -282,21 +322,19 @@ export function logoutThunk(): ThunkWithFetch<void> {
 }
 
 export function reauthenticateThunk(password: string): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         try {
             dispatch(postReauthenticateStart())
-            const rsp = await fetch(config.api_path_auth + '/auth/reauthenticate', {
-                method: 'POST',
-                body: JSON.stringify({ password }),
-                headers: mkPostHeaders()
+            const rsp = await postAllauthByClientV1AuthReauthenticate({
+                path,
+                body: { password }
             })
-            const json = await rsp.json()
-            handleAllauthResponse(
+            handleAllauthResponseFromClient(
                 dispatch,
                 (dispatch, _json) => {
                     dispatch(postReauthenticateSuccess())
                 },
-                json
+                rsp
             )
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
@@ -305,30 +343,28 @@ export function reauthenticateThunk(password: string): ThunkWithFetch<void> {
 }
 
 export function postEmailVerificationThunk(key: string): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         try {
             dispatch(postEmailVerificationStart())
-            await fetch(config.api_path_auth + '/config')
-            const rsp = await fetch(config.api_path_auth + '/auth/email/verify', {
-                method: 'POST',
-                body: JSON.stringify({ key }),
-                headers: mkPostHeaders(),
-                credentials: 'include'
+            await getAllauthByClientV1Config({ path })
+            const rsp = await postAllauthByClientV1AuthEmailVerify({
+                path,
+                body: { key },
+                headers: mkPostHeaders()
             })
-            const json = await rsp.json()
-            handleAllauthResponse(
+            handleAllauthResponseFromClient(
                 dispatch,
                 (dispatch, _json) => {
                     dispatch(addSuccessVanish('Email successfully verified'))
                     dispatch(postEmailVerificationSuccess())
                 },
-                json
+                rsp
             )
             // When there is no bad request, confirmation was successful
-            if (rsp.status == 401) {
+            if (rsp.error?.status == 401) {
                 dispatch(addSuccessVanish('Email successfully verified'))
                 dispatch(postEmailVerificationSuccess())
-            } else if (rsp.status == 400) {
+            } else if (rsp.error?.status == 400) {
                 dispatch(postEmailVerificationError())
             }
         } catch (e: unknown) {

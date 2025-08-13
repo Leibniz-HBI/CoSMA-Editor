@@ -99,5 +99,7 @@ jobs:
         run: npm ci
       - name: Lint frontend
         run: npm run lint
+      - name: Generate openapi clients
+        run: npm run openapi
       - name: test frontend
         run: npm run test

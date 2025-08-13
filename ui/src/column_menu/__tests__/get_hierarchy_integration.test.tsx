@@ -2,76 +2,14 @@
  * @vitest-environment jsdom
  */
 
-import {
-    RenderOptions,
-    render,
-    waitFor,
-    screen,
-    getByRole,
-    within
-} from '@testing-library/react'
-import { ColumnSelectionState, newColumnSelectionState } from '../state'
-import { configureStore } from '@reduxjs/toolkit'
-import { columnSelectionReducer } from '../slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen, getByRole, within } from '@testing-library/react'
 import { ColumnMenu } from '../components/menu'
 import userEvent from '@testing-library/user-event'
 import { UserEvent } from '@testing-library/user-event/dist/types/setup/setup'
-import {
-    NotificationManager,
-    NotificationType,
-    notificationReducer
-} from '../../util/notification/slice'
+import { NotificationType } from '../../util/notification/slice'
 import { vi, Mock } from 'vitest'
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            columnSelection: newColumnSelectionState({}),
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            columnSelection: columnSelectionReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
+import { addResponseSequence } from '../../util/tests/response'
+import { renderWithProviders } from '../../util/tests/provider'
 
 const idColumn0 = 'id-column-test-0'
 const nameColumn0 = 'column def 0'

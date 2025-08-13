@@ -1,4 +1,5 @@
 export const config = {
+    api_url: '',
     api_path: '/api',
     api_path_auth: '/auth',
     /**

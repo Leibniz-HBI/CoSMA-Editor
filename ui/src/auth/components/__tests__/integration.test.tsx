@@ -1,39 +1,28 @@
 /**
  * @vitest-environment jsdom
  */
-import { configureStore } from '@reduxjs/toolkit'
-import { Provider } from 'react-redux'
-import { act, PropsWithChildren } from 'react'
-import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import {
-    UserPermissionGroup,
-    UserState,
-    newUserInfo,
-    newUserState
-} from '../../../user/state'
-import userReducer from '../../../user/slice'
+import { act } from 'react'
+import { screen, waitFor } from '@testing-library/react'
+import { UserPermissionGroup, newUserInfo, newUserState } from '../../../user/state'
 import { AuthProvider } from '../provider'
 import userEvent from '@testing-library/user-event'
 import { newRemote } from '../../../util/state'
 import {
-    NotificationManager,
     NotificationType,
     newNotification,
-    newNotificationManager,
-    notificationReducer
+    newNotificationManager
 } from '../../../util/notification/slice'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
 } from '../../../session/state'
-import { editSessionReducer } from '../../../session/slice'
-import { AuthState, AuthStep, newAuthState } from '../../state'
-import { authReducer } from '../../slice'
-import { vi, Mock } from 'vitest'
+import { AuthStep, newAuthState } from '../../state'
+import { vi } from 'vitest'
 import { RegisterUserManagementComponent } from '../../../management/components'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 const idErrorTest = 'id-error-test'
 vi.mock('uuid', () => {
     return {
@@ -129,17 +118,21 @@ describe('login', () => {
         await waitFor(() => {
             const state = store.getState()
             expect(state.user).toEqual(newUserState({}))
-            const notifications = state.notification.notificationList
-            expect(notifications.length).toEqual(1)
-            const notification = notifications[0]
-            expect(notification.msg).toEqual(testError)
+            expect(state.notification.notificationList).toEqual([
+                newNotification({
+                    msg: testError,
+                    id: expect.anything(),
+                    type: NotificationType.Error
+                })
+            ])
         })
         expect(screen.queryByText('You are logged in')).toBeNull()
     })
 })
 describe('totp', () => {
-    const partialState = {
+    const partialLoginState = {
         preloadedState: {
+            ...emptyState,
             auth: authStepPartial,
             user: newUserState({}),
             notification: newNotificationManager({}),
@@ -170,7 +163,7 @@ describe('totp', () => {
         const { store } = renderWithProviders(
             <AuthProvider children={<span>{loggedInText}</span>}></AuthProvider>,
             fetchMock,
-            partialState
+            partialLoginState
         )
         await enterMfaCode()
         await waitFor(() => {
@@ -195,7 +188,7 @@ describe('totp', () => {
                 )
             })
         )
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 { credentials: 'include' }
@@ -204,15 +197,12 @@ describe('totp', () => {
                 'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 {
                     credentials: 'include',
-                    body: JSON.stringify({ code: mfaCode }),
-                    headers: headers,
+                    body: { code: mfaCode },
+                    headers,
                     method: 'POST'
                 }
             ],
-            [
-                'http://127.0.0.1:8000/cosmae/api/user/self',
-                { credentials: 'include', headers }
-            ]
+            ['http://127.0.0.1:8000/cosmae/api/user/self', { credentials: 'include' }]
         ])
     })
     test('new totp error', async () => {
@@ -224,7 +214,7 @@ describe('totp', () => {
         const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
             fetchMock,
-            partialState
+            partialLoginState
         )
         await enterMfaCode()
         await waitFor(() => {
@@ -243,7 +233,7 @@ describe('totp', () => {
         })
         expect(screen.queryByText('You are logged in')).toBeNull()
         screen.getByRole('textbox')
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 { credentials: 'include' }
@@ -252,7 +242,7 @@ describe('totp', () => {
                 'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 {
                     credentials: 'include',
-                    body: JSON.stringify({ code: mfaCode }),
+                    body: { code: mfaCode },
                     headers: headers,
                     method: 'POST'
                 }
@@ -268,7 +258,7 @@ describe('totp', () => {
         const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
             fetchMock,
-            partialState
+            partialLoginState
         )
         await enterMfaCode()
         await waitFor(() => {
@@ -288,7 +278,7 @@ describe('totp', () => {
         const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
             fetchMock,
-            partialState
+            partialLoginState
         )
         await enterMfaCode()
         await waitFor(() => {
@@ -313,7 +303,7 @@ describe('totp', () => {
                 )
             })
         )
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 { credentials: 'include' }
@@ -322,15 +312,12 @@ describe('totp', () => {
                 'http://127.0.0.1:8000/_allauth/browser/v1/auth/2fa/authenticate',
                 {
                     credentials: 'include',
-                    body: JSON.stringify({ code: mfaCode }),
+                    body: { code: mfaCode },
                     headers: headers,
                     method: 'POST'
                 }
             ],
-            [
-                'http://127.0.0.1:8000/cosmae/api/user/self',
-                { credentials: 'include', headers }
-            ]
+            ['http://127.0.0.1:8000/cosmae/api/user/self', { credentials: 'include' }]
         ])
     })
     test('existing totp error', async () => {
@@ -344,7 +331,7 @@ describe('totp', () => {
         const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
             fetchMock,
-            partialState
+            partialLoginState
         )
         await enterMfaCode()
         await waitFor(() => {
@@ -363,7 +350,7 @@ describe('totp', () => {
         })
         expect(screen.queryByText('You are logged in')).toBeNull()
         screen.getByRole('textbox')
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/_allauth/browser/v1/account/authenticators/totp',
                 { credentials: 'include' }
@@ -372,7 +359,7 @@ describe('totp', () => {
                 'http://127.0.0.1:8000/_allauth/browser/v1/auth/2fa/authenticate',
                 {
                     credentials: 'include',
-                    body: JSON.stringify({ code: mfaCode }),
+                    body: { code: mfaCode },
                     headers: headers,
                     method: 'POST'
                 }
@@ -388,7 +375,7 @@ describe('totp', () => {
         const { store } = renderWithProviders(
             <AuthProvider children={<span>You are logged in</span>}></AuthProvider>,
             fetchMock,
-            partialState
+            partialLoginState
         )
         await enterMfaCode()
         await waitFor(() => {
@@ -509,20 +496,20 @@ describe('registration', () => {
                 notificationMap: expect.anything()
             })
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/manage/user',
                 {
                     credentials: 'include',
                     method: 'POST',
                     headers,
-                    body: JSON.stringify({
+                    body: {
                         username: userNameTest,
                         email: emailTest,
                         password: passwordTest,
                         names_personal: namesPersonalTest,
                         ssh_key: sshKeyTest
-                    })
+                    }
                 }
             ]
         ])
@@ -554,8 +541,9 @@ describe('registration', () => {
     })
 })
 describe('reauthenticate', () => {
-    const partialState = {
+    const partialLoginState = {
         preloadedState: {
+            ...emptyState,
             auth: reauthenticateState,
             user: newUserState({}),
             notification: newNotificationManager({}),
@@ -577,7 +565,7 @@ describe('reauthenticate', () => {
                 <span>{loggedInText}</span>
             </AuthProvider>,
             fetchMock,
-            partialState
+            partialLoginState
         )
         await performReauthentication()
         await waitFor(() => {
@@ -586,18 +574,18 @@ describe('reauthenticate', () => {
             )
             const state = store.getState()
             expect(state.auth).toEqual({
-                ...partialState.preloadedState.auth,
+                ...partialLoginState.preloadedState.auth,
                 stepStack: newRemote([AuthStep.Totp])
             })
             expect(state.notification.notificationList.length).toEqual(0)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/_allauth/browser/v1/auth/reauthenticate',
                 {
                     headers,
                     method: 'POST',
-                    body: JSON.stringify({ password: passwordTest })
+                    body: { password: passwordTest }
                 }
             ]
         ])
@@ -612,7 +600,7 @@ describe('reauthenticate', () => {
                 <span>{loggedInText}</span>
             </AuthProvider>,
             fetchMock,
-            partialState
+            partialLoginState
         )
         await performReauthentication()
         await waitFor(() => {
@@ -620,7 +608,7 @@ describe('reauthenticate', () => {
                 'Please enter the current code from your authenticator app.'
             )
             const state = store.getState()
-            expect(state.auth).toEqual(partialState.preloadedState.auth)
+            expect(state.auth).toEqual(partialLoginState.preloadedState.auth)
             expect(state.notification.notificationList).toEqual([
                 newNotification({
                     msg: testError,
@@ -629,73 +617,18 @@ describe('reauthenticate', () => {
                 })
             ])
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/_allauth/browser/v1/auth/reauthenticate',
                 {
                     headers,
                     method: 'POST',
-                    body: JSON.stringify({ password: passwordTest })
+                    body: { password: passwordTest }
                 }
             ]
         ])
     })
 })
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        auth: AuthState
-        user: UserState
-        notification: NotificationManager
-        editSession: EditSessionState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            user: newUserState({}),
-            auth: newAuthState({}),
-            notification: { notificationList: [], notificationMap: {} },
-            editSession: newEditSessionState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            user: userReducer,
-            auth: authReducer,
-            notification: notificationReducer,
-            editSession: editSessionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 
 const userNameTest = 'test_user'
 const emailTest = 'me@test.url'
@@ -709,7 +642,6 @@ const idEditSession = 'id-session-test'
 const idAuthTest = 287
 const nameEditSession = 'edit session for tests'
 const headers = {
-    'Access-Control-Allow-Credentials': 'true',
     'Content-Type': 'application/json'
 }
 const authUserApiRsp = {
@@ -765,6 +697,7 @@ const totpInputRequiredRsp = {
 }
 
 const newTotpRsp = {
+    status: 404,
     meta: {
         secret: 'J4ZKKXTK7NOVU7EPUVY23LCDV4T2QZYM',
         totp_url:

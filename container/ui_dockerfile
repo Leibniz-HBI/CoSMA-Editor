@@ -21,11 +21,14 @@ ADD ui/tsconfig.app.json /cosmae/
 ADD ui/tsconfig.node.json /cosmae/
 ADD ui/src/ /cosmae/src
 ADD ui/public /cosmae/public
+ADD ui/openapi.js /cosmae/openapi.js
+ADD ui/openapi /cosmae/openapi
 RUN cp /cosmae/src/config_production.ts /cosmae/src/config.ts
 RUN npm install vite @vitejs/plugin-react
+RUN npm run openapi
 RUN npm run build
 
-FROM nginx:1.27.4-alpine
+FROM nginx:1.29.0-alpine
 COPY --from=builder /cosmae/build /srv/cosmae
 COPY container/resources/robots.txt /srv/cosmae
 COPY container/resources/nginx.conf /etc/nginx

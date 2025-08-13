@@ -1,4 +1,5 @@
 export const config = {
+    api_url: 'http://127.0.0.1:8000/',
     api_path: 'http://127.0.0.1:8000/cosmae/api',
     api_path_auth: 'http://127.0.0.1:8000/_allauth/browser/v1',
     /**

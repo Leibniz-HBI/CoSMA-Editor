@@ -19,6 +19,7 @@ import {
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { PublicUserInfo } from '../user/state'
 import { curateColumnError, curateColumnStart } from './slice'
+import { cosmaeColumnApiPostGetColumnChildren } from '../openapi/cosmae'
 
 export function loadColumnHierarchy({
     idParentPersistent = undefined,
@@ -43,25 +44,17 @@ export function loadColumnHierarchy({
             if (upUntilDate !== undefined) {
                 body['up_until_time'] = upUntilDate.toISOString()
             }
-            const rsp = await fetch(config.api_path + '/columns/children', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            })
-            const json = await rsp.json()
-            if (rsp.status != 200) {
+            const rsp = await cosmaeColumnApiPostGetColumnChildren({body})
+            if (rsp.error !== undefined) {
                 dispatch(loadColumnHierarchyError())
                 dispatch(
                     addError(
-                        `Could not load column definitions. Reason: "${json['msg']}"`
+                        `Could not load column definitions. Reason: "${rsp.error.msg}"`
                     )
                 )
                 return
             }
-            const columnsApi = json['column_list']
+            const columnsApi = rsp.data.column_list
             for (const columnApi of columnsApi) {
                 const columnDefinition = parseColumnsFromApi(columnApi, namePath)
                 columns.push(columnDefinition)

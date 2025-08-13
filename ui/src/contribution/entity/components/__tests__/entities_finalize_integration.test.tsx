@@ -7,31 +7,17 @@ vi.mock('@glideapps/glide-data-grid', () => ({
     DataEditor: vi.fn().mockImplementation((props: any) => <MockTable />)
 }))
 import { vi, Mock } from 'vitest'
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import { ContributionEntityState, newContributionEntityState } from '../../state'
-import { configureStore } from '@reduxjs/toolkit'
-import { contributionEntitySlice } from '../../slice'
-import {
-    ContributionState,
-    contributionSlice,
-    newContributionState
-} from '../../../slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen } from '@testing-library/react'
+import { newContributionEntityState } from '../../state'
+import { newContributionState } from '../../../slice'
 import { EntitiesStep } from '../../components'
-import {
-    ColumnSelectionState,
-    newColumnSelectionState
-} from '../../../../column_menu/state'
-import { columnSelectionReducer } from '../../../../column_menu/slice'
-import {
-    NotificationManager,
-    NotificationType,
-    notificationReducer
-} from '../../../../util/notification/slice'
+import { newColumnSelectionState } from '../../../../column_menu/state'
+import { NotificationType } from '../../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
 import { ContributionStep, newContribution } from '../../../state'
 import { newRemote } from '../../../../util/state'
+import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
+import { addResponseSequence } from '../../../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -51,71 +37,6 @@ beforeEach(() => {
     ;(useNavigate() as Mock).mockClear()
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionEntity: ContributionEntityState
-        contribution: ContributionState
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionEntity: newContributionEntityState({}),
-            contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        idPersistent: idContribution,
-                        name: 'contribution test',
-                        description: 'A contribution used in tests',
-                        hasHeader: true,
-                        step: ContributionStep.ValuesExtracted,
-                        emptyValues: 'null,na',
-                        author: 'author-test'
-                    })
-                )
-            }),
-            columnSelection: newColumnSelectionState({}),
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionEntity: contributionEntitySlice.reducer,
-            contribution: contributionSlice.reducer,
-            columnSelection: columnSelectionReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 function mkMatches(
     entities: {
         id_persistent: string
@@ -214,7 +135,7 @@ test('success', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(6)
     })
@@ -250,7 +171,7 @@ test('error', async () => {
     initialResponses(fetchMock)
     const errorMsg = 'Could not finalize'
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
-    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(6)
     })
@@ -271,3 +192,24 @@ test('error', async () => {
     ])
     expect((useNavigate() as Mock).mock.calls).toEqual([])
 })
+
+const preloadedState = {
+        ...emptyState,
+        contributionEntity: newContributionEntityState({}),
+        contribution: newContributionState({
+            selectedContribution: newRemote(
+                newContribution({
+                    idPersistent: idContribution,
+                    name: 'contribution test',
+                    description: 'A contribution used in tests',
+                    hasHeader: true,
+                    step: ContributionStep.ValuesExtracted,
+                    emptyValues: 'null,na',
+                    author: 'author-test'
+                })
+            )
+        }),
+        columnSelection: newColumnSelectionState({}),
+        notification: { notificationList: [], notificationMap: {} }
+    },
+    initialState = { preloadedState }
