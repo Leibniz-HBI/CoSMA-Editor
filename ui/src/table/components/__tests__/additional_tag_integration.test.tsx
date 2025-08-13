@@ -13,19 +13,13 @@ vi.mock('@glideapps/glide-data-grid', async () => {
 })
 import { vi, Mock } from 'vitest'
 import { Button } from 'react-bootstrap'
-import {
-    ColumnSelectionState,
-    newColumnSelectionState
-} from '../../../column_menu/state'
+import { newColumnSelectionState } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
-    UserState,
     newPublicUserInfo,
-    newUserInfo,
-    newUserState
+    newUserInfo
 } from '../../../user/state'
 import {
-    TableState,
     displayTextColumn,
     displayTxtColumnId,
     justificationColumn,
@@ -34,41 +28,29 @@ import {
     newTableState
 } from '../../state'
 import { newEntity } from '../../../entity/state'
-import {
-    NotificationManager,
-    newNotificationManager,
-    notificationReducer
-} from '../../../util/notification/slice'
-import { RenderOptions, waitFor, render, screen } from '@testing-library/react'
-import { showColumnAddMenu, tableReducer } from '../../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren, act } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen } from '@testing-library/react'
+import { showColumnAddMenu } from '../../slice'
 import { RemoteDataTable } from '../table'
-import { userSlice } from '../../../user/slice'
-import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { newRemote } from '../../../util/state'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
 } from '../../../session/state'
-import { editSessionReducer } from '../../../session/slice'
-import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
-import { entityDetailsReducer } from '../../../entity/slice'
-import { columnSelectionReducer } from '../../../column_menu/slice'
 import { useAppDispatch } from '../../../hooks'
-import { AuthState, newAuthState } from '../../../auth/state'
-import { authReducer } from '../../../auth/slice'
+import { newAuthState } from '../../../auth/state'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { act } from 'react'
 
 test('get descendant column success', async () => {
     const fetchMock = vi.fn()
     addEntitiesResponse(fetchMock)
     addHierarchyAndDescendantsResponse(fetchMock)
     addValueResponse(fetchMock)
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    addUserProfileResponse(fetchMock)
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, initialState)
     await openColumnModal()
     await selectColumn()
     await waitFor(() => {
@@ -86,12 +68,12 @@ test('get descendant column success', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
-                body: JSON.stringify({ offset: 0, limit: 500 }),
+                body: { offset: 0, limit: 500 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -100,7 +82,7 @@ test('get descendant column success', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
-                body: JSON.stringify({ offset: version1 + 1, limit: 500 }),
+                body: { offset: version1 + 1, limit: 500 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -108,7 +90,7 @@ test('get descendant column success', async () => {
         [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
-                body: '{}',
+                body: {},
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
@@ -117,9 +99,9 @@ test('get descendant column success', async () => {
         [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
-                body: JSON.stringify({
+                body: {
                     id_parent_persistent: idColumnParentPersistent
-                }),
+                },
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
@@ -128,16 +110,16 @@ test('get descendant column success', async () => {
         [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
-                body: JSON.stringify({
+                body: {
                     id_parent_persistent: idColumnPersistent
-                }),
+                },
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/columns/${idColumnParentPersistent}/descendants?`,
+            `http://127.0.0.1:8000/cosmae/api/columns/${idColumnParentPersistent}/descendants`,
             { credentials: 'include' }
         ],
         [
@@ -146,11 +128,11 @@ test('get descendant column success', async () => {
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+                body: {
                     id_column_persistent: idColumnPersistent,
                     offset: 0,
                     limit: 5000
-                })
+                }
             }
         ],
         [
@@ -168,13 +150,14 @@ test('get descendant column with history success', async () => {
     addEntitiesResponse(fetchMock)
     addHierarchyAndDescendantsResponse(fetchMock)
     addValueResponse(fetchMock)
+    addUserProfileResponse(fetchMock)
     const historyDate = new Date(2004, 3, 7)
     const historyDateString = historyDate.toISOString()
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, {
         preloadedState: {
-            ...defaultPreloadedState,
+            ...initialState.preloadedState,
             table: {
-                ...defaultPreloadedState.table,
+                ...initialState.preloadedState.table,
                 historyDateSinceEpoch: historyDate.getTime()
             }
         }
@@ -197,16 +180,16 @@ test('get descendant column with history success', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
-                body: JSON.stringify({
+                body: {
                     up_until_time: historyDateString,
                     offset: 0,
                     limit: 500
-                }),
+                },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -215,11 +198,11 @@ test('get descendant column with history success', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
-                body: JSON.stringify({
+                body: {
                     up_until_time: historyDateString,
                     offset: version1 + 1,
                     limit: 500
-                }),
+                },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -227,7 +210,7 @@ test('get descendant column with history success', async () => {
         [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
-                body: JSON.stringify({ up_until_time: historyDateString }),
+                body: { up_until_time: historyDateString },
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
@@ -236,10 +219,10 @@ test('get descendant column with history success', async () => {
         [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
-                body: JSON.stringify({
+                body: {
                     id_parent_persistent: idColumnParentPersistent,
                     up_until_time: historyDateString
-                }),
+                },
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
@@ -248,10 +231,10 @@ test('get descendant column with history success', async () => {
         [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
-                body: JSON.stringify({
+                body: {
                     id_parent_persistent: idColumnPersistent,
                     up_until_time: historyDateString
-                }),
+                },
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
@@ -270,12 +253,12 @@ test('get descendant column with history success', async () => {
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+                body: {
                     id_column_persistent: idColumnPersistent,
                     up_until_time: historyDateString,
                     offset: 0,
                     limit: 5000
-                })
+                }
             }
         ],
         [
@@ -311,21 +294,6 @@ async function selectColumn() {
             closeButton?.click()
         })
     })
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        fetchMock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            )
-        )
-    }
 }
 
 const idPersistent0 = 'test-id-0'
@@ -499,6 +467,11 @@ function addValueResponse(fetchMock: Mock) {
         ]
     ])
 }
+
+function addUserProfileResponse(fetchMock: Mock) {
+    addResponseSequence(fetchMock, [[200, {}]])
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function MockTable(props: any) {
     const dispatch = useAppDispatch()
@@ -514,84 +487,40 @@ function MockTable(props: any) {
         </div>
     )
 }
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        table: TableState
-        tableSelection: TableSelectionState
-        columnSelection: ColumnSelectionState
-        user: UserState
-        auth: AuthState
-        editSession: EditSessionState
-        entityDetails: EntityDetailsState
-    }
-}
 
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = defaultPreloadedState,
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            tableSelection: tableSelectionSlice.reducer,
-            table: tableReducer,
-            columnSelection: columnSelectionReducer,
-            user: userSlice.reducer,
-            auth: authReducer,
-            editSession: editSessionReducer,
-            entityDetails: entityDetailsReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
+const initialState = {
+    preloadedState: {
+        ...emptyState,
+        columnSelection: newColumnSelectionState({
+            columnsByIdPersistent: {
+                [displayTxtColumnId]: newRemote(displayTextColumn),
+                [justificationColumnId]: newRemote(justificationColumn)
+            }
+        }),
+        auth: newAuthState({
+            user: newRemote(
+                newUserInfo({
+                    ...userTest,
+                    email: 'mail@test.org',
+                    namesPersonal: 'names personal',
+                    columns: []
+                })
+            )
+        }),
+        editSession: newEditSessionState({
+            currentEditSession: newRemote(
+                newEditSession({
+                    idPersistent: 'id-session-test',
+                    name: 'edit session for tests',
+                    owner: newEditSessionParticipant({
+                        type: EditSessionParticipantType.internal,
+                        name: 'edit session owner test',
+                        id: idUserTest
+                    }),
+                    participantList: [],
+                    participantMap: {}
+                })
+            )
+        })
     }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-const defaultPreloadedState = {
-    notification: newNotificationManager({}),
-    table: newTableState({}),
-    tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-    columnSelection: newColumnSelectionState({
-        columnsByIdPersistent: {
-            [displayTxtColumnId]: newRemote(displayTextColumn),
-            [justificationColumnId]: newRemote(justificationColumn)
-        }
-    }),
-    user: newUserState({}),
-    auth: newAuthState({
-        user: newRemote(
-            newUserInfo({
-                ...userTest,
-                email: 'mail@test.org',
-                namesPersonal: 'names personal',
-                columns: []
-            })
-        )
-    }),
-    entityDetails: newEntityDetailsState({}),
-    editSession: newEditSessionState({
-        currentEditSession: newRemote(
-            newEditSession({
-                idPersistent: 'id-session-test',
-                name: 'edit session for tests',
-                owner: newEditSessionParticipant({
-                    type: EditSessionParticipantType.internal,
-                    name: 'edit session owner test',
-                    id: idUserTest
-                }),
-                participantList: [],
-                participantMap: {}
-            })
-        )
-    })
 }

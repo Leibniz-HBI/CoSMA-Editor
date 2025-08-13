@@ -1,7 +1,7 @@
-import { PreloadedState, combineReducers, configureStore } from '@reduxjs/toolkit'
+import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { notificationReducer } from './util/notification/slice'
 import { userSlice } from './user/slice'
-import { columnManagementReducer} from './column_management/slice'
+import { columnManagementReducer } from './column_management/slice'
 import { contributionColumnDefinitionSlice } from './contribution/columns/slice'
 import { contributionEntitySlice } from './contribution/entity/slice'
 import { contributionSlice } from './contribution/slice'
@@ -18,6 +18,10 @@ import { editSessionReducer } from './session/slice'
 import { entityDetailsReducer } from './entity/slice'
 import { permissionsReducer } from './permissions/slice'
 import { authReducer } from './auth/slice'
+import { client as cosmaeClient } from './openapi/cosmae/client.gen'
+import { client as allauthClient } from './openapi/allauth/client.gen'
+import { config } from './config'
+import { Fetch } from './util/type'
 
 const rootReducer = combineReducers({
     notification: notificationReducer,
@@ -41,7 +45,8 @@ const rootReducer = combineReducers({
     auth: authReducer
 })
 
-export function setupStore(preloadedState?: PreloadedState<RootState>) {
+export function setupStore(preloadedState?: RootState) {
+    setBaseUrls()
     return configureStore({
         reducer: rootReducer,
         middleware: (getDefaultMiddleware) =>
@@ -57,3 +62,8 @@ export default store
 export type RootState = ReturnType<typeof rootReducer>
 export type AppStore = ReturnType<typeof setupStore>
 export type AppDispatch = AppStore['dispatch']
+
+export function setBaseUrls(fetch?: Fetch | undefined) {
+    allauthClient.setConfig({ baseUrl: config.api_url, credentials: 'include', fetch })
+    cosmaeClient.setConfig({ baseUrl: config.api_url, credentials: 'include', fetch })
+}

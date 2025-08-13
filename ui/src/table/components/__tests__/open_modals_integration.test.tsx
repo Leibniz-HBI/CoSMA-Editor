@@ -13,65 +13,38 @@ vi.mock('@glideapps/glide-data-grid', async () => {
     }
 })
 import { vi, Mock } from 'vitest'
+import {screen, waitFor} from '@testing-library/react'
 import { Button, Col, Row } from 'react-bootstrap'
 import {
     Column,
-    ColumnSelectionState,
     ColumnType,
     newColumn,
     newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
-    UserState,
     newPublicUserInfo,
-    newUserInfo,
-    newUserState
+    newUserInfo
 } from '../../../user/state'
 import {
-    TableState,
     displayTextColumn,
     displayTxtColumnId,
     justificationColumn,
-    justificationColumnId,
-    newTableState
+    justificationColumnId
 } from '../../state'
-import {
-    NotificationManager,
-    newNotificationManager,
-    notificationReducer
-} from '../../../util/notification/slice'
-import { RenderOptions, waitFor, render, screen } from '@testing-library/react'
-import { tableReducer } from '../../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
-import { RemoteDataTable } from '../table'
-import { userSlice } from '../../../user/slice'
-import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { selectShowSearch } from '../../selectors'
-import { columnSelectionReducer } from '../../../column_menu/slice'
 import { useAppSelector } from '../../../hooks'
-import { EntityMergeRequestState } from '../../../merge_request/entity/state'
 import { newRemote } from '../../../util/state'
-import { entityMergeRequestsReducer } from '../../../merge_request/entity/slice'
-import {
-    EntityMergeRequestConflictsState,
-    newEntityMergeRequestConflictsState
-} from '../../../merge_request/entity/conflicts/state'
-import { entityMergeRequestConflictSlice } from '../../../merge_request/entity/conflicts/slice'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
 } from '../../../session/state'
-import { editSessionReducer } from '../../../session/slice'
-import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
-import { entityDetailsReducer } from '../../../entity/slice'
-import { AuthState, newAuthState } from '../../../auth/state'
-import { authReducer } from '../../../auth/slice'
+import { newAuthState } from '../../../auth/state'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { RemoteDataTable } from '../table'
+import { addResponseSequence} from '../../../util/tests/response'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -92,98 +65,11 @@ function MockTable(props: any) {
     )
 }
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        table: TableState
-        tableSelection: TableSelectionState
-        user: UserState
-        auth: AuthState
-        columnSelection: ColumnSelectionState
-        entityMergeRequests: EntityMergeRequestState
-        entityMergeRequestConflicts: EntityMergeRequestConflictsState
-        entityDetails: EntityDetailsState
-        editSession: EditSessionState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            notification: newNotificationManager({}),
-            table: newTableState({}),
-            tableSelection: { rows: [0, 1], cols: [], rowSelectionOrder: [0, 1] },
-            columnSelection: newColumnSelectionState({
-                columnsByIdPersistent: {
-                    [displayTxtColumnId]: newRemote(displayTextColumn),
-                    [justificationColumnId]: newRemote(justificationColumn),
-                    [idColumnPersistent]: newRemote(columnTest)
-                }
-            }),
-            entityMergeRequests: { entityMergeRequests: newRemote([]) },
-            entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
-            user: newUserState({}),
-            auth: newAuthState({
-                user: newRemote(
-                    newUserInfo({
-                        ...userTest,
-                        email: 'mail@test.org',
-                        namesPersonal: 'names personal',
-                        columns: [columnTest]
-                    })
-                )
-            }),
-            entityDetails: newEntityDetailsState({}),
-            editSession: newEditSessionState({
-                currentEditSession: newRemote(
-                    newEditSession({
-                        idPersistent: 'id-session-test',
-                        name: 'edit session for tests',
-                        owner: newEditSessionParticipant({
-                            type: EditSessionParticipantType.internal,
-                            name: 'edit session owner test',
-                            id: idUserTest
-                        }),
-                        participantList: [],
-                        participantMap: {}
-                    })
-                )
-            })
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            tableSelection: tableSelectionSlice.reducer,
-            table: tableReducer,
-            user: userSlice.reducer,
-            auth: authReducer,
-            columnSelection: columnSelectionReducer,
-            entityMergeRequests: entityMergeRequestsReducer,
-            entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
-            entityDetails: entityDetailsReducer,
-            editSession: editSessionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
 
 test('show and hide Search', async () => {
     const fetchMock = vi.fn()
     addInitialTable(fetchMock)
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, preloadedState)
     await waitFor(() => {
         const searchButton = screen.getByRole('button', { name: 'Search' })
         searchButton.click()
@@ -203,7 +89,7 @@ test('show and hide Search', async () => {
 test('show and hide add entity modal', async () => {
     const fetchMock = vi.fn()
     addInitialTable(fetchMock)
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, preloadedState)
     await waitFor(() => {
         const newEntityText = screen.queryByText('Add new Entity')
         expect(newEntityText).toBeNull()
@@ -226,7 +112,7 @@ test('show and hide add column modal', async () => {
     const fetchMock = vi.fn()
     addInitialTable(fetchMock)
     addResponseSequence(fetchMock, [[200, [{ column_list: [] }]]])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, preloadedState)
     await waitFor(() => {
         const addButton = screen.getByRole('button', { name: '+' })
         addButton.click()
@@ -247,15 +133,17 @@ test('show and hide entity merging modal', async () => {
     const fetchMock = vi.fn()
     addInitialTable(fetchMock)
     addResponseSequence(fetchMock, [[200, [{ column_list: [] }]]])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, preloadedState)
     await waitFor(() => {
+        const state = store.getState()
+        expect(state.table.showEntityMergingModal).toBeFalsy()
         const addButton = screen.getByRole('button', { name: 'Merge Entities' })
         addButton.click()
     })
-    await waitFor(() => {
+    await waitFor(async () => {
         const state = store.getState()
         expect(state.table.showEntityMergingModal).toBeTruthy()
-        const closeButton = screen.getByRole('button', { name: 'Close' })
+        const closeButton = await screen.findByRole('button', { name: 'Close' })
         closeButton.click()
     })
 
@@ -304,20 +192,6 @@ function addInitialTable(fetchMock: Mock) {
     ])
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        fetchMock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            )
-        )
-    }
-}
 
 const columnNameTest = 'column name test'
 const idColumnPersistent = 'column_id_test'
@@ -338,3 +212,41 @@ const columnTest: Column = newColumn({
     version: 2,
     hidden: false
 })
+
+const initialState = {...emptyState,
+            tableSelection: { rows: [0, 1], cols: [], rowSelectionOrder: [0, 1] },
+            columnSelection: newColumnSelectionState({
+                columnsByIdPersistent: {
+                    [displayTxtColumnId]: newRemote(displayTextColumn),
+                    [justificationColumnId]: newRemote(justificationColumn),
+                    [idColumnPersistent]: newRemote(columnTest)
+                }
+            }),
+            auth: newAuthState({
+                user: newRemote(
+                    newUserInfo({
+                        ...userTest,
+                        email: 'mail@test.org',
+                        namesPersonal: 'names personal',
+                        columns: [columnTest]
+                    })
+                )
+            }),
+            editSession: newEditSessionState({
+                currentEditSession: newRemote(
+                    newEditSession({
+                        idPersistent: 'id-session-test',
+                        name: 'edit session for tests',
+                        owner: newEditSessionParticipant({
+                            type: EditSessionParticipantType.internal,
+                            name: 'edit session owner test',
+                            id: idUserTest
+                        }),
+                        participantList: [],
+                        participantMap: {}
+                    })
+                )
+            })
+}
+
+const preloadedState= {preloadedState:initialState}

@@ -2,29 +2,16 @@
  * @vitest-environment jsdom
  */
 
-import {
-    RenderOptions,
-    getByRole,
-    render,
-    screen,
-    waitFor
-} from '@testing-library/react'
-import {
-    ColumnDefinitionsContributionState,
-    newColumnDefinitionsContributionState
-} from '../state'
+import { getByRole, screen, waitFor } from '@testing-library/react'
+import { newColumnDefinitionsContributionState } from '../state'
 import { newRemote } from '../../../util/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { contributionColumnDefinitionSlice } from '../slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
-import { ColumnSelectionState, newColumnSelectionState } from '../../../column_menu/state'
-import { columnSelectionReducer} from '../../../column_menu/slice'
 import userEvent from '@testing-library/user-event'
-import { ContributionState, contributionSlice, newContributionState } from '../../slice'
+import { newContributionState } from '../../slice'
 import { vi, Mock } from 'vitest'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { addResponseSequence, expectFetchCall } from '../../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -40,70 +27,6 @@ vi.mock('react-flip-toolkit', () => {
     }
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionColumnDefinition: ColumnDefinitionsContributionState
-        contribution: ContributionState
-        columnSelection: ColumnSelectionState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionColumnDefinition: newColumnDefinitionsContributionState({
-                columns: newRemote(undefined)
-            }),
-            contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        name: 'contribution test',
-                        idPersistent: idContribution,
-                        description: 'a contribution for tests',
-                        step: ContributionStep.ColumnsExtracted,
-                        hasHeader: true,
-                        emptyValues: 'null,na',
-                        author: authorTest
-                    })
-                )
-            }),
-            columnSelection: newColumnSelectionState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
-            contribution: contributionSlice.reducer,
-            columnSelection: columnSelectionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 export const idContribution = 'id-contribution-test'
 const authorTest = 'author test'
 export const contributionColumnActiveRsp0 = {
@@ -171,7 +94,11 @@ test('create, select and assign column', async () => {
         [200, { ...contributionColumnActiveRsp1, id_existing_persistent: idColumn0 }],
         [200, { contribution_values: [], destination_values: [] }]
     ])
-    const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+    const { store } = renderWithProviders(
+        <ColumnDefinitionStep />,
+        fetchMock,
+        initialState
+    )
     const user = userEvent.setup()
     let title2: HTMLElement | undefined
     await waitFor(() => {
@@ -221,7 +148,7 @@ test('create, select and assign column', async () => {
                 ?.idExistingPersistent
         ).toEqual(idColumn0)
     })
-    expect(fetchMock.mock.calls.at(-2)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-2), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns/${contributionColumnActiveRsp1.id_persistent}`,
         {
             method: 'PATCH',
@@ -229,8 +156,30 @@ test('create, select and assign column', async () => {
             body: JSON.stringify({ id_existing_persistent: idColumn0 })
         }
     ])
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-2`,
         { credentials: 'include' }
     ])
 }, 10000)
+
+const preloadedState = {
+    ...emptyState,
+
+    contributionColumnDefinition: newColumnDefinitionsContributionState({
+        columns: newRemote(undefined)
+    }),
+    contribution: newContributionState({
+        selectedContribution: newRemote(
+            newContribution({
+                name: 'contribution test',
+                idPersistent: idContribution,
+                description: 'a contribution for tests',
+                step: ContributionStep.ColumnsExtracted,
+                hasHeader: true,
+                emptyValues: 'null,na',
+                author: authorTest
+            })
+        )
+    })
+}
+const initialState = { preloadedState }

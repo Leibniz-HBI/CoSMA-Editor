@@ -18,24 +18,15 @@ import {
     newPublicUserInfo,
     newUserInfo
 } from '../../../user/state'
-import { TableState, newTableState } from '../../state'
+import { newTableState } from '../../state'
 import { newEntity } from '../../../entity/state'
-import {
-    NotificationManager,
-    newNotificationManager,
-    notificationReducer
-} from '../../../util/notification/slice'
-import { RenderOptions, waitFor, render, screen } from '@testing-library/react'
-import { tableReducer } from '../../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
-import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
+import { waitFor, screen } from '@testing-library/react'
 import { EntityAddModal } from '../modals'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { newRemote } from '../../../util/state'
-import { authReducer } from '../../../auth/slice'
-import { AuthState, newAuthState } from '../../../auth/state'
+import { newAuthState } from '../../../auth/state'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -62,20 +53,6 @@ function MockTable(props: any) {
         </div>
     )
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        fetchMock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            )
-        )
-    }
-}
 const idPersistent0 = 'test-id-0'
 const version0 = 0
 const displayTxt0 = 'test display txt 0'
@@ -84,7 +61,7 @@ const justification0 = 'Tremendously terrific shit poster.'
 test('success new entity', async () => {
     const fetchMock = vi.fn()
     addEntityResponse(fetchMock, displayTxt0, justification0)
-    const { store } = renderWithProviders(<EntityAddModal />, fetchMock)
+    const { store } = renderWithProviders(<EntityAddModal />, fetchMock, initialState)
     const user = userEvent.setup()
     await fillEntityForm(user, displayTxt0, justification0)
     await waitFor(() => {
@@ -100,15 +77,15 @@ test('success new entity', async () => {
             })
         ])
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/entities',
             {
-                body: JSON.stringify({
+                body: {
                     entity_list: [
                         { display_txt: displayTxt0, justification_txt: justification0 }
                     ]
-                }),
+                },
                 credentials: 'include',
                 method: 'POST'
             }
@@ -118,7 +95,7 @@ test('success new entity', async () => {
 test('success new entity no display text', async () => {
     const fetchMock = vi.fn()
     addEntityResponse(fetchMock, displayTxt0, justification0)
-    const { store } = renderWithProviders(<EntityAddModal />, fetchMock)
+    const { store } = renderWithProviders(<EntityAddModal />, fetchMock, initialState)
     const user = userEvent.setup()
     await fillEntityForm(user, undefined, justification0)
     await waitFor(() => {
@@ -134,28 +111,19 @@ test('success new entity no display text', async () => {
             })
         ])
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/entities',
             {
                 credentials: 'include',
-                body: JSON.stringify({
+                body: {
                     entity_list: [{ justification_txt: justification0 }]
-                }),
+                },
                 method: 'POST'
             }
         ]
     ])
 })
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        table: TableState
-        tableSelection: TableSelectionState
-        auth: AuthState
-    }
-}
 
 function addEntityResponse(fetchMock: Mock, displayTxt: string, justification: string) {
     addResponseSequence(fetchMock, [
@@ -197,47 +165,6 @@ async function fillEntityForm(
     )
 }
 
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            notification: newNotificationManager({}),
-            table: newTableState({ showEntityAddDialog: true }),
-            tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            auth: newAuthState({
-                user: newRemote(
-                    newUserInfo({
-                        ...userTest,
-                        email: 'mail@test.org',
-                        namesPersonal: 'names personal',
-                        columns: []
-                    })
-                )
-            })
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            tableSelection: tableSelectionSlice.reducer,
-            table: tableReducer,
-            auth: authReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
 const nameUserTest = 'user_test'
 const idUserTest = 'id-user-test'
 const userTest = newPublicUserInfo({
@@ -245,3 +172,21 @@ const userTest = newPublicUserInfo({
     username: nameUserTest,
     permissionGroup: UserPermissionGroup.CONTRIBUTOR
 })
+
+const initialState = {
+    preloadedState: {
+        ...emptyState,
+        table: newTableState({ showEntityAddDialog: true }),
+        auth: newAuthState({
+            user: newRemote(
+                newUserInfo({
+                    ...userTest,
+                    email: 'mail@test.org',
+                    namesPersonal: 'names personal',
+                    columns: []
+                })
+            )
+        }),
+        tableSelection: { rows: [], cols: [], rowSelectionOrder: [] }
+    }
+}

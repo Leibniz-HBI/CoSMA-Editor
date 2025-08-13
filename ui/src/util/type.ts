@@ -21,7 +21,7 @@ export type HandleChange = {
 
 export type StringFunction = (str: string) => void
 
-type Fetch = (
+export type Fetch = (
     input: RequestInfo | URL,
     init?: RequestInit | undefined
 ) => Promise<Response>

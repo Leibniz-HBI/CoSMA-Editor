@@ -27,6 +27,7 @@ import { setCurrentEditSession } from '../session/slice'
 import { parseEditSessionFromApi } from '../session/thunks'
 import { removeUserColumn } from '../auth/slice'
 import { handleAllauthResponse } from '../util/api'
+import { cosmaeUserApiPostAppendColumnIdPersistent } from '../openapi/cosmae'
 
 export function setCurrentEditSessionThunk(
     id_edit_session_persistent: string
@@ -150,9 +151,8 @@ export function remoteUserProfileColumnAppend(
         if (idColumnPersistent == justificationColumnId) {
             return
         }
-        await fetch(config.api_path + `/user/columns/append/${idColumnPersistent}`, {
-            credentials: 'include',
-            method: 'POST'
+        await cosmaeUserApiPostAppendColumnIdPersistent({
+            path: { id_column_persistent: idColumnPersistent }
         })
     }
 }

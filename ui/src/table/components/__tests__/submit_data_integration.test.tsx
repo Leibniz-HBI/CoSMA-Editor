@@ -16,46 +16,33 @@ import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     Column,
-    ColumnSelectionState,
     ColumnType,
     newColumn,
     newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
-    UserState,
     newPublicUserInfo,
-    newUserInfo,
-    newUserState
+    newUserInfo
 } from '../../../user/state'
 import {
-    TableState,
     displayTextColumn,
     displayTxtColumnId,
     justificationColumn,
-    justificationColumnId,
-    newTableState
+    justificationColumnId
 } from '../../state'
 import { newEntity } from '../../../entity/state'
 import {
-    NotificationManager,
     NotificationType,
     newNotification,
-    newNotificationManager,
-    notificationReducer
+    newNotificationManager
 } from '../../../util/notification/slice'
-import { RenderOptions, waitFor, render, screen } from '@testing-library/react'
-import { tableReducer } from '../../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { ChangeEvent, PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen } from '@testing-library/react'
+import { ChangeEvent } from 'react'
 import { RemoteDataTable } from '../table'
-import { userSlice } from '../../../user/slice'
-import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import { FormField } from '../../../util/form'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
@@ -64,12 +51,9 @@ import { GridCellKind, Item } from '@glideapps/glide-data-grid'
 import userEvent from '@testing-library/user-event'
 import { debounce } from 'debounce'
 import { newRemote } from '../../../util/state'
-import { editSessionReducer } from '../../../session/slice'
-import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
-import { entityDetailsReducer } from '../../../entity/slice'
-import { columnSelectionReducer } from '../../../column_menu/slice'
-import { AuthState, newAuthState } from '../../../auth/state'
-import { authReducer } from '../../../auth/slice'
+import { newAuthState } from '../../../auth/state'
+import { addResponseSequence, expectFetchCall } from '../../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 
 const debounced = debounce(
     (changeCallback: (item: Item, value: string) => void, item: Item, value: string) =>
@@ -146,7 +130,11 @@ test('edit display text success', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const user = userEvent.setup()
     const inputs = await waitFor(() => {
         const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
@@ -172,12 +160,12 @@ test('edit display text success', async () => {
         )
     })
     expect(fetchMock.mock.calls.length).toEqual(4)
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         'http://127.0.0.1:8000/cosmae/api/entities',
         {
             credentials: 'include',
             method: 'POST',
-            body: JSON.stringify({
+            body: {
                 entity_list: [
                     {
                         display_txt: valueChanged,
@@ -185,7 +173,7 @@ test('edit display text success', async () => {
                         version: version1
                     }
                 ]
-            })
+            }
         }
     ])
 })
@@ -195,7 +183,11 @@ test('edit display text error', async () => {
     addValueResponse(fetchMock)
     const msg = 'could not edit entity for test'
     addResponseSequence(fetchMock, [[500, { msg }]])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const user = userEvent.setup()
     const inputs = await waitFor(() => {
         const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
@@ -253,7 +245,11 @@ test('edit value success', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const user = userEvent.setup()
     const inputs = await waitFor(() => {
         const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
@@ -277,13 +273,13 @@ test('edit value success', async () => {
         ])
     })
     expect(fetchMock.mock.calls.length).toEqual(4)
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         'http://127.0.0.1:8000/cosmae/api/values',
         {
             credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+            body: {
                 value_list: [
                     {
                         id_entity_persistent: idPersistent0,
@@ -293,7 +289,7 @@ test('edit value success', async () => {
                         version: versionValue0
                     }
                 ]
-            })
+            }
         }
     ])
 })
@@ -304,7 +300,11 @@ test('edit value api msg error', async () => {
     addValueResponse(fetchMock)
     const msg = 'Could not change value'
     addResponseSequence(fetchMock, [[500, { msg }]])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const user = userEvent.setup()
     const inputs = await waitFor(() => {
         const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
@@ -363,7 +363,11 @@ test('edit value changed in backend', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const user = userEvent.setup()
     const inputs = await waitFor(() => {
         const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
@@ -401,20 +405,6 @@ test('edit value changed in backend', async () => {
     })
     expect(fetchMock.mock.calls.length).toEqual(4)
 })
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        fetchMock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            )
-        )
-    }
-}
 
 const idPersistent0 = 'test-id-0'
 const idPersistent1 = 'test-id-1'
@@ -514,84 +504,39 @@ function addValueResponse(fetchMock: Mock) {
     ])
 }
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        table: TableState
-        tableSelection: TableSelectionState
-        columnSelection: ColumnSelectionState
-        auth: AuthState
-        user: UserState
-        editSession: EditSessionState
-        entityDetails: EntityDetailsState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            notification: newNotificationManager({}),
-            table: newTableState({}),
-            tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            columnSelection: newColumnSelectionState({
-                columnsByIdPersistent: {
-                    [displayTxtColumnId]: newRemote(displayTextColumn),
-                    [justificationColumnId]: newRemote(justificationColumn),
-                    [idColumnPersistent]: newRemote(columnTest)
-                }
-            }),
-            user: newUserState({}),
-            auth: newAuthState({
-                user: newRemote(
-                    newUserInfo({
-                        ...userTest,
-                        email: 'mail@test.org',
-                        namesPersonal: 'names personal',
-                        columns: [columnTest]
-                    })
-                )
-            }),
-            entityDetails: newEntityDetailsState({}),
-            editSession: newEditSessionState({
-                currentEditSession: newRemote(
-                    newEditSession({
-                        idPersistent: 'id-session-test',
-                        name: 'edit session for tests',
-                        owner: newEditSessionParticipant({
-                            type: EditSessionParticipantType.internal,
-                            name: 'edit session owner test',
-                            id: idUserTest
-                        }),
-                        participantList: [],
-                        participantMap: {}
-                    })
-                )
+const initialState = {
+    ...emptyState,
+    columnSelection: newColumnSelectionState({
+        columnsByIdPersistent: {
+            [displayTxtColumnId]: newRemote(displayTextColumn),
+            [justificationColumnId]: newRemote(justificationColumn),
+            [idColumnPersistent]: newRemote(columnTest)
+        }
+    }),
+    auth: newAuthState({
+        user: newRemote(
+            newUserInfo({
+                ...userTest,
+                email: 'mail@test.org',
+                namesPersonal: 'names personal',
+                columns: [columnTest]
             })
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            tableSelection: tableSelectionSlice.reducer,
-            table: tableReducer,
-            columnSelection: columnSelectionReducer,
-            user: userSlice.reducer,
-            auth: authReducer,
-            entityDetails: entityDetailsReducer,
-            editSession: editSessionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
+        )
+    }),
+    editSession: newEditSessionState({
+        currentEditSession: newRemote(
+            newEditSession({
+                idPersistent: 'id-session-test',
+                name: 'edit session for tests',
+                owner: newEditSessionParticipant({
+                    type: EditSessionParticipantType.internal,
+                    name: 'edit session owner test',
+                    id: idUserTest
+                }),
+                participantList: [],
+                participantMap: {}
+            })
+        )
     })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
+const preloadedState = { preloadedState: initialState }

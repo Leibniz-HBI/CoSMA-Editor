@@ -7,39 +7,17 @@ vi.mock('@glideapps/glide-data-grid', () => ({
     DataEditor: vi.fn().mockImplementation((props: any) => <MockTable />)
 }))
 import { vi, Mock } from 'vitest'
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import {
-    ContributionEntityState,
-    newContributionEntityState,
-    newEntityWithDuplicates,
-    newScoredEntity
-} from '../../state'
+import { waitFor, screen } from '@testing-library/react'
+import { newEntityWithDuplicates, newScoredEntity } from '../../state'
 import { newRemote } from '../../../../util/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { contributionEntitySlice } from '../../slice'
-import {
-    ContributionState,
-    contributionSlice,
-    newContributionState
-} from '../../../slice'
-import { act, PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { newContributionState } from '../../../slice'
+import { act } from 'react'
 import { EntitiesStep } from '../../components'
-import {
-    ColumnSelectionState,
-    newColumnSelectionState
-} from '../../../../column_menu/state'
-import { columnSelectionReducer } from '../../../../column_menu/slice'
 import { ContributionStep, newContribution } from '../../../state'
 import userEvent from '@testing-library/user-event'
-import {
-    EntityDetailsState,
-    newEntity,
-    newEntityDetailsState
-} from '../../../../entity/state'
-import { entityDetailsReducer } from '../../../../entity/slice'
-import { newTableState, TableState } from '../../../../table/state'
-import { tableReducer } from '../../../../table/slice'
+import { newEntity, newEntityDetailsState } from '../../../../entity/state'
+import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
+import { addResponseSequence, expectFetchCall } from '../../../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -55,10 +33,10 @@ test('add searched entity', async () => {
     const fetchMock = vi.fn()
     initialResponses(fetchMock)
     addSearchResultResponses(fetchMock)
-    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock, preloadedState)
     await doSearch(fetchMock)
-    await waitFor(() => {
-        expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await waitFor(async () => {
+        await expectFetchCall(fetchMock.mock.calls.at(-1), [
             `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/score?` +
                 `id_entity_contribution_persistent=id-entity-1&id_entity_existing_persistent=${idEntitySearch0}`,
             { credentials: 'include' }
@@ -100,16 +78,6 @@ test('add searched entity', async () => {
     )
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionEntity: ContributionEntityState
-        contribution: ContributionState
-        columnSelection: ColumnSelectionState
-        entityDetails: EntityDetailsState
-        table: TableState
-    }
-}
-
 async function doSearch(fetchMock: Mock) {
     const user = userEvent.setup()
     await waitFor(async () => {
@@ -127,86 +95,6 @@ async function doSearch(fetchMock: Mock) {
         const match0 = await screen.findByText(displayTxtSearch0)
         user.click(match0)
     })
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionEntity: newContributionEntityState({}),
-            contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        idPersistent: idContribution,
-                        name: 'contribution test',
-                        description: 'A contribution used in tests',
-                        hasHeader: true,
-                        step: ContributionStep.ValuesExtracted,
-                        emptyValues: 'null,na',
-                        author: 'author-test'
-                    })
-                )
-            }),
-            columnSelection: newColumnSelectionState({}),
-            entityDetails: newEntityDetailsState({
-                entityByIdPersistentMap: {
-                    [idEntitySearch0 + '@']: newRemote(
-                        newEntity({
-                            displayTxt: displayTxtSearch0,
-                            idPersistent: idEntitySearch0,
-                            displayTxtDetails: 'Display Text',
-                            disabled: false,
-                            version: 70
-                        })
-                    ),
-                    [idEntitySearch1 + '@']: newRemote(
-                        newEntity({
-                            displayTxt: displayTxtSearch1,
-                            idPersistent: idEntitySearch1,
-                            displayTxtDetails: 'Display Text',
-                            disabled: false,
-                            version: 71
-                        })
-                    )
-                }
-            }),
-            table: newTableState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionEntity: contributionEntitySlice.reducer,
-            contribution: contributionSlice.reducer,
-            columnSelection: columnSelectionReducer,
-            entityDetails: entityDetailsReducer,
-            table: tableReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
 }
 const idContribution = 'id-contribution-test'
 const personList = Array.from({ length: 60 }, (_val, idx) => {
@@ -331,3 +219,43 @@ function addSearchResultResponses(fetchMock: Mock) {
         ]
     ])
 }
+
+const initialState = {
+    ...emptyState,
+    contribution: newContributionState({
+        selectedContribution: newRemote(
+            newContribution({
+                idPersistent: idContribution,
+                name: 'contribution test',
+                description: 'A contribution used in tests',
+                hasHeader: true,
+                step: ContributionStep.ValuesExtracted,
+                emptyValues: 'null,na',
+                author: 'author-test'
+            })
+        )
+    }),
+    entityDetails: newEntityDetailsState({
+        entityByIdPersistentMap: {
+            [idEntitySearch0 + '@']: newRemote(
+                newEntity({
+                    displayTxt: displayTxtSearch0,
+                    idPersistent: idEntitySearch0,
+                    displayTxtDetails: 'Display Text',
+                    disabled: false,
+                    version: 70
+                })
+            ),
+            [idEntitySearch1 + '@']: newRemote(
+                newEntity({
+                    displayTxt: displayTxtSearch1,
+                    idPersistent: idEntitySearch1,
+                    displayTxtDetails: 'Display Text',
+                    disabled: false,
+                    version: 71
+                })
+            )
+        }
+    })
+}
+const preloadedState = { preloadedState: initialState }

@@ -1,14 +1,20 @@
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
-import { fetch_chunk } from '../util/fetch'
 import { Column, ColumnType } from '../column_menu/state'
 import { CellValue, displayTxtColumnId, justificationColumnId } from './state'
 import { Entity } from '../entity/state'
 import { newEntity } from '../entity/state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
-import { constructColumnTitle } from '../contribution/entity/hooks'
 import { parseColumnsFromApi } from '../column_menu/thunks'
 import { JsonValue, ThunkWithFetch } from '../util/type'
+import { ValueUpdatedResponse } from '../openapi/cosmae/types.gen'
+import {
+    cosmaeColumnApiGetDescendants,
+    cosmaeEntityApiEntitiesChunksPost,
+    cosmaeEntityApiEntitiesPost,
+    cosmaeValueApiPostValue,
+    cosmaeValueApiPostValueChunks,
+} from '../openapi/cosmae/sdk.gen'
 import {
     Edit,
     appendColumn,
@@ -39,7 +45,7 @@ import { parseCommentFromApi } from '../comments/thunks'
 export function getTableAsync(
     upUntilTime: Date | undefined = undefined
 ): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(setEntityLoading())
         dispatch(setColumnLoading(displayTxtColumnId))
         try {
@@ -49,35 +55,29 @@ export function getTableAsync(
             }
             const entities: Entity[] = []
             for (let offset = 0; ; ) {
-                const rsp = await fetch_chunk({
-                    api_path: config.api_path + '/entities/chunk',
-                    offset,
-                    limit: 500,
-                    fetchMethod: fetch,
-                    payload
+                const rsp = await cosmaeEntityApiEntitiesChunksPost({
+                    body: { ...payload, offset, limit: 500 }
                 })
-                if (rsp.status == 404) {
+                if (rsp.response.status == 404) {
                     dispatch(setEntities([]))
                     return false
-                } else if (rsp.status !== 200) {
-                    const json = await rsp.json()
+                } else if (rsp.data === undefined) {
                     dispatch(setLoadDataError())
                     dispatch(
                         addError(
-                            `Could not load entities chunk with offset ${offset}. Reason: "${json['msg']}"`
+                            `Could not load entities chunk with offset ${offset}. Reason: "${rsp.error.msg}"`
                         )
                     )
                     return false
                 }
-                const json = await rsp.json()
-                const rowsApi = json['entity_list']
+                const rowsApi = rsp.data.entity_list
                 if (rowsApi !== null) {
                     for (const entry_json of rowsApi) {
                         const entity = parseEntityObjectFromJson(entry_json)
                         entities.push(entity)
                     }
                 }
-                offset = json['next_offset']
+                offset = rsp.data.next_offset
                 if (offset <= 0) {
                     break
                 }
@@ -111,20 +111,15 @@ export function getColumnAsync(
         let idPersistentList = [columnDefinition.idPersistent]
         if (columnDefinition.columnType === ColumnType.Inner) {
             try {
-                let requestPath =
-                    config.api_path +
-                    `/columns/${columnDefinition.idPersistent}/descendants?`
-                if (upUntilTime !== undefined) {
-                    requestPath += new URLSearchParams({
-                        up_until_time: upUntilTime.toISOString()
-                    })
-                }
-                const rsp = await fetch(requestPath, { credentials: 'include' })
-                const json = await rsp.json()
-                if (rsp.status == 200) {
-                    idPersistentList = json['id_descendants_persistent_list']
+                const descendantsRsp = await cosmaeColumnApiGetDescendants({
+                    path: { id_persistent },
+                    query: { up_until_time: upUntilTime?.toISOString() }
+                })
+                if (descendantsRsp.data !== undefined) {
+                    idPersistentList =
+                        descendantsRsp.data.id_descendants_persistent_list
                 } else {
-                    dispatch(addError(errorMessageFromApi(json)))
+                    dispatch(addError(errorMessageFromApi(descendantsRsp.error)))
                     return []
                 }
             } catch (_e: unknown) {
@@ -147,32 +142,30 @@ export function getColumnAsync(
                 const column_data: { [key: string]: CellValue[] } = {}
                 let offset = 0
                 for (let i = 0; ; i += 5000) {
-                    const rsp = await fetch_chunk({
-                        api_path: config.api_path + '/values/chunk',
-                        offset,
-                        limit: 5000,
-                        payload,
-                        fetchMethod: fetch
+                    const rsp = await cosmaeValueApiPostValueChunks({
+                        body: {
+                            up_until_time: upUntilTime?.toISOString(),
+                            id_column_persistent: idPersistent,
+                            offset,
+                            limit: 5000
+                        }
                     })
-                    if (rsp.status !== 200) {
+                    if (rsp.data === undefined) {
                         dispatch(setLoadDataError())
                         dispatch(
                             addError(
-                                `Could not load instances chunk ${i}. Reason: "${
-                                    (await rsp.json())['msg']
-                                }"`
+                                `Could not load instances chunk ${i}. Reason: "${rsp.error.msg}"`
                             )
                         )
                         return []
                     }
-                    const json = await rsp.json()
-                    const columns = json['value_list']
+                    const columns = rsp.data.value_list
                     for (const column of columns) {
                         const id_entity_persistent: string =
                             column['id_entity_persistent']
-                        const valueString = column['value']
-                        const valueIdPersistent = column['id_persistent']
-                        const valueVersion = Number.parseInt(column['version'])
+                        const valueString = column.value ?? ''
+                        const valueIdPersistent = column.id_persistent ?? ''
+                        const valueVersion = column.version ?? 0
                         const versionedValue = {
                             value: valueString,
                             idPersistent: valueIdPersistent,
@@ -184,12 +177,8 @@ export function getColumnAsync(
                         break
                     } else {
                         offset =
-                            Math.max(
-                                ...columns.map(
-                                    (columnJson: { [key: string]: unknown }) =>
-                                        columnJson['version']
-                                )
-                            ) + 1
+                            Math.max(...columns.map((column) => column.version ?? 0)) +
+                            1
                     }
                 }
                 dispatch(
@@ -215,31 +204,28 @@ export function submitValuesAsync(
     return async (dispatch, _getState, fetch) => {
         dispatch(submitValuesStart())
         try {
-            const rsp = await fetch(config.api_path + '/values', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+            const rsp = await cosmaeValueApiPostValue({
+                body: {
                     value_list: [
                         {
                             id_entity_persistent: edit[0],
                             id_column_persistent: edit[1],
-                            value: edit[2].value,
+                            value: edit[2].value?.toString(),
                             id_persistent: edit[2].idPersistent,
                             version: edit[2].version
                         }
                     ]
-                })
+                }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const value = json['value_list'][0]
+            if (rsp.data !== undefined) {
+                const value = rsp.data.value_list[0]
 
                 dispatch(submitValuesSuccess([extractEdit(edit, columnType, value)]))
                 return
             }
-            if (rsp.status == 409) {
-                const value = json['value_list'][0]
+            const status = rsp.response.status
+            if (status == 409) {
+                const value = (rsp.error as ValueUpdatedResponse).value_list[0]
                 dispatch(submitValuesSuccess([extractEdit(edit, columnType, value)]))
                 dispatch(submitValuesError())
                 dispatch(
@@ -250,20 +236,17 @@ export function submitValuesAsync(
                 )
                 return
             }
-            if (rsp.status == 403) {
-                const namePath = constructColumnTitle(
-                    json['name_path'] ?? json['name'] ?? ['UNKNOWN']
-                )
+            if (status == 403) {
                 dispatch(submitValuesError())
                 dispatch(
                     addError(
-                        `You do not have sufficient permissions to change values for column ${namePath}`
+                        `You do not have sufficient permissions to change values for column`
                     )
                 )
                 return
             }
             dispatch(submitValuesError())
-            dispatch(addError(errorMessageFromApi(json)))
+            dispatch(addError(errorMessageFromApi(rsp.error)))
         } catch (e: unknown) {
             dispatch(submitValuesError())
             dispatch(addError('Unknown error: ' + exceptionMessage(e)))
@@ -301,10 +284,8 @@ export function entityChangeOrCreate({
     return async (dispatch, _getState, fetch) => {
         dispatch(entityChangeOrCreateStart())
         try {
-            const rsp = await fetch(config.api_path + '/entities', {
-                credentials: 'include',
-                method: 'POST',
-                body: JSON.stringify({
+            const rsp = await cosmaeEntityApiEntitiesPost({
+                body: {
                     entity_list: [
                         {
                             display_txt: displayTxt,
@@ -313,18 +294,17 @@ export function entityChangeOrCreate({
                             version: version
                         }
                     ]
-                })
+                }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const entity = json['entity_list'][0]
+            if (rsp.data !== undefined) {
+                const entity = rsp.data.entity_list[0]
                 dispatch(entityChangeOrCreateSuccess(parseEntityObjectFromJson(entity)))
                 if (idPersistent === undefined) {
                     dispatch(addSuccessVanish('Entity created.'))
                 }
             } else {
                 dispatch(entityChangeOrCreateError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(entityChangeOrCreateError())

@@ -2,31 +2,18 @@
  * @vitest-environment jsdom
  */
 
-import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import {
-    ColumnDefinitionsContributionState,
-    newColumnDefinitionsContributionState
-} from '../state'
+import { screen, waitFor } from '@testing-library/react'
+import { newColumnDefinitionsContributionState } from '../state'
 import { newRemote } from '../../../util/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { contributionColumnDefinitionSlice } from '../slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
-import {
-    ColumnSelectionState,
-    newColumnSelectionState
-} from '../../../column_menu/state'
-import { columnSelectionReducer } from '../../../column_menu/slice'
-import { ContributionState, contributionSlice, newContributionState } from '../../slice'
-import {
-    NotificationManager,
-    NotificationType,
-    notificationReducer
-} from '../../../util/notification/slice'
+import { newColumnSelectionState } from '../../../column_menu/state'
+import { NotificationType } from '../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
 import { vi, Mock } from 'vitest'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { addResponseSequence } from '../../../util/tests/response'
+import { newContributionState } from '../../slice'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -42,73 +29,6 @@ beforeEach(() => {
     ;(useNavigate() as Mock).mockClear()
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionColumnDefinition: ColumnDefinitionsContributionState
-        contribution: ContributionState
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionColumnDefinition: newColumnDefinitionsContributionState({
-                columns: newRemote(undefined)
-            }),
-            contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        name: 'contribution test',
-                        idPersistent: idContribution,
-                        description: 'a contribution for tests',
-                        step: ContributionStep.ColumnsExtracted,
-                        hasHeader: true,
-                        emptyValues: 'null,na',
-                        author: authorTest
-                    })
-                )
-            }),
-            columnSelection: newColumnSelectionState({}),
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
-            contribution: contributionSlice.reducer,
-            columnSelection: columnSelectionReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 export const idContribution = 'id-contribution-test'
 const authorTest = 'author test'
 export const contributionColumnActiveRsp0 = {
@@ -174,7 +94,11 @@ test('finish success', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+    const { store } = renderWithProviders(
+        <ColumnDefinitionStep />,
+        fetchMock,
+        initialState
+    )
     let button: HTMLElement | undefined
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(3)
@@ -213,7 +137,11 @@ test('finish error', async () => {
         [500, { msg: errorMsg }],
         [200, { column_list: [] }]
     ])
-    const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+    const { store } = renderWithProviders(
+        <ColumnDefinitionStep />,
+        fetchMock,
+        initialState
+    )
     let button: HTMLElement | undefined
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(4)
@@ -238,3 +166,26 @@ test('finish error', async () => {
     )
     expect((useNavigate() as Mock).mock.calls).toEqual([])
 })
+
+const preloadedState = {
+    ...emptyState,
+    contributionColumnDefinition: newColumnDefinitionsContributionState({
+        columns: newRemote(undefined)
+    }),
+    contribution: newContributionState({
+        selectedContribution: newRemote(
+            newContribution({
+                name: 'contribution test',
+                idPersistent: idContribution,
+                description: 'a contribution for tests',
+                step: ContributionStep.ColumnsExtracted,
+                hasHeader: true,
+                emptyValues: 'null,na',
+                author: authorTest
+            })
+        )
+    }),
+    columnSelection: newColumnSelectionState({}),
+    notification: { notificationList: [], notificationMap: {} }
+}
+const initialState = { preloadedState }

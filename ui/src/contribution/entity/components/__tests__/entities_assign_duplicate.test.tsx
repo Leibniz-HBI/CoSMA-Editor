@@ -42,6 +42,8 @@ import {
     Rectangle
 } from '@glideapps/glide-data-grid'
 import { ContributionStep, newContribution } from '../../../state'
+import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
+import { addResponseSequence } from '../../../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -124,53 +126,19 @@ const contribution = newContribution({
     emptyValues: 'null,na',
     author: 'author-test'
 })
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionEntity: newContributionEntityState({}),
-            contribution: newContributionState({
-                selectedContribution: newRemote({
-                    ...contribution,
-                    justification: 'justification'
-                })
-            }),
-            columnSelection: newColumnSelectionState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionEntity: contributionEntitySlice.reducer,
-            contribution: contributionSlice.reducer,
-            columnSelection: columnSelectionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
+const preloadedState = {
+        ...emptyState,
+        contributionEntity: newContributionEntityState({}),
+        contribution: newContributionState({
+            selectedContribution: newRemote({
+                ...contribution,
+                justification: 'justification'
+            })
+        }),
+        columnSelection: newColumnSelectionState({})
+    },
+    initialState = { preloadedState }
 
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 const personList = Array.from({ length: 60 }, (_val, idx) => {
     return {
         display_txt: `entity-${idx}`,
@@ -282,7 +250,7 @@ test('merge with existing', async () => {
         [200, { assigned_duplicate: undefined }],
         [200, { value_responses: [] }]
     ])
-    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(5)
     })
@@ -355,7 +323,9 @@ test('merge with existing', async () => {
     })
     await waitFor(() => {
         const state = store.getState().contributionEntity
-        expect(state.entities.value?.at(3)?.assignedDuplicate).toEqual(newRemote(undefined))
+        expect(state.entities.value?.at(3)?.assignedDuplicate).toEqual(
+            newRemote(undefined)
+        )
     })
     expect(fetchMock.mock.calls.at(-1)).toEqual([
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-3/duplicate`,
@@ -378,7 +348,7 @@ test('last match', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(4)
     })
@@ -410,6 +380,7 @@ test('open justification modal', async () => {
     ])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock, {
         preloadedState: {
+            ...emptyState,
             contribution: newContributionState({
                 selectedContribution: newRemote(contribution)
             }),
@@ -459,7 +430,7 @@ test('does not open modal for entity with justification', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(4)
     })

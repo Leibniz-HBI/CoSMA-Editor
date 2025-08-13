@@ -15,56 +15,39 @@ import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     Column,
-    ColumnSelectionState,
     ColumnType,
     newColumn,
     newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
-    UserState,
     newPublicUserInfo,
-    newUserInfo,
-    newUserState
+    newUserInfo
 } from '../../../user/state'
 import {
-    TableState,
     displayTextColumn,
     displayTxtColumnId,
     justificationColumn,
-    justificationColumnId,
-    newTableState
+    justificationColumnId
 } from '../../state'
 import {
-    NotificationManager,
     NotificationType,
     newNotification,
-    newNotificationManager,
-    notificationReducer
+    newNotificationManager
 } from '../../../util/notification/slice'
-import { RenderOptions, waitFor, render, screen, act } from '@testing-library/react'
-import { tableReducer } from '../../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen, act } from '@testing-library/react'
 import { RemoteDataTable } from '../table'
-import { userSlice } from '../../../user/slice'
-import { TableSelectionState, tableSelectionSlice } from '../../selection/slice'
 import userEvent, { UserEvent } from '@testing-library/user-event'
-import { columnSelectionReducer } from '../../../column_menu/slice'
 import { newRemote } from '../../../util/state'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
 } from '../../../session/state'
-import { editSessionReducer } from '../../../session/slice'
-import { entityDetailsReducer } from '../../../entity/slice'
-import { EntityDetailsState, newEntityDetailsState } from '../../../entity/state'
-import { AuthState, newAuthState } from '../../../auth/state'
-import { authReducer } from '../../../auth/slice'
+import { newAuthState } from '../../../auth/state'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -108,25 +91,11 @@ function MockTable(props: any) {
         </div>
     )
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        fetchMock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            )
-        )
-    }
-}
 test('show justifications, open modal and hide again', async () => {
     const fetchMock = vi.fn()
     addEntitiesAndInstancesResponse(fetchMock)
     addJustificationHistoryResponse(fetchMock)
-    renderWithProviders(<RemoteDataTable />, fetchMock)
+    renderWithProviders(<RemoteDataTable />, fetchMock, preloadedState)
     await openModalForEntity0()
     await closeModal()
     await toggleJustifications()
@@ -150,7 +119,11 @@ test('add justification', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const user = userEvent.setup()
     await openModalForEntity0()
     await fillJustificationForm(user)
@@ -170,12 +143,12 @@ test('add justification', async () => {
     const state = store.getState()
     expect(state.notification.notificationList).toEqual([])
     expect(state.table.entities?.at(0)?.justificationTxt).toEqual(justificationChanged)
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
-                body: JSON.stringify({ offset: 0, limit: 500 }),
+                body: { offset: 0, limit: 500 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -184,7 +157,7 @@ test('add justification', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/chunk',
             {
                 credentials: 'include',
-                body: JSON.stringify({ offset: version1 + 1, limit: 500 }),
+                body: { offset: version1 + 1, limit: 500 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -195,11 +168,11 @@ test('add justification', async () => {
                 credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+                body: {
                     id_column_persistent: idColumnPersistent,
                     offset: 0,
                     limit: 5000
-                })
+                }
             }
         ],
         [
@@ -208,7 +181,7 @@ test('add justification', async () => {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: '{}'
+                body: {}
             }
         ],
         [
@@ -232,7 +205,11 @@ test('add justification found', async () => {
     addEntitiesAndInstancesResponse(fetchMock)
     addJustificationHistoryResponse(fetchMock)
     addResponseSequence(fetchMock, [[302, {}]])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const input = userEvent.setup()
     await openModalForEntity0()
     await fillJustificationForm(input)
@@ -265,7 +242,11 @@ test('get justification error', async () => {
     const errorMsg = 'error getting justification history'
     addEntitiesAndInstancesResponse(fetchMock)
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     await openModalForEntity0()
     await waitFor(() => {
         expect(store.getState().notification).toEqual(
@@ -289,7 +270,11 @@ test('add justification error', async () => {
     addEntitiesAndInstancesResponse(fetchMock)
     addJustificationHistoryResponse(fetchMock)
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const user = userEvent.setup()
     await openModalForEntity0()
     await fillJustificationForm(user)
@@ -443,18 +428,6 @@ function addEntitiesAndInstancesResponse(fetchMock: Mock) {
         [200, { column_list: [] }]
     ])
 }
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        table: TableState
-        tableSelection: TableSelectionState
-        columnSelection: ColumnSelectionState
-        user: UserState
-        auth: AuthState
-        entityDetails: EntityDetailsState
-        editSession: EditSessionState
-    }
-}
 
 const columnTest: Column = newColumn({
     namePath: [columnNameTest],
@@ -467,71 +440,39 @@ const columnTest: Column = newColumn({
     hidden: false
 })
 
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            notification: newNotificationManager({}),
-            table: newTableState({}),
-            tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            columnSelection: newColumnSelectionState({
-                columnsByIdPersistent: {
-                    [displayTxtColumnId]: newRemote(displayTextColumn),
-                    [justificationColumnId]: newRemote(justificationColumn),
-                    [idColumnPersistent]: newRemote(columnTest)
-                }
-            }),
-            user: newUserState({}),
-            auth: newAuthState({
-                user: newRemote(
-                    newUserInfo({
-                        ...userTest,
-                        email: 'mail@test.org',
-                        namesPersonal: 'names personal',
-                        columns: [columnTest]
-                    })
-                )
-            }),
-            entityDetails: newEntityDetailsState({}),
-            editSession: newEditSessionState({
-                currentEditSession: newRemote(
-                    newEditSession({
-                        idPersistent: 'id-session-test',
-                        name: 'edit session for tests',
-                        owner: newEditSessionParticipant({
-                            type: EditSessionParticipantType.internal,
-                            name: 'edit session owner test',
-                            id: idUserTest
-                        }),
-                        participantList: [],
-                        participantMap: {}
-                    })
-                )
+const initialState = {
+    ...emptyState,
+    columnSelection: newColumnSelectionState({
+        columnsByIdPersistent: {
+            [displayTxtColumnId]: newRemote(displayTextColumn),
+            [justificationColumnId]: newRemote(justificationColumn),
+            [idColumnPersistent]: newRemote(columnTest)
+        }
+    }),
+    auth: newAuthState({
+        user: newRemote(
+            newUserInfo({
+                ...userTest,
+                email: 'mail@test.org',
+                namesPersonal: 'names personal',
+                columns: [columnTest]
             })
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            tableSelection: tableSelectionSlice.reducer,
-            columnSelection: columnSelectionReducer,
-            table: tableReducer,
-            user: userSlice.reducer,
-            auth: authReducer,
-            entityDetails: entityDetailsReducer,
-            editSession: editSessionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
+        )
+    }),
+    editSession: newEditSessionState({
+        currentEditSession: newRemote(
+            newEditSession({
+                idPersistent: 'id-session-test',
+                name: 'edit session for tests',
+                owner: newEditSessionParticipant({
+                    type: EditSessionParticipantType.internal,
+                    name: 'edit session owner test',
+                    id: idUserTest
+                }),
+                participantList: [],
+                participantMap: {}
+            })
+        )
     })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
+const preloadedState = { preloadedState: initialState }

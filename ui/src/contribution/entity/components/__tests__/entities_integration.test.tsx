@@ -7,29 +7,15 @@ vi.mock('@glideapps/glide-data-grid', () => ({
     DataEditor: vi.fn().mockImplementation((props: any) => <MockTable />)
 }))
 import { vi, Mock } from 'vitest'
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import { ContributionEntityState, newContributionEntityState } from '../../state'
+import { waitFor, screen } from '@testing-library/react'
+import { newContributionEntityState } from '../../state'
 import { newRemote } from '../../../../util/state'
 import { ContributionStep, newContribution } from '../../../state'
-import { configureStore } from '@reduxjs/toolkit'
-import { contributionEntitySlice } from '../../slice'
-import {
-    ContributionState,
-    contributionSlice,
-    newContributionState
-} from '../../../slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { newContributionState } from '../../../slice'
 import { EntitiesStep } from '../../components'
-import {
-    ColumnSelectionState,
-    newColumnSelectionState
-} from '../../../../column_menu/state'
-import { columnSelectionReducer } from '../../../../column_menu/slice'
-import {
-    NotificationManager,
-    notificationReducer
-} from '../../../../util/notification/slice'
+import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
+import { newColumnSelectionState } from '../../../../column_menu/state'
+import { addResponseSequence } from '../../../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -41,71 +27,6 @@ function MockTable(props: any) {
     return <div className="mock"></div>
 }
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionEntity: ContributionEntityState
-        contribution: ContributionState
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionEntity: newContributionEntityState({}),
-            contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        idPersistent: idContribution,
-                        name: 'contribution test',
-                        description: 'A contribution used in tests',
-                        hasHeader: true,
-                        step: ContributionStep.ValuesExtracted,
-                        emptyValues: 'null,na',
-                        author: 'author-test'
-                    })
-                )
-            }),
-            columnSelection: newColumnSelectionState({}),
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionEntity: contributionEntitySlice.reducer,
-            contribution: contributionSlice.reducer,
-            columnSelection: columnSelectionReducer,
-            error: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 const idContribution = 'id-contribution-test'
 const entityList = Array.from({ length: 60 }, (_val, idx) => {
     return {
@@ -190,7 +111,11 @@ function initialResponses(fetchMock: Mock) {
 test('get duplicates', async () => {
     const fetchMock = vi.fn()
     initialResponses(fetchMock)
-    const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { container, store } = renderWithProviders(
+        <EntitiesStep />,
+        fetchMock,
+        initialState
+    )
     await waitFor(() => {
         screen.getByText('entity-1')
         expect(
@@ -224,7 +149,11 @@ test('select entity', async () => {
     const fetchMock = vi.fn()
     initialResponses(fetchMock)
     addResponseSequence(fetchMock, [])
-    const { container, store } = renderWithProviders(<EntitiesStep />, fetchMock)
+    const { container, store } = renderWithProviders(
+        <EntitiesStep />,
+        fetchMock,
+        initialState
+    )
     await waitFor(() => {
         screen.getByText('Please select an entity')
     })
@@ -238,3 +167,24 @@ test('select entity', async () => {
     })
     expect(store.getState().contributionEntity.selectedEntityIdx).toEqual(1)
 })
+
+const preloadedState = {
+        ...emptyState,
+        contributionEntity: newContributionEntityState({}),
+        contribution: newContributionState({
+            selectedContribution: newRemote(
+                newContribution({
+                    idPersistent: idContribution,
+                    name: 'contribution test',
+                    description: 'A contribution used in tests',
+                    hasHeader: true,
+                    step: ContributionStep.ValuesExtracted,
+                    emptyValues: 'null,na',
+                    author: 'author-test'
+                })
+            )
+        }),
+        columnSelection: newColumnSelectionState({}),
+        notification: { notificationList: [], notificationMap: {} }
+    },
+    initialState = { preloadedState }

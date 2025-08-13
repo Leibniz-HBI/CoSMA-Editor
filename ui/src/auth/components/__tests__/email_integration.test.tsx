@@ -1,25 +1,16 @@
 /**
  * @vitest-environment jsdom
  */
-import { RenderOptions, render, waitFor } from '@testing-library/react'
-import { AuthState, newAuthState } from '../../state'
-import { newUserState, UserState } from '../../../user/state'
+import { waitFor } from '@testing-library/react'
 import {
-    NotificationManager,
-    notificationReducer,
     NotificationType
 } from '../../../util/notification/slice'
-import { EditSessionState, newEditSessionState } from '../../../session/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { Mock, vi } from 'vitest'
-import { authReducer } from '../../slice'
-import { editSessionReducer } from '../../../session/slice'
-import { userReducer } from '../../../user/slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { Mock, vi, expect } from 'vitest'
 import { EmailVerification } from '../email_verification'
 import { useNavigate } from 'react-router-dom'
 import { newRemote } from '../../../util/state'
+import { addResponseSequence, expectFetchCallList} from '../../../util/tests/response'
+import { renderWithProviders } from '../../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const mockNavigate = vi.fn()
@@ -29,8 +20,9 @@ vi.mock('react-router-dom', () => {
     }
 })
 
-beforeEach(()=>{
-    (useNavigate() as Mock).mockClear()
+beforeEach(() => {})
+afterEach(() => {
+    vi.clearAllMocks()
 })
 test('successful confirmation while logged in', async () => {
     const fetchMock = vi.fn()
@@ -58,14 +50,14 @@ test('successful confirmation while logged in', async () => {
             }
         ])
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         ['http://127.0.0.1:8000/_allauth/browser/v1/config'],
         [
             'http://127.0.0.1:8000/_allauth/browser/v1/auth/email/verify',
             {
                 credentials: 'include',
                 method: 'POST',
-                body: JSON.stringify({ key: testKey }),
+                body: { key: testKey },
                 headers: {
                     'Access-Control-Allow-Credentials': 'true',
                     'Content-Type': 'application/json'
@@ -82,9 +74,9 @@ test('successful confirmation while logged out', async () => {
         [
             401,
             {
-                meta: { is_authenticated: false},
+                meta: { is_authenticated: false },
                 status: 401,
-                data: { flows: [{id:'login'},{id:'signup'}]}
+                data: { flows: [{ id: 'login' }, { id: 'signup' }] }
             }
         ]
     ])
@@ -101,14 +93,14 @@ test('successful confirmation while logged out', async () => {
             }
         ])
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         ['http://127.0.0.1:8000/_allauth/browser/v1/config'],
         [
             'http://127.0.0.1:8000/_allauth/browser/v1/auth/email/verify',
             {
                 credentials: 'include',
                 method: 'POST',
-                body: JSON.stringify({ key: testKey }),
+                body: { key: testKey },
                 headers: {
                     'Access-Control-Allow-Credentials': 'true',
                     'Content-Type': 'application/json'
@@ -126,9 +118,10 @@ test('shows error msg', async () => {
         [
             400,
             {
-                meta: { is_authenticated: false},
+                meta: { is_authenticated: false },
                 status: 400,
-                errors: [{message:errorTest}]
+                errors: [{ message: errorTest }],
+                data: { flows: [{ id: 'login' }, { id: 'signup' }] }
             }
         ]
     ])
@@ -145,14 +138,14 @@ test('shows error msg', async () => {
             }
         ])
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         ['http://127.0.0.1:8000/_allauth/browser/v1/config'],
         [
             'http://127.0.0.1:8000/_allauth/browser/v1/auth/email/verify',
             {
                 credentials: 'include',
                 method: 'POST',
-                body: JSON.stringify({ key: testKey }),
+                body: { key: testKey },
                 headers: {
                     'Access-Control-Allow-Credentials': 'true',
                     'Content-Type': 'application/json'
@@ -171,58 +164,4 @@ const authUserApi = {
     username: userNameTest,
     email: emailTest,
     id: idAuthTest
-}
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        auth: AuthState
-        user: UserState
-        notification: NotificationManager
-        editSession: EditSessionState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            user: newUserState({}),
-            auth: newAuthState({}),
-            notification: { notificationList: [], notificationMap: {} },
-            editSession: newEditSessionState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            user: userReducer,
-            auth: authReducer,
-            notification: notificationReducer,
-            editSession: editSessionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
 }

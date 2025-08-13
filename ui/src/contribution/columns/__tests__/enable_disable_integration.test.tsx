@@ -2,32 +2,24 @@
  * @vitest-environment jsdom
  */
 
+import { getByRole, screen, waitFor } from '@testing-library/react'
 import {
-    RenderOptions,
-    getByRole,
-    render,
-    screen,
-    waitFor
-} from '@testing-library/react'
-import {
+    ColumnDefinitionContribution,
     ColumnDefinitionsContributionState,
     newColumnDefinitionsContributionState
 } from '../state'
 import { newRemote } from '../../../util/state'
-import { contributionColumnDefinitionSlice } from '../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { Provider } from 'react-redux'
-import { PropsWithChildren } from 'react'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
 import {
-    Column,
     ColumnSelectionState,
     newColumnSelectionState
 } from '../../../column_menu/state'
-import { columnSelectionReducer } from '../../../column_menu/slice'
-import { ContributionState, contributionSlice, newContributionState } from '../../slice'
+import { ContributionState, newContributionState } from '../../slice'
 import { vi, Mock } from 'vitest'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { EnhancedStore } from '@reduxjs/toolkit'
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
     loaderMock.mockReturnValue('id-contribution-test')
@@ -42,69 +34,6 @@ vi.mock('react-flip-toolkit', () => {
     }
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionColumnDefinition: ColumnDefinitionsContributionState
-        contribution: ContributionState
-        columnSelection: ColumnSelectionState
-    }
-}
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionColumnDefinition: newColumnDefinitionsContributionState({
-                columns: newRemote(undefined)
-            }),
-            contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        name: 'contribution test',
-                        idPersistent: idContribution,
-                        description: 'a contribution for tests',
-                        step: ContributionStep.ColumnsExtracted,
-                        hasHeader: true,
-                        emptyValues: 'null,na',
-                        author: authorTest
-                    })
-                )
-            }),
-            columnSelection: newColumnSelectionState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
-            contribution: contributionSlice.reducer,
-            columnSelection: columnSelectionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 export const idContribution = 'id-contribution-test'
 const authorTest = 'author test'
 export const contributionColumnActiveRsp0 = {
@@ -148,7 +77,11 @@ describe('beginning', () => {
             [200, { ...contributionColumnActiveRsp0, discard: true }],
             [200, contributionColumnActiveRsp0]
         ])
-        const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+        const { store } = renderWithProviders(
+            <ColumnDefinitionStep />,
+            fetchMock,
+            initialState
+        )
         let columnLabel0: HTMLElement | undefined
         await waitFor(() => {
             screen.getByText(nameColumn0)
@@ -208,7 +141,7 @@ describe('beginning', () => {
                 ]
             )
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns`,
                 { credentials: 'include' }
@@ -220,7 +153,7 @@ describe('beginning', () => {
             [
                 'http://127.0.0.1:8000/cosmae/api/columns/children',
                 {
-                    body: '{}',
+                    body: {},
                     credentials: 'include',
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
@@ -229,7 +162,7 @@ describe('beginning', () => {
             [
                 'http://127.0.0.1:8000/cosmae/api/columns/children',
                 {
-                    body: JSON.stringify({ id_parent_persistent: idColumn0 }),
+                    body: { id_parent_persistent: idColumn0 },
                     credentials: 'include',
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
@@ -263,7 +196,11 @@ describe('middle', () => {
             [200, { contribution_values: [], destination_values: [] }],
             [200, contributionColumnActiveRsp2]
         ])
-        const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+        const { store } = renderWithProviders(
+            <ColumnDefinitionStep />,
+            fetchMock,
+            initialState
+        )
         let columnLabel2: HTMLElement | undefined
         await waitFor(() => {
             columnLabel2 = screen.getByText(contributionColumnActiveRsp2.name)
@@ -334,7 +271,11 @@ describe('end', () => {
             [200, { contribution_values: [], destination_values: [] }],
             [200, contributionColumnActiveRsp4]
         ])
-        const { store } = renderWithProviders(<ColumnDefinitionStep />, fetchMock)
+        const { store } = renderWithProviders(
+            <ColumnDefinitionStep />,
+            fetchMock,
+            initialState
+        )
         let columnLabel4: HTMLElement | undefined
         await waitFor(() => {
             columnLabel4 = screen.getByText(contributionColumnActiveRsp4.name)
@@ -431,7 +372,7 @@ function initialResponseSequence(fetchMock: Mock) {
 }
 
 function expectActiveDiscardedIds(
-    store: ToolkitStore<{
+    store: EnhancedStore<{
         contributionColumnDefinition: ColumnDefinitionsContributionState
         contribution: ContributionState
         columnSelection: ColumnSelectionState
@@ -443,14 +384,36 @@ function expectActiveDiscardedIds(
         store
             .getState()
             .contributionColumnDefinition.columns.value?.activeDefinitionsList.map(
-                (col: Column) => col.idPersistent
+                (col: ColumnDefinitionContribution) => col.idPersistent
             )
     ).toEqual(expectedActiveIdList)
     expect(
         store
             .getState()
             .contributionColumnDefinition.columns.value?.discardedDefinitionsList.map(
-                (col: Column) => col.idPersistent
+                (col: ColumnDefinitionContribution) => col.idPersistent
             )
     ).toEqual(expectedDiscardedIdList)
 }
+
+const preloadedState = {
+    ...emptyState,
+    contributionColumnDefinition: newColumnDefinitionsContributionState({
+        columns: newRemote(undefined)
+    }),
+    contribution: newContributionState({
+        selectedContribution: newRemote(
+            newContribution({
+                name: 'contribution test',
+                idPersistent: idContribution,
+                description: 'a contribution for tests',
+                step: ContributionStep.ColumnsExtracted,
+                hasHeader: true,
+                emptyValues: 'null,na',
+                author: authorTest
+            })
+        )
+    }),
+    columnSelection: newColumnSelectionState({})
+}
+const initialState = { preloadedState }
