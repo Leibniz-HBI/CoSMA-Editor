@@ -12,6 +12,9 @@ import {
     loadColumnHierarchyError,
     loadColumnHierarchyStart,
     loadColumnHierarchySuccess,
+    searchColumnError,
+    searchColumnStart,
+    searchColumnSuccess,
     submitColumnError,
     submitColumnStart,
     submitColumnSuccess
@@ -19,7 +22,10 @@ import {
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { PublicUserInfo } from '../user/state'
 import { curateColumnError, curateColumnStart } from './slice'
-import { cosmaeColumnApiPostGetColumnChildren } from '../openapi/cosmae'
+import {
+    cosmaeColumnApiGetSearch,
+    cosmaeColumnApiPostGetColumnChildren
+} from '../openapi/cosmae'
 
 export function loadColumnHierarchy({
     idParentPersistent = undefined,
@@ -44,7 +50,7 @@ export function loadColumnHierarchy({
             if (upUntilDate !== undefined) {
                 body['up_until_time'] = upUntilDate.toISOString()
             }
-            const rsp = await cosmaeColumnApiPostGetColumnChildren({body})
+            const rsp = await cosmaeColumnApiPostGetColumnChildren({ body })
             if (rsp.error !== undefined) {
                 dispatch(loadColumnHierarchyError())
                 dispatch(
@@ -337,6 +343,28 @@ export function curateAsync(idColumnPersistent: string): ThunkWithFetch<void> {
             }
         } catch (e: unknown) {
             dispatch(curateColumnError())
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
+export function searchColumnThunk(
+    searchTerm: string,
+    upUntilDate: Date | undefined
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, _fetch) => {
+        dispatch(searchColumnStart())
+        try {
+            const rsp = await cosmaeColumnApiGetSearch({
+                query: { term: searchTerm, up_until_time: upUntilDate?.toISOString() }
+            })
+            if (rsp.data !== undefined) {
+                dispatch(searchColumnSuccess(rsp.data.id_persistent_list))
+            } else {
+                dispatch(searchColumnError())
+                dispatch(addError(errorMessageFromApi(rsp.error)))
+            }
+        } catch (e: unknown) {
+            dispatch(searchColumnError())
             dispatch(addError(exceptionMessage(e)))
         }
     }

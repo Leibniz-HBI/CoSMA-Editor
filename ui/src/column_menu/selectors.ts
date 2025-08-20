@@ -142,3 +142,8 @@ export const selectColumnHierarchy = createSelector(
         upUntilDate: Date | undefined
     ) => addColumnToHierarchy(columnsByIdPersistent, hierarchy, upUntilDate)
 )
+
+export const selectSearchResultIdPersistentList = createSelector(
+    selectColumnSelection,
+    (state) => state.searchResultIdPersistentList
+)

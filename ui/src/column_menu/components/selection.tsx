@@ -1,4 +1,4 @@
-import { ReactElement, useState } from 'react'
+import { ChangeEvent, ReactElement, useState } from 'react'
 import {
     Col,
     ListGroup,
@@ -23,12 +23,14 @@ import {
     selectEditColumnDefinition,
     selectIsDragging,
     selectColumnHierarchy,
-    ColumnHierarchyNode
+    ColumnHierarchyNode,
+    selectSearchResultIdPersistentList
 } from '../selectors'
 import { changeColumnParent } from '../thunks'
 import { CreateTabBody } from './menu'
 import { newRemote } from '../../util/state'
 import { ColumnNamePath } from './misc'
+import { ColumnSearchField, ColumnSearchResults } from './search'
 
 export function ColumnSelector({
     mkTailElement,
@@ -41,10 +43,45 @@ export function ColumnSelector({
     allowEdit?: boolean
     upUntilDate?: Date | undefined
 }) {
+    let body
+    const searchResultList = useAppSelector(selectSearchResultIdPersistentList)
+    if (searchResultList.value !== undefined) {
+        body = <ColumnSearchResults upUntilDate={upUntilDate} />
+    } else {
+        body = (
+            <ColumnExplorerList
+                mkTailElement={mkTailElement}
+                additionalEntries={additionalEntries}
+                allowEdit={allowEdit}
+                upUntilDate={upUntilDate}
+            />
+        )
+    }
+    return (
+        <Col className="overflow-y-hidden pb-3 d-contents">
+            <Row className="d-contents">
+                <ColumnSearchField upUntilDate={upUntilDate} />
+            </Row>
+            <Row className="d-contents">{body}</Row>
+        </Col>
+    )
+}
+
+function ColumnExplorerList({
+    mkTailElement,
+    additionalEntries = [],
+    allowEdit = true,
+    upUntilDate
+}: {
+    mkTailElement: (def: Column) => ReactElement
+    additionalEntries?: { idPersistent: string; name: string }[]
+    allowEdit?: boolean
+    upUntilDate?: Date | undefined
+}) {
+    const dispatch = useAppDispatch()
     const columnHierarchy = useAppSelector((state) =>
         selectColumnHierarchy(state, upUntilDate)
     )
-    const dispatch = useAppDispatch()
     const toggleExpansionCallback = (path: number[]) => dispatch(toggleExpansion(path))
     const setEditColumnCallback = allowEdit
         ? (column: Column) => dispatch(setEditColumn(column))
@@ -70,27 +107,8 @@ export function ColumnSelector({
         )
     const dragColumnStartCallback = () => dispatch(dragColumnStart())
     const dragColumnEndCallback = () => dispatch(dragColumnEnd())
-    // if (editColumn !== undefined) {
-    //     return (
-    //         <Col className="overflow-y-hidden pb-3 d-flex flex-column scroll-gutter">
-    //             <Row className="overflow-y-scroll flex-grow-1 flex-shrink-1 pe-2">
-    //                 <EditTabBody
-    //                     column={editColumn}
-    //                     closeEditCallback={() => setEditColumn(undefined)}
-    //                 />
-    //             </Row>
-    //         </Col>
-    //     )
-    // }
     return (
-        <Col className="overflow-y-hidden pb-3 d-contents">
-            {/* <Row className="row mt-2 flex-grow-0 flex-shrink-0">
-                <Col>
-                    <Form.FloatingLabel label="Search">
-                        <Form.Control type="text" name="name" placeholder="Search" />
-                    </Form.FloatingLabel>
-                </Col>
-            </Row> */}
+        <Col className="d-contents">
             <Row className="flex-grow-0 flex-shrink-0">
                 <NoParentEntry changeParentCallback={changeParentCallback} />
             </Row>
@@ -107,7 +125,7 @@ export function ColumnSelector({
                         changeParentCallback,
                         dragColumnStartCallback,
                         dragColumnEndCallback,
-                        allowEdit,
+                        allowEdit
                     })}
                 </ListGroup>
             </Row>
@@ -404,7 +422,7 @@ export function mkListItems(args: {
             startEditCallback,
             changeParentCallback,
             dragColumnStartCallback,
-            dragColumnEndCallback,
+            dragColumnEndCallback
         })
         if (entry.isExpanded) {
             return [
