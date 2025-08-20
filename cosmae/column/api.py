@@ -1,8 +1,10 @@
 "API endpoints for columns."
 
 from datetime import datetime
+from logging import getLogger
 from typing import List
 from uuid import uuid4
+from venv import logger
 
 from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpRequest
@@ -36,6 +38,7 @@ from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
 router = Router()
+logger = getLogger(__name__)
 
 
 class ColumnRequest(Schema):
@@ -95,6 +98,12 @@ class DescendantListResponse(Schema):
 
     # pylint: disable=too-few-public-methods
     id_descendants_persistent_list: List[str]
+
+
+class IdPersistentList(Schema):
+    "API model for a list of persistent Ids"
+
+    id_persistent_list: List[str]
 
 
 @router.post(
@@ -164,21 +173,44 @@ def post_columns(  # pylint: disable=too-many-branches
             for column, do_write in column_def_db_list:
                 if do_write:
                     column.save()
-                    if column.id_parent_persistent is None:
-                        update_column_name_path(column.id)
-                    else:
-                        parent = (
-                            column_objects()
-                            .by_id_persistent(column.id_parent_persistent)
-                            .get()
-                        )
-                        update_column_name_path(parent.id)
+                    update_column_name_path(column.id)
     except IntegrityError as exc:
         return 500, ApiError(msg="Provided data not consistent with database.")
 
     return 200, ColumnResponseList(
-        column_list=[column_db_to_api(column) for column, _ in column_def_db_list]
+        column_list=[column_db_to_api(column, now) for column, _ in column_def_db_list]
     )
+
+
+@router.get(
+    "/search",
+    response={
+        200: IdPersistentList,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
+)
+def get_search(request: HttpRequest, term: str, up_until_time: datetime | None = None):
+    "API method for searching columns."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient Permissions")
+    try:
+        column_db_list = column_objects(up_until_time).search(term)[:10]
+        column_id_persistent_list = list(
+            column_db_list.values_list("id_persistent", flat=True)
+        )
+        return 200, IdPersistentList(id_persistent_list=column_id_persistent_list)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception(
+            "Error while searching column with term '%s'", term, exc_info=exc
+        )
+        return 500, ApiError(msg="Could not search columns.")
 
 
 @router.post(
@@ -188,6 +220,7 @@ def post_columns(  # pylint: disable=too-many-branches
         400: ApiError,
         401: ApiError,
         403: ApiError,
+        500: ApiError,
     },
 )
 def post_details(request: HttpRequest, body: ColumnDefinitionDetailsRequest):
@@ -204,9 +237,13 @@ def post_details(request: HttpRequest, body: ColumnDefinitionDetailsRequest):
         column_db_queryset = column_objects(body.up_until_time).filter(
             id_persistent__in=body.id_persistent_list
         )
-        column_api_list = [column_db_to_api(column) for column in column_db_queryset]
+        column_api_list = [
+            column_db_to_api(column, up_until_time=body.up_until_time)
+            for column in column_db_queryset
+        ]
         return 200, ColumnResponseList(column_list=column_api_list)
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Error while getting column details", exc_info=exc)
         return 500, ApiError(msg="Could not get columns.")
 
 
@@ -236,11 +273,17 @@ def post_get_column_children(
             )
         )
         return 200, ColumnResponseList(
-            column_list=[column_db_to_api(column) for column in child_definitions_db]
+            column_list=[
+                column_db_to_api(
+                    column, up_until_time=post_children_request.up_until_time
+                )
+                for column in child_definitions_db
+            ]
         )
     except DatabaseError:
         return 500, ApiError(msg="Database Error.")
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Could not get children columns", exc_info=exc)
         return 500, ApiError(msg="Could not get children columns.")
 
 

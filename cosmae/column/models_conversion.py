@@ -1,5 +1,7 @@
 "Model conversions for columns."
 
+from datetime import datetime
+
 from cosmae.column.models_api import ColumnResponse
 from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.queue import get_column_name_path, get_column_name_path_from_parts
@@ -30,7 +32,7 @@ column_type_mapping_api_to_db = {
 
 
 def column_db_dict_to_api(
-    column: ColumnDb,
+    column: ColumnDb, up_until_time: datetime | None = None
 ) -> ColumnResponse:
     "Convert a column from database to API model."
     id_persistent = column["id_persistent"]
@@ -48,7 +50,7 @@ def column_db_dict_to_api(
         id_parent_persistent=column["id_parent_persistent"],
         name=name,
         description=column["description"],
-        name_path=get_column_name_path_from_parts(id_version, name),
+        name_path=get_column_name_path_from_parts(id_version, name, up_until_time),
         version=id_version,
         type=_column_type_mapping_db_to_api[column["type"]],
         owner=owner,
@@ -58,7 +60,9 @@ def column_db_dict_to_api(
     )
 
 
-def column_db_to_api(column: ColumnDb) -> ColumnResponse:
+def column_db_to_api(
+    column: ColumnDb, up_until_time: datetime | None = None
+) -> ColumnResponse:
     "Convert a column from database to API model."
     owner = column.owner
     if owner is None:
@@ -70,7 +74,7 @@ def column_db_to_api(column: ColumnDb) -> ColumnResponse:
         id_parent_persistent=column.id_parent_persistent,
         name=column.name,
         description=column.description,
-        name_path=get_column_name_path(column),
+        name_path=get_column_name_path(column, up_until_time),
         version=column.id,
         type=_column_type_mapping_db_to_api[column.type],
         owner=username,

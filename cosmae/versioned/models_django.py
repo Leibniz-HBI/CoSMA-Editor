@@ -17,6 +17,8 @@ from cosmae.exception import (
 class VersionedQueryset(models.QuerySet):
     "Query set for versioned models"
 
+    up_until_date = None
+
     def exclude_hidden(self):
         "Exclude items from queryset that are hidden"
         return self.filter(hidden=False)
@@ -44,6 +46,15 @@ class VersionedQueryset(models.QuerySet):
     def by_id_persistent(self, id_persistent):
         """Return a query for the most recent version of a column."""
         return self.filter(id_persistent=id_persistent)  # pylint: disable=no-member
+
+    def up_until(self, date: datetime):
+        "Only return items that are edited up until the provided datetime"
+        if date is not None and (
+            self.up_until_date is None or date < self.up_until_date
+        ):
+            self.up_until_date = date
+            return self.filter(time_edit__lte=date)
+        return self
 
 
 class Versioned(models.Model):

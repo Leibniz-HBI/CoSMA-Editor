@@ -1,5 +1,6 @@
 "API methods for changing column permissions."
 
+from logging import getLogger
 from typing import List, Union
 from uuid import uuid4
 
@@ -22,6 +23,7 @@ from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
 router = Router()
+logger = getLogger(__name__)
 
 
 class OwnershipRequest(Schema):
@@ -260,7 +262,8 @@ def get_ownership_requests(request: HttpRequest):
                 if req.column is not None
             ],
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.exception("Error retrieving ownership requests.", exc_info=exc)
         return 500, ApiError(msg="Could not create ownership request")
 
 
