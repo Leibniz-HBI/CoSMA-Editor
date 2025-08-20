@@ -7,7 +7,6 @@ from django.apps import AppConfig, apps
 from django.conf import settings
 from django.core.exceptions import AppRegistryNotReady
 from django.db.models.signals import post_migrate
-from django.db.utils import DatabaseError, OperationalError, ProgrammingError
 
 from cosmae.signals import (
     connect_add_superuser,
@@ -74,7 +73,6 @@ class CosmaeConfig(AppConfig):
         try:
             if not settings.IS_UNITTEST:
                 connect_read_csv_signal()
-                populate_column_name_path_cache()
                 connect_column_queue_process()
                 connect_entity_display_txt()
                 connect_value_display_txt()
@@ -84,20 +82,3 @@ class CosmaeConfig(AppConfig):
         except AppRegistryNotReady:
             pass
         super().ready()
-
-
-def populate_column_name_path_cache():
-    "Spawn queue processes that populate the name path cache for all"
-    # pylint: disable=import-outside-toplevel
-    from django_rq import enqueue
-
-    from cosmae.column.models_django import column_objects
-    from cosmae.column.queue import update_column_name_path
-
-    try:
-        roots = column_objects().children(None)
-        for root in roots:
-            if not root.disabled:
-                enqueue(update_column_name_path, root.id_persistent, [])
-    except (OperationalError, DatabaseError, ProgrammingError):
-        pass  #

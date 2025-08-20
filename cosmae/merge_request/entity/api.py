@@ -606,7 +606,7 @@ def column_json_field_to_api(column_dict):
     name = column_dict["name"]
     return Column(
         version=column_dict["id"],
-        name_path=get_column_name_path_from_parts(id_version, name),
+        name_path=get_column_name_path_from_parts(id_version, name, None),
         id_persistent=id_persistent,
         id_parent_persistent=column_dict["id_parent_persistent"],
         curated=column_dict["curated"],

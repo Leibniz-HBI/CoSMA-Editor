@@ -239,7 +239,7 @@ def entities_chunks_post(
         next_offset = -1
         entity_api_list = []
         for entity_db in entity_db_list:
-            entity_api_list.append(entity_db_to_api(entity_db))
+            entity_api_list.append(entity_db_to_api(entity_db, req_data.up_until_time))
             next_offset = max(entity_db.id, next_offset)
         return 200, EntityWithJustificationOffsetList(
             entity_list=entity_api_list, next_offset=next_offset + 1
@@ -280,7 +280,7 @@ def get_values(
         )
         instances_api = [value_db_to_api(instance) for instance in instances_db]
         return 200, EntityDetailsResponse(
-            entity=entity_db_to_api(entity), value_list=instances_api
+            entity=entity_db_to_api(entity, up_until_time), value_list=instances_api
         )
     except EntityDb.DoesNotExist:
         return 404, ApiError(msg="Entity does not exist")
@@ -315,7 +315,7 @@ def get_details(
             .by_id_persistent(id_persistent=id_persistent)
             .annotate_justification(up_until_time)
         ).get()
-        return 200, entity_db_to_api(entity)
+        return 200, entity_db_to_api(entity, up_until_time=up_until_time)
     except EntityDb.DoesNotExist:
         return 404, ApiError(msg="Entity does not exist")
     except Exception:  # pylint: disable=broad-except
@@ -524,13 +524,13 @@ def entity_api_to_db(
     return entity_db, save_entity, justification
 
 
-def entity_db_to_api(entity: EntityDb) -> Entity:
+def entity_db_to_api(entity: EntityDb, up_until_time: datetime | None = None) -> Entity:
     """Transform a natural entity from DB to API representation."""
     display_txt = entity.display_txt
     id_persistent = entity.id_persistent
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
     if isinstance(display_txt_info, dict):
-        display_txt_info = column_db_dict_to_api(display_txt_info)
+        display_txt_info = column_db_dict_to_api(display_txt_info, up_until_time)
     return EntityWithJustification(
         display_txt=display_txt,
         version=entity.id,

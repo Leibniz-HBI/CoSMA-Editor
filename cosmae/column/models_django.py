@@ -6,6 +6,11 @@ from datetime import datetime
 from typing import Optional, TypeVar
 
 from django.contrib.postgres.indexes import GistIndex
+from django.contrib.postgres.search import (
+    SearchQuery,
+    SearchRank,
+    SearchVector,
+)
 from django.db import models
 
 from cosmae.exception import (
@@ -140,9 +145,31 @@ class ColumnQuerySet(VersionedQueryset):
         "Get a specific column instance."
         return self.filter(id=id_version)
 
-    def up_until(self, date: datetime):
-        "Only return columns that are edited up until the provided datetime"
-        return self.filter(time_edit__lte=date)
+    def search(self, search_term):
+        "search for column by search term"
+        return (
+            self.annotate_name_path_string()
+            .annotate(
+                rank=SearchRank(
+                    SearchVector("name_path_string"), SearchQuery(search_term)
+                )
+            )
+            .order_by("-rank")
+        )
+
+    def annotate_name_path_string(self):
+        "Annotate the concatenated name path sting"
+        name_cache_query = ColumnNamePathCache.objects.filter(
+            column_id=models.OuterRef("id"),
+        )
+        if self.up_until_date is not None:
+            name_cache_query = name_cache_query.filter(
+                time_edit__lte=self.up_until_date
+            )
+        name_cache_query = name_cache_query.order_by("-time_edit").values(
+            "name_path_string"
+        )[:1]
+        return self.annotate(name_path_string=models.Subquery(name_cache_query))
 
 
 class Column(ColumnAbstract):
@@ -447,22 +474,24 @@ class ColumnNamePathCache(models.Model):
     name_path = models.JSONField()
     name_path_string = models.TextField()
     column = models.ForeignKey(ColumnHistory, on_delete=models.CASCADE)
+    time_edit = models.DateTimeField()
 
     class Meta:
         "Meta class for ColumNamePathCache ORM"
 
         indexes = [
             GistIndex(
-                models.functions.Lower("name_path_string"),
+                SearchVector("name_path_string", config="english"),
                 name="name_path_string_lower_idx",
             )
         ]
 
     @classmethod
-    def set_cache_entry(cls, id_version, name_path):
+    def set_cache_entry(cls, id_version, name_path, time_edit):
         "Create a new cache entry."
-        return cls.objects.create(
+        return cls.objects.update_or_create(
             column_id=id_version,
             name_path=name_path,
             name_path_string=" -> ".join(name_path),
+            time_edit=time_edit,
         )

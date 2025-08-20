@@ -204,8 +204,8 @@ def auth_server1(auth_server_no_mfa1, mock_mfa):
     return auth_server_no_mfa1
 
 
-@pytest.fixture()
-def auth_server_applicant_no_mfa(live_server):
+@pytest.fixture
+def user_applicant(db):
     session = EditSession.objects.create(
         id_persistent=cs.id_session_applicant,
         id_owner_persistent=cu.test_uuid_applicant,
@@ -222,6 +222,11 @@ def auth_server_applicant_no_mfa(live_server):
     )
     user.set_password(cu.test_password_applicant)
     user.save()
+    return user
+
+
+@pytest.fixture()
+def auth_server_applicant_no_mfa(live_server, user_applicant):
 
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
@@ -548,3 +553,19 @@ def other_session(user):
         name=cs.name_session_user_changed,
         user=user,
     )
+
+
+@pytest.fixture()
+def request_user(user, mocker):
+    mock = mocker.MagicMock()
+    mock.user = user
+    mock.session = {"account_authentication_methods": [{"type": "totp"}]}
+    return mock
+
+
+@pytest.fixture()
+def request_applicant(user_applicant, mocker):
+    mock = mocker.MagicMock()
+    mock.user = user_applicant
+    mock.session = {"account_authentication_methods": [{"type": "totp"}]}
+    return mock
