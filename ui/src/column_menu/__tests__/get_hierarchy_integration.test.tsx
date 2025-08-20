@@ -5,7 +5,7 @@
 import { waitFor, screen, getByRole, within } from '@testing-library/react'
 import { ColumnMenu } from '../components/menu'
 import userEvent from '@testing-library/user-event'
-import { UserEvent } from '@testing-library/user-event/dist/types/setup/setup'
+import { UserEvent } from '@testing-library/user-event'
 import { NotificationType } from '../../util/notification/slice'
 import { vi, Mock } from 'vitest'
 import { addResponseSequence } from '../../util/tests/response'
@@ -220,7 +220,7 @@ describe('create column definition', () => {
         await user.type(textBox, 'new column')
         const stringLabel = screen.getByText('string')
         const stringRadio = getByRole(
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-non-null-asserted-optional-chain
+            // eslint-disable-next-line  @typescript-eslint/no-non-null-asserted-optional-chain
             stringLabel.parentElement?.parentElement!,
             'radio'
         )
@@ -245,7 +245,6 @@ describe('create column definition', () => {
         await setNameAndType(user)
         const button = screen.getByRole('button', { name: 'Create' })
         await user.click(button)
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(9)
             expect(fetchMock.mock.calls[8]).toEqual([
@@ -290,7 +289,6 @@ describe('create column definition', () => {
         await user.click(parentRadio)
         const createButton = screen.getByRole('button', { name: 'Create' })
         await user.click(createButton)
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(9)
             expect(fetchMock.mock.calls[8]).toEqual([
@@ -363,7 +361,7 @@ test('open edit menu', async () => {
     })
     await waitFor(() => {
         const textboxes = screen.getAllByRole('textbox')
-        expect(textboxes.length).toEqual(2)
+        expect(textboxes.length).toEqual(4)
         const radios = screen.getAllByRole('radio')
         // 3 type radios + 6 for parent selection
         expect(radios.length).toEqual(10)

@@ -18,9 +18,6 @@ const columnSelectionSlice = createSlice({
         loadColumnHierarchyError(state: ColumnSelectionState) {
             state.isLoading = false
         },
-        startSearch(state: ColumnSelectionState) {
-            state.isSearching = true
-        },
         loadColumnHierarchyStart(
             state: ColumnSelectionState,
             action: PayloadAction<string | undefined>
@@ -96,6 +93,21 @@ const columnSelectionSlice = createSlice({
             if (!(column === undefined || column.value === undefined)) {
                 column.value.curated = true
             }
+        },
+        searchColumnClear(state: ColumnSelectionState) {
+            state.searchResultIdPersistentList = newRemote(undefined)
+        },
+        searchColumnError(state: ColumnSelectionState) {
+            state.searchResultIdPersistentList.isLoading = false
+        },
+        searchColumnStart(state: ColumnSelectionState) {
+            state.searchResultIdPersistentList.isLoading = true
+        },
+        searchColumnSuccess(
+            state: ColumnSelectionState,
+            action: PayloadAction<string[]>
+        ) {
+            state.searchResultIdPersistentList = newRemote(action.payload)
         },
         submitColumnStart(state: ColumnSelectionState) {
             state.isSubmittingDefinition = true
@@ -407,7 +419,10 @@ export const {
     loadColumnHierarchyError,
     loadColumnHierarchyStart,
     loadColumnHierarchySuccess,
-    startSearch,
+    searchColumnClear,
+    searchColumnError,
+    searchColumnStart,
+    searchColumnSuccess,
     submitColumnError,
     submitColumnStart,
     submitColumnSuccess,
