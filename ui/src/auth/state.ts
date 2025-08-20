@@ -33,7 +33,7 @@ export interface AuthState {
     user: RemoteInterface<UserInfo | undefined>
     stepStack: RemoteInterface<AuthStep[]>
     registration: RemoteInterface<boolean>
-    totpUrl: RemoteInterface<string | undefined>
+    totpSignupInfo: RemoteInterface<{ url: string; code: string } | undefined>
     emailVerified: RemoteInterface<boolean | undefined>
     emailAddressList: RemoteInterface<EmailAllauth[] | undefined>
     passwordChangeRequired: boolean
@@ -44,16 +44,16 @@ export function newAuthState({
     user = newRemote(undefined),
     stepStack = newRemote([]),
     registration = newRemote(false),
-    totpUrl = newRemote(undefined),
+    totpSignupInfo = newRemote(undefined),
     emailVerified = newRemote(undefined),
     emailAddressList = newRemote(undefined),
-    passwordChangeRequired = false,
+    passwordChangeRequired = false
 }: {
     user?: RemoteInterface<UserInfo | undefined>
     userAuth?: UserAllAuth | undefined
     stepStack?: RemoteInterface<AuthStep[]>
     registration?: RemoteInterface<boolean>
-    totpUrl?: RemoteInterface<string | undefined>
+    totpSignupInfo?: RemoteInterface<{ url: string; code: string } | undefined>
     emailVerified?: RemoteInterface<boolean | undefined>
     emailAddressList?: RemoteInterface<EmailAllauth[] | undefined>
     passwordChangeRequired?: boolean
@@ -63,7 +63,7 @@ export function newAuthState({
         userAuth,
         stepStack,
         registration,
-        totpUrl,
+        totpSignupInfo,
         emailVerified,
         emailAddressList,
         passwordChangeRequired

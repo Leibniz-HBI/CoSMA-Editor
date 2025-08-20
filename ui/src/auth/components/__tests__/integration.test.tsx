@@ -94,13 +94,15 @@ describe('login', () => {
                     'Please register an authenticator app using the QR-Code'
                 )
             ).toBeDefined()
+            expect(screen.getByText('Code for manual signup:')).toBeDefined()
+            expect(screen.getByText(totpCode)).toBeDefined()
         })
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(5)
         })
         expect(store.getState().auth).toEqual({
             ...authStateTotp,
-            totpUrl: expect.anything()
+            totpSignupInfo: newRemote({ url: expect.anything(), code: totpCode })
         })
     })
     test('login error with message', async () => {
@@ -264,7 +266,7 @@ describe('totp', () => {
         await waitFor(() => {
             expect(store.getState().auth).toEqual({
                 ...reauthenticateState,
-                totpUrl: newRemote(expect.anything())
+                totpSignupInfo: newRemote({ url: expect.anything(), code: totpCode })
             })
         })
     })
@@ -696,10 +698,11 @@ const totpInputRequiredRsp = {
     meta: { is_authenticated: false }
 }
 
+const totpCode = 'J4ZKKXTK7NOVU7EPUVY23LCDV4T2QZYM'
 const newTotpRsp = {
     status: 404,
     meta: {
-        secret: 'J4ZKKXTK7NOVU7EPUVY23LCDV4T2QZYM',
+        secret: totpCode,
         totp_url:
             'otpauth://totp/Example:alice@fsf.org?secret=JBSWY3DPEHPK3PXP&issuer=Example'
     }
@@ -749,7 +752,7 @@ const authStateSuccess = newAuthState({
 })
 const reauthenticateState = newAuthState({
     stepStack: newRemote([AuthStep.Totp, AuthStep.Reauthentication]),
-    totpUrl: newRemote(undefined)
+    totpSignupInfo: newRemote(undefined)
 })
 
 function allauthErrorRsp(msg: string) {

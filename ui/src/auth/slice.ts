@@ -10,7 +10,7 @@ const authSlice = createSlice({
     reducers: {
         authStepEnd(state: AuthState) {
             state.stepStack.isLoading = false
-            state.totpUrl.isLoading = false
+            state.totpSignupInfo.isLoading = false
             state.emailVerified = newRemote(undefined)
             state.user.isLoading = false
         },
@@ -26,8 +26,8 @@ const authSlice = createSlice({
         ) {
             state.emailAddressList = newRemote(action.payload)
         },
-        getTotpNotFound(state: AuthState, action: PayloadAction<string>) {
-            state.totpUrl = newRemote(action.payload)
+        getTotpNotFound(state: AuthState, action: PayloadAction<{ url: string; code: string }>) {
+            state.totpSignupInfo = newRemote(action.payload)
             const stepStackValue = state.stepStack.value
             stepStackValue[stepStackValue.length - 1] = AuthStep.Totp
             state.stepStack.isLoading = false
@@ -92,25 +92,25 @@ const authSlice = createSlice({
             state.stepStack.isLoading = false
         },
         postTotpCodeEnd(state: AuthState) {
-            state.totpUrl.isLoading = false
+            state.totpSignupInfo.isLoading = false
             state.stepStack = newRemote([AuthStep.LoggedOut])
         },
         postTotpCodeStart(state: AuthState) {
-            state.totpUrl.isLoading = true
+            state.totpSignupInfo.isLoading = true
         },
         postTotpCodeSuccess(state: AuthState) {
-            state.totpUrl = newRemote(undefined)
+            state.totpSignupInfo = newRemote(undefined)
             state.stepStack = newRemote([AuthStep.Authenticated])
         },
         setAuthUser(state: AuthState, action: PayloadAction<UserAllAuth | undefined>) {
             state.userAuth = action.payload
             state.stepStack = newRemote([AuthStep.Authenticated])
-            state.totpUrl = newRemote(undefined)
+            state.totpSignupInfo = newRemote(undefined)
         },
         setReauthenticate(state: AuthState) {
             state.stepStack.isLoading = false
             state.stepStack.value.push(AuthStep.Reauthentication)
-            state.totpUrl.isLoading = false
+            state.totpSignupInfo.isLoading = false
             state.userAuth = undefined
         },
         setReauthenticateMfa(state: AuthState) {

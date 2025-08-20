@@ -211,9 +211,10 @@ export function getTotpThunk(): ThunkWithFetch<void> {
             const rsp = await getAllauthByClientV1AccountAuthenticatorsTotp({ path })
             if (rsp.error?.status == 404) {
                 const totpUrlString = rsp.error.meta.totp_url
+                const code = rsp.error.meta.secret
                 const totpUrlQrCodeImageSource = await toDataURL(totpUrlString)
 
-                dispatch(getTotpNotFound(totpUrlQrCodeImageSource))
+                dispatch(getTotpNotFound({url: totpUrlQrCodeImageSource, code}))
             } else {
                 handleAllauthResponseFromClient(
                     dispatch,

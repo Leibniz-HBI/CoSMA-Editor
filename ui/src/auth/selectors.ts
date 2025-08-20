@@ -24,7 +24,7 @@ export const selectShowRegistration = createSelector(
     (state) => state.registration
 )
 
-export const selectTotpUrl = createSelector(selectAuthState, (state) => state.totpUrl)
+export const selectTotpUrl = createSelector(selectAuthState, (state) => state.totpSignupInfo)
 
 export const selectEmailVerification = createSelector(
     selectAuthState,
