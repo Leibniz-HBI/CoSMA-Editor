@@ -24,7 +24,11 @@ export function MfaForm({ reauthenticate }: { reauthenticate: boolean }) {
             <Col>
                 <Row>Please register an authenticator app using the QR-Code</Row>
                 <Row>
-                    <img src={totpUrl.value} />
+                    <img src={totpUrl.value.url} />
+                </Row>
+                <Row>
+                    <span>Code for manual signup: </span>
+                    <span className="fw-bold">{totpUrl.value.code}</span>
                 </Row>
             </Col>
         )
