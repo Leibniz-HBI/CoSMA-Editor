@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-arguments,too-many-positional-arguments
 from uuid import uuid4
 
 import tests.contribution.entity.api.requests as r
@@ -173,3 +173,28 @@ def test_put_duplicate_removes_old(auth_server, contribution_candidate, entities
     duplicate = EntityDuplicate.objects.all().get()  # pylint: disable=no-member
     assert duplicate.id_origin_persistent == c.id_persistent_entity_duplicate_test
     assert duplicate.id_destination_persistent == ce.id_persistent_test_1
+
+
+def test_no_duplicate_assignment(
+    auth_server,
+    contribution_candidate,
+    entity1,
+    entity_duplicate,
+    entity_duplicate1,
+    duplicate_assignment,
+):
+    "Make sure no two contributed entities are assigned to the same destination entity."
+    live_server, cookies = auth_server
+    rsp = r.put_duplicate(
+        live_server.url,
+        contribution_candidate.id_persistent,
+        c.id_persistent_entity_duplicate_test1,
+        ce.id_persistent_test_1,
+        cookies=cookies,
+    )
+    assert rsp.status_code == 400
+    json = rsp.json()
+    assert (
+        json["msg"]
+        == "Destination entity is already assigned to another row from the contribution."
+    )

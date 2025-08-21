@@ -253,6 +253,53 @@ def scored_match_from_assigned_duplicate(assigned_duplicate, candidate, origin):
     return scored_match
 
 
+class DuplicateDestinationException(Exception):
+    "Indicate that another contributed entity is already assigned to the same destination."
+
+
+def check_duplicate_destination(
+    user: CosmaeUser,
+    candidate: ContributionCandidate,
+    id_entity_origin_persistent: str,
+    body: PutDuplicateRequest,
+):
+    "Make sure that the destination assignment is correct."
+    id_entity_destination_persistent = body.id_entity_destination_persistent
+    if id_entity_destination_persistent:
+        try:
+            destination_conflict = EntityDuplicate.objects.filter(
+                id_destination_persistent=id_entity_destination_persistent,
+                contribution_candidate=candidate,
+            ).get()
+            if destination_conflict.id_origin_persistent != id_entity_origin_persistent:
+                raise DuplicateDestinationException()
+        except EntityDuplicate.DoesNotExist:
+            pass
+        destination = (
+            EntityDb.objects.by_id_persistent(
+                id_entity_destination_persistent
+            ).annotate_justification()
+        ).get()
+        if body.justification_txt is not None:
+            add_justification(
+                candidate,
+                id_entity_origin_persistent,
+                body.justification_txt,
+                user,
+                body.keep_justification_for_all,
+            )
+    else:
+        destination = None
+        handle_justification_no_duplicate(
+            candidate,
+            id_entity_origin_persistent,
+            body.justification_txt,
+            body.keep_justification_for_all,
+            user,
+        )
+    return destination
+
+
 @router.put(
     "{id_entity_origin_persistent}/duplicate",
     response={
@@ -285,35 +332,21 @@ def put_duplicate_assignment(
         origin = EntityDb.most_recent_by_id(id_entity_origin_persistent)
         if origin.contribution_candidate != candidate:
             return 400, ApiError(msg="Origin Entity does not belong to contribution.")
-        if id_entity_destination_persistent:
-            destination = (
-                EntityDb.objects.by_id_persistent(
-                    id_entity_destination_persistent
-                ).annotate_justification()
-            ).get()
-            assigned_duplicate = entity_db_to_api(destination)
-            if body.justification_txt is not None:
-                add_justification(
-                    candidate,
-                    id_entity_origin_persistent,
-                    body.justification_txt,
-                    user,
-                    body.keep_justification_for_all,
-                )
-        else:
-            assigned_duplicate = None
-            try:
-                handle_justification_no_duplicate(
-                    candidate,
-                    id_entity_origin_persistent,
-                    body.justification_txt,
-                    body.keep_justification_for_all,
-                    user,
-                )
-            except EntityJustification.EmptyJustificationException:
-                return 400, ApiError(msg="Justification can not be empty.")
-            except EntityJustification.NoJustificationException:
-                return 400, ApiError(msg="Entity justification required.")
+        assigned_duplicate = None
+        try:
+            destination = check_duplicate_destination(
+                user, candidate, id_entity_origin_persistent, body
+            )
+            if destination is not None:
+                assigned_duplicate = entity_db_to_api(destination)
+        except DuplicateDestinationException:
+            return 400, ApiError(
+                msg="Destination entity is already assigned to another row from the contribution."
+            )
+        except EntityJustification.EmptyJustificationException:
+            return 400, ApiError(msg="Justification can not be empty.")
+        except EntityJustification.NoJustificationException:
+            return 400, ApiError(msg="Entity justification required.")
 
         with transaction.atomic():
             # Delete existing duplicate

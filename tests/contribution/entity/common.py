@@ -4,6 +4,11 @@ from datetime import datetime, timezone
 id_persistent_entity_duplicate_test = "f43e8697-713c-40cc-ac3e-d8f63fd87c08"
 display_txt_test_entity_duplicate = "test entity d"  # similar to test entity [0,1]
 time_edit_test_duplicate = datetime(2022, 4, 23, tzinfo=timezone.utc)
+id_persistent_entity_duplicate_test1 = "a97f88bb-c38c-4e55-a441-fee05fd301b9"
+display_txt_test_entity_duplicate1 = (
+    "another contribution entity"  # similar to test entity [0,1]
+)
+time_edit_test_duplicate1 = datetime(2022, 4, 24, tzinfo=timezone.utc)
 id_persistent_entity_duplicate_no_match_test = "136810a9-ccc5-4f7d-87e7-e7d44bdd9cf8"
 display_txt_test_entity_duplicate_no_match = (
     "something completely different"  # different from entity [0,1] on purpose
