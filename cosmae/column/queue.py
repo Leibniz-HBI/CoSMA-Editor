@@ -28,7 +28,7 @@ def get_column_name_path_from_parts(
     This will retrieve the name path from the cache if present.
     Otherwise only the name is returned and an update to the cache is triggered."""
     try:
-        cache_objects = ColumnNamePathCache.objects
+        cache_objects = ColumnNamePathCache.objects.filter(column_id=id_column)
         if up_until_time is not None:
             cache_objects = cache_objects.filter(time_edit__lte=up_until_time)
         name_path = (
