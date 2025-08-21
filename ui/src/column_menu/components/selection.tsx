@@ -1,4 +1,4 @@
-import { ChangeEvent, ReactElement, useState } from 'react'
+import { ReactElement, useState } from 'react'
 import {
     Col,
     ListGroup,
@@ -46,7 +46,7 @@ export function ColumnSelector({
     let body
     const searchResultList = useAppSelector(selectSearchResultIdPersistentList)
     if (searchResultList.value !== undefined) {
-        body = <ColumnSearchResults upUntilDate={upUntilDate} />
+        body = <ColumnSearchResults upUntilDate={upUntilDate} mkTailElement={mkTailElement} />
     } else {
         body = (
             <ColumnExplorerList
