@@ -36,8 +36,8 @@ SCORED_SINGLE_PAIR_PREFIX = """
                 , (1-(
                 	LEAST(
 						levenshtein(
-							"existing_display_txt",
-							"contribution_display_txt"
+							LOWER("existing_display_txt"),
+							LOWER("contribution_display_txt")
 						),
 						ceiling(
 							0.25*length("contribution_display_txt")
@@ -76,16 +76,18 @@ SCORED_CANDIDATE_PAIRS_PREFIX = """
                 , (
                 	case when "similarity" > 0.3 then
                 		(1-levenshtein_less_equal(
-		                	"existing_display_txt",
-		                	"contribution_display_txt",
+		                	LOWER("existing_display_txt"),
+		                	LOWER("contribution_display_txt"),
 		                	ceiling(
 		                    	0.25*length("contribution_display_txt"))::int)::float/length("contribution_display_txt"))
                    	else 0.0
                    	end) "levenshtein_similarity"
             from (
                 select *
-                    , SIMILARITY("existing_display_txt", "contribution_display_txt")
-                from entity_pairs
+                    , SIMILARITY(
+                    	LOWER("existing_display_txt"),
+                    	LOWER("contribution_display_txt")
+                ) from entity_pairs
             ) with_similarity
 		),
 """

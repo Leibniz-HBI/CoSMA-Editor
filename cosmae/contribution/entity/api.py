@@ -1,8 +1,9 @@
 "API methods for entities of a contribution"
 
-import logging
+from logging import getLogger
 from typing import Dict, List
 from uuid import uuid4
+from venv import logger
 
 from django.db import transaction
 from django.db.models import Q
@@ -28,6 +29,7 @@ from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
 router = Router()
+logger = getLogger(__name__)
 
 
 class ScoredMatch(Schema):
@@ -117,8 +119,9 @@ def get_entities(request: HttpRequest, start: int, offset: int):
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
     except Exception as exc:  # pylint: disable=broad-except
-        logging.warning(None, exc_info=exc)
-        return 500, ApiError(msg="Could not get entities of the contribution.")
+        msg = "Could not get entities of the contribution."
+        logger.exception(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.post(
@@ -167,8 +170,9 @@ def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
     except IndexError:
         return 404, ApiError(msg="Entity does not exist.")
     except Exception as exc:  # pylint: disable=broad-except
-        logging.warning(None, exc_info=exc)
-        return 500, ApiError(msg="Could not get entities of the contribution.")
+        msg = "Could not get entities of the contribution."
+        logger.exception(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.get(
@@ -230,8 +234,9 @@ def get_score(
     except IndexError:  # pylint: disable=no-member
         return 404, ApiError(msg="Entity does not exist.")
     except Exception as exc:  # pylint: disable=broad-except
-        logging.warning(None, exc_info=exc)
-        return 500, ApiError(msg="Could not get entities of the contribution.")
+        msg = "Could not get scores for entities of the contribution."
+        logger.exception(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 def scored_match_from_assigned_duplicate(assigned_duplicate, candidate, origin):
@@ -331,10 +336,9 @@ def put_duplicate_assignment(
     except ContributionCandidate.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution candidate does not exist.")
     except Exception as exc:  # pylint: disable=broad-except
-        logging.warning("", exc_info=exc)
-        return 500, ApiError(
-            msg="Could not assign entity duplicates for the contribution."
-        )
+        msg = "Could not assign entity duplicates for the contribution."
+        logger.exception(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 def handle_justification_no_duplicate(
