@@ -25,6 +25,20 @@ def entity_duplicate(contribution_candidate):
 
 
 @pytest.fixture
+def entity_duplicate1(contribution_candidate):
+    entity_duplicate, _ = EntityHistory.change_or_create_versioned(
+        id_persistent=c.id_persistent_entity_duplicate_test1,
+        display_txt=c.display_txt_test_entity_duplicate1,
+        time_edit=c.time_edit_test_duplicate1,
+        contribution_candidate=contribution_candidate,
+        written_by_session=contribution_candidate.created_by.edit_session,
+        approved_by=contribution_candidate.created_by.id_persistent,
+    )
+    entity_duplicate.save()
+    return entity_duplicate
+
+
+@pytest.fixture
 def entity_duplicate_no_match(contribution_candidate):
     entity_duplicate, _ = EntityHistory.change_or_create_versioned(
         id_persistent=c.id_persistent_entity_duplicate_no_match_test,
