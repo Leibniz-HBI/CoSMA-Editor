@@ -186,10 +186,12 @@ MATCHES_QUERY_STRING_WITHOUT_PAIRS = """
             		'display_txt',
             		"cosmae_entity"."display_txt",
             		'disabled',
-            		"cosmae_entity"."disabled")::json "assigned_duplicate"
+            		"cosmae_entity"."disabled",
+                    'discard',
+                    "cosmae_entityduplicate"."discard")::json "assigned_duplicate"
             from "cosmae_entityduplicate"
             left join cosmae_entity
-            on "cosmae_entityduplicate"."id_destination_persistent" = "cosmae_entity"."id_persistent"
+            on "cosmae_entityduplicate"."id_origin_persistent" = "cosmae_entity"."id_persistent"
             where  "cosmae_entityduplicate"."id_origin_persistent" = any(SELECT "contribution_id_persistent" UNIQUE FROM entity_pairs)
                 and "cosmae_entity"."max_id" is not null
         )

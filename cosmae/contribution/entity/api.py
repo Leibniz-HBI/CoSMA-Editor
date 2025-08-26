@@ -8,7 +8,7 @@ from venv import logger
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest
-from ninja import Router, Schema
+from ninja import Path, Router, Schema
 
 from cosmae.contribution.entity.match_entities import (
     find_matches,
@@ -47,6 +47,7 @@ class ScoredMatchesWithDuplicateAssignment(Schema):
     # pylint: disable=too-few-public-methods
     matches: List[ScoredMatch]
     assigned_duplicate: ScoredMatch | None = None
+    discard: bool
 
 
 class ScoredMatchResponse(Schema):
@@ -70,6 +71,7 @@ class PutDuplicateRequest(Schema):
     id_entity_destination_persistent: str | None = None
     justification_txt: str | None = None
     keep_justification_for_all: bool | None = None
+    discard: bool = False
 
 
 class PutDuplicateResponse(Schema):
@@ -77,9 +79,12 @@ class PutDuplicateResponse(Schema):
 
     # pylint: disable=too-few-public-methods
     assigned_duplicate: ScoredMatch | None = None
+    discard: bool
 
 
-empty_match = ScoredMatchesWithDuplicateAssignment(assigned_duplicate=None, matches=[])
+empty_match = ScoredMatchesWithDuplicateAssignment(
+    assigned_duplicate=None, matches=[], discard=False
+)
 
 
 @router.get(
@@ -128,17 +133,17 @@ def get_entities(request: HttpRequest, start: int, offset: int):
     "similar",
     response={200: ScoredMatchResponse, 401: ApiError, 404: ApiError, 500: ApiError},
 )
-def post_similar(request: HttpRequest, similar_request: PostSimilarRequest):
+def post_similar(
+    request: HttpRequest,
+    similar_request: PostSimilarRequest,
+    id_contribution_persistent: str = Path(...),
+):
     "API method for getting existing entities similar to contributed ones"
     # pylint: disable=too-many-return-statements
     try:
         user = check_user(request)
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
-
-    id_contribution_persistent = request.resolver_match.captured_kwargs[
-        "id_contribution_persistent"
-    ]
 
     try:
         candidate = ContributionCandidate.by_id_persistent(
@@ -290,13 +295,14 @@ def check_duplicate_destination(
             )
     else:
         destination = None
-        handle_justification_no_duplicate(
-            candidate,
-            id_entity_origin_persistent,
-            body.justification_txt,
-            body.keep_justification_for_all,
-            user,
-        )
+        if not body.discard:
+            handle_justification_no_duplicate(
+                candidate,
+                id_entity_origin_persistent,
+                body.justification_txt,
+                body.keep_justification_for_all,
+                user,
+            )
     return destination
 
 
@@ -311,7 +317,10 @@ def check_duplicate_destination(
     },
 )
 def put_duplicate_assignment(
-    request: HttpRequest, id_entity_origin_persistent: str, body: PutDuplicateRequest
+    request: HttpRequest,
+    id_entity_origin_persistent: str,
+    body: PutDuplicateRequest,
+    id_contribution_persistent: str = Path(...),
 ):  # pylint: disable=too-many-return-statements
     "API method for assigning duplicates."
     try:
@@ -319,9 +328,6 @@ def put_duplicate_assignment(
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
 
-    id_contribution_persistent = request.resolver_match.captured_kwargs[
-        "id_contribution_persistent"
-    ]
     id_entity_destination_persistent = body.id_entity_destination_persistent
 
     try:
@@ -337,8 +343,11 @@ def put_duplicate_assignment(
             destination = check_duplicate_destination(
                 user, candidate, id_entity_origin_persistent, body
             )
-            if destination is not None:
+            if destination is None:
+                id_entity_destination_persistent = None
+            else:
                 assigned_duplicate = entity_db_to_api(destination)
+                id_entity_destination_persistent = destination.id_persistent
         except DuplicateDestinationException:
             return 400, ApiError(
                 msg="Destination entity is already assigned to another row from the contribution."
@@ -353,16 +362,19 @@ def put_duplicate_assignment(
             EntityDuplicate.objects.filter(  # pylint: disable=no-member
                 id_origin_persistent=id_entity_origin_persistent
             ).delete()
-            if id_entity_destination_persistent:
+            if id_entity_destination_persistent or body.discard:
                 EntityDuplicate.objects.create(  # pylint: disable=no-member
                     id_origin_persistent=origin.id_persistent,
-                    id_destination_persistent=destination.id_persistent,
+                    id_destination_persistent=id_entity_destination_persistent,
                     contribution_candidate=candidate,
+                    discard=body.discard,
                 )
             scored_match = scored_match_from_assigned_duplicate(
                 assigned_duplicate, candidate, origin
             )
-            return 200, PutDuplicateResponse(assigned_duplicate=scored_match)
+            return 200, PutDuplicateResponse(
+                assigned_duplicate=scored_match, discard=body.discard
+            )
 
     except EntityDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="One of the entities does not exist.")
@@ -445,8 +457,10 @@ def matches_db_to_api(matches, candidate):
     for entity in matches:
         assigned_duplicate = None
         id_assigned_duplicate = None
+        discard = False
         if entity.assigned_duplicate is not None:
             id_assigned_duplicate = entity.assigned_duplicate["id_persistent"]
+            discard = entity.assigned_duplicate["discard"]
         matches_api = []
         for match in entity.matches:
             match_api = scored_match_db_to_api(match)
@@ -464,6 +478,6 @@ def matches_db_to_api(matches, candidate):
                 matches_api.insert(0, scored_match)
                 assigned_duplicate = scored_match
         scored_matches[entity.id_persistent] = ScoredMatchesWithDuplicateAssignment(
-            assigned_duplicate=assigned_duplicate, matches=matches_api
+            assigned_duplicate=assigned_duplicate, matches=matches_api, discard=discard
         )
     return scored_matches

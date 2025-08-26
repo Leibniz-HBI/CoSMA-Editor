@@ -21,6 +21,16 @@ def entity_match(contribution_candidate):
     )
 
 
+@pytest.fixture
+def entity_discarded(contribution_candidate):
+    return EntityDuplicate.objects.create(  # pylint: disable=no-member
+        id_destination_persistent=None,
+        id_origin_persistent=c.id_persistent_entity_duplicate_test,
+        contribution_candidate=contribution_candidate,
+        discard=True,
+    )
+
+
 @pytest.fixture()
 def contribution_with_justification(user):
 

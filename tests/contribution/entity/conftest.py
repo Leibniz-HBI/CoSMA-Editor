@@ -78,6 +78,16 @@ def duplicate_assignment(contribution_candidate):
     )
 
 
+@pytest.fixture()
+def duplicate_assignment_discard(contribution_candidate):
+    return EntityDuplicate.objects.create(  # pylint: disable=no-member
+        id_origin_persistent=c.id_persistent_entity_duplicate_test,
+        id_destination_persistent=None,
+        contribution_candidate=contribution_candidate,
+        discard=True,
+    )
+
+
 @pytest.fixture
 def duplicate_assignment_no_match(contribution_candidate):
     return EntityDuplicate.objects.create(  # pylint: disable=no-member

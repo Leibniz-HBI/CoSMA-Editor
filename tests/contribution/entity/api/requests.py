@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-many-arguments
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-many-arguments,too-many-positional-arguments
 import requests
 
 
@@ -57,6 +57,7 @@ def put_duplicate(
     id_entity_destination_persistent,
     justification=None,
     keep_justification_for_all=None,
+    discard=False,
     cookies=None,
 ):
     return requests.put(
@@ -69,6 +70,7 @@ def put_duplicate(
             "id_entity_destination_persistent": id_entity_destination_persistent,
             "justification_txt": justification,
             "keep_justification_for_all": keep_justification_for_all,
+            "discard": discard,
         },
         cookies=cookies,
         timeout=90,
