@@ -73,7 +73,7 @@ function JustificationModalBody({
                 putDuplicateCallback({
                     idEntityOriginPersistent: entity.idPersistent,
                     idEntityDestinationPersistent:
-                        entity.assignedDuplicate.value?.idPersistent,
+                        entity.assignedDuplicate.value?.assignedDuplicate?.idPersistent,
                     justificationTxt: justification,
                     keepJustificationForAll: keepJustification,
                     onSuccess: closeModalCallback

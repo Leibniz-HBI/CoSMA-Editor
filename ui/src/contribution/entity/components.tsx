@@ -67,6 +67,7 @@ export type PutDuplicateCallback = ({
     idEntityDestinationPersistent,
     justificationTxt,
     keepJustificationForAll,
+    discard,
     onSuccess
 }: {
     idEntityOriginPersistent: string
@@ -74,6 +75,7 @@ export type PutDuplicateCallback = ({
     justificationTxt?: string | undefined
     keepJustificationForAll?: boolean | undefined
     onSuccess?: VoidFunction | undefined
+    discard?: boolean | undefined
 }) => Promise<boolean>
 
 export function EntitiesStepBody({
@@ -107,13 +109,15 @@ export function EntitiesStepBody({
         idEntityDestinationPersistent,
         justificationTxt = undefined,
         keepJustificationForAll = undefined,
-        onSuccess = undefined
+        onSuccess = undefined,
+        discard = undefined
     }: {
         idEntityOriginPersistent: string
         idEntityDestinationPersistent?: string
         justificationTxt?: string | undefined
         keepJustificationForAll?: boolean | undefined
         onSuccess?: VoidFunction | undefined
+        discard?: boolean | undefined
     }) => {
         const result = await dispatch(
             putDuplicateAction({
@@ -121,7 +125,8 @@ export function EntitiesStepBody({
                 idEntityOriginPersistent,
                 idEntityDestinationPersistent,
                 justificationTxt,
-                keepJustificationForAll
+                keepJustificationForAll,
+                discard
             })
         )
         if (result) {
@@ -438,7 +443,15 @@ export function EntitySimilarityItem({
                             if (current !== undefined) {
                                 //Select range
                                 const [colIdx, rowIdx] = current.cell
-                                if (rowIdx != 0 || colIdx == 0) {
+                                if (rowIdx != 0) {
+                                    return
+                                }
+                                if (colIdx == 0 && rowIdx == 0) {
+                                    putDuplicateCallback({
+                                        idEntityOriginPersistent: entity.idPersistent,
+                                        idEntityDestinationPersistent: undefined,
+                                        discard: true
+                                    })
                                     return
                                 }
                                 if (colIdx === undefined || colIdx < 2) {

@@ -64,6 +64,16 @@ export type AppStore = ReturnType<typeof setupStore>
 export type AppDispatch = AppStore['dispatch']
 
 export function setBaseUrls(fetch?: Fetch | undefined) {
-    allauthClient.setConfig({ baseUrl: config.api_url, credentials: 'include', fetch })
-    cosmaeClient.setConfig({ baseUrl: config.api_url, credentials: 'include', fetch })
+    if (config.api_url !== undefined && config.api_url !== '') {
+        allauthClient.setConfig({
+            baseUrl: config.api_url,
+            credentials: 'include',
+            fetch
+        })
+        cosmaeClient.setConfig({
+            baseUrl: config.api_url,
+            credentials: 'include',
+            fetch
+        })
+    }
 }

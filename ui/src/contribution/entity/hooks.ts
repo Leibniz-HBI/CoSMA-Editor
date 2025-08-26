@@ -122,22 +122,23 @@ export function mkCellContentCallback(
             if (row_idx == 0) {
                 // row with assignment buttons
                 let replaceInfo = undefined
+                const idPersistentAssignedDuplicate =
+                    entityGroup.assignedDuplicate.value?.assignedDuplicate?.idPersistent
+                const discard = entityGroup.assignedDuplicate.value?.discard ?? false
                 if (col_idx == 0) {
-                    return {
-                        kind: 'text' as GridCellKind,
-                        data: '',
-                        displayData: ''
-                    } as GridCell
+                    replaceInfo = newReplaceButtonCellData(false, discard, true)
                 } else if (col_idx == 1) {
                     replaceInfo = newReplaceButtonCellData(
-                        false,
-                        entityGroup.assignedDuplicate.value?.idPersistent == undefined
+                        true,
+                        idPersistentAssignedDuplicate == undefined && !discard,
+                        false
                     )
                 } else {
                     replaceInfo = newReplaceButtonCellData(
-                        true,
+                        false,
                         entityGroup.similarEntities.value[col_idx - 2]?.idPersistent ==
-                            entityGroup.assignedDuplicate.value?.idPersistent
+                            idPersistentAssignedDuplicate,
+                        false
                     )
                 }
                 return {
@@ -161,6 +162,7 @@ export function mkCellContentCallback(
                     contentAlign = 'left'
                 }
             } else if (row_idx == 2) {
+                // row with match counts
                 if (col_idx > 1) {
                     displayTxt = `${
                         entityGroup.similarEntities.value[col_idx - 2]

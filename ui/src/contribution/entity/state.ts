@@ -12,6 +12,12 @@ export interface ScoredEntity {
     cellContents: RemoteInterface<CellValue[]>[]
     idMatchColumnPersistentList: string[]
 }
+
+export interface DiscardableScoredEntity {
+    assignedDuplicate: ScoredEntity | undefined
+    discard: boolean
+}
+
 export function newScoredEntity({
     idPersistent,
     displayTxt,
@@ -40,9 +46,22 @@ export function newScoredEntity({
     }
 }
 
+export function newDiscardableScoredEntity({
+    assignedDuplicate = undefined,
+    discard = false
+}: {
+    assignedDuplicate?: ScoredEntity
+    discard?: boolean
+}): DiscardableScoredEntity {
+    return {
+        assignedDuplicate,
+        discard
+    }
+}
+
 export interface EntityWithDuplicates extends Entity {
     similarEntities: RemoteInterface<ScoredEntity[]>
-    assignedDuplicate: RemoteInterface<ScoredEntity | undefined>
+    assignedDuplicate: RemoteInterface<DiscardableScoredEntity | undefined>
     cellContents: RemoteInterface<CellValue[]>[]
     entityMap: { [key: string]: number }
     justificationTxt: string | undefined
@@ -54,7 +73,7 @@ export function newEntityWithDuplicates({
     version,
     disabled = false,
     similarEntities,
-    assignedDuplicate = newRemote(undefined),
+    assignedDuplicate = newRemote({ assignedDuplicate: undefined, discard: false }),
     cellContents = [],
     entityMap = undefined,
     justificationTxt = undefined
@@ -65,7 +84,7 @@ export function newEntityWithDuplicates({
     version: number
     disabled?: boolean
     similarEntities: RemoteInterface<ScoredEntity[]>
-    assignedDuplicate?: RemoteInterface<undefined | ScoredEntity>
+    assignedDuplicate?: RemoteInterface<undefined | DiscardableScoredEntity>
     cellContents?: RemoteInterface<CellValue[]>[]
     entityMap?: { [key: string]: number }
     justificationTxt?: string | undefined
@@ -134,7 +153,7 @@ export function newContributionEntityState({
     matchWidths = [200, 200],
     showJustificationDialog = false
 }: {
-    entities?: RemoteInterface<EntityWithDuplicates[]|undefined>
+    entities?: RemoteInterface<EntityWithDuplicates[] | undefined>
     entityMap?: { [key: string]: number }
     completeEntityAssignment?: RemoteInterface<boolean>
     columnList?: Column[]
@@ -146,10 +165,9 @@ export function newContributionEntityState({
     showJustificationDialog?: boolean
 }): ContributionEntityState {
     let newEntityMap: { [key: string]: number }, newColumnMap: { [key: string]: number }
-    if (entities.value === undefined){
+    if (entities.value === undefined) {
         newEntityMap = {}
-    }
-    else if (entityMap === undefined || entityMap.size != entities.value.length) {
+    } else if (entityMap === undefined || entityMap.size != entities.value.length) {
         newEntityMap = {}
         for (let idx = 0; idx < entities.value.length; ++idx) {
             newEntityMap[entities.value[idx].idPersistent] = idx
