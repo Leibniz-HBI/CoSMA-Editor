@@ -58,6 +58,24 @@ def test_deletes_replaced(
 
 
 @pytest.mark.django_db
+def test_deletes_discarded(
+    entity_duplicate, entity_discarded, contribution_with_justification
+):
+    assert len(EntityHistory.objects.all()) == 1  # pylint: disable = no-member
+    with_replacement_info = q.annotate_with_replacement_info(
+        EntityHistory.objects.all(),  # pylint: disable=no-member
+        EntityDuplicate.objects.all(),  # pylint: disable=no-member
+        "id_persistent",
+    )
+    q.update_entities(
+        with_replacement_info,
+        contribution_with_justification,
+        c.time_edit_deduplication,
+    )
+    assert len(EntityHistory.objects.all()) == 0  # pylint: disable = no-member
+
+
+@pytest.mark.django_db
 def test_copies_justifications(
     entity_duplicate, entity_match, contribution_with_justification
 ):

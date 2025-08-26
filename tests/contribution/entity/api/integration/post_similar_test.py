@@ -85,6 +85,7 @@ def test_similar_entities_no_duplicate(auth_server, contribution_candidate, enti
                         },
                     ],
                     "assigned_duplicate": None,
+                    "discard": False,
                 }
             }
         },
@@ -143,6 +144,7 @@ def test_similar_entities_with_duplicate(
                         "id_match_column_persistent_list": [],
                         "similarity": 0.9230769230769231,
                     },
+                    "discard": False,
                 }
             }
         },
@@ -210,6 +212,7 @@ def test_similar_entities_with_column_match(
                             "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
                         ],
                     },
+                    "discard": False,
                 }
             }
         },
@@ -285,6 +288,62 @@ def test_similar_entities_assigned_duplicate_no_match(
                         "similarity": 0.6923076923076923,
                         "id_match_column_persistent_list": [],
                     },
+                    "discard": False,
+                }
+            }
+        },
+    )
+
+
+def test_similar_entities_assigned_duplicate_discard(
+    auth_server,
+    contribution_candidate,
+    entities,
+    duplicate_assignment_discard,
+    values_match,
+    column_merge_request,
+):
+    live_server, cookies = auth_server
+    rsp = r.post_similar(
+        live_server.url,
+        contribution_candidate.id_persistent,
+        [c.id_persistent_entity_duplicate_test],
+        cookies,
+    )
+    assert rsp.status_code == 200
+    assert_versioned(
+        rsp.json(),
+        {
+            "matches": {
+                c.id_persistent_entity_duplicate_test: {
+                    "matches": [
+                        {
+                            "entity": {
+                                "disabled": False,
+                                "display_txt": "test entity 1",
+                                "display_txt_details": "Display Text",
+                                "id_persistent": ce.id_persistent_test_1,
+                                "version": 2,
+                            },
+                            "id_match_column_persistent_list": [
+                                "2ec43995-338b-4f4b-b1cc-4bfc71466fc5"
+                            ],
+                            "similarity": 0.9230769230769231,
+                        },
+                        {
+                            "similarity": 0.9230769230769231,
+                            "id_match_column_persistent_list": [],
+                            "entity": {
+                                "display_txt": "test entity 0",
+                                "display_txt_details": "Display Text",
+                                "version": 1,
+                                "id_persistent": ce.id_persistent_test_0,
+                                "disabled": False,
+                            },
+                        },
+                    ],
+                    "assigned_duplicate": None,
+                    "discard": True,
                 }
             }
         },

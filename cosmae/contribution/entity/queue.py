@@ -100,12 +100,14 @@ def update_values(values_with_duplicates, user, time_edit):
 
 def annotate_with_replacement_info(manager, replacements, id_entity_field_name):
     "Annotate DB objects with replacement information."
+    replacements_subquery = replacements.filter(
+        id_origin_persistent=OuterRef(id_entity_field_name)
+    )
     return manager.annotate(  # pylint: disable=no-member
         replacement_id_entity_persistent=Subquery(
-            replacements.filter(
-                id_origin_persistent=OuterRef(id_entity_field_name)
-            ).values("id_destination_persistent")
-        )
+            replacements_subquery.values("id_destination_persistent")
+        ),
+        replacement_discard=Subquery(replacements_subquery.values("discard")),
     )
 
 
@@ -117,15 +119,22 @@ def update_entities(
     others will be made full entities by removing the contribution_candidate."""
     # In the future the entities may just be disabled.
     for_deletion = entities_with_replacement_info.filter(
-        replacement_id_entity_persistent__isnull=False
+        replacement_id_entity_persistent__isnull=False, replacement_discard=False
     )
     for entity in for_deletion:
         EntityJustification.copy(
             entity.id_persistent, entity.replacement_id_entity_persistent
         )
-    for_deletion.delete()
+    EntityHistory.objects.filter(
+        id_persistent__in=for_deletion.values("id_persistent")
+    ).delete()
+    EntityHistory.objects.filter(
+        id_persistent__in=entities_with_replacement_info.filter(
+            replacement_discard=True
+        ).values("id_persistent")
+    ).delete()
     new_entities = entities_with_replacement_info.filter(
-        replacement_id_entity_persistent__isnull=True
+        replacement_id_entity_persistent__isnull=True, replacement_discard__isnull=True
     )
     missing_justification = new_entities.annotate(
         justification=models.Subquery(
