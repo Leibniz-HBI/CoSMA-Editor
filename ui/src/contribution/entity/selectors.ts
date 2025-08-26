@@ -110,7 +110,8 @@ export const selectEntityColumnDefs = createSelector(
             id: 'Description',
             title: 'Column',
             width: widths[0],
-            columnType: ColumnType.String
+            columnType: ColumnType.String,
+            contentAlign: 'left'
         },
         {
             id: entity?.idPersistent,

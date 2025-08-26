@@ -49,7 +49,10 @@ test('add searched entity', async () => {
             displayTxt: 'entity 1',
             version: 0,
             disabled: false,
-            assignedDuplicate: undefined,
+            assignedDuplicate: newRemote({
+                assignedDuplicate: undefined,
+                discard: true
+            }),
             displayTxtDetails: 'Display Text',
             cellContents: [],
             similarEntities: newRemote([
@@ -80,11 +83,14 @@ test('add searched entity', async () => {
 
 async function doSearch(fetchMock: Mock) {
     const user = userEvent.setup()
-    await waitFor(async () => {
-        expect(fetchMock.mock.calls.length).toEqual(7)
-        const entity = await screen.findByText('entity 1')
-        entity.click()
-    })
+    await waitFor(
+        async () => {
+            expect(fetchMock.mock.calls.length).toEqual(7)
+            const entity = await screen.findByText('entity 1')
+            entity.click()
+        },
+        { timeout: 3000 }
+    )
     await waitFor(async () => {
         const searchBox = await screen.findByRole('textbox')
         await act(async () => {
@@ -138,15 +144,20 @@ function mkMatches(
                         }
                     }
                 ],
-                assignedDuplicate:
+                assigned_duplicate:
                     idx % 10 == 0
                         ? {
-                              display_txt: entity.display_txt + ' match 1',
-                              display_txt_details: 'display_txt_detail',
-                              id_persistent: entity.id_persistent + '-1',
-                              version: 0
+                              entity: {
+                                  display_txt: entity.display_txt + ' match 1',
+                                  display_txt_details: 'display_txt_detail',
+                                  id_persistent: entity.id_persistent + '-1',
+                                  version: 0
+                              },
+                              similarity: idx / 100.0 + 0.001,
+                              id_match_column_persistent_list: []
                           }
-                        : undefined
+                        : undefined,
+                discard: idx % 10 == 1
             }
         ])
     )

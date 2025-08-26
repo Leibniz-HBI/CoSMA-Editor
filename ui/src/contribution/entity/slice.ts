@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
     ContributionEntityState,
+    DiscardableScoredEntity,
     EntityWithDuplicates,
     newContributionEntityState,
     ScoredEntity
@@ -56,7 +57,9 @@ export const contributionEntitySlice = createSlice({
         putDuplicateSuccess(
             state: ContributionEntityState,
             action: PayloadAction<
-                ContributionEntityDuplicatesPayload<ScoredEntity | undefined>
+                ContributionEntityDuplicatesPayload<
+                    DiscardableScoredEntity | undefined
+                >
             >
         ) {
             const entity = getEntity(state, action.payload.idPersistent)
@@ -87,7 +90,7 @@ export const contributionEntitySlice = createSlice({
             action: PayloadAction<
                 ContributionEntityDuplicatesPayload<{
                     scoredEntities: ScoredEntity[]
-                    assignedEntity?: ScoredEntity
+                    assignedEntity?: DiscardableScoredEntity
                 }>
             >
         ) {

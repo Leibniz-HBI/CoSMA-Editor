@@ -7,11 +7,13 @@ import {
 
 export function newReplaceButtonCellData(
     isNew: boolean,
-    active: boolean
+    active: boolean,
+    isDiscard: boolean
 ): ReplaceButtonCellProps {
     return {
         isNew,
         active,
+        isDiscard,
         kind: 'replace-button-cell'
     }
 }
@@ -56,8 +58,18 @@ export const loadingCellRenderer: CustomRenderer<LoadingCell> = {
 }
 interface ReplaceButtonCellProps {
     readonly kind: 'replace-button-cell'
+    /**
+     * Indicate that the button in the cell is currently active selection.
+     */
     active: boolean
+    /**
+     * Indicate that the button in the cell toggles whether a new entity is created.
+     */
     isNew: boolean
+    /**
+     * Indicate that the current cell tracks discard state.
+     */
+    isDiscard: boolean
 }
 
 export type ReplaceButtonCell = CustomCell<ReplaceButtonCellProps>
@@ -88,6 +100,12 @@ export class ReplaceButtonDrawer {
             } else {
                 this.drawReplaceButtonIsNewInactive(rect, ctx)
             }
+        } else if (data.isDiscard) {
+            if (data.active) {
+                this.drawReplaceButtonIsDiscardActive(rect, ctx)
+            } else {
+                this.drawReplaceButtonIsDiscardInactive(rect, ctx)
+            }
         } else {
             if (data.active) {
                 this.drawReplaceButtonIsExistingActive(rect, ctx)
@@ -113,23 +131,25 @@ export class ReplaceButtonDrawer {
         ctx.closePath()
         ctx.stroke()
         ctx.fill()
+        const textAlign = ctx.textAlign
         ctx.textAlign = 'center'
         ctx.fillStyle = borderColor
-        ctx.fillText(label, x + width / 2, y + height / 2, width - 40)
+        ctx.fillText(label, x + width / 2, y + height / 2, width - 60)
+        ctx.textAlign = textAlign
     }
 
     drawReplaceButtonIsNewActive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
-        this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Merge with Existing')
+        this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Create New Entity')
         // when drawing fails, using a cache will not recover.
         // this.drawReplaceButtonIsNewActive = mkCanvasCopyFunction(rect, ctx)
     }
     drawReplaceButtonIsNewInactive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
-        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Merge with Existing')
+        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Create New Entity')
         // when drawing fails, using a cache will not recover.
         // this.drawReplaceButtonIsNewInactive = mkCanvasCopyFunction(rect, ctx)
     }
     drawReplaceButtonIsExistingActive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
-        this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Create New Entity')
+        this.drawButtonToCanvas(rect, ctx, '#197374', '#eceff4', 'Merge with Existing')
         // when drawing fails, using a cache will not recover.
         // this.drawReplaceButtonIsExistingActive = mkCanvasCopyFunction(rect, ctx)
     }
@@ -137,9 +157,15 @@ export class ReplaceButtonDrawer {
         rect: Rectangle,
         ctx: CanvasRenderingContext2D
     ) {
-        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Create New Entity')
+        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#197374', 'Merge with Existing')
         // when drawing fails, using a cache will not recover.
         // this.drawReplaceButtonIsExistingInactive = mkCanvasCopyFunction(rect, ctx)
+    }
+    drawReplaceButtonIsDiscardActive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
+        this.drawButtonToCanvas(rect, ctx, '#ea5e5f', '#eceff4', 'Discard Entity')
+    }
+    drawReplaceButtonIsDiscardInactive(rect: Rectangle, ctx: CanvasRenderingContext2D) {
+        this.drawButtonToCanvas(rect, ctx, '#eceff4', '#ea5e5f', 'Discard Entity')
     }
 }
 const replaceButtonDrawer = new ReplaceButtonDrawer()

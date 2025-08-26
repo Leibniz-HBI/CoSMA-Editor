@@ -78,9 +78,13 @@ describe('cell contents callback', () => {
     test('handles column names', () => {
         const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1, [])
         expect(cellCallback([0, 0])).toEqual({
-            kind: 'text' as GridCellKind,
-            data: '',
-            displayData: ''
+            kind: 'custom' as GridCellKind,
+            data: {
+                isNew: false,
+                isDiscard: true,
+                active: false,
+                kind: 'replace-button-cell'
+            }
         })
         expect(cellCallback([0, 1])).toEqual({
             kind: 'text' as GridCellKind,
@@ -121,7 +125,7 @@ describe('cell contents callback', () => {
         const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1, [])
         expect(cellCallback([1, 0])).toEqual({
             kind: 'custom' as GridCellKind,
-            data: newReplaceButtonCellData(false, true)
+            data: newReplaceButtonCellData(true, true, false)
         })
 
         expect(cellCallback([1, 1])).toEqual({
@@ -162,12 +166,10 @@ describe('cell contents callback', () => {
         })
     })
     test('handles similar entities', () => {
-        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1, [
-            column
-        ])
+        const cellCallback = mkCellContentCallback(entityTest, columnTypes, 1, [column])
         expect(cellCallback([2, 0])).toEqual({
             kind: 'custom' as GridCellKind,
-            data: newReplaceButtonCellData(true, false)
+            data: newReplaceButtonCellData(false, false, false)
         })
         expect(cellCallback([2, 1])).toEqual({
             kind: 'text' as GridCellKind,
@@ -206,7 +208,7 @@ describe('cell contents callback', () => {
         })
         expect(cellCallback([3, 0])).toEqual({
             kind: 'custom' as GridCellKind,
-            data: newReplaceButtonCellData(true, false)
+            data: newReplaceButtonCellData(false, false, false)
         })
         expect(cellCallback([3, 1])).toEqual({
             kind: 'text' as GridCellKind,

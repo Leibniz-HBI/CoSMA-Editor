@@ -1,6 +1,7 @@
 import { config } from '../../config'
 import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
 import {
+    DiscardableScoredEntity,
     EntityWithDuplicates,
     ScoredEntity,
     newEntityWithDuplicates,
@@ -35,6 +36,10 @@ import {
 import { newRemote } from '../../util/state'
 import { addError, addSuccessVanish } from '../../util/notification/slice'
 import { setJustificationOfContribution } from '../slice'
+import {
+    cosmaeContributionEntityApiPostSimilar,
+    cosmaeContributionEntityApiPutDuplicateAssignment
+} from '../../openapi/cosmae'
 
 export function getContributionEntitiesAction(
     idContributionPersistent: string
@@ -44,7 +49,7 @@ export function getContributionEntitiesAction(
             dispatch(getContributionEntitiesStart())
             try {
                 let entities: EntityWithDuplicates[] = []
-                for (let offset = 0; ;) {
+                for (let offset = 0; ; ) {
                     const rsp = await fetch_chunk_get({
                         api_path:
                             config.api_path +
@@ -89,33 +94,34 @@ export function putDuplicateAction({
     idEntityOriginPersistent,
     idEntityDestinationPersistent,
     justificationTxt,
-    keepJustificationForAll
+    keepJustificationForAll,
+    discard = undefined
 }: {
     idContributionPersistent: string
     idEntityOriginPersistent: string
     idEntityDestinationPersistent?: string
     justificationTxt?: string
     keepJustificationForAll?: boolean
+    discard?: boolean | undefined
 }): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(putDuplicateStart(idEntityOriginPersistent))
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/contributions/${idContributionPersistent}/entities/${idEntityOriginPersistent}/duplicate`,
-                {
-                    method: 'PUT',
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        id_entity_destination_persistent: idEntityDestinationPersistent,
-                        justification_txt: justificationTxt,
-                        keep_justification_for_all: keepJustificationForAll
-                    })
+            const rsp = await cosmaeContributionEntityApiPutDuplicateAssignment({
+                body: {
+                    id_entity_destination_persistent: idEntityDestinationPersistent,
+                    justification_txt: justificationTxt,
+                    keep_justification_for_all: keepJustificationForAll,
+                    discard
+                },
+                path: {
+                    id_entity_origin_persistent: idEntityOriginPersistent,
+                    id_contribution_persistent: idContributionPersistent
                 }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const assignedDuplicateJson = json['assigned_duplicate']
+            })
+            if (rsp.data !== undefined) {
+                const assignedDuplicateJson = rsp.data.assigned_duplicate
+                const discard = rsp.data.discard
                 let assignedDuplicate = undefined
                 if (
                     assignedDuplicateJson !== null &&
@@ -126,7 +132,7 @@ export function putDuplicateAction({
                 dispatch(
                     putDuplicateSuccess({
                         idPersistent: idEntityOriginPersistent,
-                        details: assignedDuplicate
+                        details: { assignedDuplicate, discard }
                     })
                 )
                 if (keepJustificationForAll && justificationTxt !== undefined) {
@@ -138,10 +144,7 @@ export function putDuplicateAction({
                     )
                 }
                 return true
-            } else if (
-                rsp.status == 400 &&
-                json['msg'] == 'Entity justification required.'
-            ) {
+            } else if (rsp.error.msg == 'Entity justification required.') {
                 dispatch(openJustificationInput())
                 return false
             }
@@ -151,7 +154,7 @@ export function putDuplicateAction({
                     details: undefined
                 })
             )
-            dispatch(addError(json['msg']))
+            dispatch(addError(rsp.error.msg))
         } catch (e: unknown) {
             dispatch(
                 putDuplicateError({
@@ -172,41 +175,43 @@ export function getContributionEntityDuplicateCandidatesAction({
     idContributionPersistent: string
     entityIdPersistentList: string[]
 }): ThunkWithFetch<{ [key: string]: string[] }> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         try {
             for (const idEntityPersistent of entityIdPersistentList) {
                 dispatch(getDuplicatesStart(idEntityPersistent))
             }
             const entitiesGroupMap: { [key: string]: string[] } = {}
             for (let idx = 0; idx < entityIdPersistentList.length; idx += 50) {
-                const rsp = await fetch(
-                    config.api_path +
-                        `/contributions/${idContributionPersistent}/entities/similar`,
-                    {
-                        method: 'POST',
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            id_entity_persistent_list: entityIdPersistentList.slice(
-                                idx,
-                                idx + 50
-                            )
-                        })
-                    }
-                )
-                const json = await rsp.json()
-                if (rsp.status == 200) {
-                    const matchesMap = json['matches']
+                const rsp = await cosmaeContributionEntityApiPostSimilar({
+                    body: {
+                        id_entity_persistent_list: entityIdPersistentList.slice(
+                            idx,
+                            idx + 50
+                        )
+                    },
+                    path: { id_contribution_persistent: idContributionPersistent }
+                })
+                if (rsp.data !== undefined) {
+                    const matchesMap = rsp.data.matches
                     for (const idEntityPersistent in matchesMap) {
-                        let assignedDuplicate =
-                            matchesMap[idEntityPersistent]['assigned_duplicate']
+                        const match = matchesMap[idEntityPersistent]
+                        const assignedDuplicateRsp = match.assigned_duplicate
+                        let assignedDuplicate: DiscardableScoredEntity | undefined =
+                            undefined
                         if (
-                            assignedDuplicate !== null &&
-                            assignedDuplicate !== undefined
+                            assignedDuplicateRsp !== null &&
+                            assignedDuplicateRsp !== undefined
                         ) {
-                            assignedDuplicate =
-                                parseScoredEntityFromJson(assignedDuplicate)
+                            assignedDuplicate = {
+                                assignedDuplicate:
+                                    parseScoredEntityFromJson(assignedDuplicateRsp),
+                                discard: false
+                            }
                         } else {
-                            assignedDuplicate = undefined
+                            assignedDuplicate = {
+                                assignedDuplicate: undefined,
+                                discard: match.discard
+                            }
                         }
                         const matches = matchesMap[idEntityPersistent]['matches'].map(
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -238,7 +243,7 @@ export function getContributionEntityDuplicateCandidatesAction({
                             })
                         )
                     }
-                    dispatch(addError(json['msg']))
+                    dispatch(addError(rsp.error.msg))
                     break
                 }
             }
@@ -407,16 +412,14 @@ export function parseScoredEntityFromJson(json: any): ScoredEntity {
     return newScoredEntity({
         ...parseEntityObjectFromJson(json['entity']),
         similarity: json['similarity'],
-        idMatchColumnPersistentList:
-            json['id_match_column_persistent_list'] ?? []
+        idMatchColumnPersistentList: json['id_match_column_persistent_list'] ?? []
     })
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseValueFromJson(json: any) {
     const idColumnPersistent =
-        json['id_column_requested_persistent'] ??
-        json['id_column_persistent']
+        json['id_column_requested_persistent'] ?? json['id_column_persistent']
     return newValue(json['id_entity_persistent'], idColumnPersistent, {
         value: json['value'],
         idPersistent: json['id_persistent'],

@@ -12,28 +12,12 @@ vi.mock('@glideapps/glide-data-grid', async () => {
     }
 })
 import { vi, Mock } from 'vitest'
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import {
-    ContributionEntityState,
-    newContributionEntityState,
-    newScoredEntity
-} from '../../state'
+import { waitFor, screen } from '@testing-library/react'
+import { newContributionEntityState, newScoredEntity } from '../../state'
 import { newRemote } from '../../../../util/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { contributionEntitySlice } from '../../slice'
-import {
-    ContributionState,
-    contributionSlice,
-    newContributionState
-} from '../../../slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { newContributionState } from '../../../slice'
 import { EntitiesStep } from '../../components'
-import {
-    ColumnSelectionState,
-    newColumnSelectionState
-} from '../../../../column_menu/state'
-import { columnSelectionReducer } from '../../../../column_menu/slice'
+import { newColumnSelectionState } from '../../../../column_menu/state'
 import { Button, Col, Row } from 'react-bootstrap'
 import {
     CompactSelection,
@@ -43,7 +27,7 @@ import {
 } from '@glideapps/glide-data-grid'
 import { ContributionStep, newContribution } from '../../../state'
 import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
-import { addResponseSequence } from '../../../../util/tests/response'
+import { addResponseSequence, expectFetchCall } from '../../../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -67,9 +51,12 @@ function MockTable(props: any) {
                                     return <Col>{cell.displayData}</Col>
                                 } else if (cell.kind == 'custom') {
                                     const replaceInfo = cell.data
-                                    const buttonText = replaceInfo.isNew
-                                        ? 'Merge with Existing'
-                                        : 'Create New Entity'
+                                    let buttonText = 'Merge with Existing'
+                                    if (replaceInfo.isNew) {
+                                        buttonText = 'Create New Entity'
+                                    } else if (replaceInfo.isDiscard) {
+                                        buttonText = 'Discard Entity'
+                                    }
                                     const selection: GridSelection = {
                                         current: {
                                             cell: [idxCol, idxRow] as Item,
@@ -106,14 +93,6 @@ function MockTable(props: any) {
             </Col>
         </div>
     )
-}
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionEntity: ContributionEntityState
-        contribution: ContributionState
-        columnSelection: ColumnSelectionState
-    }
 }
 
 const idContribution = 'id-contribution-test'
@@ -226,7 +205,8 @@ test('merge with existing', async () => {
                         version: 0,
                         disabled: false
                     }
-                }
+                },
+                discard: false
             }
         ],
         [200, { value_responses: [] }],
@@ -243,11 +223,12 @@ test('merge with existing', async () => {
                         version: 0,
                         disabled: false
                     }
-                }
+                },
+                discard: false
             }
         ],
         [200, { value_responses: [] }],
-        [200, { assigned_duplicate: undefined }],
+        [200, { assigned_duplicate: undefined, discard: true }],
         [200, { value_responses: [] }]
     ])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
@@ -273,64 +254,66 @@ test('merge with existing', async () => {
     await waitFor(() => {
         const state = store.getState().contributionEntity
         expect(state.entities.value?.at(1)?.assignedDuplicate).toEqual(
-            newRemote(
-                newScoredEntity({
+            newRemote({
+                assignedDuplicate: newScoredEntity({
                     similarity: 0.8,
                     idMatchColumnPersistentList: [],
                     idPersistent: 'id-entity-1-0',
                     displayTxt: 'entity-1 match 0',
                     displayTxtDetails: 'display_txt_detail',
                     version: 0
-                })
-            )
+                }),
+                discard: false
+            })
         )
     })
     await waitFor(() => {
         const state = store.getState().contributionEntity
         expect(state.entities.value?.at(2)?.assignedDuplicate).toEqual(
-            newRemote(
-                newScoredEntity({
+            newRemote({
+                assignedDuplicate: newScoredEntity({
                     similarity: 0.9,
                     idMatchColumnPersistentList: [],
                     idPersistent: 'id-entity-2-1',
                     displayTxt: 'entity-2 match 1',
                     displayTxtDetails: 'display_txt_detail',
                     version: 0
-                })
-            )
+                }),
+                discard: false
+            })
         )
     }, {})
-    expect(fetchMock.mock.calls.at(-3)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-3), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-1/duplicate`,
         {
-            body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-1-0' }),
+            body: { id_entity_destination_persistent: 'id-entity-1-0' },
             credentials: 'include',
             method: 'PUT'
         }
     ])
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-2/duplicate`,
         {
-            body: JSON.stringify({ id_entity_destination_persistent: 'id-entity-2-1' }),
+            body: { id_entity_destination_persistent: 'id-entity-2-1' },
             credentials: 'include',
             method: 'PUT'
         }
     ])
     await waitFor(() => {
         screen.getByText('entity-3 match 0')
-        const button = screen.getByRole('button', { name: /Create New Entity/i })
+        const button = screen.getByRole('button', { name: /Discard Entity/i })
         button.click()
     })
     await waitFor(() => {
         const state = store.getState().contributionEntity
         expect(state.entities.value?.at(3)?.assignedDuplicate).toEqual(
-            newRemote(undefined)
+            newRemote({ assignedDuplicate: undefined, discard: true })
         )
     })
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-3/duplicate`,
         {
-            body: JSON.stringify({}),
+            body: { discard: true },
             credentials: 'include',
             method: 'PUT'
         }
@@ -443,11 +426,11 @@ test('does not open modal for entity with justification', async () => {
         const button = screen.getByRole('button', { name: /Create New Entity/i })
         button.click()
     })
-    await waitFor(() => {
-        expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await waitFor(async () => {
+        await expectFetchCall(fetchMock.mock.calls.at(-1), [
             `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entities/id-entity-0/duplicate`,
             {
-                body: JSON.stringify({}),
+                body: {},
                 credentials: 'include',
                 method: 'PUT'
             }
