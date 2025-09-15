@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"Quick setup for cosmae"
+"Quick setup for CoSMA-Editor, will generate all necessary secrets and print them."
 import secrets
 import subprocess
 from argparse import ArgumentParser
@@ -15,11 +15,13 @@ def mk_parser():
     "Create a parser"
     parser = ArgumentParser(
         prog="cosmae-quick-setup",
-        description="Quick setup for cosmae, will generate all necessary secrets and print them.",
+        description="Quick setup for CoSMA-E, will generate all necessary secrets and print them.",
     )
     parser.add_argument("--db-password", help="password for the database")
     parser.add_argument(
-        "--db-user", help="username for accessing the database", default="cosmae-db-user"
+        "--db-user",
+        help="username for accessing the database",
+        default="cosmae-db-user",
     )
     parser.add_argument(
         "--db-name", help="name to use for the database", default="cosmae-data"
@@ -55,8 +57,8 @@ if __name__ == "__main__":
     if REDIS_PASSWORD is None:
         REDIS_PASSWORD = generate_key(16)
 
-    PG_CONF = f"cosmae_db:5432:{args.db_name}:{args.db_user}:{DB_PASSWORD}"
-    PG_SERVICE_FILE = f"""host=cosmae_db
+    PG_CONF = f"db:5432:{args.db_name}:{args.db_user}:{DB_PASSWORD}"
+    PG_SERVICE_FILE = f"""host=db
 port=5432
 dbname={args.db_name}
 user={args.db_user}

@@ -1,7 +1,6 @@
 "Utils for contribution candidate queue methods."
 
 from collections import defaultdict
-from os.path import join
 
 from django.conf import settings
 from pandas import read_csv
@@ -39,7 +38,7 @@ def find_delimiter(csv_pth, encoding):
 
 def read_csv_of_candidate(contribution, nrows=None):
     "Read the csv file belonging to a contribution candidate"
-    pth = join(settings.CONTRIBUTION_DIRECTORY, contribution.file_name)
+    pth = settings.CONTRIBUTION_DIRECTORY / contribution.file_name
     if contribution.has_header:
         header_param = 0
     else:

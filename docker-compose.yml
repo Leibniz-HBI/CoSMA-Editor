@@ -27,7 +27,19 @@ volumes:
   cosmae_redis_volume:
 
 services:
-  cosmae_ui:
+  ssh:
+    build:
+      context: ./
+      dockerfile: container/ssh_dockerfile
+    volumes:
+      - ${HOST_DATA_DIR-/srv/csoame}/ssh:/etc/ssh:ro
+      - ${HOST_DATA_DIR-/srv/csoame}/credentials:/credentials:ro
+      - ${HOST_DATA_DIR-/srv/csoame}/home:/srv/cosmae/home:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 1709:1709
+    image: 127.0.0.1:5000/cosmae_ssh
+  ui:
     build:
       context: ./
       dockerfile: container/ui_dockerfile
@@ -36,13 +48,11 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - /srv/cosmae/ssl:/etc/ssl:ro
-      - /srv/cosmae/acme-challenge:/srv/acme-challenge
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_ui
     # command: [nginx-debug, '-g', 'daemon off;']
 
-  cosmae_queue_worker:
+  queue_worker:
     build:
       context: ./
       dockerfile: container/django_dockerfile
@@ -61,9 +71,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /srv/cosmae/contributions:/srv/cosmae/contributions
-      - type: bind
-        source: /srv/cosmae/user_pipe
-        target: /srv/cosmae/user_pipe
     image: 127.0.0.1:5000/cosmae_django
     command: [
       "python",
@@ -72,7 +79,7 @@ services:
       "--with-scheduler"
     ]
 
-  cosmae_django:
+  django:
     build:
       context: ./
       dockerfile: container/django_dockerfile
@@ -93,7 +100,7 @@ services:
       - email_host_user
       - email_host_password
     volumes:
-      - /srv/cosmae:/srv/cosmae/
+      - /srv/cosmae/contributions:/srv/cosmae/contributions
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_django
     # command: [
@@ -106,7 +113,7 @@ services:
     #   'debug'
     # ]
 
-  cosmae_db:
+  db:
     container_name: cosmae_db
     image: postgres:15.4
     shm_size: 265m
@@ -127,7 +134,7 @@ services:
     - cosmae_db_volume:/var/lib/postgresql/data
     - /etc/localtime:/etc/localtime:ro
 
-  cosmae_redis:
+  redis:
     container_name: cosmae_redis
     build:
       context: ./

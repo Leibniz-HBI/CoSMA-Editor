@@ -77,7 +77,7 @@ def contribution_post(
             )
         contribution_db = mk_initial_contribution_candidate(contribution, request.user)
         out_file_name = contribution_db.id_persistent + extension
-        out_file_path = os.path.join(settings.CONTRIBUTION_DIRECTORY, out_file_name)
+        out_file_path = settings.CONTRIBUTION_DIRECTORY / out_file_name
         contribution_db.file_name = out_file_name
         try:
             with open(out_file_path, "wb") as out_f:
