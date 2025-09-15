@@ -28,7 +28,12 @@ DOMAIN_NAME = "http://127.0.0.1:5173"
 DEBUG = True
 
 
-CONTRIBUTION_DIRECTORY = "/srv/cosmae/contributions"
+CONTRIBUTION_DIRECTORY = Path("/srv/cosmae/contributions")
+USER_HOME_BASE_DIR = Path("/srv/cosmae/home")
+CREDENTIALS_DIR = Path("/srv/cosmae/credentials")
+
+
+SYSTEM_GROUP_NAME, SYSTEM_GROUP_ID = ("cosmae", 70000)
 
 ###################################################################
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -229,7 +234,6 @@ CACHES = {
     },
 }
 
-HOST_PIPE_PATH = "/srv/cosmae/user_pipe"
 
 IS_UNITTEST = False
 ACCOUNT_RATE_LIMITS = False

@@ -165,7 +165,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "cosmae.CosmaeUser"
 
-CONTRIBUTION_DIRECTORY = "/tmp"
+CONTRIBUTION_DIRECTORY = Path(__file__).resolve().parent / "_test_data/contributions"
+USER_HOME_BASE_DIR = Path(__file__).resolve().parent / "_test_data/home"
+CREDENTIALS_DIR = Path(__file__).resolve().parent / "_test_data/credentials"
+
+SYSTEM_GROUP_NAME, SYSTEM_GROUP_ID = ("cosmae", 90000)
 
 RQ_QUEUES = {
     "default": {
@@ -190,7 +194,6 @@ CACHES = {
     },
 }
 
-HOST_PIPE_PATH = "/tmp/test_host_pipe"
 
 IS_UNITTEST = True
 ACCOUNT_RATE_LIMITS = False

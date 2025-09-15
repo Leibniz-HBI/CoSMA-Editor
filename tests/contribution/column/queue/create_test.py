@@ -1,4 +1,6 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,disable=unused-argument
+
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -65,7 +67,7 @@ _expected_columns = [
 
 def test_extracts_with_header(contribution_other):
     conf_mock = MagicMock
-    conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/"
+    conf_mock.CONTRIBUTION_DIRECTORY = Path("tests/files/")
     with patch("cosmae.contribution.column.queue.util.settings", conf_mock):
         read_csv_head(contribution_other.id_persistent)
     columns = ColumnContribution.objects.all()  # pylint: disable=no-member
@@ -81,7 +83,7 @@ def test_extracts_with_header(contribution_other):
 
 def test_extracts_with_header_semicolon(contribution_semicolon):
     conf_mock = MagicMock
-    conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/"
+    conf_mock.CONTRIBUTION_DIRECTORY = Path("tests/files/")
     with patch("cosmae.contribution.column.queue.util.settings", conf_mock):
         read_csv_head(contribution_semicolon.id_persistent)
     columns = ColumnContribution.objects.all()  # pylint: disable=no-member
@@ -97,7 +99,7 @@ def test_extracts_with_header_semicolon(contribution_semicolon):
 
 def test_sets_error(contribution_other):
     conf_mock = MagicMock
-    conf_mock.CONTRIBUTION_DIRECTORY = "tests/files/does_not_exist"
+    conf_mock.CONTRIBUTION_DIRECTORY = Path("tests/files/does_not_exist")
     with patch("cosmae.contribution.column.queue.util.settings", conf_mock):
         read_csv_head(contribution_other.id_persistent)
     contribution = ContributionCandidate.by_id_persistent(

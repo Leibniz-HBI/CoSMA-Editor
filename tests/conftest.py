@@ -532,6 +532,14 @@ def redis(redis_fixture):
     return redis_fixture
 
 
+@pytest.fixture(autouse=True, scope="session")
+def delete_errors():
+    yield
+    contributions_pth = settings.CONTRIBUTION_DIRECTORY
+    for pth in contributions_pth.glob("*"):
+        pth.unlink()
+
+
 @pytest.fixture
 def display_txt_order_0(column):
     ConfigValue.append_to_list(DISPLAY_TXT_ORDER_CONFIG_KEY, column.id_persistent)

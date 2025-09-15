@@ -25,7 +25,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-CONTRIBUTION_DIRECTORY = "/srv/cosmae/contributions"
+CONTRIBUTION_DIRECTORY = Path("/srv/cosmae/contributions")
+USER_HOME_BASE_DIR = Path("/srv/cosmae/home")
+CREDENTIALS_DIR = Path("/srv/cosmae/credentials")
+
+
+def _get_group_info():
+    with open(f"{CREDENTIALS_DIR}/group", "r", encoding="ascii") as group_file:
+        line = group_file.readline()
+        split = line.split(":")
+        return split[0], int(split[2])
+
+
+SYSTEM_GROUP_NAME, SYSTEM_GROUP_ID = _get_group_info()
+
 DOMAIN_NAME = ""
 
 
@@ -55,7 +68,6 @@ def get_secret(secret_name):
 
 ###################################################################
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "cosmae-poc.duckdns.org"]
-
 
 CSRF_TRUSTED_ORIGINS = [DOMAIN_NAME]
 
@@ -122,7 +134,7 @@ DATABASES = {
         "NAME": get_secret("cosmae_db_name"),
         "USER": get_secret("cosmae_db_user"),
         "PASSWORD": get_secret("cosmae_db_password"),
-        "HOST": "cosmae_db",
+        "HOST": "db",
         "PORT": "5432",
         # "OPTIONS": {
         # "service": "cosmae_service",
@@ -183,7 +195,7 @@ AUTH_USER_MODEL = "cosmae.CosmaeUser"
 
 RQ_QUEUES = {
     "default": {
-        "HOST": "cosmae_redis",
+        "HOST": "redis",
         "PORT": 6379,
         "DB": 0,
         "DEFAULT_TIMEOUT": 360,
@@ -195,26 +207,24 @@ RQ_QUEUES = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://cosmae_redis:6379",
-        "OPTIONS": {"password": get_secret("cosmae_redis_password")},
+        "LOCATION": "redis://redis:6379",
+        "OPTIONS": {"password": get_secret("redis_password")},
     },
     "column_name_paths": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://cosmae_redis:6379",
+        "LOCATION": "redis://redis:6379",
         "OPTIONS": {"password": get_secret("cosmae_redis_password")},
         "KEY_PREFIX": "column_name_path",
         "TIMEOUT": None,
     },
     "entity_display_txt_information": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://cosmae_redis:6379",
+        "LOCATION": "redis://redis:6379",
         "OPTIONS": {"password": get_secret("cosmae_redis_password")},
         "KEY_PREFIX": "entity_display_txt_information",
         "TIMEOUT": None,
     },
 }
-
-HOST_PIPE_PATH = "/srv/cosmae/user_pipe"
 
 IS_UNITTEST = False
 DEBUG = False

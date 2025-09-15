@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from allauth.account.signals import password_changed, user_signed_up
 from django.apps import apps
+from django.conf import settings
 from django.db.backends.signals import connection_created
 from django.db.models.signals import post_delete, post_save
 
@@ -41,19 +42,36 @@ def add_superuser(
     try:
         user_model = apps.get_model("cosmae", "cosmaeuser")
         if user_model.objects.count() == 0:
-            username = "admin"
-            email = "mail@test.url"
-            password = "changeme"
-            print(f"Creating account for {username} ({email})")
-            admin = user_model.objects.create_superuser(
-                email=email,
-                username=username,
-                password=password,
-                id_persistent=str(uuid4()),
-            )
-            admin.is_active = True
-            admin.is_admin = True
-            admin.save()
+            password = "linuxy$jFT$.VleHugrAufPWIAmmAw28/$96G4IbTuE6Avuhxq3SS9x4YxB6N9l4QeVguL4kvRJc8"  # pylint: disable=line-too-long
+            users = [
+                {"username": "admin", "email": "mail@test.url", "is_admin": True},
+            ]
+            if not settings.IS_UNITTEST:
+                users.append(
+                    {
+                        "username": "cosmartin",
+                        "email": "martin@test.url",
+                        "is_admin": False,
+                    },
+                )
+            for user_dict in users:
+                is_admin = user_dict["is_admin"]
+                if is_admin:
+                    mk_user = user_model.objects.create_superuser
+                else:
+                    mk_user = user_model.objects.create_user
+                username = user_dict["username"]
+                email = user_dict["email"]
+                print(f"Creating account for {username} ({email})")
+                new_user = mk_user(
+                    email=email,
+                    username=username,
+                    password=password,
+                    id_persistent=str(uuid4()),
+                )
+                new_user.is_active = True
+                new_user.is_admin = is_admin
+                new_user.save()
     except Exception:  # pylint: disable=broad-except
         pass
 
