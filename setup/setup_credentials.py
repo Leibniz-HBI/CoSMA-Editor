@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from datetime import datetime, timezone
 from os import chmod, chown, geteuid, mkdir, path
 from shutil import copyfile
+from typing import Set
 
 LOGGER = logging.getLogger("setup_credentials")
 _epoch = datetime.fromtimestamp(0, timezone.utc)
@@ -187,14 +188,14 @@ def setup_credentials(credentials_dir, username, user_id, group_id):
         "$y$jFT$.VleHugrAufPWIAmmAw28/$96G4IbTuE6Avuhxq3SS9x4YxB6N9l4QeVguL4kvRJc8"
     )
     add_to_shadow(username, credentials_dir, password_change_time, password_hash)
-    with open(credentials_dir + "/group", "wt", encoding="ascii") as group:
+    with open(credentials_dir + "/group", "at", encoding="ascii") as group:
         # group inside container will always be "cosmae"
         group.write(f"cosmae:x:{group_id}:\n")
 
 
 def add_to_passwd(username, user_id, group_id, credentials_dir):
     "Add an user to the passwd file."
-    with open(credentials_dir + "/passwd", "wt", encoding="ascii") as passwd:
+    with open(credentials_dir + "/passwd", "at", encoding="ascii") as passwd:
         passwd.write(
             f"{username}:x:{user_id}:{group_id}::/home/{username}:/usr/bin/true\n"
         )
@@ -202,8 +203,40 @@ def add_to_passwd(username, user_id, group_id, credentials_dir):
 
 def add_to_shadow(username, credentials_dir, password_change_time, password_hash):
     "Add an user to the shadow file."
-    with open(credentials_dir + "/shadow", "wt", encoding="ascii") as shadow:
+    with open(credentials_dir + "/shadow", "at", encoding="ascii") as shadow:
         shadow.write(f"{username}:{password_hash}:{password_change_time}::::::\n")
+
+
+def _copy_user_info_from_host_to_guest(
+    username_set: Set[str],
+    credentials_pth: str,
+    exclude_group_id_set: Set[str] | None = None,
+):
+    "Copy user information from host to guest."
+    group_id_set = set()
+    if exclude_group_id_set is None:
+        exclude_group_id_set = set()
+    with open("/etc/passwd", "rt", encoding="ascii") as host_passwd:
+        with open(credentials_pth + "/passwd", "at", encoding="ascii") as guest_passwd:
+            for line in host_passwd.readlines():
+                parts = line.split(":")
+                if parts[0] in username_set:
+                    guest_passwd.write(line)
+                    group_id = parts[3]
+                    if not group_id in exclude_group_id_set:
+                        group_id_set.add(group_id)
+    with open("/etc/shadow", "rt", encoding="ascii") as host_shadow:
+        with open(credentials_pth + "/shadow", "at", encoding="ascii") as guest_shadow:
+            for line in host_shadow.readlines():
+                parts = line.split(":")
+                if parts[0] in username_set:
+                    guest_shadow.write(line)
+    with open("/etc/group", "rt", encoding="ascii") as host_group:
+        with open(credentials_pth + "/group", "at", encoding="ascii") as guest_group:
+            for line in host_group.readlines():
+                parts = line.split(":")
+                if parts[2] in group_id_set:
+                    guest_group.write(line)
 
 
 def run_setup_credentials(
@@ -223,8 +256,9 @@ def run_setup_credentials(
     if not path.exists(credentials_dir):
         mkdir(credentials_dir)
         chown(credentials_dir, system_user_id, group_id)
-    add_to_passwd(system_user, system_user_id, group_id, credentials_dir)
-    add_to_shadow(system_user, credentials_dir, 0, "!")
+    _copy_user_info_from_host_to_guest(
+        {system_user, "sshd"}, credentials_dir, {str(group_id)}
+    )
     host_user_id_limit = _get_user_id_limit()
     # add two to avoid collision with potential admin account.
     first_proxy_user_id = 10000 * (1 + (host_user_id_limit // 10000)) + 2
