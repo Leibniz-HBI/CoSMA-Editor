@@ -67,9 +67,9 @@ def get_secret(secret_name):
 
 
 ###################################################################
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "cosmae-poc.duckdns.org"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", DOMAIN_NAME]
 
-CSRF_TRUSTED_ORIGINS = [DOMAIN_NAME]
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^http://127\.0\.0\.1:\d+$", r"^http://localhost:\d+$"]
 
 SESSION_COOKIE_SECURE = True
 
@@ -184,7 +184,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = "/var/www/cosmae-poc.duckdns.org/static/"
+STATIC_ROOT = "/var/www/cosmae"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -208,7 +208,7 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://redis:6379",
-        "OPTIONS": {"password": get_secret("redis_password")},
+        "OPTIONS": {"password": get_secret("cosmae_redis_password")},
     },
     "column_name_paths": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
@@ -261,7 +261,10 @@ EMAIL_HOST = get_secret("email_host")
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = get_secret("email_host_user")
-EMAIL_HOST_PASSWORD = get_secret("email_host_password")
+EMAIL_HOST_PASSWORD = get_secret("email_host_app_password")
+DEFAULT_EMAIL_FROM = get_secret("email_from")
+DEFAULT_EMAIL_SUBJECT_PREFIX = "[CoSMA-E] "
+ACCOUNT_EMAIL_SUBJECT_PREFIX = DEFAULT_EMAIL_SUBJECT_PREFIX
 
 
 LOGGING = {
