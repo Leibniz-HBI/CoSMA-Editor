@@ -289,3 +289,8 @@ def dispatch_set_ssh_keys(
 ):
     "Queues the task for setting SSH keys."
     enqueue(set_system_ssh_keys, instance.user_id)
+
+
+def dispatch_initial_user():
+    "Queues the task for updating the initial system user."
+    enqueue(create_initial_user)

@@ -9,7 +9,7 @@ from django.core.exceptions import AppRegistryNotReady
 from django.db.models.signals import post_migrate
 
 from cosmae.signals import (
-    connect_add_superuser,
+    connect_add_initial_users,
     connect_column_queue_process,
     connect_entity_display_txt,
     connect_password_changed_signal,
@@ -68,7 +68,7 @@ class CosmaeConfig(AppConfig):
     name = "cosmae"
 
     def ready(self) -> None:
-        connect_add_superuser()
+        connect_add_initial_users()
         post_migrate.connect(add_permissions, dispatch_uid="cosmae.create_groups")
         try:
             if not settings.IS_UNITTEST:
