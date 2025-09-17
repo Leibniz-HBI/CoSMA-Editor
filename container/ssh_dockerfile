@@ -7,3 +7,4 @@ RUN mkdir /credentials
 RUN ln -f -s /credentials/passwd /etc/passwd
 RUN ln -f -s /credentials/shadow /etc/shadow
 RUN ln -f -s /credentials/group /etc/group
+CMD ["/usr/sbin/sshd", "-D" ]

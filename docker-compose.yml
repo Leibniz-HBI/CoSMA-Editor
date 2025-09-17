@@ -19,12 +19,14 @@ secrets:
     external: true
   email_host_user:
     external: true
-  email_host_password:
+  email_host_app_password:
+    external: true
+  email_from:
     external: true
 
 volumes:
-  cosmae_db_volume:
-  cosmae_redis_volume:
+  db_volume:
+  redis_volume:
 
 services:
   ssh:
@@ -32,13 +34,14 @@ services:
       context: ./
       dockerfile: container/ssh_dockerfile
     volumes:
-      - ${HOST_DATA_DIR-/srv/csoame}/ssh:/etc/ssh:ro
-      - ${HOST_DATA_DIR-/srv/csoame}/credentials:/credentials:ro
-      - ${HOST_DATA_DIR-/srv/csoame}/home:/srv/cosmae/home:ro
+      - ${HOST_DATA_DIR-/srv/cosmae}/ssh:/etc/ssh:ro
+      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/credentials:ro
+      - ${HOST_DATA_DIR-/srv/cosmae}/home:/srv/cosmae/home:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
       - 1709:1709
     image: 127.0.0.1:5000/cosmae_ssh
+
   ui:
     build:
       context: ./
@@ -50,6 +53,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_ui
+    # no need to set user as host fs is not written to.
+    # user: ${USER_ID}:${GROUP_ID}
     # command: [nginx-debug, '-g', 'daemon off;']
 
   queue_worker:
@@ -67,11 +72,15 @@ services:
       - orcid_client_secret
       - email_host
       - email_host_user
-      - email_host_password
+      - email_host_app_password
+      - email_from
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /srv/cosmae/contributions:/srv/cosmae/contributions
+      - ${HOST_DATA_DIR-/srv/cosmae}/contributions:/srv/cosmae/contributions
+      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/srv/cosmae/credentials
+      - ${HOST_DATA_DIR-/srv/cosmae}/home:/srv/cosmae/home
     image: 127.0.0.1:5000/cosmae_django
+    user: ${USER_ID}:${GROUP_ID}
     command: [
       "python",
       "manage.py",
@@ -98,11 +107,14 @@ services:
       - orcid_client_secret
       - email_host
       - email_host_user
-      - email_host_password
+      - email_host_app_password
+      - email_from
     volumes:
-      - /srv/cosmae/contributions:/srv/cosmae/contributions
+      - ${HOST_DATA_DIR-/srv/cosmae}/contributions:/srv/cosmae/contributions
+      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/srv/cosmae/credentials
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_django
+    user: ${USER_ID}:${GROUP_ID}
     # command: [
     #   'gunicorn',
     #   'django_project.asgi:application',
@@ -114,8 +126,10 @@ services:
     # ]
 
   db:
-    container_name: cosmae_db
-    image: postgres:15.4
+    build:
+      context: ./
+      dockerfile: container/db_dockerfile
+    image: 127.0.0.1:5000/cosmae_db
     shm_size: 265m
     restart: unless-stopped
     ports:
@@ -131,11 +145,11 @@ services:
     - cosmae_db_user
     - cosmae_db_name
     volumes:
-    - cosmae_db_volume:/var/lib/postgresql/data
+    - db_volume:/var/lib/postgresql/data
     - /etc/localtime:/etc/localtime:ro
+    user: ${USER_ID}:${GROUP_ID}
 
   redis:
-    container_name: cosmae_redis
     build:
       context: ./
       dockerfile: container/redis_dockerfile
@@ -143,10 +157,11 @@ services:
     expose:
       - 6379
     volumes:
-      - cosmae_redis_volume:/data
+      - redis_volume:/data
       - /etc/localtime:/etc/localtime:ro
     secrets:
       - cosmae_redis_conf
+    user: ${USER_ID}:${GROUP_ID}
     command: [
       "redis-server",
       "/etc/redis/redis.conf"
