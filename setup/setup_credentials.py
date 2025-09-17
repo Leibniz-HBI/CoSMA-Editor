@@ -47,6 +47,16 @@ def create_group(group_name):
     return get_group_id(group_name)
 
 
+def _get_user_id(username):
+    with open("/etc/passwd", "r", encoding="ascii") as passwd_file:
+        for line in passwd_file.readlines():
+            if line.startswith(username):
+                return int(line.split(":")[2])
+    raise Exception(  # pylint: disable=broad-exception-raised
+        "Could not determine user id."
+    )
+
+
 def create_user(
     username, user_id=None, user_home_base_dir=None, group_name=None, create_home=True
 ):
@@ -67,17 +77,16 @@ def create_user(
     cmd += [username]
 
     with subprocess.Popen(cmd) as process:
-        if process.wait() != 0:
-            raise Exception(  # pylint: disable=broad-exception-raised
-                "Could not create user."
-            )
-    with open("/etc/passwd", "r", encoding="ascii") as passwd_file:
-        for line in passwd_file.readlines():
-            if line.startswith(username):
-                return int(line.split(":")[2])
-    raise Exception(  # pylint: disable=broad-exception-raised
-        "Could not determine user id."
-    )
+        create_success = process.wait() != 0
+    try:
+        user_id = _get_user_id(username)
+        return user_id
+    except Exception as exc:  # pylint: disable=broad-except
+        if create_success:
+            raise exc
+        raise Exception(  # pylint: disable=broad-exception-raised
+            "Could not create user."
+        ) from exc
 
 
 def _get_conf_int_from_file(file_pth, conf_field_name):
@@ -205,9 +214,10 @@ def run_setup_credentials(
     group_id = create_group(group_name)
     # system user is used on host and in containers
     system_user_id = create_user(system_user, group_name=group_name)
+    _mk_parent_dir(base_dir)
     chown(base_dir, system_user_id, group_id)
     contributions_dir = path.join(base_dir, "contributions")
-    _mk_parent_dir(contributions_dir)
+    mkdir(contributions_dir)
     chown(contributions_dir, system_user_id, group_id)
     credentials_dir = f"{base_dir}/credentials"
     if not path.exists(credentials_dir):
