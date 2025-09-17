@@ -1,4 +1,6 @@
-FROM python:3.12
+FROM python:3.12-bookworm
+ARG USER_ID
+ARG GROUP_ID
 RUN apt-get update && apt-get install -y  gcc g++ libpq-dev whois postgresql-client-15
 
 ARG POETRY_VIRTUALENVS_CREATE=false
@@ -11,4 +13,6 @@ ADD cosmae /cosmae/cosmae
 ADD django_project /cosmae/django_project
 COPY manage.py /cosmae/
 # RUN apk --purge del .build-deps
+RUN mkdir -p /var/www
+RUN chown -R ${USER_ID}:${GROUP_ID} /var/www
 CMD sh -c ' python3 manage.py migrate && python manage.py collectstatic --no-input && gunicorn django_project.asgi:application -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000'

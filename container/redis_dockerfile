@@ -1,2 +1,5 @@
 from redis:7.4-alpine
+ARG USER_ID
+ARG GROUP_ID
 ADD container/resources/redis.conf /etc/redis/redis.conf
+RUN chown ${USER_ID}:${GROUP_ID} /data

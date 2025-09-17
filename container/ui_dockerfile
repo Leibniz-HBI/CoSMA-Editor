@@ -24,6 +24,8 @@ ADD ui/public /cosmae/public
 ADD ui/openapi.js /cosmae/openapi.js
 ADD ui/openapi /cosmae/openapi
 RUN cp /cosmae/src/config_production.ts /cosmae/src/config.ts
+# Needed to ensure network connectivity for some reason
+RUN npm config set fetch-timeout 120000 && npm config set fetch-retries 5
 RUN npm install vite @vitejs/plugin-react
 RUN npm run openapi
 RUN npm run build
