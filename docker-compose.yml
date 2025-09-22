@@ -80,7 +80,8 @@ services:
       - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/srv/cosmae/credentials
       - ${HOST_DATA_DIR-/srv/cosmae}/home:/srv/cosmae/home
     image: 127.0.0.1:5000/cosmae_django
-    user: ${USER_ID}:${GROUP_ID}
+    #  needs to run as root in order to chown
+    # user: ${USER_ID}:${GROUP_ID}
     command: [
       "python",
       "manage.py",
