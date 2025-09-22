@@ -278,7 +278,7 @@ def run_setup_credentials(
     # Therefore, only after initial user in db is created, we can set the correct permissions,
     # Before that SSH will fail. This is intended.
     authorized_keys_pth = f"{user_home}/{initial_user}/.ssh/authorized_keys"
-    chmod(authorized_keys_pth, 0o666)
+    chmod(authorized_keys_pth, 0o600)
     chown(authorized_keys_pth, first_proxy_user_id, group_id)
     chmod(ssh_pth, 0o700)
     chown(ssh_pth, first_proxy_user_id, group_id)
