@@ -1,5 +1,6 @@
 "Collection of methods for attaching signals to models."
 
+from logging import getLogger
 from uuid import uuid4
 
 from allauth.account.signals import password_changed, user_signed_up
@@ -8,6 +9,8 @@ from django.conf import settings
 from django.db import transaction
 from django.db.backends.signals import connection_created
 from django.db.models.signals import post_delete, post_save
+
+_LOGGER = getLogger(__name__)
 
 
 def connect_read_csv_signal():
@@ -42,6 +45,7 @@ def add_initial_users(
     "Add superuser if no users exist"
     try:
         user_model = apps.get_model("cosmae", "cosmaeuser")
+        _LOGGER.debug("Checking for existing users.")
         if user_model.objects.count() == 0:
             users = [
                 {
@@ -62,13 +66,13 @@ def add_initial_users(
                 )
             for user_dict in users:
                 _create_user(user_model, user_dict)
-            from management.user.queue import (  # pylint: disable=import-outside-toplevel
+            from cosmae.management.user.queue import (  # pylint: disable=import-outside-toplevel
                 dispatch_initial_user,
             )
 
             dispatch_initial_user()
-    except Exception:  # pylint: disable=broad-except
-        pass
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.error("Could not create initial users", exc_info=exc)
 
 
 def _create_user(user_model, user_dict):
@@ -80,9 +84,10 @@ def _create_user(user_model, user_dict):
         "password": "changeme",
         "id_persistent": str(uuid4()),
     }
+    _LOGGER.debug("Creating user with arguments: %s", str(user_args))
     edit_session_model = apps.get_model("cosmae", "editsession")
     edit_session_participant_model = apps.get_model("cosmae", "editsessionparticipant")
-    email_model = apps.get_model("auth", "emailaddress")
+    email_model = apps.get_model("account", "emailaddress")
     with transaction.atomic():
         if is_admin:
             new_user = user_model.objects.create_superuser(**user_args)
