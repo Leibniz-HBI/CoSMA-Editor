@@ -203,21 +203,21 @@ def create_initial_user():
     The information is taken from files in the credentials directory."""
     with open(settings.CREDENTIALS_DIR / "shadow", "rt", encoding="ascii") as f:
         lines = f.readlines()
-    if len(lines) != 2:
+    if len(lines) != 3:
         raise Exception(  # pylint: disable=broad-exception-raised
-            "There must be exactly two users in the shadow file."
+            "There must be exactly three users in the shadow file."
         )
-    split = lines[1].split(":")
+    split = lines[2].split(":")
     username = split[0]
     password_hash = split[1]
     django_password = change_prefix_to_django(password_hash[1:])
     with open(settings.CREDENTIALS_DIR / "passwd", "rt", encoding="ascii") as f:
         lines = f.readlines()
-    if len(lines) != 2:
+    if len(lines) != 3:
         raise Exception(  # pylint: disable=broad-exception-raised
-            "There must be exactly two users in the shadow file."
+            "There must be exactly three users in the passwd file."
         )
-    split = lines[1].split(":")
+    split = lines[2].split(":")
     if split[0] != username:
         raise Exception(  # pylint: disable=broad-exception-raised
             "User names in passwd and shadow file do not match."
@@ -267,7 +267,6 @@ def create_initial_user():
             key=key,
         )
         ssh_key.save()
-    chmod(ssh_path, 0o600)
 
 
 def dispatch_create_system_user(
