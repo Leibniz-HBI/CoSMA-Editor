@@ -35,7 +35,8 @@ you can either use the `quick_setup.py` script for setting up secrets or registe
   * `email_host_user` containing the username for the SMTP host
   * `email_host_app_password` containing the password for the SMTP host
   * `email_from` to the adress emails are sent from, e.g., `"cosmae@$YOUR_TLD"`
-3. Create directories using `setup_credentials.py`
+3. Create directories using `setup_credentials.py`.
+   The default location is `/srv/cosmae`. You can change it with the `--directory argument`
 4. Set the following variables `django_project/settings/settings_production.py`
   * `DOMAIN_NAME` to the correct URL.
   * `EMAIL_SUBJECT_RPEFIX` to a value indicating the name of the app.
