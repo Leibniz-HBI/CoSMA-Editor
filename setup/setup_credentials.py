@@ -151,7 +151,7 @@ def setup_ssh_proxy(root_dir):
             sshd_config.write("PasswordAuthentication yes\n")
             sshd_config.write("PermitRootLogin no\n")
             sshd_config.write("KbdInteractiveAuthentication no\n")
-            sshd_config.write("UsePAM yes\n")
+            sshd_config.write("UsePAM no\n")
             sshd_config.write("AllowAgentForwarding no\n")
             sshd_config.write("AllowTcpForwarding yes\n")
             sshd_config.write("X11Forwarding no\n")
@@ -183,7 +183,9 @@ def setup_ssh_proxy(root_dir):
 def setup_credentials(credentials_dir, username, user_id, group_id):
     "Create necessary files and folders for user credentials."
     add_to_passwd(username, user_id, group_id, credentials_dir)
-    password_change_time = (datetime.now(timezone.utc) - _epoch).total_seconds() * 1000
+    password_change_time = int(
+        (datetime.now(timezone.utc) - _epoch).total_seconds() // (60 * 60 * 24)
+    )
     password_hash = (  # password is 'changeme'
         "$y$jFT$.VleHugrAufPWIAmmAw28/$96G4IbTuE6Avuhxq3SS9x4YxB6N9l4QeVguL4kvRJc8"
     )
@@ -197,7 +199,7 @@ def add_to_passwd(username, user_id, group_id, credentials_dir):
     "Add an user to the passwd file."
     with open(credentials_dir + "/passwd", "at", encoding="ascii") as passwd:
         passwd.write(
-            f"{username}:x:{user_id}:{group_id}::/home/{username}:/usr/bin/true\n"
+            f"{username}:x:{user_id}:{group_id}::/srv/cosmae/home/{username}:/usr/bin/true\n"
         )
 
 
