@@ -6,7 +6,6 @@ from uuid import uuid4
 from allauth.account.signals import password_changed, user_signed_up
 from django.apps import apps
 from django.conf import settings
-from django.db import transaction
 from django.db.backends.signals import connection_created
 from django.db.models.signals import post_delete, post_save
 
@@ -47,73 +46,25 @@ def add_initial_users(
         user_model = apps.get_model("cosmae", "cosmaeuser")
         _LOGGER.debug("Checking for existing users.")
         if user_model.objects.count() == 0:
-            users = [
-                {
-                    "username": "admin",
-                    "email": "mail@test.url",
-                    "is_admin": True,
-                    "permission_group": "APLC",
-                },
-            ]
-            if not settings.IS_UNITTEST:
-                users.append(
-                    {
-                        "username": "cosmartin",
-                        "email": "martin@test.url",
-                        "is_admin": False,
-                        "permission_group": "COMM",
-                    },
-                )
-            for user_dict in users:
-                _create_user(user_model, user_dict)
-            from cosmae.management.user.queue import (  # pylint: disable=import-outside-toplevel
-                dispatch_initial_user,
+            _LOGGER.debug("Creating admin user.")
+            new_user = user_model.objects.create_superuser(
+                username="admin",
+                email="mail@test.url",
+                password="changeme",
+                id_persistent=str(uuid4()),
+                permission_group="APLC",
             )
+            new_user.is_admin = True
+            new_user.is_active = True
+            new_user.save()
+            if not settings.IS_UNITTEST:
+                from cosmae.management.user.queue import (  # pylint: disable=import-outside-toplevel
+                    dispatch_initial_user,
+                )
 
-            dispatch_initial_user()
+                dispatch_initial_user()
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.error("Could not create initial users", exc_info=exc)
-
-
-def _create_user(user_model, user_dict):
-    is_admin = user_dict["is_admin"]
-    user_args = {
-        "username": user_dict["username"],
-        "email": user_dict["email"],
-        "permission_group": user_dict["permission_group"],
-        "password": "changeme",
-        "id_persistent": str(uuid4()),
-    }
-    _LOGGER.debug("Creating user with arguments: %s", str(user_args))
-    edit_session_model = apps.get_model("cosmae", "editsession")
-    edit_session_participant_model = apps.get_model("cosmae", "editsessionparticipant")
-    email_model = apps.get_model("account", "emailaddress")
-    with transaction.atomic():
-        if is_admin:
-            new_user = user_model.objects.create_superuser(**user_args)
-        else:
-            new_user = user_model.objects.create_user(**user_args)
-            edit_session = edit_session_model.objects.create(
-                id_persistent=uuid4(),
-                id_owner_persistent=new_user.id_persistent,
-                name="Default Edit Session",
-            )
-            participant = edit_session_participant_model.objects.create(
-                edit_session=edit_session,
-                type_participant="INT",
-                id_participant=new_user.id_persistent,
-                name_participant=new_user.username,
-            )
-            edit_session.editsessionparticipantset = {participant}
-            email_model.objects.create(
-                user_id=new_user.id,
-                email=new_user.email,
-                primary=True,
-                verified=True,
-            )
-        new_user.is_active = True
-        new_user.is_admin = is_admin
-        new_user.save()
 
 
 def connect_add_initial_users():

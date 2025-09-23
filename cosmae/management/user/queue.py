@@ -8,13 +8,16 @@ from shutil import chown, copy
 from sys import maxsize
 from tempfile import NamedTemporaryFile
 from time import sleep
+from typing import Tuple
 from uuid import uuid4
 
+from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.core.exceptions import EmptyResultSet
 from django.db import transaction
 from django_rq import enqueue
 
+from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.user.ssh.models_django import SshKey
 from cosmae.util import CosmaeUser
 
@@ -32,7 +35,7 @@ def change_prefix_to_django(password_hash: str):
     return "linuxy" + password_hash[1:]
 
 
-def _get_minimum_user_ids() -> int:
+def _get_minimum_user_ids() -> Tuple[int, int]:
     mins = [maxsize, maxsize - 1]
     with open(settings.CREDENTIALS_DIR / "passwd", "r", encoding="ascii") as passwd:
         for line in passwd.readlines():
@@ -77,14 +80,14 @@ def set_system_ssh_keys(id_user: int):
         ssh_key_list = [key.as_pub_key_string() for key in key_query]
         user = user_query.get()
         username = user.username
-        set_ssh_key_list(username, ssh_key_list)
+        set_ssh_key_list(username, _MIN_USER_ID + id_user, ssh_key_list)
     except CosmaeUser.DoesNotExist:
         _logger.error("Can not set SSH keys for missing user with id %d", id_user)
     except EmptyResultSet:
         _logger.error("Could not find any SSH keys for user with id %d", id_user)
 
 
-def set_ssh_key_list(username, ssh_key_list):
+def set_ssh_key_list(username, user_id_system, ssh_key_list):
     "Set all SSH keys for a user."
     _logger.info("Set SSH keys for user %s", username)
     target_dir = settings.USER_HOME_BASE_DIR / username / ".ssh"
@@ -98,7 +101,7 @@ def set_ssh_key_list(username, ssh_key_list):
             tmp_file.write("\n")
         tmp_file.close()
         copy(tmp_file.name, target_pth)
-        chown(target_pth, username, settings.SYSTEM_GROUP_NAME)
+        chown(target_pth, user_id_system, settings.SYSTEM_GROUP_ID)
         chmod(target_pth, 0o600)
 
 
@@ -134,7 +137,7 @@ def create_system_user(id_user_persistent):
         chown(new_user_home_dir_path, username, settings.SYSTEM_GROUP_NAME)
         chown(ssh_pth, username, settings.SYSTEM_GROUP_NAME)
         chmod(ssh_pth, 0o700)
-        set_ssh_key_list(username, [ssh_key.as_pub_key_string()])
+        set_ssh_key_list(username, user_id, [ssh_key.as_pub_key_string()])
 
 
 def set_shadow_entry(username, password_hash, password_change_time):
@@ -210,7 +213,6 @@ def create_initial_user():
     split = lines[2].split(":")
     username = split[0]
     password_hash = split[1]
-    django_password = change_prefix_to_django(password_hash[1:])
     with open(settings.CREDENTIALS_DIR / "passwd", "rt", encoding="ascii") as f:
         lines = f.readlines()
     if len(lines) != 3:
@@ -228,14 +230,11 @@ def create_initial_user():
             f"User id {user_id_system} is too small. It must be at least {_MIN_USER_ID}."
         )
     user_id = user_id_system - _MIN_USER_ID
-    user = CosmaeUser(
-        username=username,
-        password=django_password,
-        id=user_id,
-        id_persistent=uuid4(),
-        first_name=username,
-        permission_group=CosmaeUser.COMMISSIONER,
-    )  # pylint: disable=no-member
+    ssh_key_string = _get_ssh_key_from_file(username)
+    _create_initial_user(username, user_id, password_hash, ssh_key_string)
+
+
+def _get_ssh_key_from_file(username):
     ssh_path = settings.USER_HOME_BASE_DIR / username / ".ssh" / "authorized_keys"
     if not ssh_path.exists():
         raise Exception(  # pylint: disable=broad-exception-raised
@@ -248,25 +247,65 @@ def create_initial_user():
                 raise Exception(  # pylint: disable=broad-exception-raised
                     f"Expected exactly one ssh public key in file {ssh_path}."
                 )
-            split = lines[0].split()
-            key_type = split[0]
-            key = split[1]
-            name = split[2]
 
     except PermissionError as exc:
         raise Exception(  # pylint: disable=broad-exception-raised
             f"Could not read ssh public key file {ssh_path}."
         ) from exc
+    return lines[0]
+
+
+def _create_initial_user(username, user_id, linux_password_hash, ssh_key_string):
+    django_password = change_prefix_to_django(linux_password_hash[1:])
     with transaction.atomic():
-        user.save()
-        ssh_key = SshKey(
-            user=user,
+        new_user = CosmaeUser(
+            username=username,
+            password=django_password,
+            id=user_id,
             id_persistent=uuid4(),
-            type=key_type,
-            name=name,
-            key=key,
+            first_name=username,
+            permission_group=CosmaeUser.COMMISSIONER,
+        )  # pylint: disable=no-member
+        verified_email = EmailAddress(
+            user_id=new_user.id,
+            email=new_user.email,
+            primary=True,
+            verified=True,
         )
-        ssh_key.save()
+        new_user.save()
+        _save_ssh_key(new_user, ssh_key_string)
+        verified_email.save()
+        _create_edit_session(new_user)
+        new_user.is_active = True
+
+
+def _create_edit_session(new_user):
+    edit_session = EditSession(
+        id_persistent=uuid4(),
+        id_owner_persistent=new_user.id_persistent,
+        name="Default Edit Session",
+    )
+    participant = EditSessionParticipant(
+        edit_session=edit_session,
+        type_participant="INT",
+        id_participant=new_user.id_persistent,
+        name_participant=new_user.username,
+    )
+    edit_session.save()
+    participant.save()
+    return participant
+
+
+def _save_ssh_key(new_user, ssh_key_string):
+    ssh_key_split = ssh_key_string.split()
+    ssh_key = SshKey(
+        user=new_user,
+        id_persistent=uuid4(),
+        type=ssh_key_split[0],
+        key=ssh_key_split[1],
+        name=ssh_key_split[2],
+    )
+    ssh_key.save()
 
 
 def dispatch_create_system_user(
