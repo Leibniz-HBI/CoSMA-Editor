@@ -1,6 +1,6 @@
 "API endpoints for managing users."
 
-import logging
+from logging import getLogger
 
 from allauth.account import signals
 from allauth.account.models import Login
@@ -40,6 +40,7 @@ class CreateUserRequest(Schema):
 
 
 router = Router()
+_LOGGER = getLogger(__name__)
 
 
 @router.post(
@@ -84,13 +85,14 @@ def post_create_user(request, user_request_data: CreateUserRequest):
                 )
         return single_error_allauth_like_response(500, "Error while creating user")
     except (IntegrityError, AccountExistsException) as exc:
-        logging.error("", exc_info=exc)
+        _LOGGER.error("", exc_info=exc)
         return single_error_allauth_like_response(
             400, "Username or mail address already in use."
         )
     except SshKey.InvalidSshKeyException as exc:
         return 400, ApiError(msg=exc.msg)
-    except Exception:  # pylint: disable=broad-except:
+    except Exception as exc:  # pylint: disable=broad-except:
+        _LOGGER.error("", exc_info=exc)
         return single_error_allauth_like_response(500, "Could not create user")
 
 
