@@ -1,5 +1,6 @@
 "API endpoints for handling user management."
 
+from logging import getLogger
 from urllib.parse import unquote
 
 from allauth.account.models import EmailAddress
@@ -39,6 +40,8 @@ from cosmae.util.auth import (
     single_error_allauth_like_response,
     success_allauth_like_response,
 )
+
+_LOGGER = getLogger(__name__)
 
 
 class PutGroupRequest(Schema):
@@ -296,7 +299,8 @@ def get_self(request: HttpRequest):
         return 200, SuccessAllauthLikeResponse[LoginResponse](
             data=user_api, meta=MetaAllauthLikeResponse(is_authenticated=True)
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.error("Could not get user info.", exc_info=exc)
         return 500, ErrorListAllauthLikeResponse(
             errors=[
                 ErrorAllauthLikeResponse(
