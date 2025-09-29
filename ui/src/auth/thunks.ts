@@ -270,7 +270,8 @@ export function postReauthenticateMfaThunk(code: string): ThunkWithFetch<void> {
         (_code) =>
             postAllauthByClientV1Auth2FaReauthenticate({
                 path,
-                headers: mkPostHeaders()
+                headers: mkPostHeaders(),
+		body: { code }
             }),
         code
     )
