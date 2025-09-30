@@ -36,20 +36,24 @@ def change_prefix_to_django(password_hash: str):
 
 
 def _get_minimum_user_ids() -> Tuple[int, int]:
-    mins = [maxsize, maxsize - 1]
+    mins = [maxsize, maxsize - 1, maxsize - 2]
     with open(settings.CREDENTIALS_DIR / "passwd", "r", encoding="ascii") as passwd:
         for line in passwd.readlines():
             split = line.split(":")
             try:
                 user_id = int(split[2])
                 if user_id < mins[0]:
+                    mins[2] = mins[1]
                     mins[1] = mins[0]
                     mins[0] = user_id
                 elif user_id < mins[1]:
+                    mins[2] = mins[1]
                     mins[1] = user_id
+                elif user_id < mins[2]:
+                    mins[2] = user_id
             except ValueError:
                 _logger.warning("Invalid user id %s in credentials file.", split[2])
-    return mins[0], mins[1] - 2  # remove constant added in setup script.
+    return mins[1], mins[2] - 2  # remove constant added in setup script.
 
 
 _SYSTEM_USER_ID, _MIN_USER_ID = _get_minimum_user_ids()
@@ -76,15 +80,23 @@ def set_system_ssh_keys(id_user: int):
     "Queue method for setting ssh keys."
     user_query = CosmaeUser.objects.filter(id=id_user)
     key_query = SshKey.objects.filter(user_id=id_user)
-    try:
-        ssh_key_list = [key.as_pub_key_string() for key in key_query]
-        user = user_query.get()
+    msg = None
+    for _ in range(10):
+        try:
+            msg = None
+            sleep(5)
+            ssh_key_list = [key.as_pub_key_string() for key in key_query]
+            user = user_query.get()
+            break
+        except CosmaeUser.DoesNotExist:
+            msg = "Can not set SSH keys for missing user with id %d"
+        except EmptyResultSet:
+            msg = "Could not find any SSH keys for user with id %d"
+    if msg is not None:
+        _logger.error(msg, id_user)
+    else:
         username = user.username
         set_ssh_key_list(username, _MIN_USER_ID + id_user, ssh_key_list)
-    except CosmaeUser.DoesNotExist:
-        _logger.error("Can not set SSH keys for missing user with id %d", id_user)
-    except EmptyResultSet:
-        _logger.error("Could not find any SSH keys for user with id %d", id_user)
 
 
 def set_ssh_key_list(username, user_id_system, ssh_key_list):
@@ -134,8 +146,8 @@ def create_system_user(id_user_persistent):
     if not exists(ssh_pth):
         # This is the case for the initial user where the ssh key is already set up
         ssh_pth.mkdir(parents=True)
-        chown(new_user_home_dir_path, username, settings.SYSTEM_GROUP_NAME)
-        chown(ssh_pth, username, settings.SYSTEM_GROUP_NAME)
+        chown(new_user_home_dir_path, user_id, settings.SYSTEM_GROUP_ID)
+        chown(ssh_pth, user_id, settings.SYSTEM_GROUP_ID)
         chmod(ssh_pth, 0o700)
         set_ssh_key_list(username, user_id, [ssh_key.as_pub_key_string()])
 
@@ -275,8 +287,10 @@ def _create_initial_user(username, user_id, linux_password_hash, ssh_key_string)
         new_user.save()
         _save_ssh_key(new_user, ssh_key_string)
         verified_email.save()
-        _create_edit_session(new_user)
+        edit_session = _create_edit_session(new_user)
         new_user.is_active = True
+        new_user.edit_session = edit_session
+        new_user.save()
 
 
 def _create_edit_session(new_user):
@@ -293,7 +307,7 @@ def _create_edit_session(new_user):
     )
     edit_session.save()
     participant.save()
-    return participant
+    return edit_session
 
 
 def _save_ssh_key(new_user, ssh_key_string):
