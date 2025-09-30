@@ -17,9 +17,7 @@ secrets:
     external: true
   email_host:
     external: true
-  email_host_user:
-    external: true
-  email_host_app_password:
+  email_host_port:
     external: true
   email_from:
     external: true
@@ -71,8 +69,7 @@ services:
       - orcid_client_id
       - orcid_client_secret
       - email_host
-      - email_host_user
-      - email_host_app_password
+      - email_host_port
       - email_from
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -107,8 +104,7 @@ services:
       - orcid_client_id
       - orcid_client_secret
       - email_host
-      - email_host_user
-      - email_host_app_password
+      - email_host_port
       - email_from
     volumes:
       - ${HOST_DATA_DIR-/srv/cosmae}/contributions:/srv/cosmae/contributions
