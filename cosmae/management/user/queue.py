@@ -171,6 +171,7 @@ def set_shadow_entry(username, password_hash, password_change_time):
                 tmp_file.write(shadow_line)
         tmp_file.close()
         chown(tmp_file.name, _SYSTEM_USER_ID, settings.SYSTEM_GROUP_NAME)
+        chmod(tmp_file.name, 0o600)
         copy(tmp_file.name, shadow_path)
 
 

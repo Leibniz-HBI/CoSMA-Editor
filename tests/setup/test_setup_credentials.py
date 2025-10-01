@@ -102,7 +102,7 @@ def test_setup_ssh_config(mock_popen, tmpdir):
     ) in content
     assert 'AuthenticationMethods "publickey,password"\n' in content
     assert "PasswordAuthentication yes\n" in content
-    assert "UsePAM yes\n" in content
+    assert "UsePAM no\n" in content
     assert "X11Forwarding no\n" in content
     assert "PrintMotd no\n" in content
     assert "ForceCommand /usr/bin/true\n" in content
@@ -128,8 +128,9 @@ def assert_lines(file_path, expected_lines):
     assert lines == expected_lines
 
 
+@patch("setup.setup_credentials.copy_matching_lines")
 @patch("setup.setup_credentials.chown")
-def test_setup_credentials_integration(chown, mocker, tmpdir):
+def test_setup_credentials_integration(chown, copy_matching_lines, mocker, tmpdir):
     # pylint: disable=too-many-locals
     "Make sure run_setup_credentials does all necessary steps."
     base_dir = tmpdir.strpath
@@ -179,10 +180,19 @@ def test_setup_credentials_integration(chown, mocker, tmpdir):
     assert ssh_dir.stat().mode & 0o777 == 0o700
     key_file = ssh_dir + "/authorized_keys"
     assert_lines(key_file, [ssh_key])
-    assert key_file.stat().mode & 0o777 == 0o666
+    assert key_file.stat().mode & 0o777 == 0o600
     assert (credentials_dir / "/passwd").exists()
-    assert (credentials_dir / "/shadow").exists()
-    assert (credentials_dir / "/group").exists()
+    copy_matching_lines.assert_has_calls(
+        [
+            call(
+                "/etc/shadow",
+                credentials_dir + "/shadow",
+                0,
+                {system_user, "sshd"},
+            ),
+            call("/etc/group", credentials_dir + "/group", 2, ANY),
+        ],
+    )
     assert (tmpdir / "ssh/sshd_config").exists()
     assert chown.call_count == 10
     chown.assert_has_calls(
@@ -199,3 +209,13 @@ def test_setup_credentials_integration(chown, mocker, tmpdir):
             call(home_dir_root / "initial_test", ANY, ANY),
         ]
     )
+
+
+def test_copy_lines(mocker, tmpdir):
+    "Make sure copy_matching_lines copies the correct lines."
+    src_path = tmpdir / "src"
+    target_path = tmpdir / "target"
+    with open(src_path, "wt", encoding="ascii") as f:
+        f.write("root:x:0:\ndaemon:x:1:\ncosmae:x:70000:\nuser:x:70001:\n")
+    setup.copy_matching_lines(src_path, target_path, 2, {"70000", "1"})
+    assert_lines(target_path, ["daemon:x:1:\n", "cosmae:x:70000:\n"])
