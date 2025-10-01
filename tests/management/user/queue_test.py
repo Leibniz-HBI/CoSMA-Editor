@@ -17,6 +17,7 @@ _test_data_pth = Path(__file__).resolve().parent.parent.parent / "_test_data"
 _credentials_pth = _test_data_pth / "credentials"
 _passwd_pth = _credentials_pth / "passwd"
 _shadow_pth = _credentials_pth / "shadow"
+_group_pth = _credentials_pth / "group"
 _home_dir = _test_data_pth / "home"
 
 
@@ -36,12 +37,17 @@ def credential_files():
         f.write(  # need to have one user to get initial user id
             "cosmae:x:5000:90000::/srv/cosmae/home/cosmae:/bin/sh\n"
         )
+        f.write("sshd:x:200:2::/run/sshd:/usr/sbin/nologin\n")
     with open(_shadow_pth, "wt", encoding="ascii") as f:
         f.write(
             "cosmae:$y$jFT$"
             "K1Y4Hf5e7b3e8e9f0g1h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0A1B2C3D4E5F6G7H8I9J0"
             ":18762:0:99999:7:::\n"
         )
+        f.write("sshd:*:18762:0:99999:7:::\n")
+    with open(_group_pth, "wt", encoding="ascii") as f:
+        f.write("cosmae:x:90000:\n")
+        f.write("nogroup:x:2:\n")
     rmtree(_home_dir)
 
 
@@ -94,9 +100,10 @@ def test_create_user(
     q.create_system_user(user.id_persistent)
     with open(_passwd_pth, "rt", encoding="ascii") as f:
         lines = f.readlines()
-    assert len(lines) == 2
+    assert len(lines) == 3
     assert lines[0].startswith("cosmae")
-    split = lines[1].split(":")
+    assert lines[1].startswith("sshd")
+    split = lines[2].split(":")
     assert split[0] == user.username
     assert split[2] == str(90000 + user.id)
     assert split[3] == "90000"  # group id
@@ -104,9 +111,10 @@ def test_create_user(
     assert split[6] == "/usr/bin/true\n"
     with open(_shadow_pth, "rt", encoding="ascii") as f:
         lines = f.readlines()
-    assert len(lines) == 2
+    assert len(lines) == 3
     assert lines[0].startswith("cosmae")
-    split = lines[1].split(":")
+    assert lines[1].startswith("sshd")
+    split = lines[2].split(":")
     assert split[0] == user.username
     assert split[1] == "$" + user.password[5:]
     assert int(split[2]) > 0  # last changed
@@ -116,23 +124,25 @@ def test_create_user(
     assert split[6] == ""  # inactive days
     assert split[7] == ""  # expire date
     assert split[8] == "\n"  # reserved
-    assert chmod.call_count == 2
+    assert chmod.call_count == 3
     chmod.assert_has_calls(
         [
+            call(ANY, 0o600),  # tmp file
             call(_home_dir / user.username / ".ssh", 0o700),
             call(_home_dir / user.username / ".ssh/authorized_keys", 0o600),
         ]
     )
     assert chown.call_count == 5
     chown.assert_has_calls(
+        # pylint: disable=protected-access
         [
             # Two calls are on tmp files!
-            call(_home_dir / user.username, user.username, "cosmae"),
-            call(_home_dir / user.username / ".ssh", user.username, "cosmae"),
+            call(_home_dir / user.username, q._MIN_USER_ID + user.id, 90000),
+            call(_home_dir / user.username / ".ssh", q._MIN_USER_ID + user.id, 90000),
             call(
                 _home_dir / user.username / ".ssh/authorized_keys",
-                user.username,
-                "cosmae",
+                q._MIN_USER_ID + user.id,
+                90000,
             ),
         ]
     )
@@ -152,9 +162,13 @@ def test_set_ssh_key_list(chown, chmod, ssh_key):
     pth = _home_dir / username / ".ssh"
     pth.mkdir(parents=True, exist_ok=True)
     q.set_ssh_key_list(
-        username, [ssh_key.as_pub_key_string(), ssh_key.as_pub_key_string()]
+        username, 11111, [ssh_key.as_pub_key_string(), ssh_key.as_pub_key_string()]
     )
-    chown.assert_called_once_with(pth / "authorized_keys", username, "cosmae")
+    chown.assert_called_once_with(
+        pth / "authorized_keys",
+        11111,
+        q._MIN_USER_ID,  # pylint: disable=protected-access
+    )
     chmod.assert_called_once_with(pth / "authorized_keys", 0o600)
     with open(pth / "authorized_keys", "rt", encoding="ascii") as f:
         lines = f.readlines()
@@ -179,9 +193,10 @@ def test_update_password(change_prefix, chown, chmod, db, cosmartin_initial_user
     q.update_password(user.id_persistent)
     with open(_shadow_pth, "rt", encoding="ascii") as f:
         lines = f.readlines()
-    assert len(lines) == 2
+    assert len(lines) == 3
     assert lines[0].startswith("cosmae")
-    split = lines[1].split(":")
+    assert lines[1].startswith("sshd")
+    split = lines[2].split(":")
     assert split[0] == user.username
     assert split[1] == system_password_hash
     assert int(split[2]) > 0  # last changed
@@ -199,8 +214,6 @@ def test_initial_user_creation(db, cosmartin_initial_user):
     "Test that initial user creation works."
     q._MIN_USER_ID = 90000  # pylint: disable=protected-access
     q.create_initial_user()
-    authorized_keys = _home_dir / "cosmartin/.ssh/authorized_keys"
-    assert authorized_keys.stat().st_mode & 0o777 == 0o600
     user = CosmaeUser.objects.get(username="cosmartin")
     assert user is not None
     assert user.is_active

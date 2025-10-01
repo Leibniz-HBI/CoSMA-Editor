@@ -227,18 +227,17 @@ def _copy_user_info_from_host_to_guest(
                     group_id = parts[3]
                     if not group_id in exclude_group_id_set:
                         group_id_set.add(group_id)
-    with open("/etc/shadow", "rt", encoding="ascii") as host_shadow:
-        with open(credentials_pth + "/shadow", "at", encoding="ascii") as guest_shadow:
-            for line in host_shadow.readlines():
-                parts = line.split(":")
-                if parts[0] in username_set:
-                    guest_shadow.write(line)
-    with open("/etc/group", "rt", encoding="ascii") as host_group:
-        with open(credentials_pth + "/group", "at", encoding="ascii") as guest_group:
-            for line in host_group.readlines():
-                parts = line.split(":")
-                if parts[2] in group_id_set:
-                    guest_group.write(line)
+    copy_matching_lines("/etc/shadow", credentials_pth + "/shadow", 0, username_set)
+    copy_matching_lines("/etc/group", credentials_pth + "/group", 2, group_id_set)
+
+
+def copy_matching_lines(file_path, target_path, match_idx, match_set):
+    "Copy lines from file_path to target_path if they start with an entry in match_set."
+    with open(file_path, "rt", encoding="ascii") as src:
+        with open(target_path, "at", encoding="ascii") as target:
+            for line in src.readlines():
+                if line.split(":")[match_idx] in match_set:
+                    target.write(line)
 
 
 def run_setup_credentials(
