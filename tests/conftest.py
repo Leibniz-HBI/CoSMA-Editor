@@ -537,7 +537,8 @@ def delete_errors():
     yield
     contributions_pth = settings.CONTRIBUTION_DIRECTORY
     for pth in contributions_pth.glob("*"):
-        pth.unlink()
+        if pth.name != ".gitignore":
+            pth.unlink()
 
 
 @pytest.fixture
