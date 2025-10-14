@@ -27,6 +27,14 @@ def mock_popen(mocker):
     return mocker.patch("setup.setup_credentials.subprocess.Popen", popen_mock)
 
 
+@fixture
+def mock_get_user_id(mocker):
+    "Mock for subprocess spawning"
+    get_user_id_mock = mocker.MagicMock()
+    get_user_id_mock.return_value = 5000
+    return mocker.patch("setup.setup_credentials._get_user_id", get_user_id_mock)
+
+
 def test_create_group(group_file, mock_popen):
     "Make sure create_group does create a group."
     group_name = "other"
@@ -43,7 +51,7 @@ def test_create_group(group_file, mock_popen):
     mock_popen.assert_called_once_with(["/usr/sbin/groupadd", "-f", group_name])
 
 
-def test_create_user(mock_popen):
+def test_create_user(mock_popen, mock_get_user_id):
     "Make sure create_user does create a user."
     setup.create_user("cosmae", group_name="cosmae")
     mock_popen.assert_called_once_with(
@@ -130,7 +138,9 @@ def assert_lines(file_path, expected_lines):
 
 @patch("setup.setup_credentials.copy_matching_lines")
 @patch("setup.setup_credentials.chown")
-def test_setup_credentials_integration(chown, copy_matching_lines, mocker, tmpdir):
+def test_setup_credentials_integration(
+    chown, copy_matching_lines, mocker, mock_get_user_id, tmpdir
+):
     # pylint: disable=too-many-locals
     "Make sure run_setup_credentials does all necessary steps."
     base_dir = tmpdir.strpath
@@ -147,6 +157,11 @@ def test_setup_credentials_integration(chown, copy_matching_lines, mocker, tmpdi
     process_mock.wait = mocker.MagicMock(return_value=0)
     popen_mock.return_value.__enter__.return_value = process_mock
     mocker.patch("setup.setup_credentials.create_group", return_value=group_id)
+    conf_int_mock = mocker.MagicMock(return_value=5)
+    mocker.patch(
+        "setup.setup_credentials._get_conf_int_from_file",  # pylint: disable=protected-access
+        conf_int_mock,
+    )
     setup.run_setup_credentials(
         base_dir, group_name, system_user, initial_user, ssh_key_path
     )
