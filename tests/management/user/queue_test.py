@@ -48,7 +48,6 @@ def credential_files():
     with open(_group_pth, "wt", encoding="ascii") as f:
         f.write("cosmae:x:90000:\n")
         f.write("nogroup:x:2:\n")
-    rmtree(_home_dir)
 
 
 @pytest.fixture
