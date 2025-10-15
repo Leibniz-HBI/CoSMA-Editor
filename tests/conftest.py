@@ -160,12 +160,12 @@ def mock_mfa(mocker):
     mocker.patch("cosmae.util.auth.check_mfa", mock)
 
 
+@pytest.fixture()
 @override_settings(
     SOCIALACCOUNT_AUTO_SIGNUP=True,
     ACCOUNT_SIGNUP_FORM_CLASS=None,
     ACCOUNT_EMAIL_VERIFICATION=account_settings.EmailVerificationMethod.NONE,  # noqa
 )
-@pytest.fixture
 def auth_server_no_mfa(live_server, user):
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
