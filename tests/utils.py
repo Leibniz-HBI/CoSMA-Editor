@@ -67,12 +67,17 @@ def assert_versioned(
         assert isinstance(expected, list)
         assert len(actual) == len(expected)
 
-        if list_sort_key is None or isinstance(expected, str):
-            actual_sorted = actual
-            expected_sorted = expected
-        else:
+        if (
+            list_sort_key is not None
+            and isinstance(expected, list)
+            and len(expected) > 0
+            and isinstance(expected[0], dict)
+        ):
             actual_sorted = sorted(actual, key=list_sort_key)
             expected_sorted = sorted(expected, key=list_sort_key)
+        else:
+            actual_sorted = actual
+            expected_sorted = expected
         for idx, tpl in enumerate(zip(actual_sorted, expected_sorted)):
             actual_element, expected_element = tpl
             assert_versioned(
