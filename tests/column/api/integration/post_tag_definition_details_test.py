@@ -95,4 +95,5 @@ def test_get_details_history(auth_server, column, column1, column_user):
             },
             column_user_dict,
         ],
+        list_sort_key=lambda k: k["id_persistent"],
     )

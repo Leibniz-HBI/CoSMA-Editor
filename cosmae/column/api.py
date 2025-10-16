@@ -268,9 +268,9 @@ def post_get_column_children(
         return 403, ApiError(msg="Insufficient permissions.")
     try:
         child_definitions_db = list(
-            column_objects(post_children_request.up_until_time).children(
-                post_children_request.id_parent_persistent, user
-            )
+            column_objects(post_children_request.up_until_time)
+            .children(post_children_request.id_parent_persistent, user)
+            .order_by("-curated")
         )
         return 200, ColumnResponseList(
             column_list=[
