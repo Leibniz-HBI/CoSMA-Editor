@@ -11,7 +11,7 @@ export const selectContributionEntity = (state: RootState) => state.contribution
  * Check whether there are any duplicates at all
  */
 export const selectIsDuplicates = createSelector(selectContributionEntity, (state) => {
-    if (state.entities.isLoading) {
+    if (state.entities.isLoading || state.entities.value === undefined) {
         return true
     }
     for (const entity of state.entities.value) {
@@ -55,6 +55,9 @@ export const selectEntitiesWithMatches = createSelector(selectEntities, (state) 
     newRemote(state.value, state.isLoading, state.errorMsg)
 )
 export const selectLoadingProgress = createSelector(selectEntities, (entities) => {
+    if (entities.value === undefined) {
+        return undefined
+    }
     for (let idx = 0; idx < entities.value.length; ++idx) {
         if (entities.value[idx].similarEntities.isLoading) {
             return Math.round((100 * (idx ?? 100)) / entities.value.length)
@@ -72,10 +75,10 @@ export const selectSelectedEntity = createSelector(
     selectEntities,
     selectSelectedEntityIdx,
     (entities, idx) => {
-        if (entities.isLoading || idx === undefined) {
+        if (entities.isLoading  || idx === undefined) {
             return undefined
         }
-        return entities.value[idx]
+        return entities.value?.at(idx)
     }
 )
 
