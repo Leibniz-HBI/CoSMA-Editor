@@ -20,20 +20,6 @@ def post_column_list(url, column_list, cookies=None):
     )
 
 
-def post_column_children(
-    url, id_persistent, up_until_time: datetime | None = None, cookies=None
-):
-    body = {"id_parent_persistent": id_persistent}
-    if up_until_time is not None:
-        body["up_until_time"] = format_datetime_request(up_until_time)
-    return requests.post(
-        urljoin(url, "cosmae/api/columns/children"),
-        json=body,
-        timeout=900,
-        cookies=cookies,
-    )
-
-
 def post_curation(url, id_column_persistent, cookies=None):
     return requests.post(
         url + f"/cosmae/api/columns/permissions/{id_column_persistent}/curate",

@@ -70,7 +70,7 @@ def column_child_0_history(user):
         id_persistent=c.id_column_persistent_child_0,
         type=Column.FLOAT,
         id_parent_persistent=c.id_column_parent_persistent_test,
-        name="test column child 0",
+        name=c.name_column_child_0,
         time_edit=c.time_edit_test + timedelta(seconds=10),
         owner_id=user.id,
         written_by_session=user.edit_session,
@@ -108,7 +108,7 @@ def column_child_1_history(user):
         id_persistent=c.id_column_persistent_child_1,
         type=Column.FLOAT,
         id_parent_persistent=c.id_column_parent_persistent_test,
-        name="test column child 1",
+        name=c.name_column_child_1,
         time_edit=c.time_edit_test + timedelta(seconds=10),
         owner_id=user.id,
         written_by_session=user.edit_session,
@@ -121,6 +121,30 @@ def column_child_1_history(user):
 def column_child_1(column_child_1_history):
     return column_objects().get(
         id=column_child_1_history.id
+    )  # pylint: disable=no-member
+
+
+@pytest.fixture
+def column_child_1_hidden_history(user):
+    "Another shared child column for tests"
+    column, _ = ColumnHistory.change_or_create_versioned(
+        id_persistent=c.id_column_persistent_child_1,
+        type=Column.FLOAT,
+        id_parent_persistent=c.id_column_parent_persistent_test,
+        name=c.name_column_child_1,
+        time_edit=c.time_edit_test + timedelta(seconds=10),
+        owner_id=user.id,
+        written_by_session=user.edit_session,
+        hidden=True,
+    )
+    column.save()
+    return column
+
+
+@pytest.fixture
+def column_child_1_hidden(column_child_1_hidden_history):
+    return column_objects().get(
+        id=column_child_1_hidden_history.id
     )  # pylint: disable=no-member
 
 

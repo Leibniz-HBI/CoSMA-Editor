@@ -1,11 +1,16 @@
 # pylint: disable=invalid-name,missing-module-docstring
 from datetime import datetime, timezone
 
+import tests.user.common as cu
+
 name_column_test = "name column test"
 name_column_test_user = "name column test_user"
 name_column_test1 = "name column test1"
 name_column_parent_test = "column_def_parent_test"
 name_column_parent_test_changed = "column_def_parent_test_changed"
+name_column_child_0 = "test column child 0"
+name_column_child_0_changed = "test column child 0 changed"
+name_column_child_1 = "test column child 1"
 name_column_curated_test = "name curated column test"
 name_column_disabled_test = "name column def disabled test"
 time_edit_test = datetime(2022, 12, 20, tzinfo=timezone.utc)
@@ -26,3 +31,80 @@ time_created_merge_request = datetime(2021, 3, 9, tzinfo=timezone.utc)
 id_contribution = "9e022465-600e-4870-8224-e647ae550575"
 id_ownership_request_test = "1a3e5449-bd68-4d47-a8b8-b53135bb91ad"
 id_ownership_request_curated_test = "52f6cb25-dd1d-41d9-b1d2-bb4c34c734bf"
+
+column_parent_rsp = {
+    "id_persistent": id_column_parent_persistent_test,
+    "name": name_column_parent_test,
+    "name_path": [name_column_parent_test],
+    "id_parent_persistent": None,
+    "type": "INNER",
+    "owner": {
+        "username": cu.test_username,
+        "id_persistent": cu.test_uuid,
+        "permission_group": "CONTRIBUTOR",
+    },
+    "curated": False,
+    "description": None,
+    "disabled": False,
+    "hidden": False,
+}
+column_child_0_rsp = {
+    "id_persistent": id_column_persistent_child_0,
+    "name": name_column_child_0,
+    "name_path": [name_column_child_0],
+    "id_parent_persistent": id_column_parent_persistent_test,
+    "type": "FLOAT",
+    "owner": {
+        "username": cu.test_username,
+        "id_persistent": cu.test_uuid,
+        "permission_group": "CONTRIBUTOR",
+    },
+    "curated": False,
+    "description": None,
+    "disabled": False,
+    "hidden": False,
+}
+column_child_1_rsp = {
+    "id_persistent": id_column_persistent_child_1,
+    "name": name_column_child_1,
+    "name_path": [name_column_child_1],
+    "id_parent_persistent": id_column_parent_persistent_test,
+    "type": "FLOAT",
+    "owner": {
+        "username": cu.test_username,
+        "id_persistent": cu.test_uuid,
+        "permission_group": "CONTRIBUTOR",
+    },
+    "curated": False,
+    "description": None,
+    "disabled": False,
+    "hidden": False,
+}
+column_child_1_hidden_rsp = {
+    "id_persistent": id_column_persistent_child_1,
+    "name": name_column_child_1,
+    "name_path": [name_column_child_1],
+    "id_parent_persistent": id_column_parent_persistent_test,
+    "type": "FLOAT",
+    "owner": {
+        "username": cu.test_username,
+        "id_persistent": cu.test_uuid,
+        "permission_group": "CONTRIBUTOR",
+    },
+    "curated": False,
+    "description": None,
+    "disabled": False,
+    "hidden": True,
+}
+column_curated_rsp = {
+    "id_persistent": id_column_curated_test,
+    "name": name_column_curated_test,
+    "name_path": [name_column_curated_test],
+    "id_parent_persistent": None,
+    "type": "BOOL",
+    "owner": None,
+    "curated": True,
+    "description": None,
+    "disabled": False,
+    "hidden": False,
+}

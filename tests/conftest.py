@@ -565,9 +565,25 @@ def other_session(user):
 
 
 @pytest.fixture()
+def request_no_user(mocker):
+    mock = mocker.MagicMock()
+    mock.user = None
+    mock.session = {}
+    return mock
+
+
+@pytest.fixture()
 def request_user(user, mocker):
     mock = mocker.MagicMock()
     mock.user = user
+    mock.session = {"account_authentication_methods": [{"type": "totp"}]}
+    return mock
+
+
+@pytest.fixture()
+def request_user1(user1, mocker):
+    mock = mocker.MagicMock()
+    mock.user = user1
     mock.session = {"account_authentication_methods": [{"type": "totp"}]}
     return mock
 
