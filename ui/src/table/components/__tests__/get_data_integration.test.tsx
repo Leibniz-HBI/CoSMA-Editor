@@ -179,9 +179,15 @@ test('get entities success', async () => {
             isLoading: false,
             columnIndices: {
                 display_txt_id: 0,
-                [idColumnPersistent]: 1
+                [justificationColumnId]: 1,
+                [idColumnPersistent]: 2
             },
-            columnStates: [displayTxtColumnState, columnColumnState]
+            columnStates: [
+                displayTxtColumnState,
+                justificationColumnState,
+                columnColumnState
+            ],
+            showEntityJustifications: true
         })
     )
     await expectFetchCallList(fetchMock.mock.calls, [
@@ -237,9 +243,15 @@ test('get entities and inner column success', async () => {
             isLoading: false,
             columnIndices: {
                 display_txt_id: 0,
-                [idColumnPersistent]: 1
+                [justificationColumnId]: 1,
+                [idColumnPersistent]: 2
             },
-            columnStates: [displayTxtColumnState, columnColumnState]
+            columnStates: [
+                displayTxtColumnState,
+                justificationColumnState,
+                columnColumnState
+            ],
+            showEntityJustifications: true
         })
     )
     await expectFetchCallList(fetchMock.mock.calls, [
@@ -349,7 +361,7 @@ test('get chunked', async () => {
 
     await waitFor(() => {
         const state = store.getState()
-        const idxLoadedColumn = 1
+        const idxLoadedColumn = 2
         expect(state.table.entities?.length).toEqual(1001)
         expect(
             state.table.columnStates[idxLoadedColumn].cellContents.value.length
@@ -433,15 +445,18 @@ test('get instances error', async () => {
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
-                    [idColumnPersistent]: 1
+                    [justificationColumnId]: 1,
+                    [idColumnPersistent]: 2
                 },
                 columnStates: [
                     displayTxtColumnState,
+                    justificationColumnState,
                     newColumnState({
                         idColumnPersistent: idColumnPersistent,
                         cellContents: newRemote([], true)
                     })
-                ]
+                ],
+                showEntityJustifications: true
             })
         )
     })
@@ -450,6 +465,10 @@ test('get instances error', async () => {
 
 const displayTxtColumnState = newColumnState({
     idColumnPersistent: displayTxtColumnId,
+    cellContents: newRemote([])
+})
+const justificationColumnState = newColumnState({
+    idColumnPersistent: justificationColumnId,
     cellContents: newRemote([])
 })
 

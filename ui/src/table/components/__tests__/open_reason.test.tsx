@@ -35,7 +35,7 @@ import {
     newNotification,
     newNotificationManager
 } from '../../../util/notification/slice'
-import { waitFor, screen, act } from '@testing-library/react'
+import { waitFor, screen } from '@testing-library/react'
 import { RemoteDataTable } from '../table'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { newRemote } from '../../../util/state'
@@ -48,6 +48,7 @@ import {
 import { newAuthState } from '../../../auth/state'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { act } from 'react'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -91,18 +92,6 @@ function MockTable(props: any) {
         </div>
     )
 }
-test('show justifications, open modal and hide again', async () => {
-    const fetchMock = vi.fn()
-    addEntitiesAndInstancesResponse(fetchMock)
-    addJustificationHistoryResponse(fetchMock)
-    renderWithProviders(<RemoteDataTable />, fetchMock, preloadedState)
-    await openModalForEntity0()
-    await closeModal()
-    await toggleJustifications()
-    await waitFor(() => {
-        expect(screen.queryByText(justification)).toBeNull()
-    })
-})
 test('add justification', async () => {
     const fetchMock = vi.fn()
     addEntitiesAndInstancesResponse(fetchMock)
@@ -176,15 +165,6 @@ test('add justification', async () => {
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/columns/children',
-            {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: {}
-            }
-        ],
-        [
             `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications?`,
             {
                 credentials: 'include'
@@ -235,7 +215,7 @@ test('add justification found', async () => {
             newRemote(idPersistent0)
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(6)
+    expect(fetchMock.mock.calls.length).toEqual(5)
 })
 test('get justification error', async () => {
     const fetchMock = vi.fn()
@@ -262,7 +242,7 @@ test('get justification error', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(5)
+    expect(fetchMock.mock.calls.length).toEqual(4)
 })
 test('add justification error', async () => {
     const fetchMock = vi.fn()
@@ -295,7 +275,7 @@ test('add justification error', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls.length).toEqual(6)
+    expect(fetchMock.mock.calls.length).toEqual(5)
 })
 
 const idPersistent0 = 'test-id-0'
@@ -333,24 +313,6 @@ const userTest = newPublicUserInfo({
     username: nameUserTest,
     permissionGroup: UserPermissionGroup.CONTRIBUTOR
 })
-async function toggleJustifications() {
-    await waitFor(() => {
-        expect(screen.queryByText(modalHeading)).toBeNull()
-        const button = screen.getByLabelText('show additional columns')
-        ;(button?.childNodes[0] as HTMLInputElement)?.click()
-    })
-    await waitFor(() => {
-        const columnLabel = screen.getByText('Justification')
-        const columnListItem =
-            columnLabel.parentElement?.parentElement?.parentElement?.parentElement
-                ?.parentElement
-        const columnButton = columnListItem?.children[1]
-        expect(columnButton?.className).toEqual('icon')
-        ;(columnButton as HTMLElement)?.click()
-
-        screen.getByRole('button', { name: /close/i }).click()
-    })
-}
 
 async function fillJustificationForm(user: UserEvent) {
     await waitFor(
@@ -405,9 +367,7 @@ async function openModalForEntity0() {
     await waitFor(() => {
         screen.getByText(displayTxt0)
         expect(screen.queryByText(modalHeading)).toBeNull()
-        expect(screen.queryByText(justification)).toBeNull()
     })
-    await toggleJustifications()
     await waitFor(() => {
         const text = screen.getByText(justification)
         text.click()
@@ -424,8 +384,7 @@ function addEntitiesAndInstancesResponse(fetchMock: Mock) {
             }
         ],
         [200, { entity_list: [], next_offset: 0 }],
-        [200, { value_list: [] }],
-        [200, { column_list: [] }]
+        [200, { value_list: [] }]
     ])
 }
 

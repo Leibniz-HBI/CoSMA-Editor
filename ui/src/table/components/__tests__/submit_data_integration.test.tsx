@@ -253,10 +253,10 @@ test('edit value success', async () => {
     const user = userEvent.setup()
     const inputs = await waitFor(() => {
         const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
-        expect(inputs.length).toEqual(4)
+        expect(inputs.length).toEqual(6)
         return inputs
     })
-    const input = inputs[1] as HTMLInputElement
+    const input = inputs[2] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -264,7 +264,7 @@ test('edit value success', async () => {
     await waitFor(() => {
         const state = store.getState()
         expect(state.notification).toEqual(newNotificationManager({}))
-        expect(state.table.columnStates[1].cellContents.value?.at(0)).toEqual([
+        expect(state.table.columnStates[2].cellContents.value?.at(0)).toEqual([
             {
                 value: valueChanged,
                 idPersistent: idValue0,
@@ -308,10 +308,10 @@ test('edit value api msg error', async () => {
     const user = userEvent.setup()
     const inputs = await waitFor(() => {
         const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
-        expect(inputs.length).toEqual(4)
+        expect(inputs.length).toEqual(6)
         return inputs
     })
-    const input = inputs[1] as HTMLInputElement
+    const input = inputs[2] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -330,7 +330,7 @@ test('edit value api msg error', async () => {
                 notificationMap: expect.anything()
             })
         )
-        expect(state.table.columnStates[1].cellContents.value?.at(0)).toEqual([
+        expect(state.table.columnStates[2].cellContents.value?.at(0)).toEqual([
             {
                 value: value0,
                 idPersistent: idValue0,
@@ -371,10 +371,10 @@ test('edit value changed in backend', async () => {
     const user = userEvent.setup()
     const inputs = await waitFor(() => {
         const inputs = screen.getAllByRole('textbox', { name: /[0-9]-[0-9]/ })
-        expect(inputs.length).toEqual(4)
+        expect(inputs.length).toEqual(6)
         return inputs
     })
-    const input = inputs[1] as HTMLInputElement
+    const input = inputs[2] as HTMLInputElement
     await user.click(input)
     await user.keyboard('{Control>}a{/Control}')
     await user.paste(valueChanged)
@@ -395,7 +395,7 @@ test('edit value changed in backend', async () => {
                 notificationMap: expect.anything()
             })
         )
-        expect(state.table.columnStates[1].cellContents.value?.at(0)).toEqual([
+        expect(state.table.columnStates[2].cellContents.value?.at(0)).toEqual([
             {
                 value: valueChangedByOther,
                 idPersistent: idValue0,

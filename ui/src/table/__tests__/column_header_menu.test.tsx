@@ -25,12 +25,12 @@ import {
     newUserState
 } from '../../user/state'
 import { waitFor, screen } from '@testing-library/react'
-import {
-    newNotificationManager,
-} from '../../util/notification/slice'
+import { newNotificationManager } from '../../util/notification/slice'
 import {
     displayTextColumn,
     displayTxtColumnId,
+    justificationColumn,
+    justificationColumnId,
     newColumnState,
     newTableState
 } from '../state'
@@ -50,6 +50,10 @@ import { useColumnDefinitionList } from '../../column_menu/hooks'
 import { newAuthState } from '../../auth/state'
 import { renderWithProviders } from '../../util/tests/provider'
 import { addResponseSequence } from '../../util/tests/response'
+import { newContributionState } from '../../contribution/slice'
+import { newContributionEntityState } from '../../contribution/entity/state'
+import { newColumnDefinitionsContributionState } from '../../contribution/columns/state'
+import { newEntityMergeRequestConflictsState } from '../../merge_request/entity/conflicts/state'
 
 const rectangle = { x: 0, y: 1, width: 2, height: 4 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,7 +67,11 @@ function MockTable(props: any) {
             <Col>
                 <Row>
                     {columnDefinitions.map((columnDefinition, idx) => (
-                        <Button onClick={() => props.onHeaderMenuClick(idx, rectangle)}>
+                        <Button
+                            onClick={() => props.onHeaderMenuClick(idx, rectangle)}
+                            key={columnDefinition.value?.idPersistent}
+                            role="button"
+                        >
                             {columnDefinition.value?.namePath.at(-1)}
                         </Button>
                     ))}
@@ -81,7 +89,11 @@ test('renders all menu entries', async () => {
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
+        expect(state.table.columnStates).toEqual([
+            displayTxtColumnState,
+            justificationColumnState,
+            columnState
+        ])
         name.click()
     })
     await waitFor(() => {
@@ -109,6 +121,11 @@ test('no curation for unprivileged user', async () => {
                     })
                 )
             }),
+            contribution: newContributionState({}),
+            contributionEntity: newContributionEntityState({}),
+            contributionColumnDefinition: newColumnDefinitionsContributionState({}),
+            displayTxtManagement: { columns: newRemote([]) },
+            entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
             user: newUserState({}),
             table: newTableState({}),
             columnSelection: initialColumnSelectionState,
@@ -121,7 +138,11 @@ test('no curation for unprivileged user', async () => {
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
+        expect(state.table.columnStates).toEqual([
+            displayTxtColumnState,
+            justificationColumnState,
+            columnState
+        ])
         name.click()
     })
     await waitFor(() => {
@@ -142,7 +163,11 @@ test('remove column from header menu', async () => {
     await waitFor(() => {
         const name = screen.getByRole('button', { name: columnNameTest })
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState, columnState])
+        expect(state.table.columnStates).toEqual([
+            displayTxtColumnState,
+            justificationColumnState,
+            columnState
+        ])
         name.click()
     })
     await waitFor(() => {
@@ -153,7 +178,7 @@ test('remove column from header menu', async () => {
         const remove = screen.queryByRole('button', { name: 'Hide Column' })
         expect(remove).toBeNull()
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState])
+        expect(state.table.columnStates).toEqual([displayTxtColumnState, justificationColumnState])
         expect(state.auth.user.value?.columns).toEqual([])
     })
     // TODO check menu entries
@@ -183,7 +208,6 @@ test('change owner shows modal', async () => {
     expect(store.getState().table.ownershipChangeColumnIdPersistent).not.toBeUndefined()
 })
 
-
 function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [[200, { entity_list: [], next_offset: 0 }]])
 }
@@ -211,6 +235,9 @@ const columnTest: Column = newColumn({
     version: 2,
     hidden: false
 })
+const justificationColumnState = newColumnState({
+    idColumnPersistent: justificationColumnId
+})
 const displayTxtColumnState = newColumnState({
     idColumnPersistent: displayTxtColumnId
 })
@@ -219,6 +246,7 @@ const columnState = newColumnState({ idColumnPersistent: idColumnPersistent })
 const initialColumnSelectionState = newColumnSelectionState({
     columnsByIdPersistent: {
         [idColumnPersistent]: newRemote(columnTest),
+        [justificationColumnId]: newRemote(justificationColumn),
         [displayTxtColumnId]: newRemote(displayTextColumn)
     }
 })
@@ -228,6 +256,11 @@ const initialState = {
         table: newTableState({}),
         tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
         columnSelection: initialColumnSelectionState,
+        contribution: newContributionState({}),
+        contributionEntity: newContributionEntityState({}),
+        contributionColumnDefinition: newColumnDefinitionsContributionState({}),
+        displayTxtManagement: { columns: newRemote([]) },
+        entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
         auth: newAuthState({
             user: newRemote(
                 newUserInfo({
