@@ -62,9 +62,15 @@ test('get descendant column success', async () => {
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
-                    [idColumnPersistent]: 1
+                    [justificationColumnId]: 1,
+                    [idColumnPersistent]: 2
                 },
-                columnStates: [displayTxtColumnState, columnColumnState]
+                columnStates: [
+                    displayTxtColumnState,
+                    justificationColumnState,
+                    columnColumnState
+                ],
+                showEntityJustifications: true
             })
         )
     })
@@ -173,10 +179,16 @@ test('get descendant column with history success', async () => {
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
-                    [idColumnPersistent]: 1
+                    [justificationColumnId]: 1,
+                    [idColumnPersistent]: 2
                 },
                 historyDateSinceEpoch: historyDate.getTime(),
-                columnStates: [displayTxtColumnState, columnColumnState]
+                columnStates: [
+                    displayTxtColumnState,
+                    justificationColumnState,
+                    columnColumnState
+                ],
+                showEntityJustifications: true
             })
         )
     })
@@ -376,6 +388,10 @@ const columnColumnState = newColumnState({
 })
 const displayTxtColumnState = newColumnState({
     idColumnPersistent: displayTxtColumnId,
+    cellContents: newRemote([])
+})
+const justificationColumnState = newColumnState({
+    idColumnPersistent: justificationColumnId,
     cellContents: newRemote([])
 })
 

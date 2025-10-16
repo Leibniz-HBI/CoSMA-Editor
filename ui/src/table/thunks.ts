@@ -1,6 +1,6 @@
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { Column, ColumnType } from '../column_menu/state'
-import { CellValue, displayTxtColumnId, justificationColumnId } from './state'
+import { CellValue, displayTxtColumnId, optionalEntityJustificationColumnIdx} from './state'
 import { Entity } from '../entity/state'
 import { newEntity } from '../entity/state'
 import { config } from '../config'
@@ -89,6 +89,7 @@ export function getTableAsync(
                     columnData: undefined
                 })
             )
+            dispatch(showEntityJustification())
             return true
         } catch (e: unknown) {
             dispatch(setLoadDataError())
@@ -104,10 +105,6 @@ export function getColumnAsync(
 ): ThunkWithFetch<string[]> {
     return async (dispatch, _getState, fetch) => {
         const id_persistent = columnDefinition.idPersistent
-        if (id_persistent == justificationColumnId) {
-            dispatch(showEntityJustification())
-            return []
-        }
         let idPersistentList = [columnDefinition.idPersistent]
         if (columnDefinition.columnType === ColumnType.Inner) {
             try {

@@ -103,12 +103,7 @@ export function ColumnModal({
     upUntilDate?: Date | undefined
 }) {
     const dispatch = useAppDispatch()
-    const justificationsShown = useAppSelector(selectShowEntityJustifications)
     const showColumnMenu = useAppSelector(selectShowColumnMenu)
-    const additionalIndices: { [key: string]: number } = {}
-    if (justificationsShown) {
-        additionalIndices[justificationColumnId] = 1
-    }
     return (
         <Modal
             show={showColumnMenu}
@@ -123,10 +118,6 @@ export function ColumnModal({
             </Modal.Header>
             <Modal.Body className="bg-secondary d-contents">
                 <ColumnMenu
-                    additionalEntries={[
-                        { idPersistent: justificationColumnId, name: 'Justification' }
-                    ]}
-                    additionalIndices={additionalIndices}
                     columnIndices={columnIndices}
                     loadColumnDataCallback={(columnDefinition: Column) =>
                         dispatch(getColumnAsync(columnDefinition, upUntilDate)).then(
