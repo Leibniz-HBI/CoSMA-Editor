@@ -14,23 +14,31 @@ import { RemoteInterface } from '../../util/state'
 
 export type GridColumWithType = GridColumn & { columnType: ColumnType }
 
-export function constructColumnTitle(namePath: string[]): string {
+export function constructColumnTitle(
+    namePath: string[],
+    reverse: boolean = false
+): string {
     if (namePath === undefined || namePath.length == 0) {
         return 'UNKNOWN'
     }
     if (namePath.length == 1) {
         return namePath[0]
     }
+    let separator = ' -> '
+    if (reverse) {
+        namePath = namePath.slice().reverse()
+        separator = ' <- '
+    }
     if (namePath.length > 3) {
         return (
             namePath[0] +
-            ' -> ... -> ' +
+            `${separator}...${separator}` +
             namePath[namePath.length - 2] +
-            ' -> ' +
+            separator +
             namePath[namePath.length - 1]
         )
     }
-    return namePath[0] + ' -> ' + namePath.slice(1).join(' -> ')
+    return namePath[0] + separator + namePath.slice(1).join(separator)
 }
 
 const emptyCell = {

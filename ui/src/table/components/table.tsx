@@ -462,7 +462,7 @@ export function DataTable({
             let title = 'loading ...'
             const column = columns[i]
             if (!(column === undefined || column.value === undefined)) {
-                title = constructColumnTitle(column.value.namePath)
+                title = constructColumnTitle(column.value.namePath, true)
                 if (column.value.curated) {
                     title = '☑ ' + title
                 }
