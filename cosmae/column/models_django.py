@@ -95,7 +95,7 @@ class ColumnAbstract(Versioned):
                     hidden=False,
                 )
                 .values("id_persistent", "type", "curated", "owner_id")
-            )
+            ).order_by("-curated")
             for obj in ids_with_type:
                 if obj["type"] == cls.INNER:
                     queue.append(obj["id_persistent"])
