@@ -96,7 +96,9 @@ def test_multi_child_include_hidden_for_owner(
     status_code, rsp = r.post_column_children(request_user, column_parent.id_persistent)
     assert status_code == 200
     assert_versioned(
-        rsp.dict()["column_list"], [c.column_child_1_hidden_rsp, c.column_child_0_rsp]
+        rsp.dict()["column_list"],
+        [c.column_child_1_hidden_rsp, c.column_child_0_rsp],
+        list_sort_key=lambda k: k["id_persistent"],
     )
 
 
@@ -107,7 +109,11 @@ def test_multi_child_exclude_hidden_for_non_owner(
         request_user1, column_parent.id_persistent
     )
     assert status_code == 200
-    assert_versioned(rsp.dict()["column_list"], [c.column_child_0_rsp])
+    assert_versioned(
+        rsp.dict()["column_list"],
+        [c.column_child_0_rsp],
+        list_sort_key=lambda k: k["id_persistent"],
+    )
 
 
 def test_bad_db(request_user):
