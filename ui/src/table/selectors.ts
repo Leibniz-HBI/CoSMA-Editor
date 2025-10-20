@@ -2,7 +2,7 @@ import { createSelector } from '@reduxjs/toolkit'
 import { AppDispatch, RootState } from '../store'
 import { selectPermissionGroup } from '../auth/selectors'
 import { removeSelectedColumn, columnChangeOwnershipShow } from './slice'
-import { remoteUserProfileColumnDeleteAsync } from '../user/thunks'
+import { remoteUserProfileColumnDeleteThunk } from '../auth/thunks'
 import { UserPermissionGroup } from '../user/state'
 import { curateAsync } from '../column_menu/thunks'
 import { justificationColumnId } from './state'
@@ -103,7 +103,7 @@ export const selectColumnHeaderMenu = createSelector(
                     labelClassName: 'danger text-danger',
                     onClick: () => {
                         dispatch(removeSelectedColumn())
-                        dispatch(remoteUserProfileColumnDeleteAsync(idPersistent))
+                        dispatch(remoteUserProfileColumnDeleteThunk(idPersistent))
                     }
                 }
             ]

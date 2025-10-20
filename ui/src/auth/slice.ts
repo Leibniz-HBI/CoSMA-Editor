@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { AuthState, AuthStep, EmailAllauth, newAuthState, UserAllAuth } from './state'
 import { newRemote } from '../util/state'
 import { UserInfo } from '../user/state'
-import { Column } from '../column_menu/state'
 
 const authSlice = createSlice({
     name: 'auth',
@@ -26,7 +25,10 @@ const authSlice = createSlice({
         ) {
             state.emailAddressList = newRemote(action.payload)
         },
-        getTotpNotFound(state: AuthState, action: PayloadAction<{ url: string; code: string }>) {
+        getTotpNotFound(
+            state: AuthState,
+            action: PayloadAction<{ url: string; code: string }>
+        ) {
             state.totpSignupInfo = newRemote(action.payload)
             const stepStackValue = state.stepStack.value
             stepStackValue[stepStackValue.length - 1] = AuthStep.Totp
@@ -148,6 +150,26 @@ const authSlice = createSlice({
             if (idx >= 0) {
                 state.user.value?.idColumnPersistentList.splice(idx, 1)
             }
+        },
+        userProfileColumnAppend(state: AuthState, action: PayloadAction<string>) {
+            state.user.value?.idColumnPersistentList.push(action.payload)
+        },
+        userProfileChangeColumnIndex(
+            state: AuthState,
+            action: PayloadAction<{ from: number; to: number }>
+        ) {
+            const idPersistentList = state.user.value?.idColumnPersistentList
+            if (idPersistentList === undefined) {
+                return
+            }
+            const from = action.payload.from
+            const to = action.payload.to
+            const tmp = idPersistentList[from]
+            idPersistentList[from] = idPersistentList[to]
+            idPersistentList[to] = tmp
+        },
+        userProfileColumnDelete(state: AuthState, action: PayloadAction<number>) {
+            state.user.value?.idColumnPersistentList.splice(action.payload, 1)
         }
     }
 })
@@ -198,4 +220,7 @@ export const {
     setVerifyEmail,
     setPartiallyAuthenticated,
     removeUserColumn,
+    userProfileChangeColumnIndex,
+    userProfileColumnAppend,
+    userProfileColumnDelete
 } = authSlice.actions

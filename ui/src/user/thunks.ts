@@ -22,12 +22,9 @@ import { PublicUserInfo, SshKey, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
 import { parseColumnsFromApi } from '../column_menu/thunks'
-import { justificationColumnId } from '../table/state'
 import { setCurrentEditSession } from '../session/slice'
 import { parseEditSessionFromApi } from '../session/thunks'
-import { removeUserColumn } from '../auth/slice'
 import { handleAllauthResponse } from '../util/api'
-import { cosmaeUserApiPostAppendColumnIdPersistent } from '../openapi/cosmae'
 
 export function setCurrentEditSessionThunk(
     id_edit_session_persistent: string
@@ -141,49 +138,6 @@ export function getUserInfoThunk(idUserPersistent: string): ThunkWithFetch<void>
             dispatch(getUserInfoError(idUserPersistent))
             dispatch(addError(exceptionMessage(e)))
         }
-    }
-}
-
-export function remoteUserProfileColumnAppend(
-    idColumnPersistent: string
-): ThunkWithFetch<void> {
-    return async (_dispatch, _getState, fetch) => {
-        if (idColumnPersistent == justificationColumnId) {
-            return
-        }
-        await cosmaeUserApiPostAppendColumnIdPersistent({
-            path: { id_column_persistent: idColumnPersistent }
-        })
-    }
-}
-export function remoteUserProfileColumnDeleteAsync(
-    idColumnPersistent: string
-): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
-        if (idColumnPersistent == justificationColumnId) {
-            return
-        }
-        const rsp = await fetch(
-            config.api_path + `/user/columns/${idColumnPersistent}`,
-            {
-                credentials: 'include',
-                method: 'DELETE'
-            }
-        )
-        if (rsp.status == 200) {
-            dispatch(removeUserColumn(idColumnPersistent))
-        }
-    }
-}
-export function remoteUserProfileChangeColumIndex(
-    idxStart: number,
-    idxEnd: number
-): ThunkWithFetch<void> {
-    return async (_dispatch, _getState, fetch) => {
-        await fetch(config.api_path + `/user/columns/swap/${idxStart}/${idxEnd}`, {
-            credentials: 'include',
-            method: 'POST'
-        })
     }
 }
 
