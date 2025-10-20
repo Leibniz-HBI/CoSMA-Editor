@@ -5,7 +5,6 @@ from typing import List, Optional, Union
 from ninja import Schema
 from pydantic import Field
 
-from cosmae.column.models_api import ColumnResponse
 from cosmae.edit_session.api import EditSession
 from cosmae.user.models_api.public import PublicUserInfo
 
@@ -33,7 +32,7 @@ class LoginResponse(Schema):
     names_personal: str
     names_family: str
     email: str
-    column_list: List[ColumnResponse]
+    id_column_persistent_list: List[str]
     permission_group: str
     edit_session: EditSession
     password_changed: bool

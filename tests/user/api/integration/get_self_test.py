@@ -36,7 +36,7 @@ def test_success(auth_server):
             "names_family": "",
             "email": c.test_email,
             "permission_group": "CONTRIBUTOR",
-            "column_list": [],
+            "id_column_persistent_list": [],
             "password_changed": True,
             "edit_session": {
                 "owner": {

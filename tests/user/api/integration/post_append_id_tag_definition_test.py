@@ -36,7 +36,7 @@ def test_existing_column(auth_server, column_user_profile):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         column_user_profile.id_persistent
     ]
 
@@ -56,7 +56,7 @@ def test_existing_column_multiple(
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         column_user_profile.id_persistent,
         column_user_profile1.id_persistent,
     ]
