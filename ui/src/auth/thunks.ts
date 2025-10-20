@@ -30,7 +30,9 @@ import {
     postReauthenticateSuccess,
     postEmailVerificationStart,
     postEmailVerificationSuccess,
-    postEmailVerificationError
+    postEmailVerificationError,
+    removeUserColumn,
+    userProfileColumnAppend
 } from './slice'
 import { EmailAllauth, UserAllAuth } from './state'
 import { handleAllauthResponseFromClient } from '../util/api'
@@ -48,7 +50,8 @@ import {
 } from '../openapi/allauth/sdk.gen'
 import {
     cosmaeManagementUserApiPostCreateUser,
-    cosmaeUserApiGetSelf
+    cosmaeUserApiGetSelf,
+    cosmaeUserApiPostAppendColumnIdPersistent
 } from '../openapi/cosmae/sdk.gen'
 import {
     AuthenticatedResponse,
@@ -59,6 +62,9 @@ import {
     TotpAuthenticator
 } from '../openapi/allauth'
 import { RequestResult } from '../openapi/allauth/client'
+import { justificationColumnId } from '../table/state'
+import { config } from '../config'
+import { Column } from '../column_menu/state'
 
 export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, _api) => {
@@ -214,7 +220,7 @@ export function getTotpThunk(): ThunkWithFetch<void> {
                 const code = rsp.error.meta.secret
                 const totpUrlQrCodeImageSource = await toDataURL(totpUrlString)
 
-                dispatch(getTotpNotFound({url: totpUrlQrCodeImageSource, code}))
+                dispatch(getTotpNotFound({ url: totpUrlQrCodeImageSource, code }))
             } else {
                 handleAllauthResponseFromClient(
                     dispatch,
@@ -271,7 +277,7 @@ export function postReauthenticateMfaThunk(code: string): ThunkWithFetch<void> {
             postAllauthByClientV1Auth2FaReauthenticate({
                 path,
                 headers: mkPostHeaders(),
-		body: { code }
+                body: { code }
             }),
         code
     )
@@ -391,5 +397,50 @@ export function parseEmailAllauthFromJson(emailJson: any): EmailAllauth {
         email: emailJson['email'],
         verified: emailJson['verified'],
         primary: emailJson['primary']
+    }
+}
+export function remoteUserProfileColumnAppendThunk(
+    idColumnPersistent: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        if (idColumnPersistent == justificationColumnId) {
+            return
+        }
+        const rsp = await cosmaeUserApiPostAppendColumnIdPersistent({
+            path: { id_column_persistent: idColumnPersistent }
+        })
+        if (rsp.error == undefined) {
+            dispatch(userProfileColumnAppend(idColumnPersistent))
+        }
+    }
+}
+export function remoteUserProfileColumnDeleteThunk(
+    idColumnPersistent: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, fetch) => {
+        if (idColumnPersistent == justificationColumnId) {
+            return
+        }
+        const rsp = await fetch(
+            config.api_path + `/user/columns/${idColumnPersistent}`,
+            {
+                credentials: 'include',
+                method: 'DELETE'
+            }
+        )
+        if (rsp.status == 200) {
+            dispatch(removeUserColumn(idColumnPersistent))
+        }
+    }
+}
+export function remoteUserProfileChangeColumIndexThunk(
+    idxStart: number,
+    idxEnd: number
+): ThunkWithFetch<void> {
+    return async (_dispatch, _getState, fetch) => {
+        await fetch(config.api_path + `/user/columns/swap/${idxStart}/${idxEnd}`, {
+            credentials: 'include',
+            method: 'POST'
+        })
     }
 }

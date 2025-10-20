@@ -29,9 +29,9 @@ import { AddEntityForm, EntityDetails } from '../../entity/components'
 import { ColumnMenu } from '../../column_menu/components/menu'
 import { Column } from '../../column_menu/state'
 import {
-    remoteUserProfileColumnAppend,
-    remoteUserProfileColumnDeleteAsync
-} from '../../user/thunks'
+    remoteUserProfileColumnAppendThunk,
+    remoteUserProfileColumnDeleteThunk
+} from '../../auth/thunks'
 import { useEffect } from 'react'
 import { CommentForm, CommentsHistory } from '../../comments/components'
 import { clearSelection } from '../selection/slice'
@@ -127,7 +127,7 @@ export function ColumnModal({
                         ).then(async (idColumnList) => {
                             for (const idPersistent of idColumnList) {
                                 await dispatch(
-                                    remoteUserProfileColumnAppend(idPersistent)
+                                    remoteUserProfileColumnAppendThunk(idPersistent)
                                 )
                             }
                         })
@@ -135,7 +135,7 @@ export function ColumnModal({
                     upUntilDate={upUntilDate}
                     hideColumnDataCallback={(columnDefinition: Column) =>
                         dispatch(
-                            remoteUserProfileColumnDeleteAsync(
+                            remoteUserProfileColumnDeleteThunk(
                                 columnDefinition.idPersistent
                             )
                         ).then(() => {
