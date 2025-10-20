@@ -21,7 +21,7 @@ import { putOwnershipRequestClear } from './slice'
 import { OwnershipRequest } from './state'
 import { RemoteInterface } from '../util/state'
 import { userSearchClear } from '../user/slice'
-import { updateUserColumn } from '../auth/slice'
+import { updateColumn } from '../column_menu/slice'
 
 export function ColumnManagementPage() {
     const dispatch: AppDispatch = useDispatch()
@@ -122,7 +122,7 @@ export function ColumnOwnershipRequestListItemBody({
                             acceptOwnershipRequest(request.value.idPersistent)
                         ).then((columnDefinition) => {
                             if (columnDefinition !== undefined) {
-                                dispatch(updateUserColumn(columnDefinition))
+                                dispatch(updateColumn(columnDefinition))
                             }
                         })
                     }

@@ -1,6 +1,6 @@
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { Column, ColumnType } from '../column_menu/state'
-import { CellValue, displayTxtColumnId, optionalEntityJustificationColumnIdx} from './state'
+import { CellValue, displayTxtColumnId } from './state'
 import { Entity } from '../entity/state'
 import { newEntity } from '../entity/state'
 import { config } from '../config'
@@ -13,7 +13,7 @@ import {
     cosmaeEntityApiEntitiesChunksPost,
     cosmaeEntityApiEntitiesPost,
     cosmaeValueApiPostValue,
-    cosmaeValueApiPostValueChunks,
+    cosmaeValueApiPostValueChunks
 } from '../openapi/cosmae/sdk.gen'
 import {
     Edit,
@@ -100,16 +100,16 @@ export function getTableAsync(
 }
 
 export function getColumnAsync(
-    columnDefinition: Column,
-    upUntilTime: Date | undefined = undefined
+    idPersistent: string,
+    upUntilTime: Date | undefined = undefined,
+    columnType: ColumnType | undefined = undefined
 ): ThunkWithFetch<string[]> {
     return async (dispatch, _getState, fetch) => {
-        const id_persistent = columnDefinition.idPersistent
-        let idPersistentList = [columnDefinition.idPersistent]
-        if (columnDefinition.columnType === ColumnType.Inner) {
+        let idPersistentList = [idPersistent]
+        if (columnType === ColumnType.Inner) {
             try {
                 const descendantsRsp = await cosmaeColumnApiGetDescendants({
-                    path: { id_persistent },
+                    path: { id_persistent: idPersistent },
                     query: { up_until_time: upUntilTime?.toISOString() }
                 })
                 if (descendantsRsp.data !== undefined) {
@@ -123,7 +123,7 @@ export function getColumnAsync(
                 dispatch(addError('Could not fetch descendant columns.'))
                 return []
             } finally {
-                dispatch(removeColumnByIdPersistent(columnDefinition.idPersistent))
+                dispatch(removeColumnByIdPersistent(idPersistent))
             }
         }
         const successList = []

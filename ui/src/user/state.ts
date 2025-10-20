@@ -34,7 +34,7 @@ export interface UserInfo extends PublicUserInfo {
     email: string
     namesPersonal: string
     namesFamily?: string
-    columns: Column[]
+    idColumnPersistentList: string[]
 }
 export function newUserInfo({
     username,
@@ -43,7 +43,7 @@ export function newUserInfo({
     namesPersonal,
     namesFamily = undefined,
     permissionGroup,
-    columns = []
+    idColumnPersistentList: idColumnPersistentList = []
 }: {
     username: string
     idPersistent: string
@@ -51,7 +51,7 @@ export function newUserInfo({
     namesPersonal: string
     namesFamily?: string
     permissionGroup: UserPermissionGroup
-    columns?: Column[]
+    idColumnPersistentList?: string[]
 }): UserInfo {
     return {
         username: username,
@@ -60,7 +60,7 @@ export function newUserInfo({
         email: email,
         namesPersonal: namesPersonal,
         namesFamily: namesFamily,
-        columns: columns
+        idColumnPersistentList
     }
 }
 

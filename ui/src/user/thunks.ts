@@ -273,11 +273,7 @@ export function parseUserInfoFromJson(json: any): UserInfo {
         email: json['email'],
         namesPersonal: json['names_personal'],
         namesFamily: json['names_family'],
-        columns:
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (json['column_list'] as Array<any>).map((columnApi) =>
-                parseColumnsFromApi(columnApi, undefined)
-            ),
+        idColumnPersistentList: json['id_column_persistent_list'],
         permissionGroup: permissionGroupApiMap[json['permission_group']]
     }
 }

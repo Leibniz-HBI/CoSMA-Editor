@@ -8,8 +8,7 @@ import {
     selectEntityJustificationHistoryForIdPersistent,
     selectShowColumnMenu,
     selectShowEntityAddMenu,
-    selectShowEntityMerging,
-    selectShowEntityJustifications
+    selectShowEntityMerging
 } from '../selectors'
 import {
     clearEntityJustificationHistory,
@@ -35,7 +34,6 @@ import {
 } from '../../user/thunks'
 import { useEffect } from 'react'
 import { CommentForm, CommentsHistory } from '../../comments/components'
-import { justificationColumnId } from '../state'
 import { clearSelection } from '../selection/slice'
 import { selectShowDetailsForEntityWithIdPersistent } from '../../entity/selectors'
 import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
@@ -120,15 +118,19 @@ export function ColumnModal({
                 <ColumnMenu
                     columnIndices={columnIndices}
                     loadColumnDataCallback={(columnDefinition: Column) =>
-                        dispatch(getColumnAsync(columnDefinition, upUntilDate)).then(
-                            async (idColumnList) => {
-                                for (const idPersistent of idColumnList) {
-                                    await dispatch(
-                                        remoteUserProfileColumnAppend(idPersistent)
-                                    )
-                                }
+                        dispatch(
+                            getColumnAsync(
+                                columnDefinition.idPersistent,
+                                upUntilDate,
+                                columnDefinition.columnType
+                            )
+                        ).then(async (idColumnList) => {
+                            for (const idPersistent of idColumnList) {
+                                await dispatch(
+                                    remoteUserProfileColumnAppend(idPersistent)
+                                )
                             }
-                        )
+                        })
                     }
                     upUntilDate={upUntilDate}
                     hideColumnDataCallback={(columnDefinition: Column) =>

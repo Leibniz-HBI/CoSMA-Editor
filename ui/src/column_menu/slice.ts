@@ -7,7 +7,7 @@ import {
     newColumnHierarchyNode
 } from './state'
 import { newRemote, RemoteInterface } from '../util/state'
-import { mkUpUntilSinceEpochColumnId } from '../util/misc'
+import { mkUpUntilDateColumnId, mkUpUntilSinceEpochColumnId } from '../util/misc'
 
 const initialState = newColumnSelectionState({})
 
@@ -345,6 +345,11 @@ const columnSelectionSlice = createSlice({
             ) {
                 state.editColumn = newRemote(undefined)
             }
+        },
+        updateColumn(state: ColumnSelectionState, action: PayloadAction<Column>) {
+            state.columnsByIdPersistent[
+                mkUpUntilDateColumnId(action.payload.idPersistent, undefined)
+            ] = newRemote(action.payload)
         }
     }
 })
@@ -439,5 +444,6 @@ export const {
     curateColumnSuccess,
     getColumnDetailsError,
     getColumnDetailsStart,
-    getColumnDetailsSuccess
+    getColumnDetailsSuccess,
+    updateColumn
 } = columnSelectionSlice.actions

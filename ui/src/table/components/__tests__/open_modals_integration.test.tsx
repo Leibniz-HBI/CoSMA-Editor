@@ -228,7 +228,7 @@ const initialState = {...emptyState,
                         ...userTest,
                         email: 'mail@test.org',
                         namesPersonal: 'names personal',
-                        columns: [columnTest]
+                        idColumnPersistentList: [columnTest]
                     })
                 )
             }),

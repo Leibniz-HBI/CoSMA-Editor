@@ -143,19 +143,10 @@ const authSlice = createSlice({
         resetEmailVerification(state: AuthState) {
             state.emailVerified = newRemote(undefined)
         },
-        updateUserColumn(state: AuthState, action: PayloadAction<Column>) {
-            if (state.user.value === undefined) {
-                return
-            }
-            const idx = findUserColumnIndex(state, action.payload.idPersistent)
-            if (idx >= 0) {
-                state.user.value.columns[idx] = action.payload
-            }
-        },
         removeUserColumn(state: AuthState, action: PayloadAction<string>) {
             const idx = findUserColumnIndex(state, action.payload)
             if (idx >= 0) {
-                state.user.value?.columns.splice(idx, 1)
+                state.user.value?.idColumnPersistentList.splice(idx, 1)
             }
         }
     }
@@ -163,10 +154,10 @@ const authSlice = createSlice({
 
 export const authReducer = authSlice.reducer
 
-function findUserColumnIndex(state: AuthState, idPersistent: string) {
+function findUserColumnIndex(state: AuthState, idPersistentFind: string) {
     return (
-        state.user.value?.columns.findIndex(
-            (column) => column.idPersistent == idPersistent
+        state.user.value?.idColumnPersistentList.findIndex(
+            (idPersistent) => idPersistent == idPersistentFind
         ) ?? -1
     )
 }
@@ -207,5 +198,4 @@ export const {
     setVerifyEmail,
     setPartiallyAuthenticated,
     removeUserColumn,
-    updateUserColumn
 } = authSlice.actions

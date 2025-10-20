@@ -665,7 +665,7 @@ const userInfoApiResponse = {
         names_personal: namesPersonalTest,
         email: emailTest,
         names_family: '',
-        column_list: [],
+        id_column_persistent_list: [],
         id_persistent: idPersistentTest,
         permission_group: 'CONTRIBUTOR',
         edit_session: {
@@ -744,7 +744,7 @@ const authStateSuccess = newAuthState({
             namesPersonal: namesPersonalTest,
             email: emailTest,
             namesFamily: '',
-            columns: [],
+            idColumnPersistentList: [],
             idPersistent: idPersistentTest,
             permissionGroup: UserPermissionGroup.CONTRIBUTOR
         })

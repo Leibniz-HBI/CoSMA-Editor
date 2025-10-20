@@ -57,7 +57,7 @@ export function renderWithProviders(
                         idPersistent: 'id-logged-in-user',
                         email: 'user@logged.in',
                         namesPersonal: 'name logged in',
-                        columns: [],
+                        idColumnPersistentList: [],
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR
                     })
                 )
