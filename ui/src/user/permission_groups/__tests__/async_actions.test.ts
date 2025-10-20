@@ -56,7 +56,7 @@ const userInfoJsonTest = {
     names_personal: namesPersonalTest,
     id_persistent: idPersistentTest,
     permission_group: 'EDITOR',
-    column_list: []
+    id_column_persistent_list: []
 }
 
 const userInfoJsonTest1 = {
@@ -65,7 +65,7 @@ const userInfoJsonTest1 = {
     names_personal: namesPersonalTest1,
     id_persistent: idPersistentTest1,
     permission_group: 'CONTRIBUTOR',
-    column_list: []
+    id_column_persistent_list: []
 }
 
 describe('get users', () => {

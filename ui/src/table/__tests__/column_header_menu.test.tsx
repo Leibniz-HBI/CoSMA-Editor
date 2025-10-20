@@ -117,7 +117,7 @@ test('no curation for unprivileged user', async () => {
                         permissionGroup: UserPermissionGroup.CONTRIBUTOR,
                         email: 'mail@test.de',
                         namesPersonal: 'names',
-                        columns: [columnTest]
+                        idColumnPersistentList: [idColumnPersistent]
                     })
                 )
             }),
@@ -179,7 +179,7 @@ test('remove column from header menu', async () => {
         expect(remove).toBeNull()
         const state = store.getState()
         expect(state.table.columnStates).toEqual([displayTxtColumnState, justificationColumnState])
-        expect(state.auth.user.value?.columns).toEqual([])
+        expect(state.auth.user.value?.idColumnPersistentList).toEqual([])
     })
     // TODO check menu entries
     expect(fetchMock.mock.calls.length).toEqual(3)
@@ -267,7 +267,7 @@ const initialState = {
                     ...userTest,
                     email: 'mail@test.org',
                     namesPersonal: 'names personal',
-                    columns: [columnTest]
+                    idColumnPersistentList: [idColumnPersistent]
                 })
             )
         }),

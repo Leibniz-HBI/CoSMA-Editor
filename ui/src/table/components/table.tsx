@@ -57,7 +57,6 @@ import {
     getTableAsync,
     submitValuesAsync
 } from '../thunks'
-import { Column } from '../../column_menu/state'
 import {
     ColumnState,
     displayTxtColumnIdx,
@@ -126,8 +125,7 @@ export function RemoteDataTable() {
             if (!success) {
                 return
             }
-            userInfo.value?.columns.forEach(async (col: Column) => {
-                const idPersistent = col.idPersistent
+            userInfo.value?.idColumnPersistentList.forEach(async (idPersistent:string) => {
                 const colStateIdx = columnIndices[idPersistent]
                 const colState = columnStates[colStateIdx ?? -1]
                 if (
@@ -137,7 +135,7 @@ export function RemoteDataTable() {
                 ) {
                     return
                 }
-                await dispatch(getColumnAsync(col, upUntilTime))
+                await dispatch(getColumnAsync(idPersistent, upUntilTime))
             })
         })
         return () => {

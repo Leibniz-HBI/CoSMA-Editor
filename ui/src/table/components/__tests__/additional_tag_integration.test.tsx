@@ -519,7 +519,7 @@ const initialState = {
                     ...userTest,
                     email: 'mail@test.org',
                     namesPersonal: 'names personal',
-                    columns: []
+                    idColumnPersistentList: []
                 })
             )
         }),
