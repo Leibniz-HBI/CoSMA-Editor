@@ -48,7 +48,7 @@ def test_start_to_middle(auth_server, user_with_columns):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         c.id_column_persistent2,
         c.id_column_persistent1,
         c.id_column_persistent,
@@ -64,7 +64,7 @@ def test_start_to_end(auth_server, user_with_columns):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         c.id_column_persistent3,
         c.id_column_persistent1,
         c.id_column_persistent2,
@@ -79,7 +79,7 @@ def test_middle_to_start(auth_server, user_with_columns):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         c.id_column_persistent2,
         c.id_column_persistent1,
         c.id_column_persistent,
@@ -94,7 +94,7 @@ def test_middle_to_middle(auth_server, user_with_columns):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         c.id_column_persistent,
         c.id_column_persistent2,
         c.id_column_persistent1,
@@ -109,7 +109,7 @@ def test_middle_to_end(auth_server, user_with_columns):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         c.id_column_persistent,
         c.id_column_persistent1,
         c.id_column_persistent3,
@@ -124,7 +124,7 @@ def test_ent_to_start(auth_server, user_with_columns):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         c.id_column_persistent3,
         c.id_column_persistent1,
         c.id_column_persistent2,
@@ -139,7 +139,7 @@ def test_end_to_middle(auth_server, user_with_columns):
     rsp = req.get_self(server.url, cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert [column["id_persistent"] for column in json["data"]["column_list"]] == [
+    assert json["data"]["id_column_persistent_list"] == [
         c.id_column_persistent,
         c.id_column_persistent3,
         c.id_column_persistent2,
