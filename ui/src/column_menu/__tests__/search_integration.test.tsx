@@ -33,9 +33,6 @@ test('search success and clear', async () => {
         screen.getByText(nameColumn)
         screen.getByText(nameColumn1)
     })
-    expect(store.getState().columnSelection.searchResultIdPersistentList).toEqual(
-        newRemote([idColumn, idColumn1])
-    )
     await performSearch(user, '')
     await waitFor(async () => {
         await expectFetchCallList(fetchMock.mock.calls, [
@@ -49,9 +46,6 @@ test('search success and clear', async () => {
             expect(screen.queryByText(nameColumn1)).toBeNull()
         },
         { timeout: 1000 }
-    )
-    expect(store.getState().columnSelection.searchResultIdPersistentList).toEqual(
-        newRemote(undefined)
     )
     await expectFetchCallList(fetchMock.mock.calls, [
         ['http://127.0.0.1:8000/cosmae/api/columns/children', {}],

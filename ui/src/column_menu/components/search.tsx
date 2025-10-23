@@ -1,43 +1,114 @@
-import { ChangeEvent, ReactElement, useEffect, useState } from 'react'
+import {
+    ChangeEvent,
+    createContext,
+    ReactElement,
+    ReactNode,
+    useContext,
+    useEffect,
+    useReducer,
+    useState
+} from 'react'
 import { FormField } from '../../util/form'
-import { useAppDispatch, useAppSelector } from '../../hooks'
-import { AppDispatch } from '../../store'
+import { useAppDispatch } from '../../hooks'
 import { debounce } from 'debounce'
-import { searchColumnClear } from '../slice'
-import { selectSearchResultIdPersistentList } from '../selectors'
 import { Col, ListGroup, ProgressBar, Row } from 'react-bootstrap'
 import { ColumnNamePath } from './misc'
-import { searchColumnThunk } from '../thunks'
 import { useColumn } from '../hooks'
 import { Column } from '../state'
+import { newRemote, RemoteInterface } from '../../util/state'
+import { cosmaeColumnApiGetSearch } from '../../openapi/cosmae'
+import { addError } from '../../util/notification/slice'
+import { errorMessageFromApi } from '../../util/exception'
 
-const debouncedSearchDispatch = debounce(
-    (searchTerm: string, upUntilDate: Date | undefined, dispatch: AppDispatch) => {
-        if (searchTerm.length > 0) {
-            dispatch(searchColumnThunk(searchTerm, upUntilDate))
-        } else {
-            dispatch(searchColumnClear())
-        }
-    },
-    400
+export const ColumnSearchContext = createContext<RemoteInterface<string[] | undefined>>(
+    newRemote(undefined)
 )
+export const ColumnSearchDispatchContext = createContext<{
+    search: (term: string, upUntilDate?: Date) => void
+    clearSearch: VoidFunction
+}>({ search: (_term: string, _upUntilDate?: Date) => {}, clearSearch: () => {} })
 
-const debouncedSearchDispatchThunk =
-    (searchTerm: string, upUntilDate: Date | undefined) => (dispatch: AppDispatch) =>
-        debouncedSearchDispatch(searchTerm, upUntilDate, dispatch)
+export function columnSearchReducer(
+    state: RemoteInterface<string[] | undefined>,
+    action: { type: string; payload?: string[] }
+) {
+    switch (action.type) {
+        case 'column_search_start':
+            return newRemote(state.value, true)
+        case 'column_search_end':
+            return newRemote(state.value, false)
+        case 'column_search_success':
+            return newRemote(action.payload, false)
+        case 'column_search_clear':
+            return newRemote(undefined, false)
+        default:
+            return state
+    }
+}
+
+const debounceSearchThunk = (
+    searchThunk: (term: string, upUntilDate: Date | undefined) => Promise<void>,
+    clearSearch: VoidFunction
+) =>
+    debounce((term: string, upUntilDate: Date | undefined) => {
+        if (term.length > 0) {
+            searchThunk(term, upUntilDate)
+        } else {
+            clearSearch()
+        }
+    }, 400)
+
+export function ColumnSearchProvider({ children }: { children: ReactNode }) {
+    const appDispatch = useAppDispatch()
+    const [state, dispatch] = useReducer(columnSearchReducer, newRemote(undefined))
+    useEffect(() => {
+        return () => {
+            clearSearch()
+        }
+    }, [dispatch])
+    function clearSearch() {
+        dispatch({ type: 'column_search_clear' })
+    }
+    async function searchThunk(
+        term: string,
+        upUntilDate: Date | undefined = undefined
+    ) {
+        dispatch({ type: 'column_search_start' })
+        const rsp = await cosmaeColumnApiGetSearch({
+            query: { term, up_until_time: upUntilDate?.toISOString() }
+        })
+        if (rsp.data !== undefined) {
+            dispatch({
+                type: 'column_search_success',
+                payload: rsp.data.id_persistent_list
+            })
+        } else {
+            dispatch({ type: 'column_search_end' })
+            appDispatch(addError(errorMessageFromApi(rsp.error)))
+        }
+    }
+    const debouncedSearchThunk = debounceSearchThunk(searchThunk, clearSearch)
+    return (
+        <ColumnSearchContext.Provider value={state}>
+            <ColumnSearchDispatchContext.Provider
+                value={{
+                    search: debouncedSearchThunk,
+                    clearSearch
+                }}
+            >
+                {children}
+            </ColumnSearchDispatchContext.Provider>
+        </ColumnSearchContext.Provider>
+    )
+}
 
 export function ColumnSearchField({
     upUntilDate = undefined
 }: {
     upUntilDate: Date | undefined
 }) {
-    const dispatch = useAppDispatch()
+    const searchDispatchContext = useContext(ColumnSearchDispatchContext)
     const [searchTerm, setSearchTerm] = useState('')
-    useEffect(() => {
-        return () => {
-            dispatch(searchColumnClear())
-        }
-    }, [dispatch])
     return (
         <FormField
             label="Search"
@@ -45,23 +116,21 @@ export function ColumnSearchField({
             handleChange={(e: ChangeEvent<HTMLInputElement>) => {
                 const formValue = e.target.value
                 setSearchTerm(formValue)
-                dispatch(debouncedSearchDispatchThunk(formValue, upUntilDate))
+                searchDispatchContext.search(formValue, upUntilDate)
             }}
             value={searchTerm}
         />
     )
 }
 
-export function ColumnSearchResults({
+export function ColumnExplorerSearchResults({
     mkTailElement,
     upUntilDate = undefined
 }: {
     mkTailElement: (def: Column) => ReactElement
     upUntilDate: Date | undefined
 }) {
-    const searchResultIdPersistentList = useAppSelector(
-        selectSearchResultIdPersistentList
-    )
+    const searchResultIdPersistentList = useContext(ColumnSearchContext)
     if (searchResultIdPersistentList.value?.length == 0) {
         return <div>No results found</div>
     }
@@ -69,7 +138,7 @@ export function ColumnSearchResults({
         <ListGroup>
             {searchResultIdPersistentList.value?.map((id) => (
                 <ListGroup.Item key={id}>
-                    <ColumnSearchResultItem
+                    <ColumnExplorerSearchResultItem
                         idColumnPersistent={id}
                         upUntilTime={upUntilDate}
                         mkTailElement={mkTailElement}
@@ -79,7 +148,7 @@ export function ColumnSearchResults({
         </ListGroup>
     )
 }
-export function ColumnSearchResultItem({
+export function ColumnExplorerSearchResultItem({
     idColumnPersistent,
     upUntilTime,
     mkTailElement
