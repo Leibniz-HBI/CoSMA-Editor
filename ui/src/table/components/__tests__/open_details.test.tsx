@@ -55,6 +55,7 @@ import userEvent from '@testing-library/user-event'
 import { newAuthState } from '../../../auth/state'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { addResponseSequence } from '../../../util/tests/response'
+import { newEntity, newEntityDetailsState } from '../../../entity/state'
 
 test('open details', async () => {
     const modalTitleText = `Entity Details`
@@ -252,6 +253,23 @@ const initialState = {
             [idColumnPersistent]: newRemote(columnTest),
             [idColumnPersistent1]: newRemote(columnTest1)
         }
+    }),
+    entityDetails: newEntityDetailsState({
+        entityByIdPersistentMap: {[idPersistent0]   : newRemote(newEntity({
+            displayTxt: displayTxt0,
+            idPersistent: idPersistent0,
+            version: version0,
+            disabled: false,
+            justificationTxt: justification,
+            displayTxtDetails: 'display_txt_detail'
+            })),[idPersistent1]   : newRemote(newEntity({
+            displayTxt: displayTxt1,
+            idPersistent: idPersistent1,
+            version: version1,
+            disabled: false,
+            justificationTxt: justification1,
+            displayTxtDetails: 'display_txt_detail'
+            }))}
     }),
     auth: newAuthState({
         user: newRemote(

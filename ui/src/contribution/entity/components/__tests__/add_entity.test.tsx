@@ -248,7 +248,7 @@ const initialState = {
     }),
     entityDetails: newEntityDetailsState({
         entityByIdPersistentMap: {
-            [idEntitySearch0 + '@']: newRemote(
+            [idEntitySearch0]: newRemote(
                 newEntity({
                     displayTxt: displayTxtSearch0,
                     idPersistent: idEntitySearch0,

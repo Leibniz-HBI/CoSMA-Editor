@@ -7,6 +7,8 @@ import {
 } from './state'
 import { newRemote } from '../util/state'
 import { Entity } from './state'
+import { mkUpUntilSinceEpochColumnId } from '../util/misc'
+import { Comment } from '../comments/slice'
 
 const slice = createSlice({
     initialState: newEntityDetailsState({}),
@@ -59,8 +61,10 @@ const slice = createSlice({
             }>
         ) {
             const { idEntityPersistent, upUntilSinceEpoch } = action.payload
-            const keyWithDate =
-                idEntityPersistent + ('@' + (upUntilSinceEpoch?.toString() ?? ''))
+            const keyWithDate = mkUpUntilSinceEpochColumnId(
+                idEntityPersistent,
+                upUntilSinceEpoch
+            )
             const existing = state.entityByIdPersistentMap[keyWithDate]
             if (existing !== undefined) {
                 existing.isLoading = true
@@ -76,9 +80,31 @@ const slice = createSlice({
             }>
         ) {
             const { entity, upUntilSinceEpoch } = action.payload
+            const keyWithUpUntilTime = mkUpUntilSinceEpochColumnId(entity.idPersistent, upUntilSinceEpoch)
             state.entityByIdPersistentMap[
-                entity.idPersistent + ('@' + (upUntilSinceEpoch?.toString() ?? ''))
+                keyWithUpUntilTime
             ] = newRemote(entity)
+        },
+        submitEntityJustificationStart(state: EntityDetailsState) {
+            state.submitJustification.isLoading = true
+        },
+        submitEntityJustificationSuccess(
+            state: EntityDetailsState,
+            action: PayloadAction<
+                { idEntityPersistent: string; comment: Comment } | undefined
+            >
+        ) {
+            state.submitJustification.isLoading = false
+            if (action.payload !== undefined) {
+                const entity =
+                    state.entityByIdPersistentMap[action.payload.idEntityPersistent]
+                if (entity !== undefined && entity.value !== undefined) {
+                    entity.value.justificationTxt = action.payload.comment.content
+                }
+            }
+        },
+        submitEntityJustificationError(state: EntityDetailsState) {
+            state.submitJustification.isLoading = false
         }
     }
 })
@@ -96,5 +122,8 @@ export const {
     getEntitySearchResultsError,
     getEntitySearchResultsStart,
     getEntitySearchResultsSuccess,
-    setShowDetailsForEntityWithIdPersistent
+    setShowDetailsForEntityWithIdPersistent,
+    submitEntityJustificationStart,
+    submitEntityJustificationError,
+    submitEntityJustificationSuccess,
 } = slice.actions

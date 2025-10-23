@@ -31,7 +31,7 @@ import {
     justificationColumn,
     justificationColumnId
 } from '../../state'
-import { newEntity } from '../../../entity/state'
+import { newEntity, newEntityDetailsState } from '../../../entity/state'
 import {
     NotificationType,
     newNotification,
@@ -123,6 +123,7 @@ test('edit display text success', async () => {
                         id_persistent: idPersistent1,
                         display_txt: valueChanged,
                         display_txt_details: 'display_txt_detail',
+                        justification_txt: justification1,
                         version: versionChanged,
                         disabled: false
                     }
@@ -149,11 +150,12 @@ test('edit display text success', async () => {
     await waitFor(() => {
         const state = store.getState()
         expect(state.notification).toEqual(newNotificationManager({}))
-        expect(state.table.entities?.at(1)).toEqual(
+        expect(state.entityDetails.entityByIdPersistentMap[idPersistent1].value).toEqual(
             newEntity({
                 displayTxt: valueChanged,
                 displayTxtDetails: 'display_txt_detail',
                 idPersistent: idPersistent1,
+                justificationTxt: justification1,
                 version: versionChanged,
                 disabled: false
             })
@@ -213,12 +215,13 @@ test('edit display text error', async () => {
                 notificationMap: expect.anything()
             })
         )
-        expect(state.table.entities?.at(1)).toEqual(
+        expect(state.entityDetails.entityByIdPersistentMap[idPersistent1].value).toEqual(
             newEntity({
                 displayTxt: displayTxt1,
                 displayTxtDetails: 'display_txt_detail',
                 idPersistent: idPersistent1,
                 version: version1,
+                justificationTxt: justification1,
                 disabled: false
             })
         )
@@ -413,10 +416,13 @@ const version1 = 1
 const versionChanged = 31234
 const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
+const justification = 'justification txt 0'
+const justification1 = 'justification txt 1'
 const test_entity_rsp_0 = {
     display_txt: displayTxt0,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent0,
+    justification_txt: justification,
     version: version0,
     disabled: false
 }
@@ -424,6 +430,7 @@ const test_entity_rsp_1 = {
     display_txt: 'test display txt 1',
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent1,
+    justification_txt: justification1,
     version: 1,
     disabled: false
 }
@@ -512,6 +519,23 @@ const initialState = {
             [justificationColumnId]: newRemote(justificationColumn),
             [idColumnPersistent]: newRemote(columnTest)
         }
+    }),
+    entityDetails: newEntityDetailsState({
+        entityByIdPersistentMap: {[idPersistent0]   : newRemote(newEntity({
+            displayTxt: displayTxt0,
+            idPersistent: idPersistent0,
+            version: version0,
+            disabled: false,
+            justificationTxt: justification,
+            displayTxtDetails: 'display_txt_detail'
+            })),[idPersistent1]   : newRemote(newEntity({
+            displayTxt: displayTxt1,
+            idPersistent: idPersistent1,
+            version: version1,
+            disabled: false,
+            justificationTxt: justification1,
+            displayTxtDetails: 'display_txt_detail'
+            }))}
     }),
     auth: newAuthState({
         user: newRemote(

@@ -25,7 +25,7 @@ import {
     selectColumnHeaderMenu,
     selectColumnIndices,
     selectColumnStates,
-    selectEntities,
+    selectEntityIdList,
     selectFrozenColumns,
     selectHistoryDate,
     selectIsLoadingEntities,
@@ -80,6 +80,8 @@ import { EntityDetailsModal } from './modals'
 import { InfoCircle } from 'react-bootstrap-icons'
 import { useColumnDefinitionList } from '../../column_menu/hooks'
 import DatePicker from 'react-datepicker'
+import { useEntityByIdPersistentList } from '../../entity/hooks'
+import { RemoteInterface } from '../../util/state'
 
 export function downloadWorkAround(csvLines: string[]) {
     const blob = new Blob(csvLines, {
@@ -103,7 +105,8 @@ export function downloadWorkAround(csvLines: string[]) {
 export function RemoteDataTable() {
     const upUntilTime = useAppSelector(selectHistoryDate)
     const isLoading = useAppSelector(selectIsLoadingEntities)
-    const entities = useAppSelector(selectEntities)
+    const entityIdList = useAppSelector(selectEntityIdList)
+    const entities = useEntityByIdPersistentList(entityIdList ?? [], upUntilTime)
     const userInfo = useAppSelector(selectUserInfo)
     const showJustifications = useAppSelector(selectShowEntityJustifications)
     const columnIndices = useAppSelector(selectColumnIndices)
@@ -113,7 +116,7 @@ export function RemoteDataTable() {
     )
     const dispatch = useAppDispatch()
     useEffect(() => {
-        if (entities !== undefined || isLoading) {
+        if (entityIdList !== undefined || isLoading) {
             return
         }
         if (userInfo === undefined) {
@@ -262,7 +265,7 @@ export function DataTable({
     entities,
     columnStates
 }: {
-    entities?: Entity[]
+    entities: RemoteInterface<Entity|undefined>[]
     columnStates: ColumnState[]
 }) {
     const dispatch: AppDispatch = useDispatch()
@@ -299,8 +302,11 @@ export function DataTable({
             ) {
                 return
             }
+            const entity = entities.at(rowIdx)?.value
+            if (entity === undefined) {
+                return
+                }
             if (colIdx == displayTxtColumnIdx) {
-                const entity = entities[rowIdx]
                 let newValueData: string | undefined = newValue.data?.toString()
                 if (newValueData == '') {
                     newValueData = undefined
@@ -319,7 +325,7 @@ export function DataTable({
                 } else {
                     dispatch(
                         submitValuesAsync(column.value.columnType, [
-                            entities[rowIdx].idPersistent,
+                            entity.idPersistent,
                             column.value.idPersistent,
                             {
                                 ...columnStates[colIdx].cellContents.value[rowIdx][0],
@@ -391,7 +397,7 @@ export function DataTable({
         ) {
             dispatch(
                 showEntityJustificationHistory(
-                    entities?.at(rowIdx)?.idPersistent ?? undefined
+                    entities?.at(rowIdx)?.value?.idPersistent
                 )
             )
         }
@@ -409,7 +415,10 @@ export function DataTable({
             ) {
                 window.clearTimeout(timeoutRefDisplayText.current)
                 window.clearTimeout(timeoutRefEntityDetails.current)
-                const entity = entities[args.location[1]]
+                const entity = entities.at(args.location[1])?.value
+                if (entity === undefined) {
+                    return
+                }
                 setTooltipDisplayTextDetails(undefined)
                 timeoutRefDisplayText.current = window.setTimeout(() => {
                     setTooltipDisplayTextDetails({

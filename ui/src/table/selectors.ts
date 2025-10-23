@@ -29,10 +29,11 @@ export const selectIsLoadingColumn = createSelector(selectColumnState, (state) =
     return false
 })
 
-export const selectEntities = createSelector(
+export const selectEntityIdList = createSelector(
     selectTableState,
-    (state) => state.entities
+    (state) => state.entityIdList
 )
+
 
 export const selectEntityIndices = createSelector(
     selectTableState,
@@ -156,19 +157,6 @@ export const selectEntityJustificationHistory = createSelector(
     selectTableState,
     (state) => state.entityJustificationHistory
 )
-
-export const makeSelectEntityByIdPersistent = () => {
-    const selector = createSelector(
-        [
-            selectEntities,
-            selectEntityIndices,
-            (_state, idPersistent: string) => idPersistent
-        ],
-        (entities, entityIndices, idPersistent) =>
-            entities?.[entityIndices[idPersistent]]
-    )
-    return selector
-}
 
 export const selectHistorySinceEpoch = createSelector(
     selectTableState,

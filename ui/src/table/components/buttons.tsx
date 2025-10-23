@@ -14,6 +14,7 @@ import { selectRowSelectionOrder } from '../selection/selectors'
 import { downloadWorkAround } from './table'
 import { useColumnDefinitionList } from '../../column_menu/hooks'
 import { useAppSelector } from '../../hooks'
+import { RemoteInterface } from '../../util/state'
 
 export function AddEntityButton({
     dispatch,
@@ -33,7 +34,7 @@ export function MergeEntitiesButton({
     mergeRequestCreatedCallback,
     disabled
 }: {
-    entityIdArray?: Entity[]
+    entityIdArray: RemoteInterface<Entity | undefined>[]
     mergeRequestCreatedCallback: VoidFunction
     disabled: boolean
 }) {
@@ -52,13 +53,12 @@ export function MergeEntitiesButton({
 
     if (!disabled && rowSelectionOrder.length == 2) {
         canNotMerge = false
+        const src = entityIdArray.at(rowSelectionOrder[0])?.value
+        const dst = entityIdArray.at(rowSelectionOrder[1])?.value
         onClick = () => {
-            dispatch(
-                putEntityMergeRequest(
-                    entityIdArray[rowSelectionOrder[0]].idPersistent,
-                    entityIdArray[rowSelectionOrder[1]].idPersistent
-                )
-            )
+            if (src !== undefined && dst !== undefined) {
+                dispatch(putEntityMergeRequest(src?.idPersistent, dst?.idPersistent))
+            }
             mergeRequestCreatedCallback()
             dispatch(toggleRowSelection(rowSelectionOrder))
         }
@@ -91,7 +91,7 @@ export function DownloadButton({
     showJustifications,
     upUntilTime
 }: {
-    entities: Entity[] | undefined
+    entities: RemoteInterface<Entity | undefined>[]
     columnStates: ColumnState[]
     showJustifications: boolean
     upUntilTime: Date | undefined

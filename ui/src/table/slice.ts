@@ -24,10 +24,10 @@ const tableSlice = createSlice({
             state.isLoading = true
         },
         setEntities(state: TableState, action: PayloadAction<Entity[]>) {
-            state.entities = action.payload
+            state.entityIdList = action.payload.map((entity) => entity.idPersistent)
             state.isLoading = false
             state.entityIndices = Object.fromEntries(
-                action.payload.map((entity, idx) => [entity.idPersistent, idx])
+                state.entityIdList.map((idPersistent, idx) => [idPersistent, idx])
             )
         },
         appendColumn(
@@ -44,10 +44,8 @@ const tableSlice = createSlice({
                     state.columnStates[colIdx].cellContents = newRemote([])
                 } else {
                     state.columnStates[colIdx].cellContents = newRemote(
-                        state.entities?.map((entity) =>
-                            entity.idPersistent in columnData
-                                ? columnData[entity.idPersistent]
-                                : []
+                        state.entityIdList?.map((idPersistent) =>
+                            idPersistent in columnData ? columnData[idPersistent] : []
                         ) ?? []
                     )
                 }
@@ -179,32 +177,23 @@ const tableSlice = createSlice({
         entityChangeOrCreateStart(state: TableState) {
             state.entityAddState.isLoading = true
         },
-        entityChangeOrCreateSuccess(state: TableState, action: PayloadAction<Entity>) {
+        entityChangeOrCreateSuccess(state: TableState, action: PayloadAction<string>) {
             state.entityAddState = newRemote(true)
-            const entity = action.payload
-            if (state.entities === undefined) {
-                state.entities = [entity]
-                state.entityIndices[entity.idPersistent] = 0
+            const idPersistent = action.payload
+            if (state.entityIdList === undefined) {
+                state.entityIdList = [idPersistent]
+                state.entityIndices[idPersistent] = 0
                 for (const columnState of state.columnStates) {
                     columnState.cellContents = newRemote([[]])
                 }
             } else {
-                const idx = state.entityIndices[entity.idPersistent]
+                const idx = state.entityIndices[idPersistent]
                 if (idx === undefined) {
-                    state.entityIndices[entity.idPersistent] = state.entities.length
-                    state.entities.push(action.payload)
+                    state.entityIndices[idPersistent] = state.entityIdList.length
+                    state.entityIdList.push(action.payload)
                     for (const columnState of state.columnStates) {
                         columnState.cellContents.value.push([])
                     }
-                } else {
-                    state.entities[idx] = entity
-                    state.columnStates[0].cellContents.value[idx] = [
-                        {
-                            value: entity.displayTxt,
-                            idPersistent: entity.idPersistent,
-                            version: entity.version
-                        }
-                    ]
                 }
             }
         },
@@ -240,42 +229,26 @@ const tableSlice = createSlice({
         loadEntityJustificationHistoryError(state: TableState) {
             state.entityJustificationHistory.isLoading = false
         },
-        submitEntityJustificationStart(state: TableState) {
-            state.showEntityJustificationHistoryForIdPersistent.isLoading = true
-        },
-        submitEntityJustificationSuccess(
-            state: TableState,
-            action: PayloadAction<
-                { idEntityPersistent: string; comment: Comment } | undefined
-            >
-        ) {
-            state.showEntityJustificationHistoryForIdPersistent.isLoading = false
-            if (action.payload !== undefined) {
-                state.entityJustificationHistory.value.push(action.payload.comment)
-                const idx = state.entityIndices[action.payload.idEntityPersistent]
-                if (idx !== undefined && state.entities !== undefined) {
-                    const entity = state.entities[idx]
-                    if (entity !== undefined) {
-                        entity.justificationTxt = action.payload.comment.content
-                    }
-                }
-            }
-        },
-        submitEntityJustificationError(state: TableState) {
-            state.showEntityJustificationHistoryForIdPersistent.isLoading = false
-        },
         clearTable(state: TableState) {
             state.columnStates = []
             state.columnIndices = {}
-            state.entities = undefined
+            state.entityIdList = undefined
         },
         setHistoryDate(state: TableState, action: PayloadAction<number | undefined>) {
             state.historyDateSinceEpoch = action.payload
             // need to reset entities to start loading
-            state.entities = undefined
+            state.entityIdList = undefined
             state.columnStates = state.columnStates.map((state) => {
                 return { ...state, cellContents: newRemote([]) }
             })
+        },
+        addJustificationToOpenHistory(
+            state: TableState,
+            action: PayloadAction<Comment>
+        ) {
+            if (state.entityJustificationHistory.value !== undefined) {
+                state.entityJustificationHistory.value.push(action.payload)
+            }
         }
     }
 })
@@ -337,9 +310,6 @@ export const {
     loadEntityJustificationHistoryError,
     showEntityJustificationHistory,
     hideEntityJustificationHistory,
-    submitEntityJustificationStart,
-    submitEntityJustificationError,
-    submitEntityJustificationSuccess,
     clearTable,
-    setHistoryDate
+    setHistoryDate, addJustificationToOpenHistory
 } = tableSlice.actions

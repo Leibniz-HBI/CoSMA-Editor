@@ -13,6 +13,7 @@ import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { useEntity } from '../hooks'
 import { newRemote } from '../../util/state'
+import { mkUpUntilDateColumnId } from '../../util/misc'
 
 function TestComponent({
     idEntity,
@@ -25,31 +26,15 @@ function TestComponent({
     return <div>{entity.value?.displayTxt}</div>
 }
 
-test('uses entity from table state', async () => {
-    const fetchMock = vi.fn()
-    renderWithProviders(<TestComponent idEntity={idEntity} />, fetchMock, {
-        preloadedState: {
-            table: newTableState({
-                entities: [entity],
-                entityIndices: { idEntity: 0 }
-            }),
-            entityDetails: newEntityDetailsState({})
-        }
-    })
-    await waitFor(() => {
-        screen.getByText(displayTxt)
-    })
-    await waitFor(() => {
-        expect(fetchMock.mock.calls).toEqual([])
-    })
-})
 test('uses entity from details state', async () => {
     const fetchMock = vi.fn()
     renderWithProviders(<TestComponent idEntity={idEntity} />, fetchMock, {
         preloadedState: {
             table: newTableState({}),
             entityDetails: newEntityDetailsState({
-                entityByIdPersistentMap: { [idEntity + '@']: newRemote(entity) }
+                entityByIdPersistentMap: {
+                    [mkUpUntilDateColumnId(idEntity, undefined)]: newRemote(entity)
+                }
             })
         }
     })
@@ -85,7 +70,7 @@ test('loads external entity', async () => {
     expect(store.getState()).toEqual({
         table: newTableState({}),
         entityDetails: newEntityDetailsState({
-            entityByIdPersistentMap: { [idEntity + '@']: newRemote(entity) }
+            entityByIdPersistentMap: { [idEntity]: newRemote(entity) }
         })
     })
     await waitFor(() => {
@@ -140,7 +125,7 @@ test('loads external entity with date', async () => {
     })
 })
 
-const idEntity = 'id-entity',
+const idEntity = '15188a39-abbf-4e84-9c1a-900cbca6168d',
     displayTxt = 'Display Text',
     entity = newEntity({
         idPersistent: idEntity,

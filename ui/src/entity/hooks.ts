@@ -1,28 +1,27 @@
 import { useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '../hooks'
-import { newRemote } from '../util/state'
-import { makeSelectAuxiliaryEntityByIdPersistent } from './selectors'
+import { newRemote, RemoteInterface } from '../util/state'
+import {
+    makeSelectAuxiliaryEntityByIdPersistent,
+    selectEntityByIdPersistentMap
+} from './selectors'
 import { RootState } from '../store'
 import { getEntityThunk } from './thunks'
-import { makeSelectEntityByIdPersistent } from '../table/selectors'
+import { mkUpUntilDateColumnId} from '../util/misc'
+import { Entity } from './state'
 
 export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
-    const selectEntityByIdPersistent = useMemo(makeSelectEntityByIdPersistent, [])
     const selectAuxiliaryEntityByIdPersistent = useMemo(
         makeSelectAuxiliaryEntityByIdPersistent,
         []
     )
-    const selectEntity = (state: RootState) =>
-        selectEntityByIdPersistent(state, idPersistent)
     const selectAuxiliaryEntity = (state: RootState) =>
         selectAuxiliaryEntityByIdPersistent(state, idPersistent, upUntilTime)
-    const entity = useAppSelector(selectEntity)
     const auxiliaryEntity = useAppSelector(selectAuxiliaryEntity)
     const dispatch = useAppDispatch()
     useEffect(
         () => {
             if (
-                entity === undefined &&
                 (auxiliaryEntity === undefined ||
                     (auxiliaryEntity.value === undefined && !auxiliaryEntity.isLoading))
             ) {
@@ -32,9 +31,27 @@ export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
         //eslint-disable-next-line react-hooks/exhaustive-deps
         [idPersistent]
     )
-    return entity
-        ? newRemote(entity)
-        : auxiliaryEntity
+    return auxiliaryEntity
         ? auxiliaryEntity
         : newRemote(undefined)
+}
+
+export function useEntityByIdPersistentList(
+    idPersistentList: string[],
+    upUntilTime: Date | undefined
+) {
+    const dispatch = useAppDispatch()
+    const entitiesCache = useAppSelector(selectEntityByIdPersistentMap)
+    const ret: RemoteInterface<Entity | undefined>[] = []
+    idPersistentList.forEach((idPersistent) => {
+        const key = mkUpUntilDateColumnId(idPersistent, upUntilTime)
+        const entity = entitiesCache[key]
+        if (entity !== undefined) {
+            ret.push(entity)
+        } else {
+            ret.push(newRemote(undefined))
+            dispatch(getEntityThunk(idPersistent, upUntilTime))
+        }
+    })
+    return ret
 }

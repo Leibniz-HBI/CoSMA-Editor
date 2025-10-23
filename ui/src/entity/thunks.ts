@@ -1,5 +1,5 @@
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
-import { addError } from '../util/notification/slice'
+import { addError, addSuccessVanish } from '../util/notification/slice'
 import { ThunkWithFetch } from '../util/type'
 import {
     getEntityDetailsError,
@@ -10,12 +10,17 @@ import {
     getEntitySearchResultsStart,
     getEntitySearchResultsSuccess,
     getEntityStart,
-    getEntitySuccess
+    getEntitySuccess,
+    submitEntityJustificationError,
+    submitEntityJustificationStart,
+    submitEntityJustificationSuccess
 } from './slice'
 import { config } from '../config'
 import { parseEntityObjectFromJson } from '../table/thunks'
 import { EntityDetails, EntitySearchResult, newEntitySearchResult } from './state'
 import { parseValueFromJson } from '../contribution/entity/thunks'
+import { parseCommentFromApi } from '../comments/thunks'
+import { Comment } from '../comments/slice'
 
 export function getEntityThunk(
     idEntityPersistent: string,
@@ -106,6 +111,42 @@ export function getEntitySearchResultsThunk(searchTerm: string): ThunkWithFetch<
             dispatch(getEntitySearchResultsError())
             dispatch(addError(exceptionMessage(e)))
         }
+    }
+}
+export function submitEntityJustificationThunk(
+    idEntityPersistent: string,
+    justification: string
+): ThunkWithFetch<{ comment: Comment | undefined; wasAdded: boolean }> {
+    return async (dispatch, _getState, fetch) => {
+        dispatch(submitEntityJustificationStart())
+        try {
+            const rsp = await fetch(
+                config.api_path + `/entities/${idEntityPersistent}/justifications`,
+                {
+                    credentials: 'include',
+                    method: 'PUT',
+                    body: JSON.stringify({ justification_txt: justification })
+                }
+            )
+            const json = await rsp.json()
+            if (rsp.status == 200) {
+                const comment = parseCommentFromApi(json['justification'])
+                dispatch(
+                    submitEntityJustificationSuccess({ idEntityPersistent, comment })
+                )
+                return { comment, wasAdded: true }
+            } else if (rsp.status == 302) {
+                dispatch(addSuccessVanish('A similar justification already exists.'))
+                dispatch(submitEntityJustificationSuccess(undefined))
+                return { comment: undefined, wasAdded: true }
+            } else {
+                dispatch(addError(errorMessageFromApi(json)))
+            }
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+        }
+        dispatch(submitEntityJustificationError())
+        return { comment: undefined, wasAdded: false }
     }
 }
 

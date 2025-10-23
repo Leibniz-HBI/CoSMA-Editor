@@ -27,7 +27,7 @@ import {
     newColumnState,
     newTableState
 } from '../../state'
-import { newEntity } from '../../../entity/state'
+import { newEntity, newEntityDetails, newEntityDetailsState } from '../../../entity/state'
 import { waitFor, screen } from '@testing-library/react'
 import { showColumnAddMenu } from '../../slice'
 import { RemoteDataTable } from '../table'
@@ -43,6 +43,7 @@ import { newAuthState } from '../../../auth/state'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import { act } from 'react'
+import { EntityDetails } from '../../../entity/components'
 
 test('get descendant column success', async () => {
     const fetchMock = vi.fn()
@@ -58,7 +59,7 @@ test('get descendant column success', async () => {
         expect(state.notification.notificationList).toEqual([])
         expect(state.table).toEqual(
             newTableState({
-                entities: entities_test,
+                entityIdList: [idPersistent0, idPersistent1],
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
@@ -175,7 +176,7 @@ test('get descendant column with history success', async () => {
         expect(state.notification.notificationList).toEqual([])
         expect(state.table).toEqual(
             newTableState({
-                entities: entities_test,
+                entityIdList: [idPersistent0, idPersistent1],
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
@@ -313,6 +314,7 @@ const idPersistent1 = 'test-id-1'
 const version0 = 0
 const version1 = 1
 const displayTxt0 = 'test display txt 0'
+const displayTxt1 = 'test display txt 1'
 const justification0 = 'very prolific shit poster'
 const justification1 = 'tremendously prolific shit poster'
 const test_entity_rsp_0 = {
@@ -324,7 +326,7 @@ const test_entity_rsp_0 = {
     justification_txt: justification0
 }
 const test_entity_rsp_1 = {
-    display_txt: 'test display txt 1',
+    display_txt: displayTxt1,
     display_txt_details: 'display_txt_detail',
     id_persistent: idPersistent1,
     version: version1,
@@ -332,24 +334,6 @@ const test_entity_rsp_1 = {
     justification_txt: justification1
 }
 
-const entities_test = [
-    newEntity({
-        idPersistent: idPersistent0,
-        displayTxt: 'test display txt 0',
-        displayTxtDetails: 'display_txt_detail',
-        version: version0,
-        disabled: false,
-        justificationTxt: justification0
-    }),
-    newEntity({
-        idPersistent: idPersistent1,
-        displayTxt: 'test display txt 1',
-        displayTxtDetails: 'display_txt_detail',
-        version: version1,
-        disabled: false,
-        justificationTxt: justification1
-    })
-]
 const columnNameParent = 'column parent test'
 const idColumnParentPersistent = 'column-id-parent-test'
 const columnNameTest = 'column name test'
@@ -511,6 +495,30 @@ const initialState = {
             columnsByIdPersistent: {
                 [displayTxtColumnId]: newRemote(displayTextColumn),
                 [justificationColumnId]: newRemote(justificationColumn)
+            }
+        }),
+        entityDetails: newEntityDetailsState({
+            entityByIdPersistentMap: {
+                [idPersistent0]: newRemote(
+                    newEntity({
+                        displayTxt: displayTxt0,
+                        idPersistent: idPersistent0,
+                        version: version0,
+                        disabled: false,
+                        justificationTxt: justification0,
+                        displayTxtDetails: 'display_txt_detail'
+                    })
+                ),
+                [idPersistent1]: newRemote(
+                    newEntity({
+                        displayTxt: displayTxt1,
+                        idPersistent: idPersistent1,
+                        version: version1,
+                        disabled: false,
+                        justificationTxt: justification1,
+                        displayTxtDetails: 'display_txt_detail'
+                    })
+                )
             }
         }),
         auth: newAuthState({
