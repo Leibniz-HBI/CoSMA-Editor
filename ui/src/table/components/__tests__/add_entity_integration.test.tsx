@@ -66,15 +66,8 @@ test('success new entity', async () => {
     await fillEntityForm(user, displayTxt0, justification0)
     await waitFor(() => {
         const state = store.getState()
-        expect(state.table.entities).toEqual([
-            newEntity({
-                displayTxt: displayTxt0,
-                idPersistent: idPersistent0,
-                version: version0,
-                disabled: false,
-                justificationTxt: justification0,
-                displayTxtDetails: 'display_txt_detail'
-            })
+        expect(state.table.entityIdList).toEqual([
+            idPersistent0
         ])
     })
     await expectFetchCallList(fetchMock.mock.calls, [
@@ -100,15 +93,8 @@ test('success new entity no display text', async () => {
     await fillEntityForm(user, undefined, justification0)
     await waitFor(() => {
         const state = store.getState()
-        expect(state.table.entities).toEqual([
-            newEntity({
-                displayTxt: displayTxt0,
-                idPersistent: idPersistent0,
-                version: version0,
-                disabled: false,
-                justificationTxt: justification0,
-                displayTxtDetails: 'display_txt_detail'
-            })
+        expect(state.table.entityIdList).toEqual([
+            idPersistent0
         ])
     })
     await expectFetchCallList(fetchMock.mock.calls, [

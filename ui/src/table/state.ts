@@ -1,13 +1,13 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { Column, ColumnType } from '../column_menu/state'
-import { RemoteInterface, newRemote } from '../util/state'
+import { Remote, RemoteInterface, newRemote } from '../util/state'
 import { Comment } from '../comments/slice'
 import { Entity } from '../entity/state'
 
 export interface TableState {
     columnStates: ColumnState[]
     columnIndices: { [key: string]: number }
-    entities?: Entity[]
+    entityIdList?: string[]
     entityIndices: { [key: string]: number }
     isLoading?: boolean
     showColumnAddMenu: boolean
@@ -29,7 +29,7 @@ export interface TableState {
 export function newTableState({
     columnStates: columnStates = [],
     columnIndices: columnIndices = {},
-    entities = undefined,
+    entityIdList = undefined,
     entityIndices = undefined,
     isLoading = undefined,
     showColumnAddMenu = false,
@@ -49,7 +49,7 @@ export function newTableState({
 }: {
     columnStates?: ColumnState[]
     columnIndices?: { [key: string]: number }
-    entities?: Entity[]
+    entityIdList?: string[]|undefined
     entityIndices?: { [key: string]: number }
     isLoading?: boolean
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,10 +70,10 @@ export function newTableState({
     historyDateSinceEpoch?: number | undefined
 }): TableState {
     let newEntityIndices: { [key: string]: number } = {}
-    if (entities !== undefined) {
-        if (entityIndices === undefined || entityIndices.size != entities.length) {
-            entities.forEach((entity, idx) => {
-                newEntityIndices[entity.idPersistent] = idx
+    if (entityIdList!== undefined) {
+        if (entityIndices === undefined || entityIndices.size != entityIdList.length) {
+            entityIdList.forEach((idPersistent, idx) => {
+                newEntityIndices[idPersistent] = idx
             })
         } else {
             newEntityIndices = entityIndices
@@ -82,7 +82,7 @@ export function newTableState({
     return {
         columnIndices: columnIndices,
         columnStates: columnStates,
-        entities: entities,
+        entityIdList: entityIdList,
         entityIndices: newEntityIndices,
         isLoading: isLoading,
         showColumnAddMenu: showColumnAddMenu,
@@ -145,7 +145,7 @@ export function csvLinesFromTable({
     columnStates,
     showJustifications
 }: {
-    entities?: Entity[]
+    entities?: RemoteInterface<Entity | undefined>[]
     selectedRows: number[]
     columns: RemoteInterface<Column | undefined>[]
     columnStates: ColumnState[]
@@ -177,15 +177,19 @@ export function csvLinesFromTable({
 
     for (let exportListIdx = 0; exportListIdx < exportIdxList.length; ++exportListIdx) {
         const rowIdx = exportIdxList[exportListIdx]
+        const entity= entities.at(rowIdx)?.value
+        if (entity === undefined) {
+            continue
+        }
         const value =
             '"' +
-            entities[rowIdx].idPersistent +
+            entity.idPersistent +
             '","' +
-            (entities[rowIdx].displayTxtDetails == 'Display Text'
-                ? entities[rowIdx].displayTxt
+            (entity.displayTxtDetails == 'Display Text'
+                ? entity.displayTxt
                 : '') +
             '","' +
-            (entities[rowIdx].justificationTxt ?? '') +
+            (entity.justificationTxt ?? '') +
             '",' +
             columnStates
                 .slice(columnStartIdx)

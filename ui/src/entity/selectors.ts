@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../store'
+import { mkUpUntilDateColumnId } from '../util/misc'
 
 export function selectEntityDetailsState(state: RootState) {
     return state.entityDetails
@@ -34,12 +35,12 @@ export const makeSelectAuxiliaryEntityByIdPersistent = () => {
     const selector = createSelector(
         [
             selectEntityByIdPersistentMap,
-            (_state, idPersistent: string, upUntilTime: Date | undefined) => [
+            (_state, idPersistent: string, upUntilTime: Date | undefined) => mkUpUntilDateColumnId(
                 idPersistent,
-                upUntilTime?.getTime()?.toString() ?? ''
-            ]
+                upUntilTime
+            )
         ],
-        (state, keyTuple) => state[keyTuple[0] + ('@' + keyTuple[1])]
+        (state, upUntilKey) => state[upUntilKey]
     )
     return selector
 }

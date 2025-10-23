@@ -169,7 +169,7 @@ export function renderWithProviders(
         preloadedState = {
             entityDetails: newEntityDetailsState({
                 entityByIdPersistentMap: {
-                    [resultId00+'@']: newRemote(
+                    [resultId00]: newRemote(
                         newEntity({
                             idPersistent: resultId00,
                             displayTxt: displayTxt00,
@@ -177,7 +177,7 @@ export function renderWithProviders(
                             disabled: false
                         })
                     ),
-                    [resultId01+'@']: newRemote(
+                    [resultId01]: newRemote(
                         newEntity({
                             idPersistent: resultId01,
                             displayTxt: displayTxt01,
@@ -185,7 +185,7 @@ export function renderWithProviders(
                             disabled: false
                         })
                     ),
-                    [resultId02+'@']: newRemote(
+                    [resultId02]: newRemote(
                         newEntity({
                             idPersistent: resultId02,
                             displayTxt: displayTxt02,
@@ -193,7 +193,7 @@ export function renderWithProviders(
                             disabled: false
                         })
                     ),
-                    [resultId10+'@']: newRemote(
+                    [resultId10]: newRemote(
                         newEntity({
                             idPersistent: resultId10,
                             displayTxt: displayTxt10,
@@ -201,7 +201,7 @@ export function renderWithProviders(
                             disabled: false
                         })
                     ),
-                    [resultId11+'@']: newRemote(
+                    [resultId11]: newRemote(
                         newEntity({
                             idPersistent: resultId11,
                             displayTxt: displayTxt11,

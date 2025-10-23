@@ -49,6 +49,7 @@ import { newAuthState } from '../../../auth/state'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import { act } from 'react'
+import { newEntity, newEntityDetailsState } from '../../../entity/state'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -96,6 +97,7 @@ test('add justification', async () => {
     const fetchMock = vi.fn()
     addEntitiesAndInstancesResponse(fetchMock)
     addJustificationHistoryResponse(fetchMock)
+    const timestampChanged = '2005-03-19 09:37:51 +0000'
     addResponseSequence(fetchMock, [
         [
             200,
@@ -103,7 +105,7 @@ test('add justification', async () => {
                 justification: {
                     content: justificationChanged,
                     author: userApi,
-                    timestamp: '2005-03-19 09:37:51 +0000'
+                    timestamp: timestampChanged
                 }
             }
         ]
@@ -122,6 +124,16 @@ test('add justification', async () => {
         screen.getByText(justification)
         // once in table, once in modal
         expect(screen.getAllByText(justificationChanged).length).toEqual(2)
+        const state = store.getState()
+        expect(state.table.entityJustificationHistory.value.at(-1)).toEqual({
+            content: justificationChanged,
+            timestamp: new Date(timestampChanged),
+            author: {
+                username: nameUserTest,
+                permissionGroup: UserPermissionGroup.CONTRIBUTOR,
+                idPersistent: idUserTest
+            }
+        })
     })
     await closeModal()
     await waitFor(() => {
@@ -131,7 +143,10 @@ test('add justification', async () => {
     })
     const state = store.getState()
     expect(state.notification.notificationList).toEqual([])
-    expect(state.table.entities?.at(0)?.justificationTxt).toEqual(justificationChanged)
+    expect(
+        state.entityDetails.entityByIdPersistentMap[idPersistent0].value
+            ?.justificationTxt
+    ).toEqual(justificationChanged)
     await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/entities/chunk',
@@ -214,6 +229,10 @@ test('add justification found', async () => {
         expect(state.table.showEntityJustificationHistoryForIdPersistent).toEqual(
             newRemote(idPersistent0)
         )
+        expect(
+            state.entityDetails.entityByIdPersistentMap[idPersistent0].value
+                ?.justificationTxt
+        ).toEqual(justification)
     })
     expect(fetchMock.mock.calls.length).toEqual(5)
 })
@@ -406,6 +425,30 @@ const initialState = {
             [displayTxtColumnId]: newRemote(displayTextColumn),
             [justificationColumnId]: newRemote(justificationColumn),
             [idColumnPersistent]: newRemote(columnTest)
+        }
+    }),
+    entityDetails: newEntityDetailsState({
+        entityByIdPersistentMap: {
+            [idPersistent0]: newRemote(
+                newEntity({
+                    displayTxt: displayTxt0,
+                    idPersistent: idPersistent0,
+                    version: version0,
+                    disabled: false,
+                    justificationTxt: justification,
+                    displayTxtDetails: 'display_txt_detail'
+                })
+            ),
+            [idPersistent1]: newRemote(
+                newEntity({
+                    displayTxt: displayTxt1,
+                    idPersistent: idPersistent1,
+                    version: version1,
+                    disabled: false,
+                    justificationTxt: justification1,
+                    displayTxtDetails: 'display_txt_detail'
+                })
+            )
         }
     }),
     auth: newAuthState({

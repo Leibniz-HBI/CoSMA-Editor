@@ -92,17 +92,18 @@ export function createCellContentCallback({
     columns,
     showEntityJustifications
 }: {
-    entities?: Entity[]
+    entities: RemoteInterface<Entity|undefined>[]
     columnStates: ColumnState[]
     columns: RemoteInterface<Column | undefined>[]
     showEntityJustifications: boolean
 }): (cell: Item) => GridCell {
     return (cell: Item): GridCell => {
         const [col_idx, row_idx] = cell
-        const entity = entities?.at(row_idx)
-        if (entities === undefined || entity === undefined) {
+        const remoteEntity = entities.at(row_idx)
+        if (remoteEntity === undefined || remoteEntity.value === undefined) {
             return emptyCell
         }
+        const entity = remoteEntity.value
         if (col_idx == displayTxtColumnIdx) {
             return mkCell(ColumnType.String, [
                 {

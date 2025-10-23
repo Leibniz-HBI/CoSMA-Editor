@@ -79,23 +79,27 @@ export interface EntityDetailsState {
     entityDetails: RemoteInterface<EntityDetails | undefined>
     entitySearchResults: RemoteInterface<EntitySearchResult[] | undefined>
     entityByIdPersistentMap: { [key: string]: RemoteInterface<Entity | undefined> }
+    submitJustification: RemoteInterface<boolean | undefined>
 }
 
 export function newEntityDetailsState({
     showEntityDetails = undefined,
     entityDetails = newRemote(undefined),
     entitySearchResults = newRemote(undefined),
-    entityByIdPersistentMap = {}
+    entityByIdPersistentMap = {},
+    submitJustification = newRemote(undefined)
 }: {
     showEntityDetails?: string | undefined
     entityDetails?: RemoteInterface<EntityDetails | undefined>
     entitySearchResults?: RemoteInterface<EntitySearchResult[] | undefined>
     entityByIdPersistentMap?: { [key: string]: RemoteInterface<Entity | undefined> }
+    submitJustification?: RemoteInterface<boolean | undefined>
 }): EntityDetailsState {
     return {
         showEntityDetails,
         entityDetails,
         entitySearchResults,
-        entityByIdPersistentMap
+        entityByIdPersistentMap,
+        submitJustification
     }
 }

@@ -35,7 +35,7 @@ import {
     newColumnState,
     newTableState
 } from '../../state'
-import { newEntity } from '../../../entity/state'
+import { Entity, newEntity, newEntityDetailsState } from '../../../entity/state'
 import {
     NotificationManager,
     NotificationType,
@@ -45,7 +45,7 @@ import {
 import { RenderOptions, waitFor, screen } from '@testing-library/react'
 import { RemoteDataTable } from '../table'
 import { TableSelectionState } from '../../selection/slice'
-import { newRemote } from '../../../util/state'
+import { newRemote, RemoteInterface } from '../../../util/state'
 import {
     EditSessionParticipantType,
     EditSessionState,
@@ -175,7 +175,7 @@ test('get entities success', async () => {
     expect(state.notification.notificationList).toEqual([])
     expect(state.table).toEqual(
         newTableState({
-            entities: entities_test,
+            entityIdList: [idPersistent0, idPersistent1],
             isLoading: false,
             columnIndices: {
                 display_txt_id: 0,
@@ -239,7 +239,7 @@ test('get entities and inner column success', async () => {
     expect(state.notification.notificationList).toEqual([])
     expect(state.table).toEqual(
         newTableState({
-            entities: entities_test,
+            entityIdList: [idPersistent0, idPersistent1],
             isLoading: false,
             columnIndices: {
                 display_txt_id: 0,
@@ -357,12 +357,30 @@ test('get chunked', async () => {
             }
         ]
     ])
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, initialState)
+    const entityByIdPersistentMap: { [idPersistent: string]: RemoteInterface<Entity> } =
+        {}
+    entities.flat().forEach((entityJson) => {
+        entityByIdPersistentMap[entityJson['id_persistent']] = newRemote(
+            newEntity({
+                idPersistent: entityJson['id_persistent'],
+                displayTxt: entityJson['display_txt'],
+                displayTxtDetails: entityJson['display_txt_details'],
+                version: 0,
+                disabled: false
+            })
+        )
+    })
+    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, {
+        preloadedState: {
+            ...initialState.preloadedState,
+            entityDetails: newEntityDetailsState({ entityByIdPersistentMap })
+        }
+    })
 
     await waitFor(() => {
         const state = store.getState()
         const idxLoadedColumn = 2
-        expect(state.table.entities?.length).toEqual(1001)
+        expect(state.table.entityIdList?.length).toEqual(1001)
         expect(
             state.table.columnStates[idxLoadedColumn].cellContents.value.length
         ).toEqual(1001)
@@ -441,7 +459,7 @@ test('get instances error', async () => {
         )
         expect(state.table).toEqual(
             newTableState({
-                entities: entities_test,
+                entityIdList: [idPersistent0, idPersistent1],
                 isLoading: false,
                 columnIndices: {
                     display_txt_id: 0,
@@ -567,6 +585,30 @@ const initialState = {
                 [justificationColumnId]: newRemote(justificationColumn),
                 [idColumnPersistent]: newRemote(columnTest),
                 [idColumnParentPersistent]: newRemote(columnParentTest)
+            }
+        }),
+        entityDetails: newEntityDetailsState({
+            entityByIdPersistentMap: {
+                [idPersistent0]: newRemote(
+                    newEntity({
+                        displayTxt: displayTxt0,
+                        idPersistent: idPersistent0,
+                        version: version0,
+                        disabled: false,
+                        justificationTxt: justification0,
+                        displayTxtDetails: 'display_txt_detail'
+                    })
+                ),
+                [idPersistent1]: newRemote(
+                    newEntity({
+                        displayTxt: displayTxt1,
+                        idPersistent: idPersistent1,
+                        version: version1,
+                        disabled: false,
+                        justificationTxt: justification1,
+                        displayTxtDetails: 'display_txt_detail'
+                    })
+                )
             }
         }),
         auth: newAuthState({

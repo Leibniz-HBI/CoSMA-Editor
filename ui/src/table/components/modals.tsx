@@ -11,6 +11,7 @@ import {
     selectShowEntityMerging
 } from '../selectors'
 import {
+    addJustificationToOpenHistory,
     clearEntityJustificationHistory,
     hideColumnAddMenu,
     hideEntityAdd,
@@ -22,8 +23,7 @@ import {
     entityChangeOrCreate,
     getColumnAsync,
     getTableAsync,
-    loadEntityJustificationHistoryThunk,
-    submitEntityJustificationThunk
+    loadEntityJustificationHistoryThunk
 } from '../thunks'
 import { AddEntityForm, EntityDetails } from '../../entity/components'
 import { ColumnMenu } from '../../column_menu/components/menu'
@@ -39,6 +39,7 @@ import { selectShowDetailsForEntityWithIdPersistent } from '../../entity/selecto
 import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
 import { useEntity } from '../../entity/hooks'
 import { constructColumnTitle } from '../../contribution/entity/hooks'
+import { submitEntityJustificationThunk } from '../../entity/thunks'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -194,7 +195,15 @@ export function EntityJustificationBody({
     const comments = useAppSelector(selectEntityJustificationHistory)
     const dispatch = useAppDispatch()
     const submitCommentCallback = (commentTxt: string) =>
-        dispatch(submitEntityJustificationThunk(idPersistent, commentTxt))
+        dispatch(submitEntityJustificationThunk(idPersistent, commentTxt)).then(
+            (result) => {
+                if (result.comment !== undefined) {
+                    dispatch(addJustificationToOpenHistory(result.comment))
+                    return true
+                }
+                return result.wasAdded
+            }
+        )
     useEffect(() => {
         if (comments === undefined || !comments.isLoading) {
             dispatch(loadEntityJustificationHistoryThunk(idPersistent, upUntilTime))
