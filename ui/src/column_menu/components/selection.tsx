@@ -1,4 +1,4 @@
-import { ReactElement, useState } from 'react'
+import { ReactElement, useContext, useState } from 'react'
 import {
     Col,
     ListGroup,
@@ -24,13 +24,17 @@ import {
     selectIsDragging,
     selectColumnHierarchy,
     ColumnHierarchyNode,
-    selectSearchResultIdPersistentList
 } from '../selectors'
 import { changeColumnParent } from '../thunks'
 import { CreateTabBody } from './menu'
 import { newRemote } from '../../util/state'
 import { ColumnNamePath } from './misc'
-import { ColumnSearchField, ColumnSearchResults } from './search'
+import {
+    ColumnSearchField,
+    ColumnExplorerSearchResults,
+    ColumnSearchProvider,
+    ColumnSearchContext
+} from './search'
 
 export function ColumnSelector({
     mkTailElement,
@@ -43,28 +47,54 @@ export function ColumnSelector({
     allowEdit?: boolean
     upUntilDate?: Date | undefined
 }) {
-    let body
-    const searchResultList = useAppSelector(selectSearchResultIdPersistentList)
-    if (searchResultList.value !== undefined) {
-        body = <ColumnSearchResults upUntilDate={upUntilDate} mkTailElement={mkTailElement} />
-    } else {
-        body = (
-            <ColumnExplorerList
-                mkTailElement={mkTailElement}
-                additionalEntries={additionalEntries}
-                allowEdit={allowEdit}
-                upUntilDate={upUntilDate}
-            />
-        )
-    }
-    return (
-        <Col className="overflow-y-hidden pb-3 d-contents">
-            <Row className="d-contents">
-                <ColumnSearchField upUntilDate={upUntilDate} />
-            </Row>
-            <Row className="d-contents">{body}</Row>
-        </Col>
-    )
+    return <ColumnSearchProvider>
+        <ColumnSelectorBody
+            mkTailElement={mkTailElement}
+            additionalEntries={additionalEntries}
+            allowEdit={allowEdit}
+            upUntilDate={upUntilDate}
+        />
+    </ColumnSearchProvider>
+}
+
+function ColumnSelectorBody({
+    mkTailElement,
+    additionalEntries = [],
+    allowEdit = true,
+    upUntilDate
+}: {
+    mkTailElement: (def: Column) => ReactElement
+    additionalEntries?: { idPersistent: string; name: string }[]
+    allowEdit?: boolean
+    upUntilDate?: Date | undefined
+}) {
+                let body
+                const searchResultList = useContext(ColumnSearchContext)
+                if (searchResultList.value !== undefined) {
+                    body = (
+                        <ColumnExplorerSearchResults
+                            upUntilDate={upUntilDate}
+                            mkTailElement={mkTailElement}
+                        />
+                    )
+                } else {
+                    body = (
+                        <ColumnExplorerList
+                            mkTailElement={mkTailElement}
+                            additionalEntries={additionalEntries}
+                            allowEdit={allowEdit}
+                            upUntilDate={upUntilDate}
+                        />
+                    )
+                }
+                return (
+                    <Col className="overflow-y-hidden pb-3 d-contents">
+                        <Row className="d-contents">
+                            <ColumnSearchField upUntilDate={upUntilDate} />
+                        </Row>
+                        <Row className="d-contents">{body}</Row>
+                    </Col>
+                )
 }
 
 function ColumnExplorerList({

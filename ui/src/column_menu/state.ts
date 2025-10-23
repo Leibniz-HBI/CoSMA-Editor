@@ -98,7 +98,6 @@ export interface ColumnSelectionState {
     isSubmittingDefinition: boolean
     editColumn: RemoteInterface<Column | undefined>
     isDragging: boolean
-    searchResultIdPersistentList: RemoteInterface<string[] | undefined>
 }
 export function newColumnSelectionState({
     children = [],
@@ -110,7 +109,6 @@ export function newColumnSelectionState({
     isSubmittingDefinition = false,
     editColumn = newRemote(undefined),
     isDragging = false,
-    searchResultIdPersistentList = newRemote(undefined)
 }: {
     children?: ColumnIdHierarchyNode[]
     columnsByIdPersistent?: {
@@ -121,7 +119,6 @@ export function newColumnSelectionState({
     editColumn?: RemoteInterface<Column | undefined>
     draggedSelectionEntry?: ColumnIdHierarchyNode
     isDragging?: boolean
-    searchResultIdPersistentList?: RemoteInterface<string[] | undefined>
 }): ColumnSelectionState {
     return {
         children,
@@ -130,6 +127,5 @@ export function newColumnSelectionState({
         isSubmittingDefinition,
         editColumn: editColumn,
         isDragging,
-        searchResultIdPersistentList
     }
 }

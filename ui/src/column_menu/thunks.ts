@@ -12,9 +12,6 @@ import {
     loadColumnHierarchyError,
     loadColumnHierarchyStart,
     loadColumnHierarchySuccess,
-    searchColumnError,
-    searchColumnStart,
-    searchColumnSuccess,
     submitColumnError,
     submitColumnStart,
     submitColumnSuccess
@@ -343,28 +340,6 @@ export function curateAsync(idColumnPersistent: string): ThunkWithFetch<void> {
             }
         } catch (e: unknown) {
             dispatch(curateColumnError())
-            dispatch(addError(exceptionMessage(e)))
-        }
-    }
-}
-export function searchColumnThunk(
-    searchTerm: string,
-    upUntilDate: Date | undefined
-): ThunkWithFetch<void> {
-    return async (dispatch, _getState, _fetch) => {
-        dispatch(searchColumnStart())
-        try {
-            const rsp = await cosmaeColumnApiGetSearch({
-                query: { term: searchTerm, up_until_time: upUntilDate?.toISOString() }
-            })
-            if (rsp.data !== undefined) {
-                dispatch(searchColumnSuccess(rsp.data.id_persistent_list))
-            } else {
-                dispatch(searchColumnError())
-                dispatch(addError(errorMessageFromApi(rsp.error)))
-            }
-        } catch (e: unknown) {
-            dispatch(searchColumnError())
             dispatch(addError(exceptionMessage(e)))
         }
     }
