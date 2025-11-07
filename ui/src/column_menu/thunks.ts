@@ -19,10 +19,7 @@ import {
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { PublicUserInfo } from '../user/state'
 import { curateColumnError, curateColumnStart } from './slice'
-import {
-    cosmaeColumnApiGetSearch,
-    cosmaeColumnApiPostGetColumnChildren
-} from '../openapi/cosmae'
+import { cosmaeColumnApiPostGetColumnChildren } from '../openapi/cosmae'
 
 export function loadColumnHierarchy({
     idParentPersistent = undefined,
