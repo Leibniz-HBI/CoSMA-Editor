@@ -213,7 +213,7 @@ test('success', async function () {
             notification: newNotificationManager({})
         })
     })
-    await waitFor(() => dragColumn(/-> column name/i, undefined))
+    await waitFor(() => dragColumn(/->column name/i, undefined))
     await waitFor(() => {
         expect(store.getState()).toEqual({
             columnSelection: newColumnSelectionState({
