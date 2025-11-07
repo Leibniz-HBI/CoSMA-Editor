@@ -1,17 +1,29 @@
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { Column, ColumnType } from '../column_menu/state'
-import { CellValue, displayTxtColumnId } from './state'
+import {
+    CellValue,
+    displayTxtColumnId,
+    FilterClause,
+    FilterOperator,
+    isFilterComposite,
+    isFilterLiteral
+} from './state'
 import { Entity } from '../entity/state'
 import { newEntity } from '../entity/state'
 import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { parseColumnsFromApi } from '../column_menu/thunks'
 import { JsonValue, ThunkWithFetch } from '../util/type'
-import { ValueUpdatedResponse } from '../openapi/cosmae/types.gen'
+import {
+    FilterComposite,
+    FilterLiteral,
+    FilterClause as FilterClauseApi,
+    ValueUpdatedResponse
+} from '../openapi/cosmae/types.gen'
 import {
     cosmaeColumnApiGetDescendants,
-    cosmaeEntityApiEntitiesChunksPost,
     cosmaeEntityApiEntitiesPost,
+    cosmaeEntityApiFilterEntities,
     cosmaeValueApiPostValue,
     cosmaeValueApiPostValueChunks
 } from '../openapi/cosmae/sdk.gen'
@@ -41,20 +53,24 @@ import { getEntitySuccess } from '../entity/slice'
  * Async action for fetching table data.
  */
 export function getTableAsync(
-    upUntilTime: Date | undefined = undefined
+    upUntilTime: Date | undefined = undefined,
+    filter: FilterClause | undefined = undefined
 ): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, _fetch) => {
         dispatch(setEntityLoading())
         dispatch(setColumnLoading(displayTxtColumnId))
         try {
-            const payload: { [key: string]: JsonValue } = {}
+            const body: { [key: string]: JsonValue } = {}
             if (upUntilTime !== undefined) {
-                payload['up_until_time'] = upUntilTime.toISOString()
+                body['up_until_time'] = upUntilTime.toISOString()
             }
-            const entities: Entity[] = []
+            if (filter !== undefined) {
+                body['filter'] = filterToApi(filter)
+            }
+            const idEntityPersistentList: string[] = []
             for (let offset = 0; ; ) {
-                const rsp = await cosmaeEntityApiEntitiesChunksPost({
-                    body: { ...payload, offset, limit: 500 }
+                const rsp = await cosmaeEntityApiFilterEntities({
+                    body: { ...body, offset, limit: 5000 }
                 })
                 if (rsp.response.status == 404) {
                     dispatch(setEntities([]))
@@ -68,19 +84,13 @@ export function getTableAsync(
                     )
                     return false
                 }
-                const rowsApi = rsp.data.entity_list
-                if (rowsApi !== null) {
-                    for (const entry_json of rowsApi) {
-                        const entity = parseEntityObjectFromJson(entry_json)
-                        entities.push(entity)
-                    }
-                }
-                offset = rsp.data.next_offset
-                if (offset <= 0) {
+                if (rsp.data.id_entity_persistent_list.length == 0) {
                     break
                 }
+                idEntityPersistentList.push(...rsp.data.id_entity_persistent_list)
+                offset = rsp.data.next_offset
             }
-            dispatch(setEntities(entities))
+            dispatch(setEntities(idEntityPersistentList))
             dispatch(
                 appendColumn({
                     idPersistent: displayTxtColumnId,
@@ -381,4 +391,42 @@ export function parseDisplayTxtDetails(
         return arg
     }
     return parseColumnsFromApi(arg)
+}
+
+function filterToApi(filter: FilterClause): FilterClauseApi {
+    const todoStack: (FilterClause | FilterOperator)[] = [filter]
+    const doneStack: FilterClauseApi[][] = [[]]
+    while (todoStack.length > 0) {
+        const current = todoStack.pop()
+        if (current === undefined) {
+            continue
+        }
+        if (typeof current === 'string') {
+            const parts = doneStack.pop()
+            if (parts === undefined || (current !== 'AND' && current !== 'OR')) {
+                throw new Error('Internal error in filter conversion.')
+            }
+            doneStack.at(-1)?.push({
+                filter: {
+                    type: 'COMPOSITE',
+                    operator: current,
+                    parts: parts
+                }
+            })
+        } else if (isFilterLiteral(current)) {
+            doneStack.at(-1)?.push({
+                filter: {
+                    type: 'LITERAL',
+                    id_column_persistent: current.idColumnPersistent,
+                    predicate: current.predicate,
+                    value: current.value
+                }
+            })
+        } else if (isFilterComposite(current)) {
+            todoStack.push(current.operator)
+            todoStack.push(...current.parts)
+            doneStack.push([])
+        }
+    }
+    return doneStack[0][0]
 }

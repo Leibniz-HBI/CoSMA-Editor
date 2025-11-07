@@ -149,19 +149,19 @@ test('add justification', async () => {
     ).toEqual(justificationChanged)
     await expectFetchCallList(fetchMock.mock.calls, [
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: 0, limit: 500 },
+                body: { offset: 0, limit: 5000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: version1 + 1, limit: 500 },
+                body: { offset: nextOffset, limit: 5000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -307,22 +307,6 @@ const justification = 'very prolific shit poster'
 const justification1 = 'tremendously prolific shit poster'
 const justificationChanged = 'shit poster in chief'
 const modalHeading = 'Entity Justification History'
-const test_entity_rsp_0 = {
-    display_txt: displayTxt0,
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent0,
-    version: version0,
-    disabled: false,
-    justification_txt: justification
-}
-const test_entity_rsp_1 = {
-    display_txt: displayTxt1,
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent1,
-    version: version1,
-    disabled: false,
-    justification_txt: justification1
-}
 const columnNameTest = 'column name test'
 const idColumnPersistent = 'column_id_test'
 const nameUserTest = 'user_test'
@@ -392,17 +376,23 @@ async function openModalForEntity0() {
         text.click()
     })
 }
-
+const nextOffset = 3646
 function addEntitiesAndInstancesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
-                next_offset: version1 + 1
+                id_entity_persistent_list: [idPersistent0, idPersistent1],
+                next_offset: nextOffset
             }
         ],
-        [200, { entity_list: [], next_offset: 0 }],
+        [
+            200,
+            {
+                id_entity_persistent_list: [],
+                next_offset: nextOffset
+            }
+        ],
         [200, { value_list: [] }]
     ])
 }

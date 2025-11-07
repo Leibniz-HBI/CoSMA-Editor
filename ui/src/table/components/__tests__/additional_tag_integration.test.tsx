@@ -27,7 +27,11 @@ import {
     newColumnState,
     newTableState
 } from '../../state'
-import { newEntity, newEntityDetails, newEntityDetailsState } from '../../../entity/state'
+import {
+    newEntity,
+    newEntityDetails,
+    newEntityDetailsState
+} from '../../../entity/state'
 import { waitFor, screen } from '@testing-library/react'
 import { showColumnAddMenu } from '../../slice'
 import { RemoteDataTable } from '../table'
@@ -43,7 +47,6 @@ import { newAuthState } from '../../../auth/state'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import { act } from 'react'
-import { EntityDetails } from '../../../entity/components'
 
 test('get descendant column success', async () => {
     const fetchMock = vi.fn()
@@ -77,19 +80,19 @@ test('get descendant column success', async () => {
     })
     await expectFetchCallList(fetchMock.mock.calls, [
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: 0, limit: 500 },
+                body: { offset: 0, limit: 5000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: version1 + 1, limit: 500 },
+                body: { offset: next_offset, limit: 5000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -195,26 +198,26 @@ test('get descendant column with history success', async () => {
     })
     await expectFetchCallList(fetchMock.mock.calls, [
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
                 body: {
                     up_until_time: historyDateString,
                     offset: 0,
-                    limit: 500
+                    limit: 5000
                 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
                 body: {
                     up_until_time: historyDateString,
-                    offset: version1 + 1,
-                    limit: 500
+                    offset: next_offset,
+                    limit: 5000
                 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
@@ -379,16 +382,23 @@ const justificationColumnState = newColumnState({
     cellContents: newRemote([])
 })
 
+const next_offset = 4000
 function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
-                next_offset: version1 + 1
+                id_entity_persistent_list: [idPersistent0, idPersistent1],
+                next_offset
             }
         ],
-        [200, { entity_list: [], next_offset: 0 }]
+        [
+            200,
+            {
+                id_entity_persistent_list: [],
+                next_offset: next_offset
+            }
+        ]
     ])
 }
 

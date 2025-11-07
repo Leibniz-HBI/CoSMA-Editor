@@ -8,7 +8,7 @@ import {
 } from '@glideapps/glide-data-grid'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Col, Row } from 'react-bootstrap'
+import { Button, Col, Row } from 'react-bootstrap'
 import { IBounds, useLayer } from 'react-laag'
 import { ColumnAddButton } from '../../column_menu/components/misc'
 import { HeaderMenu } from '../../header_menu'
@@ -26,6 +26,7 @@ import {
     selectColumnIndices,
     selectColumnStates,
     selectEntityIdList,
+    selectFilter,
     selectFrozenColumns,
     selectHistoryDate,
     selectIsLoadingEntities,
@@ -48,7 +49,9 @@ import {
     columnChangeOwnershipHide,
     toggleEntityMergingModal,
     toggleSearch,
-    setHistoryDate
+    setHistoryDate,
+    setShowFilterEditor,
+    setFilter
 } from '../slice'
 import { addError } from '../../util/notification/slice'
 import {
@@ -68,7 +71,8 @@ import {
     EntityAddModal,
     EntityMergingModal,
     EntityJustificationModal,
-    DisplayTextDetails
+    DisplayTextDetails,
+    FilterModal
 } from './modals'
 import { createCellContentCallback } from '../cell'
 import { AddEntityButton } from './buttons'
@@ -111,6 +115,7 @@ export function RemoteDataTable() {
     const showJustifications = useAppSelector(selectShowEntityJustifications)
     const columnIndices = useAppSelector(selectColumnIndices)
     const columnStates = useAppSelector(selectColumnStates)
+    const filter = useAppSelector(selectFilter)
     const columnChangeOwnership = useAppSelector(
         selectOwnershipChangeColumnIdPersistent
     )
@@ -124,27 +129,29 @@ export function RemoteDataTable() {
             dispatch(addError('Please refresh the page and log in'))
             return
         }
-        dispatch(getTableAsync(upUntilTime)).then(async (success) => {
+        dispatch(getTableAsync(upUntilTime, filter)).then(async (success) => {
             if (!success) {
                 return
             }
-            userInfo.value?.idColumnPersistentList.forEach(async (idPersistent:string) => {
-                const colStateIdx = columnIndices[idPersistent]
-                const colState = columnStates[colStateIdx ?? -1]
-                if (
-                    isLoading ||
-                    colState?.cellContents.isLoading ||
-                    colState?.cellContents.value.length > 0
-                ) {
-                    return
+            userInfo.value?.idColumnPersistentList.forEach(
+                async (idPersistent: string) => {
+                    const colStateIdx = columnIndices[idPersistent]
+                    const colState = columnStates[colStateIdx ?? -1]
+                    if (
+                        isLoading ||
+                        colState?.cellContents.isLoading ||
+                        colState?.cellContents.value.length > 0
+                    ) {
+                        return
+                    }
+                    await dispatch(getColumnAsync(idPersistent, upUntilTime))
                 }
-                await dispatch(getColumnAsync(idPersistent, upUntilTime))
-            })
+            )
         })
         return () => {
             dispatch(clearTable())
         }
-    }, [upUntilTime])
+    }, [upUntilTime, filter])
 
     return (
         <Row className="h-100">
@@ -166,6 +173,13 @@ export function RemoteDataTable() {
                                         dispatch(toggleEntityMergingModal(true))
                                     }
                                 />
+                            </Col>
+                            <Col className="ps-0" xs="auto">
+                                <Button
+                                    onClick={() => dispatch(setShowFilterEditor(true))}
+                                >
+                                    Filter
+                                </Button>
                             </Col>
                         </Row>
                     </Col>
@@ -221,7 +235,10 @@ export function RemoteDataTable() {
                         data-testid="table-container-inner"
                     >
                         <DataTable entities={entities} columnStates={columnStates} />
-                        <ColumnModal columnIndices={columnIndices} upUntilDate={upUntilTime} />
+                        <ColumnModal
+                            columnIndices={columnIndices}
+                            upUntilDate={upUntilTime}
+                        />
                         <EntityAddModal />
                         <EntityMergingModal />
                         <ChangeOwnershipModal
@@ -230,6 +247,14 @@ export function RemoteDataTable() {
                         />
                         <EntityJustificationModal upUntilTime={upUntilTime} />
                         <EntityDetailsModal upUntilTime={upUntilTime} />
+                        <FilterModal
+                            upUntilTime={upUntilTime}
+                            filter={filter}
+                            setFilter={(filter) => {
+                                dispatch(setFilter(filter))
+                                dispatch(setShowFilterEditor(false))
+                            }}
+                        />
                     </div>
                 </Row>
                 <div id="portal" />
@@ -265,7 +290,7 @@ export function DataTable({
     entities,
     columnStates
 }: {
-    entities: RemoteInterface<Entity|undefined>[]
+    entities: RemoteInterface<Entity | undefined>[]
     columnStates: ColumnState[]
 }) {
     const dispatch: AppDispatch = useDispatch()
@@ -305,7 +330,7 @@ export function DataTable({
             const entity = entities.at(rowIdx)?.value
             if (entity === undefined) {
                 return
-                }
+            }
             if (colIdx == displayTxtColumnIdx) {
                 let newValueData: string | undefined = newValue.data?.toString()
                 if (newValueData == '') {

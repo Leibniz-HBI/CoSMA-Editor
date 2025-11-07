@@ -418,22 +418,6 @@ const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
 const justification = 'justification txt 0'
 const justification1 = 'justification txt 1'
-const test_entity_rsp_0 = {
-    display_txt: displayTxt0,
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent0,
-    justification_txt: justification,
-    version: version0,
-    disabled: false
-}
-const test_entity_rsp_1 = {
-    display_txt: 'test display txt 1',
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent1,
-    justification_txt: justification1,
-    version: 1,
-    disabled: false
-}
 
 const columnNameTest = 'column name test'
 const idColumnPersistent = 'column_id_test'
@@ -456,16 +440,23 @@ const columnTest: Column = newColumn({
     version: 2,
     hidden: false
 })
+const nextOffset = 12698
 function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
-                next_offset: version1 + 1
+                id_entity_persistent_list: [idPersistent0, idPersistent1],
+                next_offset: nextOffset
             }
         ],
-        [200, { entity_list: [], next_offset: 0 }]
+        [
+            200,
+            {
+                id_entity_persistent_list: [],
+                next_offset: nextOffset
+            }
+        ],
     ])
 }
 

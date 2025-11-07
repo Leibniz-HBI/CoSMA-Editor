@@ -165,3 +165,12 @@ export const selectHistorySinceEpoch = createSelector(
 export const selectHistoryDate = createSelector(selectHistorySinceEpoch, (state) =>
     state === undefined ? undefined : new Date(state)
 )
+export const selectShowFilterEditor = createSelector(
+    selectTableState,
+    (state) => state.showFilterEditor
+)
+
+export const selectFilter = createSelector(
+    selectTableState,
+    (state) => state.filter
+)

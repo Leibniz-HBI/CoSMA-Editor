@@ -147,14 +147,6 @@ const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
 const justification = 'very prolific shit poster'
 const justification1 = 'tremendously prolific shit poster'
-const test_entity_rsp_0 = {
-    display_txt: displayTxt0,
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent0,
-    version: version0,
-    disabled: false,
-    justification_txt: justification
-}
 const test_entities_rsp_1 = {
     display_txt: displayTxt1,
     display_txt_details: 'display_txt_detail',
@@ -181,16 +173,23 @@ const value1 = 'value 1'
 const versionInstance0 = 10
 const versionInstance1 = 11
 
+const nextOffset = 56589
 function addEntitiesAndInstancesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                entity_list: [test_entity_rsp_0, test_entities_rsp_1],
-                next_offset: version1 + 1
+                id_entity_persistent_list: [idPersistent0, idPersistent1],
+                next_offset: nextOffset
             }
         ],
-        [200, { entity_list: [], next_offset: 0 }],
+        [
+            200,
+            {
+                id_entity_persistent_list: [],
+                next_offset: nextOffset
+            }
+        ],
         [200, { value_list: [] }]
     ])
 }

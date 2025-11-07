@@ -1,8 +1,44 @@
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { Column, ColumnType } from '../column_menu/state'
-import { Remote, RemoteInterface, newRemote } from '../util/state'
+import { RemoteInterface, newRemote } from '../util/state'
 import { Comment } from '../comments/slice'
 import { Entity } from '../entity/state'
+import {
+    FilterClause as IFilterClause,
+    FilterComposite as IFilterComposite,
+    FilterLiteral as IFilterLiteral
+} from './state'
+
+export enum FilterPredicate {
+    EQUALS = 'EQ',
+    NOT_EQUALS = 'NEQ'
+}
+
+export interface FilterLiteral {
+    idColumnPersistent: string
+    value: string
+    predicate: FilterPredicate
+}
+
+export enum FilterOperator {
+    AND = 'AND',
+    OR = 'OR'
+}
+
+export interface FilterComposite {
+    operator: FilterOperator
+    parts: FilterClause[]
+}
+
+export type FilterClause = FilterLiteral | FilterComposite
+
+export function newFilterLiteral(
+    idColumnPersistent: string,
+    value: string,
+    predicate: FilterPredicate = FilterPredicate.EQUALS
+): FilterLiteral {
+    return { idColumnPersistent, value, predicate }
+}
 
 export interface TableState {
     columnStates: ColumnState[]
@@ -24,6 +60,8 @@ export interface TableState {
     entityJustificationHistory: RemoteInterface<Comment[]>
     showSearch: boolean
     historyDateSinceEpoch: number | undefined
+    showFilterEditor: boolean
+    filter: FilterClause | undefined
 }
 
 export function newTableState({
@@ -45,11 +83,13 @@ export function newTableState({
     showEntityJustificationHistoryForIdPersistent = newRemote(undefined),
     entityJustificationHistory = newRemote([]),
     showSearch = false,
-    historyDateSinceEpoch=undefined
+    historyDateSinceEpoch = undefined,
+    showFilterEditor = false,
+    filter = undefined
 }: {
     columnStates?: ColumnState[]
     columnIndices?: { [key: string]: number }
-    entityIdList?: string[]|undefined
+    entityIdList?: string[] | undefined
     entityIndices?: { [key: string]: number }
     isLoading?: boolean
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,9 +108,11 @@ export function newTableState({
     entityJustificationHistory?: RemoteInterface<Comment[]>
     showSearch?: boolean
     historyDateSinceEpoch?: number | undefined
+    showFilterEditor?: boolean
+    filter?: FilterClause | undefined
 }): TableState {
     let newEntityIndices: { [key: string]: number } = {}
-    if (entityIdList!== undefined) {
+    if (entityIdList !== undefined) {
         if (entityIndices === undefined || entityIndices.size != entityIdList.length) {
             entityIdList.forEach((idPersistent, idx) => {
                 newEntityIndices[idPersistent] = idx
@@ -99,7 +141,9 @@ export function newTableState({
             showEntityJustificationHistoryForIdPersistent,
         entityJustificationHistory: entityJustificationHistory,
         showSearch: showSearch,
-        historyDateSinceEpoch
+        historyDateSinceEpoch,
+        showFilterEditor,
+        filter: filter
     }
 }
 
@@ -177,7 +221,7 @@ export function csvLinesFromTable({
 
     for (let exportListIdx = 0; exportListIdx < exportIdxList.length; ++exportListIdx) {
         const rowIdx = exportIdxList[exportListIdx]
-        const entity= entities.at(rowIdx)?.value
+        const entity = entities.at(rowIdx)?.value
         if (entity === undefined) {
             continue
         }
@@ -185,9 +229,7 @@ export function csvLinesFromTable({
             '"' +
             entity.idPersistent +
             '","' +
-            (entity.displayTxtDetails == 'Display Text'
-                ? entity.displayTxt
-                : '') +
+            (entity.displayTxtDetails == 'Display Text' ? entity.displayTxt : '') +
             '","' +
             (entity.justificationTxt ?? '') +
             '",' +
@@ -234,4 +276,10 @@ export const justificationColumn: Column = {
     version: 0,
     disabled: false,
     hidden: false
+}
+export function isFilterLiteral(clause: IFilterClause): clause is IFilterLiteral {
+    return (clause as IFilterLiteral).predicate !== undefined
+}
+export function isFilterComposite(clause: IFilterClause): clause is IFilterComposite {
+    return (clause as IFilterComposite).parts !== undefined
 }
