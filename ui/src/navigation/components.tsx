@@ -10,7 +10,7 @@ import { config } from '../config'
 
 export function CosmaeNavbar() {
     return (
-        <Navbar expand="lg" className="bg-primary flex-shrink-0 mb-3">
+        <Navbar expand="lg" className="bg-primary flex-shrink-0 mb-2">
             <Container className="text-secondary">
                 <Navbar.Brand href="/" className="fw-bold">
                     {config.navBarName}
