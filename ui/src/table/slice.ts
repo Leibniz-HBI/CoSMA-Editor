@@ -5,7 +5,8 @@ import {
     newColumnState,
     newTableState,
     justificationColumnId,
-    optionalEntityJustificationColumnIdx
+    optionalEntityJustificationColumnIdx,
+    FilterClause
 } from './state'
 import { Entity } from '../entity/state'
 import { newRemote } from '../util/state'
@@ -23,8 +24,8 @@ const tableSlice = createSlice({
         setEntityLoading(state: TableState) {
             state.isLoading = true
         },
-        setEntities(state: TableState, action: PayloadAction<Entity[]>) {
-            state.entityIdList = action.payload.map((entity) => entity.idPersistent)
+        setEntities(state: TableState, action: PayloadAction<string[]>) {
+            state.entityIdList = action.payload
             state.isLoading = false
             state.entityIndices = Object.fromEntries(
                 state.entityIdList.map((idPersistent, idx) => [idPersistent, idx])
@@ -90,7 +91,11 @@ const tableSlice = createSlice({
             }
         },
         showEntityJustification(state: TableState) {
-            if (state.showEntityJustifications) {
+            if (
+                state.showEntityJustifications &&
+                state.columnStates.at(optionalEntityJustificationColumnIdx)
+                    ?.idColumnPersistent === justificationColumnId
+            ) {
                 return
             }
             const columnState = newColumnState({
@@ -249,6 +254,17 @@ const tableSlice = createSlice({
             if (state.entityJustificationHistory.value !== undefined) {
                 state.entityJustificationHistory.value.push(action.payload)
             }
+        },
+        setShowFilterEditor(state: TableState, action: PayloadAction<boolean>) {
+            state.showFilterEditor = action.payload
+        },
+        setFilter(state: TableState, action: PayloadAction<FilterClause | undefined>) {
+            state.filter = action.payload
+            state.entityIdList = undefined
+            state.columnStates = state.columnStates.map((state) => {
+                return { ...state, cellContents: newRemote([]) }
+            })
+            generateColumnStateIndices(state)
         }
     }
 })
@@ -311,5 +327,8 @@ export const {
     showEntityJustificationHistory,
     hideEntityJustificationHistory,
     clearTable,
-    setHistoryDate, addJustificationToOpenHistory
+    setHistoryDate,
+    addJustificationToOpenHistory,
+    setShowFilterEditor,
+    setFilter
 } = tableSlice.actions

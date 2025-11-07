@@ -338,3 +338,7 @@ div#layers > div > .container {
     display: block;
     position: relative;
 }
+
+.w-4em {
+    width: 4em !important;
+}

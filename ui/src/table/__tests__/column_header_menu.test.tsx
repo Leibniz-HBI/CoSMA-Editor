@@ -209,7 +209,7 @@ test('change owner shows modal', async () => {
 })
 
 function addEntitiesResponse(fetchMock: Mock) {
-    addResponseSequence(fetchMock, [[200, { entity_list: [], next_offset: 0 }]])
+    addResponseSequence(fetchMock, [[200, { id_entity_persistent_list: [], next_offset: 0 }]])
 }
 
 function addValueResponse(fetchMock: Mock) {

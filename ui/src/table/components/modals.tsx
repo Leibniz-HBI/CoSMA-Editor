@@ -8,7 +8,8 @@ import {
     selectEntityJustificationHistoryForIdPersistent,
     selectShowColumnMenu,
     selectShowEntityAddMenu,
-    selectShowEntityMerging
+    selectShowEntityMerging,
+    selectShowFilterEditor
 } from '../selectors'
 import {
     addJustificationToOpenHistory,
@@ -17,6 +18,7 @@ import {
     hideEntityAdd,
     hideEntityJustificationHistory,
     removeColumnByIdPersistent,
+    setShowFilterEditor,
     toggleEntityMergingModal
 } from '../slice'
 import {
@@ -40,6 +42,8 @@ import { setShowDetailsForEntityWithIdPersistent } from '../../entity/slice'
 import { useEntity } from '../../entity/hooks'
 import { constructColumnTitle } from '../../contribution/entity/hooks'
 import { submitEntityJustificationThunk } from '../../entity/thunks'
+import { FilterEditor } from './filter'
+import { FilterClause } from '../state'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -248,6 +252,39 @@ export function EntityDetailsModal({ upUntilTime }: { upUntilTime: Date | undefi
                         idEntityPersistent={idEntityPersistent}
                         upUntilTime={upUntilTime}
                     />
+                ) : (
+                    <div />
+                )}
+            </Modal.Body>
+        </Modal>
+    )
+}
+
+export function FilterModal({
+    upUntilTime,
+    setFilter,
+    filter
+}: {
+    upUntilTime: Date | undefined
+    setFilter: (filter: FilterClause | undefined) => void
+    filter?: FilterClause | undefined
+}) {
+    const dispatch = useAppDispatch()
+    const showFilterModal = useAppSelector(selectShowFilterEditor)
+    return (
+        <Modal
+            show={showFilterModal}
+            onHide={() => dispatch(setShowFilterEditor(false))}
+            size="xl"
+            // fullscreen={true}
+            key="entity-merging-modal"
+        >
+            <Modal.Header closeButton={true}>
+                <Modal.Title>Entity Details</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="display-block vh-95">
+                {showFilterModal ? (
+                    <FilterEditor upUntilDate={upUntilTime} onSubmit={setFilter} filter={filter}/>
                 ) : (
                     <div />
                 )}

@@ -92,41 +92,6 @@ const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
 const justification0 = 'very prolific shit poster'
 const justification1 = 'tremendously prolific shit poster'
-const test_entity_rsp_0 = {
-    display_txt: displayTxt0,
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent0,
-    version: version0,
-    disabled: false,
-    justification_txt: justification0
-}
-const test_entity_rsp_1 = {
-    display_txt: 'test display txt 1',
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent1,
-    version: version1,
-    disabled: false,
-    justification_txt: justification1
-}
-
-const entities_test = [
-    newEntity({
-        idPersistent: idPersistent0,
-        displayTxt: 'test display txt 0',
-        displayTxtDetails: 'display_txt_detail',
-        version: version0,
-        disabled: false,
-        justificationTxt: justification0
-    }),
-    newEntity({
-        idPersistent: idPersistent1,
-        displayTxt: 'test display txt 1',
-        displayTxtDetails: 'display_txt_detail',
-        version: version1,
-        disabled: false,
-        justificationTxt: justification1
-    })
-]
 const columnNameParent = 'column parent test'
 const idColumnParentPersistent = 'column-id-parent-test'
 const columnNameTest = 'column name test'
@@ -192,19 +157,19 @@ test('get entities success', async () => {
     )
     await expectFetchCallList(fetchMock.mock.calls, [
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: 0, limit: 500 },
+                body: { offset: 0, limit: 5000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: version1 + 1, limit: 500 },
+                body: { offset: nextOffset, limit: 5000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -256,19 +221,19 @@ test('get entities and inner column success', async () => {
     )
     await expectFetchCallList(fetchMock.mock.calls, [
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: 0, limit: 500 },
+                body: { offset: 0, limit: 5000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
         ],
         [
-            'http://127.0.0.1:8000/cosmae/api/entities/chunk',
+            'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: version1 + 1, limit: 500 },
+                body: { offset: nextOffset, limit: 5000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -292,26 +257,36 @@ test('get entities and inner column success', async () => {
 test('get chunked', async () => {
     const fetchMock = vi.fn()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const entities: any[][] = [[], [], []]
+    const idEntityPersistentListList: any[][] = [[], [], []]
     for (let j = 0; j < 2; ++j) {
         for (let i = 0; i < 500; ++i) {
-            entities[j].push({
-                id_persistent: 500 * j + i,
-                display_txt: 'display_text test',
-                display_txt_details: 'display_txt_detail'
-            })
+            idEntityPersistentListList[j].push(500 * j + i)
         }
     }
-    entities[2].push({
-        id_persistent: 1001,
-        display_txt: 'display text test',
-        display_txt_details: 'display_txt_detail'
-    })
+    idEntityPersistentListList[2].push(1001)
     addResponseSequence(fetchMock, [
-        [200, { entity_list: entities[0], next_offset: 501 }],
-        [200, { entity_list: entities[1], next_offset: 1001 }],
-        [200, { entity_list: entities[2], next_offset: 1501 }],
-        [200, { entity_list: [], next_offset: 0 }]
+        [
+            200,
+            {
+                id_entity_persistent_list: idEntityPersistentListList[0],
+                next_offset: 501
+            }
+        ],
+        [
+            200,
+            {
+                id_entity_persistent_list: idEntityPersistentListList[1],
+                next_offset: 1001
+            }
+        ],
+        [
+            200,
+            {
+                id_entity_persistent_list: idEntityPersistentListList[2],
+                next_offset: 1501
+            }
+        ],
+        [200, { id_entity_persistent_list: [], next_offset: 0 }]
     ])
     const idValueChunk = 'test-value-id-0'
     const version = 12
@@ -359,12 +334,12 @@ test('get chunked', async () => {
     ])
     const entityByIdPersistentMap: { [idPersistent: string]: RemoteInterface<Entity> } =
         {}
-    entities.flat().forEach((entityJson) => {
-        entityByIdPersistentMap[entityJson['id_persistent']] = newRemote(
+    idEntityPersistentListList.flat().forEach((idPersistent: string) => {
+        entityByIdPersistentMap[idPersistent] = newRemote(
             newEntity({
-                idPersistent: entityJson['id_persistent'],
-                displayTxt: entityJson['display_txt'],
-                displayTxtDetails: entityJson['display_txt_details'],
+                idPersistent: idPersistent,
+                displayTxt: `entity ${idPersistent}`,
+                displayTxtDetails: 'display_txt_details',
                 version: 0,
                 disabled: false
             })
@@ -514,16 +489,23 @@ const columnColumnState = newColumnState({
     ])
 })
 
+const nextOffset = 4452
 function addEntitiesResponse(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                entity_list: [test_entity_rsp_0, test_entity_rsp_1],
-                next_offset: version1 + 1
+                id_entity_persistent_list: [idPersistent0, idPersistent1],
+                next_offset: nextOffset
             }
         ],
-        [200, { entity_list: [], next_offset: 0 }]
+        [
+            200,
+            {
+                id_entity_persistent_list: [],
+                next_offset: nextOffset
+            }
+        ]
     ])
 }
 
