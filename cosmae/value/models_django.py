@@ -9,7 +9,7 @@ from django.db import models
 from django.db.models.aggregates import Max
 
 from cosmae.column.models_django import Column, column_objects
-from cosmae.entity.models_django import Entity
+from cosmae.entity.models_django import Entity, entity_objects
 from cosmae.exception import (
     ColumnDisabledException,
     ColumnMissingException,
@@ -110,11 +110,15 @@ class ValueQuerySet(models.QuerySet):
             id_column_persistent=id_column_persistent,
         ).order_by("id")
 
-    def annotate_entity(self):
+    def annotate_entity(self, up_until_time: datetime | None = None):
         "Annotate values with the most recent entity and value version"
-        entity_sub_query = Entity.objects.filter(  # pylint: disable=no-member
-            id_persistent=models.OuterRef("id_entity_persistent")
-        ).order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+        entity_sub_query = (
+            entity_objects(up_until_time)
+            .filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("id_entity_persistent")
+            )
+            .order_by(models.F("previous_version").desc(nulls_last=True))[:1]
+        )
         return self.annotate(
             entity=models.Subquery(
                 # pylint: disable=duplicate-code
@@ -128,6 +132,16 @@ class ValueQuerySet(models.QuerySet):
                 )
             ),
         )
+
+    def earliest_value(self):
+        "Annotate values with the earliest value for each entity and column"
+        earliest_sub_query = self.filter(  # pylint: disable=no-member
+            id_entity_persistent=models.OuterRef("id_entity_persistent"),
+            id_column_persistent=models.OuterRef("id_column_persistent"),
+        ).order_by("time_edit")[:1]
+        return self.annotate(
+            earliest_id=models.Subquery(earliest_sub_query.values("id")),
+        ).filter(id=models.F("earliest_id"))
 
     def annotate_column(self):
         "Annotate values with the most recent column and value"

@@ -1,6 +1,7 @@
 """API for handling entities."""
 
 from datetime import datetime
+from logging import getLogger
 from typing import List, Optional, Union
 from uuid import uuid4
 
@@ -8,11 +9,13 @@ from django.db import IntegrityError, transaction
 from django.db.models import F, TextField, Value
 from django.db.models.functions import Cast
 from django.http import HttpRequest
-from ninja import Router, Schema
+from ninja import Field, Router, Schema
 
 from cosmae.column.models_api import ColumnResponse
 from cosmae.column.models_conversion import column_db_dict_to_api
 from cosmae.comments.api import Comment
+from cosmae.entity.filter_conversion import filter_to_django_q
+from cosmae.entity.models_api import FilterClause
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.models_django import EntityJustification as EntityJustificationDb
@@ -37,6 +40,7 @@ from cosmae.value.models_conversion import (
 from cosmae.value.models_django import value_objects
 
 router = Router()
+_LOGGER = getLogger(__name__)
 
 
 class Entity(Schema):
@@ -149,6 +153,22 @@ class EntitySearchResultList(Schema):
     # pylint: disable=too-few-public-methods
     """API response for multiple search results"""
     search_result_list: List[EntitySearchResult]
+
+
+class EntityIdList(Schema):
+    # pylint: disable=too-few-public-methods
+    """API Model for multiple entity ids."""
+    id_entity_persistent_list: List[str]
+    next_offset: int
+
+
+class FilterRequest(Schema):
+    # pylint: disable=too-few-public-methods
+    """API Model for filter request."""
+    filter: FilterClause | None = Field(default=None)
+    up_until_time: datetime | None = None
+    offset: int = 0
+    limit: int
 
 
 @router.post(
@@ -286,6 +306,54 @@ def get_values(
         return 404, ApiError(msg="Entity does not exist")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get instances")
+
+
+@router.post(
+    "filter",
+    response={
+        200: EntityIdList,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        500: ApiError,
+    },
+)
+def filter_entities(request: HttpRequest, filter_body: FilterRequest):
+    "Filter entities based on provided filter."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group == CosmaeUser.APPLICANT:
+        return 403, ApiError(msg="Insufficient permissions.")
+    try:
+        django_q = filter_to_django_q(filter_body.filter)
+        entity_id_queryset = (
+            (
+                value_objects(filter_body.up_until_time)
+                .filter(django_q)
+                .values("id_entity_persistent")
+                .distinct()
+            )
+            .annotate_entity(up_until_time=filter_body.up_until_time)
+            .filter(entity__id__gte=filter_body.offset)
+            .filter(entity__isnull=False)
+        ).order_by("entity__id")[: filter_body.limit]
+        entity_id_list = entity_id_queryset.values_list(
+            "id_entity_persistent", flat=True
+        )
+        if len(entity_id_list) > 0:
+            next_offset = (
+                entity_id_queryset[len(entity_id_queryset) - 1]["entity"]["id"] + 1
+            )
+        else:
+            next_offset = -1
+        return 200, EntityIdList(
+            id_entity_persistent_list=entity_id_list, next_offset=next_offset
+        )
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.error("Error filtering entities.", exc_info=exc)
+        return 500, ApiError(msg="Could not filter entities.")
 
 
 @router.get(

@@ -5,7 +5,8 @@ from typing import Iterable, Type
 
 from django.conf import settings
 from django.contrib.postgres.aggregates import JSONBAgg
-from django.db.models import Aggregate, JSONField, Model
+from django.db.models import Aggregate, JSONField, Lookup, Model
+from django.db.models.fields import Field
 from django.db.transaction import atomic
 
 
@@ -48,3 +49,17 @@ def get_json_array_agg() -> Type[Aggregate]:
 def get_db_default_connection_type():
     "Get the type of the default database as string."
     return settings.DATABASES["default"]["ENGINE"].split(".")[-1]
+
+
+@Field.register_lookup
+class Like(Lookup):
+    """Custom Django lookup for SQL LIKE operator."""
+
+    # pylint: disable=abstract-method
+    lookup_name = "like"
+
+    def as_sql(self, compiler, connection):
+        lhs, lhs_params = self.process_lhs(compiler, connection)
+        rhs, rhs_params = self.process_rhs(compiler, connection)
+        params = lhs_params + rhs_params
+        return f"{lhs} LIKE {rhs}", params
