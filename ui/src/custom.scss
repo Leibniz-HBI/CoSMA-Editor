@@ -15,13 +15,17 @@ $navbar-light-active-color: $secondary;
 $navbar-light-hover-color: $secondary;
 $navbar-light-color: $secondary;
 
-/* import bootstrap to set changes */
-@import '../node_modules/bootstrap/scss/bootstrap';
+$component-warning-color: $orange;
+$component-warning-bg: $orange;
 
-$theme-colors: map-merge($theme-colors, (
+
+$theme-colors: (
     'primary': $primary,
     'secondary': $secondary,
     'light': $secondary,
     'danger': $red,
     'warning': $orange
-));
+);
+
+/* import bootstrap to set changes */
+@import '../node_modules/bootstrap/scss/bootstrap';

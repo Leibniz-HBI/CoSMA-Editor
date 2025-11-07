@@ -173,7 +173,7 @@ export function FilterEditor({
                 upUntilDate={upUntilDate}
             />
             <Row>
-                <Col />{' '}
+                <Col />
                 <Col xs="auto">
                     <Button
                         variant="primary"

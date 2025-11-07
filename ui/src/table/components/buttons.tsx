@@ -1,4 +1,4 @@
-import { Button } from 'react-bootstrap'
+import { Badge, Button } from 'react-bootstrap'
 import { AppDispatch } from '../../store'
 import { showEntityAdd, toggleSearch } from '../slice'
 
@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { putEntityMergeRequest } from '../../merge_request/entity/conflicts/thunks'
 import { selectPermissionGroup } from '../../auth/selectors'
 import { UserPermissionGroup } from '../../user/state'
-import { ColumnState, csvLinesFromTable } from '../state'
+import { ColumnState, csvLinesFromTable, FilterClause } from '../state'
 import { Entity } from '../../entity/state'
 import { toggleRowSelection } from '../selection/slice'
 import { selectRowSelectionOrder } from '../selection/selectors'
@@ -116,6 +116,34 @@ export function DownloadButton({
             }
         >
             Download
+        </Button>
+    )
+}
+
+export function FilterButton({
+    onClick,
+    filter
+}: {
+    onClick: () => void
+    filter: FilterClause | undefined
+}) {
+    let content = <span>Filter</span>
+    if (filter !== undefined) {
+        content = (
+            <>
+                Filter
+                <Badge
+                    bg="warning"
+                    className="position-absolute top-0 start-100 translate-middle p-2 rounded-circle z-3000"
+                >
+                    <span className="visually-hidden">Active Filter</span>
+                </Badge>
+            </>
+        )
+    }
+    return (
+        <Button className="position-relative" onClick={onClick}>
+            {content}
         </Button>
     )
 }

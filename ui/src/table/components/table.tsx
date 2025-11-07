@@ -8,13 +8,13 @@ import {
 } from '@glideapps/glide-data-grid'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Col, Row } from 'react-bootstrap'
+import { Col, Row } from 'react-bootstrap'
 import { IBounds, useLayer } from 'react-laag'
 import { ColumnAddButton } from '../../column_menu/components/misc'
 import { HeaderMenu } from '../../header_menu'
 import { loadingCellRenderer } from '../draw'
 import { ChangeOwnershipModal } from '../../column_management/components'
-import { MergeEntitiesButton } from './buttons'
+import { FilterButton, MergeEntitiesButton } from './buttons'
 import { mkGridSelectionCallback } from '../selection/slice'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '../../store'
@@ -156,7 +156,7 @@ export function RemoteDataTable() {
     return (
         <Row className="h-100">
             <Col className="h-100 overflow-hidden d-flex flex-column">
-                <Row className="ms-3 me-3 mb-3 justify-content-between">
+                <Row className="ms-3 me-3 mb-3 justify-content-between mt-2">
                     <Col className="ps-0">
                         <Row className="justify-content-start">
                             <Col xs="auto">
@@ -175,11 +175,10 @@ export function RemoteDataTable() {
                                 />
                             </Col>
                             <Col className="ps-0" xs="auto">
-                                <Button
+                                <FilterButton
                                     onClick={() => dispatch(setShowFilterEditor(true))}
-                                >
-                                    Filter
-                                </Button>
+                                    filter={filter}
+                                />
                             </Col>
                         </Row>
                     </Col>
