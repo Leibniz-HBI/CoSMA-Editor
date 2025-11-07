@@ -1,18 +1,21 @@
 import {
     ChangeEvent,
     createContext,
+    forwardRef,
     ReactElement,
     ReactNode,
     useContext,
     useEffect,
     useReducer,
-    useState
+    useRef,
+    useState,
+    MutableRefObject
 } from 'react'
 import { FormField } from '../../util/form'
 import { useAppDispatch } from '../../hooks'
 import { debounce } from 'debounce'
-import { Col, ListGroup, ProgressBar, Row } from 'react-bootstrap'
-import { ColumnNamePath } from './misc'
+import { Col, ListGroup, Overlay, ProgressBar, Row } from 'react-bootstrap'
+import { ColumnNamePath, ColumnNamePathFromId } from './misc'
 import { useColumn } from '../hooks'
 import { Column } from '../state'
 import { newRemote, RemoteInterface } from '../../util/state'
@@ -102,26 +105,25 @@ export function ColumnSearchProvider({ children }: { children: ReactNode }) {
     )
 }
 
-export function ColumnSearchField({
-    upUntilDate = undefined
-}: {
-    upUntilDate: Date | undefined
-}) {
-    const searchDispatchContext = useContext(ColumnSearchDispatchContext)
-    const [searchTerm, setSearchTerm] = useState('')
-    return (
-        <FormField
-            label="Search"
-            name="Search"
-            handleChange={(e: ChangeEvent<HTMLInputElement>) => {
-                const formValue = e.target.value
-                setSearchTerm(formValue)
-                searchDispatchContext.search(formValue, upUntilDate)
-            }}
-            value={searchTerm}
-        />
-    )
-}
+export const ColumnSearchField = forwardRef(
+    ({ upUntilDate = undefined }: { upUntilDate: Date | undefined }, ref) => {
+        const searchDispatchContext = useContext(ColumnSearchDispatchContext)
+        const [searchTerm, setSearchTerm] = useState('')
+        return (
+            <FormField
+                label="Search"
+                name="Search"
+                handleChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    const formValue = e.target.value
+                    setSearchTerm(formValue)
+                    searchDispatchContext.search(formValue, upUntilDate)
+                }}
+                value={searchTerm}
+                ref={ref}
+            />
+        )
+    }
+)
 
 export function ColumnExplorerSearchResults({
     mkTailElement,
@@ -148,6 +150,99 @@ export function ColumnExplorerSearchResults({
         </ListGroup>
     )
 }
+
+export function ColumnSearch({
+    onSearchResultClicked,
+    upUntilDate = undefined,
+    resultsClassName = ''
+}: {
+    onSearchResultClicked: (idColumnPersistent: string) => void
+    upUntilDate?: Date | undefined
+    resultsClassName?: string
+}) {
+    const target = useRef(null)
+    return (
+        <ColumnSearchProvider>
+            <ColumnSearchField upUntilDate={upUntilDate} ref={target} />
+            <ColumnSearchResults
+                onSearchResultClicked={onSearchResultClicked}
+                resultsClassName={resultsClassName}
+                target={target}
+            />
+        </ColumnSearchProvider>
+    )
+}
+
+export function ColumnSearchResults({
+    onSearchResultClicked,
+    resultsClassName = '',
+    target
+}: {
+    onSearchResultClicked: (idColumnPersistent: string) => void
+    resultsClassName?: string
+    target: MutableRefObject<null>
+}) {
+    const searchResultIdPersistentList = useContext(ColumnSearchContext)
+    return (
+        <Overlay
+            target={target}
+            show={searchResultIdPersistentList.value !== undefined}
+            placement="bottom-start"
+        >
+            {({
+                placement: _placement,
+                arrowProps: _arrowProps,
+                show: _show,
+                popper: _popper,
+                hasDoneInitialMeasure: _hasDoneInitialMeasure,
+                ...props
+            }) => {
+                return (
+                    <Row
+                        className="z-3000"
+                        {...props}
+                        style={{
+                            position: 'relative',
+                            paddingTop: '4px',
+                            paddingLeft: '12px',
+                            ...props.style
+                        }}
+                    >
+                        <div className={resultsClassName}>
+                            <div className="h-100 overflow-y-scroll scroll-gutter">
+                                <ColumnSearchResultList
+                                    onSearchResultClicked={onSearchResultClicked}
+                                />
+                            </div>
+                        </div>
+                    </Row>
+                )
+            }}
+        </Overlay>
+    )
+}
+
+export function ColumnSearchResultList({
+    onSearchResultClicked
+}: {
+    onSearchResultClicked: (idColumnPersistent: string) => void
+}) {
+    const searchResultIdPersistentList = useContext(ColumnSearchContext)
+    let items = [<ListGroup.Item>No columns found</ListGroup.Item>]
+    if (searchResultIdPersistentList.value?.length !== 0) {
+        items = searchResultIdPersistentList.value?.map((idColumnPersistent, idx) => (
+            <ListGroup.Item
+                role="button"
+                key={idx}
+                onClick={() => onSearchResultClicked(idColumnPersistent)}
+            >
+                <ColumnNamePathFromId idColumnPersistent={idColumnPersistent} />
+            </ListGroup.Item>
+        )) ?? [<ListGroup.Item key={-1} />]
+    }
+    return <ListGroup>{items}</ListGroup>
+}
+
 export function ColumnExplorerSearchResultItem({
     idColumnPersistent,
     upUntilTime,
