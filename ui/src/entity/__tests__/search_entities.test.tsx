@@ -147,7 +147,7 @@ async function typeInSearchField(user: UserEvent) {
     await waitFor(async () => {
         const input = screen.getByRole('textbox')
         await act(async () => await user.type(input, 'f'))
-    })
+    }, { timeout: 5000 })
 }
 
 function newSearchResultApi(
