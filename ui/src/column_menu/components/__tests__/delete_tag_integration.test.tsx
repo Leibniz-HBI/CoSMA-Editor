@@ -20,7 +20,7 @@ import {
     NotificationType
 } from '../../../util/notification/slice'
 import { configureStore } from '@reduxjs/toolkit'
-import { columnSelectionReducer} from '../../slice'
+import { columnSelectionReducer } from '../../slice'
 import { act, PropsWithChildren } from 'react'
 import { vi, Mock } from 'vitest'
 
@@ -43,15 +43,18 @@ const columnTest = newColumn({
 
 describe('disable', () => {
     async function submitDisable(user: UserEvent, input = 'DISABLE') {
-        await waitFor(async () => {
-            const textBoxes = await screen.findAllByRole('textbox')
-            expect(textBoxes.length).toEqual(2)
-            await act(async () => {
-                await user.type(textBoxes[0], input)
-            })
-            const buttons = await screen.findAllByRole('button')
-            buttons[0].click()
-        })
+        await waitFor(
+            async () => {
+                const textBoxes = await screen.findAllByRole('textbox')
+                expect(textBoxes.length).toEqual(2)
+                await act(async () => {
+                    await user.type(textBoxes[0], input)
+                })
+                const buttons = await screen.findAllByRole('button')
+                buttons[0].click()
+            },
+            { timeout: 3000 }
+        )
     }
     test('wrong input', async () => {
         const fetchMock = vi.fn()

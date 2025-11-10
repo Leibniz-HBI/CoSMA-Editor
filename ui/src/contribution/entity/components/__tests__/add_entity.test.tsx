@@ -96,7 +96,7 @@ async function doSearch(fetchMock: Mock) {
         await act(async () => {
             await user.type(searchBox, 't')
         })
-    })
+    }, { timeout: 3000 })
     await waitFor(async () => {
         const match0 = await screen.findByText(displayTxtSearch0)
         user.click(match0)

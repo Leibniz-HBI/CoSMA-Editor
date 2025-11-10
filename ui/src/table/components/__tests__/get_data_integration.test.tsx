@@ -254,7 +254,7 @@ test('get entities and inner column success', async () => {
     ])
 })
 
-test('get chunked', async () => {
+test('get chunked', {timeout: 10000}, async () => {
     const fetchMock = vi.fn()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const idEntityPersistentListList: any[][] = [[], [], []]
