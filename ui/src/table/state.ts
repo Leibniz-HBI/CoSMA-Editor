@@ -6,7 +6,8 @@ import { Entity } from '../entity/state'
 import {
     FilterClause as IFilterClause,
     FilterComposite as IFilterComposite,
-    FilterLiteral as IFilterLiteral
+    FilterLiteral as IFilterLiteral,
+    FilterNegation as IFilterNegation
 } from './state'
 
 export enum FilterPredicate {
@@ -27,10 +28,14 @@ export enum FilterOperator {
 
 export interface FilterComposite {
     operator: FilterOperator
-    parts: FilterClause[]
+    clause_list: FilterClause[]
 }
 
-export type FilterClause = FilterLiteral | FilterComposite
+export interface FilterNegation {
+    clause: FilterClause
+}
+
+export type FilterClause = FilterLiteral | FilterComposite | FilterNegation
 
 export function newFilterLiteral(
     idColumnPersistent: string,
@@ -281,5 +286,9 @@ export function isFilterLiteral(clause: IFilterClause): clause is IFilterLiteral
     return (clause as IFilterLiteral).predicate !== undefined
 }
 export function isFilterComposite(clause: IFilterClause): clause is IFilterComposite {
-    return (clause as IFilterComposite).parts !== undefined
+    return (clause as IFilterComposite).clause_list !== undefined
+}
+
+export function isFilterNegation(clause: IFilterClause): clause is IFilterNegation {
+    return (clause as FilterNegation).clause !== undefined
 }

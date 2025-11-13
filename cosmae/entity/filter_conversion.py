@@ -5,7 +5,12 @@ from typing import Union
 
 from django.db.models import Q
 
-from cosmae.entity.models_api import FilterClause, FilterComposite, FilterLiteral
+from cosmae.entity.models_api import (
+    FilterClause,
+    FilterComposite,
+    FilterLiteral,
+    FilterNegation,
+)
 
 _MAPPING_FILTER_PREDICATE_API_TO_DJANGO = {
     "EQ": lambda x, y: Q(id_column_persistent=x, value__like=y),
@@ -33,9 +38,14 @@ def filter_to_django_q(
     while todo_stack:
         current = todo_stack.pop()
         if isinstance(current, str):  # operator
-            parts = done_stack.pop()
+            if current == "NOT":
+                clause = done_stack.pop()
+                negated = ~clause[0]
+                done_stack[-1].append(negated)
+                continue
+            clause_list = done_stack.pop()
             operator = _MAPPING_FILTER_OPERATOR_API_TO_DJANGO[current]
-            combined = reduce(operator, parts)
+            combined = reduce(operator, clause_list)
             done_stack[-1].append(combined)
             continue
         current = current.filter
@@ -51,8 +61,12 @@ def filter_to_django_q(
                     ),
                 )
             )
+        if isinstance(current, FilterNegation):
+            todo_stack.append("NOT")
+            todo_stack.append(current.clause)
+            done_stack.append([])
         elif isinstance(current, FilterComposite):
             done_stack.append([])
             todo_stack.append(current.operator)
-            todo_stack = todo_stack + current.parts
+            todo_stack = todo_stack + current.clause_list
     return done_stack[0][0]

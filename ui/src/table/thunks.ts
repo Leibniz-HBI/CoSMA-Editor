@@ -6,7 +6,8 @@ import {
     FilterClause,
     FilterOperator,
     isFilterComposite,
-    isFilterLiteral
+    isFilterLiteral,
+    isFilterNegation
 } from './state'
 import { Entity } from '../entity/state'
 import { newEntity } from '../entity/state'
@@ -15,8 +16,6 @@ import { addError, addSuccessVanish } from '../util/notification/slice'
 import { parseColumnsFromApi } from '../column_menu/thunks'
 import { JsonValue, ThunkWithFetch } from '../util/type'
 import {
-    FilterComposite,
-    FilterLiteral,
     FilterClause as FilterClauseApi,
     ValueUpdatedResponse
 } from '../openapi/cosmae/types.gen'
@@ -394,7 +393,7 @@ export function parseDisplayTxtDetails(
 }
 
 function filterToApi(filter: FilterClause): FilterClauseApi {
-    const todoStack: (FilterClause | FilterOperator)[] = [filter]
+    const todoStack: (FilterClause | FilterOperator | 'NOT')[] = [filter]
     const doneStack: FilterClauseApi[][] = [[]]
     while (todoStack.length > 0) {
         const current = todoStack.pop()
@@ -403,16 +402,28 @@ function filterToApi(filter: FilterClause): FilterClauseApi {
         }
         if (typeof current === 'string') {
             const parts = doneStack.pop()
-            if (parts === undefined || (current !== 'AND' && current !== 'OR')) {
+            if (
+                parts === undefined ||
+                (current !== 'AND' && current !== 'OR' && current !== 'NOT')
+            ) {
                 throw new Error('Internal error in filter conversion.')
             }
-            doneStack.at(-1)?.push({
-                filter: {
-                    type: 'COMPOSITE',
-                    operator: current,
-                    parts: parts
-                }
-            })
+            if (current === 'NOT') {
+                doneStack.at(-1)?.push({
+                    filter: {
+                        type: 'NEGATION',
+                        clause: parts[0]
+                    }
+                })
+            } else {
+                doneStack.at(-1)?.push({
+                    filter: {
+                        type: 'COMPOSITE',
+                        operator: current,
+                        clause_list: parts
+                    }
+                })
+            }
         } else if (isFilterLiteral(current)) {
             doneStack.at(-1)?.push({
                 filter: {
@@ -424,7 +435,11 @@ function filterToApi(filter: FilterClause): FilterClauseApi {
             })
         } else if (isFilterComposite(current)) {
             todoStack.push(current.operator)
-            todoStack.push(...current.parts)
+            todoStack.push(...current.clause_list)
+            doneStack.push([])
+        } else if (isFilterNegation(current)) {
+            todoStack.push('NOT')
+            todoStack.push(current.clause)
             doneStack.push([])
         }
     }

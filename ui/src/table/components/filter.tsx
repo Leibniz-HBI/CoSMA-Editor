@@ -8,7 +8,9 @@ import {
     newFilterLiteral,
     FilterOperator,
     isFilterLiteral,
-    isFilterComposite
+    isFilterComposite,
+    isFilterNegation,
+    FilterNegation as IFilterNegation
 } from '../state'
 import { ColumnSearch } from '../../column_menu/components/search'
 import { FormField } from '../../util/form'
@@ -21,6 +23,7 @@ interface FilterEditorFunctions {
     literalPredicateChanged: (path: number[], newPredicate: FilterPredicate) => void
     literalColumnChanged: (path: number[], newIdColumnPersistent: string) => void
     expandClause: (path: number[], operator: IFilterOperator) => void
+    negateClause: (path: number[]) => void
     deleteClause: (path: number[]) => void
     setEdit(path: number[] | undefined): void
 }
@@ -29,18 +32,22 @@ const _ACTION_LITERAL_PREDICATE_CHANGED = 'literal_predicate_changed'
 const _ACTION_LITERAL_COLUMN_CHANGED = 'literal_column_changed'
 const _ACTION_EXPAND_CLAUSE = 'expand_clause'
 const _ACTION_DELETE_CLAUSE = 'delete_clause'
+const _ACTION_NEGATE_CLAUSE = 'negate_clause'
 
 export function filterReducer(
     state: IFilterClause,
     action: { type: string; path: number[]; payload?: string }
 ): IFilterClause {
-    const newState = structuredClone(state)
-    let target = newState,
-        targetPredecessor = undefined
+    const newState = structuredClone(state),
+        targetPath: { target: IFilterComposite | IFilterNegation; idx: number }[] = []
+    let target = newState
     for (const idx of action.path) {
         if (isFilterComposite(target)) {
-            targetPredecessor = target
-            target = target.parts[idx]
+            targetPath.push({ target, idx })
+            target = target.clause_list[idx]
+        } else if (isFilterNegation(target)) {
+            target = target.clause
+            targetPath.push({ target: target as IFilterNegation, idx: 0 })
         }
     }
     let newTarget
@@ -73,41 +80,78 @@ export function filterReducer(
             const operator = action.payload as IFilterOperator
             if (isFilterComposite(target)) {
                 if (operator === target.operator) {
-                    target.parts.push(newFilterLiteral('', ''))
+                    target.clause_list.push(newFilterLiteral('', ''))
                     newTarget = target
                     break
                 }
             }
             newTarget = {
                 operator: operator,
-                parts: [target, newFilterLiteral('', '')]
+                clause_list: [target, newFilterLiteral('', '')]
             }
+            break
+        }
+        case _ACTION_NEGATE_CLAUSE: {
+            newTarget = {
+                clause: target
+            } as IFilterNegation
             break
         }
         case _ACTION_DELETE_CLAUSE: {
             break
         }
     }
-    const lastPathIdx = action.path.at(-1) ?? 0
+    let targetPredecessor: IFilterComposite | undefined = undefined
+    let lastPathIdx = 0
     if (newTarget === undefined) {
         // this implies delete
+        for (let i = targetPath.length - 1; i >= 0; i--) {
+            const targetPointer = targetPath[i].target
+            if (isFilterComposite(targetPointer)) {
+                if (i < targetPath.length - 1 || targetPointer.clause_list.length > 1) {
+                    targetPredecessor = targetPath[i].target as IFilterComposite
+                    lastPathIdx = targetPath[i].idx
+                    break
+                }
+            }
+        }
         if (
             targetPredecessor === undefined ||
             (isFilterComposite(targetPredecessor) &&
-                targetPredecessor.parts.length <= 1)
+                targetPredecessor.clause_list.length <= 1)
         ) {
             return newFilterLiteral('', '')
         }
-        targetPredecessor.parts.splice(lastPathIdx, 1)
+        if (isFilterComposite(targetPredecessor)) {
+            targetPredecessor.clause_list.splice(lastPathIdx, 1)
+        }
         return newState
     }
+    for (let i = targetPath.length - 1; i >= 0; i--) {
+        const targetPointer = targetPath[i].target
+        if (isFilterComposite(targetPointer)) {
+            targetPredecessor = targetPath[i].target as IFilterComposite
+            lastPathIdx = targetPath[i].idx
+            break
+        }
+    }
     if (targetPredecessor === undefined) {
-        if (isFilterComposite(newTarget) && newTarget.parts.length == 0) {
+        if (isFilterComposite(newTarget) && newTarget.clause_list.length == 0) {
             return newFilterLiteral('', '')
+        }
+        if (isFilterNegation(newTarget) && isFilterNegation(newTarget.clause)) {
+            newTarget = (newTarget.clause as IFilterNegation).clause
         }
         return newTarget
     } else {
-        targetPredecessor.parts[lastPathIdx] = newTarget
+        if (
+            isFilterNegation(newTarget) &&
+            isFilterNegation(targetPredecessor.clause_list[lastPathIdx])
+        ) {
+            newTarget = (targetPredecessor.clause_list[lastPathIdx] as IFilterNegation)
+                .clause
+        }
+        targetPredecessor.clause_list[lastPathIdx] = newTarget
         return newState
     }
 }
@@ -159,19 +203,27 @@ export function FilterEditor({
         deleteClause: (path: number[]) => {
             dispatch({ type: _ACTION_DELETE_CLAUSE, path })
         },
+        negateClause: (path: number[]) => {
+            dispatch({ type: _ACTION_NEGATE_CLAUSE, path })
+        },
         setEdit: (path: number[] | undefined) => {
             setEditPathPart(path)
         }
     }
     return (
-        <Col>
-            <FilterClause
-                clause={clause}
-                path={[]}
-                editPathPart={editPathPart}
-                functions={functions}
-                upUntilDate={upUntilDate}
-            />
+        <Col className="h-95 d-flex flex-column">
+            <Row className="h-95 mb-4 flex-grow-1 overflow-y-scroll">
+                <Col>
+                    <FilterClause
+                        clause={clause}
+                        path={[]}
+                        editPathPart={editPathPart}
+                        functions={functions}
+                        upUntilDate={upUntilDate}
+                        depth={0}
+                    />
+                </Col>
+            </Row>
             <Row>
                 <Col />
                 <Col xs="auto">
@@ -200,15 +252,21 @@ export function FilterClause({
     path,
     editPathPart,
     functions,
-    upUntilDate
+    upUntilDate,
+    depth
 }: {
     clause: IFilterClause
     path: number[]
     editPathPart: number[] | undefined
     functions: FilterEditorFunctions
     upUntilDate: Date | undefined
+    depth: number
 }) {
     let body
+    let classname = 'border border-black-subtle mt-1 mb-1 bg-secondary-subtle'
+    if (depth % 2 == 1) {
+        classname = 'border border-black-subtle mt-1 mb-1 bg-white'
+    }
     if (isFilterComposite(clause)) {
         body = (
             <FilterComposite
@@ -217,9 +275,10 @@ export function FilterClause({
                 editPathPart={editPathPart}
                 functions={functions}
                 upUntilDate={upUntilDate}
+                depth={depth + 1}
             />
         )
-    } else {
+    } else if (isFilterLiteral(clause)) {
         body = (
             <FilterLiteral
                 literal={clause as IFilterLiteral}
@@ -229,9 +288,20 @@ export function FilterClause({
                 upUntilDate={upUntilDate}
             />
         )
+    } else {
+        body = (
+            <FilterNegation
+                clause={clause as IFilterNegation}
+                path={path}
+                editPathPart={editPathPart}
+                functions={functions}
+                upUntilDate={upUntilDate}
+                depth={depth + 1}
+            />
+        )
     }
     return (
-        <Row className="border border-black-subtle">
+        <Row className={classname}>
             <Col>{body}</Col>
             <Col xs="auto">
                 <div className="w-4em">
@@ -257,6 +327,12 @@ export function FilterClause({
                             >
                                 OR
                             </Dropdown.Item>
+                            <Dropdown.Item
+                                as="button"
+                                onClick={() => functions.negateClause(path)}
+                            >
+                                NOT
+                            </Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Item
                                 as="button"
@@ -279,18 +355,20 @@ export function FilterComposite({
     path,
     editPathPart,
     functions,
-    upUntilDate
+    upUntilDate,
+    depth
 }: {
     composite: IFilterComposite
     path: number[]
     editPathPart: number[] | undefined
     functions: FilterEditorFunctions
     upUntilDate: Date | undefined
+    depth: number
 }) {
     return (
         <Row>
             <Col>
-                {composite.parts.map((part, idx) => (
+                {composite.clause_list.map((part, idx) => (
                     <Row key={idx}>
                         <Col xs="auto">
                             {idx != 0 ? composite.operator.toString() : ''}
@@ -306,10 +384,45 @@ export function FilterComposite({
                                 }
                                 functions={functions}
                                 upUntilDate={upUntilDate}
+                                depth={depth}
                             />
                         </Col>
                     </Row>
                 ))}
+            </Col>
+        </Row>
+    )
+}
+
+export function FilterNegation({
+    clause,
+    path,
+    editPathPart,
+    functions,
+    upUntilDate,
+    depth
+}: {
+    clause: IFilterNegation
+    path: number[]
+    editPathPart: number[] | undefined
+    functions: FilterEditorFunctions
+    upUntilDate: Date | undefined
+    depth: number
+}) {
+    return (
+        <Row>
+            <Col xs="auto">NOT</Col>
+            <Col>
+                <FilterClause
+                    clause={clause.clause}
+                    path={[...path, 0]}
+                    editPathPart={
+                        editPathPart?.at(0) == 0 ? editPathPart?.slice(1) : undefined
+                    }
+                    functions={functions}
+                    upUntilDate={upUntilDate}
+                    depth={depth}
+                />
             </Col>
         </Row>
     )

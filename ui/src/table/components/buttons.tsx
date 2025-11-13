@@ -134,7 +134,7 @@ export function FilterButton({
                 Filter
                 <Badge
                     bg="warning"
-                    className="position-absolute top-0 start-100 translate-middle p-2 rounded-circle z-3000"
+                    className="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
                 >
                     <span className="visually-hidden">Active Filter</span>
                 </Badge>
