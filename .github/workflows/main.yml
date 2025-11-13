@@ -1,4 +1,4 @@
-name: CoSMA-Editor tests
+name: CoSMA-Editor Tests
 
 on:
   pull_request:
