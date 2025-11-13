@@ -282,9 +282,13 @@ export function FilterModal({
             <Modal.Header closeButton={true}>
                 <Modal.Title>Entity Details</Modal.Title>
             </Modal.Header>
-            <Modal.Body className="display-block vh-95">
+            <Modal.Body className="display-block vh-85 overflow-y-hidden">
                 {showFilterModal ? (
-                    <FilterEditor upUntilDate={upUntilTime} onSubmit={setFilter} filter={filter}/>
+                    <FilterEditor
+                        upUntilDate={upUntilTime}
+                        onSubmit={setFilter}
+                        filter={filter}
+                    />
                 ) : (
                     <div />
                 )}

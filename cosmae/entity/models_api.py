@@ -18,11 +18,20 @@ class FilterComposite(Schema):
     # pylint: disable=too-few-public-methods
     """API model for composite filter."""
     operator: Literal["AND", "OR"]
-    parts: List["FilterClause"]
+    clause_list: List["FilterClause"]
     type: Literal["COMPOSITE"] = Field(default="COMPOSITE")
+
+
+class FilterNegation(Schema):
+    # pylint: disable=too-few-public-methods
+    """API model for negation filter."""
+    clause: "FilterClause"
+    type: Literal["NEGATION"] = Field(default="NEGATION")
 
 
 class FilterClause(Schema):
     # pylint: disable=too-few-public-methods
     """API model for discriminating between filter types."""
-    filter: Union[FilterLiteral, FilterComposite] = Field(..., discriminator="type")
+    filter: Union[FilterLiteral, FilterComposite, FilterNegation] = Field(
+        ..., discriminator="type"
+    )

@@ -15,6 +15,7 @@ import {
     FilterPredicate as IFilterPredicate,
     FilterComposite as IFilterComposite,
     FilterOperator as IFilterOperator,
+    FilterNegation as IFilterNegation,
     newFilterLiteral
 } from '../../state'
 import { FilterLiteral, filterReducer } from '../filter'
@@ -84,7 +85,7 @@ describe('reducer actions', () => {
     const literal1 = newFilterLiteral('id1', 'value1')
     const andFilter: IFilterComposite = {
         operator: 'AND' as IFilterOperator,
-        parts: [literal0, literal1]
+        clause_list: [literal0, literal1]
     }
     test('composite operator changed', () => {
         const action = {
@@ -94,7 +95,7 @@ describe('reducer actions', () => {
         }
         const expectedFilter = {
             operator: 'OR',
-            parts: [
+            clause_list: [
                 andFilter,
                 {
                     idColumnPersistent: '',
@@ -109,11 +110,11 @@ describe('reducer actions', () => {
     test('composite operator changed nested', () => {
         const initialFilter: IFilterComposite = {
             operator: 'AND' as IFilterOperator,
-            parts: [
+            clause_list: [
                 literal0,
                 {
                     operator: 'AND' as IFilterOperator,
-                    parts: [literal1]
+                    clause_list: [literal1]
                 }
             ]
         }
@@ -124,14 +125,14 @@ describe('reducer actions', () => {
         }
         const expectedFilter = {
             operator: 'AND',
-            parts: [
+            clause_list: [
                 literal0,
                 {
                     operator: 'AND',
-                    parts: [
+                    clause_list: [
                         {
                             operator: 'AND',
-                            parts: [
+                            clause_list: [
                                 literal1,
                                 {
                                     idColumnPersistent: '',
@@ -156,8 +157,8 @@ describe('reducer actions', () => {
         const newFilter = filterReducer(andFilter, action)
         expect(newFilter).toEqual({
             ...andFilter,
-            parts: [
-                ...andFilter.parts,
+            clause_list: [
+                ...andFilter.clause_list,
                 {
                     idColumnPersistent: '',
                     predicate: IFilterPredicate.EQUALS,
@@ -173,7 +174,7 @@ describe('reducer actions', () => {
         }
         const expectedFilter = {
             operator: 'AND',
-            parts: [literal0]
+            clause_list: [literal0]
         }
         const newFilter = filterReducer(andFilter, action)
         expect(newFilter).toEqual(expectedFilter)
@@ -186,6 +187,83 @@ describe('reducer actions', () => {
         const expectedFilter = newFilterLiteral('', '')
         const newFilter = filterReducer(andFilter, action)
         expect(newFilter).toEqual(expectedFilter)
+    })
+    test('negation', () => {
+        const initialFilter: IFilterLiteral = {
+            idColumnPersistent: 'col1',
+            predicate: IFilterPredicate.EQUALS,
+            value: 'test'
+        }
+        const action = {
+            type: 'negate_clause',
+            path: []
+        }
+        const expectedFilter: IFilterNegation = {
+            clause: initialFilter
+        }
+        const result = filterReducer(initialFilter, action)
+        expect(result).toEqual(expectedFilter)
+    })
+    test('literal double negation', () => {
+        const expectedFilter: IFilterLiteral = {
+            idColumnPersistent: 'col1',
+            predicate: IFilterPredicate.EQUALS,
+            value: 'test'
+        }
+        const action = {
+            type: 'negate_clause',
+            path: []
+        }
+        const initialFilter: IFilterNegation = {
+            clause: expectedFilter
+        }
+        const result = filterReducer(initialFilter, action)
+        expect(result).toEqual(expectedFilter)
+    })
+    test('nested double negation', () => {
+        const literal0 = {
+            idColumnPersistent: 'col0',
+            predicate: IFilterPredicate.EQUALS,
+            value: 'test 0'
+        }
+        const literal1 = {
+            idColumnPersistent: 'col1',
+            predicate: IFilterPredicate.EQUALS,
+            value: 'test 1'
+        }
+        const literal2 = {
+            idColumnPersistent: 'col2',
+            predicate: IFilterPredicate.EQUALS,
+            value: 'test 2'
+        }
+        const initialFilter: IFilterComposite = {
+            operator: IFilterOperator.AND,
+            clause_list: [
+                literal0,
+
+                {
+                    operator: IFilterOperator.OR,
+                    clause_list: [literal1, { clause: literal2 }]
+                }
+            ]
+        }
+        const expectedFilter: IFilterComposite = {
+            operator: IFilterOperator.AND,
+            clause_list: [
+                literal0,
+
+                {
+                    operator: IFilterOperator.OR,
+                    clause_list: [literal1, literal2]
+                }
+            ]
+        }
+        const action = {
+            type: 'negate_clause',
+            path: [1, 1]
+        }
+        const result = filterReducer(initialFilter, action)
+        expect(result).toEqual(expectedFilter)
     })
 })
 describe('literal component', () => {
@@ -200,6 +278,7 @@ describe('literal component', () => {
             literalColumnChanged: vi.fn(),
             literalPredicateChanged: vi.fn(),
             expandClause: vi.fn(),
+            negateClause: vi.fn(),
             deleteClause: vi.fn(),
             setEdit: vi.fn()
         }
@@ -236,6 +315,7 @@ describe('literal component', () => {
             literalPredicateChanged: vi.fn(),
             expandClause: vi.fn(),
             deleteClause: vi.fn(),
+            negateClause: vi.fn(),
             setEdit: vi.fn()
         }
         renderWithProviders(
@@ -267,6 +347,7 @@ describe('literal component', () => {
             literalPredicateChanged: vi.fn(),
             expandClause: vi.fn(),
             deleteClause: vi.fn(),
+            negateClause: vi.fn(),
             setEdit: vi.fn()
         }
         renderWithProviders(
