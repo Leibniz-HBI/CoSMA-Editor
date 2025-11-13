@@ -52,10 +52,12 @@ jobs:
             poetry.lock
       - name: Install dependencies
         run: |
+          export PATH=$PATH:/root/.local/bin
           poetry env use ${{ matrix.python-version }}
           poetry install --no-interaction
       - name: Test with pytest
         run: |
+          export PATH=$PATH:/root/.local/bin
           if [[ ${{ matrix.python-version }} == '3.12' ]]; then
             COSMAE_REDIS_PORT=6312 poetry run pytest -c pytest_ci.ini --cov-report html:coverage-${{ matrix.python-version }}
           fi
