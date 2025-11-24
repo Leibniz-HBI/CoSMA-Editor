@@ -128,11 +128,15 @@ def update_entities(
     EntityHistory.objects.filter(
         id_persistent__in=for_deletion.values("id_persistent")
     ).delete()
-    EntityHistory.objects.filter(
+    id_entity_discarded = EntityHistory.objects.filter(
         id_persistent__in=entities_with_replacement_info.filter(
             replacement_discard=True
         ).values("id_persistent")
+    )
+    ValueHistory.objects.filter(
+        id_entity_persistent__in=id_entity_discarded.values("id_persistent")
     ).delete()
+    id_entity_discarded.delete()
     new_entities = entities_with_replacement_info.filter(
         replacement_id_entity_persistent__isnull=True, replacement_discard__isnull=True
     )
