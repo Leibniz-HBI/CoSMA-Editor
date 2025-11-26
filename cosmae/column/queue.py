@@ -36,7 +36,13 @@ def get_column_name_path_from_parts(
             .values_list("name_path", flat=True)
             .get()
         )
-    except ColumnNamePathCache.DoesNotExist:
+    except ColumnNamePathCache.DoesNotExist as exc:
+        logger.debug(
+            "Column name path cache miss for column id %s at time %s",
+            id_column,
+            up_until_time,
+            exc_info=exc,
+        )
         name_path = [name]
         enqueue(update_column_name_path, id_column)
     return name_path
@@ -71,19 +77,27 @@ def update_column_name_path(
                     parent_name_path = []
                 else:
                     try:
+                        column_parent = history_up_until_column.by_id_persistent(
+                            column.id_parent_persistent
+                        ).get()
+
                         parent_name_path = (
-                            history_up_until_column.by_id_persistent(
-                                column.id_parent_persistent
-                            )
-                            .values("name_path")
+                            ColumnNamePathCache.objects.filter(column=column_parent)
+                            .values_list("name_path", flat=True)
                             .get()
                         )
-                    except ColumnHistory.DoesNotExist:
+                    except ColumnNamePathCache.DoesNotExist:
                         # Parent was not processed yet
                         # On parent change this method will be called
                         # with parent name path.
                         logger.error(
                             "Parent not found for column with id_version %s", column.id
+                        )
+                        enqueue(
+                            update_column_name_path,
+                            column_parent.id,
+                            None,
+                            up_until_time,
                         )
                         return
             name_path = parent_name_path + [column.name]
@@ -97,7 +111,8 @@ def update_column_name_path(
             for child in children:
                 if not child.disabled:
                     enqueue(update_column_name_path, child.id, name_path, up_until_time)
-    except Exception:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.error("Error updating column name path cache", exc_info=exc)
         return
 
 
