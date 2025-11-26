@@ -39,7 +39,7 @@ def eliminate_duplicates(id_contribution_persistent):
                 return
             time_edit = timestamp()
             duplicates = EntityDuplicate.objects.filter(  # pylint: disable=no-member
-                contribution_candidate=contribution
+                contribution_candidate=contribution, discard=False
             )
             values_with_duplicates = annotate_with_replacement_info(
                 Value.objects.all(),  # pylint: disable=no-member
@@ -64,7 +64,7 @@ def eliminate_duplicates(id_contribution_persistent):
             contribution.set_state(ContributionCandidate.MERGED)
             contribution.save()
     except Exception as exc:  # pylint: disable=broad-except
-        logging.warning(None, exc_info=exc)
+        logging.error(None, exc_info=exc)
         with transaction.atomic():
             contribution_candidate = contribution_query.get()
             contribution_candidate.set_state(
@@ -134,7 +134,9 @@ def update_entities(
         ).values("id_persistent")
     )
     ValueHistory.objects.filter(
-        id_entity_persistent__in=id_entity_discarded.values("id_persistent")
+        id_entity_persistent__in=id_entity_discarded.values_list(
+            "id_persistent", flat=True
+        )
     ).delete()
     id_entity_discarded.delete()
     new_entities = entities_with_replacement_info.filter(
