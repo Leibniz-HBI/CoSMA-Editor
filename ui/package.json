@@ -12,7 +12,7 @@
         "@types/react-dom": "^18.2.18",
         "@types/uuid": "^9.0.7",
         "bootstrap": "^5.3.3",
-        "debounce": "^1.2.1",
+        "debounce": "^3.0.0",
         "formik": "^2.4.6",
         "lodash": "^4.17.21",
         "marked": "^4.3.0",
