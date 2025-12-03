@@ -21,6 +21,10 @@ id_justification_1 = "2ee0fee1-7559-4e80-9a17-52be3414cebb"
 justification_1 = "shit poster in chief"
 time_justification_1 = datetime(2022, 11, 16, 12, tzinfo=timezone.utc)
 
+id_justification_2 = "6b7d3604-525d-4c15-8283-6a35624c9826"
+justification_2 = "illiberal bigot"
+time_justification_2 = datetime(2022, 11, 17, 12, tzinfo=timezone.utc)
+
 display_txt_test = "display text test"
 time_edit_test = datetime(2022, 11, 15, tzinfo=timezone.utc)
 id_persistent_test = "id_persistent_test_0"

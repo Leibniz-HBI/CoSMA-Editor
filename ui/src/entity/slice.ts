@@ -47,29 +47,36 @@ const slice = createSlice({
         ) {
             state.entitySearchResults = newRemote(action.payload)
         },
-        getEntityError(state: EntityDetailsState, action: PayloadAction<string>) {
-            const existing = state.entityByIdPersistentMap[action.payload]
-            if (existing !== undefined) {
-                existing.isLoading = false
+        getEntityError(state: EntityDetailsState, action: PayloadAction<string[]>) {
+            for (const idPersistent of action.payload) {
+                const existing = state.entityByIdPersistentMap[idPersistent]
+                if (existing !== undefined) {
+                    existing.isLoading = false
+                }
             }
         },
         getEntityStart(
             state: EntityDetailsState,
             action: PayloadAction<{
-                idEntityPersistent: string
+                idEntityPersistentList: string[]
                 upUntilSinceEpoch: number | undefined
             }>
         ) {
-            const { idEntityPersistent, upUntilSinceEpoch } = action.payload
-            const keyWithDate = mkUpUntilSinceEpochColumnId(
-                idEntityPersistent,
-                upUntilSinceEpoch
-            )
-            const existing = state.entityByIdPersistentMap[keyWithDate]
-            if (existing !== undefined) {
-                existing.isLoading = true
-            } else {
-                state.entityByIdPersistentMap[keyWithDate] = newRemote(undefined, true)
+            const { idEntityPersistentList, upUntilSinceEpoch } = action.payload
+            for (const idEntityPersistent of idEntityPersistentList) {
+                const keyWithDate = mkUpUntilSinceEpochColumnId(
+                    idEntityPersistent,
+                    upUntilSinceEpoch
+                )
+                const existing = state.entityByIdPersistentMap[keyWithDate]
+                if (existing !== undefined) {
+                    existing.isLoading = true
+                } else {
+                    state.entityByIdPersistentMap[keyWithDate] = newRemote(
+                        undefined,
+                        true
+                    )
+                }
             }
         },
         getEntitySuccess(
@@ -80,10 +87,11 @@ const slice = createSlice({
             }>
         ) {
             const { entity, upUntilSinceEpoch } = action.payload
-            const keyWithUpUntilTime = mkUpUntilSinceEpochColumnId(entity.idPersistent, upUntilSinceEpoch)
-            state.entityByIdPersistentMap[
-                keyWithUpUntilTime
-            ] = newRemote(entity)
+            const keyWithUpUntilTime = mkUpUntilSinceEpochColumnId(
+                entity.idPersistent,
+                upUntilSinceEpoch
+            )
+            state.entityByIdPersistentMap[keyWithUpUntilTime] = newRemote(entity)
         },
         submitEntityJustificationStart(state: EntityDetailsState) {
             state.submitJustification.isLoading = true
@@ -125,5 +133,5 @@ export const {
     setShowDetailsForEntityWithIdPersistent,
     submitEntityJustificationStart,
     submitEntityJustificationError,
-    submitEntityJustificationSuccess,
+    submitEntityJustificationSuccess
 } = slice.actions

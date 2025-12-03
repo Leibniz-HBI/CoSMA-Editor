@@ -10,7 +10,7 @@ from ninja import Router, Schema
 from cosmae.column.models_api import ColumnResponse
 from cosmae.column.models_conversion import column_db_to_api
 from cosmae.column.models_django import Column as ColumnDb
-from cosmae.entity.api import Entity, entity_db_dict_to_api
+from cosmae.entity.api import EntityRequest, entity_db_dict_to_api
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
 from cosmae.merge_request.entity.api import (
     REPLACEMENT_STATE_API_TO_DB_MAP,
@@ -44,7 +44,7 @@ class MergeRequest(Schema):
 class MergeRequestConflict(Schema):
     # pylint: disable=too-few-public-methods
     "API model for merge request conflicts."
-    entity: Entity
+    entity: EntityRequest
     value_origin: Value
     value_destination: Value | None = None
     replacement_state: str | None = None

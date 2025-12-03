@@ -16,10 +16,10 @@ import {
     submitColumnStart,
     submitColumnSuccess
 } from './slice'
-import { parsePublicUserInfoFromJson } from '../user/thunks'
+import { parsePublicUserInfoFromJson, parsePublicUserInfoFromOpenApi } from '../user/thunks'
 import { PublicUserInfo } from '../user/state'
 import { curateColumnError, curateColumnStart } from './slice'
-import { cosmaeColumnApiPostGetColumnChildren } from '../openapi/cosmae'
+import { cosmaeColumnApiPostGetColumnChildren, ColumnResponse } from '../openapi/cosmae'
 
 export function loadColumnHierarchy({
     idParentPersistent = undefined,
@@ -349,6 +349,7 @@ export const columnTypeMapApiToApp = new Map<string, ColumnType>([
     ['BOOL', ColumnType.Boolean]
 ])
 
+
 export const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
 
 export function parseColumnsFromApi(
@@ -381,6 +382,36 @@ export function parseColumnsFromApi(
         disabled: columnApi['disabled']
     })
 }
+export function parseColumnsFromOpenApi(
+    columnApi: ColumnResponse,
+    parentNamePath?: string | undefined
+): Column {
+    const columnType = columnTypeMapApiToApp.get(columnApi.type) ?? ColumnType.String
+    let namePath = []
+    if (parentNamePath === undefined) {
+        namePath = columnApi.name_path
+    } else {
+        namePath = [...parentNamePath, columnApi.name_path.at(-1) ?? '???']
+    }
+    let owner: PublicUserInfo | undefined = undefined
+    const ownerJson = columnApi.owner
+    if (ownerJson !== undefined && ownerJson !== null) {
+        owner = parsePublicUserInfoFromOpenApi(ownerJson)
+    }
+    return newColumn({
+        idPersistent: columnApi.id_persistent,
+        idParentPersistent: columnApi.id_parent_persistent ?? undefined,
+        namePath,
+        version: columnApi['version'],
+        curated: columnApi['curated'],
+        columnType: columnType,
+        owner: owner,
+        description: columnApi['description'] ?? undefined,
+        hidden: columnApi['hidden'],
+        disabled: columnApi['disabled']
+    })
+}
+
 export const columnTypeMapAppToApi = new Map<ColumnType, string>([
     [ColumnType.Inner, 'INNER'],
     [ColumnType.String, 'STRING'],

@@ -47,6 +47,10 @@ class VersionedQueryset(models.QuerySet):
         """Return a query for the most recent version of a column."""
         return self.filter(id_persistent=id_persistent)  # pylint: disable=no-member
 
+    def in_id_persistent_list(self, id_persistent_list):
+        "Return a queryset containing all items with an id_persistent in the provided list."
+        return self.filter(id_persistent__in=id_persistent_list)
+
     def up_until(self, date: datetime):
         "Only return items that are edited up until the provided datetime"
         if date is not None and (

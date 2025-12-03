@@ -25,7 +25,7 @@ export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
                 (auxiliaryEntity === undefined ||
                     (auxiliaryEntity.value === undefined && !auxiliaryEntity.isLoading))
             ) {
-                dispatch(getEntityThunk(idPersistent, upUntilTime))
+                dispatch(getEntityThunk([idPersistent], upUntilTime))
             }
         },
         //eslint-disable-next-line react-hooks/exhaustive-deps
@@ -50,7 +50,7 @@ export function useEntityByIdPersistentList(
             ret.push(entity)
         } else {
             ret.push(newRemote(undefined))
-            dispatch(getEntityThunk(idPersistent, upUntilTime))
+            dispatch(getEntityThunk([idPersistent], upUntilTime))
         }
     })
     return ret

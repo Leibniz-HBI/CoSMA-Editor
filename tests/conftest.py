@@ -12,10 +12,6 @@ from pytest_redis import factories
 
 import tests.column.common as c
 import tests.value.common as cv
-from tests.allauth.api.integration.requests import get_config, post_login
-from tests.edit_session import common as cs
-from tests.entity import common as ce
-from tests.user import common as cu
 from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.entity.models_django import EntityHistory, EntityJustification
@@ -25,6 +21,10 @@ from cosmae.util import CosmaeUser
 from cosmae.value.models_django import (
     ValueHistory,
 )
+from tests.allauth.api.integration.requests import get_config, post_login
+from tests.edit_session import common as cs
+from tests.entity import common as ce
+from tests.user import common as cu
 
 
 @pytest.fixture
@@ -94,6 +94,17 @@ def justification1(user1):
         ce.justification_1,
         ce.time_justification_1,
         user1,
+    )[0]
+
+
+@pytest.fixture()
+def justification2(user):
+    return EntityJustification.add(
+        ce.id_justification_2,
+        ce.id_persistent_test_2,
+        ce.justification_2,
+        ce.time_justification_2,
+        user,
     )[0]
 
 

@@ -17,40 +17,58 @@ import {
 } from './slice'
 import { config } from '../config'
 import { parseEntityObjectFromJson } from '../table/thunks'
-import { EntityDetails, EntitySearchResult, newEntitySearchResult } from './state'
+import {
+    Entity,
+    EntityDetails,
+    EntitySearchResult,
+    newEntity,
+    newEntitySearchResult
+} from './state'
 import { parseValueFromJson } from '../contribution/entity/thunks'
 import { parseCommentFromApi } from '../comments/thunks'
 import { Comment } from '../comments/slice'
+import {
+    ColumnResponse,
+    cosmaeEntityApiGetDetails,
+    EntityWithJustification
+} from '../openapi/cosmae'
+import { Column } from '../column_menu/state'
+import { parseColumnsFromOpenApi } from '../column_menu/thunks'
 
 export function getEntityThunk(
-    idEntityPersistent: string,
+    idEntityPersistentList: string[],
     upUntilTime: Date | undefined
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
-        const upUntilSinceEpoch = upUntilTime?.getTime()
-        dispatch(getEntityStart({ idEntityPersistent, upUntilSinceEpoch }))
+    return async (dispatch, _getState, _fetch) => {
+        const upUntilSinceEpoch = upUntilTime?.getTime(),
+            errorList = []
+        dispatch(getEntityStart({ idEntityPersistentList, upUntilSinceEpoch }))
         try {
-            const params: { [key: string]: string } = {
-                id_persistent: idEntityPersistent
-            }
-            if (upUntilTime !== undefined) {
-                params['up_until_time'] = upUntilTime.toISOString()
-            }
-            const queryPath = '/entities?' + new URLSearchParams(params)
-            const rsp = await fetch(config.api_path + queryPath, {
-                credentials: 'include'
+            const rsp = await cosmaeEntityApiGetDetails({
+                body: {
+                    id_entity_persistent_list: idEntityPersistentList,
+                    up_until_time: upUntilTime?.toISOString()
+                }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const entity = parseEntityObjectFromJson(json)
-                dispatch(getEntitySuccess({ entity, upUntilSinceEpoch }))
+            if (rsp.data !== undefined) {
+                for (const idPersistent of idEntityPersistentList) {
+                    const entityApi = rsp.data.entity_map[idPersistent]
+                    if (entityApi !== undefined) {
+                        const entity = parseEntityObjectFromOpenApi(entityApi)
+                        dispatch(getEntitySuccess({ entity, upUntilSinceEpoch }))
+                    } else {
+                        errorList.push(idPersistent)
+                    }
+                }
             } else {
-                dispatch(getEntityError(idEntityPersistent))
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
-            dispatch(getEntityError(idEntityPersistent))
             dispatch(addError(exceptionMessage(e)))
+        }
+        if (errorList.length > 0) {
+            dispatch(addError(`Could not find ${errorList.length} entities. `))
+            dispatch(getEntityError(errorList))
         }
     }
 }
@@ -148,6 +166,31 @@ export function submitEntityJustificationThunk(
         dispatch(submitEntityJustificationError())
         return { comment: undefined, wasAdded: false }
     }
+}
+
+export function parseEntityObjectFromOpenApi(entity: EntityWithJustification): Entity {
+    return newEntity({
+        idPersistent: entity.id_persistent,
+        displayTxt: entity.display_txt,
+        displayTxtDetails: parseDisplayTextDetailsFromOpenApi(
+            entity.display_txt_details
+        ),
+        version: entity.version,
+        disabled: entity.disabled,
+        justificationTxt: entity.justification_txt ?? undefined
+    })
+}
+
+export function parseDisplayTextDetailsFromOpenApi(
+    arg: string | ColumnResponse
+): string | Column | undefined {
+    if (arg === null) {
+        return undefined
+    }
+    if (typeof arg == 'string') {
+        return arg
+    }
+    return parseColumnsFromOpenApi(arg)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

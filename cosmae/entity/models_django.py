@@ -49,10 +49,6 @@ class EntityQueryset(VersionedQueryset):
         "Exclude entities from queryset that belong to a contribution."
         return self.filter(contribution_candidate__isnull=True)
 
-    def by_id_persistent(self, id_persistent: str):
-        "Filter entity by id_persistent"
-        return self.filter(id_persistent=id_persistent)
-
     def annotate_justification(
         self,
         up_until_time: datetime | None = None,

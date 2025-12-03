@@ -21,10 +21,10 @@ import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { PublicUserInfo, SshKey, UserInfo, UserPermissionGroup } from './state'
 import { config } from '../config'
 import { ThunkWithFetch } from '../util/type'
-import { parseColumnsFromApi } from '../column_menu/thunks'
 import { setCurrentEditSession } from '../session/slice'
 import { parseEditSessionFromApi } from '../session/thunks'
 import { handleAllauthResponse } from '../util/api'
+import { PublicUserInfo as PublicUserInfoOpenApi } from '../openapi/cosmae/types.gen'
 
 export function setCurrentEditSessionThunk(
     id_edit_session_persistent: string
@@ -239,6 +239,16 @@ export function parsePublicUserInfoFromJson(
     const idPersistent = userInfoJson['id_persistent']
     const userName = userInfoJson['username']
     const permissionGroup = permissionGroupApiMap[userInfoJson['permission_group']]
+    return { username: userName, idPersistent, permissionGroup }
+}
+
+export function parsePublicUserInfoFromOpenApi(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    publicUserInfo: PublicUserInfoOpenApi
+): PublicUserInfo {
+    const idPersistent = publicUserInfo.id_persistent
+    const userName = publicUserInfo.username
+    const permissionGroup = permissionGroupApiMap[publicUserInfo.permission_group]
     return { username: userName, idPersistent, permissionGroup }
 }
 

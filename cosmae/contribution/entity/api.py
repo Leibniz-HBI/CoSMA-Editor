@@ -17,7 +17,7 @@ from cosmae.contribution.entity.match_entities import (
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.api import (
-    Entity,
+    EntityRequest,
     EntityWithJustificationOffsetList,
     entity_db_dict_to_api,
     entity_db_to_api,
@@ -38,7 +38,7 @@ class ScoredMatch(Schema):
     # pylint: disable=too-few-public-methods
     similarity: float
     id_match_column_persistent_list: List[str]
-    entity: Entity
+    entity: EntityRequest
 
 
 class ScoredMatchesWithDuplicateAssignment(Schema):

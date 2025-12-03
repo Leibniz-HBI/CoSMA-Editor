@@ -2,18 +2,15 @@
  * @vitest-environment jsdom
  */
 
-import { vi, Mock } from 'vitest'
-import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import { EntityDetailsState, newEntity, newEntityDetailsState } from '../state'
-import { newTableState, TableState } from '../../table/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { entityDetailsReducer } from '../slice'
-import { tableReducer } from '../../table/slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { vi } from 'vitest'
+import { screen, waitFor } from '@testing-library/react'
+import { newEntity, newEntityDetailsState } from '../state'
+import { newTableState } from '../../table/state'
 import { useEntity } from '../hooks'
 import { newRemote } from '../../util/state'
 import { mkUpUntilDateColumnId } from '../../util/misc'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
+import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
 
 function TestComponent({
     idEntity,
@@ -30,6 +27,7 @@ test('uses entity from details state', async () => {
     const fetchMock = vi.fn()
     renderWithProviders(<TestComponent idEntity={idEntity} />, fetchMock, {
         preloadedState: {
+            ...emptyState,
             table: newTableState({}),
             entityDetails: newEntityDetailsState({
                 entityByIdPersistentMap: {
@@ -51,12 +49,16 @@ test('loads external entity', async () => {
         [
             200,
             {
-                display_txt: displayTxt,
-                id_persistent: idEntity,
-                disabled: false,
-                version: 0,
-                display_txt_details: null,
-                justification_txt: null
+                entity_map: {
+                    [idEntity]: {
+                        display_txt: displayTxt,
+                        id_persistent: idEntity,
+                        disabled: false,
+                        version: 0,
+                        display_txt_details: null,
+                        justification_txt: null
+                    }
+                }
             }
         ]
     ])
@@ -67,20 +69,24 @@ test('loads external entity', async () => {
     await waitFor(() => {
         screen.getByText(displayTxt)
     })
-    expect(store.getState()).toEqual({
-        table: newTableState({}),
-        entityDetails: newEntityDetailsState({
-            entityByIdPersistentMap: { [idEntity]: newRemote(entity) }
-        })
+    await waitFor(async () => {
+        const state = store.getState()
+        expect(state.entityDetails).toEqual(
+            newEntityDetailsState({
+                entityByIdPersistentMap: { [idEntity]: newRemote(entity) }
+            })
+        )
     })
-    await waitFor(() => {
-        expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/entities?id_persistent=${idEntity}`,
-                { credentials: 'include' }
-            ]
-        ])
-    })
+    await expectFetchCallList(fetchMock.mock.calls, [
+        [
+            'http://127.0.0.1:8000/cosmae/api/entities/details',
+            {
+                credentials: 'include',
+                method: 'POST',
+                body: { id_entity_persistent_list: [idEntity] }
+            }
+        ]
+    ])
 })
 test('loads external entity with date', async () => {
     const fetchMock = vi.fn()
@@ -89,12 +95,16 @@ test('loads external entity with date', async () => {
         [
             200,
             {
-                display_txt: displayTxt,
-                id_persistent: idEntity,
-                disabled: false,
-                version: 0,
-                display_txt_details: null,
-                justification_txt: null
+                entity_map: {
+                    [idEntity]: {
+                        display_txt: displayTxt,
+                        id_persistent: idEntity,
+                        disabled: false,
+                        version: 0,
+                        display_txt_details: null,
+                        justification_txt: null
+                    }
+                }
             }
         ]
     ])
@@ -105,24 +115,29 @@ test('loads external entity with date', async () => {
     await waitFor(() => {
         screen.getByText(displayTxt)
     })
-    expect(store.getState()).toEqual({
-        table: newTableState({}),
-        entityDetails: newEntityDetailsState({
-            entityByIdPersistentMap: {
-                [idEntity + '@' + upUntilTime.getTime().toString()]: newRemote(entity)
+    await waitFor(async () => {
+        expect(store.getState().entityDetails).toEqual(
+            newEntityDetailsState({
+                entityByIdPersistentMap: {
+                    [idEntity + '@' + upUntilTime.getTime().toString()]:
+                        newRemote(entity)
+                }
+            })
+        )
+    })
+    await expectFetchCallList(fetchMock.mock.calls, [
+        [
+            'http://127.0.0.1:8000/cosmae/api/entities/details',
+            {
+                credentials: 'include',
+                method: 'POST',
+                body: {
+                    id_entity_persistent_list: [idEntity],
+                    up_until_time: upUntilTime.toISOString()
+                }
             }
-        })
-    })
-    await waitFor(() => {
-        expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/entities?id_persistent=${idEntity}&up_until_time=${encodeURIComponent(
-                    upUntilTime.toISOString()
-                )}`,
-                { credentials: 'include' }
-            ]
-        ])
-    })
+        ]
+    ])
 })
 
 const idEntity = '15188a39-abbf-4e84-9c1a-900cbca6168d',
@@ -133,52 +148,3 @@ const idEntity = '15188a39-abbf-4e84-9c1a-900cbca6168d',
         version: 0,
         disabled: false
     })
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        table: TableState
-        entityDetails: EntityDetailsState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            entityDetails: newEntityDetailsState({}),
-            table: newTableState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            entityDetails: entityDetailsReducer,
-            table: tableReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(async () => {
-                await new Promise((promise) => setTimeout(promise, 50))
-                return {
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                }
-            }) as Mock
-        )
-    }
-}

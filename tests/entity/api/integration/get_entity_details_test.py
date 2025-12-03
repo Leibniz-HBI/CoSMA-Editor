@@ -1,10 +1,10 @@
-# pylint: disable=missing-module-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements
+# pylint: disable=missing-module-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements,too-many-positional-arguments
 from unittest.mock import MagicMock, patch
 
 import tests.entity.api.integration.requests as req
 import tests.entity.common as ce
-from tests.utils import assert_versioned
 from cosmae.exception import NotAuthenticatedException
+from tests.utils import assert_versioned
 
 
 def test_missing_cookies(auth_server):
@@ -38,7 +38,8 @@ def test_missing_entity(auth_server, values_user):
     "Test getting instances"
     server, cookies = auth_server
     rsp = req.get_entity_details(server.url, ce.id_persistent_test_0, cookies=cookies)
-    assert rsp.status_code == 404
+    assert rsp.status_code == 200
+    assert rsp.json() == {"entity_map": {}}
 
 
 def test_up_until_time(auth_server, entity1, entity1_changed, justification1):
@@ -51,15 +52,17 @@ def test_up_until_time(auth_server, entity1, entity1_changed, justification1):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    entity = rsp.json()
+    entity_map = rsp.json()["entity_map"]
     assert_versioned(
-        entity,
+        entity_map,
         {
-            "id_persistent": ce.id_persistent_test_1,
-            "display_txt": ce.display_txt_test1,
-            "display_txt_details": "Display Text",
-            "disabled": False,
-            "justification_txt": justification1.text,
+            ce.id_persistent_test_1: {
+                "id_persistent": ce.id_persistent_test_1,
+                "display_txt": ce.display_txt_test1,
+                "display_txt_details": "Display Text",
+                "disabled": False,
+                "justification_txt": justification1.text,
+            }
         },
     )
     # make sure most recent is returned, when no date is provided.
@@ -69,32 +72,77 @@ def test_up_until_time(auth_server, entity1, entity1_changed, justification1):
         cookies=cookies,
     )
     assert rsp.status_code == 200
-    entity = rsp.json()
+    entity_map = rsp.json()["entity_map"]
     assert_versioned(
-        entity,
+        entity_map,
         {
-            "id_persistent": ce.id_persistent_test_1,
-            "display_txt": ce.display_txt_test1_changed,
-            "display_txt_details": "Display Text",
-            "disabled": False,
-            "justification_txt": justification1.text,
+            ce.id_persistent_test_1: {
+                "id_persistent": ce.id_persistent_test_1,
+                "display_txt": ce.display_txt_test1_changed,
+                "display_txt_details": "Display Text",
+                "disabled": False,
+                "justification_txt": justification1.text,
+            }
         },
     )
 
 
-def test_get_instances(auth_server, entity0, justification0):
+def test_get_instance(auth_server, entity0, justification0):
     "Test getting entity detail"
     server, cookies = auth_server
     rsp = req.get_entity_details(server.url, ce.id_persistent_test_0, cookies=cookies)
     assert rsp.status_code == 200
-    entity = rsp.json()
+    json = rsp.json()
     assert_versioned(
-        entity,
+        json,
         {
-            "id_persistent": ce.id_persistent_test_0,
-            "display_txt": ce.display_txt_test0,
-            "display_txt_details": "Display Text",
-            "disabled": False,
-            "justification_txt": justification0.text,
+            "entity_map": {
+                ce.id_persistent_test_0: {
+                    "id_persistent": ce.id_persistent_test_0,
+                    "display_txt": ce.display_txt_test0,
+                    "display_txt_details": "Display Text",
+                    "disabled": False,
+                    "justification_txt": justification0.text,
+                }
+            }
+        },
+    )
+
+
+def test_get_multiple(
+    auth_server,
+    entity0,
+    entity1,
+    entity2,
+    justification0,
+    justification1,
+    justification2,
+):
+    "Test getting entity detail"
+    server, cookies = auth_server
+    rsp = req.get_entity_details_list(
+        server.url, [ce.id_persistent_test_0, ce.id_persistent_test_2], cookies=cookies
+    )
+    assert rsp.status_code == 200
+    json = rsp.json()
+    assert_versioned(
+        json,
+        {
+            "entity_map": {
+                ce.id_persistent_test_0: {
+                    "id_persistent": ce.id_persistent_test_0,
+                    "display_txt": ce.display_txt_test0,
+                    "display_txt_details": "Display Text",
+                    "disabled": False,
+                    "justification_txt": justification0.text,
+                },
+                ce.id_persistent_test_2: {
+                    "id_persistent": ce.id_persistent_test_2,
+                    "display_txt": ce.display_txt_test2,
+                    "display_txt_details": "Display Text",
+                    "disabled": False,
+                    "justification_txt": justification2.text,
+                },
+            }
         },
     )

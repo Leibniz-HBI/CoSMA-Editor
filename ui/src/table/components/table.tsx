@@ -364,12 +364,10 @@ export function DataTable({
             dispatch(showHeaderMenu({ columnIdx, bounds })),
         hideHeaderMenuCallback = () => dispatch(hideHeaderMenu()),
         setColumnWidthCallback = (
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            column: GridColumn,
+            _column: GridColumn,
             newSize: number,
             colIndex: number,
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            newSizeWithGrow: number
+            _newSizeWithGrow: number
         ) => dispatch(setColumnWidth({ columnIdx: colIndex, width: newSize })),
         switchColumnsCallback = (startIdx: number, endIdx: number) =>
             dispatch(changeColumnIndex({ startIdx, endIdx })),

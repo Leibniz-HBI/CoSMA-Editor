@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from logging import getLogger
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 from django.db import IntegrityError, transaction
@@ -42,8 +42,10 @@ from cosmae.value.models_django import value_objects
 router = Router()
 _LOGGER = getLogger(__name__)
 
+_CHUNK_LIMIT = 1000
 
-class Entity(Schema):
+
+class EntityRequest(Schema):
     # pylint: disable=too-few-public-methods
     """API model for a natural person."""
 
@@ -54,6 +56,23 @@ class Entity(Schema):
     id_persistent: str | None = None
     disabled: bool | None = None
     display_txt_details: Union[str, ColumnResponse] | None = None
+
+
+class EntityWithJustificationRequest(EntityRequest):
+    "API Model for an entity with justification"
+
+    justification_txt: str | None = None
+
+
+class EntityResponse(Schema):
+    # pylint: disable=too-few-public-methods
+    """API model for a natural person."""
+
+    display_txt: str
+    version: int
+    id_persistent: str
+    disabled: bool
+    display_txt_details: Union[str, ColumnResponse]
 
 
 class JustificationList(Schema):
@@ -82,7 +101,7 @@ class EntityJustificationAddRequest(Schema):
     text: str
 
 
-class EntityWithJustification(Entity):
+class EntityWithJustification(EntityResponse):
     "API Model for an entity with justification"
 
     # pylint: disable=too-few-public-methods
@@ -93,7 +112,16 @@ class EntityList(Schema):
     # pylint: disable=too-few-public-methods
     """API Model for multiple natural entities."""
 
-    entity_list: List[Entity]
+    entity_list: List[EntityRequest]
+
+
+class EntityWithJustificationRequestList(Schema):
+    # pylint: disable=too-few-public-methods
+    """API Model for multiple natural entities
+    with justification for being in the db,
+    used for requests"""
+
+    entity_list: List[EntityWithJustificationRequest]
 
 
 class EntityWithJustificationList(Schema):
@@ -103,6 +131,15 @@ class EntityWithJustificationList(Schema):
     used for responses"""
 
     entity_list: List[EntityWithJustification]
+
+
+class EntityWithJustificationMapping(Schema):
+    # pylint: disable=too-few-public-methods
+    """API Model for multiple natural entities
+    with justification for being in the db,
+    used for responses"""
+
+    entity_map: Dict[str, EntityWithJustification]
 
 
 class EntityWithJustificationOffsetList(EntityWithJustificationList):
@@ -118,11 +155,12 @@ class EntityGetRequest(Schema):
     modified_ids: List[str]
 
 
-class EntityCountResponse(Schema):
+class EntityDetailsPostRequest(Schema):
     # pylint: disable=too-few-public-methods
-    """Response for the count entity request."""
+    """Request body for getting entity details."""
 
-    count: int
+    id_entity_persistent_list: List[str]
+    up_until_time: datetime | None = None
 
 
 class ChunkRequest(Schema):
@@ -137,7 +175,7 @@ class ChunkRequest(Schema):
 class EntityDetailsResponse(Schema):
     # pylint: disable=too-few-public-methods
     """API Response combining an entity with its values."""
-    entity: Entity
+    entity: EntityRequest
     value_list: List[ValuePost]
 
 
@@ -182,7 +220,7 @@ class FilterRequest(Schema):
     },
 )
 def entities_post(
-    request: HttpRequest, entities: EntityWithJustificationList
+    request: HttpRequest, entities: EntityWithJustificationRequestList
 ):  # pylint: disable=too-many-return-statements
     """Add an entity to the DB.
     Returns:
@@ -242,9 +280,8 @@ def entities_chunks_post(
     """Get a chunk of entities.
     Note:
         The entities are ordered by the order of initial creation."""
-    chunk_limit = 1000
-    if req_data.limit > chunk_limit:
-        return 400, ApiError(msg=f"Please specify limit smaller than {chunk_limit}.")
+    if req_data.limit > _CHUNK_LIMIT:
+        return 400, ApiError(msg=f"Please specify limit smaller than {_CHUNK_LIMIT}.")
     user = check_user(request)
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions")
@@ -356,10 +393,10 @@ def filter_entities(request: HttpRequest, filter_body: FilterRequest):
         return 500, ApiError(msg="Could not filter entities.")
 
 
-@router.get(
-    "",
+@router.post(
+    "details",
     response={
-        200: EntityWithJustification,
+        200: EntityWithJustificationMapping,
         400: ApiError,
         401: ApiError,
         403: ApiError,
@@ -367,9 +404,7 @@ def filter_entities(request: HttpRequest, filter_body: FilterRequest):
         500: ApiError,
     },
 )
-def get_details(
-    request: HttpRequest, id_persistent: str, up_until_time: datetime | None = None
-):
+def get_details(request: HttpRequest, body: EntityDetailsPostRequest):
     "Get details for an entity"
     try:
         user = check_user(request)
@@ -377,16 +412,26 @@ def get_details(
         return 401, ApiError(msg="Not authenticated")
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions.")
+    if len(body.id_entity_persistent_list) == 0:
+        return 400, ApiError(msg="No entity id_persistents provided.")
+    if len(body.id_entity_persistent_list) > _CHUNK_LIMIT:
+        return 400, ApiError(
+            msg=f"Please provide less than {_CHUNK_LIMIT} entity id_persistents."
+        )
     try:
-        entity = (
-            entity_objects(up_until_time)
-            .by_id_persistent(id_persistent=id_persistent)
-            .annotate_justification(up_until_time)
-        ).get()
-        return 200, entity_db_to_api(entity, up_until_time=up_until_time)
-    except EntityDb.DoesNotExist:
-        return 404, ApiError(msg="Entity does not exist")
-    except Exception:  # pylint: disable=broad-except
+        entity_queryset = (
+            entity_objects(body.up_until_time)
+            .in_id_persistent_list(id_persistent_list=body.id_entity_persistent_list)
+            .annotate_justification(body.up_until_time)
+        )
+        return 200, EntityWithJustificationMapping(
+            entity_map={
+                entity.id_persistent: entity_db_to_api(entity)
+                for entity in entity_queryset
+            }
+        )
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.error("Error getting entity details.", exc_info=exc)
         return 500, ApiError(msg="Could not get instances")
 
 
@@ -537,7 +582,7 @@ def put_justification(
 
 
 def entity_api_to_db(
-    entity: Entity, time_edit: datetime, requester: CosmaeUser
+    entity: EntityRequest, time_edit: datetime, requester: CosmaeUser
 ) -> EntityDb:
     """Transform an natural entity from API to DB model."""
     version = entity.version
@@ -592,7 +637,9 @@ def entity_api_to_db(
     return entity_db, save_entity, justification
 
 
-def entity_db_to_api(entity: EntityDb, up_until_time: datetime | None = None) -> Entity:
+def entity_db_to_api(
+    entity: EntityDb, up_until_time: datetime | None = None
+) -> EntityRequest:
     """Transform a natural entity from DB to API representation."""
     display_txt = entity.display_txt
     id_persistent = entity.id_persistent
@@ -609,7 +656,7 @@ def entity_db_to_api(entity: EntityDb, up_until_time: datetime | None = None) ->
     )
 
 
-def entity_db_dict_to_api(entity: Optional[dict]) -> Optional[Entity]:
+def entity_db_dict_to_api(entity: Optional[dict]) -> Optional[EntityRequest]:
     "Transform a entity natural db dict to an API representation"
     if entity is None:
         return None
@@ -618,7 +665,7 @@ def entity_db_dict_to_api(entity: Optional[dict]) -> Optional[Entity]:
     display_txt, display_txt_info = get_display_txt_info(id_persistent, display_txt)
     if isinstance(display_txt_info, dict):
         display_txt_info = column_db_dict_to_api(display_txt_info)
-    return Entity(
+    return EntityRequest(
         display_txt=display_txt,
         version=entity["id"],
         id_persistent=id_persistent,

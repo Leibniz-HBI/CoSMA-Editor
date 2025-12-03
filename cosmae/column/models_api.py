@@ -11,7 +11,7 @@ class ColumnResponse(Schema):
     "API model for a column as a response object."
 
     # pylint: disable=too-few-public-methods
-    id_persistent: str | None = None
+    id_persistent: str
     id_parent_persistent: str | None = None
     name: str
     description: str | None = None

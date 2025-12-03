@@ -71,14 +71,20 @@ def get_justification(url, id_entity_persistent, up_until_time=None, cookies=Non
 
 
 def get_entity_details(url, id_entity_persistent, up_until_time=None, cookies=None):
-    url += "/cosmae/api/entities?id_persistent=" + id_entity_persistent
+    return get_entity_details_list(url, [id_entity_persistent], up_until_time, cookies)
+
+
+def get_entity_details_list(
+    url, id_entity_persistent_list, up_until_time=None, cookies=None
+):
+
+    payload = {"id_entity_persistent_list": id_entity_persistent_list}
     if up_until_time is not None:
-        url += "&up_until_time=" + format_datetime_request(up_until_time).replace(
-            "+", "%2b"
-        )
-    return requests.get(
-        url,
+        payload["up_until_time"] = format_datetime_request(up_until_time)
+    return requests.post(
+        url + "/cosmae/api/entities/details",
         cookies=cookies,
+        json=payload,
         timeout=900,
     )
 
