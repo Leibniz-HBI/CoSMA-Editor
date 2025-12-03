@@ -111,7 +111,7 @@ export function getColumnAsync(
     upUntilTime: Date | undefined = undefined,
     columnType: ColumnType | undefined = undefined
 ): ThunkWithFetch<string[]> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         let idPersistentList = [idPersistent]
         if (columnType === ColumnType.Inner) {
             try {
@@ -205,7 +205,7 @@ export function submitValuesAsync(
     columnType: ColumnType,
     edit: Edit
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(submitValuesStart())
         try {
             const rsp = await cosmaeValueApiPostValue({
@@ -285,7 +285,7 @@ export function entityChangeOrCreate({
     justificationTxt?: string
     version?: number
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(entityChangeOrCreateStart())
         try {
             const rsp = await cosmaeEntityApiEntitiesPost({

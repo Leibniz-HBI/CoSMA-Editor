@@ -4,17 +4,17 @@ from unittest.mock import patch
 import pytest
 
 import tests.column.common as cc
-from tests.entity import common as c
 from cosmae.entity import api
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.queue import entity_display_txt_information_cache
 from cosmae.exception import ValidationException
+from tests.entity import common as c
 
 
 @pytest.mark.django_db
 def test_conversion_api_to_db_without_id(user):
-    person_api = api.EntityWithJustification(
+    person_api = api.EntityWithJustificationRequest(
         display_txt=c.display_txt_test,
         version=None,
         justification_txt=c.justification,
@@ -39,7 +39,7 @@ def test_conversion_api_to_db_with_id(user):
         display_txt=c.display_txt_test,
     )
     prev.save()
-    person_api = api.EntityWithJustification(
+    person_api = api.EntityWithJustificationRequest(
         display_txt=c.display_txt_test + " changed",
         version=prev.id,  # pylint: disable=no-member
         id_persistent=c.id_persistent_test,
@@ -54,7 +54,7 @@ def test_conversion_api_to_db_with_id(user):
 
 
 def test_conversion_api_to_db_with_id_no_version(user):
-    person_api = api.Entity(
+    person_api = api.EntityRequest(
         display_txt=c.display_txt_test,
         id_persistent=c.id_persistent_test,
     )
@@ -63,7 +63,7 @@ def test_conversion_api_to_db_with_id_no_version(user):
 
 
 def test_conversion_api_to_db_no_id_with_version(user):
-    person_api = api.Entity(
+    person_api = api.EntityRequest(
         display_txt=c.display_txt_test,
         version=5,  # pylint: disable=no-member
     )

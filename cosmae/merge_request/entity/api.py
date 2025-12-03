@@ -11,7 +11,7 @@ from ninja import Router, Schema
 from cosmae.column.models_django import Column as ColumnDb
 from cosmae.column.models_django import column_objects
 from cosmae.column.queue import get_column_name_path_from_parts
-from cosmae.entity.api import Entity, entity_db_to_api
+from cosmae.entity.api import EntityRequest, entity_db_to_api
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.exception import (
     ApiError,
@@ -60,8 +60,8 @@ class EntityMergeRequest(Schema):
 
     # pylint: disable=too-few-public-methods
     id_persistent: str
-    origin: Entity
-    destination: Entity
+    origin: EntityRequest
+    destination: EntityRequest
     created_by: PublicUserInfo
     state: str
 
