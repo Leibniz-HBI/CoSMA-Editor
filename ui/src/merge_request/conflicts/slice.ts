@@ -105,6 +105,11 @@ const columnMergeRequestConflictsSlice = createSlice({
         },
         toggleDisableOnMergeError: (state: MergeRequestConflictResolutionState) => {
             state.disableOriginOnMerge.isLoading = false
+        },
+        clearMergeRequestConflict: (state: MergeRequestConflictResolutionState) => {
+            state.conflicts = newRemote(undefined)
+            state.disableOriginOnMerge = newRemote(undefined)
+            state.startMerge = newRemote(false)
         }
     }
 })
@@ -141,9 +146,11 @@ function processConflicts(
         }
     }
 }
-export const columnMergeRequestConflictsReducer = columnMergeRequestConflictsSlice.reducer
+export const columnMergeRequestConflictsReducer =
+    columnMergeRequestConflictsSlice.reducer
 
 export const {
+    clearMergeRequestConflict,
     getMergeRequestConflictStart,
     getMergeRequestConflictSuccess,
     getMergeRequestConflictError,

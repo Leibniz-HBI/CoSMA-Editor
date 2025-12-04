@@ -40,9 +40,17 @@ import { CommentHistoryAndForm } from '../../comments/components'
 import { Formik } from 'formik'
 import { debounce } from 'debounce'
 import { FormField } from '../../util/form'
+import { clearMergeRequestConflict } from './slice'
 
 export function MergeRequestConflictView() {
     const idMergeRequestPersistent = useLoaderData() as string
+    const dispatch = useAppDispatch()
+    useEffect(() => {
+        return () => {
+            dispatch(clearMergeRequestConflict())
+        }
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
     return (
         <div className="d-contents">
             <TabView
@@ -83,7 +91,9 @@ export function MergeRequestConflictResolutionView({
     idMergeRequestPersistent: string
 }) {
     const dispatch = useAppDispatch()
-    const conflictsByCategory = useAppSelector(selectColumnMergeRequestConflictsByCategory)
+    const conflictsByCategory = useAppSelector(
+        selectColumnMergeRequestConflictsByCategory
+    )
     const startMergeValue = useAppSelector(selectStartMerge)
     const [resolvedCount, conflictsCount] = useAppSelector(selectResolvedCount)
     const resolveConflictCallback = ({
@@ -113,7 +123,6 @@ export function MergeRequestConflictResolutionView({
             return
         }
         dispatch(getMergeRequestConflicts(idMergeRequestPersistent))
-        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idMergeRequestPersistent])
 
     const conflictsByCategoryValue = conflictsByCategory.value
@@ -139,8 +148,8 @@ export function MergeRequestConflictResolutionView({
                     overlay={
                         <Tooltip id="disable-origin-on-merge-tooltip">
                             <span>
-                                When this toggle is enabled, the origin column,
-                                marked with
+                                When this toggle is enabled, the origin column, marked
+                                with
                             </span>
                             <span> </span>
                             <span>
@@ -148,9 +157,9 @@ export function MergeRequestConflictResolutionView({
                             </span>
                             <span> </span>
                             <span>
-                                will be disabled. I.e., the column will not
-                                appear anymore in the the column explorer but is
-                                still kept in the history.
+                                will be disabled. I.e., the column will not appear
+                                anymore in the the column explorer but is still kept in
+                                the history.
                             </span>
                         </Tooltip>
                     }
@@ -187,7 +196,7 @@ export function MergeRequestConflictResolutionView({
                                 <Accordion.Body>
                                     <ListGroup key="merge-request-conflicts-updated">
                                         {conflictsByCategoryValue.updated.map(
-                                            (conflict, idx) => (
+                                            (conflict) => (
                                                 <MergeRequestConflictItem
                                                     mergeRequest={
                                                         conflictsByCategoryValue.mergeRequest
@@ -196,7 +205,10 @@ export function MergeRequestConflictResolutionView({
                                                     resolveConflictCallback={
                                                         resolveConflictCallback
                                                     }
-                                                    key={`updated-${idx}`}
+                                                    key={
+                                                        conflict.value.valueOrigin
+                                                            .idPersistent
+                                                    }
                                                 />
                                             )
                                         )}
@@ -211,7 +223,7 @@ export function MergeRequestConflictResolutionView({
                             <Accordion.Body>
                                 <ListGroup key="merge-requests-conflicts">
                                     {conflictsByCategoryValue.conflicts.map(
-                                        (conflict, idx) => (
+                                        (conflict) => (
                                             <MergeRequestConflictItem
                                                 mergeRequest={
                                                     conflictsByCategoryValue.mergeRequest
@@ -220,7 +232,7 @@ export function MergeRequestConflictResolutionView({
                                                 resolveConflictCallback={
                                                     resolveConflictCallback
                                                 }
-                                                key={`conflict-${idx}`}
+                                                key={conflict.value.valueOrigin.idPersistent}
                                             />
                                         )
                                     )}
@@ -279,10 +291,8 @@ export function MergeRequestConflictItem({
                                 entity: conflict.value.entity,
                                 valueOrigin: conflict.value.valueOrigin,
                                 columnOrigin: mergeRequest.originColumn,
-                                valueDestination:
-                                    conflict.value.valueDestination,
-                                columnDestination:
-                                    mergeRequest.destinationColumn,
+                                valueDestination: conflict.value.valueDestination,
+                                columnDestination: mergeRequest.destinationColumn,
                                 replacementValue: formValues.replacementValue,
                                 replacementState: formValues.replacementState
                             },

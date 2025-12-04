@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import {vi, Mock }  from 'vitest'
+import { vi, Mock } from 'vitest'
 import {
     RenderOptions,
     render,
@@ -18,7 +18,7 @@ import {
     notificationReducer
 } from '../../../util/notification/slice'
 import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
+import { act, PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
 import { MergeRequestConflictResolutionView } from '../components'
 import { newRemote } from '../../../util/state'
@@ -35,7 +35,6 @@ import {
 import { columnMergeRequestConflictsReducer } from '../slice'
 import { newEntity } from '../../../entity/state'
 import { MergeRequestStep, newMergeRequest } from '../../state'
-import { act } from 'react-dom/test-utils'
 import userEvent from '@testing-library/user-event'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
@@ -47,7 +46,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 
 export function renderWithProviders(
     ui: React.ReactElement,
-    fetchMock: vi.mock,
+    fetchMock: Mock,
     {
         preloadedState = {
             columnMergeRequestConflicts: newMergeRequestConflictResolutionState({}),
@@ -72,7 +71,7 @@ export function renderWithProviders(
     // Return an object with the store and all of RTL's query functions
     return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
-function addResponseSequence(mock: vi.mock, responses: [number, unknown][]) {
+function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
     for (const tpl of responses) {
         const [status_code, rsp] = tpl
         mock.mockImplementationOnce(
@@ -81,7 +80,7 @@ function addResponseSequence(mock: vi.mock, responses: [number, unknown][]) {
                     status: status_code,
                     json: () => Promise.resolve(rsp)
                 })
-            ) as vi.mock
+            ) as Mock
         )
     }
 }
