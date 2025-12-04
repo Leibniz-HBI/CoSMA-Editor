@@ -34,13 +34,13 @@ import {
 import {
     UserPermissionGroup,
     newPublicUserInfo,
-    newUserInfo,
+    newUserInfo
 } from '../../../user/state'
 import {
     displayTextColumn,
     displayTxtColumnId,
     justificationColumn,
-    justificationColumnId,
+    justificationColumnId
 } from '../../state'
 import { waitFor, screen } from '@testing-library/react'
 import { RemoteDataTable } from '../table'
@@ -63,7 +63,11 @@ test('open details', async () => {
     const fetchMock = vi.fn()
     addEntitiesAndInstancesResponse(fetchMock)
     addDetailsResponseSequence(fetchMock)
-    const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, preloadedState)
+    const { store } = renderWithProviders(
+        <RemoteDataTable />,
+        fetchMock,
+        preloadedState
+    )
     const user = userEvent.setup()
     await waitFor(async () => {
         const cell = screen.getByText(displayTxt1)
@@ -254,21 +258,34 @@ const initialState = {
         }
     }),
     entityDetails: newEntityDetailsState({
-        entityByIdPersistentMap: {[idPersistent0]   : newRemote(newEntity({
-            displayTxt: displayTxt0,
-            idPersistent: idPersistent0,
-            version: version0,
-            disabled: false,
-            justificationTxt: justification,
-            displayTxtDetails: 'display_txt_detail'
-            })),[idPersistent1]   : newRemote(newEntity({
-            displayTxt: displayTxt1,
-            idPersistent: idPersistent1,
-            version: version1,
-            disabled: false,
-            justificationTxt: justification1,
-            displayTxtDetails: 'display_txt_detail'
-            }))}
+        entityByIdPersistentMap: {
+            indexMap: {
+                [idPersistent0]: 0,
+                [idPersistent1]: 1
+            },
+            list: [
+                newRemote(
+                    newEntity({
+                        displayTxt: displayTxt0,
+                        idPersistent: idPersistent0,
+                        version: version0,
+                        disabled: false,
+                        justificationTxt: justification,
+                        displayTxtDetails: 'display_txt_detail'
+                    })
+                ),
+                newRemote(
+                    newEntity({
+                        displayTxt: displayTxt1,
+                        idPersistent: idPersistent1,
+                        version: version1,
+                        disabled: false,
+                        justificationTxt: justification1,
+                        displayTxtDetails: 'display_txt_detail'
+                    })
+                )
+            ]
+        }
     }),
     auth: newAuthState({
         user: newRemote(

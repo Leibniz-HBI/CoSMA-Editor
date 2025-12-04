@@ -47,11 +47,21 @@ const slice = createSlice({
         ) {
             state.entitySearchResults = newRemote(action.payload)
         },
-        getEntityError(state: EntityDetailsState, action: PayloadAction<string[]>) {
-            for (const idPersistent of action.payload) {
-                const existing = state.entityByIdPersistentMap[idPersistent]
-                if (existing !== undefined) {
-                    existing.isLoading = false
+        getEntityError(
+            state: EntityDetailsState,
+            action: PayloadAction<{
+                idEntityPersistentList: string[]
+                upUntilSinceEpoch: number | undefined
+            }>
+        ) {
+            for (const idPersistent of action.payload.idEntityPersistentList) {
+                const keyWithDate = mkUpUntilSinceEpochColumnId(
+                    idPersistent,
+                    action.payload.upUntilSinceEpoch
+                )
+                const existingIdx = state.entityByIdPersistentMap.indexMap[keyWithDate]
+                if (existingIdx !== undefined) {
+                    state.entityByIdPersistentMap.list[existingIdx].isLoading = false
                 }
             }
         },
@@ -68,14 +78,13 @@ const slice = createSlice({
                     idEntityPersistent,
                     upUntilSinceEpoch
                 )
-                const existing = state.entityByIdPersistentMap[keyWithDate]
-                if (existing !== undefined) {
-                    existing.isLoading = true
+                const existingIdx = state.entityByIdPersistentMap.indexMap[keyWithDate]
+                if (existingIdx !== undefined) {
+                    state.entityByIdPersistentMap.list[existingIdx].isLoading = true
                 } else {
-                    state.entityByIdPersistentMap[keyWithDate] = newRemote(
-                        undefined,
-                        true
-                    )
+                    state.entityByIdPersistentMap.indexMap[keyWithDate] =
+                        state.entityByIdPersistentMap.list.length
+                    state.entityByIdPersistentMap.list.push(newRemote(undefined, true))
                 }
             }
         },
@@ -91,7 +100,11 @@ const slice = createSlice({
                 entity.idPersistent,
                 upUntilSinceEpoch
             )
-            state.entityByIdPersistentMap[keyWithUpUntilTime] = newRemote(entity)
+            const existingIdx =
+                state.entityByIdPersistentMap.indexMap[keyWithUpUntilTime]
+            if (existingIdx !== undefined) {
+                state.entityByIdPersistentMap.list[existingIdx] = newRemote(entity)
+            }
         },
         submitEntityJustificationStart(state: EntityDetailsState) {
             state.submitJustification.isLoading = true
@@ -104,10 +117,17 @@ const slice = createSlice({
         ) {
             state.submitJustification.isLoading = false
             if (action.payload !== undefined) {
-                const entity =
-                    state.entityByIdPersistentMap[action.payload.idEntityPersistent]
-                if (entity !== undefined && entity.value !== undefined) {
-                    entity.value.justificationTxt = action.payload.comment.content
+                const keyWithUpUntilTime = mkUpUntilSinceEpochColumnId(
+                    action.payload.idEntityPersistent,
+                    undefined
+                )
+                const entityIdx =
+                    state.entityByIdPersistentMap.indexMap[keyWithUpUntilTime]
+                if (entityIdx !== undefined) {
+                    const entity = state.entityByIdPersistentMap.list[entityIdx]
+                    if (entity.value !== undefined) {
+                        entity.value.justificationTxt = action.payload.comment.content
+                    }
                 }
             }
         },

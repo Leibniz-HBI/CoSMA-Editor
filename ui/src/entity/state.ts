@@ -1,6 +1,7 @@
 import { Column } from '../column_menu/state'
 import { Value } from '../contribution/entity/state'
 import { newRemote, RemoteInterface } from '../util/state'
+import { IndexedList } from '../util/type'
 
 export interface BaseEntity {
     idPersistent: string
@@ -78,7 +79,7 @@ export interface EntityDetailsState {
     showEntityDetails: string | undefined
     entityDetails: RemoteInterface<EntityDetails | undefined>
     entitySearchResults: RemoteInterface<EntitySearchResult[] | undefined>
-    entityByIdPersistentMap: { [key: string]: RemoteInterface<Entity | undefined> }
+    entityByIdPersistentMap: IndexedList<RemoteInterface<Entity | undefined>>
     submitJustification: RemoteInterface<boolean | undefined>
 }
 
@@ -86,13 +87,13 @@ export function newEntityDetailsState({
     showEntityDetails = undefined,
     entityDetails = newRemote(undefined),
     entitySearchResults = newRemote(undefined),
-    entityByIdPersistentMap = {},
+    entityByIdPersistentMap = { list: [], indexMap: {} },
     submitJustification = newRemote(undefined)
 }: {
     showEntityDetails?: string | undefined
     entityDetails?: RemoteInterface<EntityDetails | undefined>
     entitySearchResults?: RemoteInterface<EntitySearchResult[] | undefined>
-    entityByIdPersistentMap?: { [key: string]: RemoteInterface<Entity | undefined> }
+    entityByIdPersistentMap?: IndexedList<RemoteInterface<Entity | undefined>>
     submitJustification?: RemoteInterface<boolean | undefined>
 }): EntityDetailsState {
     return {

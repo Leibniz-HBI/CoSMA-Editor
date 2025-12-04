@@ -40,35 +40,50 @@ export function getEntityThunk(
     upUntilTime: Date | undefined
 ): ThunkWithFetch<void> {
     return async (dispatch, _getState, _fetch) => {
-        const upUntilSinceEpoch = upUntilTime?.getTime(),
-            errorList = []
+        const upUntilSinceEpoch = upUntilTime?.getTime()
         dispatch(getEntityStart({ idEntityPersistentList, upUntilSinceEpoch }))
-        try {
-            const rsp = await cosmaeEntityApiGetDetails({
-                body: {
-                    id_entity_persistent_list: idEntityPersistentList,
-                    up_until_time: upUntilTime?.toISOString()
-                }
-            })
-            if (rsp.data !== undefined) {
-                for (const idPersistent of idEntityPersistentList) {
-                    const entityApi = rsp.data.entity_map[idPersistent]
-                    if (entityApi !== undefined) {
-                        const entity = parseEntityObjectFromOpenApi(entityApi)
-                        dispatch(getEntitySuccess({ entity, upUntilSinceEpoch }))
-                    } else {
-                        errorList.push(idPersistent)
+        for (
+            let chunkStartIdx = 0;
+            chunkStartIdx < idEntityPersistentList.length;
+            chunkStartIdx += 1000
+        ) {
+            const errorList = [],
+                idEntityPersistentListSlice = idEntityPersistentList.slice(
+                    chunkStartIdx,
+                    chunkStartIdx + 1000
+                )
+            try {
+                const rsp = await cosmaeEntityApiGetDetails({
+                    body: {
+                        id_entity_persistent_list: idEntityPersistentListSlice,
+                        up_until_time: upUntilTime?.toISOString()
                     }
+                })
+                if (rsp.data !== undefined) {
+                    for (const idPersistent of idEntityPersistentListSlice) {
+                        const entityApi = rsp.data.entity_map[idPersistent]
+                        if (entityApi !== undefined) {
+                            const entity = parseEntityObjectFromOpenApi(entityApi)
+                            dispatch(getEntitySuccess({ entity, upUntilSinceEpoch }))
+                        } else {
+                            errorList.push(idPersistent)
+                        }
+                    }
+                } else {
+                    dispatch(addError(errorMessageFromApi(rsp.error)))
                 }
-            } else {
-                dispatch(addError(errorMessageFromApi(rsp.error)))
+            } catch (e: unknown) {
+                dispatch(addError(exceptionMessage(e)))
             }
-        } catch (e: unknown) {
-            dispatch(addError(exceptionMessage(e)))
-        }
-        if (errorList.length > 0) {
-            dispatch(addError(`Could not find ${errorList.length} entities. `))
-            dispatch(getEntityError(errorList))
+            if (errorList.length > 0) {
+                dispatch(addError(`Could not find ${errorList.length} entities. `))
+                dispatch(
+                    getEntityError({
+                        idEntityPersistentList: errorList,
+                        upUntilSinceEpoch
+                    })
+                )
+            }
         }
     }
 }

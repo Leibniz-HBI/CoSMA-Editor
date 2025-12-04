@@ -57,6 +57,10 @@ import { EntityDetailsState } from '../../../entity/state'
 import { AuthState, newAuthState } from '../../../auth/state'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import {
+    newIndexedListByKey,
+    remoteIdPersistentKey
+} from '../../../util/type'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MockTable(props: any) {
@@ -254,7 +258,7 @@ test('get entities and inner column success', async () => {
     ])
 })
 
-test('get chunked', {timeout: 10000}, async () => {
+test('get chunked', { timeout: 10000 }, async () => {
     const fetchMock = vi.fn()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const idEntityPersistentListList: any[][] = [[], [], []]
@@ -332,19 +336,20 @@ test('get chunked', {timeout: 10000}, async () => {
             }
         ]
     ])
-    const entityByIdPersistentMap: { [idPersistent: string]: RemoteInterface<Entity> } =
-        {}
-    idEntityPersistentListList.flat().forEach((idPersistent: string) => {
-        entityByIdPersistentMap[idPersistent] = newRemote(
-            newEntity({
-                idPersistent: idPersistent,
-                displayTxt: `entity ${idPersistent}`,
-                displayTxtDetails: 'display_txt_details',
-                version: 0,
-                disabled: false
-            })
-        )
-    })
+    const entityByIdPersistentMap = newIndexedListByKey<RemoteInterface<Entity>>(
+        idEntityPersistentListList.flat().map((idPersistent: string) =>
+            newRemote(
+                newEntity({
+                    idPersistent: idPersistent,
+                    displayTxt: `entity ${idPersistent}`,
+                    displayTxtDetails: 'display_txt_details',
+                    version: 0,
+                    disabled: false
+                })
+            )
+        ),
+        remoteIdPersistentKey
+    )
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, {
         preloadedState: {
             ...initialState.preloadedState,
@@ -571,26 +576,32 @@ const initialState = {
         }),
         entityDetails: newEntityDetailsState({
             entityByIdPersistentMap: {
-                [idPersistent0]: newRemote(
-                    newEntity({
-                        displayTxt: displayTxt0,
-                        idPersistent: idPersistent0,
-                        version: version0,
-                        disabled: false,
-                        justificationTxt: justification0,
-                        displayTxtDetails: 'display_txt_detail'
-                    })
-                ),
-                [idPersistent1]: newRemote(
-                    newEntity({
-                        displayTxt: displayTxt1,
-                        idPersistent: idPersistent1,
-                        version: version1,
-                        disabled: false,
-                        justificationTxt: justification1,
-                        displayTxtDetails: 'display_txt_detail'
-                    })
-                )
+                indexMap: {
+                    [idPersistent0]: 0,
+                    [idPersistent1]: 1
+                },
+                list: [
+                    newRemote(
+                        newEntity({
+                            displayTxt: displayTxt0,
+                            idPersistent: idPersistent0,
+                            version: version0,
+                            disabled: false,
+                            justificationTxt: justification0,
+                            displayTxtDetails: 'display_txt_detail'
+                        })
+                    ),
+                    newRemote(
+                        newEntity({
+                            displayTxt: displayTxt1,
+                            idPersistent: idPersistent1,
+                            version: version1,
+                            disabled: false,
+                            justificationTxt: justification1,
+                            displayTxtDetails: 'display_txt_detail'
+                        })
+                    )
+                ]
             }
         }),
         auth: newAuthState({

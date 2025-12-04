@@ -1,5 +1,6 @@
 import { ChangeEvent } from 'react'
 import { AppDispatch, RootState } from '../store'
+import { RemoteInterface } from './state'
 
 export type JsonValue =
     | string
@@ -31,3 +32,24 @@ export type ThunkWithFetch<T> = (
     getState: () => RootState,
     fetch: Fetch
 ) => Promise<T>
+
+export interface IndexedList<U> {
+    list: U[]
+    indexMap: { [id: string]: number }
+}
+
+export function remoteIdPersistentKey<U extends { idPersistent: string }>(
+    item: RemoteInterface<U >
+) {
+    return item.value.idPersistent
+}
+
+export function newIndexedListByKey<U>(
+    list: U[],
+    selector: (item: U) => string
+): IndexedList<U> {
+    return {
+        list,
+        indexMap: Object.fromEntries(list.map((item, idx) => [selector(item), idx]))
+    }
+}

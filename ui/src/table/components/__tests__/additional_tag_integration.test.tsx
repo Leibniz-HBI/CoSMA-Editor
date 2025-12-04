@@ -509,26 +509,32 @@ const initialState = {
         }),
         entityDetails: newEntityDetailsState({
             entityByIdPersistentMap: {
-                [idPersistent0]: newRemote(
-                    newEntity({
-                        displayTxt: displayTxt0,
-                        idPersistent: idPersistent0,
-                        version: version0,
-                        disabled: false,
-                        justificationTxt: justification0,
-                        displayTxtDetails: 'display_txt_detail'
-                    })
-                ),
-                [idPersistent1]: newRemote(
-                    newEntity({
-                        displayTxt: displayTxt1,
-                        idPersistent: idPersistent1,
-                        version: version1,
-                        disabled: false,
-                        justificationTxt: justification1,
-                        displayTxtDetails: 'display_txt_detail'
-                    })
-                )
+                indexMap: {
+                    [idPersistent0]: 0,
+                    [idPersistent1]: 1
+                },
+                list: [
+                    newRemote(
+                        newEntity({
+                            displayTxt: displayTxt0,
+                            idPersistent: idPersistent0,
+                            version: version0,
+                            disabled: false,
+                            justificationTxt: justification0,
+                            displayTxtDetails: 'display_txt_detail'
+                        })
+                    ),
+                    newRemote(
+                        newEntity({
+                            displayTxt: displayTxt1,
+                            idPersistent: idPersistent1,
+                            version: version1,
+                            disabled: false,
+                            justificationTxt: justification1,
+                            displayTxtDetails: 'display_txt_detail'
+                        })
+                    )
+                ]
             }
         }),
         auth: newAuthState({
