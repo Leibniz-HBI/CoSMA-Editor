@@ -40,7 +40,7 @@ export const makeSelectAuxiliaryEntityByIdPersistent = () => {
                 upUntilTime
             )
         ],
-        (state, upUntilKey) => state[upUntilKey]
+        (state, upUntilKey) => state.list.at(state.indexMap[upUntilKey])
     )
     return selector
 }

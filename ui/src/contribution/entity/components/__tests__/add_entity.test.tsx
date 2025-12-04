@@ -91,12 +91,15 @@ async function doSearch(fetchMock: Mock) {
         },
         { timeout: 3000 }
     )
-    await waitFor(async () => {
-        const searchBox = await screen.findByRole('textbox')
-        await act(async () => {
-            await user.type(searchBox, 't')
-        })
-    }, { timeout: 3000 })
+    await waitFor(
+        async () => {
+            const searchBox = await screen.findByRole('textbox')
+            await act(async () => {
+                await user.type(searchBox, 't')
+            })
+        },
+        { timeout: 3000 }
+    )
     await waitFor(async () => {
         const match0 = await screen.findByText(displayTxtSearch0)
         user.click(match0)
@@ -248,24 +251,30 @@ const initialState = {
     }),
     entityDetails: newEntityDetailsState({
         entityByIdPersistentMap: {
-            [idEntitySearch0]: newRemote(
-                newEntity({
-                    displayTxt: displayTxtSearch0,
-                    idPersistent: idEntitySearch0,
-                    displayTxtDetails: 'Display Text',
-                    disabled: false,
-                    version: 70
-                })
-            ),
-            [idEntitySearch1 + '@']: newRemote(
-                newEntity({
-                    displayTxt: displayTxtSearch1,
-                    idPersistent: idEntitySearch1,
-                    displayTxtDetails: 'Display Text',
-                    disabled: false,
-                    version: 71
-                })
-            )
+            indexMap: {
+                [idEntitySearch0]: 0,
+                [idEntitySearch1]: 1
+            },
+            list: [
+                newRemote(
+                    newEntity({
+                        displayTxt: displayTxtSearch0,
+                        idPersistent: idEntitySearch0,
+                        displayTxtDetails: 'Display Text',
+                        disabled: false,
+                        version: 70
+                    })
+                ),
+                newRemote(
+                    newEntity({
+                        displayTxt: displayTxtSearch1,
+                        idPersistent: idEntitySearch1,
+                        displayTxtDetails: 'Display Text',
+                        disabled: false,
+                        version: 71
+                    })
+                )
+            ]
         }
     })
 }

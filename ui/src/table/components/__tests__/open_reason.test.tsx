@@ -143,9 +143,10 @@ test('add justification', async () => {
     })
     const state = store.getState()
     expect(state.notification.notificationList).toEqual([])
+    const entityByIdPersistentMap = state.entityDetails.entityByIdPersistentMap
     expect(
-        state.entityDetails.entityByIdPersistentMap[idPersistent0].value
-            ?.justificationTxt
+        entityByIdPersistentMap.list[entityByIdPersistentMap.indexMap[idPersistent0]]
+            .value?.justificationTxt
     ).toEqual(justificationChanged)
     await expectFetchCallList(fetchMock.mock.calls, [
         [
@@ -230,8 +231,9 @@ test('add justification found', async () => {
             newRemote(idPersistent0)
         )
         expect(
-            state.entityDetails.entityByIdPersistentMap[idPersistent0].value
-                ?.justificationTxt
+            state.entityDetails.entityByIdPersistentMap.list[
+                state.entityDetails.entityByIdPersistentMap.indexMap[idPersistent0]
+            ].value?.justificationTxt
         ).toEqual(justification)
     })
     expect(fetchMock.mock.calls.length).toEqual(5)
@@ -419,26 +421,32 @@ const initialState = {
     }),
     entityDetails: newEntityDetailsState({
         entityByIdPersistentMap: {
-            [idPersistent0]: newRemote(
-                newEntity({
-                    displayTxt: displayTxt0,
-                    idPersistent: idPersistent0,
-                    version: version0,
-                    disabled: false,
-                    justificationTxt: justification,
-                    displayTxtDetails: 'display_txt_detail'
-                })
-            ),
-            [idPersistent1]: newRemote(
-                newEntity({
-                    displayTxt: displayTxt1,
-                    idPersistent: idPersistent1,
-                    version: version1,
-                    disabled: false,
-                    justificationTxt: justification1,
-                    displayTxtDetails: 'display_txt_detail'
-                })
-            )
+            indexMap: {
+                [idPersistent0]: 0,
+                [idPersistent1]: 1
+            },
+            list: [
+                newRemote(
+                    newEntity({
+                        displayTxt: displayTxt0,
+                        idPersistent: idPersistent0,
+                        version: version0,
+                        disabled: false,
+                        justificationTxt: justification,
+                        displayTxtDetails: 'display_txt_detail'
+                    })
+                ),
+                newRemote(
+                    newEntity({
+                        displayTxt: displayTxt1,
+                        idPersistent: idPersistent1,
+                        version: version1,
+                        disabled: false,
+                        justificationTxt: justification1,
+                        displayTxtDetails: 'display_txt_detail'
+                    })
+                )
+            ]
         }
     }),
     auth: newAuthState({

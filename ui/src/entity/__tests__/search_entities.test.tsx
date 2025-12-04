@@ -3,7 +3,7 @@
  */
 
 import { vi, Mock } from 'vitest'
-import { render, RenderOptions, screen, waitFor} from '@testing-library/react'
+import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
 import {
     EntityDetailsState,
     newEntity,
@@ -23,7 +23,7 @@ import {
     ColumnType
 } from '../../column_menu/state'
 import { newRemote } from '../../util/state'
-import { columnSelectionReducer} from '../../column_menu/slice'
+import { columnSelectionReducer } from '../../column_menu/slice'
 import { newTableState, TableState } from '../../table/state'
 import { tableReducer } from '../../table/slice'
 
@@ -42,8 +42,16 @@ test('search and click result', async () => {
             200,
             {
                 search_result_list: [
-                    newSearchResultApi(resultMatchValue00, resultIdColumn00, resultId00),
-                    newSearchResultApi(resultMatchValue01, resultIdColumn01, resultId01),
+                    newSearchResultApi(
+                        resultMatchValue00,
+                        resultIdColumn00,
+                        resultId00
+                    ),
+                    newSearchResultApi(
+                        resultMatchValue01,
+                        resultIdColumn01,
+                        resultId01
+                    ),
                     newSearchResultApi(resultMatchValue02, resultIdColumn02, resultId02)
                 ]
             }
@@ -52,7 +60,11 @@ test('search and click result', async () => {
             200,
             {
                 search_result_list: [
-                    newSearchResultApi(resultMatchValue10, resultIdColumn10, resultId10),
+                    newSearchResultApi(
+                        resultMatchValue10,
+                        resultIdColumn10,
+                        resultId10
+                    ),
                     newSearchResultApi(resultMatchValue11, resultIdColumn11, resultId11)
                 ]
             }
@@ -99,8 +111,14 @@ test('search and click result', async () => {
         expect(clickMock.mock.calls).toEqual([[resultId11]])
     })
     expect(fetchMock.mock.calls).toEqual([
-        ['http://127.0.0.1:8000/cosmae/api/entities/search?term=f', { credentials: 'include' }],
-        ['http://127.0.0.1:8000/cosmae/api/entities/search?term=ff', { credentials: 'include' }]
+        [
+            'http://127.0.0.1:8000/cosmae/api/entities/search?term=f',
+            { credentials: 'include' }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/entities/search?term=ff',
+            { credentials: 'include' }
+        ]
     ])
     expect(store.getState().entityDetails.entitySearchResults).toEqual(
         newRemote(undefined)
@@ -144,10 +162,13 @@ const columnCommon = {
 }
 
 async function typeInSearchField(user: UserEvent) {
-    await waitFor(async () => {
-        const input = screen.getByRole('textbox')
-        await act(async () => await user.type(input, 'f'))
-    }, { timeout: 5000 })
+    await waitFor(
+        async () => {
+            const input = screen.getByRole('textbox')
+            await act(async () => await user.type(input, 'f'))
+        },
+        { timeout: 5000 }
+    )
 }
 
 function newSearchResultApi(
@@ -169,46 +190,55 @@ export function renderWithProviders(
         preloadedState = {
             entityDetails: newEntityDetailsState({
                 entityByIdPersistentMap: {
-                    [resultId00]: newRemote(
-                        newEntity({
-                            idPersistent: resultId00,
-                            displayTxt: displayTxt00,
-                            version: 100,
-                            disabled: false
-                        })
-                    ),
-                    [resultId01]: newRemote(
-                        newEntity({
-                            idPersistent: resultId01,
-                            displayTxt: displayTxt01,
-                            version: 101,
-                            disabled: false
-                        })
-                    ),
-                    [resultId02]: newRemote(
-                        newEntity({
-                            idPersistent: resultId02,
-                            displayTxt: displayTxt02,
-                            version: 102,
-                            disabled: false
-                        })
-                    ),
-                    [resultId10]: newRemote(
-                        newEntity({
-                            idPersistent: resultId10,
-                            displayTxt: displayTxt10,
-                            version: 10,
-                            disabled: false
-                        })
-                    ),
-                    [resultId11]: newRemote(
-                        newEntity({
-                            idPersistent: resultId11,
-                            displayTxt: displayTxt11,
-                            version: 111,
-                            disabled: false
-                        })
-                    )
+                    indexMap: {
+                        [resultId00]: 0,
+                        [resultId01]: 1,
+                        [resultId02]: 2,
+                        [resultId10]: 3,
+                        [resultId11]: 4
+                    },
+                    list: [
+                        newRemote(
+                            newEntity({
+                                idPersistent: resultId00,
+                                displayTxt: displayTxt00,
+                                version: 100,
+                                disabled: false
+                            })
+                        ),
+                        newRemote(
+                            newEntity({
+                                idPersistent: resultId01,
+                                displayTxt: displayTxt01,
+                                version: 101,
+                                disabled: false
+                            })
+                        ),
+                        newRemote(
+                            newEntity({
+                                idPersistent: resultId02,
+                                displayTxt: displayTxt02,
+                                version: 102,
+                                disabled: false
+                            })
+                        ),
+                        newRemote(
+                            newEntity({
+                                idPersistent: resultId10,
+                                displayTxt: displayTxt10,
+                                version: 10,
+                                disabled: false
+                            })
+                        ),
+                        newRemote(
+                            newEntity({
+                                idPersistent: resultId11,
+                                displayTxt: displayTxt11,
+                                version: 111,
+                                disabled: false
+                            })
+                        )
+                    ]
                 }
             }),
             columnSelection: newColumnSelectionState({

@@ -31,7 +31,8 @@ test('uses entity from details state', async () => {
             table: newTableState({}),
             entityDetails: newEntityDetailsState({
                 entityByIdPersistentMap: {
-                    [mkUpUntilDateColumnId(idEntity, undefined)]: newRemote(entity)
+                    indexMap: { [mkUpUntilDateColumnId(idEntity, undefined)]: 0 },
+                    list: [newRemote(entity)]
                 }
             })
         }
@@ -73,7 +74,10 @@ test('loads external entity', async () => {
         const state = store.getState()
         expect(state.entityDetails).toEqual(
             newEntityDetailsState({
-                entityByIdPersistentMap: { [idEntity]: newRemote(entity) }
+                entityByIdPersistentMap: {
+                    indexMap: { [idEntity]: 0 },
+                    list: [newRemote(entity)]
+                }
             })
         )
     })
@@ -119,8 +123,10 @@ test('loads external entity with date', async () => {
         expect(store.getState().entityDetails).toEqual(
             newEntityDetailsState({
                 entityByIdPersistentMap: {
-                    [idEntity + '@' + upUntilTime.getTime().toString()]:
-                        newRemote(entity)
+                    indexMap: {
+                        [idEntity + '@' + upUntilTime.getTime().toString()]: 0
+                    },
+                    list: [newRemote(entity)]
                 }
             })
         )

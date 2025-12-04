@@ -7,7 +7,7 @@ import {
 } from './selectors'
 import { RootState } from '../store'
 import { getEntityThunk } from './thunks'
-import { mkUpUntilDateColumnId} from '../util/misc'
+import { mkUpUntilDateColumnId } from '../util/misc'
 import { Entity } from './state'
 
 export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
@@ -22,8 +22,8 @@ export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
     useEffect(
         () => {
             if (
-                (auxiliaryEntity === undefined ||
-                    (auxiliaryEntity.value === undefined && !auxiliaryEntity.isLoading))
+                auxiliaryEntity === undefined ||
+                (auxiliaryEntity.value === undefined && !auxiliaryEntity.isLoading)
             ) {
                 dispatch(getEntityThunk([idPersistent], upUntilTime))
             }
@@ -31,9 +31,7 @@ export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
         //eslint-disable-next-line react-hooks/exhaustive-deps
         [idPersistent]
     )
-    return auxiliaryEntity
-        ? auxiliaryEntity
-        : newRemote(undefined)
+    return auxiliaryEntity ? auxiliaryEntity : newRemote(undefined)
 }
 
 export function useEntityByIdPersistentList(
@@ -42,16 +40,18 @@ export function useEntityByIdPersistentList(
 ) {
     const dispatch = useAppDispatch()
     const entitiesCache = useAppSelector(selectEntityByIdPersistentMap)
-    const ret: RemoteInterface<Entity | undefined>[] = []
+    const ret: RemoteInterface<Entity | undefined>[] = [],
+        toLoad: string[] = []
     idPersistentList.forEach((idPersistent) => {
         const key = mkUpUntilDateColumnId(idPersistent, upUntilTime)
-        const entity = entitiesCache[key]
+        const entity = entitiesCache.list.at(entitiesCache.indexMap[key])
         if (entity !== undefined) {
             ret.push(entity)
         } else {
             ret.push(newRemote(undefined))
-            dispatch(getEntityThunk([idPersistent], upUntilTime))
+            toLoad.push(idPersistent)
         }
     })
+    dispatch(getEntityThunk(toLoad, upUntilTime))
     return ret
 }
