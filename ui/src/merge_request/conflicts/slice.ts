@@ -62,9 +62,19 @@ const columnMergeRequestConflictsSlice = createSlice({
                 state,
                 (conflict) => {
                     conflict.isLoading = false
-                    conflict.value.replacementState = action.payload.replacementState
-                    conflict.value.replacementValue = action.payload.replacementValue
-                    return true
+                    const replacementState = action.payload.replacementState
+                    const replacementValue = action.payload.replacementValue
+                    conflict.value.replacementState = replacementState
+                    conflict.value.replacementValue = replacementValue
+                    return (
+                        replacementState === ReplacementState.KEEP ||
+                        replacementState === ReplacementState.REPLACE ||
+                        (replacementState === ReplacementState.VALUE &&
+                            !(
+                                replacementValue === undefined ||
+                                replacementValue === ''
+                            ))
+                    )
                 },
                 action.payload.idEntityPersistent
             )
