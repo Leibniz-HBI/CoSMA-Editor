@@ -366,24 +366,14 @@ def filter_entities(request: HttpRequest, filter_body: FilterRequest):
         return 403, ApiError(msg="Insufficient permissions.")
     try:
         django_q = filter_to_django_q(filter_body.filter)
-        entity_id_queryset = (
-            (
-                value_objects(filter_body.up_until_time)
-                .filter(django_q)
-                .values("id_entity_persistent")
-                .distinct()
-            )
-            .annotate_entity(up_until_time=filter_body.up_until_time)
-            .filter(entity__id__gte=filter_body.offset)
-            .filter(entity__isnull=False)
-        ).order_by("entity__id")[: filter_body.limit]
-        entity_id_list = entity_id_queryset.values_list(
-            "id_entity_persistent", flat=True
-        )
+        entity_queryset = (
+            entity_objects(filter_body.up_until_time)
+            .from_offset(filter_body.offset)
+            .filter_by_values(value_objects(filter_body.up_until_time), django_q)
+        ).order_by("id")[: filter_body.limit]
+        entity_id_list = entity_queryset.values_list("id_persistent", flat=True)
         if len(entity_id_list) > 0:
-            next_offset = (
-                entity_id_queryset[len(entity_id_queryset) - 1]["entity"]["id"] + 1
-            )
+            next_offset = entity_queryset[len(entity_queryset) - 1].id + 1
         else:
             next_offset = -1
         return 200, EntityIdList(
