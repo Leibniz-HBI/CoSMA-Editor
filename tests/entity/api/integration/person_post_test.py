@@ -4,8 +4,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.db import IntegrityError
 
+from cosmae.entity.models_django import Entity
+from cosmae.justification.models_django import EntityJustification
 from tests.entity.api.integration.requests import post_person, post_persons
-from cosmae.entity.models_django import Entity, EntityJustification
 
 test_display_txt_0 = "test display text 0"
 test_id_persistent_0 = "test_id_0"

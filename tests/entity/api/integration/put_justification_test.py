@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 import tests.entity.api.integration.requests as req
 import tests.entity.common as c
 import tests.user.common as cu
-from cosmae.entity.models_django import EntityJustification
 from cosmae.exception import NotAuthenticatedException
+from cosmae.justification.models_django import EntityJustification
 
 justification_txt = "justification for test"
 

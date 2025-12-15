@@ -2,13 +2,14 @@
 
 from django.db import models
 
-from tests.merge_request.entity import common as c
 from cosmae.column.models_django import Column
-from cosmae.entity.models_django import Entity, EntityJustification
+from cosmae.entity.models_django import Entity
+from cosmae.justification.models_django import EntityJustification
 from cosmae.merge_request.entity.models_django import EntityMergeRequest
 from cosmae.merge_request.entity.queue import apply_entity_merge_request
 from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.value.models_django import Value
+from tests.merge_request.entity import common as c
 
 
 def test_creates_column_merge_requests(conflict_resolution_replace):

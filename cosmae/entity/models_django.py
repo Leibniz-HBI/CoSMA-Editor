@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
-from uuid import uuid4
 
-from django.contrib.postgres.indexes import GistIndex
 from django.db import models
 from django.db.models.aggregates import Max
 
+from cosmae.entity.queryset import EntityQueryset
 from cosmae.util import CosmaeUser
-from cosmae.versioned.models_django import HistoryMixin, Versioned, VersionedQueryset
+from cosmae.versioned.models_django import HistoryMixin, Versioned
 
 
 class EntityAbstract(Versioned):
@@ -29,43 +28,6 @@ class EntityAbstract(Versioned):
         "Meta class for abstract entity django model"
 
         abstract = True
-
-
-class EntityQueryset(VersionedQueryset):
-    "Custom queryset for recent entities"
-
-    def search(self, search_term: str):
-        "search for entities by display text."
-        query = models.Q()
-        for term in search_term.split():
-            query = query & models.Q(display_txt__icontains=term)
-        return self.filter(query)
-
-    def chunk(self, offset: int, limit=int):
-        "Get a portion of entities"
-        return self.filter(id__gte=offset).order_by("id")[:limit]
-
-    def exclude_contributed(self):
-        "Exclude entities from queryset that belong to a contribution."
-        return self.filter(contribution_candidate__isnull=True)
-
-    def annotate_justification(
-        self,
-        up_until_time: datetime | None = None,
-    ):
-        "Annotate the most recent justification for being in the db to a query set of entities."
-        inner_query = models.Q(id_entity_persistent=models.OuterRef("id_persistent"))
-        if up_until_time is not None:
-            inner_query &= models.Q(timestamp__lte=up_until_time)
-        return self.annotate(
-            justification_txt=models.Subquery(
-                EntityJustification.objects.filter(
-                    inner_query
-                )  # pylint: disable=no-member
-                .order_by(models.F("timestamp").desc())[:1]
-                .values("text")
-            )
-        )
 
 
 class Entity(EntityAbstract):
@@ -87,113 +49,6 @@ class Entity(EntityAbstract):
     def has_write_access(self, _user: CosmaeUser):
         "Check wether a user can change the entity."
         return True
-
-
-class EntityJustification(models.Model):
-    """Django ORM model for justifications why an entity exists in the database."""
-
-    id_entity_persistent = models.CharField(max_length=36)
-    text = models.TextField()
-    timestamp = models.DateTimeField()
-    id_persistent = models.CharField(max_length=36, primary_key=True)
-    author = models.ForeignKey(
-        "cosmae.CosmaeUser", null=True, blank=True, on_delete=models.SET_NULL
-    )
-
-    class Meta:
-        "Meta class for entity model"
-
-        # pylint: disable=too-few-public-methods
-        indexes = [
-            # Possible alternative gin index with `opclasses=["gin_trgrm_ops"],
-            # Would mean faster retrieval but increased size and update time.
-            # Needs to add extension via migration.
-            GistIndex(
-                fields=["text"],
-            ),
-        ]
-
-    class EmptyJustificationException(Exception):
-        "Indicates the attempt of adding a justification with no text"
-
-    class NoJustificationException(Exception):
-        "Indicates that there is no justification stored."
-
-    @classmethod
-    def for_id_entity_persistent_unordered(
-        cls, id_entity_persistent, until_time: datetime | None = None
-    ):
-        "Get all justifications for an entity unordered"
-        query = models.Q(id_entity_persistent=id_entity_persistent)
-        if until_time is not None:
-            query &= models.Q(timestamp__lte=until_time)
-        return cls.objects.filter(query)  # pylint: disable=no-member
-
-    @classmethod
-    def for_id_entity_persistent_asc(
-        cls, id_entity_persistent, up_until_time: datetime | None = None
-    ):
-        "Get all justifications for an entity ordered ascending by date."
-        return cls.for_id_entity_persistent_unordered(
-            id_entity_persistent, up_until_time
-        ).order_by(models.F("timestamp").asc())
-
-    @classmethod
-    def for_id_entity_persistent_desc(cls, id_entity_persistent):
-        "Get all justifications for an entity ordered descending by date."
-        return cls.for_id_entity_persistent_unordered(id_entity_persistent).order_by(
-            models.F("timestamp").desc()
-        )
-
-    @classmethod
-    def add(
-        cls,
-        id_persistent: str,
-        id_entity_persistent: str,
-        text: Optional[str],
-        timestamp: datetime,
-        author: CosmaeUser,
-    ):
-        # pylint: disable=too-many-arguments,too-many-positional-arguments
-        "Add a new entity justification."
-        if text is None or text.strip() == "":
-            raise cls.EmptyJustificationException()
-        existing_queryset = cls.objects.filter(  # pylint: disable=no-member
-            id_entity_persistent=id_entity_persistent, text__search=text
-        )
-        if len(existing_queryset) > 0:
-            existing = existing_queryset[0]
-            if existing.text == text:
-                return existing, False
-        return (
-            cls.objects.create(  # pylint: disable=no-member
-                id_persistent=id_persistent,
-                id_entity_persistent=id_entity_persistent,
-                text=text,
-                timestamp=timestamp,
-                author=author,
-            ),
-            True,
-        )
-
-    @classmethod
-    def copy(
-        cls,
-        origin_id_persistent: str,
-        destination_id_persistent: str,
-    ):
-        "Copy all justifications for a source entity to a destination entity."
-        justifications = EntityJustification.for_id_entity_persistent_unordered(
-            origin_id_persistent
-        )
-        for justification in justifications:
-            cls.add(
-                uuid4(),
-                destination_id_persistent,
-                justification.text,
-                justification.timestamp,
-                justification.author,
-            )
 
 
 class EntityHistory(EntityAbstract, HistoryMixin):

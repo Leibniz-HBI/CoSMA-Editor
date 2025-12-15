@@ -17,9 +17,7 @@ from cosmae.comments.api import Comment
 from cosmae.entity.filter_conversion import filter_to_django_q
 from cosmae.entity.models_api import FilterClause
 from cosmae.entity.models_django import Entity as EntityDb
-from cosmae.entity.models_django import EntityHistory
-from cosmae.entity.models_django import EntityJustification as EntityJustificationDb
-from cosmae.entity.models_django import entity_objects
+from cosmae.entity.models_django import EntityHistory, entity_objects
 from cosmae.entity.queue import get_display_txt_info
 from cosmae.exception import (
     ApiError,
@@ -27,6 +25,9 @@ from cosmae.exception import (
     EntityUpdatedException,
     NotAuthenticatedException,
     ValidationException,
+)
+from cosmae.justification.models_django import (
+    EntityJustification as EntityJustificationDb,
 )
 from cosmae.management.display_txt.util import DISPLAY_TXT_ORDER_CONFIG_KEY
 from cosmae.management.models_django import ConfigValue

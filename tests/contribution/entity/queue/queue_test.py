@@ -3,13 +3,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import cosmae.contribution.entity.queue as q
 import tests.contribution.entity.common as c
 import tests.entity.common as ce
 import tests.value.common as cv
-import cosmae.contribution.entity.queue as q
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity, EntityHistory, EntityJustification
+from cosmae.entity.models_django import Entity, EntityHistory
+from cosmae.justification.models_django import EntityJustification
 from cosmae.value.models_django import (
     Value,
     ValueHistory,

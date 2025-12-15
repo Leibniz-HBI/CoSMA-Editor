@@ -5,8 +5,8 @@ import pytest
 
 import tests.entity.api.integration.requests as req
 import tests.entity.common as c
-from cosmae.entity.models_django import EntityJustification
 from cosmae.exception import NotAuthenticatedException
+from cosmae.justification.models_django import EntityJustification
 
 
 def test_no_cookies(live_server):

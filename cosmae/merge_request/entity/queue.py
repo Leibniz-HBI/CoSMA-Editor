@@ -8,12 +8,13 @@ from uuid import uuid4
 from django.db import models, transaction
 
 from cosmae.column.models_django import Column, ColumnHistory
-from cosmae.entity.models_django import Entity, EntityHistory, EntityJustification
+from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.exception import (
     ColumnExistsException,
     EntityUpdatedException,
     PermissionException,
 )
+from cosmae.justification.models_django import EntityJustification
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,
