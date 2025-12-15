@@ -11,8 +11,9 @@ from cosmae.contribution.column.models_django import (
     ValueContribution,
 )
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import Entity, EntityJustification
+from cosmae.entity.models_django import Entity
 from cosmae.exception import ApiError, NotAuthenticatedException
+from cosmae.justification.models_django import EntityJustification
 from cosmae.util.auth import check_user
 from cosmae.value.models_django import value_objects
 

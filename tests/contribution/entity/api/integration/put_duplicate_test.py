@@ -6,7 +6,7 @@ import tests.contribution.entity.common as c
 import tests.entity.common as ce
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import EntityJustification
+from cosmae.justification.models_django import EntityJustification
 
 justification = "justification for entity"
 

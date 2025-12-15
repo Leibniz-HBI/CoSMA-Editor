@@ -10,8 +10,9 @@ from django.db.utils import OperationalError
 
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.entity.models_django import EntityHistory, EntityJustification
+from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.queue import update_display_txt_cache
+from cosmae.justification.models_django import EntityJustification
 from cosmae.merge_request.queue import merge_request_fast_forward
 from cosmae.util import timestamp
 from cosmae.value.models_django import Value, ValueHistory

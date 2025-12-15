@@ -23,8 +23,9 @@ from cosmae.entity.api import (
     entity_db_to_api,
 )
 from cosmae.entity.models_django import Entity as EntityDb
-from cosmae.entity.models_django import EntityJustification, entity_objects
+from cosmae.entity.models_django import entity_objects
 from cosmae.exception import ApiError, NotAuthenticatedException
+from cosmae.justification.models_django import EntityJustification
 from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.auth import check_user
 
