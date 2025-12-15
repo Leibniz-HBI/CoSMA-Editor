@@ -224,11 +224,13 @@ class ColumnMergeRequest(AbstractMergeRequest):
                     )
                 )
             ),
-            conflict_resolution_replacement_state=models.Subquery(
-                resolutions_sub_query.values("replacement_state")
+            conflict_resolution_replacement_state=models.functions.Cast(
+                models.Subquery(resolutions_sub_query.values("replacement_state")),
+                models.CharField(max_length=5),
             ),
-            conflict_resolution_replacement_value=models.Subquery(
-                resolutions_sub_query.values("replacement_value")
+            conflict_resolution_replacement_value=models.functions.Cast(
+                models.Subquery(resolutions_sub_query.values("replacement_value")),
+                models.TextField(),
             ),
         )
         with_conflict_info = conflict_candidate_query.exclude(
