@@ -77,8 +77,10 @@ def post_curation(request: HttpRequest, id_column_persistent):
         return 404, ApiError(msg="Column does not exist.")
     except PermissionException:
         return 403, ApiError(msg="Insufficient permissions.")
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not change curation status of column")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not change curation status of column"
+        logger.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.post(

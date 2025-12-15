@@ -313,8 +313,10 @@ def purge(request: HttpRequest, id_persistent: str):
             for column in column_history_queryset:
                 column.delete()
         return 200, None
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not delete column history")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not delete column history"
+        logger.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.get(
