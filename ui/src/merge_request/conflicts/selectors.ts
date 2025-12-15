@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
+import { ReplacementState } from './state'
 
 function selectColumnMergeRequestConflicts(state: RootState) {
     return state.columnMergeRequestConflicts
@@ -22,9 +23,15 @@ export const selectResolvedCount = createSelector(
         if (state.conflicts.value !== undefined) {
             numResolved = 0
             for (let idx = 0; idx < state.conflicts.value.conflicts.length; ++idx) {
+                const replacementValue =
+                        state.conflicts.value.conflicts[idx].value?.replacementValue,
+                    replacementState =
+                        state.conflicts.value.conflicts[idx].value?.replacementState
                 if (
-                    state.conflicts.value.conflicts[idx].value?.replacementState !==
-                    undefined
+                    replacementState === ReplacementState.KEEP ||
+                    replacementState === ReplacementState.REPLACE ||
+                    (replacementState === ReplacementState.VALUE &&
+                        !(replacementValue === undefined || replacementValue === ''))
                 ) {
                     numResolved++
                 }

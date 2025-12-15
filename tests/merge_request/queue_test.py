@@ -1,7 +1,7 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 
-import tests.merge_request.common as c
 import cosmae.merge_request.queue as q
+import tests.merge_request.common as c
 from cosmae.column.models_django import Column
 from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.value.models_django import Value
@@ -209,13 +209,13 @@ def test_merges_for_equal_value_replace(
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
-        )
+        ).order_by("id_persistent")
     )
+    assert instances[0].merged_from is None
     assert instances[1].merged_from == c.id_instance_origin1
     assert len(instances) == 2
-    instance_values = sorted([inst.value for inst in instances])
-    assert instance_values[0] == "value origin"
-    assert instance_values[1] == "value origin 1"
+    assert instances[0].value == "value origin"
+    assert instances[1].value == "value origin 1"
 
 
 def test_merges_for_equal_value_keep(

@@ -239,9 +239,17 @@ class ColumnMergeRequest(AbstractMergeRequest):
         )
         if include_resolved:
             return with_conflict_info
-
-        return with_conflict_info.exclude(
-            models.Q(conflict_resolution_replacement_state__isnull=False)
+        return with_conflict_info.filter(
+            models.Q(conflict_resolution_replacement_state__isnull=True)
+            | (
+                models.Q(
+                    conflict_resolution_replacement_state=ColumnConflictResolution.VALUE
+                )
+                & (
+                    models.Q(conflict_resolution_replacement_value="")
+                    | models.Q(conflict_resolution_replacement_value__isnull=True)
+                )
+            )
         )
 
     @classmethod
