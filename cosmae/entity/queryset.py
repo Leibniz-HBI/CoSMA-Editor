@@ -43,3 +43,17 @@ class EntityQueryset(VersionedQueryset):
                 .values("text")
             )
         )
+
+    def filter_by_values(self, value_objects, values_q):
+        """Filter entities by values matching the provided query.
+        The provided values objects is needed to ensure that the up_until_time is
+        correctly applied."""
+        return self.annotate(
+            value_id=models.Subquery(
+                value_objects.filter(
+                    id_entity_persistent=models.OuterRef("id_persistent")
+                )
+                .filter(values_q)
+                .values("id")[:1]
+            )
+        ).filter(value_id__isnull=False)
