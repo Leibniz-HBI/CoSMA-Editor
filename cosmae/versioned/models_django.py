@@ -60,9 +60,13 @@ class VersionedQueryset(models.QuerySet):
             return self.filter(time_edit__lte=date)
         return self
 
-    def from_offset(self, offset: int):
+    def gte_id_version(self, offset: int):
         "Get a portion of versioned models"
         return self.filter(id__gte=offset)
+
+    def lt_id_version(self, offset: int):
+        "Get a portion of versioned models"
+        return self.filter(id__lt=offset)
 
 
 class Versioned(models.Model):

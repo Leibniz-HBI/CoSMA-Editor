@@ -83,7 +83,7 @@ test('get descendant column success', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: 0, limit: 5000 },
+                body: { offset: 0, limit: 1000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -92,7 +92,7 @@ test('get descendant column success', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: next_offset, limit: 5000 },
+                body: { offset: next_offset, limit: 1000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -204,7 +204,7 @@ test('get descendant column with history success', async () => {
                 body: {
                     up_until_time: historyDateString,
                     offset: 0,
-                    limit: 5000
+                    limit: 1000
                 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
@@ -217,7 +217,7 @@ test('get descendant column with history success', async () => {
                 body: {
                     up_until_time: historyDateString,
                     offset: next_offset,
-                    limit: 5000
+                    limit: 1000
                 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
@@ -320,22 +320,6 @@ const displayTxt0 = 'test display txt 0'
 const displayTxt1 = 'test display txt 1'
 const justification0 = 'very prolific shit poster'
 const justification1 = 'tremendously prolific shit poster'
-const test_entity_rsp_0 = {
-    display_txt: displayTxt0,
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent0,
-    version: version0,
-    disabled: false,
-    justification_txt: justification0
-}
-const test_entity_rsp_1 = {
-    display_txt: displayTxt1,
-    display_txt_details: 'display_txt_detail',
-    id_persistent: idPersistent1,
-    version: version1,
-    disabled: false,
-    justification_txt: justification1
-}
 
 const columnNameParent = 'column parent test'
 const idColumnParentPersistent = 'column-id-parent-test'

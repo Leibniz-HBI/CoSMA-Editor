@@ -32,7 +32,7 @@ def filter_to_django_q(
 ) -> Q:
     """Convert API filter model to Django Q object."""
     if filter_tree is None:
-        return Q()
+        return None
     todo_stack = [filter_tree]
     done_stack = [[]]
     while todo_stack:

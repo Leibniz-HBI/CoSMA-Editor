@@ -164,7 +164,7 @@ test('get entities success', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: 0, limit: 5000 },
+                body: { offset: 0, limit: 1000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -173,7 +173,7 @@ test('get entities success', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: nextOffset, limit: 5000 },
+                body: { offset: nextOffset, limit: 1000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -228,7 +228,7 @@ test('get entities and inner column success', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: 0, limit: 5000 },
+                body: { offset: 0, limit: 1000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
@@ -237,7 +237,7 @@ test('get entities and inner column success', async () => {
             'http://127.0.0.1:8000/cosmae/api/entities/filter',
             {
                 credentials: 'include',
-                body: { offset: nextOffset, limit: 5000 },
+                body: { offset: nextOffset, limit: 1000 },
                 headers: { 'Content-Type': 'application/json' },
                 method: 'POST'
             }
