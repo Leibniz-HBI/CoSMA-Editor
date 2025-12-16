@@ -365,19 +365,31 @@ def filter_entities(request: HttpRequest, filter_body: FilterRequest):
     if user.permission_group == CosmaeUser.APPLICANT:
         return 403, ApiError(msg="Insufficient permissions.")
     try:
+        entity_queryset = entity_objects(filter_body.up_until_time)
+        look_ahead = min(100, filter_body.limit)
+        batch_offset = filter_body.offset
+        entity_id_list: List[str] = []
         django_q = filter_to_django_q(filter_body.filter)
-        entity_queryset = (
-            entity_objects(filter_body.up_until_time)
-            .from_offset(filter_body.offset)
-            .filter_by_values(value_objects(filter_body.up_until_time), django_q)
-        ).order_by("id")[: filter_body.limit]
-        entity_id_list = entity_queryset.values_list("id_persistent", flat=True)
-        if len(entity_id_list) > 0:
-            next_offset = entity_queryset[len(entity_queryset) - 1].id + 1
-        else:
-            next_offset = -1
+        next_request_offset = -1
+        while len(entity_id_list) < filter_body.limit:
+            offset_queryset = entity_queryset.gte_id_version(batch_offset)
+            if not offset_queryset.exists():
+                break
+            look_ahead_queryset = offset_queryset.lt_id_version(
+                batch_offset + look_ahead
+            ).order_by("id")
+            if django_q is not None:
+                look_ahead_queryset = look_ahead_queryset.filter_by_values(
+                    value_objects(filter_body.up_until_time), django_q
+                )
+            entity_id_list += look_ahead_queryset.values_list(
+                "id_persistent", flat=True
+            )
+            if look_ahead_queryset:
+                next_request_offset = look_ahead_queryset.last().id + 1
+            batch_offset += look_ahead
         return 200, EntityIdList(
-            id_entity_persistent_list=entity_id_list, next_offset=next_offset
+            id_entity_persistent_list=entity_id_list, next_offset=next_request_offset
         )
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.error("Error filtering entities.", exc_info=exc)

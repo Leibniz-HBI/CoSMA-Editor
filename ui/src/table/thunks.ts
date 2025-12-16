@@ -69,7 +69,7 @@ export function getTableAsync(
             const idEntityPersistentList: string[] = []
             for (let offset = 0; ; ) {
                 const rsp = await cosmaeEntityApiFilterEntities({
-                    body: { ...body, offset, limit: 5000 }
+                    body: { ...body, offset, limit: 1000 }
                 })
                 if (rsp.response.status == 404) {
                     dispatch(setEntities([]))
