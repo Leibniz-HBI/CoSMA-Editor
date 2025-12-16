@@ -128,6 +128,7 @@ export function resolveConflict({
                         replacementValue: replacementValue
                     })
                 )
+                dispatch(addSuccessVanish('Conflict resolved successfully.'))
             } else {
                 const json = await rsp.json()
                 dispatch(resolveConflictError(entity.idPersistent))
