@@ -1,5 +1,5 @@
-import { Col, ListGroup, Row } from 'react-bootstrap'
-import { useLoaderData, useNavigate } from 'react-router-dom'
+import { Row } from 'react-bootstrap'
+import { useLoaderData } from 'react-router-dom'
 import { UserPermissionGroupComponent } from '../user/permission_groups/components'
 import { DisplayTxtManagementComponent } from './display_txt/components'
 import { RegistrationForm } from '../auth/components/registration_form'
@@ -7,12 +7,14 @@ import { createUserThunk } from '../auth/thunks'
 import { useAppDispatch } from '../hooks'
 import { Subpage } from '../util/components/subpage'
 import { ManagementPasswordComponent } from './password/components'
+import { DataPublicationManagement } from './data_publication/components'
 
 enum ManagementCategory {
     UserCreation = 'user-creation',
     UserPermission = 'user-permission',
     Password = 'password',
-    DisplayTxt = 'display-txt'
+    DisplayTxt = 'display-txt',
+    DataPublication = 'data-publication'
 }
 
 export function ManagementPage() {
@@ -29,7 +31,8 @@ export function ManagementPage() {
                 'Create User': ManagementCategory.UserCreation,
                 'User Permissions': ManagementCategory.UserPermission,
                 'Reset User Password': ManagementCategory.Password,
-                'Display Text': ManagementCategory.DisplayTxt
+                'Display Text': ManagementCategory.DisplayTxt,
+                'Data Publication': ManagementCategory.DataPublication
             }}
             selectedPage={category}
             pathPrefix={'/management/'}
@@ -55,6 +58,8 @@ export function ManagementCategoryBody({
         return <RegisterUserManagementComponent />
     } else if (selectedCategory == ManagementCategory.DisplayTxt) {
         return <DisplayTxtManagementComponent />
+    } else if (selectedCategory == ManagementCategory.DataPublication) {
+        return <DataPublicationManagement />
     }
     return <div>Please select a management category.</div>
 }
