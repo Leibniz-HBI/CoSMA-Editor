@@ -10,6 +10,7 @@ import { userSlice } from './slice'
 import { configureStore } from '@reduxjs/toolkit'
 import { PropsWithChildren } from 'react'
 import { Provider } from 'react-redux'
+import { wait } from '@testing-library/user-event/dist/cjs/utils/index.js'
 
 export const nameSshKey = 'ssh key name',
     typeSshKey = 'sshKeyType',

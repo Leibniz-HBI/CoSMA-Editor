@@ -45,6 +45,11 @@ import {
     newEntityMergeRequestConflictsState
 } from '../../merge_request/entity/conflicts/state'
 import { entityMergeRequestConflictSlice } from '../../merge_request/entity/conflicts/slice'
+import { dataPublicationReducer } from '../../management/data_publication/slice'
+import {
+    DataPublicationState,
+    newDataPublicationState
+} from '../../management/data_publication/state'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
@@ -61,6 +66,7 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         contributionColumnDefinition: ColumnDefinitionsContributionState
         displayTxtManagement: DisplayTxtManagementState
         entityMergeRequestConflicts: EntityMergeRequestConflictsState
+        dataPublication: DataPublicationState
     }
 }
 export const emptyState = {
@@ -76,7 +82,8 @@ export const emptyState = {
     contributionEntity: newContributionEntityState({}),
     contributionColumnDefinition: newColumnDefinitionsContributionState({}),
     displayTxtManagement: { columns: newRemote([]) },
-    entityMergeRequestConflicts: newEntityMergeRequestConflictsState({})
+    entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
+    dataPublication: newDataPublicationState({})
 }
 export function renderWithProviders(
     ui: React.ReactElement,
@@ -97,7 +104,8 @@ export function renderWithProviders(
             contributionEntity: contributionEntitySlice.reducer,
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
             displayTxtManagement: displayTxtManagementReducer,
-            entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer
+            entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
+            dataPublication: dataPublicationReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

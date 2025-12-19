@@ -22,6 +22,7 @@ import { client as cosmaeClient } from './openapi/cosmae/client.gen'
 import { client as allauthClient } from './openapi/allauth/client.gen'
 import { config } from './config'
 import { Fetch } from './util/type'
+import { dataPublicationReducer } from './management/data_publication/slice'
 
 const rootReducer = combineReducers({
     notification: notificationReducer,
@@ -38,6 +39,7 @@ const rootReducer = combineReducers({
     entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
     entityDetails: entityDetailsReducer,
     displayTxtManagement: displayTxtManagementReducer,
+    dataPublication: dataPublicationReducer,
     comments: commentsReducer,
     table: tableReducer,
     permissions: permissionsReducer,
