@@ -2,9 +2,11 @@
 
 from ninja import Router
 
+from cosmae.management.data_publication.api import router as dataset_publication_router
 from cosmae.management.display_txt.api import router as display_txt_router
 from cosmae.management.user.api import router as user_router
 
 router = Router()
 router.add_router("display_txt", display_txt_router)
 router.add_router("user", user_router)
+router.add_router("data_publication", dataset_publication_router)

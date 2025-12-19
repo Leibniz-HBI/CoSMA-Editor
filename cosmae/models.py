@@ -12,6 +12,10 @@ from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.edit_session.models_django import EditSession, EditSessionParticipant
 from cosmae.entity.models_django import Entity
 from cosmae.justification.models_django import EntityJustification
+from cosmae.management.data_publication.models_django import (
+    DataPublication,
+    DataPublicationStepInput,
+)
 from cosmae.management.models_django import ConfigValue
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
