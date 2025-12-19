@@ -606,3 +606,11 @@ def request_applicant(user_applicant, mocker):
     mock.user = user_applicant
     mock.session = {"account_authentication_methods": [{"type": "totp"}]}
     return mock
+
+
+@pytest.fixture()
+def request_commissioner(user_commissioner, mocker):
+    mock = mocker.MagicMock()
+    mock.user = user_commissioner
+    mock.session = {"account_authentication_methods": [{"type": "totp"}]}
+    return mock

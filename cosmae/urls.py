@@ -56,7 +56,7 @@ class JsonDecoder(json.JSONDecoder):
         "try to parse dates, otherwise return the value."
         ret = {}
         for key, value in obj.items():
-            if key in {"timestamp", "up_until_time"}:
+            if key in {"timestamp", "up_until_time", "start_time", "end_time"}:
                 ret[key] = datetime.strptime(value, DATE_FORMAT)
             else:
                 ret[key] = value

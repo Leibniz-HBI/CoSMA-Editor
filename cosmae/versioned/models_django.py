@@ -60,6 +60,12 @@ class VersionedQueryset(models.QuerySet):
             return self.filter(time_edit__lte=date)
         return self
 
+    def after(self, date: datetime):
+        "Only return items that are edited after the provided datetime"
+        if date is not None:
+            return self.filter(time_edit__gt=date)
+        return self
+
     def gte_id_version(self, offset: int):
         "Get a portion of versioned models"
         return self.filter(id__gte=offset)
