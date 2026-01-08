@@ -27,6 +27,10 @@ from cosmae.value.models_django import (
 )
 
 
+class NotResolvedException(Exception):
+    "Raised when resolving is tried for unresolved merge requests."
+
+
 def apply_entity_merge_request(
     id_entity_merge_request_persistent: str, id_user_persistent
 ):
@@ -43,7 +47,9 @@ def apply_entity_merge_request(
             mr_query.select_for_update()
             merge_request = mr_query.get()
             if merge_request.state != EntityMergeRequest.RESOLVED:
-                return
+                if merge_request.state == EntityMergeRequest.MERGED:
+                    return
+                raise NotResolvedException("Entity Merge request is not resolved.")
             user = user_query.get()
             resolutions = EntityConflictResolution.for_merge_request_query_set(
                 merge_request
