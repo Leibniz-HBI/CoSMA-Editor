@@ -127,6 +127,8 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             try:
                 merge_request = merge_request_query.get()
                 if not merge_request.state == ColumnMergeRequest.RESOLVED:
+                    if merge_request.state == ColumnMergeRequest.MERGED:
+                        return
                     raise NotResolvedException("Column Merge request is not resolved.")
                 approved_by = approved_by_query.get()
             except OperationalError:
