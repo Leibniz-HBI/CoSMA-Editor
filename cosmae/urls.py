@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 from typing import cast
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import authenticate, login
 from django.http import HttpRequest
@@ -86,7 +87,9 @@ class NinjaParserWithDateTime(Parser):
 
 
 ninja_api = NinjaAPI(
-    csrf=False,  # renderer=JsonRendererWithDateTime(), parser=NinjaParserWithDateTime()
+    csrf=not settings.IS_UNITTEST,
+    # renderer=JsonRendererWithDateTime(),
+    # parser=NinjaParserWithDateTime()
 )
 ninja_api.add_router("user", user_router, auth=NOT_SET)
 ninja_api.add_router("entities", person_router, auth=cosmae_auth)
