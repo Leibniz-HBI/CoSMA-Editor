@@ -39,10 +39,7 @@ def test_success(auth_server):
             "id_column_persistent_list": [],
             "password_changed": True,
             "edit_session": {
-                "owner": {
-                    "id_participant": c.test_uuid,
-                    "type_participant": "INTERNAL",
-                },
+                "owner": edit_session_participant_api,
                 "id_persistent": cs.id_session_user,
                 "name": cs.name_session_user,
                 "participant_list": [edit_session_participant_api],

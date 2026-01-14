@@ -35,7 +35,7 @@ class EditSession(Schema):
     # pylint: disable=too-few-public-methods
     "API model for edit sessions."
     id_persistent: str
-    owner: EditSessionParticipant
+    owner: EditSessionParticipantWithName
     participant_list: List[EditSessionParticipantWithName]
     name: str
 
@@ -355,12 +355,24 @@ def edit_session_participant_db_to_api(participant: EditSessionParticipantDb):
 
 def edit_session_db_to_api(edit_session: EditSessionDb):
     "Convert an edit session from db to API format."
+    try:
+        name_owner = (
+            edit_session.editsessionparticipant_set.filter(
+                type_participant=EditSessionParticipantDb.INTERNAL,
+                id_participant=edit_session.id_owner_persistent,
+            )
+            .get()
+            .name_participant
+        )
+    except EditSessionParticipantDb.DoesNotExist:
+        name_owner = "Unknown Owner"
     return EditSession(
         name=edit_session.name,
         id_persistent=edit_session.id_persistent,
-        owner=EditSessionParticipant(
+        owner=EditSessionParticipantWithName(
             id_participant=edit_session.id_owner_persistent,
             type_participant="INTERNAL",
+            name_participant=name_owner,
         ),
         participant_list=[
             edit_session_participant_db_to_api(participant)

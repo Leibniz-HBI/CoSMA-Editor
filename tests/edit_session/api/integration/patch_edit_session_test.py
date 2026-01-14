@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import tests.edit_session.common as c
 import tests.user.common as cu
-from tests.edit_session.api.integration import requests as req
 from cosmae.exception import NotAuthenticatedException
+from tests.edit_session.api.integration import requests as req
 
 new_name = "patched name for user session"
 
@@ -59,15 +59,13 @@ def test_change_name(auth_server):
         "type_participant": "INTERNAL",
         "name_participant": cu.test_username,
     }
-    owner_json = participant_json.copy()
-    owner_json.pop("name_participant")
     participant_list = [
         participant_json,
     ]
     json = rsp.json()
     assert json == {
         "id_persistent": c.id_session_user,
-        "owner": owner_json,
+        "owner": participant_json,
         "name": new_name,
         "participant_list": participant_list,
     }
