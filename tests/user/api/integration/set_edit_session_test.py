@@ -48,18 +48,14 @@ def test_can_change_session(auth_server, other_session):
     user = CosmaeUser.objects.filter(id_persistent=cu.test_uuid).get()
     assert user.edit_session_id == other_session.id_persistent
     assert rsp.status_code == 200
+    participant_json = {
+        "id_participant": user.id_persistent,
+        "type_participant": "INTERNAL",
+        "name_participant": user.username,
+    }
     assert rsp.json() == {
         "name": ce.name_session_user_changed,
         "id_persistent": ce.id_session_user_changed,
-        "owner": {
-            "id_participant": user.id_persistent,
-            "type_participant": "INTERNAL",
-        },
-        "participant_list": [
-            {
-                "id_participant": user.id_persistent,
-                "type_participant": "INTERNAL",
-                "name_participant": user.username,
-            }
-        ],
+        "owner": participant_json,
+        "participant_list": [participant_json],
     }

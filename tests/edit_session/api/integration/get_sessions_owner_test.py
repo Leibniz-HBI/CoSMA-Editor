@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import tests.edit_session.common as c
 import tests.user.common as cu
-from tests.edit_session.api.integration import requests as req
 from cosmae.exception import NotAuthenticatedException
+from tests.edit_session.api.integration import requests as req
 
 
 def test_unknown_user(auth_server):
@@ -43,20 +43,18 @@ def test_get_sessions_owner(auth_server, other_session):
         "type_participant": "INTERNAL",
         "name_participant": cu.test_username,
     }
-    owner_json = participant_json.copy()
-    owner_json.pop("name_participant")
     json = rsp.json()
     session_list = json["edit_session_list"]
     assert session_list == [
         {
             "id_persistent": c.id_session_user,
-            "owner": owner_json,
+            "owner": participant_json,
             "name": c.name_session_user,
             "participant_list": [participant_json],
         },
         {
             "id_persistent": c.id_session_user_changed,
-            "owner": owner_json,
+            "owner": participant_json,
             "name": c.name_session_user_changed,
             "participant_list": [participant_json],
         },
