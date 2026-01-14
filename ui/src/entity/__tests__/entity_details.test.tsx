@@ -4,54 +4,43 @@
 import { vi, Mock } from 'vitest'
 import {
     Column,
-    ColumnSelectionState,
     ColumnType,
     newColumn,
     newColumnSelectionState
 } from '../../column_menu/state'
 import { UserPermissionGroup, newPublicUserInfo, newUserInfo } from '../../user/state'
-import { TableState, newTableState } from '../../table/state'
 import { newEntity } from '../state'
 import {
-    NotificationManager,
     NotificationType,
     newNotification,
-    newNotificationManager,
-    notificationReducer
+    newNotificationManager
 } from '../../util/notification/slice'
-import { RenderOptions, waitFor, render, screen } from '@testing-library/react'
-import { tableReducer } from '../../table/slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
-import { TableSelectionState, tableSelectionSlice } from '../../table/selection/slice'
-import { columnSelectionReducer } from '../../column_menu/slice'
+import { waitFor, screen } from '@testing-library/react'
 import { newRemote } from '../../util/state'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
 } from '../../session/state'
-import { editSessionReducer } from '../../session/slice'
-import { entityDetailsReducer } from '../../entity/slice'
-import {
-    EntityDetailsState,
-    newEntityDetails,
-    newEntityDetailsState
-} from '../../entity/state'
+import { newEntityDetails, newEntityDetailsState } from '../../entity/state'
 import { EntityDetails } from '../components'
 import { newValue } from '../../contribution/entity/state'
-import { AuthState, newAuthState } from '../../auth/state'
-import { authReducer } from '../../auth/slice'
+import { newAuthState } from '../../auth/state'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
+import {
+    addResponseSequence,
+    expectFetchCall,
+    expectFetchCallList
+} from '../../util/tests/response'
 
 test('success', async () => {
     const fetchMock = vi.fn()
     addDetailsResponseSequence(fetchMock)
     const { store } = renderWithProviders(
         <EntityDetails idEntityPersistent={idEntityPersistent} />,
-        fetchMock
+        fetchMock,
+        { preloadedState }
     )
     await waitFor(() => {
         screen.getByText(columnNameTest)
@@ -93,7 +82,7 @@ test('success', async () => {
             )
         })
     )
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             `http://127.0.0.1:8000/cosmae/api/entities/values?id_persistent=${idEntityPersistent}`,
             { credentials: 'include' }
@@ -106,7 +95,8 @@ test('error', async () => {
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(
         <EntityDetails idEntityPersistent={idEntityPersistent} />,
-        fetchMock
+        fetchMock,
+        { preloadedState }
     )
     await waitFor(() => {
         const state = store.getState()
@@ -158,19 +148,6 @@ const versionInstance0 = 10
 const versionInstance1 = 11
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addResponseSequence(fetchMock: Mock, responses: [number, any][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        fetchMock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            )
-        )
-    }
-}
 
 function addDetailsResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
@@ -198,17 +175,6 @@ function addDetailsResponseSequence(fetchMock: Mock) {
         ]
     ])
 }
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        table: TableState
-        tableSelection: TableSelectionState
-        columnSelection: ColumnSelectionState
-        auth: AuthState
-        entityDetails: EntityDetailsState
-        editSession: EditSessionState
-    }
-}
 
 const columnTest: Column = newColumn({
     namePath: [columnNameTest],
@@ -232,70 +198,40 @@ const columnTest1: Column = newColumn({
     hidden: false
 })
 
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            notification: newNotificationManager({}),
-            table: newTableState({}),
-            tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
-            columnSelection: newColumnSelectionState({
-                columnsByIdPersistent: {
-                    [idColumnPersistent]: newRemote(columnTest),
-                    [idColumnPersistent1]: newRemote(columnTest1)
-                }
-            }),
-            auth: newAuthState({
-                user: newRemote(
-                    newUserInfo({
-                        ...userTest,
-                        email: 'mail@test.org',
-                        namesPersonal: 'names personal',
-                        idColumnPersistentList: [columnTest]
-                    })
-                )
-            }),
-            entityDetails: newEntityDetailsState({
-                showEntityDetails: idEntityPersistent
-            }),
-            editSession: newEditSessionState({
-                currentEditSession: newRemote(
-                    newEditSession({
-                        idPersistent: 'id-session-test',
-                        name: 'edit session for tests',
-                        owner: newEditSessionParticipant({
-                            type: EditSessionParticipantType.internal,
-                            name: 'edit session owner test',
-                            id: idUserTest
-                        }),
-                        participantList: [],
-                        participantMap: {}
-                    })
-                )
+const preloadedState = {
+    ...emptyState,
+    columnSelection: newColumnSelectionState({
+        columnsByIdPersistent: {
+            [idColumnPersistent]: newRemote(columnTest),
+            [idColumnPersistent1]: newRemote(columnTest1)
+        }
+    }),
+    auth: newAuthState({
+        user: newRemote(
+            newUserInfo({
+                ...userTest,
+                email: 'mail@test.org',
+                namesPersonal: 'names personal',
+                idColumnPersistentList: [columnTest.idPersistent]
             })
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            tableSelection: tableSelectionSlice.reducer,
-            columnSelection: columnSelectionReducer,
-            table: tableReducer,
-            auth: authReducer,
-            entityDetails: entityDetailsReducer,
-            editSession: editSessionReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
+        )
+    }),
+    entityDetails: newEntityDetailsState({
+        showEntityDetails: idEntityPersistent
+    }),
+    editSession: newEditSessionState({
+        currentEditSession: newRemote(
+            newEditSession({
+                idPersistent: 'id-session-test',
+                name: 'edit session for tests',
+                owner: newEditSessionParticipant({
+                    type: EditSessionParticipantType.internal,
+                    name: 'edit session owner test',
+                    id: idUserTest
+                }),
+                participantList: [],
+                participantMap: {}
+            })
+        )
     })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }

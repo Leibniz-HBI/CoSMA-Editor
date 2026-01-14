@@ -1,19 +1,14 @@
 /**
  * @vitest-environment jsdom
  */
-import {vi, Mock }  from 'vitest'
-import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
+import { vi } from 'vitest'
+import { screen, waitFor } from '@testing-library/react'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
 } from '../state'
-import { editSessionReducer } from '../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { Provider } from 'react-redux'
-import { PropsWithChildren } from 'react'
 import {
     EditSessionEditorButton,
     EditSessionOwnerList,
@@ -23,14 +18,13 @@ import { newRemote } from '../../util/state'
 import {
     newNotification,
     newNotificationManager,
-    NotificationManager,
-    notificationReducer,
     NotificationType
 } from '../../util/notification/slice'
 import userEvent from '@testing-library/user-event'
 import { newUserInfo, UserPermissionGroup } from '../../user/state'
-import { AuthState, newAuthState } from '../../auth/state'
-import { authReducer } from '../../auth/slice'
+import { newAuthState } from '../../auth/state'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
+import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
 
 test('change session success', async () => {
     const fetchMock = vi.fn()
@@ -41,7 +35,8 @@ test('change session success', async () => {
 
     const { store } = renderWithProviders(
         <EditSessionEditorButton popoverPlacement="right" tooltipPlacement="right" />,
-        fetchMock
+        fetchMock,
+        { preloadedState }
     )
     await selectSession()
     await waitFor(() => {
@@ -50,13 +45,16 @@ test('change session success', async () => {
         )
         expect(store.getState().editSession.currentEditSession.value).toEqual(session2)
     })
-    expect(fetchMock.mock.calls).toEqual([
-        ['http://127.0.0.1:8000/cosmae/api/edit_sessions/owner', { credentials: 'include' }],
+    await expectFetchCallList(fetchMock.mock.calls, [
+        [
+            'http://127.0.0.1:8000/cosmae/api/edit_sessions/owner',
+            { credentials: 'include' }
+        ],
         [
             'http://127.0.0.1:8000/cosmae/api/user/edit_session',
             {
                 credentials: 'include',
-                body: JSON.stringify({ id_edit_session_persistent: idSession2 }),
+                body: { id_edit_session_persistent: idSession2 },
                 method: 'POST'
             }
         ]
@@ -69,7 +67,8 @@ describe('select edit session', () => {
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
             <EditSessionEditorButton popoverPlacement="top" tooltipPlacement="top" />,
-            fetchMock
+            fetchMock,
+            { preloadedState }
         )
         await selectOwnerTab()
         await waitFor(() => {
@@ -81,8 +80,11 @@ describe('select edit session', () => {
                 })
             ])
         })
-        expect(fetchMock.mock.calls).toEqual([
-            ['http://127.0.0.1:8000/cosmae/api/edit_sessions/owner', { credentials: 'include' }]
+        await expectFetchCallList(fetchMock.mock.calls, [
+            [
+                'http://127.0.0.1:8000/cosmae/api/edit_sessions/owner',
+                { credentials: 'include' }
+            ]
         ])
         expect(store.getState().editSession).toEqual(initialSessionState)
     })
@@ -96,7 +98,8 @@ describe('select edit session', () => {
         ])
         const { store } = renderWithProviders(
             <EditSessionEditorButton tooltipPlacement="left" popoverPlacement="left" />,
-            fetchMock
+            fetchMock,
+            { preloadedState }
         )
         await selectSession()
         await waitFor(() => {
@@ -108,13 +111,16 @@ describe('select edit session', () => {
                 })
             ])
         })
-        expect(fetchMock.mock.calls).toEqual([
-            ['http://127.0.0.1:8000/cosmae/api/edit_sessions/owner', { credentials: 'include' }],
+        await expectFetchCallList(fetchMock.mock.calls, [
+            [
+                'http://127.0.0.1:8000/cosmae/api/edit_sessions/owner',
+                { credentials: 'include' }
+            ],
             [
                 'http://127.0.0.1:8000/cosmae/api/user/edit_session',
                 {
                     credentials: 'include',
-                    body: JSON.stringify({ id_edit_session_persistent: idSession2 }),
+                    body: { id_edit_session_persistent: idSession2 },
                     method: 'POST'
                 }
             ]
@@ -140,7 +146,8 @@ describe('owner', () => {
                 <EditSessionOwnerList
                     selectEditSessionCallback={selectEditSessionMock}
                 />,
-                fetchMock
+                fetchMock,
+                { preloadedState }
             )
             await createSession()
             await waitFor(() => {
@@ -152,7 +159,7 @@ describe('owner', () => {
                     })
                 )
             })
-            expect(fetchMock.mock.calls).toEqual([
+            await expectFetchCallList(fetchMock.mock.calls, [
                 [
                     'http://127.0.0.1:8000/cosmae/api/edit_sessions/owner',
                     { credentials: 'include' }
@@ -162,7 +169,7 @@ describe('owner', () => {
                     {
                         credentials: 'include',
                         method: 'PUT',
-                        body: JSON.stringify({ name: nameSession2 })
+                        body: { name: nameSession2 }
                     }
                 ]
             ])
@@ -179,7 +186,8 @@ describe('owner', () => {
                 <EditSessionOwnerList
                     selectEditSessionCallback={selectEditSessionMock}
                 />,
-                fetchMock
+                fetchMock,
+                { preloadedState }
             )
             await createSession()
             await waitFor(() => {
@@ -205,7 +213,8 @@ describe('participant', () => {
             ])
             const { store } = renderWithProviders(
                 <EditSessionParticipantList />,
-                fetchMock
+                fetchMock,
+                { preloadedState }
             )
             await removeFromSession()
             await confirmRemoval()
@@ -214,7 +223,7 @@ describe('participant', () => {
                     newRemote([session2])
                 )
             })
-            expect(fetchMock.mock.calls).toEqual([
+            await expectFetchCallList(fetchMock.mock.calls, [
                 [
                     'http://127.0.0.1:8000/cosmae/api/edit_sessions/participant',
                     { credentials: 'include' }
@@ -224,10 +233,10 @@ describe('participant', () => {
                     {
                         credentials: 'include',
                         method: 'DELETE',
-                        body: JSON.stringify({
+                        body: {
                             id_participant: 'id-user',
                             type_participant: 'INTERNAL'
-                        })
+                        }
                     }
                 ]
             ])
@@ -241,7 +250,8 @@ describe('participant', () => {
             ])
             const { store } = renderWithProviders(
                 <EditSessionParticipantList />,
-                fetchMock
+                fetchMock,
+                { preloadedState }
             )
             await removeFromSession()
             await confirmRemoval()
@@ -266,7 +276,8 @@ describe('participant', () => {
             addResponseSequence(fetchMock, [[500, { msg: testError }]])
             const { store } = renderWithProviders(
                 <EditSessionParticipantList />,
-                fetchMock
+                fetchMock,
+                { preloadedState }
             )
             await waitFor(() => {
                 const state = store.getState()
@@ -281,7 +292,7 @@ describe('participant', () => {
                     ...initialSessionState
                 })
             })
-            expect(fetchMock.mock.calls).toEqual([
+            await expectFetchCallList(fetchMock.mock.calls, [
                 [
                     'http://127.0.0.1:8000/cosmae/api/edit_sessions/participant',
                     { credentials: 'include' }
@@ -297,7 +308,8 @@ describe('participant', () => {
             ])
             const { store } = renderWithProviders(
                 <EditSessionParticipantList />,
-                fetchMock
+                fetchMock,
+                { preloadedState }
             )
             await removeFromSession()
             await waitFor(() => {
@@ -371,68 +383,6 @@ async function confirmRemoval() {
         const button = screen.getByRole('button', { name: 'Remove' })
         button.click()
     })
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        editSession: EditSessionState
-        notification: NotificationManager
-        auth: AuthState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            editSession: initialSessionState,
-            notification: newNotificationManager({}),
-            auth: newAuthState({
-                user: newRemote(
-                    newUserInfo({
-                        username: 'user-test',
-                        email: 'mail@test.org',
-                        namesPersonal: ' name test',
-                        permissionGroup: UserPermissionGroup.APPLICANT,
-                        idPersistent: 'id-user'
-                    })
-                )
-            })
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            editSession: editSessionReducer,
-            notification: notificationReducer,
-            auth: authReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
 }
 
 const idParticipant1 = 'id-participant-1'
@@ -566,3 +516,20 @@ const successSessionList = newRemote([
     }),
     session2
 ])
+
+const preloadedState = {
+    ...emptyState,
+    editSession: initialSessionState,
+    notification: newNotificationManager({}),
+    auth: newAuthState({
+        user: newRemote(
+            newUserInfo({
+                username: 'user-test',
+                email: 'mail@test.org',
+                namesPersonal: ' name test',
+                permissionGroup: UserPermissionGroup.APPLICANT,
+                idPersistent: 'id-user'
+            })
+        )
+    })
+}

@@ -196,10 +196,10 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { column_list: [] }],
-        [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
         [200, { matches: mkMatches(personList.slice(50)) }],
+        [200, { column_list: [] }],
+        [200, { column_list: [] }],
         // empty response because no match columns.
         [200, { value_responses: [] }]
     ])

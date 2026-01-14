@@ -1,4 +1,3 @@
-import { config } from '../../../config'
 import { AppDispatch } from '../../../store'
 import { Entity } from '../../../entity/state'
 import { addError, addSuccessVanish } from '../../../util/notification/slice'
@@ -37,26 +36,30 @@ import {
     Column,
     newEntityMergeRequestConflict
 } from './state'
+import {
+    cosmaeMergeRequestEntityApiGet,
+    cosmaeMergeRequestEntityApiGetMergeRequestConflicts,
+    cosmaeMergeRequestEntityApiPostMergeRequestMerge,
+    cosmaeMergeRequestEntityApiPostResolveConflict,
+    cosmaeMergeRequestEntityApiPut,
+    cosmaeMergeRequestEntityApiReverseOriginDestination
+} from '../../../openapi/cosmae'
 
 export function getEntityMergeRequest(
     idEntityMergeRequest: string
 ): ThunkWithFetch<string | undefined> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
+    return async (dispatch: AppDispatch, _getState, _fetch) => {
         try {
             dispatch(getEntityMergeRequestStart())
-            const rsp = await fetch(
-                config.api_path + `/merge_requests/entities/${idEntityMergeRequest}`,
-                {
-                    credentials: 'include'
-                }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const entityMergeRequest = parseEntityMergeRequestFromJson(json)
+            const rsp = await cosmaeMergeRequestEntityApiGet({
+                path: { id_merge_request_persistent: idEntityMergeRequest }
+            })
+            if (rsp.data) {
+                const entityMergeRequest = parseEntityMergeRequestFromJson(rsp.data)
                 dispatch(getEntityMergeRequestSuccess(entityMergeRequest))
-                return json['id_persistent']
+                return rsp.data.id_persistent
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(getEntityMergeRequestError())
                 return undefined
             }
@@ -70,29 +73,26 @@ export function putEntityMergeRequest(
     idEntityOrigin: string,
     idEntityDestination: string
 ): ThunkWithFetch<string | undefined> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
+    return async (dispatch: AppDispatch, _getState, _fetch) => {
         try {
             dispatch(putEntityMergeRequestStart())
-            const rsp = await fetch(
-                config.api_path +
-                    `/merge_requests/entities/${idEntityOrigin}/${idEntityDestination}`,
-                {
-                    method: 'PUT',
-                    credentials: 'include'
+            const rsp = await cosmaeMergeRequestEntityApiPut({
+                path: {
+                    id_entity_origin_persistent: idEntityOrigin,
+                    id_entity_destination_persistent: idEntityDestination
                 }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const entityMergeRequest = parseEntityMergeRequestFromJson(json)
+            })
+            if (rsp.data) {
+                const entityMergeRequest = parseEntityMergeRequestFromJson(rsp.data)
                 dispatch(
                     putEntityMergeRequestSuccess({
                         newlyCreated: true,
                         mergeRequest: entityMergeRequest
                     })
                 )
-                return json['id_persistent']
+                return rsp.data.id_persistent
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(putEntityMergeRequestError())
                 return undefined
             }
@@ -106,30 +106,23 @@ export function putEntityMergeRequest(
 export function getEntityMergeRequestConflicts(
     idEntityMergeRequest: string
 ): ThunkWithFetch<void> {
-    return async (dispatch: AppDispatch, _getState, fetch) => {
+    return async (dispatch: AppDispatch, _getState, _fetch) => {
         try {
             dispatch(getEntityMergeRequestConflictsStart())
-            const rsp = await fetch(
-                config.api_path +
-                    `/merge_requests/entities/${idEntityMergeRequest}/conflicts`,
-                { credentials: 'include' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const resolvableConflicts = json['resolvable_conflicts'].map(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (conflictJson: any) =>
+            const rsp = await cosmaeMergeRequestEntityApiGetMergeRequestConflicts({
+                path: { id_merge_request_persistent: idEntityMergeRequest }
+            })
+            if (rsp.data) {
+                const resolvableConflicts = rsp.data.resolvable_conflicts.map(
+                    (conflictJson) =>
                         newRemote(parseEntityMergeRequestConflictFromJson(conflictJson))
                 )
-                const unresolvableConflicts = json['unresolvable_conflicts'].map(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (conflictJson: any) =>
+                const unresolvableConflicts = rsp.data.unresolvable_conflicts.map(
+                    (conflictJson) =>
                         newRemote(parseEntityMergeRequestConflictFromJson(conflictJson))
                 )
-                const updated = json['updated'].map(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (conflictJson: any) =>
-                        newRemote(parseEntityMergeRequestConflictFromJson(conflictJson))
+                const updated = rsp.data.updated.map((conflictJson) =>
+                    newRemote(parseEntityMergeRequestConflictFromJson(conflictJson))
                 )
                 dispatch(
                     getEntityMergeRequestConflictsSuccess({
@@ -156,7 +149,7 @@ export function getEntityMergeRequestConflicts(
                 )
             } else {
                 dispatch(getEntityMergeRequestConflictsError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(getEntityMergeRequestConflictsError())
@@ -183,36 +176,27 @@ export function resolveEntityConflict({
     replacementState?: ReplacementState
     replacementValue: string | undefined
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(resolveEntityConflictStart(column.idPersistent))
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/merge_requests/entities/${idMergeRequestPersistent}/resolve`,
-                {
-                    method: 'POST',
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        id_column_version: column.version,
-                        id_entity_origin_version: entityOrigin.version,
-                        id_value_origin_version: valueOrigin.version,
-                        id_entity_destination_version: entityDestination.version,
-                        id_value_destination_version:
-                            valueDestination?.version,
-                        id_column_persistent: column.idPersistent,
-                        id_entity_origin_persistent: entityOrigin.idPersistent,
-                        id_value_origin_persistent:
-                            valueOrigin.idPersistent,
-                        id_entity_destination_persistent:
-                            entityDestination.idPersistent,
-                        id_value_destination_persistent:
-                            valueDestination?.idPersistent,
-                        replacement_state: replacementState,
-                        replacement_value: replacementValue
-                    })
+            const rsp = await cosmaeMergeRequestEntityApiPostResolveConflict({
+                path: { id_merge_request_persistent: idMergeRequestPersistent },
+                body: {
+                    id_column_version: column.version,
+                    id_entity_origin_version: entityOrigin.version,
+                    id_value_origin_version: valueOrigin.version,
+                    id_entity_destination_version: entityDestination.version,
+                    id_value_destination_version: valueDestination?.version,
+                    id_column_persistent: column.idPersistent,
+                    id_entity_origin_persistent: entityOrigin.idPersistent,
+                    id_value_origin_persistent: valueOrigin.idPersistent,
+                    id_entity_destination_persistent: entityDestination.idPersistent,
+                    id_value_destination_persistent: valueDestination?.idPersistent,
+                    replacement_state: replacementState,
+                    replacement_value: replacementValue
                 }
-            )
-            if (rsp.status == 200) {
+            })
+            if (!rsp.error) {
                 dispatch(
                     resolveEntityConflictSuccess({
                         idColumnPersistent: column.idPersistent,
@@ -221,9 +205,8 @@ export function resolveEntityConflict({
                     })
                 )
             } else {
-                const json = await rsp.json()
                 dispatch(resolveEntityConflictError(column.idPersistent))
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(resolveEntityConflictError(column.idPersistent))
@@ -235,22 +218,19 @@ export function resolveEntityConflict({
 export function reverseOriginDestination(
     idEntityMergeRequest: string
 ): ThunkWithFetch<EntityMergeRequest | undefined> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(reverseOriginDestinationStart(idEntityMergeRequest))
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/merge_requests/entities/${idEntityMergeRequest}/reverse_origin_destination`,
-                { credentials: 'include', method: 'POST' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const mergeRequest = parseEntityMergeRequestFromJson(json)
+            const rsp = await cosmaeMergeRequestEntityApiReverseOriginDestination({
+                path: { id_merge_request_persistent: idEntityMergeRequest }
+            })
+            if (rsp.data) {
+                const mergeRequest = parseEntityMergeRequestFromJson(rsp.data)
                 dispatch(reverseOriginDestinationSuccess(mergeRequest))
                 return mergeRequest
             } else {
                 dispatch(reverseOriginDestinationError(idEntityMergeRequest))
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(reverseOriginDestinationError(idEntityMergeRequest))
@@ -262,21 +242,18 @@ export function reverseOriginDestination(
 export function mergeEntityMergeRequest(
     idEntityMergeRequest: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(mergeEntityMergeRequestStart(idEntityMergeRequest))
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/merge_requests/entities/${idEntityMergeRequest}/merge`,
-                { method: 'POST', credentials: 'include' }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeMergeRequestEntityApiPostMergeRequestMerge({
+                path: { id_merge_request_persistent: idEntityMergeRequest }
+            })
+            if (!rsp.error) {
                 dispatch(mergeEntityMergeRequestSuccess(idEntityMergeRequest))
                 dispatch(addSuccessVanish('Application of resolutions started.'))
                 return
             }
-            const json = await rsp.json()
-            dispatch(addError(errorMessageFromApi(json)))
+            dispatch(addError(errorMessageFromApi(rsp.error)))
             dispatch(mergeEntityMergeRequestError(idEntityMergeRequest))
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
@@ -295,9 +272,7 @@ function parseEntityMergeRequestConflictFromJson(conflictJson: {
     }
     return newEntityMergeRequestConflict({
         column: parseColumnFromJson(conflictJson['column']),
-        valueOrigin: parseValueFromJson(
-            conflictJson['value_origin']
-        ),
+        valueOrigin: parseValueFromJson(conflictJson['value_origin']),
         valueDestination: valueDestination,
         replacementState:
             replacementStateJsonToAppDict[conflictJson['replacement_state']],

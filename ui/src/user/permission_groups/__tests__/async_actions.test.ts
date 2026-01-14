@@ -1,3 +1,4 @@
+vi.spyOn(global, 'fetch')
 import { vi, Mock } from 'vitest'
 import { UserPermissionGroup, newUserInfo } from '../../state'
 import {
@@ -9,26 +10,18 @@ import {
     SetUserPermissionSuccessAction
 } from '../actions'
 import { GetUserInfoListAction, SetUserPermissionAction } from '../async_actions'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { client as cosmaeClient } from '../../../openapi/cosmae/client.gen'
+import { config } from '../../../config'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function responseSequence(responses: [number, any][]) {
-    const fetchMock = vi.spyOn(global, 'fetch')
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        fetchMock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
+    addResponseSequence(fetch as Mock, responses)
 }
 const userNameTest = 'userTest'
 const emailTest = 'me@test.url'
 const namesPersonalTest = 'names personal test'
-const idPersistentTest = 'id-user=test'
+const idPersistentTest = 'id-user-test'
 const permissionGroupTest = UserPermissionGroup.EDITOR
 const userNameTest1 = 'userTest1'
 const emailTest1 = 'me1@test.url'
@@ -68,6 +61,16 @@ const userInfoJsonTest1 = {
     id_column_persistent_list: []
 }
 
+beforeAll(() => {
+    cosmaeClient.setConfig({
+        baseUrl: config.api_url,
+        credentials: 'include',
+        fetch
+    })
+})
+beforeEach(() => {
+    vi.clearAllMocks()
+})
 describe('get users', () => {
     test('success', async () => {
         responseSequence([
@@ -82,7 +85,7 @@ describe('get users', () => {
             [new GetUserInfoListStartAction()],
             [new GetUserInfoListSuccessAction([userInfoTest, userInfoTest1])]
         ])
-        expect((fetch as Mock).mock.calls).toEqual([
+        await expectFetchCallList((fetch as Mock).mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/user/chunks/0/5000',
                 { credentials: 'include', method: 'GET' }
@@ -129,13 +132,15 @@ describe('set user permissions', () => {
                 )
             ]
         ])
-        expect((fetch as Mock).mock.calls).toContainEqual([
-            `http://127.0.0.1:8000/cosmae/api/user/id/${idPersistentTest}/permission_group`,
-            {
-                method: 'PUT',
-                credentials: 'include',
-                body: JSON.stringify({ permission_group: 'APPLICANT' })
-            }
+        await expectFetchCallList((fetch as Mock).mock.calls, [
+            [
+                `http://127.0.0.1:8000/cosmae/api/user/id/${idPersistentTest}/permission_group`,
+                {
+                    method: 'PUT',
+                    credentials: 'include',
+                    body: { permission_group: 'APPLICANT' }
+                }
+            ]
         ])
     })
     test('error', async () => {

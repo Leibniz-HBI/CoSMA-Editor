@@ -152,7 +152,7 @@ test('assign existing', async () => {
             {
                 method: 'PATCH',
                 credentials: 'include',
-                body: JSON.stringify({ id_existing_persistent: 'display_txt' })
+                body: { id_existing_persistent: 'display_txt' }
             }
         ],
         [

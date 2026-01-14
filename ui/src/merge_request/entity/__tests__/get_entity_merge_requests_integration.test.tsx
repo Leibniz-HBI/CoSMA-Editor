@@ -2,26 +2,16 @@
  * @vitest-environment jsdom
  */
 import { vi, Mock } from 'vitest'
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import { RemoteInterface, newRemote } from '../../../util/state'
-import {
-    EntityMergeRequest,
-    EntityMergeRequestStep,
-    newEntityMergeRequest
-} from '../state'
-import { configureStore } from '@reduxjs/toolkit'
-import { entityMergeRequestsReducer } from '../slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen } from '@testing-library/react'
+import { newRemote } from '../../../util/state'
+import { EntityMergeRequestStep, newEntityMergeRequest } from '../state'
 import { EntityMergeRequests } from '../components'
 import { newEntity } from '../../../entity/state'
 import { UserPermissionGroup } from '../../../user/state'
-import {
-    NotificationManager,
-    notificationReducer,
-    NotificationType
-} from '../../../util/notification/slice'
+import { NotificationType } from '../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { renderWithProviders } from '../../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const navigateCallbackMock = vi.fn()
@@ -34,56 +24,6 @@ vi.mock('uuid', () => {
     }
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        entityMergeRequests: {
-            entityMergeRequests: RemoteInterface<EntityMergeRequest[] | undefined>
-        }
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            entityMergeRequests: { entityMergeRequests: newRemote(undefined) },
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            entityMergeRequests: entityMergeRequestsReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 const idEntityMr0 = 'id-entity-mr-0'
 const displayTextOrigin0 = 'Entity Origin 0'
 const idPersistentOrigin0 = 'id-entity-origin-0'
@@ -115,60 +55,62 @@ test('success', async () => {
         screen.getByText(displayTextOrigin1)
         screen.getByText(displayTextDestination1)
     })
-    expect(store.getState()).toEqual({
-        notification: { notificationList: [], notificationMap: {} },
-        entityMergeRequests: {
-            entityMergeRequests: newRemote([
-                newEntityMergeRequest({
-                    idPersistent: idEntityMr0,
-                    entityOrigin: newEntity({
-                        idPersistent: idPersistentOrigin0,
-                        displayTxt: displayTextOrigin0,
-                        displayTxtDetails: 'display_txt_detail',
-                        version: versionOrigin0,
-                        disabled: false
+    expect(store.getState()).toEqual(
+        expect.objectContaining({
+            notification: { notificationList: [], notificationMap: {} },
+            entityMergeRequests: {
+                entityMergeRequests: newRemote([
+                    newEntityMergeRequest({
+                        idPersistent: idEntityMr0,
+                        entityOrigin: newEntity({
+                            idPersistent: idPersistentOrigin0,
+                            displayTxt: displayTextOrigin0,
+                            displayTxtDetails: 'display_txt_detail',
+                            version: versionOrigin0,
+                            disabled: false
+                        }),
+                        entityDestination: newEntity({
+                            idPersistent: idPersistentDestination0,
+                            displayTxt: displayTextDestination0,
+                            displayTxtDetails: 'display_txt_detail',
+                            version: versionDestination0,
+                            disabled: false
+                        }),
+                        createdBy: {
+                            idPersistent: idUser0,
+                            username: userName0,
+                            permissionGroup: 'Commissioner' as UserPermissionGroup
+                        },
+                        state: 'open' as EntityMergeRequestStep
                     }),
-                    entityDestination: newEntity({
-                        idPersistent: idPersistentDestination0,
-                        displayTxt: displayTextDestination0,
-                        displayTxtDetails: 'display_txt_detail',
-                        version: versionDestination0,
-                        disabled: false
-                    }),
-                    createdBy: {
-                        idPersistent: idUser0,
-                        username: userName0,
-                        permissionGroup: 'Commissioner' as UserPermissionGroup
-                    },
-                    state: 'open' as EntityMergeRequestStep
-                }),
-                newEntityMergeRequest({
-                    idPersistent: idEntityMr1,
-                    entityOrigin: newEntity({
-                        idPersistent: idPersistentOrigin1,
-                        displayTxt: displayTextOrigin1,
-                        displayTxtDetails: 'display_txt_detail',
-                        version: versionOrigin1,
-                        disabled: false
-                    }),
-                    entityDestination: newEntity({
-                        idPersistent: idPersistentDestination1,
-                        displayTxt: displayTextDestination1,
-                        displayTxtDetails: 'display_txt_detail',
-                        version: versionDestination1,
-                        disabled: false
-                    }),
-                    createdBy: {
-                        idPersistent: idUser1,
-                        username: userName1,
-                        permissionGroup: 'Editor' as UserPermissionGroup
-                    },
-                    state: 'open' as EntityMergeRequestStep
-                })
-            ])
-        }
-    })
-    expect(fetchMock.mock.calls).toEqual([
+                    newEntityMergeRequest({
+                        idPersistent: idEntityMr1,
+                        entityOrigin: newEntity({
+                            idPersistent: idPersistentOrigin1,
+                            displayTxt: displayTextOrigin1,
+                            displayTxtDetails: 'display_txt_detail',
+                            version: versionOrigin1,
+                            disabled: false
+                        }),
+                        entityDestination: newEntity({
+                            idPersistent: idPersistentDestination1,
+                            displayTxt: displayTextDestination1,
+                            displayTxtDetails: 'display_txt_detail',
+                            version: versionDestination1,
+                            disabled: false
+                        }),
+                        createdBy: {
+                            idPersistent: idUser1,
+                            username: userName1,
+                            permissionGroup: 'Editor' as UserPermissionGroup
+                        },
+                        state: 'open' as EntityMergeRequestStep
+                    })
+                ])
+            }
+        })
+    )
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/merge_requests/entities/all',
             { credentials: 'include' }
@@ -203,7 +145,7 @@ test('error', async () => {
         expect(notification.type).toEqual(NotificationType.Error)
         expect(notification.msg).toEqual('error')
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/merge_requests/entities/all',
             { credentials: 'include' }

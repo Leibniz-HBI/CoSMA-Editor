@@ -181,7 +181,7 @@ test('add justification', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications?`,
+            `http://127.0.0.1:8000/cosmae/api/entities/${idPersistent0}/justifications`,
             {
                 credentials: 'include'
             }
@@ -191,7 +191,7 @@ test('add justification', async () => {
             {
                 credentials: 'include',
                 method: 'PUT',
-                body: JSON.stringify({ justification_txt: justificationChanged })
+                body: { justification_txt: justificationChanged }
             }
         ]
     ])

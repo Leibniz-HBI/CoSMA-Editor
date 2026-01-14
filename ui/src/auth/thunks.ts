@@ -3,7 +3,6 @@ import { setCurrentEditSession } from '../session/slice'
 import { parseEditSessionFromApi } from '../session/thunks'
 import { AppDispatch } from '../store'
 import { parseUserInfoFromJson } from '../user/thunks'
-import { getCookie } from '../util/cookie'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { ACCEPT_JSON_HEADER } from '../util/fetch'
 import { addError, addSuccessVanish } from '../util/notification/slice'
@@ -50,6 +49,7 @@ import {
 } from '../openapi/allauth/sdk.gen'
 import {
     cosmaeManagementUserApiPostCreateUser,
+    cosmaeUserApiDeleteColumnIdPersistent,
     cosmaeUserApiGetSelf,
     cosmaeUserApiPostAppendColumnIdPersistent
 } from '../openapi/cosmae/sdk.gen'
@@ -64,7 +64,6 @@ import {
 import { RequestResult } from '../openapi/allauth/client'
 import { justificationColumnId } from '../table/state'
 import { config } from '../config'
-import { Column } from '../column_menu/state'
 
 export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, _api) => {
@@ -127,10 +126,6 @@ function mkPostHeaders() {
     const headers: { [key: string]: string } = {
         'Access-Control-Allow-Credentials': 'true',
         'Content-Type': 'application/json'
-    }
-    const csrfmiddlewaretoken = getCookie('csrftoken')
-    if (csrfmiddlewaretoken !== undefined) {
-        headers['X-CSRFToken'] = csrfmiddlewaretoken
     }
     return headers
 }
@@ -402,7 +397,7 @@ export function parseEmailAllauthFromJson(emailJson: any): EmailAllauth {
 export function remoteUserProfileColumnAppendThunk(
     idColumnPersistent: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         if (idColumnPersistent == justificationColumnId) {
             return
         }
@@ -417,30 +412,15 @@ export function remoteUserProfileColumnAppendThunk(
 export function remoteUserProfileColumnDeleteThunk(
     idColumnPersistent: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         if (idColumnPersistent == justificationColumnId) {
             return
         }
-        const rsp = await fetch(
-            config.api_path + `/user/columns/${idColumnPersistent}`,
-            {
-                credentials: 'include',
-                method: 'DELETE'
-            }
-        )
-        if (rsp.status == 200) {
+        const rsp = await cosmaeUserApiDeleteColumnIdPersistent({
+            path: { id_column_persistent: idColumnPersistent }
+        })
+        if (rsp.error === undefined) {
             dispatch(removeUserColumn(idColumnPersistent))
         }
-    }
-}
-export function remoteUserProfileChangeColumIndexThunk(
-    idxStart: number,
-    idxEnd: number
-): ThunkWithFetch<void> {
-    return async (_dispatch, _getState, fetch) => {
-        await fetch(config.api_path + `/user/columns/swap/${idxStart}/${idxEnd}`, {
-            credentials: 'include',
-            method: 'POST'
-        })
     }
 }

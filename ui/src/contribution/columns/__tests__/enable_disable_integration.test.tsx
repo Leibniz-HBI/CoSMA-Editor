@@ -173,7 +173,7 @@ describe('beginning', () => {
                 {
                     method: 'PATCH',
                     credentials: 'include',
-                    body: JSON.stringify({ discard: true })
+                    body: { discard: true }
                 }
             ],
             [
@@ -181,7 +181,7 @@ describe('beginning', () => {
                 {
                     method: 'PATCH',
                     credentials: 'include',
-                    body: JSON.stringify({ discard: false })
+                    body: { discard: false }
                 }
             ]
         ])

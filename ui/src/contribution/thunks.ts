@@ -14,37 +14,38 @@ import {
     uploadContributionStart
 } from './slice'
 import { Contribution, ContributionStep, newContribution } from './state'
-import { fetch_chunk_get } from '../util/fetch'
+import {
+    ContributionCandidatePatchRequest,
+    cosmaeContributionApiContributionChunkGet,
+    cosmaeContributionApiContributionGet,
+    cosmaeContributionApiContributionPatch,
+    cosmaeContributionApiContributionPost
+} from '../openapi/cosmae'
 
 export function getContributionList(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getContributionListStart())
         try {
             const contributions: Contribution[] = []
             for (let i = 0; ; i += 5000) {
-                const rsp = await fetch_chunk_get({
-                    api_path: config.api_path + '/contributions/chunk',
-                    offset: i,
-                    limit: 5000,
-                    fetchMethod: fetch
+                const rsp = await cosmaeContributionApiContributionChunkGet({
+                    path: { start: i, offset: 5000 }
                 })
-                if (rsp.status !== 200) {
+
+                if (rsp.error) {
                     dispatch(getContributionListEnd())
                     dispatch(
                         addError(
-                            `Could not load contributions. Reason: "${
-                                (await rsp.json())['msg']
-                            }".`
+                            `Could not load contributions. Reason: "${rsp.error.msg}".`
                         )
                     )
                     return
                 }
-                const json = await rsp.json()
-                const contributions_json = json['contributions']
-                if (contributions_json.length < 1) {
+                const contributionsApi = rsp.data.contributions
+                if (contributionsApi.length < 1) {
                     break
                 }
-                for (const contribution_json of contributions_json) {
+                for (const contribution_json of contributionsApi) {
                     contributions.push(parseContributionFromApi(contribution_json))
                 }
             }
@@ -59,28 +60,25 @@ export function getContributionList(): ThunkWithFetch<void> {
 export function loadContributionDetails(
     idContributionPersistent: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getContributionStart())
         try {
-            const rsp = await fetch(
-                config.api_path + '/contributions/' + idContributionPersistent,
-                {
-                    credentials: 'include'
-                }
-            )
-            const json = await rsp.json()
-            if (rsp.status != 200) {
+            const rsp = await cosmaeContributionApiContributionGet({
+                path: { id_persistent: idContributionPersistent }
+            })
+            if (rsp.error) {
                 dispatch(
                     addError(
-                        `Could not load contribution details. Reason: "${json['msg']}".`
+                        `Could not load contribution details. Reason: "${rsp.error.msg}".`
                     )
                 )
                 return
             }
-            const contribution = parseContributionFromApi(json)
-            const errorMsg = json['error_msg']
+            const data = rsp.data
+            const contribution = parseContributionFromApi(data)
+            const errorMsg = data.error_msg
             if (errorMsg) {
-                const errorDetails = json['error_details']
+                const errorDetails = data.error_details
                 if (errorDetails) {
                     dispatch(addError(errorMsg + '\n' + errorDetails))
                 } else {
@@ -108,30 +106,28 @@ export function uploadContribution({
     idEditSessionPersistent: string
     file: File
 }): ThunkWithFetch<string | undefined> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(uploadContributionStart())
         let idPersistent = undefined
         try {
-            const form = new FormData()
-            form.append('file', file)
-            form.append('name', name)
-            form.append('description', description)
-            form.append('empty_values', emptyValues)
-            form.append('has_header', hasHeader.toString())
-            form.append('id_edit_session_persistent', idEditSessionPersistent)
-            const rsp = await fetch(config.api_path + '/contributions', {
-                method: 'POST',
-                credentials: 'include',
-                body: form
+            const rsp = await cosmaeContributionApiContributionPost({
+                body: {
+                    file: file,
+                    name: name,
+                    description: description,
+                    empty_values: emptyValues,
+                    has_header: hasHeader,
+                    id_edit_session_persistent: idEditSessionPersistent
+                }
             })
-            if (rsp.status == 200) {
-                const json = await rsp.json()
-                idPersistent = json['id_persistent']
+            if (rsp.data) {
+                idPersistent = rsp.data.id_persistent
                 dispatch(addSuccessVanish('Successfully added contribution.'))
             } else {
-                const json = await rsp.json()
                 dispatch(
-                    addError(`Could not upload contribution. Reason: "${json['msg']}".`)
+                    addError(
+                        `Could not upload contribution. Reason: "${rsp.error.msg}".`
+                    )
                 )
             }
         } catch (e: unknown) {
@@ -157,7 +153,7 @@ export function patchContributionDetails({
 
     hasHeader?: boolean
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch): Promise<void> => {
+    return async (dispatch, _getState, _fetch): Promise<void> => {
         dispatch(patchSelectedContributionStart())
         try {
             const body: { [key: string]: string | boolean } = {}
@@ -173,29 +169,19 @@ export function patchContributionDetails({
             if (emptyValues !== undefined) {
                 body['empty_values'] = emptyValues
             }
-            const rsp = await fetch(
-                config.api_path + '/contributions/' + idPersistent,
-                {
-                    method: 'PATCH',
-                    credentials: 'include',
-                    body: JSON.stringify(body)
-                }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeContributionApiContributionPatch({
+                body: body as ContributionCandidatePatchRequest,
+                path: { id_persistent: idPersistent }
+            })
+            if (rsp.data) {
                 dispatch(
-                    patchSelectedContributionEnd(
-                        parseContributionFromApi(await rsp.json())
-                    )
+                    patchSelectedContributionEnd(parseContributionFromApi(rsp.data))
                 )
                 return
             }
             dispatch(patchSelectedContributionEnd(undefined))
             dispatch(
-                addError(
-                    `Could not update contribution. Reason: "${
-                        (await rsp.json())['msg']
-                    }".`
-                )
+                addError(`Could not update contribution. Reason: "${rsp.error.msg}".`)
             )
         } catch (e: unknown) {
             dispatch(patchSelectedContributionEnd(undefined))

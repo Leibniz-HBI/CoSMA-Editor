@@ -12,7 +12,10 @@ import { NotificationType } from '../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
 import { vi, Mock } from 'vitest'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
-import { addResponseSequence } from '../../../util/tests/response'
+import {
+    addResponseSequence,
+    expectFetchCall,
+} from '../../../util/tests/response'
 import { newContributionState } from '../../slice'
 
 vi.mock('react-router-dom', () => {
@@ -99,10 +102,9 @@ test('finish success', async () => {
         fetchMock,
         initialState
     )
-    let button: HTMLElement | undefined
-    await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(3)
-        button = screen.getByRole('button', { name: /finalize column assignment/i })
+    const button = await waitFor(() => {
+        expect(fetchMock.mock.calls.length).toEqual(4)
+        return screen.getByRole('button', { name: /finalize column assignment/i })
     })
     button?.click()
     await waitFor(() => {
@@ -116,15 +118,16 @@ test('finish success', async () => {
         expect(store.getState().contribution.selectedContribution.value?.step).toEqual(
             ContributionStep.ColumnsAssigned
         )
+        expect(fetchMock.mock.calls).toHaveLength(6)
     })
-    expect(fetchMock).toHaveBeenCalledWith(
+    await expectFetchCall(fetchMock.mock.calls.at(-2), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
-    )
-    expect(fetchMock).toHaveBeenCalledWith(
+    ])
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
         { credentials: 'include' }
-    )
+    ])
     expect((useNavigate() as Mock).mock.calls).toEqual([
         ['/contribute/id-contribution-test/entities']
     ])
@@ -160,10 +163,10 @@ test('finish error', async () => {
         expect(notification.type).toEqual(NotificationType.Error)
         expect(notification.msg).toEqual(errorMsg)
     })
-    expect(fetchMock).toHaveBeenCalledWith(
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/column_assignment_complete`,
         { method: 'POST', credentials: 'include' }
-    )
+    ])
     expect((useNavigate() as Mock).mock.calls).toEqual([])
 })
 

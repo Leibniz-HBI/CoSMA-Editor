@@ -1,16 +1,3 @@
-import { render, RenderOptions } from '@testing-library/react'
-import {
-    newNotificationManager,
-    NotificationManager,
-    notificationReducer
-} from '../util/notification/slice'
-import { newUserState, UserState } from './state'
-import { Mock } from 'vitest'
-import { userSlice } from './slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
-import { wait } from '@testing-library/user-event/dist/cjs/utils/index.js'
 
 export const nameSshKey = 'ssh key name',
     typeSshKey = 'sshKeyType',
@@ -30,37 +17,3 @@ export const nameSshKey = 'ssh key name',
     },
     sshKeyListApi = { key_list: [sshKeyApi, sshKeyApi1] },
     noKeyApiResponse = { key_list: [] }
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        user: UserState
-    }
-}
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            notification: newNotificationManager({}),
-            user: newUserState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            user: userSlice.reducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}

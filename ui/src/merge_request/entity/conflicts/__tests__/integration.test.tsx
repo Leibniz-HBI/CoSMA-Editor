@@ -1,31 +1,22 @@
 /**
  * @vitest-environment jsdom
  */
-import {vi, Mock }  from 'vitest'
+import { vi, Mock } from 'vitest'
 import {
-    RenderOptions,
-    render,
     waitFor,
     screen,
     getByText
 } from '@testing-library/react'
 import { newRemote } from '../../../../util/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
 import { UserPermissionGroup } from '../../../../user/state'
 import {
-    NotificationManager,
-    notificationReducer
-} from '../../../../util/notification/slice'
-import {
-    EntityMergeRequestConflictsState,
     newEntityMergeRequestConflict
 } from '../state'
-import { entityMergeRequestConflictSlice } from '../slice'
 import { EntityMergeRequestConflictView } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
 import { ReplacementState } from '../../../conflicts/state'
+import { addResponseSequence } from '../../../../util/tests/response'
+import { renderWithProviders } from '../../../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const navigateCallbackMock = vi.fn()
@@ -43,60 +34,6 @@ vi.mock('react-router-dom', () => {
     return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        entityMergeRequestConflicts: EntityMergeRequestConflictsState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            entityMergeRequestConflicts: {
-                conflicts: newRemote(undefined),
-                mergeRequest: newRemote(undefined),
-                newlyCreated: false,
-                reverseOriginDestination: newRemote(undefined),
-                merge: newRemote(undefined)
-            },
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 const idEntityMr0 = 'id-entity-mr-0'
 const displayTextOrigin0 = 'Entity Origin 0'
 const idPersistentOrigin0 = 'id-entity-origin-0'
@@ -302,9 +239,7 @@ test('update conflicts', async () => {
     await waitFor(() => {
         screen.getByText(valueValueOriginResolvable0)
         screen.getByText(valueValueDestinationResolvable0)
-        const textValueOriginList = screen.getAllByText(
-            valueValueOriginResolvable1
-        )
+        const textValueOriginList = screen.getAllByText(valueValueOriginResolvable1)
         expect(textValueOriginList.length).toEqual(2)
         const textValueDestinationList = screen.getAllByText(
             valueValueDestinationResolvable1
@@ -468,10 +403,12 @@ test('update conflicts', async () => {
         merge: newRemote(undefined)
     }
     await waitFor(() => {
-        expect(store.getState()).toEqual({
-            entityMergeRequestConflicts: expectedState,
-            notification: { notificationList: [], notificationMap: {} }
-        })
+        expect(store.getState()).toEqual(
+            expect.objectContaining({
+                entityMergeRequestConflicts: expectedState,
+                notification: { notificationList: [], notificationMap: {} }
+            })
+        )
     })
     const updatedConflictsLabel = screen.getByText(
         'For the following conflicts the underlying data has changed'

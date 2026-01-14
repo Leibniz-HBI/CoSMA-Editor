@@ -2,32 +2,22 @@
  * @vitest-environment jsdom
  */
 
-import {vi, Mock }  from 'vitest'
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
+import { vi, Mock } from 'vitest'
+import { waitFor, screen } from '@testing-library/react'
+import { MergeRequestStep, newMergeRequest, newMergeRequestState } from '../state'
 import {
-    MergeRequestState,
-    MergeRequestStep,
-    newMergeRequest,
-    newMergeRequestState
-} from '../state'
-import {
-    NotificationManager,
     NotificationType,
     newNotification,
-    newNotificationManager,
-    notificationReducer
+    newNotificationManager
 } from '../../util/notification/slice'
-import { columnMergeRequestsReducer } from '../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
 import { ReviewList } from '../components'
 import { newRemote } from '../../util/state'
 import { UserPermissionGroup, newPublicUserInfo, newUserInfo } from '../../user/state'
 import { ColumnType, newColumn } from '../../column_menu/state'
 import { useNavigate } from 'react-router-dom'
-import { AuthState, newAuthState } from '../../auth/state'
-import { authReducer } from '../../auth/slice'
+import { newAuthState } from '../../auth/state'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
+import { addResponseSequence } from '../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const mockNavigate = vi.fn()
@@ -35,66 +25,21 @@ vi.mock('react-router-dom', () => {
         useNavigate: vi.fn().mockReturnValue(mockNavigate)
     }
 })
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        columnMergeRequests: MergeRequestState
-        auth: AuthState
-    }
-}
 
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            columnMergeRequests: newMergeRequestState({}),
-            notification: { notificationList: [], notificationMap: {} },
-            auth: newAuthState({
-                user: newRemote(
-                    newUserInfo({
-                        username: 'logged in user',
-                        idPersistent: 'id-logged-in-user',
-                        email: 'user@logged.in',
-                        namesPersonal: 'name logged in',
-                        idColumnPersistentList: [],
-                        permissionGroup: UserPermissionGroup.CONTRIBUTOR
-                    })
-                )
+const preloadedState = {
+    ...emptyState,
+    auth: newAuthState({
+        user: newRemote(
+            newUserInfo({
+                username: 'logged in user',
+                idPersistent: 'id-logged-in-user',
+                email: 'user@logged.in',
+                namesPersonal: 'name logged in',
+                idColumnPersistentList: [],
+                permissionGroup: UserPermissionGroup.CONTRIBUTOR
             })
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            columnMergeRequests: columnMergeRequestsReducer,
-            auth: authReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
         )
-    }
+    })
 }
 const idUser = 'id-user'
 const nameUser = 'user name'
@@ -178,7 +123,7 @@ test('success', async () => {
     addResponseSequence(fetchMock, [
         [200, { assigned: [mergeRequest1], created: [mergeRequest] }]
     ])
-    const { store } = renderWithProviders(<ReviewList />, fetchMock)
+    const { store } = renderWithProviders(<ReviewList />, fetchMock, { preloadedState })
 
     await waitFor(() => {
         const items = screen.getAllByText(
@@ -271,20 +216,22 @@ test('error', async () => {
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(<ReviewList />, fetchMock)
     await waitFor(() => {
-        expect(store.getState()).toEqual({
-            columnMergeRequests: newMergeRequestState({}),
-            notification: newNotificationManager({
-                notificationList: [
-                    newNotification({
-                        msg: testError,
-                        type: NotificationType.Error,
-                        id: expect.anything()
-                    })
-                ],
-                notificationMap: expect.anything(),
-                helpPath: undefined
-            }),
-            auth: expect.anything()
-        })
+        expect(store.getState()).toEqual(
+            expect.objectContaining({
+                columnMergeRequests: newMergeRequestState({}),
+                notification: newNotificationManager({
+                    notificationList: [
+                        newNotification({
+                            msg: testError,
+                            type: NotificationType.Error,
+                            id: expect.anything()
+                        })
+                    ],
+                    notificationMap: expect.anything(),
+                    helpPath: undefined
+                }),
+                auth: expect.anything()
+            })
+        )
     })
 })

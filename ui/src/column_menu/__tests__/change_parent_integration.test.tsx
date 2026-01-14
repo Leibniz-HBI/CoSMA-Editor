@@ -2,42 +2,24 @@
  * @vitest-environment jsdom
  */
 
-import {
-    RenderOptions,
-    render,
-    waitFor,
-    screen,
-    fireEvent
-} from '@testing-library/react'
+import { waitFor, screen, fireEvent } from '@testing-library/react'
 import {
     Column,
-    ColumnSelectionState,
     ColumnType,
     newColumn,
     newColumnHierarchyNode,
     newColumnSelectionState
 } from '../state'
-import { configureStore } from '@reduxjs/toolkit'
-import { columnSelectionReducer } from '../slice'
-import React, { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
 import {
-    NotificationManager,
     NotificationType,
     newNotification,
-    newNotificationManager,
-    notificationReducer
+    newNotificationManager
 } from '../../util/notification/slice'
 import { ColumnSelector } from '../components/selection'
 import { newRemote } from '../../util/state'
-import { vi, Mock } from 'vitest'
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
+import { vi } from 'vitest'
+import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
 
 const nameCol = 'column name'
 const nameCol1 = 'column name 1'
@@ -63,60 +45,26 @@ const columnTest1 = newColumn({
     curated: true
 })
 
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            columnSelection: newColumnSelectionState({
-                children: [
-                    newColumnHierarchyNode({
-                        name: nameCol,
-                        idColumnPersistent: idCol
-                    }),
-                    newColumnHierarchyNode({
-                        idColumnPersistent: idColumn1,
-                        name: nameCol1,
-                        isExpanded: true
-                    })
-                ],
-                columnsByIdPersistent: {
-                    [idCol]: newRemote(columnTest),
-                    [idColumn1]: newRemote(columnTest1)
-                }
-            }),
-            notification: newNotificationManager({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            columnSelection: columnSelectionReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
+const initialState = {
+    preloadedState: {
+        ...emptyState,
+        columnSelection: newColumnSelectionState({
+            children: [
+                newColumnHierarchyNode({
+                    name: nameCol,
+                    idColumnPersistent: idCol
+                }),
+                newColumnHierarchyNode({
+                    idColumnPersistent: idColumn1,
+                    name: nameCol1,
+                    isExpanded: true
                 })
-            ) as Mock
-        )
+            ],
+            columnsByIdPersistent: {
+                [idCol]: newRemote(columnTest),
+                [idColumn1]: newRemote(columnTest1)
+            }
+        })
     }
 }
 
@@ -181,12 +129,14 @@ test('success', async function () {
     ])
     const { store } = renderWithProviders(
         <ColumnSelector mkTailElement={mkTailElement} />,
-        fetchMock
+        fetchMock,
+        initialState
     )
     await waitFor(() => dragColumn(nameCol, nameCol1))
     await waitFor(() => {
-        expect(store.getState()).toEqual({
-            columnSelection: newColumnSelectionState({
+        const state = store.getState()
+        expect(state.columnSelection).toEqual(
+            newColumnSelectionState({
                 children: [
                     newColumnHierarchyNode({
                         idColumnPersistent: idColumn1,
@@ -209,14 +159,14 @@ test('success', async function () {
                     }),
                     [idColumn1]: newRemote(columnTest1)
                 }
-            }),
-            notification: newNotificationManager({})
-        })
+            })
+        )
     })
     await waitFor(() => dragColumn(/-> column name/i, undefined))
     await waitFor(() => {
-        expect(store.getState()).toEqual({
-            columnSelection: newColumnSelectionState({
+        const state = store.getState()
+        expect(state.columnSelection).toEqual(
+            newColumnSelectionState({
                 children: [
                     newColumnHierarchyNode({
                         idColumnPersistent: idColumn1,
@@ -236,17 +186,16 @@ test('success', async function () {
                     }),
                     [idColumn1]: newRemote(columnTest1)
                 }
-            }),
-            notification: newNotificationManager({})
-        })
+            })
+        )
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/columns',
             {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({
+                body: {
                     column_list: [
                         {
                             id_persistent: columnTest.idPersistent,
@@ -256,7 +205,7 @@ test('success', async function () {
                             version: columnTest.version
                         }
                     ]
-                })
+                }
             }
         ],
         [
@@ -264,7 +213,7 @@ test('success', async function () {
             {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({
+                body: {
                     column_list: [
                         {
                             id_persistent: columnTest.idPersistent,
@@ -273,7 +222,7 @@ test('success', async function () {
                             version: newVersion
                         }
                     ]
-                })
+                }
             }
         ]
     ])
@@ -285,12 +234,14 @@ test('error', async function () {
     addResponseSequence(fetchMock, [[500, { msg: testError }]])
     const { store } = renderWithProviders(
         <ColumnSelector mkTailElement={mkTailElement} />,
-        fetchMock
+        fetchMock,
+        initialState
     )
     await waitFor(() => dragColumn(nameCol, nameCol1))
     await waitFor(() => {
-        expect(store.getState()).toEqual({
-            columnSelection: newColumnSelectionState({
+        const state = store.getState()
+        expect(state.columnSelection).toEqual(
+            newColumnSelectionState({
                 children: [
                     newColumnHierarchyNode({
                         name: nameCol,
@@ -306,8 +257,10 @@ test('error', async function () {
                     [idCol]: newRemote(columnTest),
                     [idColumn1]: newRemote(columnTest1)
                 }
-            }),
-            notification: newNotificationManager({
+            })
+        )
+        expect(state.notification).toEqual(
+            newNotificationManager({
                 notificationList: [
                     newNotification({
                         msg: testError,
@@ -317,15 +270,15 @@ test('error', async function () {
                 ],
                 notificationMap: expect.anything()
             })
-        })
+        )
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/columns',
             {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({
+                body: {
                     column_list: [
                         {
                             id_persistent: columnTest.idPersistent,
@@ -335,7 +288,7 @@ test('error', async function () {
                             version: columnTest.version
                         }
                     ]
-                })
+                }
             }
         ]
     ])

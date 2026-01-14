@@ -5,6 +5,7 @@ import { screen, waitFor } from '@testing-library/react'
 import {
     addResponseSequence,
     expectError,
+    expectFetchCallList,
     expectNoNotification
 } from '../../../util/tests/response'
 import {
@@ -12,7 +13,6 @@ import {
     nameSshKey,
     nameSshKey1,
     noKeyApiResponse,
-    renderWithProviders,
     sshKeyApi,
     sshKeyListApi,
     typeSshKey,
@@ -20,6 +20,7 @@ import {
 } from '../../test_utils'
 import { SshKeyPage } from '../ssh_key'
 import userEvent from '@testing-library/user-event'
+import { renderWithProviders } from '../../../util/tests/provider'
 
 describe('get ssh key list', () => {
     test(' success', async () => {
@@ -32,7 +33,7 @@ describe('get ssh key list', () => {
             screen.getByText(typeSshKey)
             screen.getByText(typeSshKey1)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             ['http://127.0.0.1:8000/cosmae/api/user/ssh', { credentials: 'include' }]
         ])
         expect(store.getState().notification.notificationList).toEqual([])
@@ -66,14 +67,14 @@ describe('add ssh key', () => {
             screen.getByText(nameSshKey)
             screen.getByText(typeSshKey)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             ['http://127.0.0.1:8000/cosmae/api/user/ssh', { credentials: 'include' }],
             [
                 'http://127.0.0.1:8000/cosmae/api/user/ssh',
                 {
                     credentials: 'include',
                     method: 'PUT',
-                    body: JSON.stringify({ key: nameSshKey })
+                    body: { key: nameSshKey }
                 }
             ]
         ])
@@ -118,7 +119,7 @@ describe('delete', () => {
             screen.getByText(typeSshKey)
             screen.getByText(nameSshKey)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             ['http://127.0.0.1:8000/cosmae/api/user/ssh', { credentials: 'include' }],
             [
                 'http://127.0.0.1:8000/cosmae/api/user/ssh/key/' + idSshKey1,
@@ -145,8 +146,9 @@ describe('delete', () => {
             screen.getByText(nameSshKey)
             screen.getByText(typeSshKey1)
             screen.getByText(nameSshKey1)
+            expect(fetchMock.mock.calls.length).toEqual(2)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             ['http://127.0.0.1:8000/cosmae/api/user/ssh', { credentials: 'include' }],
             [
                 'http://127.0.0.1:8000/cosmae/api/user/ssh/key/' + idSshKey1,

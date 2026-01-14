@@ -1,4 +1,14 @@
-import { config } from '../config'
+import {
+    cosmaeEditSessionApiDeleteParticipant,
+    cosmaeEditSessionApiGetEditSessionsOwner,
+    cosmaeEditSessionApiGetEditSessionsParticipant,
+    cosmaeEditSessionApiPatchEditSession,
+    cosmaeEditSessionApiPutEditSession,
+    cosmaeEditSessionApiPutParticipant,
+    cosmaeEditSessionApiSearchParticipants,
+    EditSession,
+    EditSessionParticipantWithName
+} from '../openapi/cosmae'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { ThunkWithFetch } from '../util/type'
@@ -33,20 +43,17 @@ import {
 } from './state'
 
 export function getEditSessionOwnerListThunk(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getEditSessionOwnerListStart())
         try {
-            const rsp = await fetch(config.api_path + '/edit_sessions/owner', {
-                credentials: 'include'
-            })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const editSessionList = json['edit_session_list'].map(
-                    (session: unknown) => parseEditSessionFromApi(session)
+            const rsp = await cosmaeEditSessionApiGetEditSessionsOwner({})
+            if (rsp.data) {
+                const editSessionList = rsp.data.edit_session_list.map(
+                    (session) => parseEditSessionFromApi(session)
                 )
                 dispatch(getEditSessionOwnerListSuccess(editSessionList))
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(getEditSessionOwnerListError())
             }
         } catch (e: unknown) {
@@ -57,20 +64,17 @@ export function getEditSessionOwnerListThunk(): ThunkWithFetch<void> {
 }
 
 export function getEditSessionParticipantListThunk(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getEditSessionParticipantListStart())
         try {
-            const rsp = await fetch(config.api_path + '/edit_sessions/participant', {
-                credentials: 'include'
-            })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const editSessionList = json['edit_session_list'].map(
-                    (session: unknown) => parseEditSessionFromApi(session)
+            const rsp = await cosmaeEditSessionApiGetEditSessionsParticipant({})
+            if (rsp.data) {
+                const editSessionList = rsp.data.edit_session_list.map(
+                    (session) => parseEditSessionFromApi(session)
                 )
                 dispatch(getEditSessionParticipantListSuccess(editSessionList))
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(getEditSessionParticipantListError())
             }
         } catch (e: unknown) {
@@ -84,29 +88,23 @@ export function addEditSessionParticipantThunk(
     idEditSessionPersistent: string,
     participant: EditSessionParticipant
 ): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(addEditSessionParticipantStart(participant.id))
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/edit_sessions/${idEditSessionPersistent}/participants`,
-                {
-                    method: 'PUT',
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        type_participant: participant.type.toString().toUpperCase(),
-                        id_participant: participant.id,
-                        name_participant: participant.name
-                    })
+            const rsp = await cosmaeEditSessionApiPutParticipant({
+                path: { id_edit_session_persistent: idEditSessionPersistent },
+                body: {
+                    type_participant: participant.type.toString().toUpperCase(),
+                    id_participant: participant.id,
+                    name_participant: participant.name
                 }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            })
+            if (rsp.data) {
                 dispatch(addEditSessionParticipantSuccess(participant))
                 return true
             }
             dispatch(addEditSessionParticipantError(participant.id))
-            dispatch(addError(errorMessageFromApi(json)))
+            dispatch(addError(errorMessageFromApi(rsp.error)))
         } catch (e: unknown) {
             dispatch(addEditSessionParticipantError(participant.id))
             dispatch(addError(exceptionMessage(e)))
@@ -118,23 +116,20 @@ export function addEditSessionParticipantThunk(
 export function searchEditSessionParticipantThunk(
     searchTerm: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(searchParticipantsStart())
         try {
-            const rsp = await fetch(config.api_path + '/edit_sessions/search', {
-                credentials: 'include',
-                method: 'POST',
-                body: JSON.stringify({ search_term: searchTerm })
+            const rsp = await cosmaeEditSessionApiSearchParticipants({
+                body: { search_term: searchTerm }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const results = json['search_result_list'].map((json: unknown) =>
-                    parseEditSessionParticipant(json)
+            if (rsp.data) {
+                const results = rsp.data['search_result_list'].map((participant) =>
+                    parseEditSessionParticipant(participant)
                 )
                 dispatch(searchParticipantsSuccess(results))
             } else {
                 dispatch(searchParticipantsError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(searchParticipantsError())
@@ -147,21 +142,17 @@ export function removeEditSessionParticipantThunk(
     idEditSession: string,
     participant: EditSessionParticipant
 ): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(removeEditSessionParticipantStart(participant))
         try {
-            const rsp = await fetch(
-                config.api_path + `/edit_sessions/${idEditSession}/participants`,
-                {
-                    credentials: 'include',
-                    method: 'DELETE',
-                    body: JSON.stringify({
-                        id_participant: participant.id,
-                        type_participant: participant.type.toString().toUpperCase()
-                    })
+            const rsp = await cosmaeEditSessionApiDeleteParticipant({
+                path: { id_edit_session_persistent: idEditSession },
+                body: {
+                    id_participant: participant.id,
+                    type_participant: participant.type.toString().toUpperCase()
                 }
-            )
-            if (rsp.status == 200) {
+            })
+            if (!rsp.error) {
                 dispatch(removeEditSessionParticipantSuccess(participant))
                 dispatch(
                     addSuccessVanish(
@@ -170,9 +161,8 @@ export function removeEditSessionParticipantThunk(
                 )
                 return true
             }
-            const json = await rsp.json()
             dispatch(removeEditSessionParticipantError(participant))
-            dispatch(addError(errorMessageFromApi(json)))
+            dispatch(addError(errorMessageFromApi(rsp.error)))
         } catch (e: unknown) {
             dispatch(removeEditSessionParticipantError(participant))
             dispatch(addError(exceptionMessage(e)))
@@ -184,20 +174,17 @@ export function removeEditSessionParticipantThunk(
 export function createEditSessionThunk(
     nameEditSession: string | undefined
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(createEditSessionStart())
         try {
-            const rsp = await fetch(config.api_path + '/edit_sessions', {
-                credentials: 'include',
-                method: 'PUT',
-                body: JSON.stringify({ name: nameEditSession })
+            const rsp = await cosmaeEditSessionApiPutEditSession({
+                body: { name: nameEditSession }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const editSession = parseEditSessionFromApi(json)
+            if (rsp.data) {
+                const editSession = parseEditSessionFromApi(rsp.data)
                 dispatch(createEditSessionSuccess(editSession))
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(createEditSessionError())
             }
         } catch (e: unknown) {
@@ -214,24 +201,19 @@ export function patchEditSessionThunk({
     idEditSessionPersistent: string
     name: string
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(patchEditSessionStart())
         try {
-            const rsp = await fetch(
-                config.api_path + `/edit_sessions/${idEditSessionPersistent}`,
-                {
-                    credentials: 'include',
-                    method: 'PATCH',
-                    body: JSON.stringify({ name })
-                }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const editSession = parseEditSessionFromApi(json)
+            const rsp = await cosmaeEditSessionApiPatchEditSession({
+                path: { id_edit_session_persistent: idEditSessionPersistent },
+                body: { name }
+            })
+            if (rsp.data) {
+                const editSession = parseEditSessionFromApi(rsp.data)
                 dispatch(patchEditSessionSuccess(editSession))
                 dispatch(addSuccessVanish('Edit session name successfully changed.'))
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(patchEditSessionError())
             }
         } catch (e: unknown) {
@@ -242,14 +224,14 @@ export function patchEditSessionThunk({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseEditSessionFromApi(json: any) {
-    const participantList = json['participant_list'].map((participant: unknown) =>
+export function parseEditSessionFromApi(session: EditSession) {
+    const participantList = session['participant_list'].map((participant) =>
         parseEditSessionParticipant(participant)
     )
     return newEditSession({
-        idPersistent: json['id_persistent'],
-        name: json['name'],
-        owner: parseEditSessionParticipant(json['owner']),
+        idPersistent: session['id_persistent'],
+        name: session['name'],
+        owner: parseEditSessionParticipant(session.owner),
         participantList,
         participantMap: Object.fromEntries(
             participantList.map((entry: EditSessionParticipant, idx: number) => [
@@ -264,11 +246,12 @@ const editSessionParticipantTypeMap: { [key: string]: EditSessionParticipantType
     ORCID: EditSessionParticipantType.orcid
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseEditSessionParticipant(json: any): EditSessionParticipant {
+export function parseEditSessionParticipant(
+    participant: EditSessionParticipantWithName
+): EditSessionParticipant {
     return newEditSessionParticipant({
-        id: json['id_participant'],
-        type: editSessionParticipantTypeMap[json['type_participant']],
-        name: json['name_participant'] ?? undefined
+        id: participant['id_participant'],
+        type: editSessionParticipantTypeMap[participant['type_participant']],
+        name: participant['name_participant']
     })
 }

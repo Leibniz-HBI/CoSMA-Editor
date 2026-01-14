@@ -30,6 +30,9 @@ import { Comment } from '../comments/slice'
 import {
     ColumnResponse,
     cosmaeEntityApiGetDetails,
+    cosmaeEntityApiGetValues,
+    cosmaeEntityApiPutJustification,
+    cosmaeEntityApiSearch,
     EntityWithJustification
 } from '../openapi/cosmae'
 import { Column } from '../column_menu/state'
@@ -92,27 +95,21 @@ export function getEntityValuesThunk(
     idEntityPersistent: string,
     upUntilTime: Date | undefined
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getEntityDetailsStart())
         try {
-            const params: { [key: string]: string } = {
-                id_persistent: idEntityPersistent
-            }
-            if (upUntilTime !== undefined) {
-                params['up_until_time'] = upUntilTime.toISOString()
-            }
-
-            const queryPath = '/entities/values?' + new URLSearchParams(params)
-            const rsp = await fetch(config.api_path + queryPath, {
-                credentials: 'include'
+            const rsp = await cosmaeEntityApiGetValues({
+                query: {
+                    id_persistent: idEntityPersistent,
+                    up_until_time: upUntilTime?.toISOString()
+                }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const details = parseEntityDetailsFromApi(json)
+            if (rsp.data) {
+                const details = parseEntityDetailsFromApi(rsp.data)
                 dispatch(getEntityDetailsSuccess(details))
             } else {
                 dispatch(getEntityDetailsError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(getEntityDetailsError())
@@ -122,23 +119,19 @@ export function getEntityValuesThunk(
 }
 
 export function getEntitySearchResultsThunk(searchTerm: string): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getEntitySearchResultsStart())
         try {
-            const rsp = await fetch(
-                config.api_path + `/entities/search?term=${searchTerm}`,
-                { credentials: 'include' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const searchResults = json['search_result_list'].map(
+            const rsp = await cosmaeEntityApiSearch({ query: { term: searchTerm } })
+            if (rsp.data) {
+                const searchResults = rsp.data.search_result_list.map(
                     (result_json: unknown) =>
                         parseEntitySearchResultsFromApi(result_json)
                 )
                 dispatch(getEntitySearchResultsSuccess(searchResults))
             } else {
                 dispatch(getEntitySearchResultsError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(getEntitySearchResultsError())
@@ -150,30 +143,25 @@ export function submitEntityJustificationThunk(
     idEntityPersistent: string,
     justification: string
 ): ThunkWithFetch<{ comment: Comment | undefined; wasAdded: boolean }> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState,_fetch) => {
         dispatch(submitEntityJustificationStart())
         try {
-            const rsp = await fetch(
-                config.api_path + `/entities/${idEntityPersistent}/justifications`,
-                {
-                    credentials: 'include',
-                    method: 'PUT',
-                    body: JSON.stringify({ justification_txt: justification })
-                }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const comment = parseCommentFromApi(json['justification'])
+            const rsp = await cosmaeEntityApiPutJustification({
+                path: { id_entity_persistent: idEntityPersistent },
+                body: { justification_txt: justification }
+            })
+            if (rsp.data) {
+                const comment = parseCommentFromApi(rsp.data.justification)
                 dispatch(
                     submitEntityJustificationSuccess({ idEntityPersistent, comment })
                 )
                 return { comment, wasAdded: true }
-            } else if (rsp.status == 302) {
+            } else if (rsp.response.status == 302) {
                 dispatch(addSuccessVanish('A similar justification already exists.'))
                 dispatch(submitEntityJustificationSuccess(undefined))
                 return { comment: undefined, wasAdded: true }
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))

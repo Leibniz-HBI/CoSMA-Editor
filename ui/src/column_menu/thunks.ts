@@ -1,7 +1,6 @@
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { Column, ColumnType, newColumn } from './state'
-import { config } from '../config'
 import { JsonValue, ThunkWithFetch } from '../util/type'
 import {
     changeParentSuccess,
@@ -16,10 +15,21 @@ import {
     submitColumnStart,
     submitColumnSuccess
 } from './slice'
-import { parsePublicUserInfoFromJson, parsePublicUserInfoFromOpenApi } from '../user/thunks'
+import {
+    parsePublicUserInfoFromJson,
+    parsePublicUserInfoFromOpenApi
+} from '../user/thunks'
 import { PublicUserInfo } from '../user/state'
 import { curateColumnError, curateColumnStart } from './slice'
-import { cosmaeColumnApiPostGetColumnChildren, ColumnResponse } from '../openapi/cosmae'
+import {
+    cosmaeColumnApiPostGetColumnChildren,
+    ColumnResponse,
+    cosmaeColumnApiPostColumns,
+    ColumnRequest,
+    cosmaeColumnApiPostDetails,
+    cosmaeColumnApiPurge,
+    cosmaeColumnApiPermissionsPostCuration
+} from '../openapi/cosmae'
 
 export function loadColumnHierarchy({
     idParentPersistent = undefined,
@@ -110,34 +120,26 @@ export function submitColumn({
     namePath?: string[]
     parentNamePath: string[]
 }): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(submitColumnStart())
         try {
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const body: { [key: string]: any } = {
-                name: name,
-                id_parent_persistent: idParentPersistent,
-                type: type,
-                description,
-                disabled
-            }
-            if (idPersistent !== undefined) {
-                body.id_persistent = idPersistent
-                body.version = version
-            }
-            const rsp = await fetch(config.api_path + '/columns', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    column_list: [body]
-                })
+            const rsp = await cosmaeColumnApiPostColumns({
+                body: {
+                    column_list: [
+                        {
+                            name: name,
+                            id_parent_persistent: idParentPersistent,
+                            type: type,
+                            description,
+                            id_persistent: idPersistent,
+                            version: version,
+                            disabled
+                        }
+                    ]
+                }
             })
-            if (rsp.status == 200) {
-                const json = await rsp.json()
-                const column = parseColumnsFromApi(json['column_list'][0])
+            if (rsp.data) {
+                const column = parseColumnsFromApi(rsp.data.column_list[0])
                 dispatch(
                     submitColumnSuccess({
                         parentNamePath,
@@ -147,10 +149,9 @@ export function submitColumn({
                 )
                 return true
             }
-            const msg = (await rsp.json())['msg']
 
             dispatch(submitColumnError())
-            dispatch(addError(msg))
+            dispatch(addError(errorMessageFromApi(rsp.error)))
 
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
@@ -175,7 +176,7 @@ export function changeColumnParent({
     oldPathToColumn: number[]
     pathToNewParent: number[]
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         const idParentRequestPersistent =
             idParentNewPersistent == '' ? undefined : idParentNewPersistent
         try {
@@ -186,15 +187,11 @@ export function changeColumnParent({
                 type: columnTypeMapAppToApi.get(column.columnType),
                 version: column.version
             }
-            const rsp = await fetch(config.api_path + '/columns', {
-                credentials: 'include',
-                method: 'POST',
-                body: JSON.stringify({ column_list: [payload] })
+            const rsp = await cosmaeColumnApiPostColumns({
+                body: { column_list: [payload as ColumnRequest] }
             })
-            if (rsp.status == 200) {
-                const json = await rsp.json()
-                const columnJson = json['column_list'][0]
-                const columnRsp = parseColumnsFromApi(columnJson)
+            if (rsp.data) {
+                const columnRsp = parseColumnsFromApi(rsp.data.column_list[0])
                 dispatch(
                     changeParentSuccess({
                         column: columnRsp,
@@ -203,8 +200,7 @@ export function changeColumnParent({
                     })
                 )
             } else {
-                const json = await rsp.json()
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
@@ -215,7 +211,7 @@ export function getColumnDetailsThunk(
     idPersistentList: string[],
     upUntilDate: Date | undefined = undefined
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         if (idPersistentList.length == 0) {
             return
         }
@@ -232,16 +228,16 @@ export function getColumnDetailsThunk(
             if (upUntilDate !== undefined) {
                 body['up_until_time'] = upUntilDate.toISOString()
             }
-            const rsp = await fetch(config.api_path + '/columns/details', {
-                credentials: 'include',
-                method: 'POST',
-                body: JSON.stringify(body)
+            const rsp = await cosmaeColumnApiPostDetails({
+                body: {
+                    id_persistent_list: idPersistentList,
+                    up_until_time: upUntilDate?.toISOString()
+                }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            if (rsp.data) {
                 const requestedIdSet = new Set<string>(idPersistentList)
                 const columnList: Column[] = []
-                json['column_list'].forEach((json: unknown) => {
+                rsp.data.column_list.forEach((json: unknown) => {
                     const column = parseColumnsFromApi(json)
                     requestedIdSet.delete(column.idPersistent)
                     columnList.push(column)
@@ -272,7 +268,7 @@ export function getColumnDetailsThunk(
                         upUntilSinceEpoch: upUntilDate?.getTime()
                     })
                 )
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(
@@ -286,17 +282,13 @@ export function getColumnDetailsThunk(
     }
 }
 export function purgeColumn(column: Column): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(submitColumnStart())
         try {
-            const rsp = await fetch(
-                config.api_path + `/columns/${column.idPersistent}`,
-                {
-                    credentials: 'include',
-                    method: 'DELETE'
-                }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeColumnApiPurge({
+                path: { id_persistent: column.idPersistent }
+            })
+            if (rsp.data) {
                 dispatch(
                     submitColumnSuccess({
                         column: { ...column, disabled: true },
@@ -306,9 +298,8 @@ export function purgeColumn(column: Column): ThunkWithFetch<void> {
                 )
                 dispatch(addSuccessVanish('Successfully purged column definition.'))
             } else {
-                const json = await rsp.json()
                 dispatch(submitColumnError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(submitColumnError())
@@ -318,22 +309,17 @@ export function purgeColumn(column: Column): ThunkWithFetch<void> {
 }
 
 export function curateAsync(idColumnPersistent: string): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(curateColumnStart())
         try {
-            const rsp = await fetch(
-                config.api_path + `/columns/permissions/${idColumnPersistent}/curate`,
-                {
-                    credentials: 'include',
-                    method: 'POST'
-                }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            const rsp = await cosmaeColumnApiPermissionsPostCuration({
+                path: { id_column_persistent: idColumnPersistent }
+            })
+            if (rsp.data) {
                 dispatch(curateColumnSuccess(idColumnPersistent))
             } else {
                 dispatch(curateColumnError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(curateColumnError())
@@ -348,7 +334,6 @@ export const columnTypeMapApiToApp = new Map<string, ColumnType>([
     ['FLOAT', ColumnType.Float],
     ['BOOL', ColumnType.Boolean]
 ])
-
 
 export const columnTypeIdxToApi = ['STRING', 'FLOAT', 'INNER']
 

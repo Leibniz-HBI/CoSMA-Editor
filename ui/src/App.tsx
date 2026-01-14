@@ -23,6 +23,7 @@ import { AuthProvider } from './auth/components/provider'
 import { EmailVerification } from './auth/components/email_verification'
 import { CosmaeNavbar } from './navigation/components'
 import { ProfilePage } from './user/components/profile'
+import { cosmaeContributionApiContributionGet } from './openapi/cosmae'
 
 export function CosmaeRoot() {
     return (
@@ -138,11 +139,14 @@ async function redirectContributionStep(idPersistent: string | undefined) {
         throw new Response('no contribution id specified', { status: 400 })
     }
     try {
-        const rsp = await fetch(config.api_path + '/contributions/' + idPersistent, {
-            credentials: 'include'
+        const rsp = await cosmaeContributionApiContributionGet({
+            path: { id_persistent: idPersistent }
         })
-        const json = await rsp.json()
-        const step = contributionStepApiToUiMap[json['state']]
+        if (rsp.error){
+            throw new Error(`error loading contribution: ${rsp.error.msg}`)
+        }
+
+        const step = contributionStepApiToUiMap[rsp.data.state]
         if (step == ContributionStep.ColumnsExtracted) {
             return redirect(`/contribute/${idPersistent}/columns`)
         }

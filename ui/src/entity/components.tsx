@@ -120,10 +120,10 @@ export function AddEntityFormBody({
 
 export function EntityDetails({
     idEntityPersistent,
-    upUntilTime
+    upUntilTime = undefined
 }: {
     idEntityPersistent: string
-    upUntilTime: Date | undefined
+    upUntilTime?: Date | undefined
 }) {
     const dispatch = useAppDispatch()
     useEffect(() => {

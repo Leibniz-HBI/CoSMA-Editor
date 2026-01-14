@@ -16,6 +16,8 @@ import { EntitiesStep } from '../../components'
 import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
 import { newColumnSelectionState } from '../../../../column_menu/state'
 import { addResponseSequence } from '../../../../util/tests/response'
+import { act } from 'react'
+import userEvent from '@testing-library/user-event'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -102,10 +104,10 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { column_list: [] }],
         [200, { matches: mkMatches(entityList.slice(0, 50)) }],
-        [200, { value_responses: [] }],
-        [200, { matches: mkMatches(entityList.slice(50)) }]
+        [200, { column_list: [] }],
+        [200, { matches: mkMatches(entityList.slice(50)) }],
+        [200, { value_responses: [] }]
     ])
 }
 test('get duplicates', async () => {
@@ -116,16 +118,17 @@ test('get duplicates', async () => {
         fetchMock,
         initialState
     )
-    await waitFor(() => {
-        screen.getByText('entity-1')
+    const entitySelectionElement = await waitFor(() => {
+        const entitySelection = screen.getByText('entity-1')
         expect(
             store.getState().contributionEntity.entities.value?.at(0)?.similarEntities
                 .isLoading
         ).toEqual(false)
+        return entitySelection
     })
-    await waitFor(() => {
-        const entitySelectionElement = screen.getByText('entity-1')
-        entitySelectionElement.click()
+    const user = userEvent.setup()
+    await act(async () => {
+        await user.click(entitySelectionElement)
     })
     await waitFor(() => {
         const mockElements = container.getElementsByClassName('mock')
@@ -148,7 +151,6 @@ test('get duplicates', async () => {
 test('select entity', async () => {
     const fetchMock = vi.fn()
     initialResponses(fetchMock)
-    addResponseSequence(fetchMock, [])
     const { container, store } = renderWithProviders(
         <EntitiesStep />,
         fetchMock,
@@ -156,16 +158,28 @@ test('select entity', async () => {
     )
     await waitFor(() => {
         screen.getByText('Please select an entity')
+        expect(fetchMock.mock.calls).toHaveLength(6)
     })
-    await waitFor(() => {
-        const entitySelectionElement = screen.getByText('entity-1')
-        entitySelectionElement.click()
+    const entitySelectionElement = await waitFor(() => {
+        expect(
+            store.getState().contributionEntity.entities.value?.at(0)?.similarEntities
+                .isLoading
+        ).toEqual(false)
+        return screen.getByRole('button', { name: 'entity-2' })
     })
-    await waitFor(() => {
-        const mockElements = container.getElementsByClassName('mock')
-        expect(mockElements.length).toEqual(1)
+    entitySelectionElement.click()
+    const user = userEvent.setup()
+    await act(async () => {
+        await user.click(entitySelectionElement)
     })
-    expect(store.getState().contributionEntity.selectedEntityIdx).toEqual(1)
+    await waitFor(
+        () => {
+            expect(store.getState().contributionEntity.selectedEntityIdx).toEqual(2)
+            const mockElements = container.getElementsByClassName('mock')
+            expect(mockElements.length).toEqual(1)
+        },
+        { timeout: 3000 }
+    )
 })
 
 const preloadedState = {

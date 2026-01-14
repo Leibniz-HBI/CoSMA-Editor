@@ -11,20 +11,22 @@ import {
     getDisplayTxtColumnsSuccess,
     removeColumn
 } from './slice'
+import {
+    cosmaeManagementDisplayTxtApiAppend,
+    cosmaeManagementDisplayTxtApiGet,
+    cosmaeManagementDisplayTxtApiRemove
+} from '../../openapi/cosmae'
 
 export function getDisplayTxtColumns(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getDisplayTxtColumnsStart())
         try {
-            const rsp = await fetch(config.api_path + '/manage/display_txt/order', {
-                credentials: 'include'
-            })
-            const json = await rsp.json()
-            if (rsp.status != 200) {
-                dispatch(addError(errorMessageFromApi(json)))
+            const rsp = await cosmaeManagementDisplayTxtApiGet()
+            if (rsp.error) {
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(getDisplayTxtColumnsError())
             } else {
-                const columnList = json['column_list'].map((columnJson: unknown) =>
+                const columnList = rsp.data.column_list.map((columnJson: unknown) =>
                     parseColumnsFromApi(columnJson)
                 )
                 dispatch(getDisplayTxtColumnsSuccess(columnList))
@@ -37,23 +39,15 @@ export function getDisplayTxtColumns(): ThunkWithFetch<void> {
 }
 
 export function appendColumnThunk(column: Column): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         try {
-            const rsp = await fetch(
-                config.api_path + '/manage/display_txt/order/append',
-                {
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        id_column_persistent: column.idPersistent
-                    }),
-                    method: 'POST'
-                }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeManagementDisplayTxtApiAppend({
+                body: { id_column_persistent: column.idPersistent }
+            })
+            if (rsp.data) {
                 dispatch(appendColumn(column))
             } else {
-                const json = await rsp.json()
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
@@ -62,21 +56,17 @@ export function appendColumnThunk(column: Column): ThunkWithFetch<void> {
 }
 
 export function removeColumnThunk(column: Column): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/manage/display_txt/order/${column.idPersistent}`,
-                {
-                    credentials: 'include',
-                    method: 'DELETE'
+            const rsp = await cosmaeManagementDisplayTxtApiRemove({
+                path: {
+                    id_column_persistent: column.idPersistent
                 }
-            )
-            if (rsp.status == 200) {
+            })
+            if (rsp.data) {
                 dispatch(removeColumn(column))
             } else {
-                const json = await rsp.json()
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))

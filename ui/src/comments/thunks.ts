@@ -1,4 +1,8 @@
-import { config } from '../config'
+import {
+    Comment as CommentApi,
+    cosmaeCommentsApiPostComment,
+    cosmaeCommentsApiPostGetComments
+} from '../openapi/cosmae'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { addError } from '../util/notification/slice'
@@ -14,29 +18,22 @@ import {
 } from './slice'
 
 export function loadCommentsThunk(idPersistentList: string[]): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(loadCommentsStart(idPersistentList))
         try {
-            const rsp = await fetch(config.api_path + '/comments', {
-                method: 'POST',
-                credentials: 'include',
-                body: JSON.stringify({ id_persistent_list: idPersistentList })
+            const rsp = await cosmaeCommentsApiPostGetComments({
+                body: { id_persistent_list: idPersistentList }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            if (rsp.data) {
                 const comments = Object.fromEntries(
-                    Object.entries(json['comments_by_id_persistent']).map(
-                        (entry) => [
-                            entry[0],
-                            (entry[1] as unknown[]).map((comment) =>
-                                parseCommentFromApi(comment)
-                            )
-                        ]
-                    )
+                    Object.entries(rsp.data.comments_by_id_persistent).map((entry) => [
+                        entry[0],
+                        entry[1].map((comment) => parseCommentFromApi(comment))
+                    ])
                 )
                 dispatch(loadCommentsSuccess(comments))
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(loadCommentsError(idPersistentList))
             }
         } catch (e: unknown) {
@@ -50,25 +47,23 @@ export function submitComment(
     idPersistent: string,
     content: string
 ): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(submitCommentStart())
         try {
-            const rsp = await fetch(config.api_path + `/comments/${idPersistent}`, {
-                method: 'POST',
-                credentials: 'include',
-                body: JSON.stringify({ comment: { content } })
+            const rsp = await cosmaeCommentsApiPostComment({
+                path: { relates_to_id_persistent: idPersistent },
+                body: { comment: { content } }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            if (rsp.data) {
                 dispatch(
                     submitCommentSuccess({
                         idPersistent,
-                        comment: parseCommentFromApi(json['comment'])
+                        comment: parseCommentFromApi(rsp.data.comment)
                     })
                 )
                 return true
             }
-            dispatch(addError(errorMessageFromApi(json)))
+            dispatch(addError(errorMessageFromApi(rsp.error)))
             dispatch(submitCommentError())
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))
@@ -77,11 +72,11 @@ export function submitComment(
         return false
     }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseCommentFromApi(commentJson: any): Comment {
+
+export function parseCommentFromApi(commentApi: CommentApi): Comment {
     return {
-        content: commentJson['content'],
-        author: parsePublicUserInfoFromJson(commentJson['author']),
-        timestamp: new Date(commentJson['timestamp'])
+        content: commentApi.content,
+        author: parsePublicUserInfoFromJson(commentApi.author),
+        timestamp: new Date(commentApi.timestamp)
     }
 }
