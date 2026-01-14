@@ -3,7 +3,7 @@
 from typing import List, Optional
 
 from django.http import HttpRequest
-from ninja import Router, Schema
+from ninja import Path, Router, Schema
 
 from cosmae.column.models_django import Column
 from cosmae.contribution.column.models_django import (
@@ -35,6 +35,7 @@ class Preview(Schema):
 def get_preview(
     request: HttpRequest,
     id_column_persistent: str,
+    id_contribution_persistent: str = Path(...),
 ):
     "Get preview for column assignment"
     try:
@@ -42,9 +43,6 @@ def get_preview(
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
     try:
-        id_contribution_persistent = request.resolver_match.captured_kwargs[
-            "id_contribution_persistent"
-        ]
         contribution = ContributionCandidate.by_id_persistent(
             id_contribution_persistent, user
         ).get()

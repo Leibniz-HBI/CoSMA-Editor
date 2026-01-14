@@ -4,7 +4,7 @@ from typing import List
 
 from django.db import DatabaseError
 from django.http import HttpRequest
-from ninja import Router, Schema
+from ninja import Path, Router, Schema
 
 from cosmae.column.models_django import Column
 from cosmae.contribution.column.models_django import (
@@ -56,14 +56,11 @@ class ColumnPatchRequest(Schema):
         400: ApiError,
     },
 )
-def get_columns(request: HttpRequest):
+def get_columns(request: HttpRequest, id_contribution_persistent: str = Path(...)):
     "API method for getting columns of a contribution candidate."
     # pylint: disable=too-many-return-statements
     try:
         user = check_user(request)
-        id_contribution_persistent = request.resolver_match.captured_kwargs[
-            "id_contribution_persistent"
-        ]
         try:
             candidate = ContributionCandidateDb.by_id_persistent(
                 id_contribution_persistent, user
@@ -104,15 +101,15 @@ allowed_additional_fields = {"display_txt", "id_persistent", "justification"}
     },
 )
 def patch_column(
-    request: HttpRequest, id_persistent: str, patch_data: ColumnPatchRequest
+    request: HttpRequest,
+    id_persistent: str,
+    patch_data: ColumnPatchRequest,
+    id_contribution_persistent: str = Path(...),
 ):
     "API method for updating a column of a contribution."
     # pylint: disable=too-many-return-statements
     try:
         user = check_user(request)
-        id_contribution_persistent = request.resolver_match.captured_kwargs[
-            "id_contribution_persistent"
-        ]
         try:
             contribution = ContributionCandidateDb.by_id_persistent(
                 id_contribution_persistent, user

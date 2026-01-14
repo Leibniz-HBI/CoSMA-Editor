@@ -97,16 +97,18 @@ empty_match = ScoredMatchesWithDuplicateAssignment(
         500: ApiError,
     },
 )
-def get_entities(request: HttpRequest, start: int, offset: int):
+def get_entities(
+    request: HttpRequest,
+    start: int,
+    offset: int,
+    id_contribution_persistent: str = Path(...),
+):
     "API method for getting entities of a contribution candidate."
     try:
         user = check_user(request)
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
 
-    id_contribution_persistent = request.resolver_match.captured_kwargs[
-        "id_contribution_persistent"
-    ]
     try:
         candidate = ContributionCandidate.by_id_persistent(
             id_contribution_persistent, user
@@ -195,6 +197,7 @@ def get_score(
     request: HttpRequest,
     id_entity_contribution_persistent,
     id_entity_existing_persistent,
+    id_contribution_persistent: str = Path(...),
 ):
     "API method for getting existing entities similar to contributed ones"
     # pylint: disable=too-many-return-statements
@@ -202,10 +205,6 @@ def get_score(
         user = check_user(request)
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
-
-    id_contribution_persistent = request.resolver_match.captured_kwargs[
-        "id_contribution_persistent"
-    ]
 
     try:
         candidate = ContributionCandidate.by_id_persistent(
