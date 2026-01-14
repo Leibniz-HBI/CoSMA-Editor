@@ -2,21 +2,16 @@
  * @vitest-environment jsdom
  */
 
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import {
-    NotificationManager,
-    NotificationType,
-    notificationReducer
-} from '../../../util/notification/slice'
-import { ContributionState, contributionSlice, newContributionState } from '../../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen } from '@testing-library/react'
+import { NotificationType } from '../../../util/notification/slice'
+import { newContributionState } from '../../slice'
 import { ContributionDetailsStep } from '../components'
 import userEvent from '@testing-library/user-event'
 import { ContributionStep, newContribution } from '../../state'
 import { newRemote } from '../../../util/state'
-import { vi, Mock } from 'vitest'
+import { vi } from 'vitest'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const mockNavigate = vi.fn()
@@ -25,75 +20,35 @@ vi.mock('react-router-dom', () => {
         useLoaderData: vi.fn().mockReturnValue('id-test-0')
     }
 })
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contribution: ContributionState
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        name: nameTest0,
-                        description: descriptionTest0,
-                        idPersistent: idTest0,
-                        author: authorTest,
-                        hasHeader: false,
-                        step: ContributionStep.ColumnsExtracted,
-                        emptyValues: emptyValuesTest
-                    })
-                )
-            }),
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contribution: contributionSlice.reducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 const nameTest0 = 'contribution test 0'
 const descriptionTest0 = 'a contribution for tests'
 const idTest0 = 'id-test-0'
 const authorTest = 'author test'
 const emptyValuesTest = 'empty,absent'
 
+const preloadedState = {
+    ...emptyState,
+    contribution: newContributionState({
+        selectedContribution: newRemote(
+            newContribution({
+                name: nameTest0,
+                description: descriptionTest0,
+                idPersistent: idTest0,
+                author: authorTest,
+                hasHeader: false,
+                step: ContributionStep.ColumnsExtracted,
+                emptyValues: emptyValuesTest
+            })
+        )
+    }),
+    notification: { notificationList: [], notificationMap: {} }
+}
+
 test('no submit for short input', async () => {
     const fetchMock = vi.fn()
-    const { container } = renderWithProviders(<ContributionDetailsStep />, fetchMock)
+    const { container } = renderWithProviders(<ContributionDetailsStep />, fetchMock, {
+        preloadedState
+    })
     const feedbacks = container.getElementsByClassName('invalid-feedback')
     for (let i = 0; i < feedbacks.length; ++i) {
         expect(feedbacks[i].textContent).toEqual('')
@@ -135,7 +90,8 @@ test('submit for changed name', async () => {
     ])
     const { container, store } = renderWithProviders(
         <ContributionDetailsStep />,
-        fetchMock
+        fetchMock,
+        { preloadedState }
     )
     const feedbacks = container.getElementsByClassName('invalid-feedback')
     for (let i = 0; i < feedbacks.length; ++i) {
@@ -149,19 +105,19 @@ test('submit for changed name', async () => {
         await user.type(inputs[0], changedName)
         await user.click(button)
     })
-    await waitFor(() => {
-        expect(fetchMock.mock.calls).toEqual([
+    await waitFor(async () => {
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
                 {
                     credentials: 'include',
                     method: 'PATCH',
-                    body: JSON.stringify({
+                    body: {
                         name: changedName,
                         description: descriptionTest0,
                         has_header: false,
                         empty_values: emptyValuesTest
-                    })
+                    }
                 }
             ]
         ])
@@ -171,22 +127,24 @@ test('submit for changed name', async () => {
         expect(feedbacks[1].textContent).toEqual('')
         expect(feedbacks[2].textContent).toEqual('')
     })
-    expect(store.getState()).toEqual({
-        contribution: newContributionState({
-            selectedContribution: newRemote(
-                newContribution({
-                    name: changedName,
-                    description: descriptionTest0,
-                    hasHeader: false,
-                    step: ContributionStep.ColumnsExtracted,
-                    idPersistent: idTest0,
-                    emptyValues: emptyValuesTest,
-                    author: authorTest
-                })
-            )
-        }),
-        notification: { notificationList: [], notificationMap: {} }
-    })
+    expect(store.getState()).toEqual(
+        expect.objectContaining({
+            contribution: newContributionState({
+                selectedContribution: newRemote(
+                    newContribution({
+                        name: changedName,
+                        description: descriptionTest0,
+                        hasHeader: false,
+                        step: ContributionStep.ColumnsExtracted,
+                        idPersistent: idTest0,
+                        emptyValues: emptyValuesTest,
+                        author: authorTest
+                    })
+                )
+            }),
+            notification: { notificationList: [], notificationMap: {} }
+        })
+    )
 })
 
 test('submit for changed empty values', async () => {
@@ -208,7 +166,8 @@ test('submit for changed empty values', async () => {
     ])
     const { container, store } = renderWithProviders(
         <ContributionDetailsStep />,
-        fetchMock
+        fetchMock,
+        { preloadedState }
     )
     const feedbacks = container.getElementsByClassName('invalid-feedback')
     for (let i = 0; i < feedbacks.length; ++i) {
@@ -225,44 +184,46 @@ test('submit for changed empty values', async () => {
         await user.type(inputs[1], changedEmptyValues)
         await user.click(button)
     })
-    await waitFor(() => {
-        expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
-                {
-                    credentials: 'include',
-                    method: 'PATCH',
-                    body: JSON.stringify({
-                        name: nameTest0,
-                        description: descriptionTest0,
-                        has_header: false,
-                        empty_values: changedEmptyValues
-                    })
-                }
-            ]
-        ])
+    await waitFor(async () => {
         const feedbacks = container.getElementsByClassName('invalid-feedback')
         expect(feedbacks.length).toEqual(3)
         expect(feedbacks[0].textContent).toEqual('')
         expect(feedbacks[1].textContent).toEqual('')
         expect(feedbacks[2].textContent).toEqual('')
     })
-    expect(store.getState()).toEqual({
-        contribution: newContributionState({
-            selectedContribution: newRemote(
-                newContribution({
-                    name: changedName,
+    expect(store.getState()).toEqual(
+        expect.objectContaining({
+            contribution: newContributionState({
+                selectedContribution: newRemote(
+                    newContribution({
+                        name: changedName,
+                        description: descriptionTest0,
+                        hasHeader: false,
+                        step: ContributionStep.ColumnsExtracted,
+                        idPersistent: idTest0,
+                        emptyValues: changedEmptyValues,
+                        author: authorTest
+                    })
+                )
+            }),
+            notification: { notificationList: [], notificationMap: {} }
+        })
+    )
+    await expectFetchCallList(fetchMock.mock.calls, [
+        [
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
+            {
+                credentials: 'include',
+                method: 'PATCH',
+                body: {
+                    name: nameTest0,
                     description: descriptionTest0,
-                    hasHeader: false,
-                    step: ContributionStep.ColumnsExtracted,
-                    idPersistent: idTest0,
-                    emptyValues: changedEmptyValues,
-                    author: authorTest
-                })
-            )
-        }),
-        notification: { notificationList: [], notificationMap: {} }
-    })
+                    has_header: false,
+                    empty_values: changedEmptyValues
+                }
+            }
+        ]
+    ])
 })
 
 test('submit for changed header flag', async () => {
@@ -283,7 +244,8 @@ test('submit for changed header flag', async () => {
     ])
     const { container, store } = renderWithProviders(
         <ContributionDetailsStep />,
-        fetchMock
+        fetchMock,
+        { preloadedState }
     )
     const feedbacks = container.getElementsByClassName('invalid-feedback')
     for (let i = 0; i < feedbacks.length; ++i) {
@@ -295,44 +257,46 @@ test('submit for changed header flag', async () => {
         const button = await screen.findByText('Edit')
         button.click()
     })
-    await waitFor(() => {
-        expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
-                {
-                    credentials: 'include',
-                    method: 'PATCH',
-                    body: JSON.stringify({
-                        name: nameTest0,
-                        description: descriptionTest0,
-                        has_header: true,
-                        empty_values: emptyValuesTest
-                    })
-                }
-            ]
-        ])
+    await waitFor(async () => {
         const feedbacks = container.getElementsByClassName('invalid-feedback')
         expect(feedbacks.length).toEqual(3)
         expect(feedbacks[0].textContent).toEqual('')
         expect(feedbacks[1].textContent).toEqual('')
         expect(feedbacks[2].textContent).toEqual('')
+        expect(store.getState()).toEqual(
+            expect.objectContaining({
+                contribution: newContributionState({
+                    selectedContribution: newRemote(
+                        newContribution({
+                            name: nameTest0,
+                            description: descriptionTest0,
+                            hasHeader: true,
+                            step: ContributionStep.ColumnsExtracted,
+                            idPersistent: idTest0,
+                            emptyValues: emptyValuesTest,
+                            author: authorTest
+                        })
+                    )
+                }),
+                notification: { notificationList: [], notificationMap: {} }
+            })
+        )
     })
-    expect(store.getState()).toEqual({
-        contribution: newContributionState({
-            selectedContribution: newRemote(
-                newContribution({
+    await expectFetchCallList(fetchMock.mock.calls, [
+        [
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
+            {
+                credentials: 'include',
+                method: 'PATCH',
+                body: {
                     name: nameTest0,
                     description: descriptionTest0,
-                    hasHeader: true,
-                    step: ContributionStep.ColumnsExtracted,
-                    idPersistent: idTest0,
-                    emptyValues: emptyValuesTest,
-                    author: authorTest
-                })
-            )
-        }),
-        notification: { notificationList: [], notificationMap: {} }
-    })
+                    has_header: true,
+                    empty_values: emptyValuesTest
+                }
+            }
+        ]
+    ])
 })
 
 test('API error', async () => {
@@ -348,7 +312,8 @@ test('API error', async () => {
     ])
     const { container, store } = renderWithProviders(
         <ContributionDetailsStep />,
-        fetchMock
+        fetchMock,
+        { preloadedState }
     )
     const feedbacks = container.getElementsByClassName('invalid-feedback')
     for (let i = 0; i < feedbacks.length; ++i) {
@@ -360,50 +325,52 @@ test('API error', async () => {
         const button = screen.getByText('Edit')
         button.click()
     })
-    await waitFor(() => {
-        expect(fetchMock.mock.calls).toEqual([
-            [
-                `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
-                {
-                    credentials: 'include',
-                    method: 'PATCH',
-                    body: JSON.stringify({
-                        name: nameTest0,
-                        description: descriptionTest0,
-                        has_header: true,
-                        empty_values: emptyValuesTest
-                    })
-                }
-            ]
-        ])
+    await waitFor(async () => {
         const feedbacks = container.getElementsByClassName('invalid-feedback')
         expect(feedbacks.length).toEqual(3)
         expect(feedbacks[0].textContent).toEqual('')
         expect(feedbacks[1].textContent).toEqual('')
         expect(feedbacks[2].textContent).toEqual('')
+        expect(store.getState()).toEqual(
+            expect.objectContaining({
+                contribution: newContributionState({
+                    selectedContribution: newRemote(
+                        newContribution({
+                            name: nameTest0,
+                            description: descriptionTest0,
+                            hasHeader: false,
+                            step: ContributionStep.ColumnsExtracted,
+                            idPersistent: idTest0,
+                            emptyValues: emptyValuesTest,
+                            author: authorTest
+                        })
+                    )
+                }),
+                notification: {
+                    notificationList: [
+                        expect.objectContaining({
+                            msg: `Could not update contribution. Reason: "${errorMsg}".`,
+                            type: NotificationType.Error
+                        })
+                    ],
+                    notificationMap: expect.anything()
+                }
+            })
+        )
     })
-    expect(store.getState()).toEqual({
-        contribution: newContributionState({
-            selectedContribution: newRemote(
-                newContribution({
+    await expectFetchCallList(fetchMock.mock.calls, [
+        [
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
+            {
+                credentials: 'include',
+                method: 'PATCH',
+                body: {
                     name: nameTest0,
                     description: descriptionTest0,
-                    hasHeader: false,
-                    step: ContributionStep.ColumnsExtracted,
-                    idPersistent: idTest0,
-                    emptyValues: emptyValuesTest,
-                    author: authorTest
-                })
-            )
-        }),
-        notification: {
-            notificationList: [
-                expect.objectContaining({
-                    msg: `Could not update contribution. Reason: "${errorMsg}".`,
-                    type: NotificationType.Error
-                })
-            ],
-            notificationMap: expect.anything()
-        }
-    })
+                    has_header: true,
+                    empty_values: emptyValuesTest
+                }
+            }
+        ]
+    ])
 })

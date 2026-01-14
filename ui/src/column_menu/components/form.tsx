@@ -17,7 +17,7 @@ import { CosmaeCard } from '../../util/components/misc'
 import { addSuccessVanish } from '../../util/notification/slice'
 
 const schema = yup.object({
-    columnType: yup.string().matches(/STRING|FLOAT|INNER|BOOL/),
+    columnType: yup.string().required().matches(/STRING|FLOAT|INNER|BOOL/),
     name: yup.string().required()
 })
 

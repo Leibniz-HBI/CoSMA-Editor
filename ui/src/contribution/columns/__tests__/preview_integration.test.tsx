@@ -22,6 +22,8 @@ import {
 import { newRemote } from '../../../util/state'
 import { contributionColumnDefinitionSlice } from '../slice'
 import { vi, Mock } from 'vitest'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { renderWithProviders } from '../../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const navigateMock = vi.fn()
@@ -37,49 +39,6 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
 beforeEach(() => {
     ;(useNavigate() as Mock).mockRestore()
 })
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            contributionColumnDefinition: newColumnDefinitionsContributionState({
-                columns: newRemote(undefined)
-            }),
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 
 const idContributionPersistent = 'id-contribution'
 const idColumnPersistent = 'id-column'
@@ -120,7 +79,7 @@ test('get preview success', async () => {
         screen.getByText(destinationValue1)
         screen.getByText(destinationValue2)
     })
-    expect(fetchMock.mock.calls).toEqual([
+    expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/contributions/' +
                 `${idContributionPersistent}/preview/${idColumnPersistent}`,

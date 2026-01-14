@@ -6,7 +6,6 @@ import {
     newMergeRequestState
 } from './state'
 import { newRemote } from '../util/state'
-import { StatementSync } from 'node:sqlite'
 
 const columnMergeRequestSlice = createSlice({
     name: 'columnMergeRequest',

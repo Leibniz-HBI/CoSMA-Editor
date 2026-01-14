@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom'
 import { ContributionStep, newContribution } from '../../../state'
 import { newRemote } from '../../../../util/state'
 import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
-import { addResponseSequence } from '../../../../util/tests/response'
+import { addResponseSequence, expectFetchCall } from '../../../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -112,9 +112,9 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
-        [200, { matches: mkMatches(personList.slice(50)) }]
+        [200, { column_list: [] }],
+        [200, { matches: mkMatches(personList.slice(50)) }],
     ])
 }
 
@@ -153,11 +153,11 @@ test('success', async () => {
             ContributionStep.EntitiesAssigned
         )
     })
-    expect(fetchMock.mock.calls.at(-2)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-2),[
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entity_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     ])
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}`,
         { credentials: 'include' }
     ])
@@ -186,7 +186,7 @@ test('error', async () => {
         expect(notification.type).toEqual(NotificationType.Error)
         expect(notification.msg).toEqual(errorMsg)
     })
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1),[
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/entity_assignment_complete`,
         { method: 'POST', credentials: 'include' }
     ])

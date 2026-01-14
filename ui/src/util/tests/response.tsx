@@ -35,7 +35,11 @@ export async function expectFetchCallList(actual: any[], expected: (string | any
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function expectFetchCall(actual: any, expected: (string | any)[]) {
+export async function expectFetchCall(
+    actual: any,
+    expected: (string | any)[],
+    bodyType: 'json' | 'formdata' = 'json'
+) {
     const request = actual[0]
     if (typeof request === 'string') {
         expect(request).toEqual(expected[0])
@@ -44,7 +48,25 @@ export async function expectFetchCall(actual: any, expected: (string | any)[]) {
         expect(request.url).toEqual(expected[0])
         if (expected.length > 1) {
             if ('body' in expected[1]) {
-                const body = await (actual[0].json() as Promise<any>)
+                let body
+                switch (bodyType) {
+                    case 'json':
+                        body = await actual[0].json()
+                        break
+                    case 'formdata':
+                        body = {}
+
+                        body = Array.from(
+                            (await actual[0].formData() as FormData).entries()
+                        ).reduce(
+                            (acc: { [key: string]: unknown }, f) => ({
+                                ...acc,
+                                [f[0]]: f[1]
+                            }),
+                            {}
+                        )
+                        break
+                }
                 expect(body).toEqual(expected[1].body)
             }
             if ('method' in expected[1]) {

@@ -153,7 +153,7 @@ test('create, select and assign column', async () => {
         {
             method: 'PATCH',
             credentials: 'include',
-            body: JSON.stringify({ id_existing_persistent: idColumn0 })
+            body: { id_existing_persistent: idColumn0 }
         }
     ])
     await expectFetchCall(fetchMock.mock.calls.at(-1), [

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import {vi, Mock }  from 'vitest'
+import { vi, Mock } from 'vitest'
 import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
 import { newRemote } from '../../../../util/state'
 import { configureStore } from '@reduxjs/toolkit'
@@ -20,6 +20,11 @@ import { entityMergeRequestConflictSlice } from '../slice'
 import { EntityMergeRequestConflictHeader } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
 import { ReplacementState } from '../../../conflicts/state'
+import {
+    addResponseSequence,
+    expectFetchCallList
+} from '../../../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const navigateCallbackMock = vi.fn()
@@ -37,60 +42,6 @@ vi.mock('react-router-dom', () => {
     return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        entityMergeRequestConflicts: EntityMergeRequestConflictsState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            entityMergeRequestConflicts: {
-                conflicts: newRemote(undefined),
-                mergeRequest: newRemote(undefined),
-                newlyCreated: false,
-                reverseOriginDestination: newRemote(undefined),
-                merge: newRemote(undefined)
-            },
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 const idEntityMr0 = 'id-entity-mr-0'
 const displayTextOrigin0 = 'Entity Origin 0'
 const idPersistentOrigin0 = 'id-entity-origin-0'
@@ -327,7 +278,7 @@ test('swap origin and destination', async () => {
         fetchMock,
         {
             preloadedState: {
-                notification: { notificationList: [], notificationMap: {} },
+                ...emptyState,
                 entityMergeRequestConflicts: {
                     conflicts: newRemote(undefined),
                     mergeRequest: newRemote(mergeRequest),
@@ -495,12 +446,14 @@ test('swap origin and destination', async () => {
         merge: newRemote(undefined)
     }
     await waitFor(() => {
-        expect(store.getState()).toEqual({
-            entityMergeRequestConflicts: expectedConflictState,
-            notification: { notificationList: [], notificationMap: {} }
-        })
+        expect(store.getState()).toEqual(
+            expect.objectContaining({
+                entityMergeRequestConflicts: expectedConflictState,
+                notification: { notificationList: [], notificationMap: {} }
+            })
+        )
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/reverse_origin_destination`,
             { credentials: 'include', method: 'POST' }

@@ -82,7 +82,7 @@ const expectedGetRequests = [
             credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: { }
+            body: {}
         }
     ],
     [
@@ -154,14 +154,14 @@ test('append and remove', async () => {
     await waitFor(() => {
         screen.getByText(nameColumn2)
     })
-        await expectFetchCallList(fetchMock.mock.calls, [
+    await expectFetchCallList(fetchMock.mock.calls, [
         ...expectedGetRequests,
         [
             'http://127.0.0.1:8000/cosmae/api/manage/display_txt/order/append',
             {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({ id_column_persistent: idColumn0 })
+                body: { id_column_persistent: idColumn0 }
             }
         ],
         [

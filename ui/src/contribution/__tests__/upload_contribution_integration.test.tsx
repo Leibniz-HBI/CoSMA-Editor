@@ -14,9 +14,9 @@ import {
     newEditSessionState
 } from '../../session/state'
 import { vi, Mock } from 'vitest'
-import { defaultState, renderWithProviders } from '../test_utils'
-import { addResponseSequence } from '../../util/tests/response'
+import { addResponseSequence, expectFetchCall } from '../../util/tests/response'
 import { newRemote } from '../../util/state'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const navigateMock = vi.fn()
@@ -55,7 +55,7 @@ const jsonEditSessionResponse = {
     ]
 }
 const preloadedState = {
-    ...defaultState,
+    ...emptyState,
     editSession: newEditSessionState({
         editSessionOwnerList: newRemote([
             newEditSession({
@@ -139,17 +139,26 @@ test('submit correct name', async () => {
         ])
     })
     expect(fetchMock).toHaveBeenCalledTimes(4)
-    expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:8000/cosmae/api/contributions',
-        expect.objectContaining({ method: 'POST', credentials: 'include' })
+    await expectFetchCall(
+        fetchMock.mock.calls[3],
+        [
+            'http://127.0.0.1:8000/cosmae/api/contributions',
+            {
+                method: 'POST',
+                credentials: 'include',
+                body: {
+                    file: expectDefined(),
+                    name: nameTest,
+                    description: '',
+                    empty_values: 'nan,null,na',
+                    id_edit_session_persistent: idEditSession,
+                    has_header: 'false'
+                }
+            }
+        ],
+        'formdata'
     )
-    checkFormData(fetchMock.mock.calls[3][1].body, {
-        name: nameTest,
-        description: '',
-        empty_values: 'nan,null,na',
-        id_edit_session_persistent: idEditSession,
-        has_header: 'false'
-    })
+
     expect((useNavigate() as Mock).mock.calls).toEqual([
         [`/contribute/${idPersistentReturn}/columns`]
     ])
@@ -178,17 +187,25 @@ test('submit with description and header', async () => {
         ])
     })
     expect(fetchMock).toHaveBeenCalledTimes(4)
-    expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:8000/cosmae/api/contributions',
-        expect.objectContaining({ method: 'POST', credentials: 'include' })
+    await expectFetchCall(
+        fetchMock.mock.calls[3],
+        [
+            'http://127.0.0.1:8000/cosmae/api/contributions',
+            {
+                method: 'POST',
+                credentials: 'include',
+                body: {
+                    file: expectDefined(),
+                    name: nameTest,
+                    description: description,
+                    empty_values: 'nan,null,na',
+                    has_header: 'true',
+                    id_edit_session_persistent: idEditSession
+                }
+            }
+        ],
+        'formdata'
     )
-    checkFormData(fetchMock.mock.calls[3][1].body, {
-        name: nameTest,
-        description: description,
-        empty_values: 'nan,null,na',
-        has_header: 'true',
-        id_edit_session_persistent: idEditSession
-    })
     expect((useNavigate() as Mock).mock.calls).toEqual([
         [`/contribute/${idPersistentReturn}/columns`]
     ])
@@ -217,36 +234,38 @@ test('error', async () => {
         ])
     })
     expect(fetchMock).toHaveBeenCalledTimes(4)
-    expect(fetchMock).toHaveBeenCalledWith(
-        'http://127.0.0.1:8000/cosmae/api/contributions',
-        expect.objectContaining({ method: 'POST', credentials: 'include' })
+    await expectFetchCall(
+        fetchMock.mock.calls[3],
+        [
+            'http://127.0.0.1:8000/cosmae/api/contributions',
+            {
+                method: 'POST',
+                credentials: 'include',
+                body: {
+                    file: expectDefined(),
+                    name: nameTest,
+                    description: '',
+                    empty_values: 'nan,null,na',
+                    has_header: 'false',
+                    id_edit_session_persistent: idEditSession
+                }
+            }
+        ],
+        'formdata'
     )
-    checkFormData(fetchMock.mock.calls[3][1].body, {
-        name: nameTest,
-        description: '',
-        empty_values: 'nan,null,na',
-        has_header: 'false',
-        id_edit_session_persistent: idEditSession
-    })
     expect((useNavigate() as Mock).mock.calls).toEqual([])
 })
 
-function checkFormData(formData: FormData, object: { [key: string]: unknown }) {
-    const formDataObject: { [key: string]: unknown } = Array.from(
-        formData.entries()
-    ).reduce((acc, f) => ({ ...acc, [f[0]]: f[1] }), {})
-    expect(formDataObject.file).not.toBeUndefined()
-    formDataObject.file = undefined
-    object.file = undefined
-    expect(formDataObject).toEqual(object)
+function expectDefined() {
+    return expect.toSatisfy((f) => f !== undefined)
 }
+
 function checkEmptyFeedbacks(container: HTMLElement) {
     const feedbacks = container.getElementsByClassName('invalid-feedback')
     for (let i = 0; i < feedbacks.length; ++i) {
         expect(feedbacks[i].textContent).toEqual('')
     }
 }
-
 
 async function submitFormWithValues(
     container: HTMLElement,

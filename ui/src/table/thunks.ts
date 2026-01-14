@@ -23,6 +23,7 @@ import {
     cosmaeColumnApiGetDescendants,
     cosmaeEntityApiEntitiesPost,
     cosmaeEntityApiFilterEntities,
+    cosmaeEntityApiGetJustifications,
     cosmaeValueApiPostValue,
     cosmaeValueApiPostValueChunks
 } from '../openapi/cosmae/sdk.gen'
@@ -323,27 +324,21 @@ export function loadEntityJustificationHistoryThunk(
     idEntityPersistent: string,
     upUntilTime: Date | undefined = undefined
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(loadEntityJustificationHistoryStart())
         try {
-            let queryPath = `/entities/${idEntityPersistent}/justifications?`
-            if (upUntilTime !== undefined) {
-                queryPath += new URLSearchParams({
-                    up_until_time: upUntilTime.toISOString()
-                })
-            }
-            const rsp = await fetch(config.api_path + queryPath, {
-                credentials: 'include'
+            const rsp = await cosmaeEntityApiGetJustifications({
+                path: { id_entity_persistent: idEntityPersistent },
+                query: { up_until_time: upUntilTime?.toISOString() }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const justifications = json['justifications'].map(
-                    (justification: unknown) => parseCommentFromApi(justification)
+            if (rsp.data) {
+                const justifications = rsp.data.justifications.map(
+                    (justification) => parseCommentFromApi(justification)
                 )
                 dispatch(loadEntityJustificationHistorySuccess(justifications))
             } else {
                 dispatch(loadEntityJustificationHistoryError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(loadEntityJustificationHistoryError())

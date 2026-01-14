@@ -5,11 +5,9 @@
 import { waitFor, screen } from '@testing-library/react'
 import { ContributionStepper } from '../components'
 import { vi } from 'vitest'
-import { addResponseSequence } from '../../util/tests/response'
-import {
-    contributionEntitiesAssignedResponse,
-    renderWithProviders
-} from '../test_utils'
+import { addResponseSequence, expectFetchCall } from '../../util/tests/response'
+import { contributionEntitiesAssignedResponse } from '../test_utils'
+import { renderWithProviders } from '../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const mockNavigate = vi.fn()
@@ -37,10 +35,10 @@ test('reloads automatically', async () => {
         screen.getByText(/not yet available/i)
     })
     await waitFor(
-        () => {
+        async () => {
             expect(fetchMock.mock.calls.length).toEqual(3)
             for (let idx = 0; idx < 3; ++idx) {
-                expect(fetchMock.mock.calls[idx]).toEqual([
+                await expectFetchCall(fetchMock.mock.calls[idx], [
                     'http://127.0.0.1:8000/cosmae/api/contributions/id-test-1',
                     { credentials: 'include' }
                 ])

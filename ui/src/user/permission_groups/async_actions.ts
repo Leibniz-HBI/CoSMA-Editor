@@ -10,11 +10,14 @@ import {
     UserPermissionGroupAction
 } from './actions'
 import { exceptionMessage } from '../../util/exception'
-import { config } from '../../config'
 import { parseUserInfoFromJson } from '../thunks'
 import { UserInfo, UserPermissionGroup } from '../state'
 import { AppDispatch } from '../../store'
 import { addError } from '../../util/notification/slice'
+import {
+    cosmaeUserApiGetUserChunk,
+    cosmaeUserApiPutUserPermissionGroup
+} from '../../openapi/cosmae'
 
 export class GetUserInfoListAction extends AsyncAction<
     UserPermissionGroupAction,
@@ -29,27 +32,20 @@ export class GetUserInfoListAction extends AsyncAction<
             let userInfoList: UserInfo[] = []
             const count = 5000
             for (let offset = 0; ; ) {
-                const rsp = await fetch(
-                    config.api_path + '/user/chunks/' + (offset + '/' + count),
-                    {
-                        method: 'GET',
-                        credentials: 'include'
-                    }
-                )
-                const json = await rsp.json()
-                if (rsp.status != 200) {
+                const rsp = await cosmaeUserApiGetUserChunk({ path: { offset, count } })
+                if (rsp.error) {
                     dispatch(new GetUserInfoListErrorAction())
-                    reduxDispatch(addError(json['msg']))
+                    reduxDispatch(addError(rsp.error.msg))
                     return
                 }
                 userInfoList = [
                     ...userInfoList,
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ...json['user_list'].map((userInfoJson: any) =>
+                    ...rsp.data.user_list.map((userInfoJson: any) =>
                         parseUserInfoFromJson(userInfoJson)
                     )
                 ]
-                offset = json['next_offset']
+                offset = rsp.data.next_offset
                 if (offset <= 0) {
                     dispatch(new GetUserInfoListSuccessAction(userInfoList))
                     return
@@ -80,17 +76,11 @@ export class SetUserPermissionAction extends AsyncAction<
     ) {
         dispatch(new SetUserPermissionStartAction())
         try {
-            const rsp = await fetch(
-                config.api_path + `/user/id/${this.idUserPersistent}/permission_group`,
-                {
-                    method: 'PUT',
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        permission_group: this.permission.toString().toUpperCase()
-                    })
-                }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeUserApiPutUserPermissionGroup({
+                path: { id_user_persistent: this.idUserPersistent },
+                body: { permission_group: this.permission.toString().toUpperCase() }
+            })
+            if (rsp.data) {
                 dispatch(
                     new SetUserPermissionSuccessAction(
                         this.idUserPersistent,
@@ -98,9 +88,8 @@ export class SetUserPermissionAction extends AsyncAction<
                     )
                 )
             } else {
-                const json = await rsp.json()
                 dispatch(new SetUserPermissionErrorAction())
-                reduxDispatch(addError(json['msg']))
+                reduxDispatch(addError(rsp.error.msg))
             }
         } catch (e: unknown) {
             dispatch(new SetUserPermissionErrorAction())

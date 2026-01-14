@@ -1,4 +1,3 @@
-import { config } from '../../config'
 import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
 import {
     DiscardableScoredEntity,
@@ -8,7 +7,6 @@ import {
     newScoredEntity,
     newValue
 } from './state'
-import { fetch_chunk_get } from '../../util/fetch'
 import { Column } from '../../column_menu/state'
 import { parseEntityObjectFromJson } from '../../table/thunks'
 import { ThunkWithFetch } from '../../util/type'
@@ -37,30 +35,32 @@ import { newRemote } from '../../util/state'
 import { addError, addSuccessVanish } from '../../util/notification/slice'
 import { setJustificationOfContribution } from '../slice'
 import {
+    cosmaeContributionApiPostCompleteEntityAssignment,
+    cosmaeContributionEntityApiGetEntities,
+    cosmaeContributionEntityApiGetScore,
     cosmaeContributionEntityApiPostSimilar,
-    cosmaeContributionEntityApiPutDuplicateAssignment
+    cosmaeContributionEntityApiPutDuplicateAssignment,
+    cosmaeValueApiPostValuesForEntities
 } from '../../openapi/cosmae'
 
 export function getContributionEntitiesAction(
     idContributionPersistent: string
 ): ThunkWithFetch<EntityWithDuplicates[]> {
     {
-        return async (dispatch, _getState, fetch) => {
+        return async (dispatch, _getState, _fetch) => {
             dispatch(getContributionEntitiesStart())
             try {
                 let entities: EntityWithDuplicates[] = []
                 for (let offset = 0; ; ) {
-                    const rsp = await fetch_chunk_get({
-                        api_path:
-                            config.api_path +
-                            `/contributions/${idContributionPersistent}/entities/chunk`,
-                        offset: offset,
-                        limit: 500,
-                        fetchMethod: fetch
+                    const rsp = await cosmaeContributionEntityApiGetEntities({
+                        path: {
+                            start: offset,
+                            offset: 500,
+                            id_contribution_persistent: idContributionPersistent
+                        }
                     })
-                    const json = await rsp.json()
-                    if (rsp.status == 200) {
-                        const entitiesChunk = json['entity_list'].map(
+                    if (rsp.data) {
+                        const entitiesChunk = rsp.data.entity_list.map(
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             (entityJson: any) =>
                                 newEntityWithDuplicates({
@@ -73,10 +73,10 @@ export function getContributionEntitiesAction(
                             dispatch(getContributionEntitiesSuccess(entities))
                             return entities
                         }
-                        offset = json['next_offset']
+                        offset = rsp.data.next_offset
                     } else {
                         dispatch(getContributionEntitiesError())
-                        dispatch(addError(json.msg))
+                        dispatch(addError(rsp.error.msg))
                         return []
                     }
                 }
@@ -266,25 +266,21 @@ export function getContributionEntityDuplicateCandidatesAction({
 export function completeEntityAssignment(
     idContributionPersistent: string
 ): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(completeEntityAssignmentStart())
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/contributions/${idContributionPersistent}/entity_assignment_complete`,
-                {
-                    method: 'POST',
-                    credentials: 'include'
-                }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeContributionApiPostCompleteEntityAssignment({
+                path: { id_persistent: idContributionPersistent }
+            })
+            if (rsp.response.status == 200) {
                 dispatch(completeEntityAssignmentSuccess())
                 dispatch(addSuccessVanish('Duplicates successfully assigned.'))
                 return true
             } else {
-                const json = await rsp.json()
                 dispatch(completeEntityAssignmentError())
-                dispatch(addError(json['msg']))
+                if (rsp.error !== undefined) {
+                    dispatch(addError(rsp.error.msg))
+                }
             }
         } catch (exc: unknown) {
             dispatch(completeEntityAssignmentError())
@@ -305,7 +301,7 @@ export function getContributionValues({
     idContributionPersistent?: string
     idMergeRequestPersistent?: string
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         try {
             dispatch(
                 getContributionValuesStart({
@@ -322,26 +318,22 @@ export function getContributionValues({
                     entitiesSet.add(idEntity)
                 }
             }
-            const rsp = await fetch(config.api_path + '/values/entities', {
-                method: 'POST',
-                credentials: 'include',
-                body: JSON.stringify({
+            const rsp = await cosmaeValueApiPostValuesForEntities({
+                body: {
                     id_column_persistent_list: columnList.map(
                         (column) => column.idPersistent
                     ),
                     id_entity_persistent_list: Array.from(entitiesSet),
                     id_contribution_persistent: idContributionPersistent,
                     id_merge_request_persistent: idMergeRequestPersistent
-                })
+                }
             })
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            if (rsp.data) {
                 dispatch(
                     getContributionValuesSuccess({
                         idEntityPersistentGroupMap: entitiesGroupMap,
                         columnList,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        details: json['value_responses'].map((instance: any) =>
+                        details: rsp.data.value_responses.map((instance) =>
                             parseValueFromJson(instance)
                         )
                     })
@@ -354,7 +346,7 @@ export function getContributionValues({
                         details: undefined
                     })
                 )
-                dispatch(addError(json['msg']))
+                dispatch(addError(rsp.error.msg))
             }
         } catch (e: unknown) {
             dispatch(
@@ -375,19 +367,18 @@ export function getAdditionalEntityScoreThunk(
     idEntityContributionPersistent: string,
     idEntityExistingPersistent: string
 ): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getAdditionalEntityScoreStart())
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/contributions/${idContributionPersistent}/entities/score` +
-                    `?id_entity_contribution_persistent=${idEntityContributionPersistent}` +
-                    `&id_entity_existing_persistent=${idEntityExistingPersistent}`,
-                { credentials: 'include' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const scoredEntity = parseScoredEntityFromJson(json)
+            const rsp = await cosmaeContributionEntityApiGetScore({
+                path: { id_contribution_persistent: idContributionPersistent },
+                query: {
+                    id_entity_contribution_persistent: idEntityContributionPersistent,
+                    id_entity_existing_persistent: idEntityExistingPersistent
+                }
+            })
+            if (rsp.data) {
+                const scoredEntity = parseScoredEntityFromJson(rsp.data)
                 dispatch(
                     getAdditionalEntityScoreSuccess({
                         match: scoredEntity,
@@ -397,7 +388,7 @@ export function getAdditionalEntityScoreThunk(
                 return true
             } else {
                 dispatch(getAdditionalEntityScoreError())
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(getAdditionalEntityScoreError())

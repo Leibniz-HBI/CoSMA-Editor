@@ -20,13 +20,13 @@ export function handleAllauthResponse(
     if(json === undefined){
         return
     }
-    const status = json['status']
+    const status = json['status'] ?? json['response']['status']
     const data = json['data']
     if (status == 200) {
         successAction(dispatch, data)
         return
     }
-    const errors: { [key: string]: string }[] = json['errors']
+    const errors: { [key: string]: string }[] = json['errors'] ?? json['error']['errors']
     if (errors !== undefined && errors.length > 0) {
         for (const error of errors) {
             dispatch(addError(error['message']))

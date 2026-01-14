@@ -6,8 +6,8 @@ import { waitFor } from '@testing-library/react'
 import { NotificationType } from '../../util/notification/slice'
 import { ContributionStepper } from '../components'
 import { vi } from 'vitest'
-import { renderWithProviders } from '../test_utils'
 import { addResponseSequence } from '../../util/tests/response'
+import { renderWithProviders } from '../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()

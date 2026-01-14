@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event'
 import { UserEvent } from '@testing-library/user-event'
 import { NotificationType } from '../../util/notification/slice'
 import { vi, Mock } from 'vitest'
-import { addResponseSequence } from '../../util/tests/response'
+import { addResponseSequence, expectFetchCall } from '../../util/tests/response'
 import { renderWithProviders } from '../../util/tests/provider'
 
 const idColumn0 = 'id-column-test-0'
@@ -247,25 +247,25 @@ describe('create column definition', () => {
         await user.click(button)
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(9)
-            expect(fetchMock.mock.calls[8]).toEqual([
-                'http://127.0.0.1:8000/cosmae/api/columns',
-                {
-                    method: 'POST',
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        column_list: [
-                            {
-                                name: 'new column',
-                                type: 'STRING',
-                                description: '',
-                                disabled: false
-                            }
-                        ]
-                    }),
-                    headers: { 'Content-Type': 'application/json' }
-                }
-            ])
         })
+        await expectFetchCall(fetchMock.mock.calls[8], [
+            'http://127.0.0.1:8000/cosmae/api/columns',
+            {
+                method: 'POST',
+                credentials: 'include',
+                body: {
+                    column_list: [
+                        {
+                            name: 'new column',
+                            type: 'STRING',
+                            description: '',
+                            disabled: false
+                        }
+                    ]
+                },
+                headers: { 'Content-Type': 'application/json' }
+            }
+        ])
     })
     test('with parent', async () => {
         const fetchMock = vi.fn()
@@ -291,26 +291,26 @@ describe('create column definition', () => {
         await user.click(createButton)
         await waitFor(() => {
             expect(fetchMock.mock.calls.length).toEqual(9)
-            expect(fetchMock.mock.calls[8]).toEqual([
-                'http://127.0.0.1:8000/cosmae/api/columns',
-                {
-                    method: 'POST',
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        column_list: [
-                            {
-                                name: 'new column',
-                                id_parent_persistent: idColumn1,
-                                type: 'STRING',
-                                description: '',
-                                disabled: false
-                            }
-                        ]
-                    }),
-                    headers: { 'Content-Type': 'application/json' }
-                }
-            ])
         })
+        await expectFetchCall(fetchMock.mock.calls[8], [
+            'http://127.0.0.1:8000/cosmae/api/columns',
+            {
+                method: 'POST',
+                credentials: 'include',
+                body: {
+                    column_list: [
+                        {
+                            name: 'new column',
+                            id_parent_persistent: idColumn1,
+                            type: 'STRING',
+                            description: '',
+                            disabled: false
+                        }
+                    ]
+                },
+                headers: { 'Content-Type': 'application/json' }
+            }
+        ])
     })
     test('dispatches error', async () => {
         const fetchMock = vi.fn()

@@ -8,7 +8,7 @@ export enum EditSessionParticipantType {
 export interface EditSessionParticipant {
     id: string
     type: EditSessionParticipantType
-    name: string | undefined
+    name: string
 }
 export interface EditSession {
     idPersistent: string

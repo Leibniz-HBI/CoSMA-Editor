@@ -50,12 +50,21 @@ import {
     DataPublicationState,
     newDataPublicationState
 } from '../../management/data_publication/state'
+import { ColumnManagementState } from '../../column_management/state'
+import { columnManagementReducer } from '../../column_management/slice'
+import { MergeRequestState, newMergeRequestState } from '../../merge_request/state'
+import { columnMergeRequestsReducer } from '../../merge_request/slice'
+import { entityMergeRequestsReducer } from '../../merge_request/entity/slice'
+import { EntityMergeRequestState } from '../../merge_request/entity/state'
+import { MergeRequestConflictResolutionState, newMergeRequestConflictResolutionState } from '../../merge_request/conflicts/state'
+import { columnMergeRequestConflictsReducer } from '../../merge_request/conflicts/slice'
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
     preloadedState?: {
         notification: NotificationManager
         table: TableState
         tableSelection: TableSelectionState
+        columnManagement: ColumnManagementState
         columnSelection: ColumnSelectionState
         user: UserState
         auth: AuthState
@@ -66,7 +75,10 @@ interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
         contributionColumnDefinition: ColumnDefinitionsContributionState
         displayTxtManagement: DisplayTxtManagementState
         entityMergeRequestConflicts: EntityMergeRequestConflictsState
+        columnMergeRequestConflicts: MergeRequestConflictResolutionState
         dataPublication: DataPublicationState
+        columnMergeRequests: MergeRequestState
+        entityMergeRequests: EntityMergeRequestState
     }
 }
 export const emptyState = {
@@ -74,6 +86,10 @@ export const emptyState = {
     table: newTableState({}),
     tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
     columnSelection: newColumnSelectionState({}),
+    columnManagement: {
+        ownershipRequests: newRemote({ petitioned: [], received: [] }),
+        putOwnershipRequest: newRemote(undefined)
+    },
     user: newUserState({}),
     auth: newAuthState({}),
     entityDetails: newEntityDetailsState({}),
@@ -83,7 +99,10 @@ export const emptyState = {
     contributionColumnDefinition: newColumnDefinitionsContributionState({}),
     displayTxtManagement: { columns: newRemote([]) },
     entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
-    dataPublication: newDataPublicationState({})
+    columnMergeRequestConflicts: newMergeRequestConflictResolutionState({}),
+    dataPublication: newDataPublicationState({}),
+    columnMergeRequests: newMergeRequestState({}),
+    entityMergeRequests: { entityMergeRequests: newRemote(undefined) }
 }
 export function renderWithProviders(
     ui: React.ReactElement,
@@ -95,6 +114,7 @@ export function renderWithProviders(
             notification: notificationReducer,
             tableSelection: tableSelectionSlice.reducer,
             table: tableReducer,
+            columnManagement: columnManagementReducer,
             columnSelection: columnSelectionReducer,
             user: userSlice.reducer,
             auth: authReducer,
@@ -105,7 +125,10 @@ export function renderWithProviders(
             contributionColumnDefinition: contributionColumnDefinitionSlice.reducer,
             displayTxtManagement: displayTxtManagementReducer,
             entityMergeRequestConflicts: entityMergeRequestConflictSlice.reducer,
-            dataPublication: dataPublicationReducer
+            columnMergeRequestConflicts: columnMergeRequestConflictsReducer,
+            dataPublication: dataPublicationReducer,
+            columnMergeRequests: columnMergeRequestsReducer,
+            entityMergeRequests: entityMergeRequestsReducer
         },
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),

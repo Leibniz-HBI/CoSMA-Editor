@@ -14,24 +14,21 @@ import {
 } from './slice'
 import { addError } from '../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
+import { cosmaeMergeRequestEntityApiGetMergeRequests } from '../../openapi/cosmae'
 
 export function getEntityMergeRequests(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getEntityMergeRequestStart())
         try {
-            const rsp = await fetch(config.api_path + '/merge_requests/entities/all', {
-                credentials: 'include'
-            })
-            if (rsp.status == 200) {
-                const json = await rsp.json()
-                const entityMergeRequests = json['entity_merge_requests'].map(
+            const rsp = await cosmaeMergeRequestEntityApiGetMergeRequests()
+            if (rsp.data) {
+                const entityMergeRequests = rsp.data.entity_merge_requests.map(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (mr: any) => parseEntityMergeRequestFromJson(mr)
                 )
                 dispatch(getEntityMergeRequestsSuccess(entityMergeRequests))
             } else {
-                const json = await rsp.json()
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(getEntityMergeRequestsError())
             }
         } catch (exc: unknown) {

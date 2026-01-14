@@ -2,22 +2,12 @@
  * @vitest-environment jsdom
  */
 
-import { Mock } from 'vitest'
-import { newUserState, UserState } from '../../../user/state'
-import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
-import {
-    newNotification,
-    newNotificationManager,
-    NotificationManager,
-    notificationReducer,
-    NotificationType
-} from '../../../util/notification/slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { userReducer } from '../../../user/slice'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { screen, waitFor } from '@testing-library/react'
+import { newNotification, NotificationType } from '../../../util/notification/slice'
 import { ManagementPasswordComponent } from '../components'
 import userEvent from '@testing-library/user-event'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { renderWithProviders } from '../../../util/tests/provider'
 
 describe('set password', () => {
     test('success', async () => {
@@ -42,7 +32,7 @@ describe('set password', () => {
             ])
         })
 
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 `http://127.0.0.1:8000/cosmae/api/user/search/${searchTermTest}`,
                 { credentials: 'include', method: 'GET' }
@@ -56,10 +46,10 @@ describe('set password', () => {
                 {
                     method: 'POST',
                     credentials: 'include',
-                    body: JSON.stringify({
+                    body: {
                         id_user_persistent: idUserTest,
                         new_password: passwordTest
-                    })
+                    }
                 }
             ]
         ])
@@ -87,7 +77,7 @@ describe('set password', () => {
             ])
         })
 
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 `http://127.0.0.1:8000/cosmae/api/user/search/${searchTermTest}`,
                 { credentials: 'include', method: 'GET' }
@@ -101,10 +91,10 @@ describe('set password', () => {
                 {
                     method: 'POST',
                     credentials: 'include',
-                    body: JSON.stringify({
+                    body: {
                         id_user_persistent: idUserTest,
                         new_password: passwordTest
-                    })
+                    }
                 }
             ]
         ])
@@ -151,51 +141,4 @@ async function submitPasswordForm(
     await user.paste(passwordRepeat)
     const button = screen.getByRole('button')
     await user.click(button)
-}
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        user: UserState
-        notification: NotificationManager
-    }
-}
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            user: newUserState({}),
-            notification: newNotificationManager({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            user: userReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
 }

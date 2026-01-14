@@ -15,7 +15,7 @@ import { EntitiesStep } from '../../components'
 import { newColumnSelectionState } from '../../../../column_menu/state'
 import { ContributionStep, newContribution } from '../../../state'
 import { emptyState, renderWithProviders } from '../../../../util/tests/provider'
-import { addResponseSequence } from '../../../../util/tests/response'
+import { addResponseSequence, expectFetchCall } from '../../../../util/tests/response'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -118,9 +118,9 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { column_list: [] }],
-        [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(0, 50)) }],
+        [200, { column_list: [] }],
+        [200, { column_list: [] }],
         [200, { matches: mkMatches(personList.slice(50)) }],
         // empty response because no match columns.
         [200, { value_responses: [] }]
@@ -137,17 +137,17 @@ test('add column values', async () => {
         entity0.click()
     })
     await addColumnByName(nameColumn0)
-    checkValueCalls(fetchMock, idColumn0)
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(10)
     })
+    await checkValueCalls(fetchMock, idColumn0)
     addValueResponses(fetchMock, idColumn1, '2')
     await addColumnByName(nameColumn1)
     // check calls for additional values
     await waitFor(() => {
         expect(fetchMock.mock.calls.length).toEqual(12)
     })
-    checkValueCalls(fetchMock, idColumn1)
+    await checkValueCalls(fetchMock, idColumn1)
     // check final values!
     await waitFor(() => {
         const state = store.getState()
@@ -300,7 +300,7 @@ test('remove values', async () => {
 
 function addValueResponses(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fetchMock: Mock<any>,
+    fetchMock: Mock,
     idColumn: string,
     suffix: string
 ) {
@@ -348,13 +348,13 @@ function addValueResponses(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function checkValueCalls(fetchMock: Mock<any>, idColumn: string) {
-    expect(fetchMock.mock.calls.at(-2)).toEqual([
+async function checkValueCalls(fetchMock: Mock<any>, idColumn: string) {
+    await expectFetchCall(fetchMock.mock.calls.at(-2), [
         'http://127.0.0.1:8000/cosmae/api/values/entities',
         {
             credentials: 'include',
             method: 'POST',
-            body: JSON.stringify({
+            body: {
                 id_column_persistent_list: [idColumn],
                 id_entity_persistent_list: personList
                     .slice(0, 50)
@@ -364,15 +364,15 @@ function checkValueCalls(fetchMock: Mock<any>, idColumn: string) {
                         entity.id_persistent + '-1'
                     ]),
                 id_contribution_persistent: idContribution
-            })
+            }
         }
     ])
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         'http://127.0.0.1:8000/cosmae/api/values/entities',
         {
             credentials: 'include',
             method: 'POST',
-            body: JSON.stringify({
+            body: {
                 id_column_persistent_list: [idColumn],
                 id_entity_persistent_list: personList
                     .slice(50)
@@ -382,7 +382,7 @@ function checkValueCalls(fetchMock: Mock<any>, idColumn: string) {
                         entity.id_persistent + '-1'
                     ]),
                 id_contribution_persistent: idContribution
-            })
+            }
         }
     ])
 }

@@ -1,3 +1,4 @@
+import { ApiError } from '../openapi/cosmae'
 import { JsonValue } from './type'
 
 export function exceptionMessage(e: unknown): string {
@@ -26,7 +27,12 @@ export function unprocessableEntityMessage(
     return errorMessageList.join('\n')
 }
 
-export function errorMessageFromApi(json: { [key: string]: unknown }): string {
+export function errorMessageFromApi(
+    json: undefined | { [key: string]: unknown }
+): string {
+    if (json === undefined) {
+        return 'Unknown API error'
+    }
     const msg = json['msg']
     if (msg !== null && msg !== undefined) {
         return msg as string

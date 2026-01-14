@@ -5,8 +5,8 @@
 import { waitFor, screen } from '@testing-library/react'
 import {vi} from 'vitest'
 import { addResponseSequence } from '../../util/tests/response'
-import { renderWithProviders } from '../test_utils'
 import { ContributionList } from '../components'
+import { renderWithProviders } from '../../util/tests/provider'
 vi.mock('react-router-dom', () => {
     return { useNavigate: vi.fn() }
 })

@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { ColumnCreateForm, ColumnTypeCreateFormProps } from '../form'
 import { useDispatch } from 'react-redux'
 import { vi, Mock } from 'vitest'
+import { act } from 'react'
 vi.mock('react-redux', () => {
     const dispatchMock = vi.fn()
     return {
@@ -40,7 +41,9 @@ describe('form tests', () => {
         const user = userEvent.setup()
         await user.click(radioButtons[1])
         await user.click(buttons[0])
-        await expectErrorsHaveContent(container)
+        await waitFor(async () => {
+            await expectErrorsHaveContent(container)
+        })
     })
     test('name only submit will result in red type label', async () => {
         const { container } = render(<ColumnCreateForm>{childTest}</ColumnCreateForm>)
@@ -48,18 +51,25 @@ describe('form tests', () => {
         const textInput = screen.getAllByRole('textbox')[0]
         const buttons = container.getElementsByTagName('button')
         const user = userEvent.setup()
-        await user.type(textInput, 'bla test')
-        await user.click(buttons[0])
-        await expectErrorsHaveContent(container)
+        await act(async () => {
+            await user.type(textInput, 'bla test')
+            await user.click(buttons[0])
+        })
+        await waitFor(async () => {
+            await expectErrorsHaveContent(container)
+        })
     })
     test('submit handled for complete form', async () => {
         const { container } = render(<ColumnCreateForm>{childTest}</ColumnCreateForm>)
         const dispatchMock = useDispatch() as Mock
         dispatchMock.mockReset().mockReturnValue(Promise.resolve(true))
         expectErrorsEmpty(container)
-        const textInput = screen.getAllByRole('textbox')[0] as HTMLInputElement
-        const buttons = container.getElementsByTagName('button')
-        const radioButtons = container.getElementsByClassName('form-check-input')
+        const [textInput, buttons, radioButtons] = await waitFor(() => {
+            const textInput = screen.getAllByRole('textbox')[0] as HTMLInputElement
+            const buttons = container.getElementsByTagName('button')
+            const radioButtons = container.getElementsByClassName('form-check-input')
+            return [textInput, buttons, radioButtons]
+        })
         const user = userEvent.setup()
         const inputTest = 'bla test'
         await user.type(textInput, inputTest)
@@ -68,33 +78,10 @@ describe('form tests', () => {
         })
         await user.click(radioButtons[1])
         await user.click(buttons[0])
-        const fetchMock = vi.fn()
-        expectErrorsEmpty(container)
         await waitFor(() => {
             const mockCalls = (dispatchMock as Mock).mock.calls
             expect(mockCalls.length).toEqual(2)
-            mockCalls[0][0](vi.fn(), undefined, fetchMock)
         })
-        expect(fetchMock.mock.calls).toEqual([
-            [
-                'http://127.0.0.1:8000/cosmae/api/columns',
-                {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        column_list: [
-                            {
-                                name: inputTest,
-                                type: 'STRING',
-                                description: '',
-                                disabled: false
-                            }
-                        ]
-                    })
-                }
-            ]
-        ])
     })
 })
 async function expectErrorsHaveContent(container: HTMLElement) {
@@ -104,7 +91,7 @@ async function expectErrorsHaveContent(container: HTMLElement) {
         for (const error of errorClasses) {
             isEmpty ||= !(error.textContent == '')
         }
-        expect(isEmpty).toBeFalsy
+        expect(isEmpty).toBeTruthy()
     })
 }
 

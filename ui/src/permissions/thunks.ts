@@ -1,4 +1,7 @@
-import { config } from '../config'
+import {
+    cosmaePermissionsApiGetPermissions,
+    cosmaePermissionsApiPutPermission
+} from '../openapi/cosmae'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { ThunkWithFetch } from '../util/type'
@@ -13,23 +16,21 @@ import { newUserPermissionSet, PermissionSet, UserPermissionSet } from './state'
 export function getPermissionsForResourceThunk(
     idResourcePersistent: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getPermissionsStart(idResourcePersistent))
         try {
-            const rsp = await fetch(
-                config.api_path + `/permissions/resource/${idResourcePersistent}`,
-                { credentials: 'include' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const permissions = json['user_permission_list'].map(
+            const rsp = await cosmaePermissionsApiGetPermissions({
+                path: { id_resource_persistent: idResourcePersistent }
+            })
+            if (rsp.data) {
+                const permissions = rsp.data.user_permission_list.map(
                     (userPermission: unknown) =>
                         parseUserPermissionSetFromJson(userPermission)
                 )
                 dispatch(getPermissionsSuccess({ idResourcePersistent, permissions }))
             } else {
                 dispatch(getPermissionsError(idResourcePersistent))
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(getPermissionsError(idResourcePersistent))
@@ -49,20 +50,17 @@ export function setPermissionThunk({
     read: boolean | undefined
     write: boolean | undefined
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState,_fetch) => {
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/permissions/${idResourcePersistent}/${idUserPersistent}`,
-                {
-                    method: 'put',
-                    credentials: 'include',
-                    body: JSON.stringify({ read, write })
-                }
-            )
-            const json = await rsp.json()
-            const permission = parsePermissionSetFromJson(json)
-            if (rsp.status == 200) {
+            const rsp = await cosmaePermissionsApiPutPermission({
+                path: {
+                    id_resource_persistent: idResourcePersistent,
+                    id_user_persistent: idUserPersistent
+                },
+                body: { read:read ?? null, write: write ?? null }
+            })
+            if (rsp.data) {
+            const permission = parsePermissionSetFromJson(rsp.data)
                 dispatch(
                     setPermissionSuccess({
                         idUserPersistent,
@@ -73,7 +71,7 @@ export function setPermissionThunk({
                 )
                 dispatch(addSuccessVanish('Successfully changed permission'))
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(addError(exceptionMessage(e)))

@@ -2,38 +2,17 @@
  * @vitest-environment jsdom
  */
 
-import { vi, Mock } from 'vitest'
-import { render, RenderOptions, screen, waitFor } from '@testing-library/react'
-import {
-    EntityDetailsState,
-    newEntity,
-    newEntityDetailsState,
-    newEntitySearchResult
-} from '../state'
+import { vi } from 'vitest'
+import { screen, waitFor } from '@testing-library/react'
+import { newEntity, newEntityDetailsState, newEntitySearchResult } from '../state'
 import { EntitySearch } from '../components'
-import { entityDetailsReducer } from '../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { act, PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { act } from 'react'
 import userEvent, { UserEvent } from '@testing-library/user-event'
-import {
-    newColumn,
-    newColumnSelectionState,
-    ColumnSelectionState,
-    ColumnType
-} from '../../column_menu/state'
+import { newColumn, newColumnSelectionState, ColumnType } from '../../column_menu/state'
 import { newRemote } from '../../util/state'
-import { columnSelectionReducer } from '../../column_menu/slice'
-import { newTableState, TableState } from '../../table/state'
-import { tableReducer } from '../../table/slice'
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        entityDetails: EntityDetailsState
-        columnSelection: ColumnSelectionState
-        table: TableState
-    }
-}
+import { newTableState } from '../../table/state'
+import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
 
 test('search and click result', async () => {
     const fetchMock = vi.fn()
@@ -73,7 +52,8 @@ test('search and click result', async () => {
     const clickMock = vi.fn()
     const { store } = renderWithProviders(
         <EntitySearch onSearchResultClicked={clickMock} />,
-        fetchMock
+        fetchMock,
+        { preloadedState }
     )
     const user = userEvent.setup()
     await typeInSearchField(user)
@@ -110,7 +90,7 @@ test('search and click result', async () => {
     await waitFor(() => {
         expect(clickMock.mock.calls).toEqual([[resultId11]])
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls,[
         [
             'http://127.0.0.1:8000/cosmae/api/entities/search?term=f',
             { credentials: 'include' }
@@ -183,115 +163,78 @@ function newSearchResultApi(
     }
 }
 
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            entityDetails: newEntityDetailsState({
-                entityByIdPersistentMap: {
-                    indexMap: {
-                        [resultId00]: 0,
-                        [resultId01]: 1,
-                        [resultId02]: 2,
-                        [resultId10]: 3,
-                        [resultId11]: 4
-                    },
-                    list: [
-                        newRemote(
-                            newEntity({
-                                idPersistent: resultId00,
-                                displayTxt: displayTxt00,
-                                version: 100,
-                                disabled: false
-                            })
-                        ),
-                        newRemote(
-                            newEntity({
-                                idPersistent: resultId01,
-                                displayTxt: displayTxt01,
-                                version: 101,
-                                disabled: false
-                            })
-                        ),
-                        newRemote(
-                            newEntity({
-                                idPersistent: resultId02,
-                                displayTxt: displayTxt02,
-                                version: 102,
-                                disabled: false
-                            })
-                        ),
-                        newRemote(
-                            newEntity({
-                                idPersistent: resultId10,
-                                displayTxt: displayTxt10,
-                                version: 10,
-                                disabled: false
-                            })
-                        ),
-                        newRemote(
-                            newEntity({
-                                idPersistent: resultId11,
-                                displayTxt: displayTxt11,
-                                version: 111,
-                                disabled: false
-                            })
-                        )
-                    ]
-                }
-            }),
-            columnSelection: newColumnSelectionState({
-                columnsByIdPersistent: {
-                    [idColumn0]: newRemote(
-                        newColumn({
-                            ...columnCommon,
-                            idPersistent: idColumn0,
-                            namePath: [nameColumn0]
-                        })
-                    ),
-                    [idColumn1]: newRemote(
-                        newColumn({
-                            ...columnCommon,
-                            idPersistent: idColumn1,
-                            namePath: [nameColumnParent, nameColumn1]
-                        })
-                    )
-                }
-            }),
-            table: newTableState({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            entityDetails: entityDetailsReducer,
-            columnSelection: columnSelectionReducer,
-            table: tableReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
+const preloadedState = {
+    ...emptyState,
+    entityDetails: newEntityDetailsState({
+        entityByIdPersistentMap: {
+            indexMap: {
+                [resultId00]: 0,
+                [resultId01]: 1,
+                [resultId02]: 2,
+                [resultId10]: 3,
+                [resultId11]: 4
+            },
+            list: [
+                newRemote(
+                    newEntity({
+                        idPersistent: resultId00,
+                        displayTxt: displayTxt00,
+                        version: 100,
+                        disabled: false
+                    })
+                ),
+                newRemote(
+                    newEntity({
+                        idPersistent: resultId01,
+                        displayTxt: displayTxt01,
+                        version: 101,
+                        disabled: false
+                    })
+                ),
+                newRemote(
+                    newEntity({
+                        idPersistent: resultId02,
+                        displayTxt: displayTxt02,
+                        version: 102,
+                        disabled: false
+                    })
+                ),
+                newRemote(
+                    newEntity({
+                        idPersistent: resultId10,
+                        displayTxt: displayTxt10,
+                        version: 10,
+                        disabled: false
+                    })
+                ),
+                newRemote(
+                    newEntity({
+                        idPersistent: resultId11,
+                        displayTxt: displayTxt11,
+                        version: 111,
+                        disabled: false
+                    })
+                )
+            ]
+        }
+    }),
+    columnSelection: newColumnSelectionState({
+        columnsByIdPersistent: {
+            [idColumn0]: newRemote(
+                newColumn({
+                    ...columnCommon,
+                    idPersistent: idColumn0,
+                    namePath: [nameColumn0]
                 })
-            ) as Mock
-        )
-    }
+            ),
+            [idColumn1]: newRemote(
+                newColumn({
+                    ...columnCommon,
+                    idPersistent: idColumn1,
+                    namePath: [nameColumnParent, nameColumn1]
+                })
+            )
+        }
+    }),
+    table: newTableState({})
 }

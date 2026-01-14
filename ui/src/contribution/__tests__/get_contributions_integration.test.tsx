@@ -18,10 +18,10 @@ import {
     idTest0,
     idTest1,
     nameTest0,
-    nameTest1,
-    renderWithProviders
+    nameTest1
 } from '../test_utils'
-import { addResponseSequence } from '../../util/tests/response'
+import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
+import { renderWithProviders } from '../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const mockNavigate = vi.fn()
@@ -74,21 +74,19 @@ test('success and open', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/contributions/chunk/0/5000',
             {
                 credentials: 'include',
-                method: 'GET',
-                headers: { 'Access-Control-Allow-Credentials': 'true' }
+                method: 'GET'
             }
         ],
         [
             'http://127.0.0.1:8000/cosmae/api/contributions/chunk/5000/5000',
             {
                 credentials: 'include',
-                method: 'GET',
-                headers: { 'Access-Control-Allow-Credentials': 'true' }
+                method: 'GET'
             }
         ]
     ])
@@ -136,21 +134,19 @@ test('error', async () => {
             })
         )
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/contributions/chunk/0/5000',
             {
                 credentials: 'include',
-                method: 'GET',
-                headers: { 'Access-Control-Allow-Credentials': 'true' }
+                method: 'GET'
             }
         ],
         [
             'http://127.0.0.1:8000/cosmae/api/contributions/chunk/5000/5000',
             {
                 credentials: 'include',
-                method: 'GET',
-                headers: { 'Access-Control-Allow-Credentials': 'true' }
+                method: 'GET'
             }
         ]
     ])

@@ -1,97 +1,24 @@
 /**
  * @vitest-environment jsdom
  */
-import { vi, Mock } from 'vitest'
-import { RenderOptions, render, screen, waitFor } from '@testing-library/react'
-import {
-    ColumnSelectionState,
-    ColumnType,
-    newColumn,
-    newColumnSelectionState
-} from '../../column_menu/state'
-import {
-    UserPermissionGroup,
-    UserState,
-    newUserState,
-    newPublicUserInfo
-} from '../../user/state'
-import userReducer from '../../user/slice'
-import columnManagementReducer from '../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { vi } from 'vitest'
+import { screen, waitFor } from '@testing-library/react'
+import { ColumnType, newColumn, newColumnSelectionState } from '../../column_menu/state'
+import { UserPermissionGroup, newUserState, newPublicUserInfo } from '../../user/state'
 import { ChangeOwnershipModal } from '../components'
 import userEvent from '@testing-library/user-event'
-import { ColumnManagementState } from '../state'
 import { newRemote } from '../../util/state'
-import {
-    NotificationManager,
-    NotificationType,
-    notificationReducer
-} from '../../util/notification/slice'
-import { columnSelectionReducer } from '../../column_menu/slice'
+import { NotificationType } from '../../util/notification/slice'
 import {
     displayTextColumn,
     displayTxtColumnId,
     justificationColumn,
     justificationColumnId
 } from '../../table/state'
+import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
+import { defaultState } from '../../contribution/test_utils'
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        user: UserState
-        columnManagement: ColumnManagementState
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            user: newUserState({}),
-            columnManagement: {
-                ownershipRequests: newRemote({ petitioned: [], received: [] }),
-                putOwnershipRequest: newRemote(undefined)
-            },
-            columnSelection: initialColumnSelectionState,
-            notification: { notificationList: [], notificationMap: {} }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            user: userReducer,
-            columnManagement: columnManagementReducer,
-            columnSelection: columnSelectionReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 const idUserTest = 'id-user-test'
 const usernameTest = 'user test'
 const permissionGroupTest = UserPermissionGroup.CONTRIBUTOR
@@ -136,6 +63,7 @@ describe('Ownership search', () => {
         permissionGroup: permissionGroupTest1
     })
     const stateWithUserSearchResults = {
+        ...emptyState,
         user: newUserState({
             userSearchResults: newRemote([userInfoTest, userInfoTest1])
         }),
@@ -174,7 +102,13 @@ describe('Ownership search', () => {
                 idColumnPersistent={idTColumnTest}
                 onClose={vi.fn()}
             />,
-            fetchMock
+            fetchMock,
+            {
+                preloadedState: {
+                    ...emptyState,
+                    columnSelection: initialColumnSelectionState
+                }
+            }
         )
         const user = userEvent.setup()
         const search = screen.getByRole('textbox')
@@ -183,7 +117,7 @@ describe('Ownership search', () => {
             screen.getByText(usernameTest)
             screen.getByText(usernameTest1)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/user/search/%C3%A4%25',
                 { credentials: 'include', method: 'GET' }
@@ -236,7 +170,7 @@ describe('Ownership search', () => {
                 'm10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05'
             )
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 `http://127.0.0.1:8000/cosmae/api/columns/permissions/${idTColumnTest}/owner/${idUserTest1}`,
                 { credentials: 'include', method: 'POST' }
@@ -282,7 +216,7 @@ describe('Ownership search', () => {
             expect(notification.type).toEqual(NotificationType.Error)
             expect(notification.msg).toEqual(testError)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 `http://127.0.0.1:8000/cosmae/api/columns/permissions/${idTColumnTest}/owner/${idUserTest1}`,
                 { credentials: 'include', method: 'POST' }

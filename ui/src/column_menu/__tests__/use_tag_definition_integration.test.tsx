@@ -2,23 +2,15 @@
  * @vitest-environment jsdom
  */
 
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
+import { waitFor, screen } from '@testing-library/react'
 import {
-    ColumnSelectionState,
     ColumnType,
     newColumn,
     newColumnSelectionState
 } from '../state'
-import { configureStore } from '@reduxjs/toolkit'
-import { columnSelectionReducer} from '../slice'
-import React, { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
 import {
-    NotificationManager,
     NotificationType,
     newNotification,
-    newNotificationManager,
-    notificationReducer
 } from '../../util/notification/slice'
 import { newRemote } from '../../util/state'
 
@@ -29,7 +21,8 @@ import {
     justificationColumn,
     justificationColumnId
 } from '../../table/state'
-import { Mock } from 'vitest'
+import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
+import { renderWithProviders } from '../../util/tests/provider'
 
 function TestComponent({ idPersistent }: { idPersistent: string }) {
     const column = useColumn(idPersistent)
@@ -85,13 +78,13 @@ test('success', async () => {
     await waitFor(() => {
         screen.getByText(nameColumn)
     })
-    expect(fetchMock.mock.calls).toEqual([
+    await expectFetchCallList(fetchMock.mock.calls, [
         [
             'http://127.0.0.1:8000/cosmae/api/columns/details',
             {
                 method: 'POST',
                 credentials: 'include',
-                body: JSON.stringify({ id_persistent_list: [idColumn] })
+                body: { id_persistent_list: [idColumn] }
             }
         ]
     ])
@@ -138,52 +131,3 @@ test('error', async () => {
         })
     ])
 })
-
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            columnSelection: newColumnSelectionState({}),
-            notification: newNotificationManager({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            columnSelection: columnSelectionReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(async () => {
-                await new Promise((promise) => setTimeout(promise, 50))
-                return {
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                }
-            }) as Mock
-        )
-    }
-}

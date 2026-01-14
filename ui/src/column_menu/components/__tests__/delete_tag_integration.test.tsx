@@ -1,28 +1,20 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, waitFor, screen, RenderOptions } from '@testing-library/react'
+import { waitFor, screen } from '@testing-library/react'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { ColumnDeleteForm } from '../form'
-import { Provider } from 'react-redux'
 import {
     newColumn,
     newColumnHierarchyNode,
-    newColumnSelectionState,
-    ColumnSelectionState,
-    ColumnType
+    ColumnType,
+    newColumnSelectionState
 } from '../../state'
-import {
-    newNotification,
-    newNotificationManager,
-    NotificationManager,
-    notificationReducer,
-    NotificationType
-} from '../../../util/notification/slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { columnSelectionReducer } from '../../slice'
-import { act, PropsWithChildren } from 'react'
-import { vi, Mock } from 'vitest'
+import { newNotification, NotificationType } from '../../../util/notification/slice'
+import { act } from 'react'
+import { vi } from 'vitest'
+import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 
 const idColumn = 'id-column-def'
 const idParentPersistent = 'id-parent'
@@ -59,7 +51,10 @@ describe('disable', () => {
     test('wrong input', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, {}]])
-        renderWithProviders(<ColumnDeleteForm column={columnTest} />, fetchMock)
+        renderWithProviders(<ColumnDeleteForm column={columnTest} />, fetchMock, {
+            preloadedState: { ...emptyState, columnSelection: columnSelectionState }
+        })
+
         const user = userEvent.setup()
         await submitDisable(user, 'other')
         await waitFor(() => {
@@ -90,7 +85,8 @@ describe('disable', () => {
         ])
         const { store } = renderWithProviders(
             <ColumnDeleteForm column={columnTest} />,
-            fetchMock
+            fetchMock,
+            { preloadedState: { ...emptyState, columnSelection: columnSelectionState } }
         )
         const user = userEvent.setup()
         await submitDisable(user)
@@ -115,14 +111,14 @@ describe('disable', () => {
                 })
             ])
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/columns',
                 {
                     credentials: 'include',
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                    body: {
                         column_list: [
                             {
                                 name: nameColumn,
@@ -134,7 +130,7 @@ describe('disable', () => {
                                 version: 1
                             }
                         ]
-                    })
+                    }
                 }
             ]
         ])
@@ -176,7 +172,9 @@ describe('purge', () => {
     test('wrong input', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [[200, {}]])
-        renderWithProviders(<ColumnDeleteForm column={columnTest} />, fetchMock)
+        renderWithProviders(<ColumnDeleteForm column={columnTest} />, fetchMock, {
+            preloadedState: { ...emptyState, columnSelection: columnSelectionState }
+        })
         const user = userEvent.setup()
         await submitPurge(user, 'other')
         await waitFor(() => {
@@ -188,7 +186,8 @@ describe('purge', () => {
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
             <ColumnDeleteForm column={columnTest} />,
-            fetchMock
+            fetchMock,
+            { preloadedState: { ...emptyState, columnSelection: columnSelectionState } }
         )
         const user = userEvent.setup()
         await submitPurge(user)
@@ -213,7 +212,7 @@ describe('purge', () => {
                 })
             ])
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 `http://127.0.0.1:8000/cosmae/api/columns/${idColumn}`,
                 {
@@ -230,7 +229,8 @@ describe('purge', () => {
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
             <ColumnDeleteForm column={columnTest} />,
-            fetchMock
+            fetchMock,
+            { preloadedState: { ...emptyState, columnSelection: columnSelectionState } }
         )
         const user = userEvent.setup()
         await submitPurge(user)
@@ -246,70 +246,23 @@ describe('purge', () => {
     })
 })
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        columnSelection: ColumnSelectionState
-        notification: NotificationManager
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            columnSelection: newColumnSelectionState({
-                children: [
-                    newColumnHierarchyNode({
-                        idColumnPersistent: idParentPersistent,
-                        name: nameParent,
-                        children: [
-                            newColumnHierarchyNode({
-                                idColumnPersistent: idColumn,
-                                name: nameColumn,
-                                children: [
-                                    newColumnHierarchyNode({
-                                        idColumnPersistent: idChild,
-                                        name: nameChild
-                                    })
-                                ]
-                            })
-                        ]
-                    })
-                ]
-            }),
-            notification: newNotificationManager({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            columnSelection: columnSelectionReducer,
-            notification: notificationReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(async () => {
-                await new Promise((promise) => setTimeout(promise, 50))
-                return {
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                }
-            }) as Mock
-        )
-    }
-}
+const columnSelectionState = newColumnSelectionState({
+    children: [
+        newColumnHierarchyNode({
+            idColumnPersistent: idParentPersistent,
+            name: nameParent,
+            children: [
+                newColumnHierarchyNode({
+                    idColumnPersistent: idColumn,
+                    name: nameColumn,
+                    children: [
+                        newColumnHierarchyNode({
+                            idColumnPersistent: idChild,
+                            name: nameChild
+                        })
+                    ]
+                })
+            ]
+        })
+    ]
+})

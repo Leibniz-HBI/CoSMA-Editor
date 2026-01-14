@@ -1,4 +1,3 @@
-import { config } from '../../config'
 import {
     ColumnDefinitionContribution,
     newColumnDefinitionContribution,
@@ -22,25 +21,28 @@ import {
 } from './slice'
 import { columnTypeMapApiToApp } from '../../column_menu/thunks'
 import { addError, addSuccessVanish } from '../../util/notification/slice'
+import {
+    cosmaeContributionApiPostCompleteAssignment,
+    cosmaeContributionColumnApiGetColumns,
+    cosmaeContributionColumnApiPatchColumn,
+    cosmaeContributionPreviewApiGetPreview
+} from '../../openapi/cosmae'
 
 export function loadColumnDefinitionsContribution(
     idPersistent: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(loadColumnDefinitionsContributionStart())
         try {
-            const rsp = await fetch(
-                config.api_path + `/contributions/${idPersistent}/columns`,
-                { credentials: 'include' }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeContributionColumnApiGetColumns({
+                path: { id_contribution_persistent: idPersistent }
+            })
+            if (rsp.data) {
                 const activeDefinitionsList: ColumnDefinitionContribution[] = []
                 const discardedDefinitionsList: ColumnDefinitionContribution[] = []
-                const json = await rsp.json()
                 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-                json['column_list'].forEach((column: any) => {
-                    const columnDefinition =
-                        parseColumnContribution(column)
+                rsp.data.column_list.forEach((column: any) => {
+                    const columnDefinition = parseColumnContribution(column)
                     if (columnDefinition.discard) {
                         discardedDefinitionsList.push(columnDefinition)
                     } else {
@@ -55,9 +57,8 @@ export function loadColumnDefinitionsContribution(
                 )
                 return
             }
-            const json = await rsp.json()
             dispatch(loadColumnDefinitionsContributionError())
-            dispatch(addError(json['msg']))
+            dispatch(addError(rsp.error.msg))
         } catch (e: unknown) {
             dispatch(loadColumnDefinitionsContributionError())
             dispatch(addError(exceptionMessage(e)))
@@ -78,7 +79,7 @@ export function patchColumnDefinitionContribution({
     name?: string
     discard?: boolean
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(patchColumnDefinitionContributionStart())
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,26 +95,22 @@ export function patchColumnDefinitionContribution({
             if (name !== undefined) {
                 body.name = name
             }
-            const rsp = await fetch(
-                config.api_path +
-                    `/contributions/${idContributionPersistent}/columns/${idPersistent}`,
-                {
-                    method: 'PATCH',
-                    credentials: 'include',
-                    body: JSON.stringify(body)
-                }
-            )
-            if (rsp.status == 200) {
-                const json = await rsp.json()
-                const changedColumnDefinition = parseColumnContribution(json)
+            const rsp = await cosmaeContributionColumnApiPatchColumn({
+                path: {
+                    id_contribution_persistent: idContributionPersistent,
+                    id_persistent: idPersistent
+                },
+                body: body
+            })
+            if (rsp.data) {
+                const changedColumnDefinition = parseColumnContribution(rsp.data)
 
                 dispatch(
                     patchColumnDefinitionContributionSuccess(changedColumnDefinition)
                 )
             } else {
-                const json = await rsp.json()
                 dispatch(patchColumnDefinitionContributionError())
-                dispatch(addError(json['msg']))
+                dispatch(addError(rsp.error.msg))
             }
         } catch (e: unknown) {
             dispatch(patchColumnDefinitionContributionError())
@@ -125,22 +122,21 @@ export function patchColumnDefinitionContribution({
 export function finalizeColumnAssignment(
     idCandidatePersistent: string
 ): ThunkWithFetch<boolean> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(finalizeColumnAssignmentStart())
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/contributions/${idCandidatePersistent}/column_assignment_complete`,
-                { credentials: 'include', method: 'POST' }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeContributionApiPostCompleteAssignment({
+                path: { id_persistent: idCandidatePersistent }
+            })
+            if (rsp.response.status == 200) {
                 dispatch(finalizeColumnAssignmentSuccess())
                 dispatch(addSuccessVanish('Columns successfully assigned.'))
                 return true
             } else {
-                const json = await rsp.json()
                 dispatch(finalizeColumnAssignmentError())
-                dispatch(addError(json['msg']))
+                if (rsp.error !== undefined) {
+                    dispatch(addError(rsp.error.msg))
+                }
             }
         } catch (e: unknown) {
             dispatch(finalizeColumnAssignmentError())
@@ -154,19 +150,19 @@ export function loadPreview(
     idContributionCandidatePersistent: string,
     idColumnPersistent: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(loadPreviewStart())
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/contributions/${idContributionCandidatePersistent}/preview/${idColumnPersistent}`,
-                { credentials: 'include' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                dispatch(loadPreviewSuccess(parsePreviewFromApi(json)))
+            const rsp = await cosmaeContributionPreviewApiGetPreview({
+                path: {
+                    id_column_persistent: idColumnPersistent,
+                    id_contribution_persistent: idContributionCandidatePersistent
+                }
+            })
+            if (rsp.data) {
+                dispatch(loadPreviewSuccess(parsePreviewFromApi(rsp.data)))
             } else {
-                dispatch(addError(errorMessageFromApi(json)))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
                 dispatch(loadPreviewError())
             }
         } catch (e: unknown) {

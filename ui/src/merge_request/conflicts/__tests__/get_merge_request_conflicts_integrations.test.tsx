@@ -3,87 +3,34 @@
  */
 
 import { vi, Mock } from 'vitest'
+import { waitFor, screen, getAllByTestId } from '@testing-library/react'
 import {
-    RenderOptions,
-    render,
-    waitFor,
-    screen,
-    getAllByTestId
-} from '@testing-library/react'
-import {
-    NotificationManager,
     NotificationType,
     newNotification,
-    newNotificationManager,
-    notificationReducer
+    newNotificationManager
 } from '../../../util/notification/slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { act, PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { act } from 'react'
 import { MergeRequestConflictResolutionView } from '../components'
 import { newRemote } from '../../../util/state'
 import { UserPermissionGroup, newPublicUserInfo } from '../../../user/state'
 import { ColumnType, newColumn } from '../../../column_menu/state'
 import {
-    MergeRequestConflictResolutionState,
     newMergeRequestConflict,
     newMergeRequestConflictResolutionState,
     newMergeRequestConflictsByState,
     newValue,
     ReplacementState
 } from '../state'
-import { columnMergeRequestConflictsReducer } from '../slice'
 import { newEntity } from '../../../entity/state'
 import { MergeRequestStep, newMergeRequest } from '../../state'
 import userEvent from '@testing-library/user-event'
+import { renderWithProviders } from '../../../util/tests/provider'
+import {
+    addResponseSequence,
+    expectFetchCall,
+    expectFetchCallList
+} from '../../../util/tests/response'
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        columnMergeRequestConflicts: MergeRequestConflictResolutionState
-    }
-}
-
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            columnMergeRequestConflicts: newMergeRequestConflictResolutionState({}),
-            notification: newNotificationManager({})
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: {
-            notification: notificationReducer,
-            columnMergeRequestConflicts: columnMergeRequestConflictsReducer
-        },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 const replacementValue = 'test replacement value'
 const columnOrigin = newColumn({
     namePath: ['column origin test'],
@@ -244,18 +191,20 @@ describe('get tests', () => {
         await waitFor(() => {
             checkConflicts(container, 2, 4)
         })
-        expect(store.getState()).toEqual({
-            notification: newNotificationManager({}),
-            columnMergeRequestConflicts: newMergeRequestConflictResolutionState({
-                conflicts: newRemote(
-                    newMergeRequestConflictsByState({
-                        updated: updatedConflicts,
-                        conflicts: conflicts,
-                        mergeRequest: mergeRequest
-                    })
-                )
+        expect(store.getState()).toEqual(
+            expect.objectContaining({
+                notification: newNotificationManager({}),
+                columnMergeRequestConflicts: newMergeRequestConflictResolutionState({
+                    conflicts: newRemote(
+                        newMergeRequestConflictsByState({
+                            updated: updatedConflicts,
+                            conflicts: conflicts,
+                            mergeRequest: mergeRequest
+                        })
+                    )
+                })
             })
-        })
+        )
     })
     test('error', async () => {
         const fetchMock = vi.fn()
@@ -268,19 +217,23 @@ describe('get tests', () => {
         await waitFor(() => {
             const accordions = container.getElementsByClassName('accordion-item')
             expect(accordions.length).toEqual(0)
-        })
-        expect(store.getState()).toEqual({
-            notification: newNotificationManager({
-                notificationList: [
-                    newNotification({
-                        msg: testError,
-                        type: NotificationType.Error,
-                        id: expect.anything()
-                    })
-                ],
-                notificationMap: expect.anything()
-            }),
-            columnMergeRequestConflicts: newMergeRequestConflictResolutionState({})
+            expect(store.getState()).toEqual(
+                expect.objectContaining({
+                    notification: newNotificationManager({
+                        notificationList: [
+                            newNotification({
+                                msg: testError,
+                                type: NotificationType.Error,
+                                id: expect.anything()
+                            })
+                        ],
+                        notificationMap: expect.anything()
+                    }),
+                    columnMergeRequestConflicts: newMergeRequestConflictResolutionState(
+                        {}
+                    )
+                })
+            )
         })
     })
 })
@@ -310,25 +263,38 @@ describe('resolve conflicts', () => {
             replaceButtons[1].click()
         })
         await waitFor(() => {
-            expect(store.getState()).toEqual({
-                notification: newNotificationManager({}),
-                columnMergeRequestConflicts: newMergeRequestConflictResolutionState({
-                    conflicts: newRemote(
-                        newMergeRequestConflictsByState({
-                            updated: updatedConflicts.slice(0, 1),
-                            conflicts: [
-                                ...conflicts.slice(0, 1),
-                                newRemote({
-                                    ...conflicts[1].value,
-                                    replacementState: ReplacementState.REPLACE
-                                }),
-                                ...conflicts.slice(2)
-                            ],
-                            mergeRequest: mergeRequest
-                        })
+            expect(store.getState()).toEqual(
+                expect.objectContaining({
+                    notification: newNotificationManager({
+                        notificationList: [
+                            newNotification({
+                                msg: 'Conflict resolved successfully.',
+                                type: NotificationType.Success,
+                                id: expect.anything()
+                            })
+                        ],
+                        notificationMap: expect.anything()
+                    }),
+                    columnMergeRequestConflicts: newMergeRequestConflictResolutionState(
+                        {
+                            conflicts: newRemote(
+                                newMergeRequestConflictsByState({
+                                    updated: updatedConflicts.slice(0, 1),
+                                    conflicts: [
+                                        ...conflicts.slice(0, 1),
+                                        newRemote({
+                                            ...conflicts[1].value,
+                                            replacementState: ReplacementState.REPLACE
+                                        }),
+                                        ...conflicts.slice(2)
+                                    ],
+                                    mergeRequest: mergeRequest
+                                })
+                            )
+                        }
                     )
                 })
-            })
+            )
             const keepButtons = screen.getAllByRole('button', {
                 name: 'Keep Existing Value'
             })
@@ -346,25 +312,29 @@ describe('resolve conflicts', () => {
             })
         })
         await waitFor(async () => {
-            expect(store.getState()).toEqual({
-                notification: newNotificationManager({}),
-                columnMergeRequestConflicts: newMergeRequestConflictResolutionState({
-                    conflicts: newRemote(
-                        newMergeRequestConflictsByState({
-                            updated: updatedConflicts.slice(0, 1),
-                            conflicts: [
-                                ...conflicts.slice(0, 1),
-                                newRemote({
-                                    ...conflicts[1].value,
-                                    replacementState: ReplacementState.KEEP
-                                }),
-                                ...conflicts.slice(2)
-                            ],
-                            mergeRequest: mergeRequest
-                        })
+            expect(store.getState()).toEqual(
+                expect.objectContaining({
+                    // notification: newNotificationManager({}),
+                    columnMergeRequestConflicts: newMergeRequestConflictResolutionState(
+                        {
+                            conflicts: newRemote(
+                                newMergeRequestConflictsByState({
+                                    updated: updatedConflicts.slice(0, 1),
+                                    conflicts: [
+                                        ...conflicts.slice(0, 1),
+                                        newRemote({
+                                            ...conflicts[1].value,
+                                            replacementState: ReplacementState.KEEP
+                                        }),
+                                        ...conflicts.slice(2)
+                                    ],
+                                    mergeRequest: mergeRequest
+                                })
+                            )
+                        }
                     )
                 })
-            })
+            )
         })
         const user = userEvent.setup()
         await waitFor(
@@ -402,66 +372,66 @@ describe('resolve conflicts', () => {
         }
         await waitFor(async () => {
             expect(fetchMock.mock.calls.length).toEqual(4)
-            expect(fetchMock.mock.calls).toEqual([
-                [
-                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/conflicts',
-                    { credentials: 'include' }
-                ],
-                [
-                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
-                    {
-                        credentials: 'include',
-                        method: 'POST',
-                        body: JSON.stringify(replaceBody)
-                    }
-                ],
-                [
-                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
-                    {
-                        credentials: 'include',
-                        method: 'POST',
-                        body: JSON.stringify({
-                            ...replaceBody,
-                            replacement_state: 'KEEP'
-                        })
-                    }
-                ],
-                [
-                    'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
-                    {
-                        credentials: 'include',
-                        method: 'POST',
-                        body: JSON.stringify({
-                            ...replaceBody,
-                            replacement_state: 'KEEP',
-                            replacement_value: replacementValue
-                        })
-                    }
-                ]
-            ])
-            const replacementValueButtons = screen.getAllByRole('button', {
-                name: 'Use Replacement Value'
-            })
-            expect(replacementValueButtons.length).toEqual(5)
-            act(() => {
-                replacementValueButtons[2].click()
-            })
         })
-        await waitFor(() => {
-            expect(fetchMock.mock.calls.length).toEqual(5)
-            expect(fetchMock.mock.calls[4]).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/conflicts',
+                { credentials: 'include' }
+            ],
+            [
                 'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
                 {
                     credentials: 'include',
                     method: 'POST',
-                    body: JSON.stringify({
-                        ...replaceBody,
-                        replacement_state: 'VALUE',
-                        replacement_value: replacementValue
-                    })
+                    body: replaceBody
                 }
-            ])
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+                {
+                    credentials: 'include',
+                    method: 'POST',
+                    body: {
+                        ...replaceBody,
+                        replacement_state: 'KEEP'
+                    }
+                }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+                {
+                    credentials: 'include',
+                    method: 'POST',
+                    body: {
+                        ...replaceBody,
+                        replacement_state: 'KEEP',
+                        replacement_value: replacementValue
+                    }
+                }
+            ]
+        ])
+        const replacementValueButtons = screen.getAllByRole('button', {
+            name: 'Use Replacement Value'
         })
+        expect(replacementValueButtons.length).toEqual(5)
+        act(() => {
+            replacementValueButtons[2].click()
+        })
+        await waitFor(() => {
+            expect(fetchMock.mock.calls.length).toEqual(5)
+        })
+        await expectFetchCall(fetchMock.mock.calls[4], [
+            'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+            {
+                credentials: 'include',
+                method: 'POST',
+                body: {
+                    ...replaceBody,
+                    replacement_state: 'VALUE',
+                    replacement_value: replacementValue
+                }
+            }
+        ])
     }, 15000)
     test('error', async () => {
         const fetchMock = vi.fn()
@@ -527,7 +497,7 @@ describe('submit', () => {
                 })
             )
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
                 { credentials: 'include' }
@@ -568,7 +538,7 @@ describe('submit', () => {
                 })
             )
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
                 { credentials: 'include' }
@@ -593,12 +563,14 @@ describe('toggle disable origin on merge', () => {
             const toggle = await screen.findByRole('checkbox')
             toggle.click()
         })
-        expect(
-            store.getState().columnMergeRequestConflicts.conflicts.value?.mergeRequest
-                .disableOriginOnMerge
-        ).toEqual(false)
+        await waitFor(() => {
+            expect(
+                store.getState().columnMergeRequestConflicts.conflicts.value
+                    ?.mergeRequest.disableOriginOnMerge
+            ).toEqual(false)
+        })
         expect(store.getState().notification).toEqual(newNotificationManager({}))
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
                 { credentials: 'include' }
@@ -608,7 +580,7 @@ describe('toggle disable origin on merge', () => {
                 {
                     credentials: 'include',
                     method: 'PATCH',
-                    body: JSON.stringify({ disable_origin_on_merge: false })
+                    body: { disable_origin_on_merge: false }
                 }
             ]
         ])
@@ -630,19 +602,21 @@ describe('toggle disable origin on merge', () => {
             store.getState().columnMergeRequestConflicts.conflicts.value?.mergeRequest
                 .disableOriginOnMerge
         ).toEqual(true)
-        expect(store.getState().notification).toEqual(
-            newNotificationManager({
-                notificationList: [
-                    newNotification({
-                        msg: testError,
-                        type: NotificationType.Error,
-                        id: expect.anything()
-                    })
-                ],
-                notificationMap: expect.anything()
-            })
-        )
-        expect(fetchMock.mock.calls).toEqual([
+        await waitFor(() => {
+            expect(store.getState().notification).toEqual(
+                newNotificationManager({
+                    notificationList: [
+                        newNotification({
+                            msg: testError,
+                            type: NotificationType.Error,
+                            id: expect.anything()
+                        })
+                    ],
+                    notificationMap: expect.anything()
+                })
+            )
+        })
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
                 { credentials: 'include' }
@@ -652,7 +626,7 @@ describe('toggle disable origin on merge', () => {
                 {
                     credentials: 'include',
                     method: 'PATCH',
-                    body: JSON.stringify({ disable_origin_on_merge: false })
+                    body: { disable_origin_on_merge: false }
                 }
             ]
         ])

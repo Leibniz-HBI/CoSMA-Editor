@@ -1,5 +1,4 @@
 import { exceptionMessage } from '../../util/exception'
-import { config } from '../../config'
 import {
     MergeRequestConflict,
     ReplacementState,
@@ -27,31 +26,32 @@ import {
     toggleDisableOnMergeStart,
     toggleDisableOnMergeSuccess
 } from './slice'
+import {
+    cosmaeMergeRequestApiGetMergeRequestConflicts,
+    cosmaeMergeRequestApiPatchMergeRequest,
+    cosmaeMergeRequestApiPostMergeRequestMerge,
+    cosmaeMergeRequestApiPostResolveConflict
+} from '../../openapi/cosmae'
 
 export function getMergeRequestConflicts(
     idMergeRequestPersistent: string
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getMergeRequestConflictStart())
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/merge_requests/${idMergeRequestPersistent}/conflicts`,
-                {
-                    credentials: 'include'
-                }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
-                const updated = json['updated'].map(
+            const rsp = await cosmaeMergeRequestApiGetMergeRequestConflicts({
+                path: { id_merge_request_persistent: idMergeRequestPersistent }
+            })
+            if (rsp.data) {
+                const updated = rsp.data.updated.map(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (conflict: any) => parseMergeRequestConflictFromApi(conflict)
                 )
-                const conflicts = json['conflicts'].map(
+                const conflicts = rsp.data.conflicts.map(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (conflict: any) => parseMergeRequestConflictFromApi(conflict)
                 )
-                const mergeRequest = parseMergeRequestFromJson(json['merge_request'])
+                const mergeRequest = parseMergeRequestFromJson(rsp.data.merge_request)
                 dispatch(
                     getMergeRequestConflictSuccess({
                         updated,
@@ -60,7 +60,7 @@ export function getMergeRequestConflicts(
                     })
                 )
             } else {
-                const msg = json['msg']
+                const msg = rsp.error.msg
                 dispatch(getMergeRequestConflictError())
                 dispatch(addError(msg))
             }
@@ -90,37 +90,27 @@ export function resolveConflict({
     replacementState?: ReplacementState
     replacementValue: string | undefined
 }): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(resolveConflictStart(entity.idPersistent))
         try {
-            const rsp = await fetch(
-                config.api_path + `/merge_requests/${idMergeRequestPersistent}/resolve`,
-                {
-                    method: 'POST',
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        id_entity_version: entity.version,
-                        id_column_origin_version: columnOrigin.version,
-                        id_value_origin_version: valueOrigin.version,
-                        id_column_destination_version:
-                            columnDestination.version,
-                        id_value_destination_version:
-                            valueDestination?.version,
-                        id_entity_persistent: entity.idPersistent,
-                        id_column_origin_persistent:
-                            columnOrigin.idPersistent,
-                        id_value_origin_persistent:
-                            valueOrigin.idPersistent,
-                        id_column_destination_persistent:
-                            columnDestination.idPersistent,
-                        id_value_destination_persistent:
-                            valueDestination?.idPersistent,
-                        replacement_state: replacementState,
-                        replacement_value: replacementValue
-                    })
+            const rsp = await cosmaeMergeRequestApiPostResolveConflict({
+                path: { id_merge_request_persistent: idMergeRequestPersistent },
+                body: {
+                    id_entity_version: entity.version,
+                    id_column_origin_version: columnOrigin.version,
+                    id_value_origin_version: valueOrigin.version,
+                    id_column_destination_version: columnDestination.version,
+                    id_value_destination_version: valueDestination?.version,
+                    id_entity_persistent: entity.idPersistent,
+                    id_column_origin_persistent: columnOrigin.idPersistent,
+                    id_value_origin_persistent: valueOrigin.idPersistent,
+                    id_column_destination_persistent: columnDestination.idPersistent,
+                    id_value_destination_persistent: valueDestination?.idPersistent,
+                    replacement_state: replacementState,
+                    replacement_value: replacementValue
                 }
-            )
-            if (rsp.status == 200) {
+            })
+            if (!rsp.error) {
                 dispatch(
                     resolveConflictSuccess({
                         idEntityPersistent: entity.idPersistent,
@@ -130,9 +120,10 @@ export function resolveConflict({
                 )
                 dispatch(addSuccessVanish('Conflict resolved successfully.'))
             } else {
-                const json = await rsp.json()
                 dispatch(resolveConflictError(entity.idPersistent))
-                dispatch(addError(json['msg']))
+                if (rsp.error) {
+                    dispatch(addError(rsp.error.msg))
+                }
             }
         } catch (e: unknown) {
             dispatch(resolveConflictError(entity.idPersistent))
@@ -175,22 +166,17 @@ export function parseValueFromJson(json: any) {
 }
 
 export function startMerge(idMergeRequestPersistent: string): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(startMergeStart())
         try {
-            const rsp = await fetch(
-                config.api_path + `/merge_requests/${idMergeRequestPersistent}/merge`,
-                {
-                    credentials: 'include',
-                    method: 'POST'
-                }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeMergeRequestApiPostMergeRequestMerge({
+                path: { id_merge_request_persistent: idMergeRequestPersistent }
+            })
+            if (!rsp.error) {
                 dispatch(startMergeSuccess())
                 dispatch(addSuccessVanish('Application of resolutions started.'))
             } else {
-                const json = await rsp.json()
-                let msg = json['msg']
+                let msg = rsp.error.msg
                 if (
                     msg ==
                         'There are conflicts for the merge request, where the underlying data has changed.' ||
@@ -212,23 +198,17 @@ export function toggleDisableOriginOnMerge(
     idMergeRequestPersistent: string,
     disableOriginOnMerge: boolean
 ): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(toggleDisableOnMergeStart())
         try {
-            const rsp = await fetch(
-                config.api_path + `/merge_requests/${idMergeRequestPersistent}`,
-                {
-                    credentials: 'include',
-                    method: 'PATCH',
-                    body: JSON.stringify({
-                        disable_origin_on_merge: disableOriginOnMerge
-                    })
-                }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeMergeRequestApiPatchMergeRequest({
+                path: { id_merge_request_persistent: idMergeRequestPersistent },
+                body: { disable_origin_on_merge: disableOriginOnMerge }
+            })
+            if (rsp.data) {
                 dispatch(toggleDisableOnMergeSuccess(disableOriginOnMerge))
             } else {
-                const msg = (await rsp.json())['msg']
+                const msg = rsp.error.msg
                 dispatch(addError(msg))
                 dispatch(toggleDisableOnMergeError())
             }

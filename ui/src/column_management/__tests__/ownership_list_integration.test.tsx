@@ -2,64 +2,12 @@
  * @vitest-environment jsdom
  */
 import { vi, Mock } from 'vitest'
-import {
-    RenderOptions,
-    getByText,
-    render,
-    screen,
-    waitFor
-} from '@testing-library/react'
+import { getByText, screen, waitFor } from '@testing-library/react'
 import { ColumnType } from '../../column_menu/state'
-import columnManagementReducer from '../slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
 import { ColumnManagementPage } from '../components'
-import { ColumnManagementState } from '../state'
-import { newRemote } from '../../util/state'
+import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
+import { renderWithProviders } from '../../util/tests/provider'
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: { columnManagement: ColumnManagementState }
-}
-export function renderWithProviders(
-    ui: React.ReactElement,
-    fetchMock: Mock,
-    {
-        preloadedState = {
-            columnManagement: {
-                ownershipRequests: newRemote({ petitioned: [], received: [] }),
-                putOwnershipRequest: newRemote(undefined)
-            }
-        },
-        ...renderOptions
-    }: ExtendedRenderOptions = {}
-) {
-    const store = configureStore({
-        reducer: { columnManagement: columnManagementReducer },
-        middleware: (getDefaultMiddleware) =>
-            getDefaultMiddleware({ thunk: { extraArgument: fetchMock } }),
-        preloadedState
-    })
-    function Wrapper({ children }: PropsWithChildren<object>): JSX.Element {
-        return <Provider store={store}>{children}</Provider>
-    }
-
-    // Return an object with the store and all of RTL's query functions
-    return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) }
-}
-function addResponseSequence(mock: Mock, responses: [number, unknown][]) {
-    for (const tpl of responses) {
-        const [status_code, rsp] = tpl
-        mock.mockImplementationOnce(
-            vi.fn(() =>
-                Promise.resolve({
-                    status: status_code,
-                    json: () => Promise.resolve(rsp)
-                })
-            ) as Mock
-        )
-    }
-}
 describe('Ownership Request List', () => {
     const idUserTest = 'id-user-test'
     const usernameTest = 'user test'
@@ -159,7 +107,7 @@ describe('Ownership Request List', () => {
                 getByText(petitionedEntry, usernameTest)
             }
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/columns/permissions/ownership_requests',
                 { credentials: 'include', method: 'GET' }
@@ -178,7 +126,7 @@ describe('Ownership Request List', () => {
         await waitFor(() => {
             expect(screen.queryAllByText('Accept').length).toEqual(0)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/columns/permissions/ownership_requests',
                 { credentials: 'include', method: 'GET' }
@@ -201,7 +149,7 @@ describe('Ownership Request List', () => {
         await waitFor(() => {
             expect(screen.queryAllByText('Withdraw').length).toEqual(0)
         })
-        expect(fetchMock.mock.calls).toEqual([
+        await expectFetchCallList(fetchMock.mock.calls, [
             [
                 'http://127.0.0.1:8000/cosmae/api/columns/permissions/ownership_requests',
                 { credentials: 'include', method: 'GET' }

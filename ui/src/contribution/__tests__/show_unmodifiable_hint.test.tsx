@@ -7,11 +7,11 @@ import { addResponseSequence } from '../../util/tests/response'
 import {
     contributionValuesExtractedResponse,
     descriptionTest1,
-    nameTest1,
-    renderWithProviders
+    nameTest1
 } from '../test_utils'
 import { ContributionStepper } from '../components'
 import { waitFor, screen } from '@testing-library/react'
+import { renderWithProviders } from '../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()

@@ -1,6 +1,13 @@
+import { data } from 'react-router-dom'
 import { Column } from '../column_menu/state'
 import { parseColumnsFromApi } from '../column_menu/thunks'
 import { config } from '../config'
+import {
+    cosmaeColumnApiPermissionsDeleteOwnershipRequest,
+    cosmaeColumnApiPermissionsGetOwnershipRequests,
+    cosmaeColumnApiPermissionsPostAcceptOwnershipRequest,
+    cosmaeColumnApiPermissionsPostOwnershipRequest
+} from '../openapi/cosmae'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { errorMessageFromApi, exceptionMessage } from '../util/exception'
 import { addError } from '../util/notification/slice'
@@ -22,26 +29,22 @@ import {
 import { OwnershipRequest, PutOwnershipRequest } from './state'
 
 export function getOwnershipRequests(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getOwnershipRequestsStart())
         try {
-            const rsp = await fetch(
-                config.api_path + '/columns/permissions/ownership_requests',
-                { method: 'GET', credentials: 'include' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            const rsp = await cosmaeColumnApiPermissionsGetOwnershipRequests()
+            if (rsp.data) {
                 dispatch(
                     getOwnershipRequestsSuccess({
-                        petitioned: json['petitioned'].map(
+                        petitioned: rsp.data.petitioned.map(
                             parseOwnershipRequestFromJson
                         ),
-                        received: json['received'].map(parseOwnershipRequestFromJson)
+                        received: rsp.data.received.map(parseOwnershipRequestFromJson)
                     })
                 )
             } else {
                 dispatch(getOwnershipRequestsError())
-                dispatch(addError(json['msg']))
+                dispatch(addError(errorMessageFromApi(rsp.error)))
             }
         } catch (e: unknown) {
             dispatch(getOwnershipRequestsError())
@@ -53,23 +56,26 @@ export function getOwnershipRequests(): ThunkWithFetch<void> {
 export function putOwnershipRequest(
     args: PutOwnershipRequest
 ): ThunkWithFetch<Column | undefined> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(putOwnershipRequestStart(args))
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/columns/permissions/${args.idColumnPersistent}/owner/${args.idUserPersistent}`,
-                { credentials: 'include', method: 'POST' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            const rsp = await cosmaeColumnApiPermissionsPostOwnershipRequest({
+                path: {
+                    id_column_persistent: args.idColumnPersistent,
+                    id_user_persistent: args.idUserPersistent
+                }
+            })
+            if (rsp.response.status == 200) {
                 dispatch(putOwnershipRequestSuccess(args))
-                if (json !== undefined && json !== null) {
-                    return parseColumnsFromApi(json)
+                const data = rsp.data
+                if (data !== undefined && data !== null) {
+                    return parseColumnsFromApi(data)
                 }
             } else {
                 dispatch(putOwnerShipRequestError(args))
-                dispatch(addError(errorMessageFromApi(json)))
+                if (rsp.error !== undefined) {
+                    dispatch(addError(errorMessageFromApi(rsp.error)))
+                }
             }
         } catch (e: unknown) {
             dispatch(putOwnerShipRequestError(args))
@@ -80,21 +86,18 @@ export function putOwnershipRequest(
 export function acceptOwnershipRequest(
     idPersistent: string
 ): ThunkWithFetch<Column | undefined> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(acceptOwnershipRequestStart(idPersistent))
         try {
-            const rsp = await fetch(
-                config.api_path +
-                    `/columns/permissions/owner/${idPersistent}/accept`,
-                { credentials: 'include', method: 'POST' }
-            )
-            const json = await rsp.json()
-            if (rsp.status == 200) {
+            const rsp = await cosmaeColumnApiPermissionsPostAcceptOwnershipRequest({
+                path: { id_ownership_request_persistent: idPersistent }
+            })
+            if (rsp.data) {
                 dispatch(acceptOwnershipRequestSuccess(idPersistent))
-                return parseColumnsFromApi(json)
+                return parseColumnsFromApi(data)
             }
             dispatch(acceptOwnershipRequestError(idPersistent))
-            dispatch(addError(errorMessageFromApi(json)))
+            dispatch(addError(errorMessageFromApi(rsp.error)))
         } catch (e: unknown) {
             dispatch(acceptOwnershipRequestError(idPersistent))
             dispatch(addError(exceptionMessage(e)))
@@ -102,19 +105,19 @@ export function acceptOwnershipRequest(
     }
 }
 export function deleteOwnershipRequest(idPersistent: string): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(deleteOwnershipRequestStart(idPersistent))
         try {
-            const rsp = await fetch(
-                config.api_path + `/columns/permissions/owner/${idPersistent}`,
-                { credentials: 'include', method: 'DELETE' }
-            )
-            if (rsp.status == 200) {
+            const rsp = await cosmaeColumnApiPermissionsDeleteOwnershipRequest({
+                path: { id_ownership_request_persistent: idPersistent }
+            })
+            if (rsp.response.status == 200) {
                 dispatch(deleteOwnershipRequestSuccess(idPersistent))
             } else {
-                const json = await rsp.json()
                 dispatch(deleteOwnershipRequestError(idPersistent))
-                dispatch(addError(errorMessageFromApi(json)))
+                if (rsp.error !== undefined) {
+                    dispatch(addError(errorMessageFromApi(rsp.error)))
+                }
             }
         } catch (e: unknown) {
             dispatch(deleteOwnershipRequestError(idPersistent))

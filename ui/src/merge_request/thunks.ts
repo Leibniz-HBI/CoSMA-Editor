@@ -1,4 +1,3 @@
-import { config } from '../config'
 import { MergeRequestStep, newMergeRequest } from './state'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { exceptionMessage } from '../util/exception'
@@ -10,29 +9,26 @@ import {
     getMergeRequestsStart,
     getMergeRequestsSuccess
 } from './slice'
+import { cosmaeMergeRequestApiGetMergeRequests } from '../openapi/cosmae'
 
 export function getColumnMergeRequests(): ThunkWithFetch<void> {
-    return async (dispatch, _getState, fetch) => {
+    return async (dispatch, _getState,_fetch) => {
         dispatch(getMergeRequestsStart())
         try {
-            const rsp = await fetch(config.api_path + '/merge_requests', {
-                credentials: 'include'
-            })
-            if (rsp.status == 200) {
-                const json = await rsp.json()
+            const rsp = await cosmaeMergeRequestApiGetMergeRequests({})
+            if (rsp.data) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const created = json['created'].map((mr: any) =>
+                const created = rsp.data.created.map((mr: any) =>
                     parseMergeRequestFromJson(mr)
                 )
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const assigned = json['assigned'].map((mr: any) =>
+                const assigned = rsp.data.assigned.map((mr: any) =>
                     parseMergeRequestFromJson(mr)
                 )
                 dispatch(getMergeRequestsSuccess({ created, assigned }))
             } else {
-                const json = await rsp.json()
                 dispatch(getMergeRequestsError())
-                dispatch(addError(json['msg']))
+                dispatch(addError(rsp.error.msg))
             }
         } catch (exc: unknown) {
             dispatch(getMergeRequestsError())

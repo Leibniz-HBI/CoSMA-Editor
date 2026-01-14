@@ -18,21 +18,14 @@ import {
     newColumn,
     newColumnSelectionState
 } from '../../column_menu/state'
-import {
-    UserPermissionGroup,
-    newPublicUserInfo,
-    newUserInfo,
-    newUserState
-} from '../../user/state'
+import { UserPermissionGroup, newPublicUserInfo, newUserInfo } from '../../user/state'
 import { waitFor, screen } from '@testing-library/react'
-import { newNotificationManager } from '../../util/notification/slice'
 import {
     displayTextColumn,
     displayTxtColumnId,
     justificationColumn,
     justificationColumnId,
-    newColumnState,
-    newTableState
+    newColumnState
 } from '../state'
 import { useAppSelector } from '../../hooks'
 import { selectColumnStates } from '../selectors'
@@ -45,15 +38,10 @@ import {
     newEditSessionState
 } from '../../session/state'
 import { newRemote } from '../../util/state'
-import { newEntityDetailsState } from '../../entity/state'
 import { useColumnDefinitionList } from '../../column_menu/hooks'
 import { newAuthState } from '../../auth/state'
-import { renderWithProviders } from '../../util/tests/provider'
-import { addResponseSequence } from '../../util/tests/response'
-import { newContributionState } from '../../contribution/slice'
-import { newContributionEntityState } from '../../contribution/entity/state'
-import { newColumnDefinitionsContributionState } from '../../contribution/columns/state'
-import { newEntityMergeRequestConflictsState } from '../../merge_request/entity/conflicts/state'
+import { emptyState, renderWithProviders } from '../../util/tests/provider'
+import { addResponseSequence, expectFetchCall } from '../../util/tests/response'
 
 const rectangle = { x: 0, y: 1, width: 2, height: 4 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,6 +98,7 @@ test('no curation for unprivileged user', async () => {
     addValueResponse(fetchMock)
     const { store } = renderWithProviders(<RemoteDataTable />, fetchMock, {
         preloadedState: {
+            ...emptyState,
             auth: newAuthState({
                 user: newRemote(
                     newUserInfo({
@@ -121,18 +110,8 @@ test('no curation for unprivileged user', async () => {
                     })
                 )
             }),
-            contribution: newContributionState({}),
-            contributionEntity: newContributionEntityState({}),
-            contributionColumnDefinition: newColumnDefinitionsContributionState({}),
             displayTxtManagement: { columns: newRemote([]) },
-            entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
-            user: newUserState({}),
-            table: newTableState({}),
-            columnSelection: initialColumnSelectionState,
-            notification: newNotificationManager({}),
-            tableSelection: { cols: [], rows: [], rowSelectionOrder: [] },
-            editSession: newEditSessionState({}),
-            entityDetails: newEntityDetailsState({})
+            columnSelection: initialColumnSelectionState
         }
     })
     await waitFor(() => {
@@ -178,12 +157,15 @@ test('remove column from header menu', async () => {
         const remove = screen.queryByRole('button', { name: 'Hide Column' })
         expect(remove).toBeNull()
         const state = store.getState()
-        expect(state.table.columnStates).toEqual([displayTxtColumnState, justificationColumnState])
+        expect(state.table.columnStates).toEqual([
+            displayTxtColumnState,
+            justificationColumnState
+        ])
         expect(state.auth.user.value?.idColumnPersistentList).toEqual([])
     })
     // TODO check menu entries
     expect(fetchMock.mock.calls.length).toEqual(3)
-    expect(fetchMock.mock.calls.at(-1)).toEqual([
+    await expectFetchCall(fetchMock.mock.calls.at(-1), [
         'http://127.0.0.1:8000/cosmae/api/user/columns/column_id_test',
         { credentials: 'include', method: 'DELETE' }
     ])
@@ -209,7 +191,9 @@ test('change owner shows modal', async () => {
 })
 
 function addEntitiesResponse(fetchMock: Mock) {
-    addResponseSequence(fetchMock, [[200, { id_entity_persistent_list: [], next_offset: 0 }]])
+    addResponseSequence(fetchMock, [
+        [200, { id_entity_persistent_list: [], next_offset: 0 }]
+    ])
 }
 
 function addValueResponse(fetchMock: Mock) {
@@ -252,15 +236,8 @@ const initialColumnSelectionState = newColumnSelectionState({
 })
 const initialState = {
     preloadedState: {
-        notification: newNotificationManager({}),
-        table: newTableState({}),
-        tableSelection: { rows: [], cols: [], rowSelectionOrder: [] },
+        ...emptyState,
         columnSelection: initialColumnSelectionState,
-        contribution: newContributionState({}),
-        contributionEntity: newContributionEntityState({}),
-        contributionColumnDefinition: newColumnDefinitionsContributionState({}),
-        displayTxtManagement: { columns: newRemote([]) },
-        entityMergeRequestConflicts: newEntityMergeRequestConflictsState({}),
         auth: newAuthState({
             user: newRemote(
                 newUserInfo({
@@ -271,7 +248,6 @@ const initialState = {
                 })
             )
         }),
-        user: newUserState({}),
         editSession: newEditSessionState({
             currentEditSession: newRemote(
                 newEditSession({
@@ -286,7 +262,6 @@ const initialState = {
                     participantMap: {}
                 })
             )
-        }),
-        entityDetails: newEntityDetailsState({})
+        })
     }
 }
