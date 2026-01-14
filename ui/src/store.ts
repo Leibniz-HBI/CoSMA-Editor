@@ -23,6 +23,7 @@ import { client as allauthClient } from './openapi/allauth/client.gen'
 import { config } from './config'
 import { Fetch } from './util/type'
 import { dataPublicationReducer } from './management/data_publication/slice'
+import { getCookie } from './util/cookie'
 
 const rootReducer = combineReducers({
     notification: notificationReducer,
@@ -48,13 +49,14 @@ const rootReducer = combineReducers({
 })
 
 export function setupStore(preloadedState?: RootState) {
-    setBaseUrls()
-    return configureStore({
+    const store = configureStore({
         reducer: rootReducer,
         middleware: (getDefaultMiddleware) =>
             getDefaultMiddleware({ thunk: { extraArgument: fetch } }),
         preloadedState
     })
+    setBaseUrls(fetch)
+    return store
 }
 
 const store = setupStore()
@@ -65,6 +67,17 @@ export type RootState = ReturnType<typeof rootReducer>
 export type AppStore = ReturnType<typeof setupStore>
 export type AppDispatch = AppStore['dispatch']
 
+const modifyMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE '])
+function csrfRequestInterceptor(request: Request) {
+    if (modifyMethods.has(request.method)) {
+        const csrfToken = getCookie('csrftoken')
+        if (csrfToken) {
+            request.headers.set('X-CSRFToken', csrfToken)
+        }
+    }
+    return request
+}
+
 export function setBaseUrls(fetch?: Fetch | undefined) {
     if (config.api_url !== undefined && config.api_url !== '') {
         allauthClient.setConfig({
@@ -72,10 +85,12 @@ export function setBaseUrls(fetch?: Fetch | undefined) {
             credentials: 'include',
             fetch
         })
+        allauthClient.interceptors.request.use(csrfRequestInterceptor)
         cosmaeClient.setConfig({
             baseUrl: config.api_url,
             credentials: 'include',
             fetch
         })
+        cosmaeClient.interceptors.request.use(csrfRequestInterceptor)
     }
 }
