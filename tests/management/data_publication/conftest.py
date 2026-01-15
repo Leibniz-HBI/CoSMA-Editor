@@ -27,3 +27,15 @@ def publication_working():
         id_persistent=c.working_id_persistent,
         is_working=True,
     )
+
+
+@fixture()
+def publication_display_txt():
+    "Data publication in display text step."
+    return DataPublication.objects.create(
+        name=c.display_txt_name,
+        start_time=c.display_txt_start_date,
+        end_time=c.display_txt_end_date,
+        id_persistent=c.display_txt_id_persistent,
+        step=DataPublication.Step.DISPLAY_TXT,
+    )
