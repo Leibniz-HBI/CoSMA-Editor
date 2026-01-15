@@ -1,6 +1,7 @@
 "API methods for merge requests."
 
 from datetime import datetime
+from logging import getLogger
 from typing import List
 
 from django.db import DatabaseError, transaction
@@ -26,7 +27,7 @@ from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util.auth import check_user
 
 router = Router()
-
+_LOGGER = getLogger(__name__)
 
 class MergeRequest(Schema):
     # pylint: disable=too-few-public-methods
@@ -199,12 +200,14 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
         return 401, ApiError(msg="Not authenticated.")
     except ForbiddenException:
         return 403, ApiError(msg="Insufficient permissions")
-    except DatabaseError:
-        return 500, ApiError(
-            msg="Could not get the merge request conflicts from the database."
-        )
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get the requested merge request conflicts.")
+    except DatabaseError as exc:
+        msg = "Could not get the merge request conflicts from the database."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError( msg=msg)
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not get the requested merge request conflicts."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.post(
