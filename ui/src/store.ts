@@ -85,12 +85,12 @@ export function setBaseUrls(fetch?: Fetch | undefined) {
             credentials: 'include',
             fetch
         })
-        allauthClient.interceptors.request.use(csrfRequestInterceptor)
         cosmaeClient.setConfig({
             baseUrl: config.api_url,
             credentials: 'include',
             fetch
         })
-        cosmaeClient.interceptors.request.use(csrfRequestInterceptor)
     }
+    allauthClient.interceptors.request.use(csrfRequestInterceptor)
+    cosmaeClient.interceptors.request.use(csrfRequestInterceptor)
 }
