@@ -14,7 +14,7 @@ pydantic = ">=2.11,<2.12"
 django-cors-headers = "^4.6.0"
 pandas = "^2.0.1"
 django-rq = "^3.0.0"
-psycopg = "^3.2.5"
+psycopg = "^3.2.13"
 levenshtein = "^0.27.1"
 sqlparse = ">=0.5.0,<1.0.0"
 django-allauth = {extras = ["mfa"], version = "<65.10,>=65.9"}
