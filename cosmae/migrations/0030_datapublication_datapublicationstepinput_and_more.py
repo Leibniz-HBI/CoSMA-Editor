@@ -15,15 +15,11 @@ class Migration(migrations.Migration):
             name="DataPublication",
             fields=[
                 (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
+                    "id_persistent",
+                    models.CharField(
+                        max_length=36, unique=True, primary_key=True, serialize=False
                     ),
                 ),
-                ("id_persistent", models.CharField(max_length=36, unique=True)),
                 ("name", models.TextField()),
                 ("start_time", models.DateTimeField()),
                 ("end_time", models.DateTimeField()),
@@ -32,6 +28,7 @@ class Migration(migrations.Migration):
                     models.TextField(
                         choices=[
                             ("CREA", "Created"),
+                            ("JUST", "Justification"),
                             ("DSPL", "DisplayText"),
                             ("CURA", "Curated"),
                             ("USER", "User"),
@@ -64,6 +61,7 @@ class Migration(migrations.Migration):
                     models.TextField(
                         choices=[
                             ("CREA", "Created"),
+                            ("JUST", "Justification"),
                             ("DSPL", "DisplayText"),
                             ("CURA", "Curated"),
                             ("USER", "User"),

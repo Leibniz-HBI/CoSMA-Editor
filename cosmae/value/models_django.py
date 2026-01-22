@@ -16,7 +16,7 @@ from cosmae.exception import (
     EntityMissingException,
 )
 from cosmae.util import CosmaeUser
-from cosmae.versioned.models_django import HistoryMixin, Versioned
+from cosmae.versioned.models_django import HistoryMixin, Versioned, VersionedQueryset
 
 
 class ValueAbstract(Versioned):
@@ -48,7 +48,7 @@ class ValueAbstract(Versioned):
         return comparison
 
 
-class ValueQuerySet(models.QuerySet):
+class ValueQuerySet(VersionedQueryset):
     "Custom queryset for recent values"
 
     def for_entities(

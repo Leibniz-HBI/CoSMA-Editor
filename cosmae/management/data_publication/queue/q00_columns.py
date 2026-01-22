@@ -1,30 +1,28 @@
 "Queue method for collecting columns for a dataset publication."
 
-from django.db import transaction
+from logging import getLogger
 
 from cosmae.column.models_django import ColumnHistory
 from cosmae.management.data_publication.models_django import (
     DataPublication,
     DataPublicationStepInput,
 )
+from cosmae.management.data_publication.queue.utils import (
+    check_publication_and_set_working,
+    process_data_publication_error,
+)
+
+_LOGGER = getLogger(__name__)
 
 
 def collect_columns(id_publication):
     "Queue the column collection step for the given dataset publication."
-    publication_query = DataPublication.objects.select_for_update().filter(
-        id_persistent=id_publication
+    publication_query = DataPublication.objects.filter(id_persistent=id_publication)
+    publication = check_publication_and_set_working(
+        publication_query, DataPublication.Step.CREATED
     )
-    with transaction.atomic():
-        publication = publication_query.first()
-        if (
-            publication is None
-            or publication.is_working
-            or publication.step != DataPublication.Step.CREATED
-            or publication.is_error
-        ):
-            return
-        publication.is_working = True
-        publication.save()
+    if publication is None:
+        return
     try:
         column_queryset = (
             ColumnHistory.objects
@@ -42,21 +40,26 @@ def collect_columns(id_publication):
         publication.save()
         DataPublicationStepInput.objects.create(
             publication=publication,
-            step=DataPublication.Step.DISPLAY_TXT,
+            step=DataPublication.Step.CURATED,
             input={
-                "columns": {
-                    "user_list": list(
-                        columns_user_queryset.values_list("id_persistent", flat=True)
-                    ),
-                    "curated_list": list(
-                        columns_curated_queryset.values_list("id_persistent", flat=True)
-                    ),
-                }
+                "id_columns_curated_list": list(
+                    columns_curated_queryset.values_list("id_persistent", flat=True)
+                ),
+            },
+        )
+        DataPublicationStepInput.objects.create(
+            publication=publication,
+            step=DataPublication.Step.USER,
+            input={
+                "id_columns_user_list": list(
+                    columns_user_queryset.values_list("id_persistent", flat=True)
+                ),
             },
         )
     except Exception as exc:  # pylint: disable=broad-except
-        publication_query.update(
-            is_working=False,
-            error_message="Failed to collect columns.",
-            error_details=str(exc),
+        process_data_publication_error(
+            publication,
+            _LOGGER,
+            "Failed to collect columns.",
+            str(exc),
         )

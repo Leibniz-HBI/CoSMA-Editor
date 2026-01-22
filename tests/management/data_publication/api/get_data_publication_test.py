@@ -27,7 +27,7 @@ def test_applicant(request_applicant):
 
 
 def test_get_data_publication(
-    request_commissioner, publication_created, publication_working
+    request_commissioner, publication_created, publication_justification_working
 ):
     """Test creating a data publication via the API."""
     status, response = get_data_publication_list(
@@ -50,11 +50,11 @@ def test_get_data_publication(
             "is_working": False,
         },
         {
-            "name": c.working_name,
-            "start_time": c.working_start_date,
-            "end_time": c.working_end_date,
-            "id_persistent": c.working_id_persistent,
-            "step": "Created",
+            "name": c.justification_name,
+            "start_time": c.justification_start_date,
+            "end_time": c.justification_end_date,
+            "id_persistent": c.justification_id_persistent,
+            "step": "Justification",
             "error": None,
             "error_details": None,
             "is_working": True,
