@@ -477,7 +477,7 @@ def values_user(user, user1):
     )
     value1 = ValueHistory(
         id_persistent=cv.id_instance_test1,
-        time_edit=cv.time_edit_instance_test,
+        time_edit=cv.time_edit_instance_test1,
         written_by_session=user.edit_session,
         approved_by=user.id_persistent,
         id_column_persistent=c.id_column_persistent_test_user,
@@ -495,10 +495,54 @@ def values_user(user, user1):
     )
     value3 = ValueHistory(
         id_persistent=cv.id_instance_test3,
-        time_edit=cv.time_edit_instance_test,
+        time_edit=cv.time_edit_instance_test1,
         written_by_session=user1.edit_session,
         approved_by=user1.id_persistent,
         id_column_persistent=c.id_column_persistent_test_user1,
+        id_entity_persistent=ce.id_persistent_test_1,
+        value="value 3",
+    )
+    values = [value, value1, value2, value3]
+    for inst in values:
+        inst.save()
+    return values
+
+
+@pytest.fixture
+def values_curated(user, user1):
+    value = ValueHistory(
+        id_persistent=cv.id_instance_test0,
+        time_edit=cv.time_edit_instance_test,
+        written_by_session=user.edit_session,
+        approved_by=user.id_persistent,
+        id_column_persistent=c.id_column_curated_test,
+        id_entity_persistent=ce.id_persistent_test_0,
+        value="value",
+    )
+    value1 = ValueHistory(
+        id_persistent=cv.id_instance_test1,
+        time_edit=cv.time_edit_instance_test1,
+        written_by_session=user.edit_session,
+        approved_by=user.id_persistent,
+        id_column_persistent=c.id_column_curated_test,
+        id_entity_persistent=ce.id_persistent_test_1,
+        value="value 1",
+    )
+    value2 = ValueHistory(
+        id_persistent=cv.id_instance_test2,
+        time_edit=cv.time_edit_instance_test,
+        written_by_session=user1.edit_session,
+        approved_by=user1.id_persistent,
+        id_column_persistent=c.id_column_curated_test,
+        id_entity_persistent=ce.id_persistent_test_0,
+        value="value 2",
+    )
+    value3 = ValueHistory(
+        id_persistent=cv.id_instance_test3,
+        time_edit=cv.time_edit_instance_test1,
+        written_by_session=user1.edit_session,
+        approved_by=user1.id_persistent,
+        id_column_persistent=c.id_column_curated_test,
         id_entity_persistent=ce.id_persistent_test_1,
         value="value 3",
     )

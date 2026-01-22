@@ -19,6 +19,9 @@ class EntityJustification(models.Model):
     author = models.ForeignKey(
         "cosmae.CosmaeUser", null=True, blank=True, on_delete=models.SET_NULL
     )
+    author_session = models.ForeignKey(
+        "cosmae.EditSession", null=True, blank=True, on_delete=models.SET_NULL
+    )
 
     class Meta:
         "Meta class for entity model"

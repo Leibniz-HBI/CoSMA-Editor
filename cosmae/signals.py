@@ -142,3 +142,18 @@ def connect_set_ssh_keys():
         sender=SshKey,
         dispatch_uid="cosmae_set_ssh_key_list_delete",
     )
+
+
+def connect_data_publication_signal():
+    "Connect signal for data publication steps."
+    # pylint: disable=import-outside-toplevel
+    from cosmae.management.data_publication.models_django import DataPublication
+    from cosmae.management.data_publication.queue.utils import (
+        data_publication_signal_handler,
+    )
+
+    post_save.connect(
+        data_publication_signal_handler,
+        sender=DataPublication,
+        dispatch_uid="cosmae_data_publication_signal_handler",
+    )

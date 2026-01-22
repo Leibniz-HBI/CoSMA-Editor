@@ -14,13 +14,14 @@ class DataPublication(models.Model):
         "Steps in the data publication author credit calculation."
 
         CREATED = "CREA", "Created"
+        JUSTIFICATION = "JUST", "Justification"
         DISPLAY_TXT = "DSPL", "DisplayText"
         CURATED = "CURA", "Curated"
         USER = "USER", "User"
         AUTHORS = "AUTH", "Authors"
         PROCESSING_COMPLETED = "CMPL", "Completed"
 
-    id_persistent = models.CharField(max_length=36, unique=True)
+    id_persistent = models.CharField(max_length=36, unique=True, primary_key=True)
     name = models.TextField()
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
