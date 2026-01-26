@@ -1,6 +1,13 @@
 /**
  * @vitest-environment jsdom
  */
+vi.mock('react-router-dom', () => {
+    return {
+        Link: function MockLink(props: { to: string; children: React.ReactNode }) {
+            return <a href={props.to}>{props.children}</a>
+        }
+    }
+})
 
 import { screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '../../../util/tests/provider'
@@ -61,9 +68,7 @@ test('error', async () => {
     })
     expect(screen.queryByText(namePublication0)).toBeNull()
     expect(screen.queryByText(namePublication1)).toBeNull()
-    expect(store.getState().dataPublication.metaDataList).toEqual(
-        newRemote([])
-    )
+    expect(store.getState().dataPublication.metaDataList).toEqual(newRemote([]))
 })
 
 const namePublication0 = 'Publication Zero'
