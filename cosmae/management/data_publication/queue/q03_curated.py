@@ -46,7 +46,7 @@ def collect_curated_credits(id_publication):
             publication,
             DataPublication.Step.USER,
             credits_by_id,
-            "curated",
+            "column_curated",
         )
 
     except (Exception,) as exc:  # pylint: disable=broad-except

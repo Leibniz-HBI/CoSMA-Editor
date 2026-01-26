@@ -78,7 +78,7 @@ def test_successful_collection(publication_user_input, values_user):
     step_input = publication_db.results.filter(step=DataPublication.Step.AUTHORS).get()
     assert step_input.input == {
         "credits": {
-            "user": {
+            "column_user": {
                 values_user[0].written_by_session_id: 2,
                 values_user[2].written_by_session_id: 2,
             }
@@ -102,7 +102,7 @@ def test_slicing(publication_user_input, values_user):
     step_input = publication_db.results.filter(step=DataPublication.Step.AUTHORS).get()
     assert step_input.input == {
         "credits": {
-            "user": {
+            "column_user": {
                 value0.written_by_session_id: 1,
                 values_user[2].written_by_session_id: 1,
             }

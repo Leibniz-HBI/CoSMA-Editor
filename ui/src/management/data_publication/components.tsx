@@ -16,6 +16,9 @@ import {
 import { useEffect } from 'react'
 import { clearPublicationMetadataList } from './slice'
 import { CosmaeLoading } from '../../util/components/misc'
+import { DataPublicationMetadata, DataPublicationStep } from './state'
+import { config } from '../../config'
+import { Link } from 'react-router-dom'
 
 export function DataPublicationManagement() {
     return (
@@ -211,33 +214,64 @@ export function DataPublicationList() {
     return (
         <ListGroup className="">
             {publicationMetadataList.value.map((item) => (
-                <ListGroup.Item className="mt-1 mb-1" key={item.idPersistent}>
-                    <Col>
-                        <Row className="fw-bold">{item.name}</Row>
-                        <Row className="justify-content-start">
-                            <Col>
-                                <Row>
-                                    <Col xs="auto" className="fw-bold">
-                                        Start:
-                                    </Col>
-                                    <Col>
-                                        {item.startDateString ?? 'Beginning of Time'}
-                                    </Col>
-                                </Row>
-                            </Col>
-                            <Col>
-                                <Row>
-                                    <Col xs="auto" className="fw-bold">
-                                        End:
-                                    </Col>
-                                    <Col>{item.endDateString}</Col>
-                                </Row>
-                            </Col>
-                            <Col xs={1} m={2}></Col>
-                        </Row>
-                    </Col>
-                </ListGroup.Item>
+                <DataPublicationListItem key={item.idPersistent} item={item} />
             ))}
         </ListGroup>
+    )
+}
+
+function DataPublicationListItem({ item }: { item: DataPublicationMetadata }) {
+    return (
+        <ListGroup.Item className="mt-1 mb-1" key={item.idPersistent}>
+            <Col>
+                <Row className="fw-bold">
+                    <Col>{item.name}</Col>
+                    <Col xs="auto">
+                        <ResultsLink
+                            idPersistent={item.idPersistent}
+                            step={item.step}
+                        />
+                    </Col>
+                </Row>
+                <Row className="justify-content-start">
+                    <Col>
+                        <Row>
+                            <Col xs="auto" className="fw-bold">
+                                Start:
+                            </Col>
+                            <Col>{item.startDateString ?? 'Beginning of Time'}</Col>
+                        </Row>
+                    </Col>
+                    <Col>
+                        <Row>
+                            <Col xs="auto" className="fw-bold">
+                                End:
+                            </Col>
+                            <Col>{item.endDateString}</Col>
+                        </Row>
+                    </Col>
+                    <Col xs={1} m={2}></Col>
+                </Row>
+            </Col>
+        </ListGroup.Item>
+    )
+}
+
+export function ResultsLink({
+    idPersistent,
+    step
+}: {
+    idPersistent: string
+    step: DataPublicationStep
+}) {
+    if (step !== DataPublicationStep.Completed) {
+        return (
+            <Button disabled>Download</Button>
+        )
+    }
+    return (
+        <Link to={`${config.api_path}/manage/data_publication/${idPersistent}/results`} >
+            <Button disabled={step !== DataPublicationStep.Completed}>Download</Button>
+        </Link>
     )
 }

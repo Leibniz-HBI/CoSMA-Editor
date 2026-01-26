@@ -37,7 +37,12 @@ def collect_authors_credits(id_publication):
         credits_by_session_id = inputs.input.get("credits", {})
         authors_cache = {}
         credits_by_author_id = {"overall": {}}
-        for category in ["curated", "user", "display_txt", "justification"]:
+        for category in [
+            "column_curated",
+            "column_user",
+            "display_txt",
+            "justification",
+        ]:
             category_credits_by_session_id = credits_by_session_id.get(category, {})
             credits_by_author_id[category] = {}
             for id_session, credit_count in category_credits_by_session_id.items():

@@ -4,15 +4,22 @@ from datetime import datetime
 from logging import getLogger
 from typing import Literal
 
-from django.http import HttpRequest
+from django.db import transaction
+from django.db.models import TextField
+from django.db.models.functions import Cast
+from django.http import HttpRequest, HttpResponse
 from ninja import Router, Schema
 
 from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.management.data_publication.models_django import (
     DataPublication as DataPublicationDb,
 )
+from cosmae.management.data_publication.models_django import (
+    DataPublicationStepInput,
+)
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user
+from cosmae.util.response import EmptyResponse
 
 router = Router()
 
@@ -121,6 +128,81 @@ def put_data_publication_metadata(
         return 200, data_publication_db_to_api(dataset_publication)
     except Exception as exc:  # pylint: disable=broad-except
         msg = "Failed to create dataset publication."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
+
+
+@router.get(
+    "/{id_publication}/results",
+    response={
+        200: str,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+    },
+)
+def get_data_publication_results(request: HttpRequest, id_publication: str):
+    "API method to get dataset publication results."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    if user.permission_group != CosmaeUser.COMMISSIONER:
+        return 403, ApiError(msg="Forbidden")
+    try:
+        publication = (
+            DataPublicationStepInput.objects.filter(
+                publication_id=id_publication,
+                step=DataPublicationDb.Step.PROCESSING_COMPLETED,
+            )
+            .annotate(input_str=Cast("input", output_field=TextField()))
+            .values("input_str")
+            .get()
+        )
+        response = HttpResponse(
+            content=str(publication["input_str"]),
+            headers={
+                "Content-Type": "application/json",
+                "Content-Disposition": 'attachment; filename="results.json"',
+            },
+        )
+        return response
+    except DataPublicationStepInput.DoesNotExist:
+        return 404, ApiError(msg="Results for dataset publication not found.")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Failed to get dataset publication results."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
+
+
+@router.delete(
+    "/{id_publication}",
+    response={200: EmptyResponse, 401: ApiError, 403: ApiError, 404: ApiError},
+)
+def delete_data_publication_metadata(request: HttpRequest, id_publication: str):
+    "API method to delete a dataset publication."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    user = check_user(request)
+    if user.permission_group != CosmaeUser.COMMISSIONER:
+        return 403, ApiError(msg="Forbidden")
+    try:
+        with transaction.atomic():
+            publication = DataPublicationDb.objects.filter(  # pylint: disable=no-member
+                id_persistent=id_publication
+            ).get()
+            DataPublicationStepInput.objects.filter(  # pylint: disable=no-member
+                publication=publication
+            ).delete()
+            publication.delete()
+            return 200, EmptyResponse()
+    except DataPublicationDb.DoesNotExist:
+        return 404, ApiError(msg="Dataset publication not found.")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Failed to get dataset publication results."
         _LOGGER.error(msg, exc_info=exc)
         return 500, ApiError(msg=msg)
 

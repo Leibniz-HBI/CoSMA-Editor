@@ -220,10 +220,39 @@ def publication_authors_input(publication_authors):
         # credits is assumed to exist from display text step.
         input={
             "credits": {
-                "user": {cu.test_uuid: 2},
-                "curated": {cu.test_uuid1: 2, cs.id_session_user: 2},
+                "column_user": {cu.test_uuid: 2},
+                "column_curated": {cu.test_uuid1: 2, cs.id_session_user: 2},
                 "justification": {cu.test_uuid: 2, cs.id_session_user: 2},
                 "display_txt": {cu.test_uuid1: 3},
             }
+        },
+    )
+
+
+@fixture()
+def publication_completed():
+    "Data publication in authors step."
+    return DataPublication.objects.create(
+        name=c.authors_name,
+        start_time=c.authors_start_date,
+        end_time=c.authors_end_date,
+        id_persistent=c.authors_id_persistent,
+        step=DataPublication.Step.PROCESSING_COMPLETED,
+    )
+
+
+@fixture()
+def publication_completed_input(publication_completed):
+    "Input for authors step."
+    return DataPublicationStepInput.objects.create(
+        publication=publication_completed,
+        step=DataPublication.Step.PROCESSING_COMPLETED,
+        # credits is assumed to exist from display text step.
+        input={
+            "column_curated": [],
+            "column_user": [],
+            "justification": [],
+            "display_txt": [],
+            "overall": [],
         },
     )
