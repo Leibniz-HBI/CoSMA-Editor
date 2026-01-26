@@ -78,7 +78,7 @@ def test_successful_collection(publication_curated_input, values_curated):
     step_input = publication_db.results.filter(step=DataPublication.Step.AUTHORS).get()
     assert step_input.input == {
         "credits": {
-            "curated": {
+            "column_curated": {
                 values_curated[0].written_by_session_id: 2,
                 values_curated[2].written_by_session_id: 2,
             }
@@ -102,7 +102,7 @@ def test_slicing(publication_curated_input, values_curated):
     step_input = publication_db.results.filter(step=DataPublication.Step.AUTHORS).get()
     assert step_input.input == {
         "credits": {
-            "curated": {
+            "column_curated": {
                 value0.written_by_session_id: 1,
                 values_curated[2].written_by_session_id: 1,
             }

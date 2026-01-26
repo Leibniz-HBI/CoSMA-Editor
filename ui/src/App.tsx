@@ -7,7 +7,6 @@ import { Col, Container, Row } from 'react-bootstrap'
 import { RemoteDataTable } from './table/components/table'
 import { Outlet, RouterProvider, createBrowserRouter, redirect } from 'react-router-dom'
 import { ContributionList, ContributionStepper } from './contribution/components'
-import { config } from './config'
 import { ContributionStep } from './contribution/state'
 import { exceptionMessage } from './util/exception'
 import { ReviewList } from './merge_request/components'
@@ -24,6 +23,7 @@ import { EmailVerification } from './auth/components/email_verification'
 import { CosmaeNavbar } from './navigation/components'
 import { ProfilePage } from './user/components/profile'
 import { cosmaeContributionApiContributionGet } from './openapi/cosmae'
+import { ResultsLink } from './management/data_publication/components'
 
 export function CosmaeRoot() {
     return (
@@ -129,6 +129,11 @@ const router = createBrowserRouter([
                 path: 'profile/:category',
                 element: <ProfilePage />,
                 loader: ({ params }) => params.category ?? ''
+            },
+            {
+                path: 'data_publication/:idPersistent',
+                element: <ResultsLink />,
+                loader: ({ params }) => params.idPersistent ?? ''
             }
         ]
     }
@@ -142,7 +147,7 @@ async function redirectContributionStep(idPersistent: string | undefined) {
         const rsp = await cosmaeContributionApiContributionGet({
             path: { id_persistent: idPersistent }
         })
-        if (rsp.error){
+        if (rsp.error) {
             throw new Error(`error loading contribution: ${rsp.error.msg}`)
         }
 

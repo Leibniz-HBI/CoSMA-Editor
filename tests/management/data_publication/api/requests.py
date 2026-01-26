@@ -29,3 +29,11 @@ def get_data_publication_list(
     return data_publication_api.get_data_publication_metadata(
         request,
     )
+
+
+def get_data_publication_results(request: HttpRequest, id_publication: str):
+    """Test method for getting data publication results via the API."""
+    return data_publication_api.get_data_publication_results(
+        request,
+        id_publication,
+    )

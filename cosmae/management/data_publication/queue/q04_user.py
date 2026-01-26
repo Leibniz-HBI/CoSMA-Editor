@@ -44,7 +44,7 @@ def collect_user_credits(id_publication):
             publication,
             DataPublication.Step.AUTHORS,
             credits_by_id,
-            "user",
+            "column_user",
         )
 
     except (Exception,) as exc:  # pylint: disable=broad-except

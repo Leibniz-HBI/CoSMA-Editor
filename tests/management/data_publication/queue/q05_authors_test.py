@@ -77,7 +77,7 @@ def test_successful_collection(publication_authors_input, user, user1):
         step=DataPublication.Step.PROCESSING_COMPLETED
     ).get()
     assert step_input.input == {
-        "curated": [
+        "column_curated": [
             {
                 "credits": 2,
                 "name": user1.get_full_name(),
@@ -91,7 +91,7 @@ def test_successful_collection(publication_authors_input, user, user1):
                 "orcid": None,
             },
         ],
-        "user": [
+        "column_user": [
             {
                 "credits": 2,
                 "name": user.get_full_name(),
