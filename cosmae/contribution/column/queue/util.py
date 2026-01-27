@@ -13,13 +13,15 @@ class DelimiterNotFoundException(Exception):
         super("Could not detect delimiter")
 
 
-def find_delimiter(csv_pth, encoding):
+def find_delimiter(csv_pth, encoding, has_header):
     "Try to find the delimiter of a csv file."
     counts = defaultdict(int)
     with open(csv_pth, "r", encoding=encoding) as csv_file:
         for _ in range(10):
             buffer = csv_file.read(1024)
             for char in buffer:
+                if has_header and char == "\n":
+                    break
                 if not char.isalpha():
                     counts[char] += 1
     tab_count = counts["\t"]
@@ -45,7 +47,7 @@ def read_csv_of_candidate(contribution, nrows=None):
         header_param = None
     for encoding in ["utf-8", "iso-8859-1"]:
         try:
-            delimiter = find_delimiter(pth, encoding)
+            delimiter = find_delimiter(pth, encoding, contribution.has_header)
             data_frame = read_csv(
                 pth,
                 header=header_param,
