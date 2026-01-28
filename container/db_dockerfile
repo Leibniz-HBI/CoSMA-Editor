@@ -1,6 +1,7 @@
-FROM postgres:15.4
+FROM postgres:17.7
 ARG USER_ID
 ARG GROUP_ID
 RUN groupadd -g ${GROUP_ID} cosmae
+RUN useradd -g ${GROUP_ID} -M -u ${USER_ID} cosmae
 RUN chown ${USER_ID}:${GROUP_ID} /var/lib/postgresql/data
 RUN chown -R ${USER_ID}:${GROUP_ID} /var/run/postgresql
