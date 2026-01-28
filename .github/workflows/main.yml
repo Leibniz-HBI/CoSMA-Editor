@@ -10,7 +10,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.14"]
     services:
       postgres:
         image: postgres:15.4
@@ -58,8 +58,8 @@ jobs:
       - name: Test with pytest
         run: |
           export PATH=$PATH:/root/.local/bin
-          if [[ ${{ matrix.python-version }} == '3.12' ]]; then
-            COSMAE_REDIS_PORT=6312 poetry run pytest -c pytest_ci.ini --cov-report html:coverage-${{ matrix.python-version }}
+          if [[ ${{ matrix.python-version }} == '3.14' ]]; then
+            COSMAE_REDIS_PORT=6314 poetry run pytest -c pytest_ci.ini --cov-report html:coverage-${{ matrix.python-version }}
           fi
         env:
           COSMAE_CI: "True"
