@@ -2,8 +2,6 @@ openapi: 3.0.3
 info:
   version: "1"
   title: "django-allauth: Headless API"
-  description:
-    $ref: "./description.md"
   contact:
     email: info@allauth.org
   license:
