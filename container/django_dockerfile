@@ -1,4 +1,4 @@
-FROM python:3.12-bookworm
+FROM python:3.14-slim-trixie
 ARG USER_ID
 ARG GROUP_ID
 RUN apt-get update && apt-get install -y  gcc g++ libpq-dev whois postgresql-client-15
