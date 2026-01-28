@@ -147,6 +147,7 @@ test('create, select and assign column', async () => {
             store.getState().contributionColumnDefinition.selectedColumnDefinition.value
                 ?.idExistingPersistent
         ).toEqual(idColumn0)
+        expect(fetchMock.mock.calls.length).toEqual(9)
     })
     await expectFetchCall(fetchMock.mock.calls.at(-2), [
         `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns/${contributionColumnActiveRsp1.id_persistent}`,
