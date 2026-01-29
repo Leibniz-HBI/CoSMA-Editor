@@ -6,9 +6,9 @@ from django.db import DatabaseError
 
 import tests.user.common as c
 import tests.user.ssh.common as c_ssh
-from tests.management.user.api.integration.requests import post_create_user
 from cosmae.edit_session.models_django import EditSession
 from cosmae.util import CosmaeUser
+from tests.management.user.api.integration.requests import post_create_user
 
 
 def test_no_cookies(live_server):
@@ -110,21 +110,12 @@ def test_same_personal_names(auth_server_commissioner):
     )
 
 
-class MockStage:
-    "Mock for failed email verification"
-
-    def __init__(self, _context, _request, _login):
-        pass
-
-    def handle(self):
-        "Raise an exception during mock stage"
-        raise Exception()  # pylint: disable=broad-exception-raised
-
-
 def test_rollback(auth_server_commissioner):
     "Test that a user is deleted when sending mail fails."
     live_server, cookies = auth_server_commissioner
-    with patch("cosmae.management.user.api.EmailVerificationStage", MockStage):
+    mock = MagicMock()
+    mock.side_effect = Exception("test")
+    with patch("cosmae.management.user.api.send_mail", mock):
         rsp = post_create_user(
             live_server.url,
             {

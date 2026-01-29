@@ -4,7 +4,6 @@ import json
 from datetime import datetime
 from typing import cast
 
-from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import authenticate, login
 from django.http import HttpRequest
@@ -87,7 +86,6 @@ class NinjaParserWithDateTime(Parser):
 
 
 ninja_api = NinjaAPI(
-    csrf=not settings.IS_UNITTEST,
     # renderer=JsonRendererWithDateTime(),
     # parser=NinjaParserWithDateTime()
 )

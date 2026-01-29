@@ -4,7 +4,6 @@ from logging import getLogger
 
 from allauth.account import signals
 from allauth.account.models import Login
-from allauth.account.stages import EmailVerificationStage
 from allauth.headless.account.inputs import SignupInput
 from django.db import IntegrityError, transaction
 from ninja import Field, Router, Schema
@@ -43,6 +42,17 @@ router = Router()
 _LOGGER = getLogger(__name__)
 
 
+def send_mail(request, login):
+    "Send a link for email verification."
+    from allauth.account.stages import (  # pylint: disable=import-outside-toplevel
+        EmailVerificationStage,
+    )
+
+    email_stage = EmailVerificationStage(None, request, login)
+    email_stage.handle()
+    return email_stage
+
+
 @router.post(
     "",
     response={
@@ -78,8 +88,7 @@ def post_create_user(request, user_request_data: CreateUserRequest):
                     signal_kwargs=None,
                     signup=True,
                 )
-                email_stage = EmailVerificationStage(None, request, login)
-                email_stage.handle()
+                send_mail(request, login)
                 return success_allauth_like_response(
                     user_db_to_login_response(user_created)
                 )

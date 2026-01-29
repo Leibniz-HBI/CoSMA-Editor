@@ -3,6 +3,7 @@
 from enum import Enum
 from typing import Generic, List, Optional, Tuple, TypeVar
 
+from django.conf import settings
 from django.http import HttpRequest
 from ninja import Schema
 from ninja.security import django_auth
@@ -31,11 +32,12 @@ class CosmaeGroup(Enum):
     COMMISSIONER = "COMMISSIONER"
 
 
-def cosmae_auth(request: HttpRequest):
-    """Workaround for cookie authentication.
-    This is required to have sub paths without authorization
-    where the parents use authorization."""
-    return django_auth.authenticate(request, None)
+def no_auth(request: HttpRequest):
+    "No authentication for unittests."
+    return request
+
+
+cosmae_auth = no_auth if settings.IS_UNITTEST else django_auth
 
 
 def check_user(request, require_2fa=True, require_password_changed=True):
