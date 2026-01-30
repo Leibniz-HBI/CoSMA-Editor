@@ -130,6 +130,6 @@ def test_bad_db(auth_server):
     assert rsp.json()["msg"] == "Could not get requested chunk."
 
 
-def test_not_logged_in(live_server):
+def test_not_logged_in(live_server, mock_csrf):
     rsp = post_value_chunks(live_server.url, "test_id_persistent", 0, 2)
     assert rsp.status_code == 401

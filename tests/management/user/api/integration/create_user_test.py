@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-few-public-methods
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,too-few-public-methods,unused-argument
 from unittest.mock import MagicMock, patch
 
 from allauth.account.models import EmailAddress
@@ -11,7 +11,7 @@ from cosmae.util import CosmaeUser
 from tests.management.user.api.integration.requests import post_create_user
 
 
-def test_no_cookies(live_server):
+def test_no_cookies(live_server, mock_csrf):
     rsp = post_create_user(
         live_server.url,
         {

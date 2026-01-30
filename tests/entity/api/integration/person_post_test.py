@@ -1,4 +1,4 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -124,7 +124,7 @@ def test_bad_db(auth_server_commissioner, display_txt_and_justification):
     assert req.json()["msg"] == "Provided data not consistent with database."
 
 
-def test_not_signed_in(live_server, display_txt_and_justification):
+def test_not_signed_in(live_server, display_txt_and_justification, mock_csrf):
     req = post_person(live_server.url, display_txt_and_justification, cookies=None)
     assert req.status_code == 401
 

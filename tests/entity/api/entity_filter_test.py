@@ -12,7 +12,7 @@ from cosmae.entity.models_api import (
 )
 
 
-def test_no_cookies(live_server):
+def test_no_cookies(live_server, mock_csrf):
     """Make sure that missing cookies result in not authenticated response"""
     rsp = post(
         live_server.url + "/cosmae/api/entities/filter",

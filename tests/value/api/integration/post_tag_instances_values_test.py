@@ -1,10 +1,11 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 from datetime import timedelta
 from time import sleep
 from unittest.mock import MagicMock, patch
 
 import tests.column.common as cc
 import tests.value.common as c
+from cosmae.util import timestamp
 from tests.column.api.integration.requests import (
     post_column,
 )
@@ -14,7 +15,6 @@ from tests.value.api.integration.requests import (
     post_value_list,
     post_value_value,
 )
-from cosmae.util import timestamp
 
 id_value_test = "id-value-test"
 id_value_test1 = "id-value-test1"
@@ -194,7 +194,8 @@ def test_bad_db(auth_server):
     mock = MagicMock()
     mock.side_effect = Exception()
     with patch(
-        "cosmae.value.models_django.ValueQuerySet.most_recent_by_entity_and_definition_id_query_set",
+        "cosmae.value.models_django.ValueQuerySet."
+        "most_recent_by_entity_and_definition_id_query_set",
         mock,
     ):
         req = post_value_value(
@@ -207,7 +208,7 @@ def test_bad_db(auth_server):
     assert req.json()["msg"] == "Could not get requested values."
 
 
-def test_not_logged_in(live_server):
+def test_not_logged_in(live_server, mock_csrf):
     req = post_value_value(
         live_server.url,
         c.id_entity_test,

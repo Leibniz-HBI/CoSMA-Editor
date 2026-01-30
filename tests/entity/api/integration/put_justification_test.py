@@ -10,7 +10,7 @@ from cosmae.justification.models_django import EntityJustification
 justification_txt = "justification for test"
 
 
-def test_no_cookies(live_server):
+def test_no_cookies(live_server, mock_csrf):
     rsp = req.put_justification(live_server.url, c.id_persistent_test_0, "some")
     assert rsp.status_code == 401
 

@@ -494,4 +494,4 @@ class ColumnNamePathCache(models.Model):
             name_path=name_path,
             name_path_string=" -> ".join(name_path),
             time_edit=time_edit,
-        )
+        )[:1]

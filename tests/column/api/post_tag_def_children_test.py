@@ -9,7 +9,7 @@ from tests.column.api import requests as r
 from tests.utils import assert_versioned
 
 
-def test_no_cookies(live_server):
+def test_no_cookies(live_server, mock_csrf):
     rsp = post(
         live_server.url + "/cosmae/api/columns/children",
         json={"id_parent_persistent": None},
