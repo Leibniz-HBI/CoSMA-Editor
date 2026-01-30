@@ -102,7 +102,7 @@ def test_request_too_large(auth_server):
     assert rsp.json()["msg"] == "Please specify limit smaller than 1000."
 
 
-def test_not_signed_in(live_server):
+def test_not_signed_in(live_server, mock_csrf):
     rsp = post_chunk(live_server.url, 0, 2, cookies=None)
     assert rsp.status_code == 401
 

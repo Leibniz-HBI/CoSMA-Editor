@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument
 "Test API endpoint for creating data publications."
 
 from requests import put
@@ -6,7 +7,22 @@ import tests.management.data_publication.common as c
 from tests.management.data_publication.api.requests import put_data_publication
 
 
-def test_unauthenticated(live_server):
+def test_no_csrf(live_server):
+    """Test that unauthenticated users cannot create a data publication."""
+    response = put(
+        f"{live_server.url}/cosmae/api/manage/data_publication",
+        json={
+            "name": "Test Publication",
+            "start_time": "2024-01-01T00:00:00Z",
+            "end_time": "2024-12-31T23:59:59Z",
+        },
+        timeout=900,
+    )
+    assert response.status_code == 403
+    assert response.json() == {"detail": "CSRF check Failed"}
+
+
+def test_unauthenticated(live_server, mock_csrf):
     """Test that unauthenticated users cannot create a data publication."""
     response = put(
         f"{live_server.url}/cosmae/api/manage/data_publication",

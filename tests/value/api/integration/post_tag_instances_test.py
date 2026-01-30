@@ -1,12 +1,12 @@
-# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 from unittest.mock import MagicMock, patch
 
 from django.db import IntegrityError
 
 import tests.column.common as cc
 import tests.entity.common as ce
-from tests.value.api.integration import requests as r
 from cosmae.exception import InvalidValueException
+from tests.value.api.integration import requests as r
 
 
 def test_id_no_version(auth_server, float_column):
@@ -150,6 +150,6 @@ def test_bad_db(auth_server, float_column):
     assert req.json()["msg"] == "Provided data not consistent with database."
 
 
-def test_not_logged_in(live_server, float_column):
+def test_not_logged_in(live_server, float_column, mock_csrf):
     req = r.post_value(live_server.url, float_column)
     assert req.status_code == 401

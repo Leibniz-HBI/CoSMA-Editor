@@ -117,6 +117,6 @@ def entity_objects(date: Optional[datetime] = None):
             queryset.filter(id_persistent=models.OuterRef("id_persistent"))
             .values("id_persistent")
             .annotate(max_id=Max("id"))
-            .values("max_id")
+            .values("max_id")[:1]
         )
     )

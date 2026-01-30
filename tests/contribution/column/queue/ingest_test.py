@@ -58,7 +58,7 @@ def csv_mock_with_empty_lines(mocker):
 def csv_mock_with_empty_values(mocker):
     new_cols = {}
     new_cols["names"] = csv_cols["names"]
-    new_cols["verified"] = ["true", None]
+    new_cols["verified"] = ["", None]
     new_cols["party"] = ["party_0", None]
     csv_mock = mocker.MagicMock(return_value=pd.DataFrame(new_cols))
     mocker.patch("cosmae.contribution.column.queue.util.read_csv", csv_mock)
@@ -168,7 +168,7 @@ def test_ingest_empty_values(
     contribution_other.save()
     ingest_values_from_csv(contribution_other.id_persistent)
     value_queryset = Value.objects.all()  # pylint: disable=no-member
-    assert len(value_queryset) == 2
+    assert list(value_queryset.values_list("value", flat=True)) == ["party_0"]
     persons = set(
         Entity.objects.values_list(  # pylint: disable=no-member
             "display_txt", flat=True
@@ -195,7 +195,7 @@ def get_value_by_mr(entity_name, id_column_persistent):
             id_persistent=Subquery(
                 ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
                     id_destination_persistent=id_column_persistent
-                ).values_list("id_origin_persistent", flat=True)
+                ).values_list("id_origin_persistent", flat=True)[:1]
             )
         )
         .get()

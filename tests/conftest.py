@@ -173,12 +173,19 @@ def mock_mfa(mocker):
 
 
 @pytest.fixture()
+def mock_csrf(mocker):
+    mocker.patch(
+        "ninja.security.apikey.check_csrf", mocker.MagicMock(return_value=None)
+    )
+
+
+@pytest.fixture()
 @override_settings(
     SOCIALACCOUNT_AUTO_SIGNUP=True,
     ACCOUNT_SIGNUP_FORM_CLASS=None,
     ACCOUNT_EMAIL_VERIFICATION=account_settings.EmailVerificationMethod.NONE,  # noqa
 )
-def auth_server_no_mfa(live_server, user):
+def auth_server_no_mfa(live_server, user, mock_csrf):
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
     rsp = post_login(
@@ -197,7 +204,7 @@ def auth_server(auth_server_no_mfa, mock_mfa):
 
 
 @pytest.fixture()
-def auth_server_no_mfa1(auth_server_no_mfa, user1):
+def auth_server_no_mfa1(auth_server_no_mfa, user1, mock_csrf):
     live_server, cookies_user0 = auth_server_no_mfa
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
@@ -238,7 +245,7 @@ def user_applicant(db):
 
 
 @pytest.fixture()
-def auth_server_applicant_no_mfa(live_server, user_applicant):
+def auth_server_applicant_no_mfa(live_server, user_applicant, mock_csrf):
 
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
@@ -259,7 +266,7 @@ def auth_server_applicant(auth_server_applicant_no_mfa, mock_mfa):
 
 
 @pytest.fixture
-def auth_server_commissioner_no_mfa(live_server, user_commissioner):
+def auth_server_commissioner_no_mfa(live_server, user_commissioner, mock_csrf):
     rsp = get_config(live_server.url)
     cookies = rsp.cookies
     rsp = post_login(

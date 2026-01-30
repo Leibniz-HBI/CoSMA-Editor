@@ -265,6 +265,6 @@ def value_objects(date: datetime | None = None):
             queryset.filter(id_persistent=models.OuterRef("id_persistent"))
             .values("id_persistent")
             .annotate(max_id=Max("id"))
-            .values("max_id")
+            .values("max_id")[:1]
         )
     )
