@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Fürneisen
+    given-names: Moritz
+    orcid: 0009-0003-9257-0616
+  - family-names: Rau
+    given-names: Jan
+    orcid: 0000-0001-7011-5346
+  - family names: Jungmann
+    given-names: Nils
+    orcid: 0000-0001-8849-8373
+  - family-names: Stille
+    given-names: Lina
+  - family-names: Siegers
+    given-names: Pascal
+    orcid: 0000-0001-7899-6045
+  - family-names: Wiedemann
+    given-names: Gregor
+    orcid: 0000-0002-4239-295X
+title: "Collaborative Social Media Account Editor"
+license: "MIT"
