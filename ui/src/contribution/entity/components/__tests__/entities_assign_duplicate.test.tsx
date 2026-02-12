@@ -348,6 +348,44 @@ test('last match', async () => {
         screen.getByText('You processed the last entity')
     })
 })
+test('can review', async () => {
+    const fetchMock = vi.fn()
+    initialResponses(fetchMock, personList.slice(0, 1), 1)
+    addResponseSequence(fetchMock, [
+        [200, { value_responses: [] }],
+        [
+            200,
+            {
+                assigned_duplicate: null
+            }
+        ]
+    ])
+    const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
+    await waitFor(() => {
+        expect(fetchMock.mock.calls.length).toEqual(4)
+    })
+    screen.getByText(/Please select an entity/i)
+    await waitFor(() => {
+        screen.getByText('entity-0')?.click()
+    })
+    await waitFor(() => {
+        const button = screen.getByRole('button', { name: /Create New Entity/i })
+        button.click()
+    })
+    await waitFor(() => {
+        expect(store.getState().contributionEntity.hitLastMatch).toBeTruthy()
+        screen.getByText('You processed the last entity')
+    })
+    await waitFor(() => {
+        const reviewButton = screen.getByRole('button', { name: /Review/i })
+        reviewButton.click()
+    })
+    await waitFor(() => {
+        expect(store.getState().contributionEntity.hitLastMatch).toBeFalsy()
+        const lastEntityText = screen.queryByText('You processed the last entity')
+        expect(lastEntityText).toBeNull()
+    })
+})
 test('open justification modal', async () => {
     const fetchMock = vi.fn()
     initialResponses(fetchMock, personList, 1)
