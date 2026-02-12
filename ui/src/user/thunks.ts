@@ -230,7 +230,6 @@ export function parsePublicUserInfoFromJson(
 }
 
 export function parsePublicUserInfoFromOpenApi(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     publicUserInfo: PublicUserInfoOpenApi
 ): PublicUserInfo {
     const idPersistent = publicUserInfo.id_persistent

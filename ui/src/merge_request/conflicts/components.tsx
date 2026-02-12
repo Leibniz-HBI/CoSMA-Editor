@@ -49,7 +49,6 @@ export function MergeRequestConflictView() {
         return () => {
             dispatch(clearMergeRequestConflict())
         }
-        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     return (
         <div className="d-contents">

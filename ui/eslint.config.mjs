@@ -34,6 +34,7 @@ export default tseslint.config(
             'snippets.ts',
             'lcov-report/**',
             'build/*',
+            'src/openapi/**',
         ],
     },
 )

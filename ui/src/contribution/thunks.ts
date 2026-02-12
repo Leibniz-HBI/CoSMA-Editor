@@ -1,5 +1,4 @@
 import { parseColumnsFromApi } from '../column_menu/thunks'
-import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { exceptionMessage } from '../util/exception'
 import { ThunkWithFetch } from '../util/type'

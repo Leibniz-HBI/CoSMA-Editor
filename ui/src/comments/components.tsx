@@ -17,7 +17,6 @@ export function CommentHistoryAndForm({ idPersistent }: { idPersistent: string }
         if (comments === undefined || !comments.isLoading) {
             dispatch(loadCommentsThunk([idPersistent]))
         }
-        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idPersistent])
     return (
         <Row className="ms-4 me-3 overflow-y-auto scroll-gutter flex-grow-1 flex-shrink-1">

@@ -8,7 +8,6 @@ import {
     optionalEntityJustificationColumnIdx,
     FilterClause
 } from './state'
-import { Entity } from '../entity/state'
 import { newRemote } from '../util/state'
 import { Rectangle } from '@glideapps/glide-data-grid'
 import { Comment } from '../comments/slice'

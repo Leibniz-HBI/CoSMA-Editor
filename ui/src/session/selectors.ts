@@ -2,9 +2,6 @@ import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../store'
 import {
     EditSession,
-    EditSessionParticipantType,
-    newEditSession,
-    newEditSessionParticipant
 } from './state'
 import { newRemote } from '../util/state'
 

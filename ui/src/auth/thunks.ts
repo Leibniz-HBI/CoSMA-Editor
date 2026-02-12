@@ -63,7 +63,6 @@ import {
 } from '../openapi/allauth'
 import { RequestResult } from '../openapi/allauth/client'
 import { justificationColumnId } from '../table/state'
-import { config } from '../config'
 
 export function getSessionThunk(withDispatch: boolean): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, _api) => {

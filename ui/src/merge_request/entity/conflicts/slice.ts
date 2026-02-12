@@ -154,7 +154,7 @@ export const entityMergeRequestConflictSlice = createSlice({
         ) {
             if (state.merge.value == action.payload) {
                 state.merge.isLoading = false
-                state.merge.errorMsg == undefined
+                state.merge.errorMsg = undefined
             }
         },
         mergeEntityMergeRequestError(

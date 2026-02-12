@@ -223,7 +223,6 @@ export function patchEditSessionThunk({
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseEditSessionFromApi(session: EditSession) {
     const participantList = session['participant_list'].map((participant) =>
         parseEditSessionParticipant(participant)

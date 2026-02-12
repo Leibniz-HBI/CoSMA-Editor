@@ -11,7 +11,6 @@ import {
 } from './state'
 import { Entity } from '../entity/state'
 import { newEntity } from '../entity/state'
-import { config } from '../config'
 import { addError, addSuccessVanish } from '../util/notification/slice'
 import { parseColumnsFromApi } from '../column_menu/thunks'
 import { JsonValue, ThunkWithFetch } from '../util/type'

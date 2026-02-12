@@ -3,8 +3,8 @@
  */
 vi.mock('@glideapps/glide-data-grid', () => ({
     __esmodule: true,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    DataEditor: vi.fn().mockImplementation((props: any) => <MockTable />)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    DataEditor: vi.fn().mockImplementation((_props: any) => <MockTable />)
 }))
 import { vi, Mock } from 'vitest'
 import { waitFor, screen } from '@testing-library/react'
@@ -22,8 +22,7 @@ vi.mock('react-router-dom', () => {
     loaderMock.mockReturnValue('id-contribution-test')
     return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-function MockTable(props: any) {
+function MockTable() {
     return <div className="mock"></div>
 }
 
@@ -299,7 +298,6 @@ test('remove values', async () => {
 })
 
 function addValueResponses(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     fetchMock: Mock,
     idColumn: string,
     suffix: string

@@ -2,25 +2,12 @@
  * @vitest-environment jsdom
  */
 
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
-import {
-    NotificationManager,
-    NotificationType,
-    newNotification,
-    notificationReducer
-} from '../../../util/notification/slice'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
+import { waitFor, screen } from '@testing-library/react'
+import { NotificationType, newNotification } from '../../../util/notification/slice'
 import { PreviewConnector } from '../components'
 import { useNavigate } from 'react-router-dom'
-import {
-    ColumnDefinitionsContributionState,
-    newColumnDefinitionsContributionState,
-    newValuePreview
-} from '../state'
+import { newColumnDefinitionsContributionState, newValuePreview } from '../state'
 import { newRemote } from '../../../util/state'
-import { contributionColumnDefinitionSlice } from '../slice'
 import { vi, Mock } from 'vitest'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import { renderWithProviders } from '../../../util/tests/provider'
@@ -29,12 +16,6 @@ vi.mock('react-router-dom', () => {
     const navigateMock = vi.fn()
     return { useNavigate: vi.fn().mockReturnValue(navigateMock) }
 })
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        contributionColumnDefinition: ColumnDefinitionsContributionState
-        notification: NotificationManager
-    }
-}
 
 beforeEach(() => {
     ;(useNavigate() as Mock).mockRestore()

@@ -15,7 +15,6 @@ import {
     submitEntityJustificationStart,
     submitEntityJustificationSuccess
 } from './slice'
-import { config } from '../config'
 import { parseEntityObjectFromJson } from '../table/thunks'
 import {
     Entity,

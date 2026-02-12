@@ -1,7 +1,6 @@
 import { data } from 'react-router-dom'
 import { Column } from '../column_menu/state'
 import { parseColumnsFromApi } from '../column_menu/thunks'
-import { config } from '../config'
 import {
     cosmaeColumnApiPermissionsDeleteOwnershipRequest,
     cosmaeColumnApiPermissionsGetOwnershipRequests,

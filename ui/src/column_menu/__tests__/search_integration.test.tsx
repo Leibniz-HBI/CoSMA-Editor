@@ -18,7 +18,7 @@ test('search success and clear', async () => {
         [200, { id_persistent_list: [idColumn, idColumn1] }],
         [200, { column_list: [] }]
     ])
-    const { store } = renderWithProviders(
+     renderWithProviders(
         <ColumnMenu
             columnIndices={{}}
             loadColumnDataCallback={vi.fn()}

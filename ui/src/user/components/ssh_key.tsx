@@ -7,7 +7,6 @@ import { CosmaeLoading } from '../../util/components/misc'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { deleteSshKeyThunk, getSshKeyListThunk, putSshKeyThunk } from '../thunks'
 import { FormField } from '../../util/form'
-import { addError } from '../../util/notification/slice'
 import { clearSshKeyList } from '../slice'
 
 export function SshKeyPage() {

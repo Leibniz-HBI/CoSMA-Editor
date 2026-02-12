@@ -664,7 +664,6 @@ function checkConflicts(
     expect(getAllByTestId(other, 'conflict-item').length).toEqual(expectedConflicts)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function initialResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [

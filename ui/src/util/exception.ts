@@ -1,4 +1,3 @@
-import { ApiError } from '../openapi/cosmae'
 import { JsonValue } from './type'
 
 export function exceptionMessage(e: unknown): string {

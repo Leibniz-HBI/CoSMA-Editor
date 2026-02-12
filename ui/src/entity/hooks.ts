@@ -28,7 +28,6 @@ export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
                 dispatch(getEntityThunk([idPersistent], upUntilTime))
             }
         },
-        //eslint-disable-next-line react-hooks/exhaustive-deps
         [idPersistent]
     )
     return auxiliaryEntity ? auxiliaryEntity : newRemote(undefined)

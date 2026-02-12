@@ -34,7 +34,6 @@ export function ReviewList() {
         ) {
             dispatch(getEntityMergeRequests())
         }
-        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     const navigateCallback = useNavigate()
     if (isLoading) {

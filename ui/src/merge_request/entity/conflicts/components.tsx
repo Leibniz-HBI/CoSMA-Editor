@@ -41,12 +41,9 @@ import { FormField } from '../../../util/form'
 export function EntityMergeRequestConflictView() {
     const idMergeRequestPersistent = useLoaderData() as string
     const dispatch: AppDispatch = useDispatch()
-    useEffect(
-        () => {
-            dispatch(getEntityMergeRequest(idMergeRequestPersistent))
-        }, // eslint-disable-next-line react-hooks/exhaustive-deps
-        [idMergeRequestPersistent]
-    )
+    useEffect(() => {
+        dispatch(getEntityMergeRequest(idMergeRequestPersistent))
+    }, [idMergeRequestPersistent])
     return (
         <EntityMergeRequestConflictComponent
             loadDataCallback={() => {
@@ -82,7 +79,6 @@ export function EntityMergeRequestConflictComponent({
         return () => {
             dispatch(clearEntityMergeState())
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mergeRequest.value?.idPersistent])
     const conflictsValue = conflicts.value
     const mergeRequestValue = mergeRequest.value
@@ -354,8 +350,7 @@ export function EntityMergeRequestConflictListItem({
                                 column: conflict.value.column,
                                 valueOrigin: conflict.value.valueOrigin,
                                 entityOrigin: mergeRequest.entityOrigin,
-                                valueDestination:
-                                    conflict.value.valueDestination,
+                                valueDestination: conflict.value.valueDestination,
                                 entityDestination: mergeRequest.entityDestination,
                                 replacementValue: formValues.replacementValue,
                                 replacementState: formValues.replacementState

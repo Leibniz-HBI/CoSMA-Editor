@@ -1,6 +1,5 @@
 import { Column } from '../../column_menu/state'
 import { parseColumnsFromApi } from '../../column_menu/thunks'
-import { config } from '../../config'
 import { addError } from '../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
 import { ThunkWithFetch } from '../../util/type'

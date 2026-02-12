@@ -30,7 +30,6 @@ import { newAuthState } from '../../auth/state'
 import { emptyState, renderWithProviders } from '../../util/tests/provider'
 import {
     addResponseSequence,
-    expectFetchCall,
     expectFetchCallList
 } from '../../util/tests/response'
 
@@ -147,7 +146,6 @@ const value1 = 'value 1'
 const versionInstance0 = 10
 const versionInstance1 = 11
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 
 function addDetailsResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [

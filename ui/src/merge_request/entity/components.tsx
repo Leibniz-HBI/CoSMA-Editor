@@ -15,7 +15,7 @@ export function EntityMergeRequests() {
     useEffect(
         () => {
             dispatch(getEntityMergeRequests())
-        }, // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
         []
     )
     const remoteEntityMergeRequests = useSelector(selectEntityMergeRequests)
