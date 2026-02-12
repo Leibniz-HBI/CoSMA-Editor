@@ -9,7 +9,7 @@ export async function setDate(user: UserEvent, input: HTMLElement, day: number) 
         },
         { timeout: 3000 }
     )
-    expect(dayButtonList.length).toBeGreaterThan(28)
+    expect(dayButtonList.length).toBeGreaterThanOrEqual(28)
     const firstOfMonthIndex = dayButtonList.findIndex(
         (element: HTMLElement) => element.textContent === '1'
     )
