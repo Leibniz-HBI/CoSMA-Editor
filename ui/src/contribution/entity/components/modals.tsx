@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useState} from 'react'
 import { Button, Col, FormCheck, Modal, Row } from 'react-bootstrap'
 import { useAppDispatch, useAppSelector } from '../../../hooks'
 import { FormField } from '../../../util/form'
@@ -12,7 +12,7 @@ import {
 } from '../selectors'
 
 import {
-    clearHitLastMatch,
+    reviewAfterHitLastMatch,
     closeJustificationInput,
     removeAdditionalColumnByIdPersistent,
     toggleColumnMenu
@@ -124,7 +124,7 @@ export function LastMatchModal({
     const lastMatchHit = useAppSelector(selectLastMatchHit)
     const dispatch = useAppDispatch()
     return (
-        <Modal show={lastMatchHit}>
+        <Modal show={lastMatchHit} onHide={() => dispatch(reviewAfterHitLastMatch())}>
             <ModalBody>
                 <Row className="justify-content-center mb-5 mt-3">
                     <Col xs="auto">You processed the last entity</Col>
@@ -133,7 +133,7 @@ export function LastMatchModal({
                     <Col xs="auto">
                         <Button
                             variant="outline-primary"
-                            onClick={() => dispatch(clearHitLastMatch())}
+                            onClick={() => dispatch(reviewAfterHitLastMatch())}
                         >
                             Review Matches
                         </Button>

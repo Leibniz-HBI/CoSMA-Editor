@@ -17,7 +17,8 @@ import {
     selectSelectedEntity,
     selectColumns,
     selectMatchColumnList,
-    selectColumnRowDefs
+    selectColumnRowDefs,
+    selectLastMatchHit
 } from './selectors'
 import {
     getAdditionalEntityScoreThunk,
@@ -28,6 +29,7 @@ import {
 } from './thunks'
 import { AppDispatch } from '../../store'
 import {
+    clearReviewAfterHitLastMatch,
     incrementSelectedEntityIdx,
     openJustificationInput,
     setColumnWidth,
@@ -331,6 +333,7 @@ export function EntitySimilarityItem({
     const columnRowDefs = useSelector(selectColumnRowDefs)
     const contributionJustification = useSelector(selectContributionJustification)
     const matchColumnList = useSelector(selectMatchColumnList)
+    const lastMatchHit = useAppSelector(selectLastMatchHit)
     const { similarEntities, displayTxtDetails: entityDisplayTxtDetails } = entity
     const dispatch = useDispatch()
     const [tooltip, setTooltip] = useState<
@@ -440,6 +443,10 @@ export function EntitySimilarityItem({
                         }
                         onGridSelectionChange={(selection: GridSelection) => {
                             const current = selection.current
+                            if (lastMatchHit == false) {
+                                dispatch(clearReviewAfterHitLastMatch())
+                                return
+                            }
                             if (current !== undefined) {
                                 //Select range
                                 const [colIdx, rowIdx] = current.cell

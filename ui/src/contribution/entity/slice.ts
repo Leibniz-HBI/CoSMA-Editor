@@ -57,9 +57,7 @@ export const contributionEntitySlice = createSlice({
         putDuplicateSuccess(
             state: ContributionEntityState,
             action: PayloadAction<
-                ContributionEntityDuplicatesPayload<
-                    DiscardableScoredEntity | undefined
-                >
+                ContributionEntityDuplicatesPayload<DiscardableScoredEntity | undefined>
             >
         ) {
             const entity = getEntity(state, action.payload.idPersistent)
@@ -316,7 +314,7 @@ export const contributionEntitySlice = createSlice({
             const selectedIdx = action.payload
             state.selectedEntityIdx = selectedIdx
             pushMatchWidth(state, selectedIdx)
-            state.hitLastMatch = false
+            state.hitLastMatch = undefined
         },
         incrementSelectedEntityIdx(
             state: ContributionEntityState,
@@ -337,11 +335,13 @@ export const contributionEntitySlice = createSlice({
                 ) {
                     state.selectedEntityIdx = idx
                     pushMatchWidth(state, idx)
-                    state.hitLastMatch = false
+                    state.hitLastMatch = undefined
                     return
                 }
             }
-            state.hitLastMatch = true
+            if (state.hitLastMatch === undefined) {
+                state.hitLastMatch = true
+            }
         },
         openJustificationInput(state: ContributionEntityState) {
             state.showJustificationDialog = true
@@ -349,8 +349,11 @@ export const contributionEntitySlice = createSlice({
         closeJustificationInput(state: ContributionEntityState) {
             state.showJustificationDialog = false
         },
-        clearHitLastMatch(state: ContributionEntityState) {
+        reviewAfterHitLastMatch(state: ContributionEntityState) {
             state.hitLastMatch = false
+        },
+        clearReviewAfterHitLastMatch(state: ContributionEntityState) {
+            state.hitLastMatch = undefined
         },
         setColumnWidth(
             state: ContributionEntityState,
@@ -360,7 +363,7 @@ export const contributionEntitySlice = createSlice({
         },
         clearContributionEntityState(state: ContributionEntityState) {
             state.selectedEntityIdx = undefined
-            state.hitLastMatch = false
+            state.hitLastMatch = undefined
         }
     }
 })
@@ -587,7 +590,8 @@ export const {
     toggleColumnMenu,
     setSelectedEntityIdx,
     incrementSelectedEntityIdx,
-    clearHitLastMatch,
+    reviewAfterHitLastMatch,
+    clearReviewAfterHitLastMatch,
     setColumnWidth,
     openJustificationInput,
     closeJustificationInput,

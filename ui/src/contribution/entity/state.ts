@@ -137,7 +137,7 @@ export interface ContributionEntityState {
     columnMap: { [key: string]: number }
     showColumnMenu: boolean
     selectedEntityIdx?: number
-    hitLastMatch: boolean
+    hitLastMatch: boolean | undefined
     matchWidths: number[]
     showJustificationDialog: boolean
 }
@@ -149,7 +149,7 @@ export function newContributionEntityState({
     columnMap,
     showColumnMenu = false,
     selectedEntityIdx = undefined,
-    hitLastMatch = false,
+    hitLastMatch = undefined,
     matchWidths = [200, 200],
     showJustificationDialog = false
 }: {
@@ -160,7 +160,7 @@ export function newContributionEntityState({
     columnMap?: { [key: string]: number }
     showColumnMenu?: boolean
     selectedEntityIdx?: number
-    hitLastMatch?: boolean
+    hitLastMatch?: boolean| undefined
     matchWidths?: number[]
     showJustificationDialog?: boolean
 }): ContributionEntityState {
