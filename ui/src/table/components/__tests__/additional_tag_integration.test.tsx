@@ -29,7 +29,6 @@ import {
 } from '../../state'
 import {
     newEntity,
-    newEntityDetails,
     newEntityDetailsState
 } from '../../../entity/state'
 import { waitFor, screen } from '@testing-library/react'

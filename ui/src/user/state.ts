@@ -1,4 +1,3 @@
-import { Column } from '../column_menu/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
 export enum UserPermissionGroup {

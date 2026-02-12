@@ -19,7 +19,6 @@ import {
     newUserInfo
 } from '../../../user/state'
 import { newTableState } from '../../state'
-import { newEntity } from '../../../entity/state'
 import { waitFor, screen } from '@testing-library/react'
 import { EntityAddModal } from '../modals'
 import userEvent, { UserEvent } from '@testing-library/user-event'

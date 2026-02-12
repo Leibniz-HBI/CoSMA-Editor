@@ -10,7 +10,6 @@ import { act } from 'react'
 vi.mock('react-redux', () => {
     const dispatchMock = vi.fn()
     return {
-        // eslint-disable-next-line
         useSelector: vi.fn(),
         useDispatch: vi.fn().mockImplementation(() => dispatchMock)
     }

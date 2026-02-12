@@ -21,7 +21,6 @@ export function DisplayTxtManagementComponent() {
             dispatch(getDisplayTxtColumns())
             dispatch(loadColumnHierarchy({ expand: true }))
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         []
     )
     return (

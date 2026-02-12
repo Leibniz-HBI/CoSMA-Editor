@@ -39,7 +39,6 @@ export function useThunkReducer<T, U>(
     const [state, dispatch] = useReducer(reducer, initialState)
     return [
         state,
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         useCallback(thunker<U>(dispatch as Dispatch<U>, reduxDispatch), [
             initialState,
             reduxDispatch

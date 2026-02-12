@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 /*global location*/
 /*eslint no-restricted-globals: 0*/
 import './App.css'

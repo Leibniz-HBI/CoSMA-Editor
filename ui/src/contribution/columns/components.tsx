@@ -56,7 +56,6 @@ export function ColumnDefinitionStep() {
                 }
             })
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contributionCandidate.value?.idPersistent])
     if (definitions.isLoading || contributionCandidate.value === undefined) {
         return <CosmaeLoading />

@@ -23,7 +23,6 @@ export function UserPermissionGroupComponent() {
         () => {
             getUserInfoListCallback()
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         []
     )
     if (userInfoList.isLoading) {

@@ -17,7 +17,6 @@ import {
 } from '../../table/state'
 import { addResponseSequence, expectFetchCallList } from '../../util/tests/response'
 import { emptyState, renderWithProviders } from '../../util/tests/provider'
-import { defaultState } from '../../contribution/test_utils'
 
 const idUserTest = 'id-user-test'
 const usernameTest = 'user test'

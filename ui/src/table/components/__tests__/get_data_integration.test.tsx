@@ -15,19 +15,16 @@ import { vi, Mock } from 'vitest'
 import { Col, Row } from 'react-bootstrap'
 import {
     Column,
-    ColumnSelectionState,
     ColumnType,
     newColumn,
     newColumnSelectionState
 } from '../../../column_menu/state'
 import {
     UserPermissionGroup,
-    UserState,
     newPublicUserInfo,
     newUserInfo
 } from '../../../user/state'
 import {
-    TableState,
     displayTextColumn,
     displayTxtColumnId,
     justificationColumn,
@@ -37,24 +34,20 @@ import {
 } from '../../state'
 import { Entity, newEntity, newEntityDetailsState } from '../../../entity/state'
 import {
-    NotificationManager,
     NotificationType,
     newNotification,
     newNotificationManager
 } from '../../../util/notification/slice'
-import { RenderOptions, waitFor, screen } from '@testing-library/react'
+import { waitFor, screen } from '@testing-library/react'
 import { RemoteDataTable } from '../table'
-import { TableSelectionState } from '../../selection/slice'
 import { newRemote, RemoteInterface } from '../../../util/state'
 import {
     EditSessionParticipantType,
-    EditSessionState,
     newEditSession,
     newEditSessionParticipant,
     newEditSessionState
 } from '../../../session/state'
-import { EntityDetailsState } from '../../../entity/state'
-import { AuthState, newAuthState } from '../../../auth/state'
+import { newAuthState } from '../../../auth/state'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import {
@@ -550,18 +543,6 @@ function addValueResponse(fetchMock: Mock) {
     ])
 }
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'queries'> {
-    preloadedState?: {
-        notification: NotificationManager
-        table: TableState
-        tableSelection: TableSelectionState
-        columnSelection: ColumnSelectionState
-        user: UserState
-        auth: AuthState
-        editSession: EditSessionState
-        entityDetails: EntityDetailsState
-    }
-}
 
 const initialState = {
     preloadedState: {

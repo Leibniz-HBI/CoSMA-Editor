@@ -34,9 +34,10 @@ export async function expectFetchCallList(actual: any[], expected: (string | any
     expect(actual).toHaveLength(expected.length)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function expectFetchCall(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     actual: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expected: (string | any)[],
     bodyType: 'json' | 'formdata' = 'json'
 ) {
@@ -57,7 +58,7 @@ export async function expectFetchCall(
                         body = {}
 
                         body = Array.from(
-                            (await actual[0].formData() as FormData).entries()
+                            ((await actual[0].formData()) as FormData).entries()
                         ).reduce(
                             (acc: { [key: string]: unknown }, f) => ({
                                 ...acc,
@@ -106,7 +107,7 @@ type MockRsp =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | ({ error: any; data: undefined } & { response: { status: number } })
 
-function mkMockRsp({
+export function mkMockRsp({
     status,
     rsp,
     errorAsData

@@ -2,21 +2,12 @@
  * @vitest-environment jsdom
  */
 import { vi, Mock } from 'vitest'
-import { RenderOptions, render, waitFor, screen } from '@testing-library/react'
+import { waitFor, screen } from '@testing-library/react'
 import { newRemote } from '../../../../util/state'
-import { configureStore } from '@reduxjs/toolkit'
-import { PropsWithChildren } from 'react'
-import { Provider } from 'react-redux'
 import { UserPermissionGroup } from '../../../../user/state'
 import {
-    NotificationManager,
-    notificationReducer
-} from '../../../../util/notification/slice'
-import {
-    EntityMergeRequestConflictsState,
     newEntityMergeRequestConflict
 } from '../state'
-import { entityMergeRequestConflictSlice } from '../slice'
 import { EntityMergeRequestConflictHeader } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
 import { ReplacementState } from '../../../conflicts/state'
