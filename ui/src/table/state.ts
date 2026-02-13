@@ -216,7 +216,10 @@ export function csvLinesFromTable({
         '"id_entity_persistent","display_txt","justification",' +
         columns
             .slice(columnStartIdx)
-            .map((colState) => '"' + columnNameFromState(colState.value) + '"')
+            .map(
+                (colState) =>
+                    '"' + escapeQuote(columnNameFromState(colState.value)) + '"'
+            )
             .join(',')
     if (header.endsWith(',')) {
         lines.push(header.slice(0, header.length - 1) + '\n')
@@ -232,11 +235,14 @@ export function csvLinesFromTable({
         }
         const value =
             '"' +
-            entity.idPersistent +
+            escapeQuote(entity.idPersistent) +
             '","' +
-            (entity.displayTxtDetails == 'Display Text' ? entity.displayTxt : '') +
+            escapeQuote(
+                (entity.displayTxtDetails == 'Display Text' ? entity.displayTxt : '') ??
+                    ''
+            ) +
             '","' +
-            (entity.justificationTxt ?? '') +
+            escapeQuote(entity.justificationTxt ?? '') +
             '",' +
             columnStates
                 .slice(columnStartIdx)
@@ -256,7 +262,7 @@ export function csvLinesFromTable({
     return lines
 }
 function escapeQuote(input: string) {
-    return input.replace(/"/g, '\\"')
+    return input.replace(/"/g, '""')
 }
 
 export const justificationColumnId = 'justification'
