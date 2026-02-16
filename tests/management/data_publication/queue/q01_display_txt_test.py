@@ -70,6 +70,7 @@ def test_successful_collection(publication_display_txt, entity0, entity1, entity
         # sessions for 1 and 2 are the same
         entity1.written_by_session.id_persistent: 2,
     }
+    assert step_input.input["metadata"]["display_txt"] == {}
 
 
 @mark.django_db
@@ -87,3 +88,4 @@ def test_slicing(publication_display_txt, entity0, entity1, entity2):
     assert step_input.input["credits"]["display_txt"] == {
         entity1.written_by_session.id_persistent: 1,
     }
+    assert step_input.input["metadata"]["display_txt"] == {}

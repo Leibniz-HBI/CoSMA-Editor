@@ -93,7 +93,7 @@ def publication_justification_input(publication_justification):
         publication=publication_justification,
         step=DataPublication.Step.AUTHORS,
         # credits is assumed to exist from display text step.
-        input={"credits": {}},
+        input={"credits": {}, "metadata": {}},
     )
 
 
@@ -129,7 +129,7 @@ def publication_curated_input(publication_curated):
         publication=publication_curated,
         step=DataPublication.Step.AUTHORS,
         # credits is assumed to exist from display text step.
-        input={"credits": {}},
+        input={"credits": {}, "metadata": {}},
     )
     return DataPublicationStepInput.objects.create(
         publication=publication_curated,
@@ -171,7 +171,7 @@ def publication_user_input(publication_user):
         publication=publication_user,
         step=DataPublication.Step.AUTHORS,
         # credits is assumed to exist from display text step.
-        input={"credits": {}},
+        input={"credits": {}, "metadata": {}},
     )
     return DataPublicationStepInput.objects.create(
         publication=publication_user,
@@ -224,7 +224,8 @@ def publication_authors_input(publication_authors):
                 "column_curated": {cu.test_uuid1: 2, cs.id_session_user: 2},
                 "justification": {cu.test_uuid: 2, cs.id_session_user: 2},
                 "display_txt": {cu.test_uuid1: 3},
-            }
+            },
+            "metadata": c.metadata_test,
         },
     )
 

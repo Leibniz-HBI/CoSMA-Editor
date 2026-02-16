@@ -63,7 +63,10 @@ def collect_authors_credits(id_publication):
             DataPublicationStepInput.objects.create(  # pylint: disable=no-member
                 publication=publication,
                 step=DataPublication.Step.PROCESSING_COMPLETED,
-                input=credits_by_author_id,
+                input={
+                    "credits": credits_by_author_id,
+                    "metadata": inputs.input.get("metadata", {}),
+                },
             )
             publication.step = DataPublication.Step.PROCESSING_COMPLETED
             publication.is_working = False

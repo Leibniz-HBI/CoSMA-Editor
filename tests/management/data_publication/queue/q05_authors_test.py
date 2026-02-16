@@ -3,6 +3,7 @@
 # pylint: disable=unused-argument
 from pytest import mark
 
+import tests.management.data_publication.common as c
 from cosmae.management.data_publication.models_django import DataPublication
 from cosmae.management.data_publication.queue.q05_authors import collect_authors_credits
 
@@ -77,56 +78,59 @@ def test_successful_collection(publication_authors_input, user, user1):
         step=DataPublication.Step.PROCESSING_COMPLETED
     ).get()
     assert step_input.input == {
-        "column_curated": [
-            {
-                "credits": 2,
-                "name": user1.get_full_name(),
-                "email": user1.email,
-                "orcid": None,
-            },
-            {
-                "credits": 2,
-                "name": user.get_full_name(),
-                "email": user.email,
-                "orcid": None,
-            },
-        ],
-        "column_user": [
-            {
-                "credits": 2,
-                "name": user.get_full_name(),
-                "email": user.email,
-                "orcid": None,
-            }
-        ],
-        "justification": [
-            {
-                "credits": 4,
-                "name": user.get_full_name(),
-                "email": user.email,
-                "orcid": None,
-            }
-        ],
-        "display_txt": [
-            {
-                "credits": 3,
-                "name": user1.get_full_name(),
-                "email": user1.email,
-                "orcid": None,
-            }
-        ],
-        "overall": [
-            {
-                "credits": 8,
-                "name": user.get_full_name(),
-                "email": user.email,
-                "orcid": None,
-            },
-            {
-                "credits": 5,
-                "name": user1.get_full_name(),
-                "email": user1.email,
-                "orcid": None,
-            },
-        ],
+        "credits": {
+            "column_curated": [
+                {
+                    "credits": 2,
+                    "name": user1.get_full_name(),
+                    "email": user1.email,
+                    "orcid": None,
+                },
+                {
+                    "credits": 2,
+                    "name": user.get_full_name(),
+                    "email": user.email,
+                    "orcid": None,
+                },
+            ],
+            "column_user": [
+                {
+                    "credits": 2,
+                    "name": user.get_full_name(),
+                    "email": user.email,
+                    "orcid": None,
+                }
+            ],
+            "justification": [
+                {
+                    "credits": 4,
+                    "name": user.get_full_name(),
+                    "email": user.email,
+                    "orcid": None,
+                }
+            ],
+            "display_txt": [
+                {
+                    "credits": 3,
+                    "name": user1.get_full_name(),
+                    "email": user1.email,
+                    "orcid": None,
+                }
+            ],
+            "overall": [
+                {
+                    "credits": 8,
+                    "name": user.get_full_name(),
+                    "email": user.email,
+                    "orcid": None,
+                },
+                {
+                    "credits": 5,
+                    "name": user1.get_full_name(),
+                    "email": user1.email,
+                    "orcid": None,
+                },
+            ],
+        },
+        "metadata": c.metadata_test,
     }
