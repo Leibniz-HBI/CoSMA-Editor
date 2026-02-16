@@ -5,6 +5,8 @@ from collections import defaultdict
 from django.db import transaction
 from django_rq import enqueue
 
+from cosmae.column.models_django import column_objects
+from cosmae.column.queue import get_column_name_path
 from cosmae.management.data_publication.models_django import (
     DataPublication,
     DataPublicationStepInput,
@@ -37,6 +39,7 @@ def update_authors_input(
     step: DataPublication.Step,
     new_credits: dict,
     credits_key: str,
+    metadata: dict | None = None,
 ):
     "Update the authors step input with new credits."
     try:
@@ -45,8 +48,11 @@ def update_authors_input(
         ).get()
         inputs_dict = inputs.input
     except DataPublicationStepInput.DoesNotExist:
-        inputs_dict = {"credits": {}}
+        inputs_dict = {"credits": {}, "metadata": {}}
     inputs_dict["credits"][credits_key] = new_credits
+    if metadata is None:
+        metadata = {}
+    inputs_dict["metadata"][credits_key] = metadata
     with transaction.atomic():
         DataPublicationStepInput.objects.update_or_create(  # pylint: disable=no-member
             publication=publication,
@@ -56,6 +62,23 @@ def update_authors_input(
         publication.step = step
         publication.is_working = False
         publication.save()
+
+
+def update_column_metadata(publication, id_persistent, values, metadata):
+    "Add metadata for a column to the given metadata dict."
+    column = (
+        column_objects(publication.end_time)
+        .filter(id_persistent=id_persistent)
+        .most_recent()
+        .first()
+    )
+    name_path = get_column_name_path(column, publication.end_time)
+    metadata[id_persistent] = {
+        "name_path": name_path,
+        "name_string": " -> ".join(name_path),
+        "description": column.description,
+        "current_value_count": len(values.after(publication.start_time).most_recent()),
+    }
 
 
 _STEP_TO_FUNCTION_MAP = {

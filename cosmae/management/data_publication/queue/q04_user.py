@@ -11,6 +11,7 @@ from cosmae.management.data_publication.queue.utils import (
     count_credits_versioned_queryset,
     process_data_publication_error,
     update_authors_input,
+    update_column_metadata,
 )
 from cosmae.value.models_django import ValueHistory
 
@@ -35,16 +36,20 @@ def collect_user_credits(id_publication):
             return
         id_columns_curated = inputs.input["id_columns_user_list"]
         credits_by_id = None
+        metadata = {}
         for id_persistent in id_columns_curated:
             values = ValueHistory.objects.filter(id_column_persistent=id_persistent)
             credits_by_id = count_credits_versioned_queryset(
                 values, publication, credits_by_id
             )
+            update_column_metadata(publication, id_persistent, values, metadata)
+
         update_authors_input(
             publication,
             DataPublication.Step.AUTHORS,
             credits_by_id,
             "column_user",
+            metadata,
         )
 
     except (Exception,) as exc:  # pylint: disable=broad-except

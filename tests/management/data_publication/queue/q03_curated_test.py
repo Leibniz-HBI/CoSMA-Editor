@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from pytest import mark
 
+import tests.column.common as cc
 from cosmae.management.data_publication.models_django import DataPublication
 from cosmae.management.data_publication.queue.q03_curated import collect_curated_credits
 
@@ -83,16 +84,26 @@ def test_successful_collection(publication_curated_input, values_curated):
                 values_curated[2].written_by_session_id: 2,
             }
         },
+        "metadata": {
+            "column_curated": {
+                cc.id_column_curated_test: {
+                    "description": None,
+                    "current_value_count": 4,
+                    "name_path": [cc.name_column_curated_test],
+                    "name_string": cc.name_column_curated_test,
+                }
+            }
+        },
     }
 
 
 @mark.django_db
 def test_slicing(publication_curated_input, values_curated):
     "Test that display text credits are collected successfully."
-    value0 = values_curated[0]
+    value = values_curated[-1]
     publication = publication_curated_input.publication
-    publication.start_time = value0.time_edit - timedelta(seconds=1)
-    publication.end_time = value0.time_edit
+    publication.start_time = value.time_edit - timedelta(seconds=1)
+    # publication.end_time = value.time_edit
     publication.save()
     id_publication_persistent = publication.id_persistent
     collect_curated_credits(id_publication_persistent)
@@ -103,8 +114,18 @@ def test_slicing(publication_curated_input, values_curated):
     assert step_input.input == {
         "credits": {
             "column_curated": {
-                value0.written_by_session_id: 1,
-                values_curated[2].written_by_session_id: 1,
+                value.written_by_session_id: 1,
+                values_curated[1].written_by_session_id: 1,
+            }
+        },
+        "metadata": {
+            "column_curated": {
+                cc.id_column_curated_test: {
+                    "description": None,
+                    "current_value_count": 2,
+                    "name_path": [cc.name_column_curated_test],
+                    "name_string": cc.name_column_curated_test,
+                }
             }
         },
     }

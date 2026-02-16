@@ -472,7 +472,7 @@ def column_user1(user):
 
 
 @pytest.fixture
-def values_user(user, user1):
+def values_user(user, user1, column_user, column_user1):
     value = ValueHistory(
         id_persistent=cv.id_instance_test0,
         time_edit=cv.time_edit_instance_test,
@@ -516,7 +516,7 @@ def values_user(user, user1):
 
 
 @pytest.fixture
-def values_curated(user, user1):
+def values_curated(user, user1, column_curated):
     value = ValueHistory(
         id_persistent=cv.id_instance_test0,
         time_edit=cv.time_edit_instance_test,

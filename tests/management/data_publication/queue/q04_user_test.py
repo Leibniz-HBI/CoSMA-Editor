@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from pytest import mark
 
+import tests.column.common as cc
 from cosmae.management.data_publication.models_django import DataPublication
 from cosmae.management.data_publication.queue.q04_user import collect_user_credits
 
@@ -83,16 +84,31 @@ def test_successful_collection(publication_user_input, values_user):
                 values_user[2].written_by_session_id: 2,
             }
         },
+        "metadata": {
+            "column_user": {
+                cc.id_column_persistent_test_user: {
+                    "description": None,
+                    "current_value_count": 2,
+                    "name_path": [cc.name_column_test_user],
+                    "name_string": cc.name_column_test_user,
+                },
+                cc.id_column_persistent_test_user1: {
+                    "description": None,
+                    "current_value_count": 2,
+                    "name_path": [cc.name_column_test1],
+                    "name_string": cc.name_column_test1,
+                },
+            }
+        },
     }
 
 
 @mark.django_db
 def test_slicing(publication_user_input, values_user):
     "Test that user column credits are collected successfully."
-    value0 = values_user[0]
+    value = values_user[-1]
     publication = publication_user_input.publication
-    publication.start_time = value0.time_edit - timedelta(seconds=1)
-    publication.end_time = value0.time_edit
+    publication.start_time = value.time_edit - timedelta(seconds=1)
     publication.save()
     id_publication_persistent = publication.id_persistent
     collect_user_credits(id_publication_persistent)
@@ -103,8 +119,24 @@ def test_slicing(publication_user_input, values_user):
     assert step_input.input == {
         "credits": {
             "column_user": {
-                value0.written_by_session_id: 1,
-                values_user[2].written_by_session_id: 1,
+                value.written_by_session_id: 1,
+                values_user[1].written_by_session_id: 1,
+            }
+        },
+        "metadata": {
+            "column_user": {
+                cc.id_column_persistent_test_user: {
+                    "description": None,
+                    "current_value_count": 1,
+                    "name_path": [cc.name_column_test_user],
+                    "name_string": cc.name_column_test_user,
+                },
+                cc.id_column_persistent_test_user1: {
+                    "description": None,
+                    "current_value_count": 1,
+                    "name_path": [cc.name_column_test1],
+                    "name_string": cc.name_column_test1,
+                },
             }
         },
     }
