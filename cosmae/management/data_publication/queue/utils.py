@@ -67,7 +67,7 @@ def update_authors_input(
 def update_column_metadata(publication, id_persistent, values, metadata):
     "Add metadata for a column to the given metadata dict."
     column = (
-        column_objects(publication.end_time)
+        column_objects(publication.end_time, include_disabled=True)
         .filter(id_persistent=id_persistent)
         .most_recent()
         .first()

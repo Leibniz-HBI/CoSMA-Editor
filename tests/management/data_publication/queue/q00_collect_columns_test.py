@@ -1,7 +1,6 @@
 "Tests for collecting columns for data publication."
 
 # pylint: disable=unused-argument,redefined-outer-name
-from datetime import timedelta
 
 from pytest import fixture
 
@@ -14,9 +13,9 @@ from cosmae.management.data_publication.models_django import (
 
 
 @fixture
-def publication_created_curated_only(publication_created):
+def publication_created_sliced(publication_created):
     "Data publication with start date excluding the user column."
-    publication_created.start_time = cc.time_edit_curated_test - timedelta(minutes=1)
+    publication_created.end_time = cc.time_edit_test
     publication_created.save()
     return publication_created
 
@@ -84,15 +83,15 @@ def test_collects_columns_successfully(
     }
 
 
-def test_collects_columns_curated_only_successfully(
+def test_collects_columns_sliced_successfully(
     column_curated,
     column_user,
-    publication_created_curated_only,
+    publication_created_sliced,
 ):
     "Test that collected columns respect time span."
-    q.collect_columns(publication_created_curated_only.id_persistent)
+    q.collect_columns(publication_created_sliced.id_persistent)
     publication = DataPublication.objects.get(
-        id_persistent=publication_created_curated_only.id_persistent
+        id_persistent=publication_created_sliced.id_persistent
     )
     assert publication.step == DataPublication.Step.DISPLAY_TXT
     assert not publication.is_working
@@ -101,12 +100,12 @@ def test_collects_columns_curated_only_successfully(
         publication=publication, step=DataPublication.Step.CURATED
     ).get()
     assert curated_input.input == {
-        "id_columns_curated_list": [column_curated.id_persistent],
+        "id_columns_curated_list": [],
     }
 
     user_input = DataPublicationStepInput.objects.filter(
         publication=publication, step=DataPublication.Step.USER
     ).get()
     assert user_input.input == {
-        "id_columns_user_list": [],
+        "id_columns_user_list": [cc.id_column_persistent_test_user],
     }

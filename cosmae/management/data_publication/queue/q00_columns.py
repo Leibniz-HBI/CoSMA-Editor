@@ -25,13 +25,9 @@ def collect_columns(id_publication):
         return
     try:
         column_queryset = (
-            ColumnHistory.objects
-            # if the column was not disabled at one time we still need to count it
+            ColumnHistory.objects.up_until(publication.end_time).most_recent()
+            # exclude columns that where disabled at the end time of the publication
             .filter(disabled=False)
-            .up_until(publication.end_time)
-            .after(publication.start_time)
-            .filter(disabled=False)
-            .most_recent()
         )
         columns_curated_queryset = column_queryset.filter(curated=True)
         columns_user_queryset = column_queryset.filter(curated=False)
