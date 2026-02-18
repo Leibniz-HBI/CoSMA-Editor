@@ -24,7 +24,6 @@ import { EmailVerification } from './auth/components/email_verification'
 import { CosmaeNavbar } from './navigation/components'
 import { ProfilePage } from './user/components/profile'
 import { cosmaeContributionApiContributionGet } from './openapi/cosmae'
-import { ResultsLink } from './management/data_publication/components'
 
 export function CosmaeRoot() {
     return (
@@ -131,11 +130,6 @@ const router = createBrowserRouter([
                 element: <ProfilePage />,
                 loader: ({ params }) => params.category ?? ''
             },
-            {
-                path: 'data_publication/:idPersistent',
-                element: <ResultsLink />,
-                loader: ({ params }) => params.idPersistent ?? ''
-            }
         ]
     }
 ])
