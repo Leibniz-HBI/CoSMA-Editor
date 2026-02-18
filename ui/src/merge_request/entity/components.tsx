@@ -25,11 +25,11 @@ export function EntityMergeRequests() {
     }
     return (
         <ListGroup>
-            {entityMergeRequestValue.map((mr, idx) => (
+            {entityMergeRequestValue.map((mr) => (
                 <EntityMergeRequestListItem
                     mergeRequest={mr}
                     navigateCallback={navigateCallback}
-                    key={idx}
+                    key={mr.idPersistent}
                 />
             ))}
         </ListGroup>

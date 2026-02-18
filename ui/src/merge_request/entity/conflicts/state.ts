@@ -5,7 +5,7 @@ import { EntityMergeRequest } from '../state'
 export interface Column {
     curated: boolean
     idPersistent: string
-    idParentPersistent: string
+    idParentPersistent: string | undefined
     namePath: string[]
     version: number
 }

@@ -152,14 +152,14 @@ export function EntityMergeRequestConflictComponent({
                                 </Accordion.Header>
                                 <Accordion.Body>
                                     <ListGroup key="merge-request-conflicts-updated">
-                                        {conflictsValue.updated.map((conflict, idx) => (
+                                        {conflictsValue.updated.map((conflict) => (
                                             <EntityMergeRequestConflictListItem
                                                 conflict={conflict}
                                                 mergeRequest={mergeRequestValue}
                                                 resolveConflictCallback={
                                                     resolveConflictCallback
                                                 }
-                                                key={idx}
+                                                key={conflict.value.column.idPersistent}
                                             />
                                         ))}
                                     </ListGroup>
@@ -173,10 +173,10 @@ export function EntityMergeRequestConflictComponent({
                             <Accordion.Body>
                                 <ListGroup key="merge-requests-conflicts">
                                     {conflictsValue.resolvableConflicts.map(
-                                        (conflict, idx) => (
+                                        (conflict) => (
                                             <EntityMergeRequestConflictListItem
                                                 conflict={conflict}
-                                                key={idx}
+                                                key={conflict.value.column.idPersistent}
                                                 mergeRequest={mergeRequestValue}
                                                 resolveConflictCallback={
                                                     resolveConflictCallback
@@ -445,12 +445,13 @@ function ResolutionFormBody({
                             checked={
                                 values.replacementState === ReplacementState.REPLACE
                             }
-                            onClick={() =>
+                            onClick={() => {
                                 setValues({
                                     ...values,
                                     replacementState: ReplacementState.REPLACE
                                 })
-                            }
+                                submitForm()
+                            }}
                         />
                     </Col>
                     <Col
