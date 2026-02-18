@@ -265,12 +265,13 @@ export function ResultsLink({
     step: DataPublicationStep
 }) {
     if (step !== DataPublicationStep.Completed) {
-        return (
-            <Button disabled>Download</Button>
-        )
+        return <Button disabled>Download</Button>
     }
     return (
-        <Link to={`${config.api_path}/manage/data_publication/${idPersistent}/results`} >
+        <Link
+            download
+            to={`${config.api_path}/manage/data_publication/${idPersistent}/results`}
+        >
             <Button disabled={step !== DataPublicationStep.Completed}>Download</Button>
         </Link>
     )
