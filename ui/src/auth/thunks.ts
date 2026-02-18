@@ -156,7 +156,7 @@ export function createUserThunk({
                 ssh_key: sshKey
             }
             if (namesFamily !== undefined && namesFamily.length > 0) {
-                body['namesFamily'] = namesFamily
+                body['names_family'] = namesFamily
             }
             const rsp = await cosmaeManagementUserApiPostCreateUser({ body, headers })
             handleAllauthResponseFromClient(
