@@ -117,10 +117,14 @@ def get_merge_requests(request: HttpRequest):
         return 401, ApiError(msg="Not authenticated.")
     except ForbiddenException:
         return 403, ApiError(msg="Insufficient permissions")
-    except DatabaseError:
-        return 500, ApiError(msg="Could not get the merge requests from the database.")
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get the requested merge requests.")
+    except DatabaseError as exc:
+        msg="Could not get the merge requests from the database."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not get the requested merge requests."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.patch(
