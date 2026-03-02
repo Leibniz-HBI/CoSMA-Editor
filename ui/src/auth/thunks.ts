@@ -101,7 +101,6 @@ export function loginThunk(username: string, password: string): ThunkWithFetch<v
         try {
             const headers: { [key: string]: string } = mkPostHeaders()
             const rsp = await postAllauthByClientV1AuthLogin({
-                headers,
                 path,
                 body: { username, password }
             })
