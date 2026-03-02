@@ -104,10 +104,12 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { matches: mkMatches(entityList.slice(0, 50)) }],
+        [200, { matches: mkMatches(entityList.slice(0, 4)) }],
         [200, { column_list: [] }],
-        [200, { matches: mkMatches(entityList.slice(50)) }],
-        [200, { value_responses: [] }]
+        [200, { matches: mkMatches(entityList.slice(4, 12)) }],
+        [200, { matches: mkMatches(entityList.slice(12, 28)) }],
+        [200, { matches: mkMatches(entityList.slice(28,60)) }],
+        [200, { value_responses: [] }],
     ])
 }
 test('get duplicates', async () => {
@@ -119,6 +121,7 @@ test('get duplicates', async () => {
         initialState
     )
     const entitySelectionElement = await waitFor(() => {
+        expect(fetchMock.mock.calls).toHaveLength(8)
         const entitySelection = screen.getByText('entity-1')
         expect(
             store.getState().contributionEntity.entities.value?.at(0)?.similarEntities
@@ -158,7 +161,7 @@ test('select entity', async () => {
     )
     await waitFor(() => {
         screen.getByText('Please select an entity')
-        expect(fetchMock.mock.calls).toHaveLength(6)
+        expect(fetchMock.mock.calls).toHaveLength(8)
     })
     const entitySelectionElement = await waitFor(() => {
         expect(
