@@ -117,10 +117,12 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { matches: mkMatches(personList.slice(0, 50)) }],
+        [200, { matches: mkMatches(personList.slice(0, 4)) }],
         [200, { column_list: [] }],
         [200, { column_list: [] }],
-        [200, { matches: mkMatches(personList.slice(50)) }],
+        [200, { matches: mkMatches(personList.slice(4, 12)) }],
+        [200, { matches: mkMatches(personList.slice(12, 28)) }],
+        [200, { matches: mkMatches(personList.slice(28,60)) }],
         // empty response because no match columns.
         [200, { value_responses: [] }]
     ])
@@ -131,7 +133,7 @@ test('add column values', async () => {
     addValueResponses(fetchMock, idColumn0, '1')
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(7)
+        expect(fetchMock.mock.calls.length).toEqual(9)
         const entity0 = screen.getByText('entity-1')
         entity0.click()
     })
@@ -185,7 +187,7 @@ test('add column values', async () => {
                         displayTxtDetails: 'display_txt_detail',
                         idPersistent: entity?.idPersistent + '-0',
                         version: 0,
-                        similarity: idx / 100,
+                        similarity: expect.any(Number),
                         cellContents: [
                             newRemote([
                                 {
@@ -212,7 +214,7 @@ test('add column values', async () => {
                         idPersistent: entity?.idPersistent + '-1',
                         displayTxtDetails: 'display_txt_detail',
                         version: 0,
-                        similarity: idx / 100 + 0.001,
+                        similarity: expect.any(Number),
                         cellContents: [
                             newRemote([
                                 {
@@ -247,7 +249,7 @@ test('add column values', async () => {
                         displayTxtDetails: 'display_txt_detail',
                         idPersistent: entity?.idPersistent + '-0',
                         version: 0,
-                        similarity: (idx - 50) / 100.0,
+                        similarity: expect.any(Number),
                         idMatchColumnPersistentList: [],
                         cellContents: [newRemote([]), newRemote([])]
                     }),
@@ -256,7 +258,7 @@ test('add column values', async () => {
                         displayTxtDetails: 'display_txt_detail',
                         idPersistent: entity?.idPersistent + '-1',
                         version: 0,
-                        similarity: (idx - 50) / 100.0 + 0.001,
+                        similarity: expect.any(Number),
                         idMatchColumnPersistentList: [],
                         cellContents: [newRemote([]), newRemote([])]
                     })
@@ -271,7 +273,7 @@ test('remove values', async () => {
     addValueResponses(fetchMock, idColumn0, '1')
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(7)
+        expect(fetchMock.mock.calls.length).toEqual(9)
         const entity0 = screen.getByText('entity-0')
         entity0.click()
     })

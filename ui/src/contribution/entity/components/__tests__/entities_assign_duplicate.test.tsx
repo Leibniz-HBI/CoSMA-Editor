@@ -181,15 +181,32 @@ function initialResponses(
     addResponseSequence(fetchMock, [
         [200, { entity_list: personList, next_offset: 500 }],
         [200, { entity_list: [], next_offset: -1 }],
-        [200, { column_list: [] }],
-        [200, { matches: mkMatches(personList.slice(0, numIncludedMatches)) }]
+        [200, { column_list: [] }]
     ])
+    let start = 0,
+        offset = 4
+    while (start < numIncludedMatches) {
+        addResponseSequence(fetchMock, [
+            [
+                200,
+                {
+                    matches: mkMatches(
+                        personList.slice(
+                            start,
+                            Math.min(start + offset, numIncludedMatches)
+                        )
+                    )
+                }
+            ]
+        ])
+        start += offset
+        offset = Math.min(offset * 2, 32)
+    }
 }
 
 test('merge with existing', async () => {
     const fetchMock = vi.fn()
     initialResponses(fetchMock, personList, 50)
-    addResponseSequence(fetchMock, [[200, {}]])
     addResponseSequence(fetchMock, [
         [200, { value_responses: [] }],
         [
@@ -233,7 +250,7 @@ test('merge with existing', async () => {
     ])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(5)
+        expect(fetchMock.mock.calls.length).toEqual(7)
     })
     screen.getByText(/Please select an entity/i)
     screen.queryByText('entity-1')?.click()

@@ -84,7 +84,7 @@ async function doSearch(fetchMock: Mock) {
     const user = userEvent.setup()
     await waitFor(
         async () => {
-            expect(fetchMock.mock.calls.length).toEqual(7)
+            expect(fetchMock.mock.calls.length).toEqual(9)
             const entity = await screen.findByText('entity 1')
             entity.click()
         },
@@ -195,8 +195,10 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { matches: mkMatches(personList.slice(0, 50)) }],
-        [200, { matches: mkMatches(personList.slice(50)) }],
+        [200, { matches: mkMatches(personList.slice(0, 4)) }],
+        [200, { matches: mkMatches(personList.slice(4, 12)) }],
+        [200, { matches: mkMatches(personList.slice(12, 28)) }],
+        [200, { matches: mkMatches(personList.slice(28,50)) }],
         [200, { column_list: [] }],
         [200, { column_list: [] }],
         // empty response because no match columns.

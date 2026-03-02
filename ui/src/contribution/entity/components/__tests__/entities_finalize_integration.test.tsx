@@ -112,9 +112,11 @@ function initialResponses(fetchMock: Mock) {
                 ]
             }
         ],
-        [200, { matches: mkMatches(personList.slice(0, 50)) }],
+        [200, { matches: mkMatches(personList.slice(0, 4)) }],
         [200, { column_list: [] }],
-        [200, { matches: mkMatches(personList.slice(50)) }],
+        [200, { matches: mkMatches(personList.slice(4, 12)) }],
+        [200, { matches: mkMatches(personList.slice(12, 28)) }],
+        [200, { matches: mkMatches(personList.slice(28,50)) }],
     ])
 }
 
@@ -137,7 +139,7 @@ test('success', async () => {
     ])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(6)
+        expect(fetchMock.mock.calls.length).toEqual(8)
     })
     const button = screen.getByRole('button', { name: /Confirm Assigned Duplicates/i })
     button.click()
@@ -173,7 +175,7 @@ test('error', async () => {
     addResponseSequence(fetchMock, [[500, { msg: errorMsg }]])
     const { store } = renderWithProviders(<EntitiesStep />, fetchMock, initialState)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(6)
+        expect(fetchMock.mock.calls.length).toEqual(8)
     })
     const completeButton = screen.getByRole('button', {
         name: /Confirm Assigned Duplicates/i
