@@ -12,15 +12,18 @@ Currently the following features are supported:
 
 # Running
 See [Setup](setup/readme.md)
+
+# Usage
+Please check the [manual](manual/readme.md).
 # Development
 There are two projects in this repository.
-A backend written in python and a frontend in TypeScript.
+A backend written in Python and a frontend in TypeScript.
 
 ## Requirements
 Currently the only operating system supported is Linux.
 For the backend the project requires Python and poetry as a package manager.
-Please install Python with your distros package manager.
-Afterwards install poetry using `pip install poetry`.
+Please install Python and pipx with your distributions package manager.
+Afterwards install poetry using `pipx install poetry`.
 
 Node is required for the frontend.
 You can find instructions on installing node at [https://github.com/nodesource/distributions]
@@ -42,7 +45,11 @@ You need to run a redis instance for managing task queues.
 The easiest way is to launch it in a container: `docker run -p 6379:6379 redis`.
 ## Running
 * Start the backend by running `poetry run ./manage.py  runserver`.
-* In a seperate shell switch to the `ui` directory and run `npm start`.
+* In a separate shell switch to the `ui` directory and run `npm start`.
 
-# Funding
+# Acknowledgements
+## Community Input
+The features of *CoSMA-Editor* where suggested and refined in multiple co-creation workshops.
+Without the input from those meetings, development would not have been possible.
+## Funding
 The CoSMA-Editor is funded by the German Federal Ministry of Education and Reasearch under grant numbers 01UG2151A-D, 16DTM208A&B and 16DTM404A-E
