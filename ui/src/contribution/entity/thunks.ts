@@ -181,8 +181,9 @@ export function getContributionEntityDuplicateCandidatesAction({
                 dispatch(getDuplicatesStart(idEntityPersistent))
             }
             const entitiesGroupMap: { [key: string]: string[] } = {}
-            let offset = 4
+            let offset = 2
             for (let idx = 0; idx < entityIdPersistentList.length; idx += offset) {
+                offset = Math.min(offset*2, 32)
                 const rsp = await cosmaeContributionEntityApiPostSimilar({
                     body: {
                         id_entity_persistent_list: entityIdPersistentList.slice(
@@ -192,7 +193,6 @@ export function getContributionEntityDuplicateCandidatesAction({
                     },
                     path: { id_contribution_persistent: idContributionPersistent }
                 })
-                offset = Math.min(offset*2, 32)
                 if (rsp.data !== undefined) {
                     const matchesMap = rsp.data.matches
                     for (const idEntityPersistent in matchesMap) {
