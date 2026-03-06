@@ -1,4 +1,7 @@
 # CoSMA-Editor
+
+[![DOI](https://zenodo.org/badge/1099093124.svg)](https://doi.org/10.5281/zenodo.18890351)
+
 This repository contains the **Co**laborative **S**ocial **M**edia **A**ccount-**Editor**.
 The CoSMA-Editor is a web application allowing communities to merge and curate lists of social media accounts
 
