@@ -219,7 +219,7 @@ This may be helpful, when the proposed is nearly correct but has a typo.
 
 When all conflicts are resolved, click on **Apply Resolutions to Destination**
 
-![Merge Request Resolution](image/review-merge-request.png)
+![Merge Request Resolution](images/review-merge-request.png)
 
 # Column Ownership
 When you create a new column it belongs to your account.
