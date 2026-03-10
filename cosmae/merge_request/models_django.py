@@ -107,7 +107,7 @@ class ColumnMergeRequest(AbstractMergeRequest):
             or (
                 self.assigned_to is None
                 and user.permission_group
-                in {CosmaeUser.COMMISSIONER, CosmaeUser.CONTRIBUTOR}
+                in {CosmaeUser.COMMISSIONER, CosmaeUser.EDITOR}
             )
         )
 
