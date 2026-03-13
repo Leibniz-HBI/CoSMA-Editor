@@ -46,7 +46,7 @@ def SECRET_KEY():  # pylint: disable=invalid-name
     return get_secret("cosmae_django_key")
 
 
-def get_secret(secret_name):
+def get_secret(secret_name, optional=False, default=None):
     "Get secret from file for development"
     try:
         with open(
@@ -57,6 +57,8 @@ def get_secret(secret_name):
         env_var_name = secret_name.upper()
         key = environ.get(env_var_name)
     if not key:
+        if optional:
+            return default
         raise Exception(  # pylint: disable=broad-exception-raised
             f"Please set the {secret_name} secret."
         )
@@ -244,7 +246,7 @@ HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
 SOCIALACCOUNT_ENABLED = False
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
 
