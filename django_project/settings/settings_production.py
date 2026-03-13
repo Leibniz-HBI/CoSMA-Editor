@@ -51,7 +51,7 @@ def SECRET_KEY():  # pylint: disable=invalid-name
     return get_secret("cosmae_django_key")
 
 
-def get_secret(secret_name):
+def get_secret(secret_name, optional=False, default=None):
     "Get secret as provided by docker_compose"
     try:
         with open(f"/run/secrets/{secret_name}", encoding="utf-8") as key_file:
@@ -60,6 +60,8 @@ def get_secret(secret_name):
         env_var_name = secret_name.upper()
         key = environ.get(env_var_name)
     if not key:
+        if optional:
+            return default
         raise Exception(  # pylint: disable=broad-exception-raised
             f"Please set the {secret_name} secret."
         )
@@ -229,8 +231,8 @@ CACHES = {
 IS_UNITTEST = False
 DEBUG = False
 
-ORCID_CLIENT_ID = get_secret("orcid_client_id")
-ORCID_CLIENT_SECRET = get_secret("orcid_client_secret")
+ORCID_CLIENT_ID = get_secret("orcid_client_id", True)
+ORCID_CLIENT_SECRET = get_secret("orcid_client_secret", True)
 
 HEADLESS_ONLY = True
 SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
@@ -257,9 +259,9 @@ HEADLESS_FRONTEND_URLS = {
     #     "socialaccount_login_error": "https://app.project.org/account/provider/callback",
 }
 
-EMAIL_HOST = get_secret("email_host")
-EMAIL_PORT = int(get_secret("email_host_port"))
-DEFAULT_FROM_EMAIL = get_secret("email_from")
+EMAIL_HOST = get_secret("email_host", True)
+EMAIL_PORT = int(get_secret("email_host_port", True, 0))
+DEFAULT_FROM_EMAIL = get_secret("email_from", True)
 
 DEFAULT_EMAIL_SUBJECT_PREFIX = "[CoSMA-E] "
 ACCOUNT_EMAIL_SUBJECT_PREFIX = DEFAULT_EMAIL_SUBJECT_PREFIX
