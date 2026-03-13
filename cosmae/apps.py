@@ -72,7 +72,7 @@ class CosmaeConfig(AppConfig):
         post_migrate.connect(add_permissions, dispatch_uid="cosmae.create_groups")
         try:
             if not settings.IS_UNITTEST:
-                connect_add_initial_users()
+                connect_add_initial_users(self)
                 connect_read_csv_signal()
                 connect_column_queue_process()
                 connect_data_publication_signal()
