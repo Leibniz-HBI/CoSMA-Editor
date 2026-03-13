@@ -87,12 +87,13 @@ def decode(reverse_code_config: Tuple[int, str], encoded: str):
     return value
 
 
+class PasswordHashCreationException(Exception):
+    "Raised when a password could not be created."
+
+
 class MkPasswordYescryptPasswordHasher(BasePasswordHasher):
     """Scrypt PasswordHasher that is compatible with Linux `/etc/shadow` format.
     This requires setting of specific parameters."""
-
-    class PasswordHashCreationException(Exception):
-        "Raised when a password could not be created."
 
     algorithm = "linuxy"
 
@@ -109,29 +110,10 @@ class MkPasswordYescryptPasswordHasher(BasePasswordHasher):
         The result is normally formatted as "algorithm$salt$hash" and
         must be fewer than 128 characters.
         """
-        with subprocess.Popen(
-            [
-                "/usr/bin/mkpasswd",
-                "-m",
-                "yescrypt",
-                "-R",
-                str(YESCRYPT_LINUX_COST_PARAMETER),
-                "-s",
-                "-S",
-                f"$y${YESCRYPT_LINUX_CONFIG}${salt}",
-            ],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        ) as p:
-            out_string, error_string = p.communicate((password + "\n").encode("utf-8"))
-            p.wait()
-        if len(error_string) > 0:
-            raise self.PasswordHashCreationException()
-        hashed_password = out_string.decode("utf-8")
+        hashed_password = hash_password(password, salt)
         # there is a '$' separator in the result from mkpasswd
         # and a new line char.
-        return self.algorithm + hashed_password[2:-1]
+        return self.algorithm + hashed_password[2:]
 
     def decode(self, encoded):
         """
@@ -167,3 +149,34 @@ class MkPasswordYescryptPasswordHasher(BasePasswordHasher):
             gettext_noop("salt"): mask_hash(decoded["salt"]),
             gettext_noop("hash"): mask_hash(decoded["hash"]),
         }
+
+
+def hash_password(password, salt=None):
+    "Hash a password using a system call to mkpasswd"
+    command = [
+        "/usr/bin/mkpasswd",
+        "-m",
+        "yescrypt",
+        "-R",
+        str(YESCRYPT_LINUX_COST_PARAMETER),
+        "-s",
+    ]
+    if salt is not None:
+        command.append(
+            "-S",
+        )
+        command.append(
+            f"$y${YESCRYPT_LINUX_CONFIG}${salt}",
+        )
+    with subprocess.Popen(
+        command,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as p:
+        out_string, error_string = p.communicate((password + "\n").encode("utf-8"))
+        p.wait()
+    if len(error_string) > 0:
+        raise PasswordHashCreationException()
+    hashed_password = out_string.decode("utf-8")
+    return hashed_password.rstrip("\n")

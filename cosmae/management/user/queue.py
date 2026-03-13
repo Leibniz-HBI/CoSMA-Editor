@@ -21,7 +21,7 @@ from cosmae.edit_session.models_django import EditSession, EditSessionParticipan
 from cosmae.user.ssh.models_django import SshKey
 from cosmae.util import CosmaeUser
 
-_logger = logging.getLogger("cosmae.management.user.queue")
+_LOGGER = logging.getLogger("cosmae.management.user.queue")
 _epoch = datetime.fromtimestamp(0, timezone.utc)
 
 
@@ -52,7 +52,7 @@ def _get_minimum_user_ids() -> Tuple[int, int]:
                 elif user_id < mins[2]:
                     mins[2] = user_id
             except ValueError:
-                _logger.warning("Invalid user id %s in credentials file.", split[2])
+                _LOGGER.warning("Invalid user id %s in credentials file.", split[2])
     return mins[1], mins[2] - 2  # remove constant added in setup script.
 
 
@@ -93,7 +93,7 @@ def set_system_ssh_keys(id_user: int):
         except EmptyResultSet:
             msg = "Could not find any SSH keys for user with id %d"
     if msg is not None:
-        _logger.error(msg, id_user)
+        _LOGGER.error(msg, id_user)
     else:
         username = user.username
         set_ssh_key_list(username, _MIN_USER_ID + id_user, ssh_key_list)
@@ -101,7 +101,7 @@ def set_system_ssh_keys(id_user: int):
 
 def set_ssh_key_list(username, user_id_system, ssh_key_list):
     "Set all SSH keys for a user."
-    _logger.info("Set SSH keys for user %s", username)
+    _LOGGER.info("Set SSH keys for user %s", username)
     target_dir = settings.USER_HOME_BASE_DIR / username / ".ssh"
     if not exists(target_dir):
         # is not yet created want to do this on user creation
@@ -135,7 +135,7 @@ def create_system_user(id_user_persistent):
     username = user.username
     user_id = _MIN_USER_ID + user.id
     password_hash = change_prefix_to_linux(user.password)
-    _logger.info("Creating user %s.", username)
+    _LOGGER.info("Creating user %s.", username)
     new_user_home_dir_path = settings.USER_HOME_BASE_DIR / username
     set_passwd_entry(username, user_id, new_user_home_dir_path)
     password_change_time = int(
@@ -214,37 +214,15 @@ def update_password(id_user_persistent):
     set_shadow_entry(username, password_hash, password_change_time)
 
 
-def create_initial_user():
+def create_initial_users():
     """Create an initial user.
     The information is taken from files in the credentials directory."""
-    with open(settings.CREDENTIALS_DIR / "shadow", "rt", encoding="ascii") as f:
-        lines = f.readlines()
-    if len(lines) != 3:
-        raise Exception(  # pylint: disable=broad-exception-raised
-            "There must be exactly three users in the shadow file."
-        )
-    split = lines[2].split(":")
-    username = split[0]
-    password_hash = split[1]
-    with open(settings.CREDENTIALS_DIR / "passwd", "rt", encoding="ascii") as f:
-        lines = f.readlines()
-    if len(lines) != 3:
-        raise Exception(  # pylint: disable=broad-exception-raised
-            "There must be exactly three users in the passwd file."
-        )
-    split = lines[2].split(":")
-    if split[0] != username:
-        raise Exception(  # pylint: disable=broad-exception-raised
-            "User names in passwd and shadow file do not match."
-        )
-    user_id_system = int(split[2])
-    if user_id_system < _MIN_USER_ID:
-        raise Exception(  # pylint: disable=broad-exception-raised
-            f"User id {user_id_system} is too small. It must be at least {_MIN_USER_ID}."
-        )
-    user_id = user_id_system - _MIN_USER_ID
-    ssh_key_string = _get_ssh_key_from_file(username)
-    _create_initial_user(username, user_id, password_hash, ssh_key_string)
+    if len(CosmaeUser.objects.all()) > 0:
+        _LOGGER.error("Users already created.")
+        return
+    with transaction.atomic():
+        _create_admin_user()
+        _create_initial_user()
 
 
 def _get_ssh_key_from_file(username):
@@ -268,7 +246,10 @@ def _get_ssh_key_from_file(username):
     return lines[0]
 
 
-def _create_initial_user(username, user_id, linux_password_hash, ssh_key_string):
+def _create_initial_user():
+    username, linux_password_hash = _get_shadow_file_details()
+    user_id = _get_user_id(username)
+    ssh_key_string = _get_ssh_key_from_file(username)
     django_password = change_prefix_to_django(linux_password_hash[1:])
     with transaction.atomic():
         new_user = CosmaeUser(
@@ -292,6 +273,76 @@ def _create_initial_user(username, user_id, linux_password_hash, ssh_key_string)
         new_user.is_active = True
         new_user.edit_session = edit_session
         new_user.save()
+
+
+def _get_user_id(username):
+    with open(settings.CREDENTIALS_DIR / "passwd", "rt", encoding="ascii") as f:
+        lines = f.readlines()
+    if len(lines) != 3:
+        raise Exception(  # pylint: disable=broad-exception-raised
+            "There must be exactly three users in the passwd file."
+        )
+    split = lines[2].split(":")
+    if split[0] != username:
+        raise Exception(  # pylint: disable=broad-exception-raised
+            "User names in passwd and shadow file do not match."
+        )
+    user_id_system = int(split[2])
+    if user_id_system < _MIN_USER_ID:
+        raise Exception(  # pylint: disable=broad-exception-raised
+            f"User id {user_id_system} is too small. It must be at least {_MIN_USER_ID}."
+        )
+    user_id = user_id_system - _MIN_USER_ID
+    return user_id
+
+
+def _get_shadow_file_details():
+    with open(settings.CREDENTIALS_DIR / "shadow", "rt", encoding="ascii") as f:
+        lines = f.readlines()
+    if len(lines) != 3:
+        raise Exception(  # pylint: disable=broad-exception-raised
+            "There must be exactly three users in the shadow file."
+        )
+    split = lines[2].split(":")
+    username = split[0]
+    linux_password_hash = split[1]
+    return username, linux_password_hash
+
+
+def _create_admin_user():
+    try:
+        if len(CosmaeUser.objects.filter(is_superuser=True)) > 0:
+            _LOGGER.error("Admin user already exists.")
+            return
+        _LOGGER.debug("Creating admin user.")
+        # pylint: disable=import-outside-toplevel
+        from cosmae.util.password_hasher import hash_password
+        from django_project.settings import get_secret
+
+        password = get_secret("cosmae_initial_admin_password")
+        password_hash = hash_password(password)
+        uuid = str(uuid4())
+        new_user = CosmaeUser.objects.create(
+            username="admin",
+            email=f"mail@{uuid}.com",
+            password=change_prefix_to_django(password_hash[1:]),
+            is_staff=True,
+            is_superuser=True,
+            id_persistent=uuid,
+            permission_group=CosmaeUser.APPLICANT,
+        )
+        new_user.is_admin = True
+        new_user.is_active = True
+        new_user.save()
+        verified_email = EmailAddress(
+            user_id=new_user.id,
+            email=new_user.email,
+            primary=True,
+            verified=True,
+        )
+        verified_email.save()
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.error("Could not create initial users", exc_info=exc)
 
 
 def _create_edit_session(new_user):
@@ -346,4 +397,4 @@ def dispatch_set_ssh_keys(
 
 def dispatch_initial_user():
     "Queues the task for updating the initial system user."
-    enqueue(create_initial_user)
+    enqueue(create_initial_users)

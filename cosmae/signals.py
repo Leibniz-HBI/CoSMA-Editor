@@ -1,13 +1,11 @@
 "Collection of methods for attaching signals to models."
 
 from logging import getLogger
-from uuid import uuid4
 
 from allauth.account.signals import password_changed, user_signed_up
 from django.apps import apps
 from django.conf import settings
-from django.db.backends.signals import connection_created
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_migrate, post_save
 
 _LOGGER = getLogger(__name__)
 
@@ -38,39 +36,24 @@ def connect_column_queue_process():
     )
 
 
-def add_initial_users(
-    sender, connection, verbosity=2, **kwargs
-):  # pylint: disable=unused-argument
+def add_initial_users(sender, **kwargs):  # pylint: disable=unused-argument
     "Add superuser if no users exist"
-    try:
-        user_model = apps.get_model("cosmae", "cosmaeuser")
-        _LOGGER.debug("Checking for existing users.")
-        if user_model.objects.count() == 0:
-            _LOGGER.debug("Creating admin user.")
-            new_user = user_model.objects.create_superuser(
-                username="admin",
-                email="mail@test.url",
-                password="changeme",
-                id_persistent=str(uuid4()),
-                permission_group="APLC",
-            )
-            new_user.is_admin = True
-            new_user.is_active = True
-            new_user.save()
-            if not settings.IS_UNITTEST:
-                from cosmae.management.user.queue import (  # pylint: disable=import-outside-toplevel
-                    dispatch_initial_user,
-                )
+    user_model = apps.get_model("cosmae", "cosmaeuser")
+    _LOGGER.debug("Checking for existing users.")
+    if user_model.objects.count() == 0 and not settings.IS_UNITTEST:
+        from cosmae.management.user.queue import (  # pylint: disable=import-outside-toplevel
+            dispatch_initial_user,
+        )
 
-                dispatch_initial_user()
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.error("Could not create initial users", exc_info=exc)
+        dispatch_initial_user()
 
 
-def connect_add_initial_users():
+def connect_add_initial_users(app_config):
     "Connect signal for adding a superuser."
-    connection_created.connect(
-        add_initial_users, dispatch_uid="cosmae.create_initial_superuser"
+    post_migrate.connect(
+        add_initial_users,
+        dispatch_uid="cosmae.create_initial_superuser",
+        sender=app_config,
     )
 
 

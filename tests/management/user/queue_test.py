@@ -183,7 +183,7 @@ def test_set_ssh_key_list(chown, chmod, ssh_key):
 def test_update_password(change_prefix, chown, chmod, db, cosmartin_initial_user):
     "Test that the password is correctly updated."
     q._MIN_USER_ID = 90000  # pylint: disable=protected-access
-    q.create_initial_user()
+    q.create_initial_users()
     user = CosmaeUser.objects.get(username="cosmartin")
     system_password_hash = (
         "$y$jFT$PQThCdimcOx7mBC3h39eU/$5sg8xZaavJMR0l5tadFyyFQaDm77RqDZySwVNuPh7n6"
@@ -212,7 +212,7 @@ def test_update_password(change_prefix, chown, chmod, db, cosmartin_initial_user
 def test_initial_user_creation(db, cosmartin_initial_user):
     "Test that initial user creation works."
     q._MIN_USER_ID = 90000  # pylint: disable=protected-access
-    q.create_initial_user()
+    q.create_initial_users()
     user = CosmaeUser.objects.get(username="cosmartin")
     assert user is not None
     assert user.is_active
