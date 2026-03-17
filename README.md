@@ -17,7 +17,7 @@ Currently the following features are supported:
 See [Setup](setup/readme.md)
 
 # Usage
-Please check the [manual](manual/readme.md).
+Please check the [manual](manual/Readme.md).
 # Development
 There are two projects in this repository.
 A backend written in Python and a frontend in TypeScript.

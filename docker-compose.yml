@@ -11,6 +11,8 @@ secrets:
     external: true
   cosmae_redis_conf:
     external: true
+  cosmae_initial_admin_password:
+    external: true
   orcid_client_id:
     external: true
   orcid_client_secret:
@@ -66,6 +68,7 @@ services:
       - cosmae_db_user
       - cosmae_db_password
       - cosmae_redis_password
+      - cosmae_initial_admin_password
       - orcid_client_id
       - orcid_client_secret
       - email_host
@@ -130,9 +133,7 @@ services:
     shm_size: 265m
     restart: unless-stopped
     ports:
-      - 127.0.0.1:5432:5432
-    expose:
-      - 5432
+      - 172.0.0.1:5432:5432
     environment:
     - POSTGRES_PASSWORD_FILE=/run/secrets/cosmae_db_password
     - POSTGRES_USER_FILE=/run/secrets/cosmae_db_user

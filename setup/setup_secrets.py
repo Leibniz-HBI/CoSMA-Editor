@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 "Quick setup for CoSMA-Editor, will generate all necessary secrets and print them."
+
 import secrets
 import subprocess
 from argparse import ArgumentParser
@@ -7,7 +8,7 @@ from argparse import ArgumentParser
 
 def generate_key(key_length=64):
     "Generate random secret keys"
-    allowed_chrs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%&*()[]:\\/?<>"
+    allowed_chrs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%&*()[].\\/?<>"
     return "".join(secrets.choice(allowed_chrs) for i in range(key_length))
 
 
@@ -28,8 +29,9 @@ def mk_parser():
     )
     parser.add_argument("--django-key", help="Key used for django")
     parser.add_argument("--redis-password")
+    parser.add_argument("--initial-admin-password")
     parser.add_argument(
-        "--show", "-s", help="Do not print the generated secrets", action="store_true"
+        "--quiet", "-q", help="Do not print the generated secrets", action="store_true"
     )
     return parser
 
@@ -56,6 +58,9 @@ if __name__ == "__main__":
     REDIS_PASSWORD = args.redis_password
     if REDIS_PASSWORD is None:
         REDIS_PASSWORD = generate_key(16)
+    INITIAL_ADMIN_PASSWORD = args.initial_admin_password
+    if INITIAL_ADMIN_PASSWORD is None:
+        INITIAL_ADMIN_PASSWORD = generate_key(16)
 
     PG_CONF = f"db:5432:{args.db_name}:{args.db_user}:{DB_PASSWORD}"
     PG_SERVICE_FILE = f"""host=db
@@ -73,11 +78,13 @@ user={args.db_user}
     add_docker_swarm_secret("cosmae_django_key", DJANGO_SECRET_KEY)
     add_docker_swarm_secret("cosmae_redis_password", REDIS_PASSWORD)
     add_docker_swarm_secret("cosmae_redis_conf", REDIS_CONF)
+    add_docker_swarm_secret("cosmae_initial_admin_password", INITIAL_ADMIN_PASSWORD)
 
-    if args.show:
+    if not args.quiet:
         print(f"DJANGO_SECRET_KEY={DJANGO_SECRET_KEY}")
         print(f"DB_PASSWORD={DB_PASSWORD}")
         print(f"PG_CONF={PG_CONF}")
         print(f"DB_SERVICE_FILE={PG_SERVICE_FILE}")
         print(f"REDIS_PASSWORD={REDIS_PASSWORD}")
         print(f"REDIS_CONF={REDIS_PASSWORD}")
+        print(f"INITIAL_ADMIN_PASSWORD={INITIAL_ADMIN_PASSWORD}")

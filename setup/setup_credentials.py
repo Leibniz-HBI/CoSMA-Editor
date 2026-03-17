@@ -1,6 +1,8 @@
+#!/usr/bin/python3
 "Create necessary folders and files for CoSMA-Editor"
 
 import logging
+import secrets
 import subprocess
 from argparse import ArgumentParser
 from datetime import datetime, timezone
@@ -8,8 +10,40 @@ from os import chmod, chown, geteuid, mkdir, path
 from shutil import copyfile
 from typing import Set
 
-LOGGER = logging.getLogger("setup_credentials")
+_LOGGER = logging.getLogger("setup_credentials")
 _epoch = datetime.fromtimestamp(0, timezone.utc)
+
+YESCRYPT_LINUX_COST_PARAMETER = 11
+
+
+def generate_key(key_length: int = 64) -> str:
+    "Generate random secret keys"
+    allowed_chrs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%&*()[]:\\/?<>"
+    return "".join(secrets.choice(allowed_chrs) for i in range(key_length))
+
+
+def hash_password(password: str) -> str:
+    "Hash a password using systemcall to mkpasswd"
+    with subprocess.Popen(
+        [
+            "/usr/bin/mkpasswd",
+            "-m",
+            "yescrypt",
+            "-R",
+            str(YESCRYPT_LINUX_COST_PARAMETER),
+            "-s",
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as p:
+        out_string, error_string = p.communicate((password + "\n").encode("utf-8"))
+        p.wait()
+    if len(error_string) > 0:
+        raise Exception(  # pylint: disable=broad-exception-raised
+            "Could not create password."
+        )
+    return out_string.decode("utf-8").rstrip("\n")
 
 
 def mk_parser():
@@ -39,7 +73,7 @@ def mk_parser():
 
 def create_group(group_name):
     "Create the user group if it does not exist."
-    LOGGER.info("Create group %s", group_name)
+    _LOGGER.info("Create group %s", group_name)
     with subprocess.Popen(["/usr/sbin/groupadd", "-f", group_name]) as process:
         if process.wait() != 0:
             raise Exception(  # pylint: disable=broad-exception-raised
@@ -51,7 +85,7 @@ def create_group(group_name):
 def _get_user_id(username):
     with open("/etc/passwd", "r", encoding="ascii") as passwd_file:
         for line in passwd_file.readlines():
-            if line.startswith(username):
+            if line.startswith(username + ":"):
                 return int(line.split(":")[2])
     raise Exception(  # pylint: disable=broad-exception-raised
         "Could not determine user id."
@@ -115,7 +149,7 @@ def get_group_id(group_name):
     "Get the group id for a given group name"
     with open("/etc/group", "rt", encoding="ascii") as group_file:
         for line in group_file.readlines():
-            if line.startswith(group_name):
+            if line.startswith(group_name + ":"):
                 return int(line.split(":")[2])
     return None
 
@@ -186,9 +220,9 @@ def setup_credentials(credentials_dir, username, user_id, group_id):
     password_change_time = int(
         (datetime.now(timezone.utc) - _epoch).total_seconds() // (60 * 60 * 24)
     )
-    password_hash = (  # password is 'changeme'
-        "$y$jFT$.VleHugrAufPWIAmmAw28/$96G4IbTuE6Avuhxq3SS9x4YxB6N9l4QeVguL4kvRJc8"
-    )
+    password = generate_key(16)
+    password_hash = hash_password(password)
+    _LOGGER.error("initial password for user %s is %s", username, password)
     add_to_shadow(username, credentials_dir, password_change_time, password_hash)
     with open(credentials_dir + "/group", "at", encoding="ascii") as group:
         # group inside container will always be "cosmae"
