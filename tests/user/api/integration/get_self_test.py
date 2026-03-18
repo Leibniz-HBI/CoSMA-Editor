@@ -1,5 +1,7 @@
 # pylint: disable=missing-module-docstring,redefined-outer-name,invalid-name,unused-argument
 
+from django.conf import settings
+
 import tests.edit_session.common as cs
 import tests.user.api.integration.requests as req
 import tests.user.common as c
@@ -78,6 +80,7 @@ def test_password_not_changed(auth_server_pw_not_changed, user_email_verified):
 
 def test_no_verified_email(auth_server_no_mfa, user_email_unverified):
     "Check response for missing mfa"
+    settings.ACCOUNT_EMAIL_VERIFICATION = "mandatory"
     live_server, cookies = auth_server_no_mfa
     rsp = req.get_self(live_server.url, cookies=cookies)
     json = rsp.json()

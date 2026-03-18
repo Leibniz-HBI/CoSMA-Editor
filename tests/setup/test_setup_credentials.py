@@ -154,6 +154,7 @@ def test_setup_credentials_integration(
         f.write(ssh_key)
     popen_mock = mocker.patch("setup.setup_credentials.subprocess.Popen")
     process_mock = mocker.MagicMock()
+    process_mock.communicate = mocker.MagicMock(return_value=(b"", b""))
     process_mock.wait = mocker.MagicMock(return_value=0)
     popen_mock.return_value.__enter__.return_value = process_mock
     mocker.patch("setup.setup_credentials.create_group", return_value=group_id)

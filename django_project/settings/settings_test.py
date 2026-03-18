@@ -247,6 +247,7 @@ SOCIALACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeSocialAccountAdapter"
 SOCIALACCOUNT_ENABLED = False
 ACCOUNT_ADAPTER = "cosmae.user.adapter.CosmaeAccountAdapter"
 ACCOUNT_EMAIL_VERIFICATION = "none"
+MFA_ALLOW_UNVERIFIED_EMAIL = True
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_SIGNUP_FORM_CLASS = "cosmae.user.forms.CosmaeSignupForm"
 
