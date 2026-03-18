@@ -6,6 +6,7 @@ from urllib.parse import unquote
 from allauth.account.models import EmailAddress
 from allauth.account.signals import password_changed as password_changed_signal
 from allauth.mfa.models import Authenticator
+from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.http import HttpRequest
 from ninja import Router, Schema
@@ -26,7 +27,7 @@ from cosmae.user.models_api.login import (
     SetPasswordRequest,
 )
 from cosmae.user.models_api.public import PublicUserInfo
-from cosmae.util import EmptyResponse, CosmaeUser
+from cosmae.util import CosmaeUser, EmptyResponse
 from cosmae.util.auth import (
     ErrorAllauthLikeResponse,
     ErrorListAllauthLikeResponse,
@@ -413,7 +414,10 @@ def create_unauthorized_response(request):
     flows = [FlowAllauthLikeResponse(id="login"), FlowAllauthLikeResponse(id="signup")]
     is_authenticated = False
     if isinstance(user, CosmaeUser):
-        email_verified_list = EmailAddress.objects.filter(user=user, verified=True)
+        if settings.ACCOUNT_EMAIL_VERIFICATION == "mandatory":
+            email_verified_list = EmailAddress.objects.filter(user=user, verified=True)
+        else:
+            email_verified_list = [None]
         if len(email_verified_list) == 0:
             flows = [FlowAllauthLikeResponse(id="verify_email", is_pending=True)]
         elif not check_mfa(request):
