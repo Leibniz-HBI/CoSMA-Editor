@@ -3,6 +3,7 @@ The **Co**llaborative **S**ocial **M**edia **A**ccount **Editor** (CoSMA-Editor)
 This software is intended to facilitate a community data trustee that is adaptable to different use cases.
 This document provides an introduction for users wanting to retrieve and contribute data.
 For instructions on reviewing contributed data check the [management documentation](management.md)
+There is also a [walk-through](scenario.md) of prototypical use-case.
 
 
 # View and Curate Data
