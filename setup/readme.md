@@ -82,4 +82,4 @@ Host cosmae
 ```
 Afterwards, run `ssh cosmae` from a terminal.
 If there is no error message you connected successfully.
-Open you browser and go to 127.0.0.1:7070
+Open you browser and go to http://127.0.0.1:7070
