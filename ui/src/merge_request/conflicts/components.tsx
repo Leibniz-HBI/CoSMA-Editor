@@ -231,7 +231,10 @@ export function MergeRequestConflictResolutionView({
                                                 resolveConflictCallback={
                                                     resolveConflictCallback
                                                 }
-                                                key={conflict.value.valueOrigin.idPersistent}
+                                                key={
+                                                    conflict.value.valueOrigin
+                                                        .idPersistent
+                                                }
                                             />
                                         )
                                     )}
@@ -274,42 +277,40 @@ export function MergeRequestConflictItem({
     ])
     return (
         <ListGroup.Item className="mb-1" data-testid="conflict-item">
-            <Row>
-                <Col sm={2} key="entity-column">
-                    <Row key="entity-description">Entity with display txt:</Row>
-                    <Row className="fw-bold">{conflict.value.entity.displayTxt}</Row>
-                </Col>
-                <Formik
-                    initialValues={{
-                        replacementState: conflict.value.replacementState,
-                        replacementValue: conflict.value.replacementValue
-                    }}
-                    onSubmit={(formValues) => {
-                        debouncedCallback(
-                            {
-                                entity: conflict.value.entity,
-                                valueOrigin: conflict.value.valueOrigin,
-                                columnOrigin: mergeRequest.originColumn,
-                                valueDestination: conflict.value.valueDestination,
-                                columnDestination: mergeRequest.destinationColumn,
-                                replacementValue: formValues.replacementValue,
-                                replacementState: formValues.replacementState
-                            },
-                            resolveConflictCallback
-                        )
-                    }}
-                >
-                    {({ setValues, values, submitForm }) => (
-                        <ResolutionFormBody
-                            values={values}
-                            setValues={setValues}
-                            submitForm={submitForm}
-                            keepValue={conflict.value?.valueDestination?.value}
-                            replaceValue={conflict.value?.valueOrigin?.value}
-                        />
-                    )}
-                </Formik>
-            </Row>
+            <Col key="entity-description" className="pb-3">
+                <span>Entity with display txt: </span>
+                <span className="fw-bold">{conflict.value.entity.displayTxt}</span>
+            </Col>
+            <Formik
+                initialValues={{
+                    replacementState: conflict.value.replacementState,
+                    replacementValue: conflict.value.replacementValue
+                }}
+                onSubmit={(formValues) => {
+                    debouncedCallback(
+                        {
+                            entity: conflict.value.entity,
+                            valueOrigin: conflict.value.valueOrigin,
+                            columnOrigin: mergeRequest.originColumn,
+                            valueDestination: conflict.value.valueDestination,
+                            columnDestination: mergeRequest.destinationColumn,
+                            replacementValue: formValues.replacementValue,
+                            replacementState: formValues.replacementState
+                        },
+                        resolveConflictCallback
+                    )
+                }}
+            >
+                {({ setValues, values, submitForm }) => (
+                    <ResolutionFormBody
+                        values={values}
+                        setValues={setValues}
+                        submitForm={submitForm}
+                        keepValue={conflict.value?.valueDestination?.value}
+                        replaceValue={conflict.value?.valueOrigin?.value}
+                    />
+                )}
+            </Formik>
         </ListGroup.Item>
     )
 }
