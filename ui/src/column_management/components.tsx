@@ -48,24 +48,18 @@ export function ColumnManagementPage() {
                         </span>
                     }
                 >
-                    <Col className="h-100 d-flex flex-column overflow-hidden flex-grow-0">
-                        <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
-                            <ListGroup>
-                                {ownershipRequests.value.received.map(
-                                    (request, idx) => (
-                                        <ListGroup.Item
-                                            key={`ownership-received-${idx}`}
-                                        >
-                                            <ColumnOwnershipRequestListItemBody
-                                                request={request}
-                                                isReceiver={true}
-                                            />
-                                        </ListGroup.Item>
-                                    )
-                                )}
-                            </ListGroup>
-                        </Row>
-                    </Col>
+                    <Row className="overflow-y-scroll flex-basis-0 flex-grow-1 ms-2 me-2">
+                        <ListGroup>
+                            {ownershipRequests.value.received.map((request, idx) => (
+                                <ListGroup.Item key={`ownership-received-${idx}`}>
+                                    <ColumnOwnershipRequestListItemBody
+                                        request={request}
+                                        isReceiver={true}
+                                    />
+                                </ListGroup.Item>
+                            ))}
+                        </ListGroup>
+                    </Row>
                 </CosmaeCard>
                 <Row className="pt-2 pb-4"></Row>
                 <CosmaeCard
@@ -76,24 +70,18 @@ export function ColumnManagementPage() {
                         </span>
                     }
                 >
-                    <Col className="h-100 d-flex flex-column overflow-hidden flex-grow-0">
-                        <Row className="overflow-y-scroll flex-grow-1 ms-2 me-2">
-                            <ListGroup>
-                                {ownershipRequests.value.petitioned.map(
-                                    (request, idx) => (
-                                        <ListGroup.Item
-                                            key={`ownership-petitioned-${idx}`}
-                                        >
-                                            <ColumnOwnershipRequestListItemBody
-                                                request={request}
-                                                isReceiver={false}
-                                            />
-                                        </ListGroup.Item>
-                                    )
-                                )}
-                            </ListGroup>
-                        </Row>
-                    </Col>
+                    <Row className="overflow-y-scroll flex-grow-1 ms-2 me-2">
+                        <ListGroup>
+                            {ownershipRequests.value.petitioned.map((request, idx) => (
+                                <ListGroup.Item key={`ownership-petitioned-${idx}`}>
+                                    <ColumnOwnershipRequestListItemBody
+                                        request={request}
+                                        isReceiver={false}
+                                    />
+                                </ListGroup.Item>
+                            ))}
+                        </ListGroup>
+                    </Row>
                 </CosmaeCard>
             </Col>
         </Row>
