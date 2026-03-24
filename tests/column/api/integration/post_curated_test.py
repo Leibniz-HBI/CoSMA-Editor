@@ -71,9 +71,12 @@ def test_curate_removes_ownership_requests(
     )
 
 
-def test_curate_changes_mrs(auth_server_commissioner, column_user, user_editor):
+def test_curate_changes_mrs(
+    auth_server_commissioner, column_user, user_editor, user_commissioner
+):
     "Check whether a commissioner can curate a column."
-    id_mr_persistent = "83cea683-d504-495f-b9dc-d14b025267a2"
+    id_mr_persistent_assigned_to = "83cea683-d504-495f-b9dc-d14b025267a2"
+    id_mr_persistent_created_by = "c0d2b0dc-2a87-45ec-b147-9dd320ab6c4f"
     ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         assigned_to=column_user.owner,
         created_by=user_editor,
@@ -81,16 +84,33 @@ def test_curate_changes_mrs(auth_server_commissioner, column_user, user_editor):
         id_origin_persistent="origin_for_test",
         id_destination_persistent=column_user.id_persistent,
         created_at=c.time_edit_test,
-        id_persistent=id_mr_persistent,
+        id_persistent=id_mr_persistent_assigned_to,
+    )
+    ColumnMergeRequest.objects.create(  # pylint: disable=no-member
+        assigned_to=user_editor,
+        created_by=column_user.owner,
+        state=ColumnMergeRequest.OPEN,
+        id_origin_persistent=column_user.id_persistent,
+        id_destination_persistent="origin_for_test",
+        created_at=c.time_edit_test,
+        id_persistent=id_mr_persistent_created_by,
     )
     server, cookies = auth_server_commissioner
     rsp = req.post_curation(server.url, column_user.id_persistent, cookies=cookies)
     assert rsp.status_code == 200
     assert (
         ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_mr_persistent
+            id_persistent=id_mr_persistent_assigned_to
         )
         .get()
         .assigned_to
         is None
+    )
+    assert (
+        ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_mr_persistent_created_by
+        )
+        .get()
+        .created_by.id_persistent
+        == user_commissioner.id_persistent
     )

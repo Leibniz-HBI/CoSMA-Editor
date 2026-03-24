@@ -71,7 +71,9 @@ def post_curation(request: HttpRequest, id_column_persistent):
             OwnershipRequestDb.by_id_column_persistent_query_set(
                 id_column_persistent
             ).delete()
-            ColumnMergeRequest.change_owner_for_column(column.id_persistent, None)
+            ColumnMergeRequest.change_assigned_for_column(
+                column.id_persistent, user, None
+            )
         return 200, column_db_to_api(column)
     except ColumnDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Column does not exist.")
@@ -126,8 +128,8 @@ def post_ownership_request(  # pylint:: disable=too-many-return-statements
                 if do_save:
                     with transaction.atomic():
                         column_new.save()
-                        ColumnMergeRequest.change_owner_for_column(
-                            id_column_persistent, user
+                        ColumnMergeRequest.change_assigned_for_column(
+                            id_column_persistent, user, user
                         )
                 return 200, column_db_to_api(column_new)
             receiver = CosmaeUser.objects.filter(id_persistent=id_user_persistent).get()
@@ -179,8 +181,10 @@ def post_accept_ownership_request(
         if do_save:
             with transaction.atomic():
                 column_new.save()
-                ColumnMergeRequest.change_owner_for_column(
-                    column_new.id_persistent, ownership_request.receiver
+                ColumnMergeRequest.change_assigned_for_column(
+                    column_new.id_persistent,
+                    ownership_request.receiver,
+                    ownership_request.receiver,
                 )
                 ownership_request.delete()
         return 200, column_db_to_api(column_new)

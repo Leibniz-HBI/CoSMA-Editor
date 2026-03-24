@@ -112,17 +112,20 @@ class ColumnMergeRequest(AbstractMergeRequest):
         )
 
     @classmethod
-    def change_owner_for_column(
-        cls, id_column_persistent: str, user: Optional[CosmaeUser]
+    def change_assigned_for_column(
+        cls,
+        id_column_persistent: str,
+        created_by: CosmaeUser,
+        assigned_to: Optional[CosmaeUser],
     ):
         """Change the owner for all merge requests that have
         a specific column as destination."""
         cls.objects.filter(  # pylint: disable=no-member
             id_destination_persistent=id_column_persistent
-        ).update(assigned_to=user)
+        ).update(assigned_to=assigned_to)
         cls.objects.filter(  # pylint: disable=no-member
             id_origin_persistent=id_column_persistent,
-        ).update(created_by=user)
+        ).update(created_by=created_by)
 
     @classmethod
     def get_for_contribution_query_set(cls, id_contribution_persistent):
