@@ -29,6 +29,7 @@ from cosmae.util.auth import check_user
 router = Router()
 _LOGGER = getLogger(__name__)
 
+
 class MergeRequest(Schema):
     # pylint: disable=too-few-public-methods
     "API Model for a single merge request"
@@ -56,8 +57,8 @@ class MergeRequestConflictResponse(Schema):
     # pylint: disable=too-few-public-methods
     "API model for multiple merge requests conflicts"
     conflicts: List[MergeRequestConflict]
-    updated: List[MergeRequestConflict]
-    merge_request: MergeRequest
+    id_value_origin_persistent_updated_list: List[str]
+    next_offset: int
 
 
 class MergeRequestResponseList(Schema):
@@ -118,7 +119,7 @@ def get_merge_requests(request: HttpRequest):
     except ForbiddenException:
         return 403, ApiError(msg="Insufficient permissions")
     except DatabaseError as exc:
-        msg="Could not get the merge requests from the database."
+        msg = "Could not get the merge requests from the database."
         _LOGGER.error(msg, exc_info=exc)
         return 500, ApiError(msg=msg)
     except Exception as exc:  # pylint: disable=broad-except
@@ -173,7 +174,9 @@ def patch_merge_request(
         500: ApiError,
     },
 )
-def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persistent):
+def get_merge_request_conflicts(
+    request: HttpRequest, id_merge_request_persistent: str, offset: int, limit: int
+):
     "API method for getting merge request conflicts."
     try:
         user = check_user(request)
@@ -183,20 +186,27 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
         resolutions = ColumnConflictResolution.for_merge_request_query_set(
             merge_request
         )
+        resolutions.filter(value_origin__gte=offset)
         recent = ColumnConflictResolution.only_recent(resolutions)
         updated_query_set = ColumnConflictResolution.non_recent(resolutions)
         conflict_query_set = merge_request.instance_conflicts_all(
-            True, recent
+            True,
+            min_idx=offset,
+            limit=limit,
+            resolution_values=recent,
         ).annotate_entity()
+        conflicts_response = []
+        max_offset = -2
+        for conflict in conflict_query_set:
+            conflicts_response.append(annotated_value_db_to_api(conflict))
+            max_offset = max(max_offset, conflict.id)
+        updated_id_persistent_list = updated_query_set.filter(
+            value_origin__lte=max_offset
+        ).values_list("value_origin__id_persistent", flat=True)
         return 200, MergeRequestConflictResponse(
-            conflicts=[
-                annotated_value_db_to_api(conflict) for conflict in conflict_query_set
-            ],
-            updated=[
-                conflict_with_updated_data_db_to_api(updated)
-                for updated in updated_query_set
-            ],
-            merge_request=merge_request_db_to_api(merge_request),
+            conflicts=conflicts_response,
+            id_value_origin_persistent_updated_list=updated_id_persistent_list,
+            next_offset=max_offset + 1,
         )
     except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Merge request does not exist.")
@@ -207,7 +217,7 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
     except DatabaseError as exc:
         msg = "Could not get the merge request conflicts from the database."
         _LOGGER.error(msg, exc_info=exc)
-        return 500, ApiError( msg=msg)
+        return 500, ApiError(msg=msg)
     except Exception as exc:  # pylint: disable=broad-except
         msg = "Could not get the requested merge request conflicts."
         _LOGGER.error(msg, exc_info=exc)

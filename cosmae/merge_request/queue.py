@@ -143,7 +143,9 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
                 merge_request.save()
                 return
             recent = ColumnConflictResolution.only_recent(conflicts_resolution_set)
-            conflicts = merge_request.instance_conflicts_all(False, recent)
+            conflicts = merge_request.instance_conflicts_all(
+                False, resolution_values=recent
+            )
             if len(conflicts) > 0:
                 merge_request.state = merge_request.OPEN
                 merge_request.save()
