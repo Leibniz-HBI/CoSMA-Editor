@@ -128,28 +128,8 @@ def get_merge_requests(request: HttpRequest):
         return 500, ApiError(msg=msg)
 
 
-@router.get(
-    "{id_persistent}",
-    response={200: MergeRequest, 401: ApiError, 404: ApiError, 500: ApiError},
-)
-def get_merge_request(request: HttpRequest, id_persistent: str):
-    "API method for retrieving a single merge request."
-    try:
-        user = check_user(request)
-        merge_request = MergeRequestDb.by_id_persistent(id_persistent, user)
-        return 200, merge_request_db_to_api(merge_request)
-    except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
-        return 404, ApiError(msg="Merge request does not exist.")
-    except NotAuthenticatedException:
-        return 401, ApiError(msg="Not authenticated.")
-    except Exception as exc:  # pylint: disable=broad-except
-        msg = "Could not get the requested merge request."
-        _LOGGER.error(msg, exc_info=exc)
-        return 500, ApiError(msg=msg)
-
-
 @router.patch(
-    "/{id_merge_request_persistent}",
+    "{id_merge_request_persistent}",
     response={
         200: MergeRequest,
         401: ApiError,
@@ -181,6 +161,28 @@ def patch_merge_request(
         return 403, ApiError(msg="Insufficient permissions.")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not patch merge request.")
+
+
+@router.get(
+    "{id_merge_request_persistent}",
+    response={200: MergeRequest, 401: ApiError, 404: ApiError, 500: ApiError},
+)
+def get_merge_request(request: HttpRequest, id_merge_request_persistent: str):
+    "API method for retrieving a single merge request."
+    try:
+        user = check_user(request)
+        merge_request = MergeRequestDb.by_id_persistent(
+            id_merge_request_persistent, user
+        )
+        return 200, merge_request_db_to_api(merge_request)
+    except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Merge request does not exist.")
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not get the requested merge request."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.get(
