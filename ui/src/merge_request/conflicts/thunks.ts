@@ -16,6 +16,9 @@ import {
     getMergeRequestConflictError,
     getMergeRequestConflictStart,
     getMergeRequestConflictSuccess,
+    getMergeRequestError,
+    getMergeRequestStart,
+    getMergeRequestSuccess,
     resolveConflictError,
     resolveConflictStart,
     resolveConflictSuccess,
@@ -30,8 +33,34 @@ import {
     cosmaeMergeRequestApiGetMergeRequestConflicts,
     cosmaeMergeRequestApiPatchMergeRequest,
     cosmaeMergeRequestApiPostMergeRequestMerge,
-    cosmaeMergeRequestApiPostResolveConflict
+    cosmaeMergeRequestApiPostResolveConflict,
+    cosmaeMergeRequestApiGetMergeRequest
 } from '../../openapi/cosmae'
+
+export function getMergeRequest(
+    idMergeRequestPersistent: string
+): ThunkWithFetch<void> {
+    return async (dispatch, _getState, _fetch) => {
+        dispatch(getMergeRequestStart())
+        try {
+            const rsp = await cosmaeMergeRequestApiGetMergeRequest({
+                path: { id_persistent: idMergeRequestPersistent }
+            })
+            if (rsp.data) {
+                const mergeRequest = parseMergeRequestFromJson(rsp.data)
+                dispatch(getMergeRequestSuccess(mergeRequest))
+            } else {
+                const msg = rsp.error.msg
+                dispatch(getMergeRequestConflictError())
+                dispatch(addError(msg))
+                return
+            }
+        } catch (e: unknown) {
+            dispatch(getMergeRequestError())
+            dispatch(addError(exceptionMessage(e)))
+        }
+    }
+}
 
 export function getMergeRequestConflicts(
     idMergeRequestPersistent: string
@@ -39,31 +68,42 @@ export function getMergeRequestConflicts(
     return async (dispatch, _getState, _fetch) => {
         dispatch(getMergeRequestConflictStart())
         try {
-            const rsp = await cosmaeMergeRequestApiGetMergeRequestConflicts({
-                path: { id_merge_request_persistent: idMergeRequestPersistent }
-            })
-            if (rsp.data) {
-                const updated = rsp.data.updated.map(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (conflict: any) => parseMergeRequestConflictFromApi(conflict)
-                )
-                const conflicts = rsp.data.conflicts.map(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (conflict: any) => parseMergeRequestConflictFromApi(conflict)
-                )
-                const mergeRequest = parseMergeRequestFromJson(rsp.data.merge_request)
-                dispatch(
-                    getMergeRequestConflictSuccess({
-                        updated,
-                        conflicts,
-                        mergeRequest
-                    })
-                )
-            } else {
-                const msg = rsp.error.msg
-                dispatch(getMergeRequestConflictError())
-                dispatch(addError(msg))
+            const conflicts: MergeRequestConflict[] = []
+            const updated: MergeRequestConflict[] = []
+            for (let offset = 0; offset >= 0; ) {
+                const rsp = await cosmaeMergeRequestApiGetMergeRequestConflicts({
+                    path: { id_merge_request_persistent: idMergeRequestPersistent },
+                    query: { offset, limit: 10 }
+                })
+                if (rsp.data) {
+                    const updatedSet = new Set(
+                        rsp.data.id_value_origin_persistent_updated_list
+                    )
+                    rsp.data.conflicts.forEach(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (conflictRsp: any) => {
+                            const conflict =
+                                parseMergeRequestConflictFromApi(conflictRsp)
+                            conflicts.push(conflict)
+                            if (updatedSet.has(conflict.valueOrigin.idPersistent)) {
+                                updated.push(conflict)
+                            }
+                        }
+                    )
+                    offset = rsp.data.next_offset
+                } else {
+                    const msg = rsp.error.msg
+                    dispatch(getMergeRequestConflictError())
+                    dispatch(addError(msg))
+                    return
+                }
             }
+            dispatch(
+                getMergeRequestConflictSuccess({
+                    updated,
+                    conflicts
+                })
+            )
         } catch (e: unknown) {
             dispatch(getMergeRequestConflictError())
             dispatch(addError(exceptionMessage(e)))

@@ -42,11 +42,11 @@ export const selectResolvedCount = createSelector(
 )
 
 export const selectConflictsMergeRequest = createSelector(
-    selectColumnMergeRequestConflictsByCategory,
-    (state) => state.value?.mergeRequest
+    selectColumnMergeRequestConflicts,
+    (state) => state.mergeRequest
 )
 
 export const selectDisableOriginOnMerge = createSelector(
     selectConflictsMergeRequest,
-    (state) => state?.disableOriginOnMerge ?? false
+    (state) => state.value?.disableOriginOnMerge ?? false
 )

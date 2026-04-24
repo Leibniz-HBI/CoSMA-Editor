@@ -13,6 +13,19 @@ const columnMergeRequestConflictsSlice = createSlice({
     name: 'columnMergeRequestConflicts',
     initialState: newMergeRequestConflictResolutionState({}),
     reducers: {
+        getMergeRequestStart(state: MergeRequestConflictResolutionState) {
+            state.mergeRequest.isLoading = true
+        },
+        getMergeRequestSuccess(
+            state: MergeRequestConflictResolutionState,
+            action: PayloadAction<MergeRequest>
+        ) {
+            state.mergeRequest.isLoading = false
+            state.mergeRequest.value = action.payload
+        },
+        getMergeRequestError(state: MergeRequestConflictResolutionState) {
+            state.mergeRequest.isLoading = false
+        },
         getMergeRequestConflictStart: (state: MergeRequestConflictResolutionState) => {
             state.conflicts.isLoading = true
         },
@@ -21,7 +34,6 @@ const columnMergeRequestConflictsSlice = createSlice({
             action: PayloadAction<{
                 updated: MergeRequestConflict[]
                 conflicts: MergeRequestConflict[]
-                mergeRequest: MergeRequest
             }>
         ) => {
             state.conflicts.isLoading = false
@@ -29,9 +41,7 @@ const columnMergeRequestConflictsSlice = createSlice({
                 updated: action.payload.updated.map((conflict) => newRemote(conflict)),
                 conflicts: action.payload.conflicts.map((conflict) =>
                     newRemote(conflict)
-                ),
-
-                mergeRequest: action.payload.mergeRequest
+                )
             })
         },
         getMergeRequestConflictError(state: MergeRequestConflictResolutionState) {
@@ -109,14 +119,15 @@ const columnMergeRequestConflictsSlice = createSlice({
             action: PayloadAction<boolean>
         ) => {
             state.disableOriginOnMerge.isLoading = false
-            if (state.conflicts.value !== undefined) {
-                state.conflicts.value.mergeRequest.disableOriginOnMerge = action.payload
+            if (state.mergeRequest.value !== undefined) {
+                state.mergeRequest.value.disableOriginOnMerge = action.payload
             }
         },
         toggleDisableOnMergeError: (state: MergeRequestConflictResolutionState) => {
             state.disableOriginOnMerge.isLoading = false
         },
-        clearMergeRequestConflict: (state: MergeRequestConflictResolutionState) => {
+        clearMergeRequest: (state: MergeRequestConflictResolutionState) => {
+            state.mergeRequest = newRemote(undefined)
             state.conflicts = newRemote(undefined)
             state.disableOriginOnMerge = newRemote(undefined)
             state.startMerge = newRemote(false)
@@ -160,7 +171,10 @@ export const columnMergeRequestConflictsReducer =
     columnMergeRequestConflictsSlice.reducer
 
 export const {
-    clearMergeRequestConflict,
+    clearMergeRequest,
+    getMergeRequestError,
+    getMergeRequestStart,
+    getMergeRequestSuccess,
     getMergeRequestConflictStart,
     getMergeRequestConflictSuccess,
     getMergeRequestConflictError,

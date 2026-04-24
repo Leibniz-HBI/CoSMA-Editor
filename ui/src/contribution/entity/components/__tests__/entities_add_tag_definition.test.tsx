@@ -139,14 +139,14 @@ test('add column values', async () => {
     })
     await addColumnByName(nameColumn0)
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(10)
+        expect(fetchMock.mock.calls.length).toEqual(12)
     })
     await checkValueCalls(fetchMock, idColumn0)
     addValueResponses(fetchMock, idColumn1, '2')
     await addColumnByName(nameColumn1)
     // check calls for additional values
     await waitFor(() => {
-        expect(fetchMock.mock.calls.length).toEqual(12)
+        expect(fetchMock.mock.calls.length).toEqual(14)
     })
     await checkValueCalls(fetchMock, idColumn1)
     // check final values!

@@ -24,12 +24,14 @@ import {
 import { newEntity } from '../../../entity/state'
 import { MergeRequestStep, newMergeRequest } from '../../state'
 import userEvent from '@testing-library/user-event'
-import { renderWithProviders } from '../../../util/tests/provider'
+import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import {
     addResponseSequence,
     expectFetchCall,
     expectFetchCallList
 } from '../../../util/tests/response'
+import { time } from 'console'
+import { replace } from 'react-router-dom'
 
 const replacementValue = 'test replacement value'
 const columnOrigin = newColumn({
@@ -92,7 +94,7 @@ const sharedConflict = newRemote(
         })
     })
 )
-const updatedConflicts = [sharedConflict, sharedConflict1]
+const updatedConflicts = [sharedConflict1, sharedConflict]
 const entity = newEntity({
     idPersistent: 'id-entity-test3',
     displayTxt: 'test entity3',
@@ -180,12 +182,13 @@ const conflicts = [
     ),
     sharedConflict
 ]
+
 describe('get tests', () => {
     test('get success', async () => {
         const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         const { container, store } = renderWithProviders(
-            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
+            <MergeRequestConflictResolutionView mergeRequest={mergeRequest} />,
             fetchMock
         )
         await waitFor(() => {
@@ -198,8 +201,7 @@ describe('get tests', () => {
                     conflicts: newRemote(
                         newMergeRequestConflictsByState({
                             updated: updatedConflicts,
-                            conflicts: conflicts,
-                            mergeRequest: mergeRequest
+                            conflicts: conflicts
                         })
                     )
                 })
@@ -211,7 +213,7 @@ describe('get tests', () => {
         const testError = 'Could not get conflicts.'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { container, store } = renderWithProviders(
-            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
+            <MergeRequestConflictResolutionView mergeRequest={mergeRequest} />,
             fetchMock
         )
         await waitFor(() => {
@@ -247,8 +249,9 @@ describe('resolve conflicts', () => {
             [200, {}]
         ])
         const { container, store } = renderWithProviders(
-            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request-persistent" />,
-            fetchMock
+            <MergeRequestConflictResolutionView mergeRequest={mergeRequest} />,
+            fetchMock,
+            { preloadedState }
         )
         await waitFor(() => {
             checkConflicts(container, 2, 4)
@@ -277,18 +280,17 @@ describe('resolve conflicts', () => {
                     }),
                     columnMergeRequestConflicts: newMergeRequestConflictResolutionState(
                         {
+                            mergeRequest: newRemote(mergeRequest),
                             conflicts: newRemote(
                                 newMergeRequestConflictsByState({
                                     updated: updatedConflicts.slice(0, 1),
                                     conflicts: [
-                                        ...conflicts.slice(0, 1),
+                                        ...conflicts.slice(0, 3),
                                         newRemote({
-                                            ...conflicts[1].value,
+                                            ...conflicts[3].value,
                                             replacementState: ReplacementState.REPLACE
-                                        }),
-                                        ...conflicts.slice(2)
-                                    ],
-                                    mergeRequest: mergeRequest
+                                        })
+                                    ]
                                 })
                             )
                         }
@@ -308,7 +310,7 @@ describe('resolve conflicts', () => {
             })
             expect(replacementValueButtons.length).toEqual(5)
             act(() => {
-                keepButtons[2].click()
+                keepButtons[4].click()
             })
         })
         await waitFor(async () => {
@@ -317,18 +319,17 @@ describe('resolve conflicts', () => {
                     // notification: newNotificationManager({}),
                     columnMergeRequestConflicts: newMergeRequestConflictResolutionState(
                         {
+                            mergeRequest: newRemote(mergeRequest),
                             conflicts: newRemote(
                                 newMergeRequestConflictsByState({
                                     updated: updatedConflicts.slice(0, 1),
                                     conflicts: [
-                                        ...conflicts.slice(0, 1),
+                                        ...conflicts.slice(0, 3),
                                         newRemote({
-                                            ...conflicts[1].value,
+                                            ...conflicts[3].value,
                                             replacementState: ReplacementState.KEEP
-                                        }),
-                                        ...conflicts.slice(2)
-                                    ],
-                                    mergeRequest: mergeRequest
+                                        })
+                                    ]
                                 })
                             )
                         }
@@ -357,37 +358,47 @@ describe('resolve conflicts', () => {
             { timeout: 2000 }
         )
         const replaceBody = {
-            id_entity_version: 81,
+            id_entity_version: 8,
             id_column_origin_version: 84,
             id_value_origin_version: 12,
             id_column_destination_version: 841,
-            id_value_destination_version: 121,
-            id_entity_persistent: 'id-entity-test1',
+            id_value_destination_version: 12,
+            id_entity_persistent: 'id-entity-test',
             id_column_origin_persistent: 'id-column-origin-test',
-            id_value_origin_persistent: 'id-instance-origin-test1',
+            id_value_origin_persistent: 'id-instance-origin-test',
             id_column_destination_persistent: 'id-column-destination-test',
+            id_value_destination_persistent: 'id-instance-destination-test',
+        }
+        const replaceBody1 = {
+            ...replaceBody,
+            id_entity_version: 81,
+            id_entity_persistent: 'id-entity-test1',
+            id_value_destination_version: 121,
             id_value_destination_persistent: 'id-instance-destination-test1',
-            replacement_state: 'REPLACE',
-            replacement_value: undefined
+            id_value_origin_persistent: 'id-instance-origin-test1'
         }
         await waitFor(async () => {
-            expect(fetchMock.mock.calls.length).toEqual(4)
+            expect(fetchMock.mock.calls.length).toEqual(5)
         })
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/resolve',
                 {
                     credentials: 'include',
                     method: 'POST',
-                    body: replaceBody
+                    body: {...replaceBody, replacement_state: 'REPLACE'}
                 }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/resolve',
                 {
                     credentials: 'include',
                     method: 'POST',
@@ -398,13 +409,13 @@ describe('resolve conflicts', () => {
                 }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/resolve',
                 {
                     credentials: 'include',
                     method: 'POST',
                     body: {
-                        ...replaceBody,
-                        replacement_state: 'KEEP',
+                        ...replaceBody1,
+                        // replacement_state: 'VALUE',
                         replacement_value: replacementValue
                     }
                 }
@@ -418,15 +429,15 @@ describe('resolve conflicts', () => {
             replacementValueButtons[2].click()
         })
         await waitFor(() => {
-            expect(fetchMock.mock.calls.length).toEqual(5)
+            expect(fetchMock.mock.calls.length).toEqual(6)
         })
-        await expectFetchCall(fetchMock.mock.calls[4], [
-            'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request-persistent/resolve',
+        await expectFetchCall(fetchMock.mock.calls[5], [
+            'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/resolve',
             {
                 credentials: 'include',
                 method: 'POST',
                 body: {
-                    ...replaceBody,
+                    ...replaceBody1,
                     replacement_state: 'VALUE',
                     replacement_value: replacementValue
                 }
@@ -439,8 +450,9 @@ describe('resolve conflicts', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { container, store } = renderWithProviders(
-            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
-            fetchMock
+            <MergeRequestConflictResolutionView mergeRequest={mergeRequest} />,
+            fetchMock,
+            { preloadedState }
         )
         await waitFor(() => {
             checkConflicts(container, 2, 4)
@@ -474,7 +486,7 @@ describe('submit', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
-            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
+            <MergeRequestConflictResolutionView mergeRequest={mergeRequest} />,
             fetchMock
         )
         await waitFor(async () => {
@@ -499,7 +511,11 @@ describe('submit', () => {
         })
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
                 { credentials: 'include' }
             ],
             [
@@ -515,7 +531,7 @@ describe('submit', () => {
         const testError = 'Could not start merge'
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
-            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
+            <MergeRequestConflictResolutionView mergeRequest={mergeRequest} />,
             fetchMock
         )
         await waitFor(async () => {
@@ -540,7 +556,11 @@ describe('submit', () => {
         })
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
                 { credentials: 'include' }
             ],
             [
@@ -556,8 +576,9 @@ describe('toggle disable origin on merge', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[200, {}]])
         const { store } = renderWithProviders(
-            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
-            fetchMock
+            <MergeRequestConflictResolutionView mergeRequest={mergeRequest} />,
+            fetchMock,
+            { preloadedState }
         )
         await waitFor(async () => {
             const toggle = await screen.findByRole('checkbox')
@@ -565,14 +586,18 @@ describe('toggle disable origin on merge', () => {
         })
         await waitFor(() => {
             expect(
-                store.getState().columnMergeRequestConflicts.conflicts.value
-                    ?.mergeRequest.disableOriginOnMerge
+                store.getState().columnMergeRequestConflicts.mergeRequest.value
+                    ?.disableOriginOnMerge
             ).toEqual(false)
         })
         expect(store.getState().notification).toEqual(newNotificationManager({}))
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
                 { credentials: 'include' }
             ],
             [
@@ -591,17 +616,20 @@ describe('toggle disable origin on merge', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [[500, { msg: testError }]])
         const { store } = renderWithProviders(
-            <MergeRequestConflictResolutionView idMergeRequestPersistent="id-merge-request" />,
-            fetchMock
+            <MergeRequestConflictResolutionView mergeRequest={mergeRequest} />,
+            fetchMock,
+            { preloadedState }
         )
         await waitFor(async () => {
             const toggle = await screen.findByRole('checkbox')
             toggle.click()
         })
-        expect(
-            store.getState().columnMergeRequestConflicts.conflicts.value?.mergeRequest
-                .disableOriginOnMerge
-        ).toEqual(true)
+        await waitFor(() => {
+            expect(
+                store.getState().columnMergeRequestConflicts.mergeRequest.value
+                    ?.disableOriginOnMerge
+            ).toEqual(true)
+        })
         await waitFor(() => {
             expect(store.getState().notification).toEqual(
                 newNotificationManager({
@@ -618,7 +646,11 @@ describe('toggle disable origin on merge', () => {
         })
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                { credentials: 'include' }
+            ],
+            [
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
                 { credentials: 'include' }
             ],
             [
@@ -664,47 +696,23 @@ function checkConflicts(
     expect(getAllByTestId(other, 'conflict-item').length).toEqual(expectedConflicts)
 }
 
+const preloadedState = {
+    ...emptyState,
+    columnMergeRequestConflicts: newMergeRequestConflictResolutionState({
+        mergeRequest: newRemote(mergeRequest)
+    })
+}
+
 function initialResponseSequence(fetchMock: Mock) {
     addResponseSequence(fetchMock, [
         [
             200,
             {
-                merge_request: {
-                    id_persistent: 'id-merge-request',
-                    assigned_to: {
-                        username: 'user_assigned',
-                        id_persistent: 'id-user-assigned',
-                        permission_group: 'CONTRIBUTOR'
-                    },
-                    created_by: {
-                        username: 'user_created',
-                        id_persistent: 'id-user-created',
-                        permission_group: 'CONTRIBUTOR'
-                    },
-                    state: 'OPEN',
-                    disable_origin_on_merge: true,
-                    origin: {
-                        name: columnOrigin.namePath[0],
-                        name_path: columnOrigin.namePath,
-                        id_persistent: columnOrigin.idPersistent,
-                        type: 'STRING',
-                        curated: false,
-                        version: columnOrigin.version,
-                        hidden: false,
-                        disabled: false
-                    },
-                    destination: {
-                        name: columnDestination.namePath[0],
-                        name_path: columnDestination.namePath,
-                        id_persistent: columnDestination.idPersistent,
-                        type: 'STRING',
-                        curated: false,
-                        version: columnDestination.version,
-                        hidden: false,
-                        disabled: false
-                    }
-                },
-                updated: [sharedConflictJson, sharedConflictJson1],
+                id_value_origin_persistent_updated_list: [
+                    sharedConflictJson.value_origin.id_persistent,
+                    sharedConflictJson1.value_origin.id_persistent
+                ],
+                next_offset: 12,
                 conflicts: [
                     {
                         entity: {
@@ -748,6 +756,16 @@ function initialResponseSequence(fetchMock: Mock) {
                     },
                     sharedConflictJson
                 ]
+            }
+        ]
+    ])
+    addResponseSequence(fetchMock, [
+        [
+            200,
+            {
+                next_offset: -1,
+                conflicts: [],
+                id_value_origin_persistent_updated_list: []
             }
         ]
     ])

@@ -23,6 +23,7 @@ import { MergeRequest } from '../state'
 import { MergeRequestListItemBody } from '../components'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import {
+    getMergeRequest,
     getMergeRequestConflicts,
     resolveConflict,
     startMerge,
@@ -32,7 +33,8 @@ import {
     selectDisableOriginOnMerge,
     selectResolvedCount,
     selectStartMerge,
-    selectColumnMergeRequestConflictsByCategory
+    selectColumnMergeRequestConflictsByCategory,
+    selectConflictsMergeRequest
 } from './selectors'
 import { ArrowLeftCircle } from 'react-bootstrap-icons'
 import { TabView } from '../../util/components/tabs'
@@ -40,16 +42,23 @@ import { CommentHistoryAndForm } from '../../comments/components'
 import { Formik } from 'formik'
 import { debounce } from 'debounce'
 import { FormField } from '../../util/form'
-import { clearMergeRequestConflict } from './slice'
+import { clearMergeRequest } from './slice'
 
 export function MergeRequestConflictView() {
     const idMergeRequestPersistent = useLoaderData() as string
     const dispatch = useAppDispatch()
+    const mergeRequest = useAppSelector(selectConflictsMergeRequest)
     useEffect(() => {
+        if (mergeRequest.value === undefined && !mergeRequest.isLoading) {
+            dispatch(getMergeRequest(idMergeRequestPersistent))
+        }
         return () => {
-            dispatch(clearMergeRequestConflict())
+            dispatch(clearMergeRequest())
         }
     }, [])
+    if (mergeRequest.value === undefined) {
+        return CosmaeLoading()
+    }
     return (
         <div className="d-contents">
             <TabView
@@ -66,7 +75,7 @@ export function MergeRequestConflictView() {
                         name: 'Resolve',
                         component: (
                             <MergeRequestConflictResolutionView
-                                idMergeRequestPersistent={idMergeRequestPersistent}
+                                mergeRequest={mergeRequest.value}
                             />
                         )
                     }
@@ -85,14 +94,15 @@ type ResolveConflictArg = {
     replacementValue: string | undefined
 }
 export function MergeRequestConflictResolutionView({
-    idMergeRequestPersistent
+    mergeRequest
 }: {
-    idMergeRequestPersistent: string
+    mergeRequest: MergeRequest
 }) {
     const dispatch = useAppDispatch()
     const conflictsByCategory = useAppSelector(
         selectColumnMergeRequestConflictsByCategory
     )
+    const idMergeRequestPersistent = mergeRequest.idPersistent
     const startMergeValue = useAppSelector(selectStartMerge)
     const [resolvedCount, conflictsCount] = useAppSelector(selectResolvedCount)
     const resolveConflictCallback = ({
@@ -139,9 +149,7 @@ export function MergeRequestConflictResolutionView({
                     />
                 </Col>
                 <Col>
-                    <MergeRequestListItemBody
-                        mergeRequest={conflictsByCategoryValue.mergeRequest}
-                    />
+                    <MergeRequestListItemBody mergeRequest={mergeRequest} />
                 </Col>
                 <OverlayTrigger
                     overlay={
@@ -166,9 +174,7 @@ export function MergeRequestConflictResolutionView({
                 >
                     <Col>
                         <DisableOriginOnMergeToggle
-                            idMergeRequestPersistent={
-                                conflictsByCategoryValue.mergeRequest.idPersistent
-                            }
+                            idMergeRequestPersistent={idMergeRequestPersistent}
                         />
                     </Col>
                 </OverlayTrigger>
@@ -197,9 +203,7 @@ export function MergeRequestConflictResolutionView({
                                         {conflictsByCategoryValue.updated.map(
                                             (conflict) => (
                                                 <MergeRequestConflictItem
-                                                    mergeRequest={
-                                                        conflictsByCategoryValue.mergeRequest
-                                                    }
+                                                    mergeRequest={mergeRequest}
                                                     conflict={conflict}
                                                     resolveConflictCallback={
                                                         resolveConflictCallback
@@ -224,9 +228,7 @@ export function MergeRequestConflictResolutionView({
                                     {conflictsByCategoryValue.conflicts.map(
                                         (conflict) => (
                                             <MergeRequestConflictItem
-                                                mergeRequest={
-                                                    conflictsByCategoryValue.mergeRequest
-                                                }
+                                                mergeRequest={mergeRequest}
                                                 conflict={conflict}
                                                 resolveConflictCallback={
                                                     resolveConflictCallback
