@@ -191,6 +191,8 @@ class ColumnMergeRequest(AbstractMergeRequest):
     def instance_conflicts_all(
         self,
         include_resolved: bool = False,
+        min_idx: int = 0,
+        limit: Optional[int] = None,
         resolution_values: Optional[
             models.BaseManager[ColumnConflictResolution]
         ] = None,
@@ -198,7 +200,7 @@ class ColumnMergeRequest(AbstractMergeRequest):
         """Get conflicts to merging the origin column referenced by the merge request
         into the destination column"""
         instance_origin_recent_query = value_objects().filter(
-            id_column_persistent=self.id_origin_persistent
+            id_column_persistent=self.id_origin_persistent, id__gte=min_idx
         )
 
         if len(instance_origin_recent_query) == 0:
@@ -242,20 +244,22 @@ class ColumnMergeRequest(AbstractMergeRequest):
                 value=models.fields.json.KT("value_destination__value"),
             )
         )
-        if include_resolved:
-            return with_conflict_info
-        return with_conflict_info.filter(
-            models.Q(conflict_resolution_replacement_state__isnull=True)
-            | (
-                models.Q(
-                    conflict_resolution_replacement_state=ColumnConflictResolution.VALUE
-                )
-                & (
-                    models.Q(conflict_resolution_replacement_value="")
-                    | models.Q(conflict_resolution_replacement_value__isnull=True)
+        if not include_resolved:
+            with_conflict_info = with_conflict_info.filter(
+                models.Q(conflict_resolution_replacement_state__isnull=True)
+                | (
+                    models.Q(
+                        conflict_resolution_replacement_state=ColumnConflictResolution.VALUE
+                    )
+                    & (
+                        models.Q(conflict_resolution_replacement_value="")
+                        | models.Q(conflict_resolution_replacement_value__isnull=True)
+                    )
                 )
             )
-        )
+        if limit is not None:
+            return with_conflict_info.order_by("id")[:limit]
+        return with_conflict_info
 
     @classmethod
     def contribution_with_match_columns(cls, id_contribution_persistent):
