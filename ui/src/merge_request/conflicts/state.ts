@@ -61,7 +61,6 @@ export function newMergeRequestConflict({
 export interface MergeRequestConflictsByState {
     updated: RemoteInterface<MergeRequestConflict>[]
     conflicts: RemoteInterface<MergeRequestConflict>[]
-    mergeRequest: MergeRequest
     updatedEntityIdMap: { [key: string]: number }
     conflictsEntityIdMap: { [key: string]: number }
 }
@@ -69,13 +68,11 @@ export interface MergeRequestConflictsByState {
 export function newMergeRequestConflictsByState({
     updated,
     conflicts,
-    mergeRequest,
     updatedEntityIdMap,
     conflictsEntityIdMap
 }: {
     updated: RemoteInterface<MergeRequestConflict>[]
     conflicts: RemoteInterface<MergeRequestConflict>[]
-    mergeRequest: MergeRequest
     updatedEntityIdMap?: { [key: string]: number }
     conflictsEntityIdMap?: { [key: string]: number }
 }): MergeRequestConflictsByState {
@@ -101,7 +98,6 @@ export function newMergeRequestConflictsByState({
     return {
         updated: updated,
         conflicts: conflicts,
-        mergeRequest: mergeRequest,
         updatedEntityIdMap: newUpdatedEntityIdMap,
         conflictsEntityIdMap: newConflictsEntityIdMap
     }
@@ -109,14 +105,17 @@ export function newMergeRequestConflictsByState({
 
 export interface MergeRequestConflictResolutionState {
     conflicts: RemoteInterface<MergeRequestConflictsByState | undefined>
+    mergeRequest: RemoteInterface<MergeRequest | undefined>
     startMerge: RemoteInterface<boolean>
     disableOriginOnMerge: RemoteInterface<undefined>
 }
 export function newMergeRequestConflictResolutionState({
+    mergeRequest= newRemote(undefined),
     conflicts = newRemote(undefined),
     startMerge = newRemote(false),
     disableOriginOnMerge = newRemote(undefined)
 }: {
+    mergeRequest?: RemoteInterface<MergeRequest | undefined>
     conflicts?: RemoteInterface<MergeRequestConflictsByState | undefined>
     startMerge?: RemoteInterface<boolean>
     disableOriginOnMerge?: RemoteInterface<undefined>
@@ -124,6 +123,7 @@ export function newMergeRequestConflictResolutionState({
     return {
         conflicts: conflicts,
         startMerge: startMerge,
-        disableOriginOnMerge
+        disableOriginOnMerge,
+        mergeRequest: mergeRequest
     }
 }
