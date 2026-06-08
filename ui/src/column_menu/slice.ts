@@ -228,10 +228,11 @@ const columnSelectionSlice = createSlice({
         ) {
             const { idPersistentList, upUntilSinceEpoch } = action.payload
             for (const idPersistent of idPersistentList) {
-                const remoteColumn = state.columnsByIdPersistent[idPersistent]
+                const idColumnWithDate = mkUpUntilSinceEpochColumnId(idPersistent, upUntilSinceEpoch)
+                const remoteColumn = state.columnsByIdPersistent[idColumnWithDate]
                 if (remoteColumn === undefined) {
                     state.columnsByIdPersistent[
-                        mkUpUntilSinceEpochColumnId(idPersistent, upUntilSinceEpoch)
+                        idColumnWithDate
                     ] = newRemote(undefined, true)
                 } else {
                     remoteColumn.isLoading = true
