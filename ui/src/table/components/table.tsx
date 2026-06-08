@@ -15,7 +15,7 @@ import { HeaderMenu } from '../../header_menu'
 import { loadingCellRenderer } from '../draw'
 import { ChangeOwnershipModal } from '../../column_management/components'
 import { FilterButton, MergeEntitiesButton } from './buttons'
-import { mkGridSelectionCallback } from '../selection/slice'
+import { clearSelection, mkGridSelectionCallback } from '../selection/slice'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '../../store'
 import { selectTableSelection } from '../selection/selectors'
@@ -201,6 +201,7 @@ export function RemoteDataTable() {
                                     isClearable={upUntilTime !== undefined}
                                     dateFormat={'dd MMM yyyy'}
                                     onChange={(date) => {
+                                        dispatch(clearSelection())
                                         let resultDateSinceEpoch = undefined
                                         if (date !== null && date !== undefined) {
                                             date.setHours(23)
