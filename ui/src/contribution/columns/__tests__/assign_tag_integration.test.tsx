@@ -8,9 +8,10 @@ import { newRemote } from '../../../util/state'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
 import { newContributionState } from '../../slice'
-import { vi } from 'vitest'
+import { Mock, vi } from 'vitest'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { Procedure } from '@vitest/spy'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
@@ -44,40 +45,7 @@ const idColumn0 = 'id-column-test-0'
 const nameColumn0 = 'column 0'
 test('assign existing', async () => {
     const fetchMock = vi.fn()
-    addResponseSequence(fetchMock, [
-        [
-            200,
-            {
-                column_list: [
-                    contributionColumnActiveRsp0,
-                    contributionColumnActiveRsp1
-                ]
-            }
-        ],
-        [200, { contribution_values: [], destination_values: [] }],
-        [
-            200,
-            {
-                column_list: [
-                    {
-                        id_persistent: idColumn0,
-                        name_path: [nameColumn0],
-                        name: nameColumn0,
-                        curated: true,
-                        version: 0,
-                        type: 'STRING'
-                    }
-                ]
-            }
-        ],
-        [200, { column_list: [] }],
-        [200, { contribution_values: [], destination_values: [] }],
-        [
-            200,
-            { ...contributionColumnActiveRsp1, id_existing_persistent: 'display_txt' }
-        ],
-        [200, { contribution_values: [], destination_values: [] }]
-    ])
+    initialResponse(fetchMock)
     const { store } = renderWithProviders(
         <ColumnDefinitionStep />,
         fetchMock,
@@ -103,18 +71,31 @@ test('assign existing', async () => {
             name: /Selected/i
         })
     ).toBeNull()
-    const radioButton = getByRole(displayTxtEntry as HTMLElement, 'button', {
+    let radioButton = getByRole(displayTxtEntry as HTMLElement, 'button', {
         name: /Select/i
     })
     radioButton.click()
-    await waitFor(() => {
-        getByRole(displayTxtEntry as HTMLElement, 'button', {
-            name: /Selected/i
+    radioButton = await waitFor(() => {
+        const radioButton = getByRole(displayTxtEntry as HTMLElement, 'button', {
+            name: /Deselect/i
         })
         expect(
             store.getState().contributionColumnDefinition.selectedColumnDefinition.value
                 ?.idExistingPersistent
         ).toEqual('display_txt')
+        return radioButton
+    })
+    radioButton.click()
+    await waitFor(() => {
+        expect(
+            queryByRole(displayTxtEntry as HTMLElement, 'button', {
+                name: /Deselect/i
+            })
+        ).toBeNull()
+        expect(
+            store.getState().contributionColumnDefinition.selectedColumnDefinition.value
+                ?.discard
+        ).toBeTruthy()
     })
     await expectFetchCallList(fetchMock.mock.calls, [
         [
@@ -160,6 +141,20 @@ test('assign existing', async () => {
             {
                 credentials: 'include'
             }
+        ],
+        [
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns/${contributionColumnActiveRsp1.id_persistent}`,
+            {
+                method: 'PATCH',
+                credentials: 'include',
+                body: { discard: true }
+            }
+        ],
+        [
+            'http://127.0.0.1:8000/cosmae/api/contributions/id-contribution-test/preview/id-active-2',
+            {
+                credentials: 'include'
+            }
         ]
     ])
 })
@@ -184,3 +179,51 @@ const preloadedState = {
     })
 }
 const initialState = { preloadedState }
+
+function initialResponse(fetchMock: Mock<Procedure>) {
+    addResponseSequence(fetchMock, [
+        [
+            200,
+            {
+                column_list: [
+                    contributionColumnActiveRsp0,
+                    contributionColumnActiveRsp1
+                ]
+            }
+        ],
+        [200, { contribution_values: [], destination_values: [] }],
+        [
+            200,
+            {
+                column_list: [
+                    {
+                        id_persistent: idColumn0,
+                        name_path: [nameColumn0],
+                        name: nameColumn0,
+                        curated: true,
+                        version: 0,
+                        type: 'STRING'
+                    }
+                ]
+            }
+        ],
+        [200, { column_list: [] }],
+        [200, { contribution_values: [], destination_values: [] }],
+        [
+            200,
+            {
+                ...contributionColumnActiveRsp1,
+                id_existing_persistent: 'display_txt'
+            }
+        ],
+        [200, { contribution_values: [], destination_values: [] }],
+        [
+            200,
+            {
+                ...contributionColumnActiveRsp1,
+                discard: true
+            }
+        ],
+        [200, { contribution_values: [], destination_values: [] }]
+    ])
+}

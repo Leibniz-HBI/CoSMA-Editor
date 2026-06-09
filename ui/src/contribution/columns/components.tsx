@@ -280,12 +280,18 @@ export function ExistingColumnForm({
     idContributionPersistent: string
 }) {
     const dispatch = useAppDispatch()
-    function assignColumnCallback(idExistingColumnPersistent: string) {
+    function assignColumnCallback(idExistingColumnPersistent: string | undefined) {
+        const rsp: { discard?: boolean; idExistingPersistent?: string } = {}
+        if (idExistingColumnPersistent === undefined) {
+            rsp['discard'] = true
+        } else {
+            rsp['idExistingPersistent'] = idExistingColumnPersistent
+        }
         dispatch(
             patchColumnDefinitionContribution({
+                ...rsp,
                 idPersistent: columnDefinitionContribution.idPersistent,
-                idContributionPersistent,
-                idExistingPersistent: idExistingColumnPersistent
+                idContributionPersistent
             })
         )
     }
@@ -334,14 +340,21 @@ function AssignmentStatusButton({
 }: {
     columnDefinitionExisting: Column
     columnDefinitionContribution: ColumnDefinitionContribution
-    assignColumnCallback: (idColumnExistingPersistent: string) => void
+    assignColumnCallback: (idColumnExistingPersistent: string | undefined) => void
 }) {
     const paddingClass = 'pt-1 pb-1 ps-2 pe-2'
     if (
         columnDefinitionContribution.idExistingPersistent ==
         columnDefinitionExisting?.idPersistent
     ) {
-        return <Button className={paddingClass}>Selected</Button>
+        return (
+            <Button
+                className={paddingClass}
+                onClick={() => assignColumnCallback(undefined)}
+            >
+                Deselect
+            </Button>
+        )
     }
     return (
         <Button

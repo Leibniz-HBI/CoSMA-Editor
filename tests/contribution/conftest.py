@@ -29,6 +29,20 @@ def contribution_user(user):
 
 
 @pytest.fixture
+def contribution_user_columns_extracted(user):
+    return ContributionCandidate.objects.create(  # pylint: disable=no-member
+        name=c.name_test0,
+        description=c.description_test0,
+        id_persistent=c.id_test0,
+        has_header=False,
+        file_name=c.file_name_test0,
+        state=ContributionCandidate.COLUMNS_EXTRACTED,
+        created_by=user,
+        edit_session=user.edit_session,
+    )
+
+
+@pytest.fixture
 def contribution_other(user1):
     return ContributionCandidate.objects.create(  # pylint: disable=no-member
         name=c.name_test1,
