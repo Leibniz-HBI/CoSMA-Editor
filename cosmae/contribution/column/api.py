@@ -1,5 +1,6 @@
 "API endpoints for managing columns of new contributions."
 
+from logging import getLogger
 from typing import List
 
 from django.db import DatabaseError
@@ -18,6 +19,7 @@ from cosmae.util.auth import check_user
 from cosmae.util.django import patch_from_dict
 
 router = Router()
+_LOGGER = getLogger(__name__)
 
 
 class ColumnContribution(Schema):
@@ -130,6 +132,8 @@ def patch_column(
                 patch_dict["discard"] = False
             elif "discard" not in patch_dict:
                 patch_dict["discard"] = True
+            if patch_dict.get("discard"):
+                patch_dict["id_existing_persistent"] = None
             patch_from_dict(candidate_definition, **patch_dict)
             return 200, columns_contribution_db_to_api(candidate_definition)
         except Column.DoesNotExist:  # pylint: disable=no-member
@@ -142,8 +146,10 @@ def patch_column(
         return 401, ApiError(msg="Not authenticated.")
     except DatabaseError:
         return 500, ApiError(msg="Could not update the column from the database.")
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not update the requested column.")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not update the requested column."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 def columns_contribution_db_to_api(column_db: ColumnContribution):
