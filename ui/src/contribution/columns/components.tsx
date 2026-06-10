@@ -36,6 +36,8 @@ import { useNavigate } from 'react-router-dom'
 import { loadContributionDetails } from '../thunks'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import { Flipped, Flipper } from 'react-flip-toolkit'
+import { ColumnNamePathFromId } from '../../column_menu/components/misc'
+import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
 
 export function ColumnDefinitionStep() {
     const dispatch: AppDispatch = useDispatch()
@@ -171,9 +173,31 @@ export function ColumnDefinitionStepListItem({
                 <Col sm={9} key="column-heading">
                     <Row key="index-in-file">Column {columnDefinition.indexInFile}</Row>
                     <Row key="column-name">
-                        <span className="d-inline-block text-truncate">
-                            {columnDefinition.name}
-                        </span>
+                        <Col xs="auto">
+                            <ArrowLeftCircle />
+                        </Col>
+                        <Col>
+                            <span className="d-inline-block text-truncate">
+                                {columnDefinition.name}
+                            </span>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col xs="auto">
+                            <ArrowRightCircleFill />
+                        </Col>
+                        <Col>
+                            {!columnDefinition.discard &&
+                            columnDefinition.idExistingPersistent !== undefined ? (
+                                <ColumnNamePathFromId
+                                    idColumnPersistent={
+                                        columnDefinition.idExistingPersistent
+                                    }
+                                />
+                            ) : (
+                                <div className="fst-italic">Not assigned</div>
+                            )}
+                        </Col>
                     </Row>
                 </Col>
                 <Col xs={2} className="align-self-center">
