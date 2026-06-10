@@ -17,6 +17,12 @@ export function ColumnAddButton(props: any) {
     )
 }
 
+const specialColumnNames = new Map<string, string>([
+    ['id_persistent', 'Persistent Entity Id'],
+    ['display_txt', 'Display Text'],
+    ['justification', 'Justification']
+])
+
 export function ColumnNamePathFromId({
     idColumnPersistent,
     upUntilTime = undefined
@@ -24,6 +30,16 @@ export function ColumnNamePathFromId({
     idColumnPersistent: string
     upUntilTime?: Date | undefined
 }) {
+    if (specialColumnNames.has(idColumnPersistent)) {
+        return (
+            <span>
+                <span>{specialColumnNames.get(idColumnPersistent) +' '}</span>
+                <span className="pre-wrap" key="check">
+                    <PatchCheckFill />
+                </span>
+            </span>
+        )
+    }
     const column = useColumn(idColumnPersistent, upUntilTime)
     if (column.isLoading) {
         return <ProgressBar animated={true} />

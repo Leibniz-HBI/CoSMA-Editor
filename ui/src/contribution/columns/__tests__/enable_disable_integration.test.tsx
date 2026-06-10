@@ -100,7 +100,7 @@ describe('beginning', () => {
                 contributionColumnDiscardRsp3.id_persistent
             ]
         )
-        let columnEntry = columnLabel0?.parentElement?.parentElement?.parentElement
+        let columnEntry = columnLabel0?.parentElement?.parentElement?.parentElement?.parentElement
 
         let toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -122,7 +122,7 @@ describe('beginning', () => {
         await waitFor(() => {
             columnLabel0 = screen.getByText(contributionColumnActiveRsp0.name)
         })
-        columnEntry = columnLabel0?.parentElement?.parentElement?.parentElement
+        columnEntry = columnLabel0?.parentElement?.parentElement?.parentElement?.parentElement
 
         toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -219,7 +219,7 @@ describe('middle', () => {
                 contributionColumnDiscardRsp3.id_persistent
             ]
         )
-        let columnEntry = columnLabel2?.parentElement?.parentElement?.parentElement
+        let columnEntry = columnLabel2?.parentElement?.parentElement?.parentElement?.parentElement
 
         let toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -241,7 +241,7 @@ describe('middle', () => {
         await waitFor(() => {
             columnLabel2 = screen.getByText(contributionColumnActiveRsp2.name)
         })
-        columnEntry = columnLabel2?.parentElement?.parentElement?.parentElement
+        columnEntry = columnLabel2?.parentElement?.parentElement?.parentElement?.parentElement
 
         toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -294,7 +294,7 @@ describe('end', () => {
                 contributionColumnDiscardRsp3.id_persistent
             ]
         )
-        let columnEntry = columnLabel4?.parentElement?.parentElement?.parentElement
+        let columnEntry = columnLabel4?.parentElement?.parentElement?.parentElement?.parentElement
 
         let toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -316,7 +316,7 @@ describe('end', () => {
         await waitFor(() => {
             columnLabel4 = screen.getByText(contributionColumnActiveRsp4.name)
         })
-        columnEntry = columnLabel4?.parentElement?.parentElement?.parentElement
+        columnEntry = columnLabel4?.parentElement?.parentElement?.parentElement?.parentElement
 
         toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
