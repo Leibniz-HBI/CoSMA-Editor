@@ -3,7 +3,11 @@
  */
 
 import { getByRole, screen, waitFor } from '@testing-library/react'
-import { newColumnDefinitionsContributionState } from '../state'
+import {
+    ColumnDefinitionContribution,
+    ColumnDefinitionsContributionState,
+    newColumnDefinitionsContributionState
+} from '../state'
 import { newRemote } from '../../../util/state'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
@@ -12,11 +16,16 @@ import { newContributionState } from '../../slice'
 import { vi, Mock } from 'vitest'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { addResponseSequence, expectFetchCall } from '../../../util/tests/response'
+import { useLoaderData, useNavigate } from 'react-router-dom'
+import { act } from 'react'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
-    loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
+    loaderMock.mockReturnValue({
+        idContributionPersistent: 'id-contribution-test',
+        stepData: 'id-active-0'
+    })
+    return { useLoaderData: loaderMock, useNavigate: vi.fn().mockReturnValue(vi.fn()) }
 })
 vi.mock('react-flip-toolkit', () => {
     return {
@@ -99,22 +108,29 @@ test('create, select and assign column', async () => {
         fetchMock,
         initialState
     )
-    const user = userEvent.setup()
-    let title2: HTMLElement | undefined
-    await waitFor(() => {
-        title2 = screen.getByText(contributionColumnActiveRsp1.name)
+    const title2 = await waitFor(() => {
+        expect(fetchMock.mock.calls.length).toEqual(3)
+        return screen.getByText(contributionColumnActiveRsp1.name)
     })
-    if (title2) {
-        await user.click(title2)
-    }
-    await waitFor(() => {
-        expect(
-            store.getState().contributionColumnDefinition.selectedColumnDefinition.value
-                ?.idPersistent
-        ).toEqual(contributionColumnActiveRsp1.id_persistent)
-        expect(fetchMock.mock.calls.length).toEqual(4)
+    ;(useLoaderData as Mock).mockReturnValue({
+        idContributionPersistent: 'id-contribution-test',
+        stepData: contributionColumnActiveRsp1.id_persistent
     })
+    act(()=> title2?.click())
+    await waitFor(
+        () => {
+            const navigate = useNavigate() as Mock
+            expect(navigate.mock.calls.length).toEqual(1)
+            checkAssignment(
+                store.getState().contributionColumnDefinition,
+                contributionColumnActiveRsp1.id_persistent,
+                undefined
+            )
+        },
+        { timeout: 5000 }
+    )
     const createMenuButton = screen.getByRole('button', { name: /Create new column/i })
+    const user = userEvent.setup()
     await user.click(createMenuButton)
     await waitFor(() => {
         screen.getAllByText('Name')
@@ -143,10 +159,11 @@ test('create, select and assign column', async () => {
     })
     radioButton.click()
     await waitFor(() => {
-        expect(
-            store.getState().contributionColumnDefinition.selectedColumnDefinition.value
-                ?.idExistingPersistent
-        ).toEqual(idColumn0)
+        checkAssignment(
+            store.getState().contributionColumnDefinition,
+            contributionColumnActiveRsp1.id_persistent,
+            idColumn0
+        )
         expect(fetchMock.mock.calls.length).toEqual(9)
     })
     await expectFetchCall(fetchMock.mock.calls.at(-2), [
@@ -184,3 +201,19 @@ const preloadedState = {
     })
 }
 const initialState = { preloadedState }
+
+export function checkAssignment(
+    state: ColumnDefinitionsContributionState,
+    idColumnContribution: string,
+    idExistingPersistent: string | undefined,
+    discard: boolean = false
+) {
+    const columns = state.columns.value
+    const predicate = (column: ColumnDefinitionContribution) =>
+        column.idPersistent == idColumnContribution
+    const columnContribution =
+        columns?.activeDefinitionsList.find(predicate) ??
+        columns?.discardedDefinitionsList.find(predicate)
+    expect(columnContribution?.idExistingPersistent).toEqual(idExistingPersistent)
+    expect(columnContribution?.discard).toEqual(discard)
+}

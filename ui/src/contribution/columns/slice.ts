@@ -22,16 +22,10 @@ export const contributionColumnDefinitionSlice = createSlice({
         ) {
             state.createTabSelected = action.payload
         },
-        columnDefinitionContributionSelect(
-            state: ColumnDefinitionsContributionState,
-            action: PayloadAction<ColumnDefinitionContribution>
-        ) {
-            state.selectedColumnDefinition = newRemote(action.payload)
-        },
         patchColumnDefinitionContributionStart(
             state: ColumnDefinitionsContributionState
         ) {
-            state.selectedColumnDefinition.isLoading = true
+            state.patchColumnDefinitionStatus = true
         },
         patchColumnDefinitionContributionSuccess(
             state: ColumnDefinitionsContributionState,
@@ -85,23 +79,19 @@ export const contributionColumnDefinitionSlice = createSlice({
                     activeDefs.splice(activeIdx, 0, action.payload)
                 }
             }
-            state.selectedColumnDefinition = newRemote(action.payload)
+            state.patchColumnDefinitionStatus = false
         },
         loadColumnDefinitionsContributionStart(
             state: ColumnDefinitionsContributionState
         ) {
             state.columns.isLoading = true
-            state.selectedColumnDefinition = newRemote(undefined)
+            state.patchColumnDefinitionStatus = false
         },
         loadColumnDefinitionsContributionSuccess(
             state: ColumnDefinitionsContributionState,
             action: PayloadAction<ColumnsTuple>
         ) {
             state.columns = newRemote(action.payload)
-            state.selectedColumnDefinition = newRemote(
-                action.payload.activeDefinitionsList[0] ??
-                    action.payload.discardedDefinitionsList[0]
-            )
             state.createTabSelected = false
         },
         finalizeColumnAssignmentStart(state: ColumnDefinitionsContributionState) {
@@ -121,13 +111,13 @@ export const contributionColumnDefinitionSlice = createSlice({
         patchColumnDefinitionContributionError(
             state: ColumnDefinitionsContributionState
         ) {
-            state.selectedColumnDefinition.isLoading = false
+            state.patchColumnDefinitionStatus = false
         },
         resetColumnDefinitionContribution(state: ColumnDefinitionsContributionState) {
             state.columns = newRemote(undefined)
             state.createTabSelected = false
             state.finalizeColumnAssignment = newRemote(false)
-            state.selectedColumnDefinition = newRemote(undefined)
+            state.patchColumnDefinitionStatus = false
         },
         loadPreviewStart(state: ColumnDefinitionsContributionState) {
             state.preview.isLoading = true
@@ -145,7 +135,6 @@ export const contributionColumnDefinitionSlice = createSlice({
 })
 
 export const {
-    columnDefinitionContributionSelect,
     finalizeColumnAssignmentStart,
     finalizeColumnAssignmentSuccess,
     finalizeColumnAssignmentError,

@@ -15,7 +15,10 @@ import { renderWithProviders } from '../../util/tests/provider'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
-    loaderMock.mockReturnValue('id-test-1')
+    loaderMock.mockReturnValue({
+        idContributionPersistent: 'id-test-1',
+        loaderData: ''
+    })
     return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 test('Shows hint when step was completed', async () => {

@@ -13,7 +13,9 @@ vi.mock('react-router-dom', () => {
     const mockNavigate = vi.fn()
     return {
         useNavigate: vi.fn().mockReturnValue(mockNavigate),
-        useLoaderData: vi.fn().mockReturnValue('id-test-1')
+        useLoaderData: vi
+            .fn()
+            .mockReturnValue({ idContributionPersistent: 'id-test-1', stepData: '' })
     }
 })
 vi.mock('../../config', async () => {

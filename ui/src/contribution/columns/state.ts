@@ -60,20 +60,20 @@ export type ColumnsTuple = {
 
 export interface ColumnDefinitionsContributionState {
     columns: RemoteInterface<ColumnsTuple | undefined>
-    selectedColumnDefinition: RemoteInterface<ColumnDefinitionContribution | undefined>
+    patchColumnDefinitionStatus: boolean
     createTabSelected: boolean
     finalizeColumnAssignment: RemoteInterface<boolean>
     preview: RemoteInterface<ValuePreview | undefined>
 }
 export function newColumnDefinitionsContributionState({
     columns = newRemote(undefined),
-    selectedColumnDefinition = newRemote(undefined),
+    patchColumnDefinitionStatus = false,
     createTabSelected = false,
     finalizeColumnAssignment = newRemote(false),
     preview = newRemote(undefined)
 }: {
     columns?: RemoteInterface<ColumnsTuple | undefined>
-    selectedColumnDefinition?: RemoteInterface<ColumnDefinitionContribution | undefined>
+    patchColumnDefinitionStatus?: boolean
     createTabSelected?: boolean
     existingColumnSelectionEntries?: RemoteInterface<ColumnIdHierarchyNode[]>
     finalizeColumnAssignment?: RemoteInterface<boolean>
@@ -81,7 +81,7 @@ export function newColumnDefinitionsContributionState({
 }): ColumnDefinitionsContributionState {
     return {
         columns: columns,
-        selectedColumnDefinition: selectedColumnDefinition,
+        patchColumnDefinitionStatus,
         createTabSelected: createTabSelected,
         finalizeColumnAssignment: finalizeColumnAssignment,
         preview: preview

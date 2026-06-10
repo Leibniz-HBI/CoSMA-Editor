@@ -12,15 +12,15 @@ import { NotificationType } from '../../../util/notification/slice'
 import { useNavigate } from 'react-router-dom'
 import { vi, Mock } from 'vitest'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
-import {
-    addResponseSequence,
-    expectFetchCall,
-} from '../../../util/tests/response'
+import { addResponseSequence, expectFetchCall } from '../../../util/tests/response'
 import { newContributionState } from '../../slice'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
-    loaderMock.mockReturnValue('id-contribution-test')
+    loaderMock.mockReturnValue({
+        idPersistent: 'id-contribution-test',
+        stepData: 'id-active-0'
+    })
     const navigateMock = vi.fn()
     return {
         useLoaderData: loaderMock,
