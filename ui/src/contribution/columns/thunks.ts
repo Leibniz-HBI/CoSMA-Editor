@@ -186,7 +186,7 @@ export function parseColumnContribution(
 ): ColumnDefinitionContribution {
     const name = column['name']
     const idPersistent = column['id_persistent']
-    const idExistingPersistent = column['id_existing_persistent']
+    const idExistingPersistent = column['id_existing_persistent'] ?? undefined
     const idParentPersistent = column['id_parent_persistent']
     const type = columnTypeMapApiToApp.get(column['type'])
     const indexInFile = column['index_in_file']

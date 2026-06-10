@@ -92,8 +92,12 @@ export function ContributionList() {
     )
 }
 
+export type StepperLoaderData<T> = { idContributionPersistent: string; stepData: T }
+
 export function ContributionStepper({ selectedIdx }: { selectedIdx: number }) {
-    const idContributionPersistent = useLoaderData() as string
+    const idContributionPersistent =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        useLoaderData<StepperLoaderData<any>>().idContributionPersistent
     const dispatch = useAppDispatch()
     useEffect(() => {
         return () => {

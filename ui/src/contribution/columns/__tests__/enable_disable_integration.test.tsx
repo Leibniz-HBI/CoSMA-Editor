@@ -22,8 +22,11 @@ import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { EnhancedStore } from '@reduxjs/toolkit'
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
-    loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
+    loaderMock.mockReturnValue({
+        idContributionPersistent: 'id-contribution-test',
+        stepData: 'id-active-0'
+    })
+    return { useLoaderData: loaderMock, useNavigate: vi.fn().mockReturnValue(vi.fn()) }
 })
 vi.mock('react-flip-toolkit', () => {
     return {
@@ -100,7 +103,8 @@ describe('beginning', () => {
                 contributionColumnDiscardRsp3.id_persistent
             ]
         )
-        let columnEntry = columnLabel0?.parentElement?.parentElement?.parentElement?.parentElement
+        let columnEntry =
+            columnLabel0?.parentElement?.parentElement?.parentElement?.parentElement
 
         let toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -122,7 +126,8 @@ describe('beginning', () => {
         await waitFor(() => {
             columnLabel0 = screen.getByText(contributionColumnActiveRsp0.name)
         })
-        columnEntry = columnLabel0?.parentElement?.parentElement?.parentElement?.parentElement
+        columnEntry =
+            columnLabel0?.parentElement?.parentElement?.parentElement?.parentElement
 
         toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -192,8 +197,9 @@ describe('middle', () => {
         const fetchMock = vi.fn()
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [
+            // patch
             [200, { ...contributionColumnActiveRsp2, discard: true }],
-            [200, { contribution_values: [], destination_values: [] }],
+            // patch
             [200, contributionColumnActiveRsp2]
         ])
         const { store } = renderWithProviders(
@@ -219,12 +225,14 @@ describe('middle', () => {
                 contributionColumnDiscardRsp3.id_persistent
             ]
         )
-        let columnEntry = columnLabel2?.parentElement?.parentElement?.parentElement?.parentElement
+        let columnEntry =
+            columnLabel2?.parentElement?.parentElement?.parentElement?.parentElement
 
         let toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
         toggle.click()
         await waitFor(() => {
+            expect(fetchMock.mock.calls.length).toEqual(5)
             expectActiveDiscardedIds(
                 store,
                 [
@@ -241,7 +249,8 @@ describe('middle', () => {
         await waitFor(() => {
             columnLabel2 = screen.getByText(contributionColumnActiveRsp2.name)
         })
-        columnEntry = columnLabel2?.parentElement?.parentElement?.parentElement?.parentElement
+        columnEntry =
+            columnLabel2?.parentElement?.parentElement?.parentElement?.parentElement
 
         toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -268,7 +277,6 @@ describe('end', () => {
         initialResponseSequence(fetchMock)
         addResponseSequence(fetchMock, [
             [200, { ...contributionColumnActiveRsp4, discard: true }],
-            [200, { contribution_values: [], destination_values: [] }],
             [200, contributionColumnActiveRsp4]
         ])
         const { store } = renderWithProviders(
@@ -294,7 +302,8 @@ describe('end', () => {
                 contributionColumnDiscardRsp3.id_persistent
             ]
         )
-        let columnEntry = columnLabel4?.parentElement?.parentElement?.parentElement?.parentElement
+        let columnEntry =
+            columnLabel4?.parentElement?.parentElement?.parentElement?.parentElement
 
         let toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')
@@ -316,7 +325,8 @@ describe('end', () => {
         await waitFor(() => {
             columnLabel4 = screen.getByText(contributionColumnActiveRsp4.name)
         })
-        columnEntry = columnLabel4?.parentElement?.parentElement?.parentElement?.parentElement
+        columnEntry =
+            columnLabel4?.parentElement?.parentElement?.parentElement?.parentElement
 
         toggle = getByRole(columnEntry as HTMLElement, 'checkbox')
         expect((toggle as HTMLInputElement).value).toEqual('on')

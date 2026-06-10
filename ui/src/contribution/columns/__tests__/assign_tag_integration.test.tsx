@@ -3,7 +3,11 @@
  */
 
 import { getByRole, queryByRole, screen, waitFor } from '@testing-library/react'
-import { newColumnDefinitionsContributionState } from '../state'
+import {
+    ColumnDefinitionContribution,
+    ColumnDefinitionsContributionState,
+    newColumnDefinitionsContributionState
+} from '../state'
 import { newRemote } from '../../../util/state'
 import { ColumnDefinitionStep } from '../components'
 import { ContributionStep, newContribution } from '../../state'
@@ -12,11 +16,15 @@ import { Mock, vi } from 'vitest'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
 import { Procedure } from '@vitest/spy'
+import { useLoaderData, useNavigate } from 'react-router-dom'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
-    loaderMock.mockReturnValue('id-contribution-test')
-    return { useLoaderData: loaderMock, useNavigate: vi.fn() }
+    loaderMock.mockReturnValue({
+        idContributionPersistent: 'id-contribution-test',
+        stepData: 'id-active-0'
+    })
+    return { useLoaderData: loaderMock, useNavigate: vi.fn().mockReturnValue(vi.fn()) }
 })
 vi.mock('react-flip-toolkit', () => {
     return {
@@ -51,18 +59,18 @@ test('assign existing', async () => {
         fetchMock,
         initialState
     )
-    let title2: HTMLElement | undefined
-    await waitFor(() => {
-        title2 = screen.getByText(contributionColumnActiveRsp1.name)
+    const title2 = await waitFor(() => {
+        return screen.getByText(contributionColumnActiveRsp1.name)
+    })
+    ;(useLoaderData as Mock).mockReturnValue({
+        idContributionPersistent: 'id-contribution-test',
+        stepData: 'id-active-2'
     })
     title2?.click()
-    await waitFor(() =>
-        expect(
-            store.getState().contributionColumnDefinition.selectedColumnDefinition.value
-                ?.idPersistent
-        ).toEqual(contributionColumnActiveRsp1.id_persistent)
-    )
-    const displayTxtLabel = await screen.findByText('Display Text')
+    const displayTxtLabel = await waitFor(async () => {
+        expect((useNavigate() as Mock).mock.calls.length).toEqual(1)
+        return await screen.findByText('Display Text')
+    })
     const displayTxtEntry =
         displayTxtLabel.parentElement?.parentElement?.parentElement?.parentElement
             ?.parentElement
@@ -79,10 +87,11 @@ test('assign existing', async () => {
         const radioButton = getByRole(displayTxtEntry as HTMLElement, 'button', {
             name: /Deselect/i
         })
-        expect(
-            store.getState().contributionColumnDefinition.selectedColumnDefinition.value
-                ?.idExistingPersistent
-        ).toEqual('display_txt')
+        checkAssignment(
+            store.getState().contributionColumnDefinition,
+            'id-active-2',
+            'display_txt'
+        )
         return radioButton
     })
     radioButton.click()
@@ -92,10 +101,12 @@ test('assign existing', async () => {
                 name: /Deselect/i
             })
         ).toBeNull()
-        expect(
-            store.getState().contributionColumnDefinition.selectedColumnDefinition.value
-                ?.discard
-        ).toBeTruthy()
+        checkAssignment(
+            store.getState().contributionColumnDefinition,
+            'id-active-2',
+            undefined,
+            true
+        )
     })
     await expectFetchCallList(fetchMock.mock.calls, [
         [
@@ -116,10 +127,6 @@ test('assign existing', async () => {
             }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-2`,
-            { credentials: 'include' }
-        ],
-        [
             'http://127.0.0.1:8000/cosmae/api/columns/children',
             {
                 body: { id_parent_persistent: idColumn0 },
@@ -127,6 +134,10 @@ test('assign existing', async () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             }
+        ],
+        [
+            `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/preview/id-active-2`,
+            { credentials: 'include' }
         ],
         [
             `http://127.0.0.1:8000/cosmae/api/contributions/${idContribution}/columns/${contributionColumnActiveRsp1.id_persistent}`,
@@ -159,6 +170,22 @@ test('assign existing', async () => {
     ])
 })
 
+export function checkAssignment(
+    state: ColumnDefinitionsContributionState,
+    idColumnContribution: string,
+    idExistingPersistent: string | undefined,
+    discard: boolean = false
+) {
+    const columns = state.columns.value
+    const predicate = (column: ColumnDefinitionContribution) =>
+        column.idPersistent == idColumnContribution
+    const columnContribution =
+        columns?.activeDefinitionsList.find(predicate) ??
+        columns?.discardedDefinitionsList.find(predicate)
+    expect(columnContribution?.idExistingPersistent).toEqual(idExistingPersistent)
+    expect(columnContribution?.discard).toEqual(discard)
+}
+
 const preloadedState = {
     ...emptyState,
     contributionColumnDefinition: newColumnDefinitionsContributionState({
@@ -182,6 +209,7 @@ const initialState = { preloadedState }
 
 function initialResponse(fetchMock: Mock<Procedure>) {
     addResponseSequence(fetchMock, [
+        //init load
         [
             200,
             {
@@ -208,7 +236,9 @@ function initialResponse(fetchMock: Mock<Procedure>) {
             }
         ],
         [200, { column_list: [] }],
+        // select column
         [200, { contribution_values: [], destination_values: [] }],
+        // set display_txt
         [
             200,
             {
@@ -217,10 +247,12 @@ function initialResponse(fetchMock: Mock<Procedure>) {
             }
         ],
         [200, { contribution_values: [], destination_values: [] }],
+        // set discard
         [
             200,
             {
                 ...contributionColumnActiveRsp1,
+                id_existing_persistent: null,
                 discard: true
             }
         ],

@@ -1,6 +1,6 @@
 import { Button, Col, Form, FormCheck, ListGroup, Modal, Row } from 'react-bootstrap'
 import { ColumnDefinitionContribution } from './state'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ColumnSelector, EditModal } from '../../column_menu/components/selection'
 import {
     RemoteTriggerButton,
@@ -20,32 +20,40 @@ import {
     patchColumnDefinitionContribution
 } from './thunks'
 import { AppDispatch } from '../../store'
-import { columnDefinitionContributionSelect, setColumnDefinitionFormTab } from './slice'
+import { setColumnDefinitionFormTab } from './slice'
 import {
     selectColumnDefinitionsContributionTriple,
+    selectContributionColumnDefinitionById,
     selectCreateTabSelected,
     selectFinalizeColumnAssignment,
-    selectPreview,
-    selectSelectedColumnDefinition
+    selectPreview
 } from './selectors'
 import { selectColumnSelectionLoading } from '../../column_menu/selectors'
 import { loadColumnHierarchy } from '../../column_menu/thunks'
 import { RemoteInterface } from '../../util/state'
 import { selectContribution } from '../selectors'
-import { useNavigate } from 'react-router-dom'
+import { useLoaderData, useNavigate } from 'react-router-dom'
 import { loadContributionDetails } from '../thunks'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import { Flipped, Flipper } from 'react-flip-toolkit'
 import { ColumnNamePathFromId } from '../../column_menu/components/misc'
 import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
+import { StepperLoaderData } from '../components'
 
 export function ColumnDefinitionStep() {
     const dispatch: AppDispatch = useDispatch()
     const definitions = useAppSelector(selectColumnDefinitionsContributionTriple)
-    const selectedColumnDefinition = useAppSelector(selectSelectedColumnDefinition)
+    const idColumnContributionPersistent =
+        useLoaderData<StepperLoaderData<string>>().stepData
+    const selectedColumnDefinition = useAppSelector(
+        selectContributionColumnDefinitionById
+    )(idColumnContributionPersistent)
     const createTabSelected = useAppSelector(selectCreateTabSelected)
     const isLoadingColumns = useAppSelector(selectColumnSelectionLoading)
     const contributionCandidate = useAppSelector(selectContribution)
+    const ref = useRef(null)
+    const [scroll, setScroll] = useState(0)
+    console.log(idColumnContributionPersistent)
     useEffect(() => {
         if (contributionCandidate.value != undefined && !definitions.isLoading) {
             dispatch(
@@ -59,6 +67,11 @@ export function ColumnDefinitionStep() {
             })
         }
     }, [contributionCandidate.value?.idPersistent])
+    useEffect(() => {
+        if (ref.current) {
+            ;(ref.current as HTMLElement).scrollTop = scroll
+        }
+    }, [ref.current])
     if (definitions.isLoading || contributionCandidate.value === undefined) {
         return <CosmaeLoading />
     }
@@ -73,9 +86,17 @@ export function ColumnDefinitionStep() {
                 <Row className="text-primary">
                     <span>Columns extracted from upload:</span>
                 </Row>
-                <Row className="flex-grow-1 overflow-y-scroll mb-3">
+                <Row
+                    className="flex-grow-1 overflow-y-scroll mb-3"
+                    ref={ref}
+                    onScroll={(ev) => {
+                        // console.log((ev.target as HTMLElement).scrollTop)
+                        setScroll((ev.target as HTMLElement).scrollTop)
+                    }}
+                >
                     <ContributionColumnsList
                         idContributionPersistent={idContributionPersistent}
+                        selectedColumnDefinition={selectedColumnDefinition}
                     />
                 </Row>
                 <Row className="align-self-center d-block">
@@ -102,12 +123,20 @@ export function ColumnDefinitionStep() {
 const _spring = { stiffness: 500, damping: 60, overShootClamping: false }
 
 function ContributionColumnsList({
-    idContributionPersistent
+    idContributionPersistent,
+    selectedColumnDefinition
 }: {
     idContributionPersistent: string
+    selectedColumnDefinition: RemoteInterface<ColumnDefinitionContribution | undefined>
 }) {
     const definitions = useAppSelector(selectColumnDefinitionsContributionTriple)
-    const selectedColumnDefinition = useAppSelector(selectSelectedColumnDefinition)
+    const navigate = useNavigate()
+    const selectCallback = (columnDefinition: ColumnDefinitionContribution) => {
+        console.log(idContributionPersistent, columnDefinition.idPersistent)
+        navigate(
+            `/contribute/${idContributionPersistent}/columns/${columnDefinition.idPersistent}`
+        )
+    }
     return (
         <ListGroup>
             <Flipper flipKey={definitions.value?.activeDefinitionsList}>
@@ -120,8 +149,12 @@ function ContributionColumnsList({
                         <div>
                             <ColumnDefinitionStepListItem
                                 columnDefinition={colDef}
-                                selected={colDef == selectedColumnDefinition.value}
+                                selected={
+                                    colDef.idPersistent ==
+                                    selectedColumnDefinition.value?.idPersistent
+                                }
                                 idContributionPersistent={idContributionPersistent}
+                                selectCallback={selectCallback}
                             />
                         </div>
                     </Flipped>
@@ -137,6 +170,7 @@ function ContributionColumnsList({
                                 columnDefinition={colDef}
                                 selected={colDef == selectedColumnDefinition.value}
                                 idContributionPersistent={idContributionPersistent}
+                                selectCallback={selectCallback}
                             />
                         </div>
                     </Flipped>
@@ -149,11 +183,13 @@ function ContributionColumnsList({
 export function ColumnDefinitionStepListItem({
     columnDefinition,
     selected,
-    idContributionPersistent
+    idContributionPersistent,
+    selectCallback
 }: {
     columnDefinition: ColumnDefinitionContribution
     selected: boolean
     idContributionPersistent: string
+    selectCallback: (columnDefinition: ColumnDefinitionContribution) => void
 }) {
     const dispatch: AppDispatch = useDispatch()
     let itemClassName = ''
@@ -164,9 +200,7 @@ export function ColumnDefinitionStepListItem({
     return (
         <ListGroup.Item
             active={selected}
-            onClick={() =>
-                dispatch(columnDefinitionContributionSelect(columnDefinition))
-            }
+            onClick={() => selectCallback(columnDefinition)}
             className={itemClassName}
         >
             <Row>

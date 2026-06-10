@@ -1,6 +1,11 @@
 import { createSelector } from '@reduxjs/toolkit'
 import { RootState } from '../../store'
-import { ColumnDefinitionsContributionState } from './state'
+import {
+    ColumnDefinitionContribution,
+    ColumnDefinitionsContributionState,
+    ColumnsTuple
+} from './state'
+import { newRemote, RemoteInterface } from '../../util/state'
 
 export const selectColumnDefinitionsContribution = (state: RootState) =>
     state.contributionColumnDefinition
@@ -10,9 +15,31 @@ export const selectColumnDefinitionsContributionTriple = createSelector(
     (state: ColumnDefinitionsContributionState) => state.columns
 )
 
-export const selectSelectedColumnDefinition = createSelector(
-    selectColumnDefinitionsContribution,
-    (state: ColumnDefinitionsContributionState) => state.selectedColumnDefinition
+function selectColumnContributionDefinitionByIdPersistent(
+    idPersistent: string | undefined,
+    columns: ColumnDefinitionContribution[] | undefined
+) {
+    return columns?.find((def) => def.idPersistent === idPersistent)
+}
+
+export const selectContributionColumnDefinitionById = createSelector(
+    selectColumnDefinitionsContributionTriple,
+    (state: RemoteInterface<ColumnsTuple|undefined>) =>
+        (idColumnContributionPersistent: string | undefined) => {
+            if (state.isLoading) {
+                return newRemote(undefined, true)
+            }
+            return newRemote(
+                selectColumnContributionDefinitionByIdPersistent(
+                    idColumnContributionPersistent,
+                    state.value?.activeDefinitionsList
+                ) ??
+                    selectColumnContributionDefinitionByIdPersistent(
+                        idColumnContributionPersistent,
+                        state.value?.discardedDefinitionsList
+                    )
+            )
+        }
 )
 
 export const selectCreateTabSelected = createSelector(

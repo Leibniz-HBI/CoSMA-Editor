@@ -75,22 +75,42 @@ const router = createBrowserRouter([
             {
                 path: 'contribute/:idPersistent/metadata',
                 element: <ContributionStepper selectedIdx={0} />,
-                loader: ({ params }) => params.idPersistent ?? ''
+                loader: ({ params }) => ({
+                    idContributionPersistent: params.idPersistent ?? '',
+                    stepData: undefined
+                })
             },
             {
                 path: 'contribute/:idPersistent/columns',
                 element: <ContributionStepper selectedIdx={1} />,
-                loader: ({ params }) => params.idPersistent ?? ''
+                loader: ({ params }) => ({
+                    idContributionPersistent: params.idPersistent ?? '',
+                    stepData: undefined
+                })
+            },
+            {
+                path: 'contribute/:idPersistent/columns/:idColumnContributionPersistent',
+                element: <ContributionStepper selectedIdx={1} />,
+                loader: ({ params }) => ({
+                    idContributionPersistent: params.idPersistent ?? '',
+                    stepData: params.idColumnContributionPersistent
+                })
             },
             {
                 path: 'contribute/:idPersistent/entities',
                 element: <ContributionStepper selectedIdx={2} />,
-                loader: ({ params }) => params.idPersistent ?? ''
+                loader: ({ params }) => ({
+                    idContributionPersistent: params.idPersistent ?? '',
+                    stepData: undefined
+                })
             },
             {
                 path: 'contribute/:idPersistent/complete',
                 element: <ContributionStepper selectedIdx={3} />,
-                loader: ({ params }) => params.idPersistent ?? ''
+                loader: ({ params }) => ({
+                    idContributionPersistent: params.idPersistent ?? '',
+                    stepData: undefined
+                })
             },
             {
                 path: 'review',
@@ -129,7 +149,7 @@ const router = createBrowserRouter([
                 path: 'profile/:category',
                 element: <ProfilePage />,
                 loader: ({ params }) => params.category ?? ''
-            },
+            }
         ]
     }
 ])
