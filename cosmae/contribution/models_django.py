@@ -84,13 +84,23 @@ class ContributionCandidate(models.Model):
     @classmethod
     def update(cls, id_persistent: str, user: CosmaeUser, **kwargs):
         "Changes a contribution candidate."
+        reprocess = False
         try:
             with transaction.atomic():
                 candidate_query = ContributionCandidate.by_id_persistent(
                     id_persistent, user
                 )
                 candidate = candidate_query.select_for_update(nowait=True).get()
+                if (
+                    kwargs.get("has_header") is not None
+                    and kwargs["has_header"] != candidate.has_header
+                ):
+                    reprocess = True
                 patch_from_dict(candidate, **kwargs)
+            if reprocess:
+                ColumnContribution.get_by_candidate_query_set(candidate).delete()
+                candidate.set_state(ContributionCandidate.UPLOADED)
+                candidate.save(update_fields=["state", "has_header"])
             return candidate
         except OperationalError as exc:
             if str(exc.args[0]).startswith("database is locked"):

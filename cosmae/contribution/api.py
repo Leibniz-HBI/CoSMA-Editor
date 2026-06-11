@@ -1,6 +1,7 @@
 "API methods for handling contributions."
 
 import os
+from logging import getLogger
 from uuid import uuid4
 
 from django.conf import settings
@@ -32,6 +33,7 @@ from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import check_user, cosmae_auth
 
+_LOGGER = getLogger(__name__)
 router = Router()
 router.add_router(
     "/{id_contribution_persistent}/columns", column_router, auth=cosmae_auth
@@ -176,7 +178,7 @@ def contribution_patch(
         if "edit_session_id" in patch_data:
             if (
                 len(
-                    EditSession.objects.filter(
+                    EditSession.objects.filter(  # pylint: disable=no-member
                         id_persistent=patch_data["edit_session_id"]
                     )
                 )
@@ -190,8 +192,10 @@ def contribution_patch(
         return 401, ApiError(msg="Not authenticated.")
     except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution does not exist.")
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not patch contribution")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not patch contribution"
+        _LOGGER.exception(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.post(
