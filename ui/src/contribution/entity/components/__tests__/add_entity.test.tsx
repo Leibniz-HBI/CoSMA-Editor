@@ -21,7 +21,10 @@ import { addResponseSequence, expectFetchCall } from '../../../../util/tests/res
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
-    loaderMock.mockReturnValue('id-contribution-test')
+    loaderMock.mockReturnValue({
+        idContributionPersistent: 'id-contribution-test',
+        stepData: ''
+    })
     return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 function MockTable() {
@@ -198,7 +201,7 @@ function initialResponses(fetchMock: Mock) {
         [200, { matches: mkMatches(personList.slice(0, 4)) }],
         [200, { matches: mkMatches(personList.slice(4, 12)) }],
         [200, { matches: mkMatches(personList.slice(12, 28)) }],
-        [200, { matches: mkMatches(personList.slice(28,50)) }],
+        [200, { matches: mkMatches(personList.slice(28, 50)) }],
         [200, { column_list: [] }],
         [200, { column_list: [] }],
         // empty response because no match columns.
