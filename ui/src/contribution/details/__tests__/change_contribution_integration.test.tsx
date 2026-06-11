@@ -3,21 +3,24 @@
  */
 
 import { waitFor, screen } from '@testing-library/react'
-import { NotificationType } from '../../../util/notification/slice'
+import { newNotification, NotificationType } from '../../../util/notification/slice'
 import { newContributionState } from '../../slice'
 import { ContributionDetailsStep } from '../components'
 import userEvent from '@testing-library/user-event'
 import { ContributionStep, newContribution } from '../../state'
 import { newRemote } from '../../../util/state'
-import { vi } from 'vitest'
+import { Mock, vi } from 'vitest'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { useNavigate } from 'react-router-dom'
 
 vi.mock('react-router-dom', () => {
     const mockNavigate = vi.fn()
     return {
         useNavigate: vi.fn().mockReturnValue(mockNavigate),
-        useLoaderData: vi.fn().mockReturnValue('id-test-0')
+        useLoaderData: vi
+            .fn()
+            .mockReturnValue({ idContributionPersistent: 'id-test-0', stepData: '' })
     }
 })
 const nameTest0 = 'contribution test 0'
@@ -43,6 +46,10 @@ const preloadedState = {
     }),
     notification: { notificationList: [], notificationMap: {} }
 }
+
+beforeEach(() => {
+    ;(useNavigate() as Mock).mockClear()
+})
 
 test('no submit for short input', async () => {
     const fetchMock = vi.fn()
@@ -142,9 +149,19 @@ test('submit for changed name', async () => {
                     })
                 )
             }),
-            notification: { notificationList: [], notificationMap: {} }
+            notification: {
+                notificationList: [
+                    newNotification({
+                        type: NotificationType.Success,
+                        msg: expect.anything(),
+                        id: expect.anything()
+                    })
+                ],
+                notificationMap: expect.anything()
+            }
         })
     )
+    expect((useNavigate() as Mock).mock.calls).toHaveLength(1)
 })
 
 test('submit for changed empty values', async () => {
@@ -206,9 +223,19 @@ test('submit for changed empty values', async () => {
                     })
                 )
             }),
-            notification: { notificationList: [], notificationMap: {} }
+            notification: {
+                notificationList: [
+                    newNotification({
+                        type: NotificationType.Success,
+                        msg: expect.anything(),
+                        id: expect.anything()
+                    })
+                ],
+                notificationMap: expect.anything()
+            }
         })
     )
+    expect((useNavigate() as Mock).mock.calls).toHaveLength(1)
     await expectFetchCallList(fetchMock.mock.calls, [
         [
             `http://127.0.0.1:8000/cosmae/api/contributions/${idTest0}`,
@@ -278,9 +305,19 @@ test('submit for changed header flag', async () => {
                         })
                     )
                 }),
-                notification: { notificationList: [], notificationMap: {} }
+                notification: {
+                    notificationList: [
+                        newNotification({
+                            type: NotificationType.Success,
+                            msg: expect.anything(),
+                            id: expect.anything()
+                        })
+                    ],
+                    notificationMap: expect.anything()
+                }
             })
         )
+        expect((useNavigate() as Mock).mock.calls).toHaveLength(1)
     })
     await expectFetchCallList(fetchMock.mock.calls, [
         [

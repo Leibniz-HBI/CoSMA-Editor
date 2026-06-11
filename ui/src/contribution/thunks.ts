@@ -151,8 +151,8 @@ export function patchContributionDetails({
     emptyValues?: string
 
     hasHeader?: boolean
-}): ThunkWithFetch<void> {
-    return async (dispatch, _getState, _fetch): Promise<void> => {
+}): ThunkWithFetch<boolean> {
+    return async (dispatch, _getState, _fetch): Promise<boolean> => {
         dispatch(patchSelectedContributionStart())
         try {
             const body: { [key: string]: string | boolean } = {}
@@ -176,7 +176,7 @@ export function patchContributionDetails({
                 dispatch(
                     patchSelectedContributionEnd(parseContributionFromApi(rsp.data))
                 )
-                return
+                return true
             }
             dispatch(patchSelectedContributionEnd(undefined))
             dispatch(
@@ -186,6 +186,7 @@ export function patchContributionDetails({
             dispatch(patchSelectedContributionEnd(undefined))
             dispatch(addError(exceptionMessage(e)))
         }
+        return false
     }
 }
 
