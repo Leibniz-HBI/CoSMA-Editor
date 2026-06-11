@@ -53,7 +53,6 @@ export function ColumnDefinitionStep() {
     const contributionCandidate = useAppSelector(selectContribution)
     const ref = useRef(null)
     const [scroll, setScroll] = useState(0)
-    console.log(idColumnContributionPersistent)
     useEffect(() => {
         if (contributionCandidate.value != undefined && !definitions.isLoading) {
             dispatch(
