@@ -21,7 +21,10 @@ import userEvent from '@testing-library/user-event'
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
-    loaderMock.mockReturnValue('id-contribution-test')
+    loaderMock.mockReturnValue({
+        idContributionPersistent: 'id-contribution-test',
+        stepData: ''
+    })
     return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -108,8 +111,8 @@ function initialResponses(fetchMock: Mock) {
         [200, { column_list: [] }],
         [200, { matches: mkMatches(entityList.slice(4, 12)) }],
         [200, { matches: mkMatches(entityList.slice(12, 28)) }],
-        [200, { matches: mkMatches(entityList.slice(28,60)) }],
-        [200, { value_responses: [] }],
+        [200, { matches: mkMatches(entityList.slice(28, 60)) }],
+        [200, { value_responses: [] }]
     ])
 }
 test('get duplicates', async () => {

@@ -19,7 +19,10 @@ import { addResponseSequence, expectFetchCall } from '../../../../util/tests/res
 
 vi.mock('react-router-dom', () => {
     const loaderMock = vi.fn()
-    loaderMock.mockReturnValue('id-contribution-test')
+    loaderMock.mockReturnValue({
+        idContributionPersistent: 'id-contribution-test',
+        stepData: ''
+    })
     return { useLoaderData: loaderMock, useNavigate: vi.fn() }
 })
 function MockTable() {
