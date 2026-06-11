@@ -4,11 +4,13 @@ import { Formik, FormikErrors, FormikTouched } from 'formik'
 import { HandleChange } from '../../util/type'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
-import { useLoaderData } from 'react-router-dom'
+import { useLoaderData, useNavigate } from 'react-router-dom'
 import { Contribution } from '../state'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import { selectContribution } from '../selectors'
 import { patchContributionDetails } from '../thunks'
+import { StepperLoaderData } from '../components'
+import { addSuccessVanish } from '../../util/notification/slice'
 
 export type PatchContributionCallback = ({
     name,
@@ -23,8 +25,11 @@ export type PatchContributionCallback = ({
 }) => void
 
 export function ContributionDetailsStep() {
-    const idPersistent = useLoaderData() as string
+    const idPersistent =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        useLoaderData<StepperLoaderData<any>>().idContributionPersistent
     const dispatch = useAppDispatch()
+    const navigate = useNavigate()
     const contribution = useAppSelector(selectContribution)
     if (contribution.isLoading || contribution.value == undefined) {
         return (
@@ -47,7 +52,16 @@ export function ContributionDetailsStep() {
                         emptyValues,
                         hasHeader
                     })
-                )
+                ).then((success) => {
+                    if (success) {
+                        dispatch(
+                            addSuccessVanish(
+                                'Contribution details updated successfully.'
+                            )
+                        )
+                        navigate(`/contribute/${idPersistent}/columns`)
+                    }
+                })
             }}
         />
     )
