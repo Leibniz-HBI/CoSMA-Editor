@@ -42,6 +42,7 @@ import { EntitiesStep } from './entity/components'
 import { CompleteStep } from './complete/components'
 import { useEditSessionByIdPersistent } from '../session/hooks'
 import { EditSessionSelectButton } from '../session/components'
+import { PencilSquare } from 'react-bootstrap-icons'
 
 export function ContributionList() {
     const dispatch = useAppDispatch()
@@ -128,6 +129,7 @@ function ContributionStepperDisplay({
     switch (contribution.value?.step) {
         case ContributionStep.Uploaded:
             processingMessage = 'Columns not yet extracted'
+            idxStepOfContribution = 1
             break
         case ContributionStep.ColumnsAssigned:
             processingMessage = 'Values not yet extracted'
@@ -293,9 +295,24 @@ export function ContributionListItem({
                             </Badge>
                         </Col>
                         <Col>
-                            <span className="link-primary">
-                                <u>{contribution.name}</u>
-                            </span>
+                            <Row className="justify-content-start">
+                                <Col xs="auto">
+                                    <span className="link-primary">
+                                        <u>{contribution.name}</u>
+                                    </span>
+                                </Col>
+                                <Col
+                                    xs="auto"
+                                    onClick={(event) => {
+                                        event.stopPropagation()
+                                        navigate(
+                                            `/contribute/${contribution.idPersistent}/metadata`
+                                        )
+                                    }}
+                                >
+                                    <PencilSquare />
+                                </Col>
+                            </Row>
                         </Col>
                     </Row>
                 </Col>
