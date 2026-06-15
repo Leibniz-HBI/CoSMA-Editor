@@ -238,6 +238,9 @@ def dispatch_resolve_conflicts(
     "Dispatch method for resolving conflicts to queue"
     django_rq.enqueue(
         merge_request_resolve_conflicts,
-        str(merge_request.id_persistent),
-        str(approved_by.id_persistent),
+        args=(
+            str(merge_request.id_persistent),
+            str(approved_by.id_persistent),
+        ),
+        job_timeout=60*12
     )
