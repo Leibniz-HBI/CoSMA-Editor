@@ -112,6 +112,7 @@ class EntityMissingException(Exception):
 
     def __init__(self, id_persistent):
         self.id_persistent = id_persistent
+        self.msg = f"Entity with id_persistent {id_persistent} does not exist."
 
 
 class ColumnMissingException(Exception):
