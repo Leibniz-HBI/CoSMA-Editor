@@ -73,7 +73,7 @@ export function getMergeRequestConflicts(
             for (let offset = 0; offset >= 0; ) {
                 const rsp = await cosmaeMergeRequestApiGetMergeRequestConflicts({
                     path: { id_merge_request_persistent: idMergeRequestPersistent },
-                    query: { offset, limit: 10 }
+                    query: { offset, limit: 30 }
                 })
                 if (rsp.data) {
                     const updatedSet = new Set(

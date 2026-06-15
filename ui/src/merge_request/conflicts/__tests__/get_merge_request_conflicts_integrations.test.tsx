@@ -382,11 +382,11 @@ describe('resolve conflicts', () => {
         })
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=30',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=30',
                 { credentials: 'include' }
             ],
             [
@@ -511,11 +511,11 @@ describe('submit', () => {
         })
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=30',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=30',
                 { credentials: 'include' }
             ],
             [
@@ -556,11 +556,11 @@ describe('submit', () => {
         })
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=30',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=30',
                 { credentials: 'include' }
             ],
             [
@@ -593,11 +593,11 @@ describe('toggle disable origin on merge', () => {
         expect(store.getState().notification).toEqual(newNotificationManager({}))
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=30',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=30',
                 { credentials: 'include' }
             ],
             [
@@ -646,11 +646,11 @@ describe('toggle disable origin on merge', () => {
         })
         await expectFetchCallList(fetchMock.mock.calls, [
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=0&limit=30',
                 { credentials: 'include' }
             ],
             [
-                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=10',
+                'http://127.0.0.1:8000/cosmae/api/merge_requests/id-merge-request/conflicts?offset=12&limit=30',
                 { credentials: 'include' }
             ],
             [
