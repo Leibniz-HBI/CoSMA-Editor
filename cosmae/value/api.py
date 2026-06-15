@@ -1,6 +1,7 @@
 "API methods for values."
 
 from datetime import datetime
+from logging import getLogger
 from typing import List
 from uuid import uuid4
 
@@ -32,6 +33,7 @@ from cosmae.value.models_django import ValueAbstract as ValueAbstractDb
 from cosmae.value.models_django import ValueHistory as ValueHistoryDb
 from cosmae.value.models_django import value_objects
 
+_LOGGER = getLogger(__name__)
 router = Router()
 
 MAX_VALUE_CHUNK_LIMIT = 10000
@@ -177,6 +179,10 @@ def post_value(request: HttpRequest, value_list: ValuePostList):
             f"to the value with id_persistent {exc.new_value.id_persistent}.",
             value_list=[value_db_to_api(exc.new_value)],
         )
+    except Exception as exc: # pylint: disable=broad-except
+        msg = "Could not set value"
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
     value_db_saves = [value for value, do_write in value_db_list if do_write]
     try:
         save_many_atomic(value_db_saves)
