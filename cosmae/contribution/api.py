@@ -5,7 +5,7 @@ from logging import getLogger
 from uuid import uuid4
 
 from django.conf import settings
-from django.db import DatabaseError, IntegrityError
+from django.db import DatabaseError
 from django.http import HttpRequest
 from ninja import File, Form, Router, UploadedFile
 
@@ -88,8 +88,6 @@ def contribution_post(
             return 500, ApiError(msg="Could not save the uploaded file.")
         try:
             contribution_db.save()
-        except IntegrityError:
-            return 400, ApiError(msg="Unknown edit session.")
         except DatabaseError:
             if os.path.exists(out_file_path):
                 os.remove(out_file_path)
@@ -100,8 +98,12 @@ def contribution_post(
         return 200, ContributionPostResponse(
             id_persistent=contribution_db.id_persistent
         )
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not create contribution")
+    except EditSession.DoesNotExist:  # pylint: disable=no-member
+        return 400, ApiError(msg="Unknown edit session.")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not create contribution"
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.get(
@@ -140,7 +142,6 @@ def contribution_get(request, id_persistent: str):
             return 401, ApiError(msg="Not authenticated.")
         except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
             return 404, ApiError(msg="Contribution does not exist.")
-
         contribution_api = contribution_db_to_api(contribution_db)
         return 200, contribution_api
     except Exception:  # pylint: disable=broad-except
@@ -166,7 +167,11 @@ def contribution_patch(
         user = check_user(request)
         patch_data = patch_data.dict(exclude_unset=True)
         try:
-            patch_data["edit_session_id"] = patch_data.pop("id_edit_session_persistent")
+            patch_data["edit_session"] = (
+                EditSession.objects.filter(  # pylint: disable=no-member
+                    id_persistent=patch_data.pop("id_edit_session_persistent")
+                ).get()
+            )
         except KeyError:
             pass
         contribution_db = ContributionCandidateDb.update(
@@ -174,18 +179,8 @@ def contribution_patch(
         )
         return 200, contribution_db_to_api(contribution_db)
 
-    except IntegrityError as exc:
-        if "edit_session_id" in patch_data:
-            if (
-                len(
-                    EditSession.objects.filter(  # pylint: disable=no-member
-                        id_persistent=patch_data["edit_session_id"]
-                    )
-                )
-                == 0
-            ):
-                return 400, ApiError(msg="Unknown edit session.")
-        raise exc
+    except EditSession.DoesNotExist:  # pylint: disable=no-member
+        return 400, ApiError(msg="Unknown edit session.")
     except ResourceLockedException:
         return 423, ApiError(msg="Contribution candidate is currently locked.")
     except NotAuthenticatedException:
@@ -293,5 +288,7 @@ def mk_initial_contribution_candidate(
         created_by=user,
         state=ContributionCandidateDb.UPLOADED,
         empty_values=contribution_api.empty_values,
-        edit_session_id=contribution_api.id_edit_session_persistent,
+        edit_session=EditSession.objects.filter(  # pylint: disable=no-member
+            id_persistent=contribution_api.id_edit_session_persistent
+        ).get(),  # pylint: disable=no-member
     )

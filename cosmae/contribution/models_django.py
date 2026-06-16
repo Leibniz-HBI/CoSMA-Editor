@@ -51,6 +51,7 @@ class ContributionCandidate(models.Model):
     edit_session = models.ForeignKey(
         "EditSession", on_delete=models.CASCADE, default=None, null=True
     )
+    mark_delete = models.BooleanField(default=False)
 
     def set_state(self, state, error_msg=None, exception=None):
         "Set state of the contribution and set or reset a possible error message."
@@ -67,7 +68,7 @@ class ContributionCandidate(models.Model):
     def chunk_for_user(cls, user, start, offset):
         "Get the contribution candidates for a specific user."
         return ContributionCandidate.objects.filter(  # pylint: disable=no-member
-            created_by=user
+            created_by=user, mark_delete=False
         ).all()[start : start + offset]
 
     @classmethod
@@ -78,7 +79,7 @@ class ContributionCandidate(models.Model):
     ):
         "Get a single contribution candidate"
         return ContributionCandidate.objects.filter(  # pylint: disable=no-member
-            created_by=user, id_persistent=id_persistent
+            created_by=user, id_persistent=id_persistent, mark_delete=False
         )
 
     @classmethod
@@ -91,6 +92,8 @@ class ContributionCandidate(models.Model):
                     id_persistent, user
                 )
                 candidate = candidate_query.select_for_update(nowait=True).get()
+                if candidate.mark_delete:
+                    raise cls.DoesNotExist()  # pylint: disable=no-member
                 if (
                     kwargs.get("has_header") is not None
                     and kwargs["has_header"] != candidate.has_header
