@@ -45,6 +45,7 @@ class ContributionCandidate(Schema):
     match_column_list: List[ColumnResponse] | None = None
     justification_txt: str | None = None
     id_edit_session_persistent: str
+    mark_delete: bool
 
 
 class ContributionCandidatePatchRequest(Schema):
@@ -55,6 +56,7 @@ class ContributionCandidatePatchRequest(Schema):
     has_header: bool | None = None
     empty_values: str | None = None
     id_edit_session_persistent: str | None = None
+    mark_delete: bool | None = None
 
 
 class ContributionChunkResponse(Schema):

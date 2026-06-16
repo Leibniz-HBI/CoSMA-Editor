@@ -3,57 +3,56 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import tests.contribution.api.integration.common as c
-import tests.contribution.api.integration.requests as req_contrib
+from requests import post
+
+import tests.contribution.api.common as c
+import tests.contribution.api.requests as req_contrib
 import tests.user.common as cu
 from cosmae.column.models_django import Column, ColumnHistory
 from cosmae.contribution.column.models_django import ColumnContribution
 from cosmae.contribution.models_django import ContributionCandidate
-from cosmae.util.auth import NotAuthenticatedException, CosmaeUser
+from cosmae.util.auth import CosmaeUser, NotAuthenticatedException
 
 
 def test_no_cookies(auth_server):
     live_server, _ = auth_server
-    rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, "id-test", {"name": "new name"}
+    rsp = post(
+        live_server.url
+        + "/cosmae/api/contributions/id-test/column_assignment_complete",
+        cookies=None,
+        timeout=900,
     )
     assert rsp.status_code == 401
 
 
-def test_invalid_user(auth_server):
+def test_invalid_user(request_user):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
     with patch("cosmae.contribution.api.check_user", mock):
-        live_server, cookies = auth_server
-        rsp = req_contrib.post_column_assignment_complete(
-            live_server.url, "id-test", cookies=cookies
+        status, _rsp = req_contrib.post_column_assignment_complete(
+            request_user, "id-test"
         )
-        assert rsp.status_code == 401
+        assert status == 401
 
 
-def test_404(auth_server):
-    live_server, cookies = auth_server
-    rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, str(uuid4()), cookies=cookies
+def test_404(request_user):
+    status, _rsp = req_contrib.post_column_assignment_complete(
+        request_user, str(uuid4())
     )
-    assert rsp.status_code == 404
+    assert status == 404
 
 
-def test_wrong_user(auth_server1):
-    live_server, cookies0, cookies1 = auth_server1
-    rsp = req_contrib.post_contribution(
-        live_server.url, c.contribution_post0, cookies=cookies0
+def test_wrong_user(request_user, request_user1):
+    status, rsp = req_contrib.post_contribution(request_user, c.contribution_post0)
+    assert status == 200
+    id_persistent = rsp.dict()["id_persistent"]
+    status, _rsp = req_contrib.post_column_assignment_complete(
+        request_user1, id_persistent
     )
-    assert rsp.status_code == 200
-    id_persistent = rsp.json()["id_persistent"]
-    rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, id_persistent, cookies=cookies1
-    )
-    assert rsp.status_code == 404
+    assert status == 404
 
 
-def test_accept_missing_display_txt(auth_server, user):
-    live_server, cookies = auth_server
+def test_accept_missing_display_txt(request_user, user):
     id_persistent = str(uuid4())
     ContributionCandidate.objects.create(  # pylint: disable=no-member
         id_persistent=id_persistent,
@@ -64,14 +63,13 @@ def test_accept_missing_display_txt(auth_server, user):
         file_name="file-test.csv",
         created_by=user,
     )
-    rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, id_persistent, cookies=cookies
+    status, _rsp = req_contrib.post_column_assignment_complete(
+        request_user, id_persistent
     )
-    assert rsp.status_code == 200
+    assert status == 200
 
 
-def test_with_discarded_assignment(auth_server):
-    live_server, cookies = auth_server
+def test_with_discarded_assignment(request_user):
     id_contribution_persistent = uuid4()
     contribution_candidate = (
         ContributionCandidate.objects.create(  # pylint: disable=no-member
@@ -100,14 +98,13 @@ def test_with_discarded_assignment(auth_server):
         discard=True,
     )
 
-    rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, id_contribution_persistent, cookies=cookies
+    status, _rsp = req_contrib.post_column_assignment_complete(
+        request_user, id_contribution_persistent
     )
-    assert rsp.status_code == 200
+    assert status == 200
 
 
-def test_incomplete_assignment(auth_server):
-    live_server, cookies = auth_server
+def test_incomplete_assignment(request_user):
     id_contribution_persistent = uuid4()
     contribution_candidate = (
         ContributionCandidate.objects.create(  # pylint: disable=no-member
@@ -137,19 +134,18 @@ def test_incomplete_assignment(auth_server):
         discard=False,
     )
 
-    rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, id_contribution_persistent, cookies=cookies
+    status, rsp = req_contrib.post_column_assignment_complete(
+        request_user, id_contribution_persistent
     )
-    assert rsp.status_code == 400
+    assert status == 400
     assert (
-        rsp.json()["msg"]
+        rsp.dict()["msg"]
         == "The following columns are neither discarded nor assigned to "
         "existing: column_test."
     )
 
 
-def test_duplicate_assignment(auth_server):
-    live_server, cookies = auth_server
+def test_duplicate_assignment(request_user):
     id_contribution_persistent = uuid4()
     contribution_candidate = (
         ContributionCandidate.objects.create(  # pylint: disable=no-member
@@ -179,18 +175,17 @@ def test_duplicate_assignment(auth_server):
         discard=False,
     )
 
-    rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, id_contribution_persistent, cookies=cookies
+    status, rsp = req_contrib.post_column_assignment_complete(
+        request_user, id_contribution_persistent
     )
-    assert rsp.status_code == 400
+    assert status == 400
     assert (
-        rsp.json()["msg"] == "Assignment to existing columns has to be unique. Please "
+        rsp.dict()["msg"] == "Assignment to existing columns has to be unique. Please "
         "check the following columns: name, column_test."
     )
 
 
-def test_complete_assignment(auth_server):
-    live_server, cookies = auth_server
+def test_complete_assignment(request_user):
     id_contribution_persistent = uuid4()
     user = CosmaeUser.objects.get(username=cu.test_username)
     contribution_candidate = (
@@ -229,7 +224,7 @@ def test_complete_assignment(auth_server):
         index_in_file=1,
     )
 
-    rsp = req_contrib.post_column_assignment_complete(
-        live_server.url, id_contribution_persistent, cookies=cookies
+    status, _rsp = req_contrib.post_column_assignment_complete(
+        request_user, id_contribution_persistent
     )
-    assert rsp.status_code == 200
+    assert status == 200

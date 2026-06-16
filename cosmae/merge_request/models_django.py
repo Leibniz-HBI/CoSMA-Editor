@@ -265,7 +265,8 @@ class ColumnMergeRequest(AbstractMergeRequest):
     def contribution_with_match_columns(cls, id_contribution_persistent):
         "Gets the columns that were used for matching in a specific contribution."
         return ContributionCandidate.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_contribution_persistent
+            id_persistent=id_contribution_persistent,
+            mark_delete=False,
         ).annotate(
             matched_columns=models.Subquery(
                 ColumnMergeRequest.objects.filter(  # pylint: disable=no-member

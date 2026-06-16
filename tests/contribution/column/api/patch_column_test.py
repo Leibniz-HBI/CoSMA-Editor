@@ -6,7 +6,7 @@ from uuid import uuid4
 from pytest import fixture
 from requests import patch as patch_request
 
-import tests.contribution.api.integration.common as c
+import tests.contribution.api.common as c
 import tests.contribution.api.requests as req_contrib
 import tests.contribution.column.api.requests as req
 from cosmae.column.models_django import Column, ColumnHistory

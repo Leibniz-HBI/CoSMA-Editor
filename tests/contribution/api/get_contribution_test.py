@@ -2,47 +2,44 @@
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import tests.contribution.api.integration.common as c
-import tests.contribution.api.integration.requests as req_contrib
+from requests import get
+
+import tests.contribution.api.common as c
+import tests.contribution.api.requests as req_contrib
 import tests.edit_session.common as cs
 import tests.user.common as cu
 from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.util.auth import NotAuthenticatedException
 
 
-def test_unknown_user(auth_server):
+def test_unknown_user(request_user):
     mock = MagicMock()
     mock.side_effect = NotAuthenticatedException()
-    server, cookies = auth_server
     with patch("cosmae.contribution.api.check_user", mock):
-        rsp = req_contrib.get_contribution(server.url, "id-test", cookies=cookies)
-        assert rsp.status_code == 401
+        status, _rsp = req_contrib.get_contribution(request_user, "id-test")
+        assert status == 401
 
 
 def test_no_cookies(auth_server):
     server, _ = auth_server
-    rsp = req_contrib.get_contribution(server.url, "id-test")
+    rsp = get(server.url + "/cosmae/api/contributions/id-test", timeout=900)
     assert rsp.status_code == 401
 
 
-def test_404(auth_server):
-    server, cookies = auth_server
-    rsp = req_contrib.get_contribution(server.url, str(uuid4()), cookies=cookies)
-    assert rsp.status_code == 404
+def test_404(request_user):
+    status, _rsp = req_contrib.get_contribution(request_user, str(uuid4()))
+    assert status == 404
 
 
-def test_get(auth_server):
-    live_server, cookies = auth_server
-    rsp = req_contrib.post_contribution(
-        live_server.url, c.contribution_post0, cookies=cookies
+def test_get(request_user):
+    status, rsp = req_contrib.post_contribution(request_user, c.contribution_post0)
+    assert status == 200
+    id_persistent = rsp.dict()["id_persistent"]
+    status, rsp = req_contrib.get_contribution(
+        request_user, id_persistent=id_persistent
     )
-    assert rsp.status_code == 200
-    id_persistent = rsp.json()["id_persistent"]
-    rsp = req_contrib.get_contribution(
-        live_server.url, id_persistent=id_persistent, cookies=cookies
-    )
-    assert rsp.status_code == 200
-    contribution = rsp.json()
+    assert status == 200
+    contribution = rsp.dict()
     assert contribution["id_persistent"] == id_persistent
     contribution.pop("id_persistent")
     assert contribution["match_column_list"] == []
@@ -50,13 +47,10 @@ def test_get(auth_server):
     assert contribution == c.contribution_test_upload0
 
 
-def test_get_with_match_column_list(auth_server, column1, column_curated):
-    live_server, cookies = auth_server
-    rsp = req_contrib.post_contribution(
-        live_server.url, c.contribution_post0, cookies=cookies
-    )
-    assert rsp.status_code == 200
-    id_persistent = rsp.json()["id_persistent"]
+def test_get_with_match_column_list(request_user, column1, column_curated):
+    status, rsp = req_contrib.post_contribution(request_user, c.contribution_post0)
+    assert status == 200
+    id_persistent = rsp.dict()["id_persistent"]
     ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         id_persistent=c.id_column_merge_request_persistent,
         id_origin_persistent=column1.id_persistent,
@@ -66,11 +60,11 @@ def test_get_with_match_column_list(auth_server, column1, column_curated):
         created_by=column1.owner,
         created_at=c.time_edit_column_merge_request,
     )
-    rsp = req_contrib.get_contribution(
-        live_server.url, id_persistent=id_persistent, cookies=cookies
+    status, rsp = req_contrib.get_contribution(
+        request_user, id_persistent=id_persistent
     )
-    assert rsp.status_code == 200
-    contribution = rsp.json()
+    assert status == 200
+    contribution = rsp.dict()
     assert contribution["id_persistent"] == id_persistent
     contribution.pop("id_persistent")
     assert contribution["match_column_list"] == [
@@ -92,13 +86,12 @@ def test_get_with_match_column_list(auth_server, column1, column_curated):
     assert contribution == c.contribution_test_upload0
 
 
-def test_get_with_error(auth_server, contribution_error):
-    live_server, cookies = auth_server
-    rsp = req_contrib.get_contribution(
-        live_server.url, id_persistent=contribution_error.id_persistent, cookies=cookies
+def test_get_with_error(request_user, contribution_error):
+    status, rsp = req_contrib.get_contribution(
+        request_user, id_persistent=contribution_error.id_persistent
     )
-    assert rsp.status_code == 200
-    json = rsp.json()
+    assert status == 200
+    json = rsp.dict()
     assert json == {
         "id_persistent": contribution_error.id_persistent,
         "name": contribution_error.name,
@@ -112,4 +105,5 @@ def test_get_with_error(auth_server, contribution_error):
         "empty_values": "null,nan,na",
         "justification_txt": None,
         "id_edit_session_persistent": cs.id_session_user,
+        "mark_delete": False,
     }

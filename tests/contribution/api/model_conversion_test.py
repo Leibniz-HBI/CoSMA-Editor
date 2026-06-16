@@ -1,13 +1,16 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,disable=unused-argument
 import tests.contribution.common as c
 import tests.edit_session.common as cs
-from tests.user import common as cu
 from cosmae.contribution.api import mk_initial_contribution_candidate
-from cosmae.contribution.models_api import ContributionCandidate, ContributionPostRequest
+from cosmae.contribution.models_api import (
+    ContributionCandidate,
+    ContributionPostRequest,
+)
 from cosmae.contribution.models_conversion import contribution_db_to_api
 from cosmae.contribution.models_django import (
     ContributionCandidate as ContributionCandidateDb,
 )
+from tests.user import common as cu
 
 
 def test_initial_contribution(user):
@@ -36,4 +39,5 @@ def test_model_db_to_api(contribution_user):
         state="COLUMNS_ASSIGNED",
         empty_values="null,nan,na",
         id_edit_session_persistent=cs.id_session_user,
+        mark_delete=False,
     )

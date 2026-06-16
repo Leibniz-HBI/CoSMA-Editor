@@ -2,8 +2,7 @@
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import tests.contribution.api.integration.common as c
-import tests.contribution.api.integration.requests as req_contrib
+import tests.contribution.api.common as c
 import tests.contribution.column.api.integration.requests as req
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.util.auth import NotAuthenticatedException
@@ -32,8 +31,8 @@ def test_404(auth_server):
 
 def test_uploaded_400(auth_server):
     server, cookies = auth_server
-    rsp = req_contrib.post_contribution(
-        server.url, c.contribution_post0, cookies=cookies
+    rsp = req.post_contribution(
+        server.url, c.contribution_post0.dict(), cookies=cookies
     )
     assert rsp.status_code == 200
     id_persistent = rsp.json()["id_persistent"]
@@ -44,8 +43,8 @@ def test_uploaded_400(auth_server):
 
 def test_no_defs(auth_server):
     server, cookies = auth_server
-    rsp = req_contrib.post_contribution(
-        server.url, c.contribution_post0, cookies=cookies
+    rsp = req.post_contribution(
+        server.url, c.contribution_post0.dict(), cookies=cookies
     )
     assert rsp.status_code == 200
     id_persistent = rsp.json()["id_persistent"]
