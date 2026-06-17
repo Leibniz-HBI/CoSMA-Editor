@@ -25,6 +25,7 @@ from cosmae.exception import (
     DbObjectExistsException,
     DisabledColumnHasChildrenException,
     EntityUpdatedException,
+    ForbiddenException,
     NoChildColumnAllowedException,
     NoParentColumnException,
     NoSelfParentColumnException,
@@ -297,21 +298,14 @@ def purge(request: HttpRequest, id_persistent: str):
         user = check_user(request)
         if user.permission_group == CosmaeUser.APPLICANT:
             return 403, ApiError(msg="Insufficient permissions")
+        ColumnHistoryDb.purge(id_persistent, user)
+    except ColumnHistoryDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Column not found")
+    except ForbiddenException:
+        return 403, ApiError(msg="Insufficient permissions")
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated")
     try:
-        column_history_queryset = ColumnHistoryDb.objects.filter(
-            id_persistent=id_persistent
-        ).order_by("-time_edit")
-        if len(column_history_queryset) == 0:
-            return 404, ApiError(msg="Column not found")
-        most_recent = column_history_queryset[0]
-        if not most_recent.is_owner(user.id_persistent):
-            return 403, ApiError(msg="Insufficient permissions")
-        with transaction.atomic():
-            ColumnHistoryDb.bypass_parent(id_persistent)
-            for column in column_history_queryset:
-                column.delete()
         return 200, None
     except Exception as exc:  # pylint: disable=broad-except
         msg = "Could not delete column history"
@@ -342,7 +336,7 @@ def get_descendants(
     try:
         descendant_id_list = ColumnDb.descendants(id_persistent, user, up_until_time)
         return DescendantListResponse(id_descendants_persistent_list=descendant_id_list)
-    except ColumnDb.DoesNotExist:
+    except ColumnDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Column does not exist")
     except Exception:  # pylint: disable=broad-except
         return 500, ApiError(msg="Could not get descendants")
