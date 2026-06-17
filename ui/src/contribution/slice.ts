@@ -89,6 +89,16 @@ export const contributionSlice = createSlice({
             const contribution = action.payload
             if (contribution !== undefined) {
                 state.selectedContribution = newRemote(contribution)
+                const contributionIndex = state.contributions.value.findIndex(
+                    (c) => c.idPersistent === contribution.idPersistent
+                )
+                if (contributionIndex !== -1 && contribution !== undefined) {
+                    if (contribution.markedForDeletion) {
+                        state.contributions.value.splice(contributionIndex, 1)
+                    } else {
+                        state.contributions.value[contributionIndex] = contribution
+                    }
+                }
             }
             state.patchSelectedContribution = false
         },

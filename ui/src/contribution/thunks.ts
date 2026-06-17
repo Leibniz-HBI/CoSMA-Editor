@@ -14,6 +14,7 @@ import {
 } from './slice'
 import { Contribution, ContributionStep, newContribution } from './state'
 import {
+    ContributionCandidate,
     ContributionCandidatePatchRequest,
     cosmaeContributionApiContributionChunkGet,
     cosmaeContributionApiContributionGet,
@@ -143,14 +144,15 @@ export function patchContributionDetails({
     name,
     description,
     hasHeader,
-    emptyValues
+    emptyValues,
+    markForDeletion
 }: {
     idPersistent: string
     name?: string
     description?: string
     emptyValues?: string
-
     hasHeader?: boolean
+    markForDeletion?: boolean
 }): ThunkWithFetch<boolean> {
     return async (dispatch, _getState, _fetch): Promise<boolean> => {
         dispatch(patchSelectedContributionStart())
@@ -167,6 +169,9 @@ export function patchContributionDetails({
             }
             if (emptyValues !== undefined) {
                 body['empty_values'] = emptyValues
+            }
+            if (markForDeletion !== undefined) {
+                body['mark_delete'] = markForDeletion
             }
             const rsp = await cosmaeContributionApiContributionPatch({
                 body: body as ContributionCandidatePatchRequest,
@@ -190,8 +195,7 @@ export function patchContributionDetails({
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseContributionFromApi(contribution_json: any): Contribution {
+export function parseContributionFromApi(contribution_json: ContributionCandidate): Contribution {
     return newContribution({
         name: contribution_json['name'],
         idPersistent: contribution_json['id_persistent'],
@@ -203,7 +207,8 @@ export function parseContributionFromApi(contribution_json: any): Contribution {
         matchColumnList: contribution_json['match_column_list']?.map(
             (columnJson: unknown) => parseColumnsFromApi(columnJson)
         ),
-        justification: contribution_json['justification_txt'] ?? undefined
+        justification: contribution_json['justification_txt'] ?? undefined,
+        markedForDeletion: contribution_json['mark_delete'] ?? false
     })
 }
 

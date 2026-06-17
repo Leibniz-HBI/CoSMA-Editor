@@ -11,8 +11,18 @@ import { ContributionStep, newContribution } from '../../state'
 import { newRemote } from '../../../util/state'
 import { Mock, vi } from 'vitest'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
-import { emptyState, renderWithProviders } from '../../../util/tests/provider'
+import { renderWithProviders } from '../../../util/tests/provider'
 import { useNavigate } from 'react-router-dom'
+import {
+    preloadedState,
+    authorTest,
+    descriptionTest0,
+    emptyValuesTest,
+    idTest0,
+    nameTest0,
+    contribution0,
+    contribution1
+} from '../test_utils'
 
 vi.mock('react-router-dom', () => {
     const mockNavigate = vi.fn()
@@ -23,29 +33,6 @@ vi.mock('react-router-dom', () => {
             .mockReturnValue({ idContributionPersistent: 'id-test-0', stepData: '' })
     }
 })
-const nameTest0 = 'contribution test 0'
-const descriptionTest0 = 'a contribution for tests'
-const idTest0 = 'id-test-0'
-const authorTest = 'author test'
-const emptyValuesTest = 'empty,absent'
-
-const preloadedState = {
-    ...emptyState,
-    contribution: newContributionState({
-        selectedContribution: newRemote(
-            newContribution({
-                name: nameTest0,
-                description: descriptionTest0,
-                idPersistent: idTest0,
-                author: authorTest,
-                hasHeader: false,
-                step: ContributionStep.ColumnsExtracted,
-                emptyValues: emptyValuesTest
-            })
-        )
-    }),
-    notification: { notificationList: [], notificationMap: {} }
-}
 
 beforeEach(() => {
     ;(useNavigate() as Mock).mockClear()
@@ -91,7 +78,8 @@ test('submit for changed name', async () => {
                 description: descriptionTest0,
                 state: 'COLUMNS_EXTRACTED',
                 author: authorTest,
-                empty_values: emptyValuesTest
+                empty_values: emptyValuesTest,
+                mark_delete: false
             }
         ]
     ])
@@ -134,20 +122,21 @@ test('submit for changed name', async () => {
         expect(feedbacks[1].textContent).toEqual('')
         expect(feedbacks[2].textContent).toEqual('')
     })
+    const patchedContribution = newContribution({
+        name: changedName,
+        description: descriptionTest0,
+        hasHeader: false,
+        step: ContributionStep.ColumnsExtracted,
+        idPersistent: idTest0,
+        emptyValues: emptyValuesTest,
+        author: authorTest,
+        markedForDeletion: false
+    })
     expect(store.getState()).toEqual(
         expect.objectContaining({
             contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        name: changedName,
-                        description: descriptionTest0,
-                        hasHeader: false,
-                        step: ContributionStep.ColumnsExtracted,
-                        idPersistent: idTest0,
-                        emptyValues: emptyValuesTest,
-                        author: authorTest
-                    })
-                )
+                selectedContribution: newRemote(patchedContribution),
+                contributions: newRemote([patchedContribution, contribution1])
             }),
             notification: {
                 notificationList: [
@@ -208,20 +197,20 @@ test('submit for changed empty values', async () => {
         expect(feedbacks[1].textContent).toEqual('')
         expect(feedbacks[2].textContent).toEqual('')
     })
+    const patchedContribution = newContribution({
+        name: changedName,
+        description: descriptionTest0,
+        hasHeader: false,
+        step: ContributionStep.ColumnsExtracted,
+        idPersistent: idTest0,
+        emptyValues: changedEmptyValues,
+        author: authorTest
+    })
     expect(store.getState()).toEqual(
         expect.objectContaining({
             contribution: newContributionState({
-                selectedContribution: newRemote(
-                    newContribution({
-                        name: changedName,
-                        description: descriptionTest0,
-                        hasHeader: false,
-                        step: ContributionStep.ColumnsExtracted,
-                        idPersistent: idTest0,
-                        emptyValues: changedEmptyValues,
-                        author: authorTest
-                    })
-                )
+                selectedContribution: newRemote(patchedContribution),
+                contributions: newRemote([patchedContribution, contribution1])
             }),
             notification: {
                 notificationList: [
@@ -290,20 +279,21 @@ test('submit for changed header flag', async () => {
         expect(feedbacks[0].textContent).toEqual('')
         expect(feedbacks[1].textContent).toEqual('')
         expect(feedbacks[2].textContent).toEqual('')
+        const patchedContribution = newContribution({
+            name: nameTest0,
+            description: descriptionTest0,
+            hasHeader: true,
+            step: ContributionStep.ColumnsExtracted,
+            idPersistent: idTest0,
+            emptyValues: emptyValuesTest,
+            author: authorTest,
+            markedForDeletion: false
+        })
         expect(store.getState()).toEqual(
             expect.objectContaining({
                 contribution: newContributionState({
-                    selectedContribution: newRemote(
-                        newContribution({
-                            name: nameTest0,
-                            description: descriptionTest0,
-                            hasHeader: true,
-                            step: ContributionStep.ColumnsExtracted,
-                            idPersistent: idTest0,
-                            emptyValues: emptyValuesTest,
-                            author: authorTest
-                        })
-                    )
+                    selectedContribution: newRemote(patchedContribution),
+                    contributions: newRemote([patchedContribution, contribution1])
                 }),
                 notification: {
                     notificationList: [
@@ -381,7 +371,8 @@ test('API error', async () => {
                             emptyValues: emptyValuesTest,
                             author: authorTest
                         })
-                    )
+                    ),
+                    contributions: newRemote([contribution0, contribution1])
                 }),
                 notification: {
                     notificationList: [
