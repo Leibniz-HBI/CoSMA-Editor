@@ -150,7 +150,7 @@ def test_patch_mark_delete(request_user):
     assert status == 200
     status, rsp = req_contrib.get_contribution(request_user, id_persistent)
     assert status == 404
-    contribution = ContributionCandidate.objects.filter(
+    contribution = ContributionCandidate.objects.filter(  # pylint: disable=no-member
         id_persistent=id_persistent
     ).get()  # pylint: disable=no-member
     assert contribution.name == c.contribution_post0.name
@@ -246,3 +246,21 @@ def test_unknown_field(request_user):
     assert not contribution["has_header"]
     assert contribution["id_edit_session_persistent"] == cs.id_session_user
     assert not contribution["mark_delete"]
+
+
+def test_not_modifiable_state(request_user):
+    status, rsp = req_contrib.post_contribution(request_user, c.contribution_post0)
+    assert status == 200
+    id_persistent = rsp.dict()["id_persistent"]
+    contribution = ContributionCandidate.objects.filter(  # pylint: disable=no-member
+        id_persistent=id_persistent
+    ).get()  # pylint: disable=no-member
+    contribution.state = ContributionCandidate.ENTITIES_ASSIGNED
+    contribution.save()
+    status, rsp = req_contrib.patch_contribution(
+        request_user, id_persistent, ContributionCandidatePatchRequest(name="new name")
+    )
+    assert status == 400
+    assert rsp.dict() == {
+        "msg": "The contribution candidate cannot be updated in the current state."
+    }

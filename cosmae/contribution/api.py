@@ -162,6 +162,7 @@ def contribution_get(request, id_persistent: str):
 def contribution_patch(
     request, id_persistent: str, patch_data: ContributionCandidatePatchRequest
 ):
+    # pylint: disable=too-many-return-statements
     "Update metadata of a contribution"
     try:
         user = check_user(request)
@@ -187,6 +188,10 @@ def contribution_patch(
         return 401, ApiError(msg="Not authenticated.")
     except ContributionCandidateDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Contribution does not exist.")
+    except ContributionCandidateDb.UpdateNotPossibleException:
+        return 400, ApiError(
+            msg="The contribution candidate cannot be updated in the current state."
+        )
     except Exception as exc:  # pylint: disable=broad-except
         msg = "Could not patch contribution"
         _LOGGER.exception(msg, exc_info=exc)
