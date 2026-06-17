@@ -53,6 +53,15 @@ class ContributionCandidate(models.Model):
     )
     mark_delete = models.BooleanField(default=False)
 
+    class UpdateNotPossibleException(Exception):
+        "Indicate that an update of the contribution is not possible in the current state."
+
+        def __init__(self):
+            super().__init__()
+            self.msg = (
+                "The contribution candidate cannot be updated in the current state."
+            )
+
     def set_state(self, state, error_msg=None, exception=None):
         "Set state of the contribution and set or reset a possible error message."
         self.state = state
@@ -94,6 +103,13 @@ class ContributionCandidate(models.Model):
                 candidate = candidate_query.select_for_update(nowait=True).get()
                 if candidate.mark_delete:
                     raise cls.DoesNotExist()  # pylint: disable=no-member
+                if candidate.state in [
+                    cls.ENTITIES_ASSIGNED,
+                    cls.ENTITIES_MATCHED,
+                    cls.VALUES_ASSIGNED,
+                    cls.MERGED,
+                ]:
+                    raise cls.UpdateNotPossibleException()
                 if (
                     kwargs.get("has_header") is not None
                     and kwargs["has_header"] != candidate.has_header
