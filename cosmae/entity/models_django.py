@@ -8,7 +8,7 @@ from typing import Optional
 from django.db import models
 from django.db.models.aggregates import Max
 
-from cosmae.entity.queryset import EntityQueryset
+from cosmae.entity.queryset import EntityHistoryQueryset, EntityQueryset
 from cosmae.util import CosmaeUser
 from cosmae.versioned.models_django import HistoryMixin, Versioned
 
@@ -54,7 +54,7 @@ class Entity(EntityAbstract):
 class EntityHistory(EntityAbstract, HistoryMixin):
     """Django ORM model for entity history."""
 
-    objects = EntityQueryset.as_manager()
+    objects = EntityHistoryQueryset.as_manager()
 
     class Meta:
         "Meta class for entity history."
