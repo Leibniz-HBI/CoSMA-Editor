@@ -27,6 +27,7 @@ export interface Contribution {
     matchColumnList: Column[]
     emptyValues: string
     justification: string | undefined
+    markedForDeletion: boolean
 }
 export function newContribution({
     name,
@@ -37,7 +38,8 @@ export function newContribution({
     author,
     emptyValues,
     matchColumnList = [],
-    justification = undefined
+    justification = undefined,
+    markedForDeletion = false
 }: {
     name: string
     idPersistent: string
@@ -48,6 +50,7 @@ export function newContribution({
     emptyValues: string
     matchColumnList?: Column[]
     justification?: string | undefined
+    markedForDeletion?: boolean
 }): Contribution {
     return {
         name,
@@ -58,7 +61,8 @@ export function newContribution({
         author,
         emptyValues,
         matchColumnList: matchColumnList,
-        justification
+        justification,
+        markedForDeletion: markedForDeletion
     }
 }
 
