@@ -11,7 +11,7 @@ from django.contrib.postgres.search import (
     SearchRank,
     SearchVector,
 )
-from django.db import models
+from django.db import models, transaction
 
 from cosmae.exception import (
     ColumnExistsException,
@@ -159,8 +159,10 @@ class ColumnQuerySet(VersionedQueryset):
 
     def annotate_name_path_string(self):
         "Annotate the concatenated name path sting"
-        name_cache_query = ColumnNamePathCache.objects.filter(
-            column_id=models.OuterRef("id"),
+        name_cache_query = (
+            ColumnNamePathCache.objects.filter(  # pylint: disable=no-member
+                column_id=models.OuterRef("id"),
+            )
         )
         if self.up_until_date is not None:
             name_cache_query = name_cache_query.filter(
@@ -312,6 +314,22 @@ class ColumnHistory(ColumnAbstract, HistoryMixin):
             version=self.id,  # pylint: disable=no-member
             curated=False,
         )
+
+    @classmethod
+    def purge(cls, id_persistent, user):
+        "Remove a column from the history."
+        column_history_queryset = cls.objects.filter(
+            id_persistent=id_persistent
+        ).order_by("-time_edit")
+        if len(column_history_queryset) == 0:
+            raise cls.DoesNotExist()  # pylint: disable=no-member
+        most_recent = column_history_queryset[0]
+        if not most_recent.is_owner(user.id_persistent):
+            raise ForbiddenException("ColumnHistory", id_persistent)
+        with transaction.atomic():
+            cls.bypass_parent(id_persistent)
+            for column in column_history_queryset:
+                column.delete()
 
     def check_integrity(self):  # pylint: disable=too-many-arguments
         """Check wether new version keeps constraints."""
@@ -489,7 +507,7 @@ class ColumnNamePathCache(models.Model):
     @classmethod
     def set_cache_entry(cls, id_version, name_path, time_edit):
         "Create a new cache entry."
-        return cls.objects.update_or_create(
+        return cls.objects.update_or_create(  # pylint: disable=no-member
             column_id=id_version,
             name_path=name_path,
             name_path_string=" -> ".join(name_path),
