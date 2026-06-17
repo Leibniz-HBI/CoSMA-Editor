@@ -75,6 +75,31 @@ class VersionedQueryset(models.QuerySet):
         return self.filter(id__lt=offset)
 
 
+class VersionedHistoryQuerysetMixin:
+    "Queryset for versioned histories"
+
+    def only_recent(self):
+        "Only return the most recent version for each id_persistent"
+        return self.annotate(
+            next_version=models.Subquery(
+                self.model.objects.filter(
+                    previous_version=models.OuterRef("id")
+                ).values("id")[:1]
+            )
+        ).filter(next_version__isnull=True)
+
+    def add_previous_versions(self):
+        "Add previous versions to the queryset"
+        previous = self
+        ret = self
+        while previous:
+            previous = self.model.objects.filter(
+                previous_version__in=previous.values("id")
+            )
+            ret = ret.join(previous)
+        return ret
+
+
 class Versioned(models.Model):
     "Abstract ORM for versioned models"
 

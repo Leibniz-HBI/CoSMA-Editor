@@ -5,7 +5,10 @@ from datetime import datetime
 from django.db import models
 
 from cosmae.justification.models_django import EntityJustification
-from cosmae.versioned.models_django import VersionedQueryset
+from cosmae.versioned.models_django import (
+    VersionedHistoryQuerysetMixin,
+    VersionedQueryset,
+)
 
 
 class EntityQueryset(VersionedQueryset):
@@ -36,9 +39,9 @@ class EntityQueryset(VersionedQueryset):
             inner_query &= models.Q(timestamp__lte=up_until_time)
         return self.annotate(
             justification_txt=models.Subquery(
-                EntityJustification.objects.filter(
+                EntityJustification.objects.filter(  # pylint: disable=no-member
                     inner_query
-                )  # pylint: disable=no-member
+                )
                 .order_by(models.F("timestamp").desc())[:1]
                 .values("text")
             )
@@ -57,3 +60,7 @@ class EntityQueryset(VersionedQueryset):
                 .values("id")[:1]
             )
         ).filter(value_id__isnull=False)
+
+
+class EntityHistoryQueryset(EntityQueryset, VersionedHistoryQuerysetMixin):
+    "Custom queryset for entity history"
