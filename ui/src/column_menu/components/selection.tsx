@@ -1,4 +1,4 @@
-import { ReactElement, useContext, useState } from 'react'
+import { ReactElement, useContext, useEffect, useRef, useState } from 'react'
 import {
     Col,
     ListGroup,
@@ -24,6 +24,7 @@ import {
     selectIsDragging,
     selectColumnHierarchy,
     ColumnHierarchyNode,
+    selectColumnSelectionLoading
 } from '../selectors'
 import { changeColumnParent } from '../thunks'
 import { CreateTabBody } from './menu'
@@ -40,74 +41,100 @@ export function ColumnSelector({
     mkTailElement,
     additionalEntries = [],
     allowEdit = true,
-    upUntilDate
+    upUntilDate,
+    initialScroll = 0,
+    setScroll = undefined
 }: {
     mkTailElement: (def: Column) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
     allowEdit?: boolean
     upUntilDate?: Date | undefined
+    initialScroll?: number
+    setScroll?: ((scroll: number) => void)| undefined
 }) {
-    return <ColumnSearchProvider>
-        <ColumnSelectorBody
-            mkTailElement={mkTailElement}
-            additionalEntries={additionalEntries}
-            allowEdit={allowEdit}
-            upUntilDate={upUntilDate}
-        />
-    </ColumnSearchProvider>
+    return (
+        <ColumnSearchProvider>
+            <ColumnSelectorBody
+                mkTailElement={mkTailElement}
+                additionalEntries={additionalEntries}
+                allowEdit={allowEdit}
+                upUntilDate={upUntilDate}
+                initialScroll={initialScroll}
+                setScroll={setScroll}
+            />
+        </ColumnSearchProvider>
+    )
 }
 
 function ColumnSelectorBody({
     mkTailElement,
     additionalEntries = [],
     allowEdit = true,
-    upUntilDate
+    upUntilDate,
+    initialScroll = 0,
+    setScroll = undefined
 }: {
     mkTailElement: (def: Column) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
     allowEdit?: boolean
     upUntilDate?: Date | undefined
+    initialScroll?: number
+    setScroll?: ((scroll: number) => void)| undefined
 }) {
-                let body
-                const searchResultList = useContext(ColumnSearchContext)
-                if (searchResultList.value !== undefined) {
-                    body = (
-                        <ColumnExplorerSearchResults
-                            upUntilDate={upUntilDate}
-                            mkTailElement={mkTailElement}
-                        />
-                    )
-                } else {
-                    body = (
-                        <ColumnExplorerList
-                            mkTailElement={mkTailElement}
-                            additionalEntries={additionalEntries}
-                            allowEdit={allowEdit}
-                            upUntilDate={upUntilDate}
-                        />
-                    )
-                }
-                return (
-                    <Col className="overflow-y-hidden pb-3 d-contents">
-                        <Row className="d-contents">
-                            <ColumnSearchField upUntilDate={upUntilDate} />
-                        </Row>
-                        <Row className="d-contents">{body}</Row>
-                    </Col>
-                )
+    let body
+    const searchResultList = useContext(ColumnSearchContext)
+    if (searchResultList.value !== undefined) {
+        body = (
+            <ColumnExplorerSearchResults
+                upUntilDate={upUntilDate}
+                mkTailElement={mkTailElement}
+            />
+        )
+    } else {
+        body = (
+            <ColumnExplorerList
+                mkTailElement={mkTailElement}
+                additionalEntries={additionalEntries}
+                allowEdit={allowEdit}
+                upUntilDate={upUntilDate}
+                setScroll={setScroll}
+                initialScroll={initialScroll}
+            />
+        )
+    }
+    return (
+        <Col className="overflow-y-hidden pb-3 d-contents">
+            <Row className="d-contents">
+                <ColumnSearchField upUntilDate={upUntilDate} />
+            </Row>
+            <Row className="d-contents">{body}</Row>
+        </Col>
+    )
 }
 
 function ColumnExplorerList({
     mkTailElement,
     additionalEntries = [],
     allowEdit = true,
-    upUntilDate
+    upUntilDate,
+    initialScroll = 0,
+    setScroll = undefined
 }: {
     mkTailElement: (def: Column) => ReactElement
     additionalEntries?: { idPersistent: string; name: string }[]
     allowEdit?: boolean
     upUntilDate?: Date | undefined
+    initialScroll?: number
+    setScroll?: ((scroll: number) => void)| undefined
 }) {
+    const ref = useRef<HTMLDivElement>(null)
+    const isLoading = useAppSelector(selectColumnSelectionLoading)
+    useEffect(() => {
+        if (ref.current && !isLoading) {
+            ;(ref.current as HTMLElement).scrollTop = initialScroll
+        }
+    }, [ref.current, isLoading])
+
     const dispatch = useAppDispatch()
     const columnHierarchy = useAppSelector((state) =>
         selectColumnHierarchy(state, upUntilDate)
@@ -142,7 +169,13 @@ function ColumnExplorerList({
             <Row className="flex-grow-0 flex-shrink-0">
                 <NoParentEntry changeParentCallback={changeParentCallback} />
             </Row>
-            <Row className="overflow-y-auto flex-grow-1 flex-shrink-1 ms-2 me-1 scroll-gutter">
+            <Row
+                className="overflow-y-auto flex-grow-1 flex-shrink-1 ms-2 me-1 scroll-gutter"
+                ref={ref}
+                onScroll={(ev) => {
+                    setScroll?.((ev.target as HTMLElement).scrollTop)
+                }}
+            >
                 <ListGroup>
                     {mkListItems({
                         columnSelectionEntries: columnHierarchy,

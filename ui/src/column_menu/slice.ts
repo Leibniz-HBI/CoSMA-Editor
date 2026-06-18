@@ -400,6 +400,7 @@ function updateNodesFromExisting(
         const existingIdx = existingIndices[node.idColumnPersistent]
         if (existingIdx !== undefined) {
             node.isExpanded = existingNodes[existingIdx].isExpanded
+            node.children = existingNodes[existingIdx].children
         }
     }
 }
