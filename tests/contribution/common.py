@@ -1,4 +1,6 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,invalid-name, unused-argument
+from datetime import datetime, timezone
+
 name_test0 = "contribution 0"
 description_test0 = "description for test contribution 0"
 id_test0 = "a02649c9-094f-40fd-8403-06c2b9017553"
@@ -21,3 +23,6 @@ id_persistent_error_test = "8a586f78-9b79-4164-a1ef-950dc5606352"
 description_error_test = "A contribution with errors for tests"
 msg_error_test = "Test Error Message"
 trace_error_test = "Test Error Trace"
+
+id_mr_persistent = "c1fc3845-a31c-4036-9401-4fb515f8c3a1"
+time_edit_mr = datetime(2024, 6, 1, tzinfo=timezone.utc)
