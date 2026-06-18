@@ -53,6 +53,7 @@ export function ColumnDefinitionStep() {
     const contributionCandidate = useAppSelector(selectContribution)
     const ref = useRef(null)
     const [scroll, setScroll] = useState(0)
+    const [scrollAssignmentForm, setScrollAssignmentForm] = useState(0)
     useEffect(() => {
         if (contributionCandidate.value != undefined && !definitions.isLoading) {
             dispatch(
@@ -89,7 +90,6 @@ export function ColumnDefinitionStep() {
                     className="flex-grow-1 overflow-y-scroll mb-3"
                     ref={ref}
                     onScroll={(ev) => {
-                        // console.log((ev.target as HTMLElement).scrollTop)
                         setScroll((ev.target as HTMLElement).scrollTop)
                     }}
                 >
@@ -113,6 +113,8 @@ export function ColumnDefinitionStep() {
                     columnDefinition={selectedColumnDefinition.value}
                     createTabSelected={createTabSelected}
                     idContributionPersistent={idContributionPersistent}
+                    initialScroll={scrollAssignmentForm}
+                    setScroll={setScrollAssignmentForm}
                 />
             </Col>
         </Row>
@@ -131,7 +133,6 @@ function ContributionColumnsList({
     const definitions = useAppSelector(selectColumnDefinitionsContributionTriple)
     const navigate = useNavigate()
     const selectCallback = (columnDefinition: ColumnDefinitionContribution) => {
-        console.log(idContributionPersistent, columnDefinition.idPersistent)
         navigate(
             `/contribute/${idContributionPersistent}/columns/${columnDefinition.idPersistent}`
         )
@@ -260,11 +261,15 @@ export function ColumnDefinitionStepListItem({
 export function ContributionColumnAssignmentForm({
     columnDefinition,
     createTabSelected,
-    idContributionPersistent
+    idContributionPersistent,
+    initialScroll = 0,
+    setScroll = undefined
 }: {
     columnDefinition?: ColumnDefinitionContribution
     createTabSelected: boolean
     idContributionPersistent: string
+    initialScroll?: number
+    setScroll?: ((scroll: number) => void) | undefined
 }) {
     const dispatch: AppDispatch = useDispatch()
     if (columnDefinition === undefined) {
@@ -280,14 +285,15 @@ export function ContributionColumnAssignmentForm({
                 <div className="ps-2 flex-grow-0 flex-shrink-0 d-block">
                     <span key="hint-note">
                         Please select the column that should receive the data of column
-                        "
                     </span>
-                    <span key="hint-column-definition">{columnDefinition.name}":</span>
+                    <span key="hint-column-definition">"{columnDefinition.name}":</span>
                 </div>
                 {createTabSelected ? (
                     <div />
                 ) : (
                     <ExistingColumnForm
+                        initialScroll={initialScroll}
+                        setScroll={setScroll}
                         columnDefinitionContribution={columnDefinition}
                         key={columnDefinition.idPersistent}
                         idContributionPersistent={idContributionPersistent}
@@ -331,10 +337,14 @@ export function ContributionColumnAssignmentForm({
 
 export function ExistingColumnForm({
     columnDefinitionContribution,
-    idContributionPersistent
+    idContributionPersistent,
+    initialScroll = 0,
+    setScroll = undefined
 }: {
     columnDefinitionContribution: ColumnDefinitionContribution
     idContributionPersistent: string
+    initialScroll?: number
+    setScroll?: ((scroll: number) => void) | undefined
 }) {
     const dispatch = useAppDispatch()
     function assignColumnCallback(idExistingColumnPersistent: string | undefined) {
@@ -359,6 +369,8 @@ export function ExistingColumnForm({
                 <CosmaeLoading />
             ) : (
                 <ColumnSelector
+                    initialScroll={initialScroll}
+                    setScroll={setScroll}
                     mkTailElement={(columnDefinitionExisting) => {
                         return (
                             <AssignmentStatusButton
