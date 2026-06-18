@@ -62,6 +62,17 @@ def add_permissions(
             return
 
 
+def delete_marked_contributions():
+    "Delete contributions marked for deletion."
+    contributions_model = apps.get_model("cosmae", "ContributionCandidate")
+    contributions = contributions_model.objects.filter(mark_delete=True)
+    # pylint: disable=import-outside-toplevel
+    from cosmae.contribution.queue import enqueue_delete_contributions
+
+    for contribution in contributions:
+        enqueue_delete_contributions(str(contribution.id_persistent))
+
+
 class CosmaeConfig(AppConfig):
     """Configuration for the CoSMA-Editor Django app"""
 
@@ -81,6 +92,7 @@ class CosmaeConfig(AppConfig):
                 connect_user_created_signal()
                 connect_password_changed_signal()
                 connect_set_ssh_keys()
+                delete_marked_contributions()
         except AppRegistryNotReady:
             pass
         super().ready()

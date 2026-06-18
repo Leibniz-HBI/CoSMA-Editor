@@ -90,14 +90,9 @@ class VersionedHistoryQuerysetMixin:
 
     def add_previous_versions(self):
         "Add previous versions to the queryset"
-        previous = self
-        ret = self
-        while previous:
-            previous = self.model.objects.filter(
-                previous_version__in=previous.values("id")
-            )
-            ret = ret.join(previous)
-        return ret
+        return self.model.objects.filter(  # pylint: disable=no-member
+            id_persistent__in=self.values("id_persistent")
+        )
 
 
 class Versioned(models.Model):

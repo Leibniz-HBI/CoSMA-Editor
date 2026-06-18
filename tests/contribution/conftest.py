@@ -4,10 +4,14 @@ import pytest
 from django.db.models.signals import post_save
 
 import tests.contribution.common as c
+import tests.contribution.entity.common as cec
 import tests.edit_session.common as cs
+import tests.entity.common as ce
 from cosmae.contribution.column.models_django import ColumnContribution
 from cosmae.contribution.column.queue import dispatch_read_csv_head
+from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
+from cosmae.entity.models_django import EntityHistory
 
 post_save.disconnect(
     dispatch_read_csv_head, ContributionCandidate, "cosmae.start_column_extraction"
@@ -157,4 +161,27 @@ def contribution_column_other(contribution_other):
         id_persistent=c.id_persistent_column_test1,
         contribution_candidate=contribution_other,
         index_in_file=900,
+    )
+
+
+@pytest.fixture
+def entity_duplicate(contribution_user):
+    entity_duplicate, _ = EntityHistory.change_or_create_versioned(
+        id_persistent=cec.id_persistent_entity_duplicate_test,
+        display_txt=cec.display_txt_test_entity_duplicate,
+        time_edit=cec.time_edit_test_duplicate,
+        contribution_candidate=contribution_user,
+        written_by_session=contribution_user.created_by.edit_session,
+        approved_by=contribution_user.created_by.id_persistent,
+    )
+    entity_duplicate.save()
+    return entity_duplicate
+
+
+@pytest.fixture()
+def duplicate_assignment(contribution_user, entity1, entity_duplicate):
+    return EntityDuplicate.objects.create(  # pylint: disable=no-member
+        id_origin_persistent=cec.id_persistent_entity_duplicate_test,
+        id_destination_persistent=ce.id_persistent_test_1,
+        contribution_candidate=contribution_user,
     )
