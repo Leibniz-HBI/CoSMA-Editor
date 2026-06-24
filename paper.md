@@ -62,7 +62,11 @@ Author credits are tracked to create visibility for contributions to the databas
 Since Development of CoSMA-Editor began, various AI tools have been released. Some of them have been tested during development. ChatGPT has been used for less than 50 problems, e.g. regarding specific libraries. The extended auto complete feature of VS Code powered by Copilot has also been tried. The quality of suggestions made was mixed and always needed human verification.
 
 # Research Impact
-CoSMA-Editor is intended as research infrastructure for data sharing, with the goal to assist reproducibility and future research. Therefore, the importance of the software is not measured by the number of publications but by the data it provides. Currently, the software is used by a community of right-wing extremism researchers. Contributions from four research projects amount to information on several thousand accounts.
+CoSMA-Editor is intended as research infrastructure for data sharing, with the goal to assist reproducibility and future research. Therefore, the importance of the software is not measured by the number of publications but by the data it provides. Currently, the software is used by a community of right-wing extremism researchers.
+Contributions from four research projects amount to information on several thousand accounts.
+There is a german language article on the concept of data trustee for social media account lists[@jungmann2025community],
+as well as an upcoming english language article accepted for publication in a Media and Communication issue on _Open Research Infrastructures and Resources for Communication and Media Studies_.
+Earlier versions of the the latter have been presented at ICA [@rau2025sharing] and Social Media & Society [@rau2024sharing].
 
 # Acknowledgements
 
