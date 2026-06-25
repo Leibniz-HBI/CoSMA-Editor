@@ -57,7 +57,7 @@ def test_resolved_conflict(
     )
     assert rsp.status_code == 200
     merge_request = (
-        ColumnMergeRequest.by_id_persistent_query_set(  # pylint: disable=no-member
+        ColumnMergeRequest.objects.by_id_persistent(  # pylint: disable=no-member
             merge_request_user.id_persistent
         )
     ).get()

@@ -22,7 +22,7 @@ def get_display_txt_order_columns(id_contribution_persistent=None):
         )
 
     else:
-        merge_requests = ColumnMergeRequest.get_for_contribution_query_set(
+        merge_requests = ColumnMergeRequest.objects.for_contribution(
             str(id_contribution_persistent)
         )
         relevant_for_display_txt_order = merge_requests.filter(
