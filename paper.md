@@ -65,9 +65,10 @@ Since the development of CoSMA-Editor began, various AI tools have been released
 CoSMA-Editor is intended as research infrastructure for sharing sensitive data, to assist collaborative data collection, reproducibility, and future research. Therefore, the importance of the software is not measured by the number of publications that use the software but by the communities that rely on it to organize their data collections. Currently, the software is used by a community of right-wing extremism researchers from six German academic institutions. Data contributions from the project partners amount to curated and validated information on several thousand accounts.
 Currently, we are preparing a project to build a community of election researchers that relies on the software for collaboratively collecting social media representations of election candidates.
 
-Our community data trustee approach has been introduced to the academic community in several conference presentations and academic publications. 
-A German-language article on the concept of data trustee for social media account lists [@jungmann2025community] has been published in the working paper series of the [German Data Forum](https://www.konsortswd.de/en/about/ratswd/). An English-language journal article has just been accepted for publication in the special issue on _Open Research Infrastructures and Resources for Communication and Media Studies_ of Media and Communication [@rau2026community].
+Our community data trustee approach has been introduced to the academic community in several conference presentations and academic publications.
+A journal article on the concept of a data trustee for social media account lists has appeared in the special issue on _Open Research Infrastructures and Resources for Communication and Media Studies_ of Media and Communication [@rau2026community].
 Earlier versions of this article have been presented at the annual conferences of the International Communication Association [@rau2025sharing] and Social Media & Society [@rau2024sharing].
+In addition, a German-language article on the the same subject [@jungmann2025community] has been published in the working paper series of the [German Data Forum](https://www.konsortswd.de/en/about/ratswd/).
 
 # Acknowledgements
 
