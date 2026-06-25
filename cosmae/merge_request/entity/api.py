@@ -264,7 +264,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
             return 403, ApiError(msg="Insufficient permissions")
         with transaction.atomic():
             merge_request = (
-                EntityMergeRequestDb.by_id_persistent_query_set(
+                EntityMergeRequestDb.objects.by_id_persistent(
                     id_merge_request_persistent
                 )
                 .select_for_update()
@@ -339,7 +339,7 @@ def reverse_origin_destination(request: HttpRequest, id_merge_request_persistent
         return 403, ApiError(msg="Insufficient permissions.")
     try:
         merge_request_existing_query_set = (
-            EntityMergeRequestDb.by_id_persistent_query_set(id_merge_request_persistent)
+            EntityMergeRequestDb.objects.by_id_persistent(id_merge_request_persistent)
         )
         merge_request_existing_query_set.select_for_update()
         merge_request_existing = merge_request_existing_query_set.get()
@@ -395,7 +395,7 @@ def put(
         if entity_origin.disabled or entity_destination.disabled:
             return 400, ApiError(msg="Can not merge disabled entities.")
         try:
-            existing = EntityMergeRequestDb.get_existing_query_set(
+            existing = EntityMergeRequestDb.objects.get_existing(
                 id_entity_origin_persistent, id_entity_destination_persistent
             ).get()
             if existing.state in [
@@ -508,9 +508,9 @@ def get(request: HttpRequest, id_merge_request_persistent):
         return 403, ApiError(msg="Insufficient permissions.")
     try:
         try:
-            merge_request = EntityMergeRequestDb.get_by_id_persistent(
+            merge_request = EntityMergeRequestDb.objects.by_id_persistent(
                 id_merge_request_persistent
-            )
+            ).get()
             if merge_request.state in [
                 EntityMergeRequestDb.OPEN,
                 EntityMergeRequestDb.ERROR,

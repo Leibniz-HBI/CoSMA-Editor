@@ -108,8 +108,8 @@ def get_merge_requests(request: HttpRequest):
     "API method for retrieving merge requests."
     try:
         user = check_user(request)
-        by_user = MergeRequestDb.created_by_user(user)
-        assigned_to_user = MergeRequestDb.assigned_to_user(user)
+        by_user = MergeRequestDb.objects.created_by_user(user)
+        assigned_to_user = MergeRequestDb.objects.assigned_to_user(user)
         return 200, MergeRequestResponseList(
             created=[merge_request_db_to_api(mr) for mr in by_user],
             assigned=[merge_request_db_to_api(mr) for mr in assigned_to_user],
@@ -333,7 +333,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
         with transaction.atomic():
             user = check_user(request)
             merge_request = (
-                MergeRequestDb.by_id_persistent_query_set(id_merge_request_persistent)
+                MergeRequestDb.objects.by_id_persistent(id_merge_request_persistent)
                 .select_for_update()
                 .get()
             )

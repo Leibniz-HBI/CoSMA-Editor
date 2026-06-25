@@ -13,8 +13,29 @@ from cosmae.util import CosmaeUser
 from cosmae.value.models_django import Value, ValueHistory
 
 
+class AbstractMergeRequestQuerySet(models.QuerySet):
+    "Query set for abstract merge requests."
+
+    def by_id_persistent(self, id_persistent: str):
+        "Query set containing the the merge request referenced by the id give as argument."
+        return self.filter(id_persistent=id_persistent)  # pylint: disable=no-member
+
+    def created_by_user(self, user: CosmaeUser):
+        "Get all merge requests created by a user"
+        return self.filter(  # pylint: disable=no-member
+            created_by=user,
+            state__in=[
+                self.model.OPEN,
+                self.model.CONFLICTS,
+                self.model.ERROR,
+            ],
+        )
+
+
 class AbstractMergeRequest(models.Model):
     "Abstract Django model for a base merge request."
+
+    objects = AbstractMergeRequestQuerySet.as_manager()
 
     OPEN = "OPN"
     CONFLICTS = "CNF"
@@ -46,31 +67,12 @@ class AbstractMergeRequest(models.Model):
         abstract = True
 
     @classmethod
-    def created_by_user(cls, user: CosmaeUser):
-        "Get all merge requests created by a user"
-        return cls.objects.filter(  # pylint: disable=no-member
-            created_by=user,
-            state__in=[
-                cls.OPEN,
-                cls.CONFLICTS,
-                cls.ERROR,
-            ],
-        )
-
-    @classmethod
     def by_id_persistent(cls, id_persistent: str, user: CosmaeUser):
         "Get a merge request by id_persistent"
-        merge_request = cls.by_id_persistent_query_set(id_persistent).get()
+        merge_request = cls.objects.by_id_persistent(id_persistent).get()
         if merge_request.has_read_access(user):
             return merge_request
         raise ForbiddenException("merge request", merge_request.id_persistent)
-
-    @classmethod
-    def by_id_persistent_query_set(cls, id_persistent: str):
-        "Query set containing the the merge request referenced by the id give as argument."
-        return cls.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        )
 
 
 class AbstractConflictResolution(models.Model):
@@ -154,19 +156,24 @@ class AbstractConflictResolution(models.Model):
         )
 
 
-class EntityMergeRequest(AbstractMergeRequest):
-    "Django model for entity merge requests."
+class EntityMergeRequestQuerySet(AbstractMergeRequestQuerySet):
+    "Query set for entity merge requests."
 
-    @classmethod
-    def get_existing_query_set(
-        cls, id_entity_origin_persistent, id_entity_destination_persistent
+    def get_existing(
+        self, id_entity_origin_persistent, id_entity_destination_persistent
     ):
         """Get the query set of existing entity merge requests
         with same origin and and destination ids."""
-        return cls.objects.filter(  # pylint: disable=no-member
+        return self.filter(  # pylint: disable=no-member
             id_origin_persistent=id_entity_origin_persistent,
             id_destination_persistent=id_entity_destination_persistent,
         )
+
+
+class EntityMergeRequest(AbstractMergeRequest):
+    "Django model for entity merge requests."
+
+    objects = EntityMergeRequestQuerySet.as_manager()
 
     def has_read_access(self, user):
         "Check if a user can read entity merge requests."
@@ -196,13 +203,6 @@ class EntityMergeRequest(AbstractMergeRequest):
             value_destination=models.F("value_origin"),
         )
         self.save()
-
-    @classmethod
-    def get_by_id_persistent(cls, id_persistent):
-        "Get an entity merge request by its id_persistent."
-        return cls.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_persistent
-        ).get()
 
     def instance_conflicts_all(
         self,

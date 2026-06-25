@@ -12,14 +12,83 @@ from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.merge_request.entity.models_django import (
     AbstractConflictResolution,
     AbstractMergeRequest,
+    AbstractMergeRequestQuerySet,
 )
 from cosmae.util import CosmaeUser
 from cosmae.util.django import get_json_array_agg
 from cosmae.value.models_django import Value, value_objects
 
 
+class ColumnMergeRequestQuerySet(AbstractMergeRequestQuerySet):
+    "QuerySet for column merge requests."
+
+    def created_by_user(self, user: CosmaeUser):
+        "Get all merge requests created by a user"
+        states = [
+            ColumnMergeRequest.OPEN,
+            ColumnMergeRequest.CONFLICTS,
+            ColumnMergeRequest.ERROR,
+        ]
+
+        created = self.filter(  # pylint: disable=no-member
+            created_by=user,
+            state__in=states,
+        )
+        if user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
+            curated = (
+                self.filter(state__in=states)  # pylint: disable=no-member
+                .annotate(
+                    curated=models.Subquery(
+                        Column.query_set()
+                        .filter(id_persistent=models.OuterRef("id_origin_persistent"))
+                        .values("curated")
+                    )
+                )
+                .filter(curated=True)
+            )
+            return created.annotate(curated=models.Value(False)).union(curated)
+        return created
+
+    def assigned_to_user(self, user: CosmaeUser):
+        "Get all merge requests assigned to a user"
+        states = [
+            ColumnMergeRequest.OPEN,
+            ColumnMergeRequest.CONFLICTS,
+            ColumnMergeRequest.ERROR,
+        ]
+
+        assigned = self.filter(  # pylint: disable=no-member
+            assigned_to=user,
+            state__in=states,
+        )
+        if user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
+            curated = (
+                self.filter(state__in=states)  # pylint: disable=no-member
+                .annotate(
+                    curated=models.Subquery(
+                        Column.query_set()
+                        .filter(
+                            id_persistent=models.OuterRef("id_destination_persistent")
+                        )
+                        .values("curated")
+                    )
+                )
+                .filter(curated=True)
+            )
+            return assigned.annotate(curated=models.Value(False)).union(curated)
+        return assigned
+
+    def for_contribution(self, id_contribution_persistent):
+        "Get all column merge requests for a contribution candidate."
+        return self.filter(  # pylint: disable=no-member
+            contribution_candidate_id=id_contribution_persistent
+        )
+
+
 class ColumnMergeRequest(AbstractMergeRequest):
     "Django model for a merge request."
+
+    objects = ColumnMergeRequestQuerySet.as_manager()
 
     assigned_to = models.ForeignKey(
         "CosmaeUser",
@@ -35,68 +104,6 @@ class ColumnMergeRequest(AbstractMergeRequest):
         null=True,
     )
     disable_origin_on_merge = models.BooleanField(default=False)
-
-    @classmethod
-    def assigned_to_user(cls, user: CosmaeUser):
-        "Get all merge requests assigned to a user"
-        states = [
-            ColumnMergeRequest.OPEN,
-            ColumnMergeRequest.CONFLICTS,
-            ColumnMergeRequest.ERROR,
-        ]
-
-        assigned = ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
-            assigned_to=user,
-            state__in=states,
-        )
-        if user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
-            curated = (
-                ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
-                    state__in=states
-                )
-                .annotate(
-                    curated=models.Subquery(
-                        Column.query_set()
-                        .filter(
-                            id_persistent=models.OuterRef("id_destination_persistent")
-                        )
-                        .values("curated")
-                    )
-                )
-                .filter(curated=True)
-            )
-            return assigned.annotate(curated=models.Value(False)).union(curated)
-        return assigned
-
-    @classmethod
-    def created_by_user(cls, user: CosmaeUser):
-        "Get all merge requests created by a user"
-        states = [
-            ColumnMergeRequest.OPEN,
-            ColumnMergeRequest.CONFLICTS,
-            ColumnMergeRequest.ERROR,
-        ]
-
-        created = ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
-            created_by=user,
-            state__in=states,
-        )
-        if user.permission_group in [CosmaeUser.EDITOR, CosmaeUser.COMMISSIONER]:
-            curated = (
-                ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
-                    state__in=states
-                )
-                .annotate(
-                    curated=models.Subquery(
-                        Column.query_set()
-                        .filter(id_persistent=models.OuterRef("id_origin_persistent"))
-                        .values("curated")
-                    )
-                )
-                .filter(curated=True)
-            )
-            return created.annotate(curated=models.Value(False)).union(curated)
-        return created
 
     def has_read_access(self, user: CosmaeUser):
         "Check wether a user can read the merge request."
@@ -126,13 +133,6 @@ class ColumnMergeRequest(AbstractMergeRequest):
         cls.objects.filter(  # pylint: disable=no-member
             id_origin_persistent=id_column_persistent,
         ).update(created_by=created_by)
-
-    @classmethod
-    def get_for_contribution_query_set(cls, id_contribution_persistent):
-        "Get all column merge requests for a contribution candidate."
-        return cls.objects.filter(  # pylint: disable=no-member
-            contribution_candidate_id=id_contribution_persistent
-        )
 
     @classmethod
     def get_columns_for_entities_request(
