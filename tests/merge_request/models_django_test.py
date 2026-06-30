@@ -19,12 +19,12 @@ def test_assigned_to_user(user, merge_request_user, merge_request_user1):
 
 
 def test_non_recent_no_change(merge_request_user, conflict_resolution_replace):
-    non_recent = ColumnConflictResolution.non_recent()
+    non_recent = ColumnConflictResolution.objects.non_recent()
     assert len(non_recent) == 0
 
 
 def test_recent_no_change(merge_request_user, conflict_resolution_replace):
-    recent = ColumnConflictResolution.only_recent()
+    recent = ColumnConflictResolution.objects.only_recent()
     assert len(recent) == 1
 
 
@@ -38,42 +38,42 @@ def test_includes_no_value_at_destination(
 def test_non_recent_change_entity(
     merge_request_user, entity1_changed, conflict_resolution_replace
 ):
-    non_recent = ColumnConflictResolution.non_recent()
+    non_recent = ColumnConflictResolution.objects.non_recent()
     assert len(non_recent) == 1
 
 
 def test_recent_change_entity(
     merge_request_user, entity1_changed, conflict_resolution_replace
 ):
-    recent = ColumnConflictResolution.only_recent()
+    recent = ColumnConflictResolution.objects.only_recent()
     assert len(recent) == 0
 
 
 def test_recent_change_definition_origin(
     merge_request_user, origin_column_for_mr_changed, conflict_resolution_replace
 ):
-    recent = ColumnConflictResolution.only_recent()
+    recent = ColumnConflictResolution.objects.only_recent()
     assert len(recent) == 0
 
 
 def test_non_recent_change_definition_origin(
     merge_request_user, origin_column_for_mr_changed, conflict_resolution_replace
 ):
-    recent = ColumnConflictResolution.non_recent()
+    recent = ColumnConflictResolution.objects.non_recent()
     assert len(recent) == 1
 
 
 def test_recent_change_definition_destination(
     merge_request_user, destination_column_for_mr_changed, conflict_resolution_replace
 ):
-    recent = ColumnConflictResolution.only_recent()
+    recent = ColumnConflictResolution.objects.only_recent()
     assert len(recent) == 0
 
 
 def test_non_recent_change_definition_destination(
     merge_request_user, destination_column_for_mr_changed, conflict_resolution_replace
 ):
-    recent = ColumnConflictResolution.non_recent()
+    recent = ColumnConflictResolution.objects.non_recent()
     assert len(recent) == 1
 
 
@@ -82,7 +82,7 @@ def test_recent_change_instance_destination(
     instance_merge_request_destination_user_conflict_changed,
     conflict_resolution_replace,
 ):
-    recent = ColumnConflictResolution.only_recent()
+    recent = ColumnConflictResolution.objects.only_recent()
     assert len(recent) == 0
 
 
@@ -91,7 +91,7 @@ def test_non_recent_change_instance_destination(
     instance_merge_request_destination_user_conflict_changed,
     conflict_resolution_replace,
 ):
-    recent = ColumnConflictResolution.non_recent()
+    recent = ColumnConflictResolution.objects.non_recent()
     assert len(recent) == 1
 
 
@@ -100,7 +100,7 @@ def test_recent_change_instance_origin(
     instance_merge_request_origin_user_changed,
     conflict_resolution_replace,
 ):
-    recent = ColumnConflictResolution.only_recent()
+    recent = ColumnConflictResolution.objects.only_recent()
     assert len(recent) == 0
 
 
@@ -109,7 +109,7 @@ def test_non_recent_change_instance_origin(
     instance_merge_request_origin_user_changed,
     conflict_resolution_replace,
 ):
-    recent = ColumnConflictResolution.non_recent()
+    recent = ColumnConflictResolution.objects.non_recent()
     assert len(recent) == 1
 
 
@@ -128,7 +128,7 @@ def test_recent_change_all(
         written_by_session=merge_request_user.created_by.edit_session,
     )[0].save()
 
-    recent = ColumnConflictResolution.only_recent()
+    recent = ColumnConflictResolution.objects.only_recent()
     assert len(recent) == 0
 
 
@@ -139,5 +139,5 @@ def test_non_recent_change_all(
     entity1_changed,
     conflict_resolution_replace,
 ):
-    recent = ColumnConflictResolution.non_recent()
+    recent = ColumnConflictResolution.objects.non_recent()
     assert len(recent) == 1

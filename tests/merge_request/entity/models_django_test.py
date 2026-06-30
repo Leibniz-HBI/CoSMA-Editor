@@ -354,5 +354,5 @@ def test_change_all(
         written_by_session=old_column.owner.edit_session,
     )[0].save()
 
-    recent = EntityConflictResolution.only_recent()
+    recent = EntityConflictResolution.objects.only_recent()
     assert len(recent) == 0

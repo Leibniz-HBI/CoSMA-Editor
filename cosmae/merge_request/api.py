@@ -202,21 +202,9 @@ def get_merge_request_conflicts(
     "API method for getting merge request conflicts."
     try:
         user = check_user(request)
-        merge_request = MergeRequestDb.by_id_persistent(
-            id_merge_request_persistent, user
+        conflict_query_set, updated_query_set = compute_conflicts(
+            id_merge_request_persistent, offset, limit, user
         )
-        resolutions = ColumnConflictResolution.for_merge_request_query_set(
-            merge_request
-        )
-        resolutions.filter(value_origin__gte=offset)
-        recent = ColumnConflictResolution.only_recent(resolutions)
-        updated_query_set = ColumnConflictResolution.non_recent(resolutions)
-        conflict_query_set = merge_request.instance_conflicts_all(
-            True,
-            min_idx=offset,
-            limit=limit,
-            resolution_values=recent,
-        ).annotate_entity()
         conflicts_response = []
         max_offset = -2
         for conflict in conflict_query_set:
@@ -244,6 +232,24 @@ def get_merge_request_conflicts(
         msg = "Could not get the requested merge request conflicts."
         _LOGGER.error(msg, exc_info=exc)
         return 500, ApiError(msg=msg)
+
+
+def compute_conflicts(id_merge_request_persistent, offset, limit, user):
+    "Compute the conflicts for a merge request and the ones were updates happened."
+    merge_request = MergeRequestDb.by_id_persistent(id_merge_request_persistent, user)
+    resolutions = ColumnConflictResolution.for_merge_request_query_set(
+        merge_request
+    ).filter(value_origin__id__gte=offset)
+    recent = resolutions.only_recent()
+    updated_query_set = resolutions.non_recent()
+    conflict_query_set = merge_request.instance_conflicts_all(
+        True,
+        min_idx=offset,
+        limit=limit,
+        resolution_values=recent,
+    ).annotate_entity()
+
+    return conflict_query_set, updated_query_set
 
 
 @router.post(
@@ -349,7 +355,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
             resolutions = ColumnConflictResolution.for_merge_request_query_set(
                 merge_request
             )
-            updated = ColumnConflictResolution.non_recent(resolutions)
+            updated = resolutions.non_recent()
             if len(updated) > 0:
                 return 400, ApiError(
                     msg="There are conflicts for the merge request, "

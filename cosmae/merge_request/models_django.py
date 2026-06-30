@@ -11,6 +11,7 @@ from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import Entity, EntityHistory
 from cosmae.merge_request.entity.models_django import (
     AbstractConflictResolution,
+    AbstractConflictResolutionQuerySet,
     AbstractMergeRequest,
     AbstractMergeRequestQuerySet,
 )
@@ -305,8 +306,103 @@ class ColumnMergeRequest(AbstractMergeRequest):
         )
 
 
+class ColumnConflictResolutionQuerySet(AbstractConflictResolutionQuerySet):
+    "Query set for column conflict resolutions."
+
+    def annotate_most_recent_ids(self):
+        """Annotate the queryset with the ids of most recent versions,
+        Also adds value information for the instance origin"""
+        return self.annotate_instance_origin_most_recent(
+            id_entity_most_recent=Entity.objects.filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("entity__id_persistent")
+            ).values("id")[:1],
+            id_column_origin_most_recent=column_objects()
+            .filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("column_origin__id_persistent")
+            )
+            .values("id")[:1],
+            id_column_destination_most_recent=column_objects()
+            .filter(  # pylint: disable=no-member
+                id_persistent=models.OuterRef("column_destination__id_persistent")
+            )
+            .values("id")[:1],
+            id_value_destination_most_recent=models.Subquery(
+                Value.objects.filter(  # pylint: disable=no-member
+                    models.Q(
+                        id_persistent=models.OuterRef(
+                            "value_destination__id_persistent"
+                        )
+                    )
+                    | models.Q(
+                        # case when value destination is null
+                        # therefore use entity information
+                        # and column information from merge request!
+                        id_entity_persistent=models.OuterRef("entity__id_persistent"),
+                        id_column_persistent=models.OuterRef(
+                            "merge_request__id_destination_persistent"
+                        ),
+                    )
+                ).values("id")[:1]
+            ),
+        )
+
+    def non_recent(self):
+        """Get the conflict resolutions that reference not up to date entities,
+        column or values."""
+        with_version_info = self.annotate_most_recent_ids()
+        non_recent_query_set = with_version_info.filter(
+            ~models.Q(entity__id=models.F("id_entity_most_recent"))
+            | ~models.Q(column_origin__id=models.F("id_column_origin_most_recent"))
+            | ~models.Q(
+                column_destination__id=models.F("id_column_destination_most_recent")
+            )
+            | self.instance_non_recent_predicate
+        )
+        with_value_destination_info = non_recent_query_set.annotate(
+            value_destination_most_recent_value=models.Subquery(
+                Value.objects.filter(  # pylint: disable=no-member
+                    id=models.OuterRef("id_value_destination_most_recent")
+                ).values("value")[:1]
+            )
+        )
+        return with_value_destination_info.exclude(
+            value_destination_most_recent_value=models.functions.Cast(
+                models.F("value_origin_most_recent__value"), models.TextField()
+            )
+        )
+
+    def only_recent(self):
+        """Get the conflict resolutions that reference not up to date entities,
+        column or values."""
+        with_most_recent_ids = self.annotate_most_recent_ids()
+        return with_most_recent_ids.filter(
+            models.Q(entity__id=models.F("id_entity_most_recent"))
+            & models.Q(column_origin__id=models.F("id_column_origin_most_recent"))
+            & models.Q(
+                column_destination__id=models.F("id_column_destination_most_recent")
+            )
+            & models.Q(
+                value_origin__id=models.functions.Cast(
+                    models.F("value_origin_most_recent__id"), models.BigIntegerField()
+                )
+            )
+            & (
+                models.Q(
+                    id_value_destination_most_recent__isnull=False,
+                    value_destination__id=models.F("id_value_destination_most_recent"),
+                )
+                | models.Q(
+                    value_destination__isnull=True,
+                    id_value_destination_most_recent__isnull=True,
+                )
+            )
+        )
+
+
 class ColumnConflictResolution(AbstractConflictResolution):
     "Django ORM model for resolutions to merge request conflicts."
+
+    objects = ColumnConflictResolutionQuerySet.as_manager()
 
     # do not use persistent ids in order to allow change detection.
     entity = models.ForeignKey(
@@ -326,190 +422,3 @@ class ColumnConflictResolution(AbstractConflictResolution):
         return cls.objects.filter(  # pylint: disable=no-member
             merge_request=merge_request
         )
-
-    @classmethod
-    def non_recent(cls, manager=None):
-        """Get the conflict resolutions that reference not up to date entities,
-        column or values."""
-        if manager is None:
-            manager = cls.objects  # pylint: disable=no-member
-        with_version_info = cls.annotate_instance_origin_most_recent(
-            manager,
-            entity_most_recent=models.Subquery(
-                Entity.objects.filter(  # pylint: disable=no-member
-                    id_persistent=models.OuterRef("entity__id_persistent")
-                ).values(  # pylint: disable=duplicate-code
-                    json=models.functions.JSONObject(
-                        id="id",
-                        id_persistent="id_persistent",
-                        display_txt="display_txt",
-                        disabled="disabled",
-                    )
-                )[
-                    :1
-                ]
-            ),
-            column_origin_most_recent=models.Subquery(
-                column_objects()
-                .filter(  # pylint: disable=no-member
-                    id_persistent=models.OuterRef("column_origin__id_persistent")
-                )
-                .values(  # pylint: disable=duplicate-code
-                    json=models.functions.JSONObject(
-                        id="id",
-                        id_persistent="id_persistent",
-                        id_parent_persistent="id_parent_persistent",
-                        name="name",
-                        type="type",
-                    )
-                )[:1]
-            ),
-            column_destination_most_recent=models.Subquery(
-                column_objects()
-                .filter(  # pylint: disable=no-member
-                    id_persistent=models.OuterRef("column_destination__id_persistent")
-                )
-                .values(
-                    json=models.functions.JSONObject(
-                        id="id",
-                        id_persistent="id_persistent",
-                        id_parent_persistent="id_parent_persistent",
-                        name="name",
-                        type="type",
-                    )
-                )[:1]
-            ),
-            value_destination_most_recent=models.Subquery(
-                Value.objects.filter(  # pylint: disable=no-member
-                    models.Q(
-                        id_persistent=models.OuterRef(
-                            "value_destination__id_persistent"
-                        )
-                    )
-                    | models.Q(
-                        # case when value destination is null
-                        # therefore use entity information
-                        # and column information from merge request!
-                        id_entity_persistent=models.OuterRef("entity__id_persistent"),
-                        id_column_persistent=models.OuterRef(
-                            "merge_request__id_destination_persistent"
-                        ),
-                    )
-                ).values(
-                    json=models.functions.JSONObject(
-                        id="id",
-                        id_persistent="id_persistent",
-                        value="value",
-                    )
-                )[
-                    :1
-                ]
-            ),
-        )
-        non_recent_query_set = with_version_info.filter(
-            ~models.Q(
-                entity__id=models.functions.Cast(
-                    models.F("entity_most_recent__id"), models.BigIntegerField()
-                )
-            )
-            | ~models.Q(
-                column_origin__id=models.functions.Cast(
-                    models.F("column_origin_most_recent__id"),
-                    models.BigIntegerField(),
-                ),
-            )
-            | ~models.Q(
-                column_destination__id=models.functions.Cast(
-                    models.F("column_destination_most_recent__id"),
-                    models.BigIntegerField(),
-                ),
-            )
-            | cls.instance_non_recent_predicate
-        )
-        return non_recent_query_set.exclude(
-            value_origin_most_recent__value=models.F(
-                "value_destination_most_recent__value"
-            )
-        )
-
-    @classmethod
-    def only_recent(cls, manager=None):
-        """Get the conflict resolutions that reference not up to date entities,
-        column or values."""
-        if manager is None:
-            manager = cls.objects  # pylint: disable=no-member
-        with_entity_version_info = manager.annotate(
-            id_entity_most_recent=Entity.objects.filter(  # pylint: disable=no-member
-                id_persistent=models.OuterRef("entity__id_persistent")
-            ).values("id")[:1]
-        )
-        only_with_recent_entities = with_entity_version_info.filter(
-            entity__id=models.F("id_entity_most_recent")
-        )
-        with_column_origin_version_info = only_with_recent_entities.annotate(
-            id_column_origin_most_recent=column_objects()
-            .filter(  # pylint: disable=no-member
-                id_persistent=models.OuterRef("column_origin__id_persistent")
-            )
-            .values("id")[:1]
-        )
-        only_with_recent_column_origins = with_column_origin_version_info.filter(
-            column_origin__id=models.F("id_column_origin_most_recent")
-        )
-        with_column_destination_version_info = only_with_recent_column_origins.annotate(
-            id_column_destination_most_recent=column_objects()
-            .filter(  # pylint: disable=no-member
-                id_persistent=models.OuterRef("column_destination__id_persistent")
-            )
-            .values("id")[:1]
-        )
-        only_with_recent_column_destinations = (
-            with_column_destination_version_info.filter(
-                column_destination__id=models.F("id_column_destination_most_recent")
-            )
-        )
-        with_instance_origin_version_info = only_with_recent_column_destinations.annotate(
-            id_value_origin_most_recent=Value.objects.filter(  # pylint: disable=no-member
-                id_persistent=models.OuterRef("value_origin__id_persistent")
-            ).values(
-                "id"
-            )[
-                :1
-            ]
-        )
-        only_with_recent_instance_origin = with_instance_origin_version_info.filter(
-            value_origin__id=models.F("id_value_origin_most_recent")
-        )
-        with_instance_destination_version_info = only_with_recent_instance_origin.annotate(
-            id_value_destination_most_recent=models.Subquery(
-                Value.objects.filter(  # pylint: disable=no-member
-                    models.Q(
-                        id_persistent=models.OuterRef(
-                            "value_destination__id_persistent"
-                        )
-                    )
-                    | models.Q(
-                        # case when value destination is null
-                        # therefore use entity information
-                        # and column information from merge request!
-                        id_entity_persistent=models.OuterRef("entity__id_persistent"),
-                        id_column_persistent=models.OuterRef(
-                            "merge_request__id_destination_persistent"
-                        ),
-                    )
-                ).values("id")[:1]
-            )
-        )
-        only_with_recent_value_destination = (
-            with_instance_destination_version_info.filter(
-                models.Q(
-                    id_value_destination_most_recent__isnull=False,
-                    value_destination__id=models.F("id_value_destination_most_recent"),
-                )
-                | models.Q(
-                    value_destination__isnull=True,
-                    id_value_destination_most_recent__isnull=True,
-                )
-            )
-        )
-        return only_with_recent_value_destination
