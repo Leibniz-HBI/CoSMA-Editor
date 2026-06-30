@@ -137,12 +137,12 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             conflicts_resolution_set = (
                 merge_request.columnconflictresolution_set.select_related()
             )
-            non_recent = ColumnConflictResolution.non_recent(conflicts_resolution_set)
+            non_recent = conflicts_resolution_set.non_recent()
             if len(non_recent) > 0:
                 merge_request.state = merge_request.OPEN
                 merge_request.save()
                 return
-            recent = ColumnConflictResolution.only_recent(conflicts_resolution_set)
+            recent = conflicts_resolution_set.only_recent()
             conflicts = merge_request.instance_conflicts_all(
                 False, resolution_values=recent
             )
@@ -242,5 +242,5 @@ def dispatch_resolve_conflicts(
             str(merge_request.id_persistent),
             str(approved_by.id_persistent),
         ),
-        job_timeout=60*12
+        job_timeout=60 * 12,
     )

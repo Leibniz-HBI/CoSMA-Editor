@@ -55,7 +55,7 @@ def apply_entity_merge_request(
                 merge_request
             )
             # get recent resolutions and apply them
-            recent_resolutions = EntityConflictResolution.only_recent(resolutions)
+            recent_resolutions = resolutions.only_recent()
             # get unresolved conflicts and create merge requests.
             # This has to be done first otherwise resolutions are not recent.
             # This will lead to unnecesary merge requests.
