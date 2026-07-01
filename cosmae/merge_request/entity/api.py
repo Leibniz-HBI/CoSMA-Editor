@@ -1,6 +1,6 @@
 "API methods for entity merge requests"
 
-from typing import List
+from typing import List, Literal
 from uuid import uuid4
 
 from django.db import DatabaseError, transaction
@@ -63,7 +63,7 @@ class EntityMergeRequest(Schema):
     origin: EntityRequest
     destination: EntityRequest
     created_by: PublicUserInfo
-    state: str
+    state: Literal["OPEN", "CONFLICTS", "CLOSED", "RESOLVED", "MERGED", "ERROR"]
 
 
 class EntityMergeRequestList(Schema):

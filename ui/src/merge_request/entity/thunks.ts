@@ -13,7 +13,10 @@ import {
 } from './slice'
 import { addError } from '../../util/notification/slice'
 import { errorMessageFromApi, exceptionMessage } from '../../util/exception'
-import { cosmaeMergeRequestEntityApiGetMergeRequests } from '../../openapi/cosmae'
+import {
+    cosmaeMergeRequestEntityApiGetMergeRequests,
+    EntityMergeRequest as EntityMergeRequestApi
+} from '../../openapi/cosmae'
 
 export function getEntityMergeRequests(): ThunkWithFetch<void> {
     return async (dispatch, _getState, _fetch) => {
@@ -36,16 +39,15 @@ export function getEntityMergeRequests(): ThunkWithFetch<void> {
         }
     }
 }
-export function parseEntityMergeRequestFromJson(json: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any
-}): EntityMergeRequest {
+export function parseEntityMergeRequestFromJson(
+    mergeRequest: EntityMergeRequestApi
+): EntityMergeRequest {
     return newEntityMergeRequest({
-        idPersistent: json['id_persistent'],
-        entityOrigin: parseEntityObjectFromJson(json['origin']),
-        entityDestination: parseEntityObjectFromJson(json['destination']),
-        createdBy: parsePublicUserInfoFromJson(json['created_by']),
-        state: entityMergeRequestStateJsonToEnumMap[json['state']]
+        idPersistent: mergeRequest.id_persistent,
+        entityOrigin: parseEntityObjectFromJson(mergeRequest.origin),
+        entityDestination: parseEntityObjectFromJson(mergeRequest.destination),
+        createdBy: parsePublicUserInfoFromJson(mergeRequest.created_by),
+        state: entityMergeRequestStateJsonToEnumMap[mergeRequest.state]
     })
 }
 export const entityMergeRequestStateJsonToEnumMap: {

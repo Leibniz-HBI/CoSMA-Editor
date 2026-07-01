@@ -1,4 +1,4 @@
-import { MergeRequestStep, newMergeRequest } from './state'
+import { MergeRequestStep, newMergeRequest, MergeRequest } from './state'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { exceptionMessage } from '../util/exception'
 import { parseColumnsFromApi } from '../column_menu/thunks'
@@ -9,7 +9,7 @@ import {
     getMergeRequestsStart,
     getMergeRequestsSuccess
 } from './slice'
-import { cosmaeMergeRequestApiGetMergeRequests } from '../openapi/cosmae'
+import { cosmaeMergeRequestApiGetMergeRequests, MergeRequest as MergeRequestApi } from '../openapi/cosmae'
 
 export function getColumnMergeRequests(): ThunkWithFetch<void> {
     return async (dispatch, _getState,_fetch) => {
@@ -37,18 +37,17 @@ export function getColumnMergeRequests(): ThunkWithFetch<void> {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseMergeRequestFromJson(mrJson: any) {
-    const idPersistent = mrJson['id_persistent']
-    let assignedTo = mrJson['assigned_to']
-    if (assignedTo !== null && assignedTo !== undefined) {
-        assignedTo = parsePublicUserInfoFromJson(assignedTo)
+export function parseMergeRequestFromJson(mr: MergeRequestApi): MergeRequest {
+    const idPersistent = mr.id_persistent
+    let assignedTo = undefined
+    if (mr.assigned_to !== null && mr.assigned_to !== undefined) {
+        assignedTo = parsePublicUserInfoFromJson(mr.assigned_to)
     }
-    const createdBy = parsePublicUserInfoFromJson(mrJson['created_by'])
-    const originColumn = parseColumnsFromApi(mrJson['origin'], undefined)
-    const destinationColumn = parseColumnsFromApi(mrJson['destination'], undefined)
-    const step = mergeRequestStateFromApiMap[mrJson['state']]
-    const disableOriginOnMerge = mrJson['disable_origin_on_merge']
+    const createdBy = parsePublicUserInfoFromJson(mr.created_by)
+    const originColumn = parseColumnsFromApi(mr.origin, undefined)
+    const destinationColumn = parseColumnsFromApi(mr.destination, undefined)
+    const step = mergeRequestStateFromApiMap[mr.state]
+    const disableOriginOnMerge = mr.disable_origin_on_merge
     return newMergeRequest({
         idPersistent,
         assignedTo,
