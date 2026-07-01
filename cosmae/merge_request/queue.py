@@ -89,7 +89,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                         version=None,
                     )
                     value.save()
-                merge_request.state = ColumnMergeRequest.MERGED
+                merge_request.state = ColumnMergeRequest.State.MERGED
                 merge_request.save()
                 disable_origin(
                     merge_request,
@@ -98,13 +98,13 @@ def merge_request_fast_forward(id_merge_request_persistent):
                     time_merge,
                 )
                 return
-            merge_request.state = merge_request.CONFLICTS
+            merge_request.state = merge_request.State.CONFLICTS
             merge_request.save(update_fields=["state"])
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
-            merge_request.state = ColumnMergeRequest.ERROR
+            merge_request.state = ColumnMergeRequest.State.ERROR
             merge_request.save()
 
 
@@ -126,8 +126,8 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
         with transaction.atomic():
             try:
                 merge_request = merge_request_query.get()
-                if not merge_request.state == ColumnMergeRequest.RESOLVED:
-                    if merge_request.state == ColumnMergeRequest.MERGED:
+                if not merge_request.state == ColumnMergeRequest.State.RESOLVED:
+                    if merge_request.state == ColumnMergeRequest.State.MERGED:
                         return
                     raise NotResolvedException("Column Merge request is not resolved.")
                 approved_by = approved_by_query.get()
@@ -139,7 +139,7 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             )
             non_recent = conflicts_resolution_set.non_recent()
             if len(non_recent) > 0:
-                merge_request.state = merge_request.OPEN
+                merge_request.state = merge_request.State.OPEN
                 merge_request.save()
                 return
             recent = conflicts_resolution_set.only_recent()
@@ -147,7 +147,7 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
                 False, resolution_values=recent
             )
             if len(conflicts) > 0:
-                merge_request.state = merge_request.OPEN
+                merge_request.state = merge_request.State.OPEN
                 merge_request.save()
                 return
             try:
@@ -156,11 +156,11 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
                     perform_value_replacement(recent, approved_by, time_merge)
             except EntityUpdatedException as exc:
                 logging.warning(None, exc_info=exc)
-                merge_request.state = merge_request.OPEN
+                merge_request.state = merge_request.State.OPEN
                 merge_request.save()
                 return
 
-            merge_request.state = merge_request.MERGED
+            merge_request.state = merge_request.State.MERGED
             merge_request.save()
             disable_origin(
                 merge_request,
@@ -172,7 +172,7 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
-            merge_request.state = ColumnMergeRequest.ERROR
+            merge_request.state = ColumnMergeRequest.State.ERROR
             merge_request.save()
 
 

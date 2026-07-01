@@ -25,9 +25,9 @@ class AbstractMergeRequestQuerySet(models.QuerySet):
         return self.filter(  # pylint: disable=no-member
             created_by=user,
             state__in=[
-                self.model.OPEN,
-                self.model.CONFLICTS,
-                self.model.ERROR,
+                self.model.State.OPEN,
+                self.model.State.CONFLICTS,
+                self.model.State.ERROR,
             ],
         )
 
@@ -37,20 +37,16 @@ class AbstractMergeRequest(models.Model):
 
     objects = AbstractMergeRequestQuerySet.as_manager()
 
-    OPEN = "OPN"
-    CONFLICTS = "CNF"
-    CLOSED = "CLS"
-    RESOLVED = "RSL"
-    MERGED = "MRG"
-    ERROR = "ERR"
-    STATE_CHOICES = [
-        (OPEN, "open"),
-        (CONFLICTS, "conflicts"),
-        (CLOSED, "closed"),
-        (RESOLVED, "resolved"),
-        (MERGED, "merged"),
-        (ERROR, "error"),
-    ]
+    class State(models.TextChoices):
+        "Enum for merge request states."
+
+        OPEN = "OPN", "open"
+        CONFLICTS = "CNF", "conflicts"
+        CLOSED = "CLS", "closed"
+        RESOLVED = "RSL", "resolved"
+        MERGED = "MRG", "merged"
+        ERROR = "ERR", "error"
+
     id_destination_persistent = models.TextField()
     id_origin_persistent = models.TextField()
     created_by = models.ForeignKey(
@@ -58,7 +54,7 @@ class AbstractMergeRequest(models.Model):
     )
     created_at = models.DateTimeField()
     id_persistent = models.UUIDField(primary_key=True)
-    state = models.TextField(max_length=3, choices=STATE_CHOICES, default=OPEN)
+    state = models.TextField(max_length=3, choices=State, default=State.OPEN)
 
     class Meta:
         "Meta class for abstract merge request django model"

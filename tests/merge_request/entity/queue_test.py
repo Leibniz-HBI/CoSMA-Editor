@@ -14,7 +14,7 @@ from tests.merge_request.entity import common as c
 
 def test_creates_column_merge_requests(conflict_resolution_replace):
     merge_request = conflict_resolution_replace.merge_request
-    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.state = EntityMergeRequest.State.RESOLVED
     merge_request.save()
     user = merge_request.created_by
     apply_entity_merge_request(merge_request.id_persistent, user.id_persistent)
@@ -48,7 +48,7 @@ def test_creates_column_merge_requests_empty_destination(
     conflict_resolution_replace_empty_destination,
 ):
     merge_request = conflict_resolution_replace_empty_destination.merge_request
-    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.state = EntityMergeRequest.State.RESOLVED
     merge_request.save()
     user = merge_request.created_by
     apply_entity_merge_request(merge_request.id_persistent, user.id_persistent)
@@ -80,7 +80,7 @@ def test_creates_column_merge_requests_empty_destination(
 
 def test_applies_resolutions(conflict_resolution_replace, user1):
     merge_request = conflict_resolution_replace.merge_request
-    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.state = EntityMergeRequest.State.RESOLVED
     merge_request.save()
     apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
     most_recent = Entity.objects.exclude_disabled().get()
@@ -99,7 +99,7 @@ def test_applies_resolution_replacement_value(
     conflict_resolution_replacement_value, user1
 ):
     merge_request = conflict_resolution_replacement_value.merge_request
-    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.state = EntityMergeRequest.State.RESOLVED
     merge_request.save()
     apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
     most_recent = Entity.objects.exclude_disabled().get()
@@ -116,7 +116,7 @@ def test_applies_resolution_replacement_value(
 
 def test_copies_justification(conflict_resolution_replace, user1):
     merge_request = conflict_resolution_replace.merge_request
-    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.state = EntityMergeRequest.State.RESOLVED
     merge_request.save()
     time = c.time_merge_request
     EntityJustification.add(
@@ -150,7 +150,7 @@ def test_creates_column_merge_request_for_updated(
     instance_merge_request_destination_user_conflict_changed,
 ):
     merge_request = conflict_resolution_replace.merge_request
-    merge_request.state = EntityMergeRequest.RESOLVED
+    merge_request.state = EntityMergeRequest.State.RESOLVED
     merge_request.save()
     apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
     most_recent = Entity.objects.exclude_disabled().get()

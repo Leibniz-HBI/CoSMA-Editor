@@ -129,7 +129,7 @@ def column_merge_request(column_curated, column1, contribution_candidate):
         id_origin_persistent=column1.id_persistent,
         id_destination_persistent=column_curated.id_persistent,
         contribution_candidate=contribution_candidate,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         created_by=column1.owner,
         created_at=c.time_edit_column_merge_request,
     )

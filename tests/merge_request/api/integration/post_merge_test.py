@@ -61,7 +61,7 @@ def test_resolved_conflict(
             merge_request_user.id_persistent
         )
     ).get()
-    assert merge_request.state == ColumnMergeRequest.RESOLVED
+    assert merge_request.state == ColumnMergeRequest.State.RESOLVED
 
 
 def test_open_conflicts(

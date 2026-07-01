@@ -62,7 +62,7 @@ def test_changes_owner_of_mrs(auth_server1, ownership_request_user, user_editor)
     ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         assigned_to=ownership_request_user.petitioner,
         created_by=user_editor,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         id_origin_persistent="origin_for_test",
         id_destination_persistent=ownership_request_user.id_column_persistent,
         created_at=c.time_edit_test,
@@ -71,7 +71,7 @@ def test_changes_owner_of_mrs(auth_server1, ownership_request_user, user_editor)
     ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         assigned_to=user_editor,
         created_by=ownership_request_user.petitioner,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         id_origin_persistent=ownership_request_user.id_column_persistent,
         id_destination_persistent="destination_for_test",
         created_at=c.time_edit_test,
