@@ -14,7 +14,7 @@ export enum MergeRequestStep {
 export interface MergeRequest {
     idPersistent: string
     createdBy: PublicUserInfo
-    assignedTo: PublicUserInfo
+    assignedTo: PublicUserInfo | undefined
     originColumn: Column
     destinationColumn: Column
     disableOriginOnMerge: boolean
@@ -31,7 +31,7 @@ export function newMergeRequest({
 }: {
     idPersistent: string
     createdBy: PublicUserInfo
-    assignedTo: PublicUserInfo
+    assignedTo: PublicUserInfo|undefined
     originColumn: Column
     destinationColumn: Column
     disableOriginOnMerge: boolean

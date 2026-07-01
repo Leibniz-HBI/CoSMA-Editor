@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from logging import getLogger
-from typing import List
+from typing import List, Literal
 
 from django.db import DatabaseError, transaction
 from django.http import HttpRequest
@@ -39,7 +39,7 @@ class MergeRequest(Schema):
     origin: ColumnResponse
     created_at: datetime
     assigned_to: PublicUserInfo | None = None
-    state: str
+    state: Literal["OPEN", "CONFLICTS", "CLOSED", "RESOLVED", "MERGED", "ERROR"]
     disable_origin_on_merge: bool
 
 
