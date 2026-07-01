@@ -139,7 +139,7 @@ def merge_request_user(
 
 @pytest.fixture
 def merge_request_user_resolved(merge_request_user):
-    merge_request_user.state = ColumnMergeRequest.RESOLVED
+    merge_request_user.state = ColumnMergeRequest.State.RESOLVED
     merge_request_user.save()
     return merge_request_user
 
@@ -164,7 +164,7 @@ def merge_request_user_disable_origin(
 def merge_request_user_disable_origin_resolved(
     merge_request_user_disable_origin,
 ):
-    merge_request_user_disable_origin.state = ColumnMergeRequest.RESOLVED
+    merge_request_user_disable_origin.state = ColumnMergeRequest.State.RESOLVED
     merge_request_user_disable_origin.save()
     return merge_request_user_disable_origin
 

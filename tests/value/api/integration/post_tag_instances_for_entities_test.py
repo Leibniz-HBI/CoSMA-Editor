@@ -6,11 +6,11 @@ import pytest
 import tests.column.common as cc
 import tests.value.api.integration.requests as req
 import tests.value.common as cv
-from tests.entity import common as ce
-from tests.utils import assert_versioned
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import ColumnMergeRequest
+from tests.entity import common as ce
+from tests.utils import assert_versioned
 
 
 def test_no_cookies(auth_server):
@@ -119,7 +119,7 @@ def merge_request(user, user1):
     mr = ColumnMergeRequest(
         id_origin_persistent=cc.id_column_persistent_test_user1,
         id_destination_persistent=cc.id_column_persistent_test_user,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         id_persistent=cc.id_merge_request,
         created_at=cc.time_created_merge_request,
         created_by=user,

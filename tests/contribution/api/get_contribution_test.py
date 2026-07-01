@@ -56,7 +56,7 @@ def test_get_with_match_column_list(request_user, column1, column_curated):
         id_origin_persistent=column1.id_persistent,
         id_destination_persistent=column_curated.id_persistent,
         contribution_candidate_id=id_persistent,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         created_by=column1.owner,
         created_at=c.time_edit_column_merge_request,
     )

@@ -191,7 +191,7 @@ def post_resolve_conflict(
         merge_request = EntityMergeRequestDb.by_id_persistent(
             id_merge_request_persistent, user
         )
-        if merge_request.state != EntityMergeRequestDb.OPEN:
+        if merge_request.state != EntityMergeRequestDb.State.OPEN:
             raise ApiException(
                 400, "Can only resolve conflicts for open merge requests."
             )
@@ -271,8 +271,8 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 .get()
             )
             if not (
-                merge_request.state == EntityMergeRequestDb.OPEN
-                or EntityMergeRequestDb.ERROR
+                merge_request.state == EntityMergeRequestDb.State.OPEN
+                or EntityMergeRequestDb.State.ERROR
             ):
                 return 400, ApiError(msg="Merge request not available for merging.")
             writable_columns = column_objects().for_user(user, True)
@@ -297,7 +297,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 return 400, ApiError(
                     msg="There are unresolved conflicts, that are resolvable by you."
                 )
-            merge_request.state = EntityMergeRequestDb.RESOLVED
+            merge_request.state = EntityMergeRequestDb.State.RESOLVED
             merge_request.save(update_fields=["state"])
             enqueue(
                 apply_entity_merge_request,
@@ -343,7 +343,7 @@ def reverse_origin_destination(request: HttpRequest, id_merge_request_persistent
         )
         merge_request_existing_query_set.select_for_update()
         merge_request_existing = merge_request_existing_query_set.get()
-        if merge_request_existing.state != EntityMergeRequestDb.OPEN:
+        if merge_request_existing.state != EntityMergeRequestDb.State.OPEN:
             return 400, ApiError(
                 msg="Can only reverse origin and destination for open merge requests."
             )
@@ -399,9 +399,9 @@ def put(
                 id_entity_origin_persistent, id_entity_destination_persistent
             ).get()
             if existing.state in [
-                EntityMergeRequestDb.OPEN,
-                EntityMergeRequestDb.ERROR,
-                EntityMergeRequestDb.CONFLICTS,
+                EntityMergeRequestDb.State.OPEN,
+                EntityMergeRequestDb.State.ERROR,
+                EntityMergeRequestDb.State.CONFLICTS,
             ]:
                 return 200, entity_merge_request_db_to_api(existing)
             return 400, ApiError(msg="Merge Request exists but is not open")
@@ -416,7 +416,7 @@ def put(
             created_by=user,
             created_at=timestamp(),
             id_persistent=uuid4(),
-            state=EntityMergeRequestDb.OPEN,
+            state=EntityMergeRequestDb.State.OPEN,
         )
         return 200, entity_merge_request_db_to_api(entity_merge_request)
     except EntityDb.DoesNotExist:  # pylint: disable=no-member
@@ -424,12 +424,12 @@ def put(
 
 
 merge_request_step_db_to_api_map = {
-    EntityMergeRequestDb.OPEN: "OPEN",
-    EntityMergeRequestDb.CONFLICTS: "CONFLICTS",
-    EntityMergeRequestDb.CLOSED: "CLOSED",
-    EntityMergeRequestDb.RESOLVED: "RESOLVED",
-    EntityMergeRequestDb.MERGED: "MERGED",
-    EntityMergeRequestDb.ERROR: "ERROR",
+    EntityMergeRequestDb.State.OPEN: "OPEN",
+    EntityMergeRequestDb.State.CONFLICTS: "CONFLICTS",
+    EntityMergeRequestDb.State.CLOSED: "CLOSED",
+    EntityMergeRequestDb.State.RESOLVED: "RESOLVED",
+    EntityMergeRequestDb.State.MERGED: "MERGED",
+    EntityMergeRequestDb.State.ERROR: "ERROR",
 }
 
 REPLACEMENT_STATE_DB_TO_API_MAP = {
@@ -468,9 +468,9 @@ def get_merge_requests(request: HttpRequest):
         merge_requests = (
             EntityMergeRequestDb.objects.filter(  # pylint: disable=no-member
                 state__in=[
-                    EntityMergeRequestDb.OPEN,
-                    EntityMergeRequestDb.CLOSED,
-                    EntityMergeRequestDb.CONFLICTS,
+                    EntityMergeRequestDb.State.OPEN,
+                    EntityMergeRequestDb.State.CLOSED,
+                    EntityMergeRequestDb.State.CONFLICTS,
                 ]
             )
         )
@@ -512,9 +512,9 @@ def get(request: HttpRequest, id_merge_request_persistent):
                 id_merge_request_persistent
             ).get()
             if merge_request.state in [
-                EntityMergeRequestDb.OPEN,
-                EntityMergeRequestDb.ERROR,
-                EntityMergeRequestDb.CONFLICTS,
+                EntityMergeRequestDb.State.OPEN,
+                EntityMergeRequestDb.State.ERROR,
+                EntityMergeRequestDb.State.CONFLICTS,
             ]:
                 return 200, entity_merge_request_db_to_api(merge_request)
             return 400, ApiError(msg="Merge Request exists but is not open")

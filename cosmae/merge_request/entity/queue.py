@@ -46,8 +46,8 @@ def apply_entity_merge_request(
         with transaction.atomic():
             mr_query.select_for_update()
             merge_request = mr_query.get()
-            if merge_request.state != EntityMergeRequest.RESOLVED:
-                if merge_request.state == EntityMergeRequest.MERGED:
+            if merge_request.state != EntityMergeRequest.State.RESOLVED:
+                if merge_request.state == EntityMergeRequest.State.MERGED:
                     return
                 raise NotResolvedException("Entity Merge request is not resolved.")
             user = user_query.get()
@@ -117,13 +117,13 @@ def apply_entity_merge_request(
                 time_edit=time_edit,
             )
             merged.save()
-            merge_request.state = EntityMergeRequest.MERGED
+            merge_request.state = EntityMergeRequest.State.MERGED
             merge_request.save()
 
     except Exception as exc:  # pylint: disable=broad-except
         logging.error(None, exc_info=exc)
         merge_request = mr_query.get()
-        merge_request.state = EntityMergeRequest.OPEN
+        merge_request.state = EntityMergeRequest.State.OPEN
         merge_request.save()
 
 
@@ -173,7 +173,7 @@ def create_column_merge_request_for_unresolved_conflict(  # pylint: disable=too-
         id_destination_persistent=column_existing_dict["id_persistent"],
         assigned_to_id=column_existing_dict["owner_id"],
         created_by=user,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         created_at=time_edit,
         id_persistent=uuid4(),
         disable_origin_on_merge=True,

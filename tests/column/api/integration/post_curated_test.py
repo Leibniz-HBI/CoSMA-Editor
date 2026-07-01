@@ -80,7 +80,7 @@ def test_curate_changes_mrs(
     ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         assigned_to=column_user.owner,
         created_by=user_editor,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         id_origin_persistent="origin_for_test",
         id_destination_persistent=column_user.id_persistent,
         created_at=c.time_edit_test,
@@ -89,7 +89,7 @@ def test_curate_changes_mrs(
     ColumnMergeRequest.objects.create(  # pylint: disable=no-member
         assigned_to=user_editor,
         created_by=column_user.owner,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         id_origin_persistent=column_user.id_persistent,
         id_destination_persistent="origin_for_test",
         created_at=c.time_edit_test,

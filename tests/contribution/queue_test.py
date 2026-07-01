@@ -40,7 +40,7 @@ def mr_contribution(contribution_user, column_user, column_user1):
         id_origin_persistent=column_user1.id_persistent,
         id_destination_persistent=column_user.id_persistent,
         contribution_candidate=contribution_user,
-        state=ColumnMergeRequest.OPEN,
+        state=ColumnMergeRequest.State.OPEN,
         created_by=contribution_user.created_by,
         created_at=c.time_edit_mr,
     )

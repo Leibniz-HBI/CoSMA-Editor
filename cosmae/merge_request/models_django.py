@@ -26,9 +26,9 @@ class ColumnMergeRequestQuerySet(AbstractMergeRequestQuerySet):
     def created_by_user(self, user: CosmaeUser):
         "Get all merge requests created by a user"
         states = [
-            ColumnMergeRequest.OPEN,
-            ColumnMergeRequest.CONFLICTS,
-            ColumnMergeRequest.ERROR,
+            ColumnMergeRequest.State.OPEN,
+            ColumnMergeRequest.State.CONFLICTS,
+            ColumnMergeRequest.State.ERROR,
         ]
 
         created = self.filter(  # pylint: disable=no-member
@@ -53,9 +53,9 @@ class ColumnMergeRequestQuerySet(AbstractMergeRequestQuerySet):
     def assigned_to_user(self, user: CosmaeUser):
         "Get all merge requests assigned to a user"
         states = [
-            ColumnMergeRequest.OPEN,
-            ColumnMergeRequest.CONFLICTS,
-            ColumnMergeRequest.ERROR,
+            ColumnMergeRequest.State.OPEN,
+            ColumnMergeRequest.State.CONFLICTS,
+            ColumnMergeRequest.State.ERROR,
         ]
 
         assigned = self.filter(  # pylint: disable=no-member

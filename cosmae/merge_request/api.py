@@ -343,7 +343,10 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 .select_for_update()
                 .get()
             )
-            if not (merge_request.state == MergeRequestDb.OPEN or MergeRequestDb.ERROR):
+            if not (
+                merge_request.state == MergeRequestDb.State.OPEN
+                or MergeRequestDb.State.ERROR
+            ):
                 return 400, ApiError(msg="Merge request not available for merging.")
             column_destination = ColumnDb.most_recent_by_id(
                 merge_request.id_destination_persistent
@@ -368,7 +371,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 return 400, ApiError(
                     msg="There are unresolved conflicts for the merge request."
                 )
-            merge_request.state = MergeRequestDb.RESOLVED
+            merge_request.state = MergeRequestDb.State.RESOLVED
             merge_request.save(update_fields=["state"])
             dispatch_resolve_conflicts(merge_request, user)
         return 200, None
