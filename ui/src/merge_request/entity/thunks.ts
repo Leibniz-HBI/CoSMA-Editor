@@ -53,6 +53,7 @@ export function parseEntityMergeRequestFromJson(
 export const entityMergeRequestStateJsonToEnumMap: {
     [key: string]: EntityMergeRequestStep
 } = {
+    CREATED: EntityMergeRequestStep.CREATED,
     OPEN: EntityMergeRequestStep.OPEN,
     MERGED: EntityMergeRequestStep.MERGED,
     ERROR: EntityMergeRequestStep.ERROR,

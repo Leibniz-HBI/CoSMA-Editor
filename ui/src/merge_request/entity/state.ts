@@ -3,6 +3,7 @@ import { PublicUserInfo } from '../../user/state'
 import { RemoteInterface } from '../../util/state'
 
 export enum EntityMergeRequestStep {
+    CREATED = 'created',
     OPEN = 'open',
     CLOSED = 'closed',
     MERGED = 'merged',

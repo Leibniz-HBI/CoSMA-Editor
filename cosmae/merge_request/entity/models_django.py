@@ -40,6 +40,7 @@ class AbstractMergeRequest(models.Model):
     class State(models.TextChoices):
         "Enum for merge request states."
 
+        CREATED = "CRT", "created"
         OPEN = "OPN", "open"
         CONFLICTS = "CNF", "conflicts"
         CLOSED = "CLS", "closed"
