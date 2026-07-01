@@ -39,7 +39,9 @@ class MergeRequest(Schema):
     origin: ColumnResponse
     created_at: datetime
     assigned_to: PublicUserInfo | None = None
-    state: Literal["OPEN", "CONFLICTS", "CLOSED", "RESOLVED", "MERGED", "ERROR"]
+    state: Literal[
+        "CREATED", "OPEN", "CONFLICTS", "CLOSED", "RESOLVED", "MERGED", "ERROR"
+    ]
     disable_origin_on_merge: bool
 
 

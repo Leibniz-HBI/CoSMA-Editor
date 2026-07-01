@@ -58,7 +58,7 @@ def test_history(
 def test_order(
     request_user, column_name_path_cache_entry, column_parent_name_path_cache_entry
 ):
-    "Make sure history works properly"
+    "Make sure columns are ordered by relevancy to query"
     status, rsp = get_search(request_user, "parent")
     assert status == 200
     assert rsp.id_persistent_list == [
@@ -68,6 +68,6 @@ def test_order(
     status, rsp = get_search(request_user, "column")
     assert status == 200
     assert rsp.id_persistent_list == [
-        c.id_column_parent_persistent_test,
         c.id_column_persistent_test,
+        c.id_column_parent_persistent_test,
     ]

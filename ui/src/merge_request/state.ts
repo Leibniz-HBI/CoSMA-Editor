@@ -3,6 +3,7 @@ import { PublicUserInfo } from '../user/state'
 import { RemoteInterface, newRemote } from '../util/state'
 
 export enum MergeRequestStep {
+    Created = 'Created',
     Open = 'Open',
     Conflicts = 'Conflicts',
     Closed = 'Closed',

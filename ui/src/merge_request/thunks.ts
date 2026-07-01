@@ -60,10 +60,11 @@ export function parseMergeRequestFromJson(mr: MergeRequestApi): MergeRequest {
 }
 
 const mergeRequestStateFromApiMap: { [key: string]: MergeRequestStep } = {
+    CREATED: MergeRequestStep.Created,
     OPEN: MergeRequestStep.Open,
     CONFLICTS: MergeRequestStep.Conflicts,
     CLOSED: MergeRequestStep.Closed,
     RESOLVED: MergeRequestStep.Resolved,
     MERGED: MergeRequestStep.Merged,
-    ERROR: MergeRequestStep.Error
+    ERROR: MergeRequestStep.Error,
 }

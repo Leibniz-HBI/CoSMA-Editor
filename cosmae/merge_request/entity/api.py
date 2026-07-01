@@ -63,7 +63,9 @@ class EntityMergeRequest(Schema):
     origin: EntityRequest
     destination: EntityRequest
     created_by: PublicUserInfo
-    state: Literal["OPEN", "CONFLICTS", "CLOSED", "RESOLVED", "MERGED", "ERROR"]
+    state: Literal[
+        "CREATED", "OPEN", "CONFLICTS", "CLOSED", "RESOLVED", "MERGED", "ERROR"
+    ]
 
 
 class EntityMergeRequestList(Schema):
@@ -424,6 +426,7 @@ def put(
 
 
 merge_request_step_db_to_api_map = {
+    EntityMergeRequestDb.State.CREATED: "CREATED",
     EntityMergeRequestDb.State.OPEN: "OPEN",
     EntityMergeRequestDb.State.CONFLICTS: "CONFLICTS",
     EntityMergeRequestDb.State.CLOSED: "CLOSED",
