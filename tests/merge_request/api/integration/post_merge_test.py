@@ -48,8 +48,7 @@ def test_wrong_user(auth_server1, merge_request_user):
 def test_resolved_conflict(
     auth_server,
     merge_request_user,
-    conflict_resolution_replace,
-    conflict_resolution_keep,
+    conflict_resolutions_replace_replace,
 ):
     server, cookies = auth_server
     rsp = req.post_start_merge(
@@ -80,11 +79,11 @@ def test_open_conflicts(
 def test_updated_data(
     auth_server,
     merge_request_user,
-    conflict_resolution_replace,
+    conflict_resolutions_empty_replace,
     conflict_resolution_keep,
 ):
     server, cookies = auth_server
-    old_instance = conflict_resolution_replace.value_destination
+    old_instance = conflict_resolutions_empty_replace[1].value_destination
     instance, _ = ValueHistory.change_or_create_versioned(
         id_persistent=old_instance.id_persistent,
         id_entity_persistent=old_instance.id_entity_persistent,

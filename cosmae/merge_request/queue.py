@@ -4,12 +4,13 @@ import logging
 from typing import Optional
 from uuid import uuid4
 
-import django_rq
 from django.db import models, transaction
 from django.db.utils import OperationalError
+from django_rq import enqueue
 
-from cosmae.column.models_django import Column, ColumnHistory
+from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.edit_session.models_django import EditSession
+from cosmae.entity.models_django import entity_objects
 from cosmae.exception import EntityUpdatedException
 from cosmae.merge_request.models_django import (
     ColumnConflictResolution,
@@ -60,7 +61,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
     try:
         with transaction.atomic():
             try:
-                merge_request = merge_request_query.get()
+                merge_request = merge_request_query.select_for_update().get()
             except OperationalError:
                 return
             column_destination = Column.most_recent_by_id(
@@ -100,6 +101,7 @@ def merge_request_fast_forward(id_merge_request_persistent):
                 return
             merge_request.state = merge_request.State.CONFLICTS
             merge_request.save(update_fields=["state"])
+            dispatch_compute_conflicts(merge_request)
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
@@ -139,16 +141,19 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             )
             non_recent = conflicts_resolution_set.non_recent()
             if len(non_recent) > 0:
-                merge_request.state = merge_request.State.OPEN
-                merge_request.save()
+                for resolution in non_recent:
+                    logging.error(
+                        "Non recent resolution found: %s", resolution.__dict__
+                    )
+                merge_request.state = merge_request.State.CONFLICTS
+                merge_request.save(update_fields=["state"])
+                dispatch_compute_conflicts(merge_request)
                 return
             recent = conflicts_resolution_set.only_recent()
-            conflicts = merge_request.instance_conflicts_all(
-                False, resolution_values=recent
-            )
+            conflicts = merge_request.compute_instance_conflicts().unresolved(recent)
             if len(conflicts) > 0:
                 merge_request.state = merge_request.State.OPEN
-                merge_request.save()
+                merge_request.save(update_fields=["state"])
                 return
             try:
                 with transaction.atomic():
@@ -232,15 +237,97 @@ def perform_value_replacement(recent_queryset, approved_by, time_merge):
         )[0].save()
 
 
+def merge_request_compute_conflicts(id_merge_request_persistent, min_idx=-2, limit=30):
+    "Compute conflicts for a merge request and store them in the database."
+    merge_request_query = (
+        ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
+            id_persistent=id_merge_request_persistent
+        )
+    )
+    try:
+        with transaction.atomic():
+            try:
+                merge_request = merge_request_query.select_for_update().get()
+            except OperationalError:
+                return
+            if merge_request.state != ColumnMergeRequest.State.CONFLICTS:
+                return
+            all_conflicts = merge_request.compute_instance_conflicts(
+                min_idx, limit
+            ).filter(value_origin__id__gte=min_idx)
+            resolutions = merge_request.columnconflictresolution_set.only_recent()
+            updated_conflicts = all_conflicts.exclude_resolved(resolutions)
+            column_origin = (
+                column_objects()
+                .by_id_persistent(merge_request.id_origin_persistent)
+                .get()
+            )
+            column_destination = (
+                column_objects()
+                .by_id_persistent(merge_request.id_destination_persistent)
+                .get()
+            )
+            max_idx = store_conflicts(
+                merge_request, updated_conflicts, column_origin, column_destination
+            )
+            if max_idx >= 0:
+                enqueue(
+                    merge_request_compute_conflicts,
+                    args=(str(merge_request.id_persistent), max_idx, limit),
+                    job_timeout=60 * 12,
+                )
+            else:
+                merge_request.state = ColumnMergeRequest.State.OPEN
+                merge_request.save()
+    except Exception as exc:  # pylint: disable=broad-except
+        logging.warning(None, exc_info=exc)
+        with transaction.atomic():
+            merge_request = merge_request_query.get()
+            merge_request.state = ColumnMergeRequest.State.ERROR
+            merge_request.save()
+
+
+def store_conflicts(merge_request, conflicts, column_origin, column_destination):
+    "Store conflicts in the database."
+    max_idx = -1
+    for conflict in conflicts:
+        entity = entity_objects().by_id_persistent(conflict.id_entity_persistent).get()
+        max_idx = max(max_idx, conflict.idx)
+        entity = conflict.id_entity_persistent
+        resolution = ColumnConflictResolution(
+            merge_request=merge_request,
+            entity=entity,
+            column_origin=column_origin,
+            column_destination=column_destination,
+            value_origin_id=conflict.id,
+            value_destination_id=conflict.value_destination__id,
+        )
+        resolution.save()
+    return max_idx
+
+
 def dispatch_resolve_conflicts(
     merge_request: ColumnMergeRequest, approved_by: CosmaeUser
 ):
     "Dispatch method for resolving conflicts to queue"
-    django_rq.enqueue(
+    enqueue(
         merge_request_resolve_conflicts,
         args=(
             str(merge_request.id_persistent),
             str(approved_by.id_persistent),
+        ),
+        job_timeout=60 * 12,
+    )
+
+
+def dispatch_compute_conflicts(merge_request):
+    "Enqueue the computation of conflicts for a merge request."
+    enqueue(
+        merge_request_compute_conflicts,
+        args=(
+            str(
+                merge_request.id_persistent,
+            ),
         ),
         job_timeout=60 * 12,
     )

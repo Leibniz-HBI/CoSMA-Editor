@@ -11,7 +11,11 @@ from ninja import Router, Schema
 from cosmae.column.models_api import ColumnResponse
 from cosmae.column.models_conversion import column_db_to_api
 from cosmae.column.models_django import Column as ColumnDb
-from cosmae.entity.api import EntityRequest, entity_db_dict_to_api
+from cosmae.entity.api import (
+    EntityRequest,
+    entity_db_dict_to_api,
+    entity_db_to_entity_request_api,
+)
 from cosmae.exception import ApiError, ForbiddenException, NotAuthenticatedException
 from cosmae.merge_request.entity.api import (
     REPLACEMENT_STATE_API_TO_DB_MAP,
@@ -21,7 +25,10 @@ from cosmae.merge_request.entity.api import (
 )
 from cosmae.merge_request.models_django import ColumnConflictResolution
 from cosmae.merge_request.models_django import ColumnMergeRequest as MergeRequestDb
-from cosmae.merge_request.queue import dispatch_resolve_conflicts
+from cosmae.merge_request.queue import (
+    dispatch_compute_conflicts,
+    dispatch_resolve_conflicts,
+)
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util.auth import check_user
@@ -59,7 +66,7 @@ class MergeRequestConflictResponse(Schema):
     # pylint: disable=too-few-public-methods
     "API model for multiple merge requests conflicts"
     conflicts: List[MergeRequestConflict]
-    id_value_origin_persistent_updated_list: List[str]
+    updated_conflicts: List[MergeRequestConflict]
     next_offset: int
 
 
@@ -204,20 +211,20 @@ def get_merge_request_conflicts(
     "API method for getting merge request conflicts."
     try:
         user = check_user(request)
-        conflict_query_set, updated_query_set = compute_conflicts(
-            id_merge_request_persistent, offset, limit, user
+        resolution_query_set, updated_query_set = resolutions_updated_querysets(
+            id_merge_request_persistent, offset, user
         )
         conflicts_response = []
         max_offset = -2
-        for conflict in conflict_query_set:
+        for conflict in resolution_query_set[:limit]:
             conflicts_response.append(annotated_value_db_to_api(conflict))
             max_offset = max(max_offset, conflict.id)
-        updated_id_persistent_list = updated_query_set.filter(
-            value_origin__lte=max_offset
-        ).values_list("value_origin__id_persistent", flat=True)
+        updated_query_set = updated_query_set.filter(id__lte=max_offset)
         return 200, MergeRequestConflictResponse(
             conflicts=conflicts_response,
-            id_value_origin_persistent_updated_list=updated_id_persistent_list,
+            updated_conflicts=[
+                updated_conflict_db_to_api(conflict) for conflict in updated_query_set
+            ],
             next_offset=max_offset + 1,
         )
     except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
@@ -236,22 +243,16 @@ def get_merge_request_conflicts(
         return 500, ApiError(msg=msg)
 
 
-def compute_conflicts(id_merge_request_persistent, offset, limit, user):
+def resolutions_updated_querysets(id_merge_request_persistent, offset, user):
     "Compute the conflicts for a merge request and the ones were updates happened."
     merge_request = MergeRequestDb.by_id_persistent(id_merge_request_persistent, user)
-    resolutions = ColumnConflictResolution.for_merge_request_query_set(
-        merge_request
-    ).filter(value_origin__id__gte=offset)
-    recent = resolutions.only_recent()
+    resolutions = (
+        ColumnConflictResolution.for_merge_request_query_set(merge_request)
+        .filter(id__gte=offset)
+        .order_by("id")
+    ).prefetch_related()
     updated_query_set = resolutions.non_recent()
-    conflict_query_set = merge_request.instance_conflicts_all(
-        True,
-        min_idx=offset,
-        limit=limit,
-        resolution_values=recent,
-    ).annotate_entity()
-
-    return conflict_query_set, updated_query_set
+    return resolutions, updated_query_set
 
 
 @router.post(
@@ -362,14 +363,20 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
             )
             updated = resolutions.non_recent()
             if len(updated) > 0:
+                merge_request.state = MergeRequestDb.State.CONFLICTS
+                merge_request.save(update_fields=["state"])
+                dispatch_compute_conflicts(merge_request)
                 return 400, ApiError(
                     msg="There are conflicts for the merge request, "
                     "where the underlying data has changed."
                 )
-            conflicts = merge_request.instance_conflicts_all(
-                include_resolved=False, resolution_values=resolutions
+            conflicts = merge_request.compute_instance_conflicts().unresolved(
+                resolutions
             )
             if len(conflicts) > 0:
+                merge_request.state = MergeRequestDb.State.CONFLICTS
+                merge_request.save(update_fields=["state"])
+                dispatch_compute_conflicts(merge_request)
                 return 400, ApiError(
                     msg="There are unresolved conflicts for the merge request."
                 )
@@ -383,12 +390,14 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
         return 404, ApiError(msg="Merge Request does not exist.")
     except ColumnDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Destination column does not exist.")
-    except DatabaseError:
-        return 500, ApiError(
-            msg="Could not mark the merge request for merging in the database."
-        )
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not mark the merge request for merging.")
+    except DatabaseError as exc:
+        msg = "Could not mark the merge request for merging in the database."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not mark the merge request for merging."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 def merge_request_db_to_api(mr_db: MergeRequestDb) -> MergeRequest:
@@ -407,30 +416,30 @@ def merge_request_db_to_api(mr_db: MergeRequestDb) -> MergeRequest:
     )
 
 
-def annotated_value_db_to_api(annotated_instance):
+def annotated_value_db_to_api(conflict):
     "Converts an annotated value from DB to API representation"
-    entity = annotated_instance.entity
-    value_destination_db = annotated_instance.value_destination
-    if value_destination_db is None:
+    entity = conflict.entity
+    value_destination = conflict.value_destination
+    if value_destination is None:
         value_destination = None
     else:
         value_destination = Value(
-            id_persistent=value_destination_db["id_persistent"],
-            version=value_destination_db["id"],
-            value=value_destination_db["value"],
+            id_persistent=value_destination.id_persistent,
+            version=value_destination.id,
+            value=value_destination.value,
         )
     return MergeRequestConflict(
-        entity=entity_db_dict_to_api(entity),
+        entity=entity_db_to_entity_request_api(entity),
         value_origin=Value(
-            id_persistent=annotated_instance.id_persistent,
-            version=annotated_instance.id,
-            value=annotated_instance.value,
+            id_persistent=conflict.value_origin.id_persistent,
+            version=conflict.value_origin.id,
+            value=conflict.value_origin.value,
         ),
         value_destination=value_destination,
         replacement_state=REPLACEMENT_STATE_DB_TO_API_MAP.get(
-            annotated_instance.conflict_resolution_replacement_state
+            conflict.replacement_state
         ),
-        replacement_value=annotated_instance.conflict_resolution_replacement_value,
+        replacement_value=conflict.replacement_value,
     )
 
 
@@ -457,6 +466,33 @@ def conflict_with_updated_data_db_to_api(annotated_conflict):
         ),
         value_destination=value_destination,
         # Underlying data has changed!
+        replacement_state=None,
+        replacement_value=annotated_conflict.replacement_value,
+    )
+
+
+def conflict_value_db_to_api(value_db):
+    "Transform a value from DB to API representation."
+    if value_db is None:
+        return None
+    return Value(
+        id_persistent=value_db["id_persistent"],
+        version=value_db["id"],
+        value=value_db["value"],
+    )
+
+
+def updated_conflict_db_to_api(annotated_conflict):
+    "Transform an updated conflict from DB to API representation."
+
+    return MergeRequestConflict(
+        entity=entity_db_dict_to_api(annotated_conflict.entity_most_recent),
+        value_origin=conflict_value_db_to_api(
+            annotated_conflict.value_origin_most_recent
+        ),
+        value_destination=conflict_value_db_to_api(
+            annotated_conflict.value_destination_most_recent
+        ),
         replacement_state=None,
         replacement_value=annotated_conflict.replacement_value,
     )

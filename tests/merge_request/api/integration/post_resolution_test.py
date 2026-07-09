@@ -81,7 +81,7 @@ def test_allow_value_resolution_without_value(
     destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
 ):
     server, cookies = auth_server
     rsp = req.post_resolution(
@@ -96,9 +96,9 @@ def test_allow_value_resolution_without_value(
         id_value_origin_persistent=instances_merge_request_origin_user[1].id_persistent,
         id_value_origin_version=instances_merge_request_origin_user[1].id,
         id_value_destination_persistent=(
-            instance_merge_request_destination_user_conflict.id_persistent
+            instance_merge_request_destination_user_conflict1.id_persistent
         ),
-        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict1.id,
         replacement_state="VALUE",
         cookies=cookies,
     )
@@ -112,7 +112,7 @@ def test_creates_resolution_replace(
     destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
 ):
     server, cookies = auth_server
     rsp = req.post_resolution(
@@ -127,9 +127,9 @@ def test_creates_resolution_replace(
         id_value_origin_persistent=instances_merge_request_origin_user[1].id_persistent,
         id_value_origin_version=instances_merge_request_origin_user[1].id,
         id_value_destination_persistent=(
-            instance_merge_request_destination_user_conflict.id_persistent
+            instance_merge_request_destination_user_conflict1.id_persistent
         ),
-        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict1.id,
         replacement_state="REPLACE",
         cookies=cookies,
     )
@@ -142,7 +142,7 @@ def test_creates_resolution_replace(
     assert resolution.value_origin_id == instances_merge_request_origin_user[1].id
     assert (
         resolution.value_destination_id
-        == instance_merge_request_destination_user_conflict.id
+        == instance_merge_request_destination_user_conflict1.id
     )
     assert resolution.replacement_state == ConflictResolutionDb.REPLACE
     assert resolution.replacement_value is None
@@ -155,7 +155,7 @@ def test_creates_resolution_replacement_value(
     destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
 ):
     server, cookies = auth_server
     rsp = req.post_resolution(
@@ -170,9 +170,9 @@ def test_creates_resolution_replacement_value(
         id_value_origin_persistent=instances_merge_request_origin_user[1].id_persistent,
         id_value_origin_version=instances_merge_request_origin_user[1].id,
         id_value_destination_persistent=(
-            instance_merge_request_destination_user_conflict.id_persistent
+            instance_merge_request_destination_user_conflict1.id_persistent
         ),
-        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict1.id,
         replacement_state="VALUE",
         replacement_value=c.replacement_value,
         cookies=cookies,
@@ -186,7 +186,7 @@ def test_creates_resolution_replacement_value(
     assert resolution.value_origin_id == instances_merge_request_origin_user[1].id
     assert (
         resolution.value_destination_id
-        == instance_merge_request_destination_user_conflict.id
+        == instance_merge_request_destination_user_conflict1.id
     )
     assert resolution.replacement_state == ConflictResolutionDb.VALUE
     assert resolution.replacement_value == c.replacement_value
@@ -199,7 +199,7 @@ def test_overwrites_resolution(
     destination_column_for_mr,
     entity1,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
 ):
     server, cookies = auth_server
     rsp = req.post_resolution(
@@ -214,9 +214,9 @@ def test_overwrites_resolution(
         id_value_origin_persistent=instances_merge_request_origin_user[1].id_persistent,
         id_value_origin_version=instances_merge_request_origin_user[1].id,
         id_value_destination_persistent=(
-            instance_merge_request_destination_user_conflict.id_persistent
+            instance_merge_request_destination_user_conflict1.id_persistent
         ),
-        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict1.id,
         replacement_state="REPLACE",
         cookies=cookies,
     )
@@ -233,9 +233,9 @@ def test_overwrites_resolution(
         id_value_origin_persistent=instances_merge_request_origin_user[1].id_persistent,
         id_value_origin_version=instances_merge_request_origin_user[1].id,
         id_value_destination_persistent=(
-            instance_merge_request_destination_user_conflict.id_persistent
+            instance_merge_request_destination_user_conflict1.id_persistent
         ),
-        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict1.id,
         replacement_state="KEEP",
         cookies=cookies,
     )
@@ -248,6 +248,6 @@ def test_overwrites_resolution(
     assert resolution.value_origin_id == instances_merge_request_origin_user[1].id
     assert (
         resolution.value_destination_id
-        == instance_merge_request_destination_user_conflict.id
+        == instance_merge_request_destination_user_conflict1.id
     )
     assert resolution.replacement_state == ConflictResolutionDb.KEEP
