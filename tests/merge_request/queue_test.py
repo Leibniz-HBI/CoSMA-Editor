@@ -68,14 +68,21 @@ def test_fast_forward_conflict(
     merge_request_user_fast_forward,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict_fast_forward,
+    mocker,
 ):
     "Does not fast forward on conflict."
+    spy = mocker.spy(q, "enqueue")
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
     merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
     assert merge_request_after.state == ColumnMergeRequest.State.CONFLICTS
+    spy.assert_called_once_with(
+        q.merge_request_compute_conflicts,
+        args=(str(merge_request_user_fast_forward.id_persistent),),
+        job_timeout=60 * 12,
+    )
 
 
 def test_fast_forward_no_conflict_same_value(
@@ -93,7 +100,7 @@ def test_fast_forward_no_conflict_same_value(
 
 
 def test_applies_resolutions(
-    merge_request_user_resolved, conflict_resolution_keep, conflict_resolution_replace
+    merge_request_user_resolved, conflict_resolutions_replace_replace
 ):
     "Test the application of a resolution."
 
@@ -111,8 +118,12 @@ def test_applies_resolutions(
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
-    assert len(instances) == 1
+    assert len(instances) == 2
+    instances = sorted(instances, key=lambda x: x.id)
     instance = instances[0]
+    assert instance.merged_from == c.id_instance_origin
+    assert instance.value == "value origin"
+    instance = instances[1]
     assert instance.merged_from == c.id_instance_origin1
     assert instance.value == "value origin 1"
 
@@ -167,7 +178,7 @@ def test_incomplete_resolution_stays_open_keep(
 
 
 def test_incomplete_resolution_stays_open_replace(
-    merge_request_user_resolved, conflict_resolution_replace
+    merge_request_user_resolved, conflict_resolution_replace1
 ):
     """The merge request should stay open if not all conflicts are resolved.
     This is the case for an existing replace resolution."""
@@ -187,12 +198,12 @@ def test_incomplete_resolution_stays_open_replace(
     )
     assert len(instances) == 1
     instance = instances[0]
-    assert instance.value == "value destination"
+    assert instance.value == "value destination 1"
 
 
 def test_merges_for_equal_value_replace(
     merge_request_user_resolved,
-    conflict_resolution_replace,
+    conflict_resolution_replace1,
     instance_destination_same_value,
 ):
     """Assert that a merge is performed if an unresolved conflict has equal values.
@@ -239,9 +250,10 @@ def test_merges_for_equal_value_keep(
             id_column_persistent=merge_request_user_resolved.id_destination_persistent
         )
     )
-    assert len(instances) == 1
-    instance = instances[0]
-    assert instance.value == instance_merge_request_destination_user_same_value1.value
+    assert len(instances) == 2
+    instances = sorted(instances, key=lambda x: x.id)
+    instance = instances[1]
+    assert instance.id == instance_merge_request_destination_user_same_value1.id
 
 
 def test_merges_for_equal_value_updated(
@@ -269,7 +281,7 @@ def test_merges_for_equal_value_updated(
 
 def test_instance_changed(
     merge_request_user_resolved,
-    conflict_resolution_replace,
+    conflict_resolution_replace1,
     instance_merge_request_origin_user_changed,
 ):
     "Merge request should stay open when the instance has changed to a different value."
@@ -281,4 +293,4 @@ def test_instance_changed(
         merge_request_user_resolved.id_persistent,
         merge_request_user_resolved.assigned_to,
     )
-    assert merge_request.state == ColumnMergeRequest.State.OPEN
+    assert merge_request.state == ColumnMergeRequest.State.CONFLICTS

@@ -73,6 +73,7 @@ def merge_request_user(
         created_by=user_commissioner,
         created_at=c.time_merge_request,
         id_persistent=c.id_merge_request_persistent,
+        state=EntityMergeRequest.State.OPEN,
     )
 
 

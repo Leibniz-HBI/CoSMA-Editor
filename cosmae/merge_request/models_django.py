@@ -17,7 +17,7 @@ from cosmae.merge_request.entity.models_django import (
 )
 from cosmae.util import CosmaeUser
 from cosmae.util.django import get_json_array_agg
-from cosmae.value.models_django import Value, value_objects
+from cosmae.value.models_django import Value, ValueQuerySet, value_objects
 
 
 class ColumnMergeRequestQuerySet(AbstractMergeRequestQuerySet):
@@ -27,7 +27,6 @@ class ColumnMergeRequestQuerySet(AbstractMergeRequestQuerySet):
         "Get all merge requests created by a user"
         states = [
             ColumnMergeRequest.State.OPEN,
-            ColumnMergeRequest.State.CONFLICTS,
             ColumnMergeRequest.State.ERROR,
         ]
 
@@ -54,7 +53,6 @@ class ColumnMergeRequestQuerySet(AbstractMergeRequestQuerySet):
         "Get all merge requests assigned to a user"
         states = [
             ColumnMergeRequest.State.OPEN,
-            ColumnMergeRequest.State.CONFLICTS,
             ColumnMergeRequest.State.ERROR,
         ]
 
@@ -83,6 +81,49 @@ class ColumnMergeRequestQuerySet(AbstractMergeRequestQuerySet):
         "Get all column merge requests for a contribution candidate."
         return self.filter(  # pylint: disable=no-member
             contribution_candidate_id=id_contribution_persistent
+        )
+
+
+class InstanceConflictQuerySet(ValueQuerySet):
+    "QuerySet for instance conflicts."
+
+    def __init__(self, model=None, query=None, using=None, hints=None):
+        super().__init__(model=model, query=query, using=using, hints=hints)
+
+    def unresolved(
+        self, resolution_values: models.BaseManager[ColumnConflictResolution]
+    ):
+        "Exclude resolved conflicts from the queryset."
+        resolutions_sub_query = resolution_values.filter(
+            # make sure to use ids to register changed data
+            column_origin__id_persistent=models.OuterRef("id_column_persistent"),
+            value_origin__id=models.OuterRef("id"),
+            value_destination__id=models.functions.Cast(
+                models.OuterRef("value_destination__id"), models.BigIntegerField()
+            ),
+        )
+        return self.annotate(
+            conflict_resolution_replacement_state=models.functions.Cast(
+                models.Subquery(resolutions_sub_query.values("replacement_state")),
+                models.CharField(max_length=5),
+            ),
+            conflict_resolution_replacement_value=models.functions.Cast(
+                models.Subquery(resolutions_sub_query.values("replacement_value")),
+                models.TextField(),
+            ),
+        ).filter(
+            # no resolution exists
+            models.Q(conflict_resolution_replacement_state__isnull=True)
+            # resolution by value but no value provided
+            | (
+                models.Q(
+                    conflict_resolution_replacement_state=ColumnConflictResolution.VALUE
+                )
+                & (
+                    models.Q(conflict_resolution_replacement_value="")
+                    | models.Q(conflict_resolution_replacement_value__isnull=True)
+                )
+            )
         )
 
 
@@ -189,23 +230,13 @@ class ColumnMergeRequest(AbstractMergeRequest):
                     }
         return {(id_column_persistent, True)}
 
-    def instance_conflicts_all(
-        self,
-        include_resolved: bool = False,
-        min_idx: int = 0,
-        limit: Optional[int] = None,
-        resolution_values: Optional[
-            models.BaseManager[ColumnConflictResolution]
-        ] = None,
-    ):
-        """Get conflicts to merging the origin column referenced by the merge request
-        into the destination column"""
+    def compute_instance_conflicts(
+        self, min_idx: int = 0, limit: Optional[int] = None
+    ) -> InstanceConflictQuerySet:
+        "Compute the conflicts for this merge request."
         instance_origin_recent_query = value_objects().filter(
             id_column_persistent=self.id_origin_persistent, id__gte=min_idx
         )
-
-        if len(instance_origin_recent_query) == 0:
-            return instance_origin_recent_query
 
         instance_destination_recent_query = value_objects().filter(
             id_column_persistent=self.id_destination_persistent
@@ -213,54 +244,25 @@ class ColumnMergeRequest(AbstractMergeRequest):
         conflicts_sub_query = instance_destination_recent_query.filter(
             id_entity_persistent=models.OuterRef("id_entity_persistent")
         )
-
-        if resolution_values is None:
-            resolution_values = (
-                ColumnConflictResolution.objects.none()  # pylint: disable=no-member
-            )
-        resolutions_sub_query = resolution_values.filter(
-            column_origin__id_persistent=models.OuterRef("id_column_persistent"),
-            value_origin__id_persistent=models.OuterRef("id_persistent"),
-        )
-        conflict_candidate_query = instance_origin_recent_query.annotate(
+        with_value_destination = instance_origin_recent_query.annotate(
             value_destination=models.Subquery(
                 conflicts_sub_query.values(
                     json=models.functions.JSONObject(
                         id="id", id_persistent="id_persistent", value="value"
                     )
                 )
-            ),
-            conflict_resolution_replacement_state=models.functions.Cast(
-                models.Subquery(resolutions_sub_query.values("replacement_state")),
-                models.CharField(max_length=5),
-            ),
-            conflict_resolution_replacement_value=models.functions.Cast(
-                models.Subquery(resolutions_sub_query.values("replacement_value")),
-                models.TextField(),
-            ),
+            )
         )
-        with_conflict_info = conflict_candidate_query.exclude(
+        without_equals = with_value_destination.exclude(
             models.Q(
                 value_destination__isnull=False,
                 value=models.fields.json.KT("value_destination__value"),
             )
         )
-        if not include_resolved:
-            with_conflict_info = with_conflict_info.filter(
-                models.Q(conflict_resolution_replacement_state__isnull=True)
-                | (
-                    models.Q(
-                        conflict_resolution_replacement_state=ColumnConflictResolution.VALUE
-                    )
-                    & (
-                        models.Q(conflict_resolution_replacement_value="")
-                        | models.Q(conflict_resolution_replacement_value__isnull=True)
-                    )
-                )
-            )
         if limit is not None:
-            return with_conflict_info.order_by("id")[:limit]
-        return with_conflict_info
+            return without_equals.order_by("id")[:limit]
+        without_equals.__class__ = InstanceConflictQuerySet
+        return without_equals
 
     @classmethod
     def contribution_with_match_columns(cls, id_contribution_persistent):
@@ -352,24 +354,45 @@ class ColumnConflictResolutionQuerySet(AbstractConflictResolutionQuerySet):
         with_version_info = self.annotate_most_recent_ids()
         non_recent_query_set = with_version_info.filter(
             ~models.Q(entity__id=models.F("id_entity_most_recent"))
-            | ~models.Q(column_origin__id=models.F("id_column_origin_most_recent"))
+            | ~models.Q(column_origin_id=models.F("id_column_origin_most_recent"))
             | ~models.Q(
-                column_destination__id=models.F("id_column_destination_most_recent")
+                column_destination_id=models.F("id_column_destination_most_recent")
             )
             | self.instance_non_recent_predicate
         )
-        with_value_destination_info = non_recent_query_set.annotate(
-            value_destination_most_recent_value=models.Subquery(
+        with_data = non_recent_query_set.annotate(
+            value_destination_most_recent=models.Subquery(
                 Value.objects.filter(  # pylint: disable=no-member
                     id=models.OuterRef("id_value_destination_most_recent")
-                ).values("value")[:1]
+                ).values(
+                    json=models.functions.JSONObject(
+                        id="id", id_persistent="id_persistent", value="value"
+                    )
+                )[
+                    :1
+                ]
+            ),
+            entity_most_recent=models.Subquery(
+                Entity.objects.filter(  # pylint: disable=no-member
+                    id=models.OuterRef("id_entity_most_recent")
+                ).values(
+                    json=models.functions.JSONObject(
+                        id="id",
+                        id_persistent="id_persistent",
+                        display_txt="display_txt",
+                        disabled="disabled",
+                    )
+                )[
+                    :1
+                ]
+            ),
+        )
+        without_same_values = with_data.exclude(
+            value_destination_most_recent__value=models.F(
+                "value_origin_most_recent__value"
             )
         )
-        return with_value_destination_info.exclude(
-            value_destination_most_recent_value=models.functions.Cast(
-                models.F("value_origin_most_recent__value"), models.TextField()
-            )
-        )
+        return without_same_values
 
     def only_recent(self):
         """Get the conflict resolutions that reference not up to date entities,
