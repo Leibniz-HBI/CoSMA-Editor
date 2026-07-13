@@ -101,7 +101,6 @@ def merge_request_fast_forward(id_merge_request_persistent):
                 return
             merge_request.state = merge_request.State.CONFLICTS
             merge_request.save(update_fields=["state"])
-            dispatch_compute_conflicts(merge_request)
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
@@ -147,7 +146,6 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
                     )
                 merge_request.state = merge_request.State.CONFLICTS
                 merge_request.save(update_fields=["state"])
-                dispatch_compute_conflicts(merge_request)
                 return
             recent = conflicts_resolution_set.only_recent()
             conflicts = merge_request.compute_instance_conflicts().unresolved(recent)
@@ -320,14 +318,19 @@ def dispatch_resolve_conflicts(
     )
 
 
-def dispatch_compute_conflicts(merge_request):
-    "Enqueue the computation of conflicts for a merge request."
-    enqueue(
-        merge_request_compute_conflicts,
-        args=(
-            str(
-                merge_request.id_persistent,
+def column_conflicts_signal_handler(  # pylint: disable=unused-argument
+    sender, instance, created, update_fields, **kwargs
+):
+    "Signal handler for triggering column conflict computation."
+    if not (update_fields and "state" in update_fields):
+        return
+    if instance.state == ColumnMergeRequest.State.CONFLICTS:
+        enqueue(
+            merge_request_compute_conflicts,
+            args=(
+                str(
+                    instance.id_persistent,
+                ),
             ),
-        ),
-        job_timeout=60 * 12,
-    )
+            job_timeout=60 * 12,
+        )
