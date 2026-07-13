@@ -26,7 +26,6 @@ from cosmae.merge_request.entity.api import (
 from cosmae.merge_request.models_django import ColumnConflictResolution
 from cosmae.merge_request.models_django import ColumnMergeRequest as MergeRequestDb
 from cosmae.merge_request.queue import (
-    dispatch_compute_conflicts,
     dispatch_resolve_conflicts,
 )
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
@@ -365,7 +364,6 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
             if len(updated) > 0:
                 merge_request.state = MergeRequestDb.State.CONFLICTS
                 merge_request.save(update_fields=["state"])
-                dispatch_compute_conflicts(merge_request)
                 return 400, ApiError(
                     msg="There are conflicts for the merge request, "
                     "where the underlying data has changed."
@@ -376,7 +374,6 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
             if len(conflicts) > 0:
                 merge_request.state = MergeRequestDb.State.CONFLICTS
                 merge_request.save(update_fields=["state"])
-                dispatch_compute_conflicts(merge_request)
                 return 400, ApiError(
                     msg="There are unresolved conflicts for the merge request."
                 )

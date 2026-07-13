@@ -11,6 +11,7 @@ from django.db.models.signals import post_migrate
 from cosmae.signals import (
     connect_add_initial_users,
     connect_column_queue_process,
+    connect_compute_column_conflicts_signal,
     connect_data_publication_signal,
     connect_entity_display_txt,
     connect_password_changed_signal,
@@ -85,6 +86,7 @@ class CosmaeConfig(AppConfig):
             if not settings.IS_UNITTEST:
                 connect_add_initial_users(self)
                 connect_read_csv_signal()
+                connect_compute_column_conflicts_signal()
                 connect_column_queue_process()
                 connect_data_publication_signal()
                 connect_entity_display_txt()

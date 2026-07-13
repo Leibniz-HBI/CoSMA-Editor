@@ -68,21 +68,14 @@ def test_fast_forward_conflict(
     merge_request_user_fast_forward,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_conflict_fast_forward,
-    mocker,
 ):
     "Does not fast forward on conflict."
-    spy = mocker.spy(q, "enqueue")
     q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
     merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
     assert merge_request_after.state == ColumnMergeRequest.State.CONFLICTS
-    spy.assert_called_once_with(
-        q.merge_request_compute_conflicts,
-        args=(str(merge_request_user_fast_forward.id_persistent),),
-        job_timeout=60 * 12,
-    )
 
 
 def test_fast_forward_no_conflict_same_value(
