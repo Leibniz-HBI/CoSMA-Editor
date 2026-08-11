@@ -6,6 +6,7 @@ import tests.entity.common as ce
 from cosmae.contribution.entity.models_django import EntityDuplicate
 from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import EntityHistory
+from cosmae.justification.models_django import EntityJustification
 from cosmae.merge_request.models_django import ColumnMergeRequest
 from cosmae.value.models_django import ValueHistory
 
@@ -131,4 +132,15 @@ def column_merge_request(column_curated, column1, contribution_candidate):
         state=ColumnMergeRequest.OPEN,
         created_by=column1.owner,
         created_at=c.time_edit_column_merge_request,
+    )
+
+
+@pytest.fixture
+def justification(entity_duplicate):
+    return EntityJustification.objects.create(  # pylint: disable=no-member
+        id_persistent=c.justification_id_persistent,
+        id_entity_persistent=entity_duplicate.id_persistent,
+        text=c.justification_text,
+        timestamp=c.justification_timestamp,
+        author_session=entity_duplicate.written_by_session,
     )

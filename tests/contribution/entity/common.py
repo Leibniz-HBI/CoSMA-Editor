@@ -35,3 +35,7 @@ id_column_merge_request_persistent = "af01c5cb-33b9-4b05-ade5-6d821a2d3075"
 time_edit_value_match_origin = datetime(2022, 1, 1, tzinfo=timezone.utc)
 time_edit_value_match_destination = datetime(2021, 12, 3, tzinfo=timezone.utc)
 time_edit_column_merge_request = datetime(2022, 1, 2, tzinfo=timezone.utc)
+
+justification_id_persistent = "26fed0c2-6ba5-4616-ad7e-1a707733ab3e"
+justification_text = "This is a test justification for the entity duplicate."
+justification_timestamp = datetime(2022, 1, 3, tzinfo=timezone.utc)

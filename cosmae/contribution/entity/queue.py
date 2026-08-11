@@ -141,7 +141,11 @@ def update_entities(
     ).delete()
     id_entity_discarded.delete()
     new_entities = entities_with_replacement_info.filter(
-        replacement_id_entity_persistent__isnull=True, replacement_discard__isnull=True
+        models.Q(replacement_id_entity_persistent__isnull=True)
+        & (
+            models.Q(replacement_discard__isnull=True)
+            | models.Q(replacement_discard=False)
+        )
     )
     missing_justification = new_entities.annotate(
         justification=models.Subquery(

@@ -1,4 +1,4 @@
-import { ChangeEvent, useState} from 'react'
+import { ChangeEvent, useState } from 'react'
 import { Button, Col, FormCheck, Modal, Row } from 'react-bootstrap'
 import { useAppDispatch, useAppSelector } from '../../../hooks'
 import { FormField } from '../../../util/form'
@@ -69,7 +69,7 @@ function JustificationModalBody({
     const [keepJustification, setKeepJustification] = useState(false)
     const button = (
         <Button
-            onClick={() =>
+            onClick={(e) => {
                 putDuplicateCallback({
                     idEntityOriginPersistent: entity.idPersistent,
                     idEntityDestinationPersistent:
@@ -78,7 +78,8 @@ function JustificationModalBody({
                     keepJustificationForAll: keepJustification,
                     onSuccess: closeModalCallback
                 })
-            }
+                // e.stopPropagation()
+            }}
         >
             Submit
         </Button>
