@@ -160,6 +160,26 @@ def test_exception_for_entity_update_without_justification(
 
 
 @pytest.mark.django_db
+def test_uses_individual_entity_justification(
+    entity_duplicate, justification, contribution_candidate
+):
+    assert len(EntityHistory.objects.all()) == 1  # pylint: disable = no-member
+    with_replacement_info = q.annotate_with_replacement_info(
+        EntityHistory.objects.all(),  # pylint: disable=no-member
+        EntityDuplicate.objects.all(),  # pylint: disable=no-member
+        "id_persistent",
+    )
+    q.update_entities(
+        with_replacement_info,
+        contribution_candidate,
+        c.time_edit_deduplication,
+    )
+    entity = Entity.objects.all().get()  # pylint: disable = no-member
+    assert entity.contribution_candidate is None
+    # If no exception is raised the justification was found.
+
+
+@pytest.mark.django_db
 def test_replaces_entity_of_column(values_for_replace, user, entity_match):
     q.update_values(
         q.annotate_with_replacement_info(

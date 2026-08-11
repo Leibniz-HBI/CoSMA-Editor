@@ -44,7 +44,7 @@ export function getMergeRequest(
         dispatch(getMergeRequestStart())
         try {
             const rsp = await cosmaeMergeRequestApiGetMergeRequest({
-                path: { id_persistent: idMergeRequestPersistent }
+                path: { id_merge_request_persistent: idMergeRequestPersistent }
             })
             if (rsp.data) {
                 const mergeRequest = parseMergeRequestFromJson(rsp.data)
