@@ -1,4 +1,4 @@
-FROM node:20.19-alpine3.22 AS builder
+FROM node:25.2-alpine3.22 AS builder
 RUN apk add --update --no-cache \
     python3 \
     pkgconfig \
