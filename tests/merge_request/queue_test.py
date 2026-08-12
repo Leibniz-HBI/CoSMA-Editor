@@ -88,7 +88,6 @@ def test_applies_resolutions(
 
     q.merge_request_resolve_conflicts(
         merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to.id_persistent,
     )
     merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
@@ -115,7 +114,6 @@ def test_applies_resolutions_disable_origin(merge_request_user_disable_origin_re
     This test does not apply any resolutions."""
     q.merge_request_resolve_conflicts(
         merge_request_user_disable_origin_resolved.id_persistent,
-        merge_request_user_disable_origin_resolved.assigned_to.id_persistent,
     )
     merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_disable_origin_resolved.id_persistent,
@@ -218,7 +216,6 @@ def test_merges_for_equal_value_replace(
     This is the case where another conflict is resolved by replace"""
     q.merge_request_resolve_conflicts(
         merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to.id_persistent,
     )
     merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,
@@ -246,7 +243,6 @@ def test_merges_for_equal_value_keep(
     This is the case where another conflict is resolved by keep"""
     q.merge_request_resolve_conflicts(
         merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to.id_persistent,
     )
     merge_request = ColumnMergeRequest.by_id_persistent(
         merge_request_user_resolved.id_persistent,

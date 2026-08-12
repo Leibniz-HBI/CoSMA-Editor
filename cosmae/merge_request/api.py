@@ -356,7 +356,8 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
             updated = resolutions.non_recent()
             if len(updated) > 0:
                 merge_request.state = MergeRequestDb.State.CONFLICTS
-                merge_request.save(update_fields=["state"])
+                merge_request.approved_by_session = user.edit_session
+                merge_request.save(update_fields=["state", "approved_by_session"])
                 return 400, ApiError(
                     msg="There are conflicts for the merge request, "
                     "where the underlying data has changed."
