@@ -20,89 +20,65 @@ def mock_enqueue(mocker):
     return mock_enqueue
 
 
-def test_fast_forward_destination_empty(
-    merge_request_user_fast_forward, instances_merge_request_origin_user
+def test_compute_conflicts_destination_empty(
+    mock_enqueue, merge_request_user_fast_forward, instances_merge_request_origin_user
 ):
     "Fast forward a merge request for an empty destination"
-    q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
+    q.merge_request_compute_conflicts(merge_request_user_fast_forward.id_persistent)
     merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == ColumnMergeRequest.State.MERGED
-    assert not Column.most_recent_by_id(
-        merge_request_user_fast_forward.id_origin_persistent
-    ).disabled
-
-
-def test_fast_forward_destination_empty_with_disable(
-    merge_request_user_fast_forward_disable_origin, instances_merge_request_origin_user
-):
-    "Disables the origin column on fast forward of a merge request."
-    q.merge_request_fast_forward(
-        merge_request_user_fast_forward_disable_origin.id_persistent
+    assert merge_request_after.state == ColumnMergeRequest.State.CONFLICTS
+    mock_enqueue.assert_called_once_with(
+        q.merge_request_compute_conflicts,
+        args=(
+            str(merge_request_user_fast_forward.id_persistent),
+            instances_merge_request_origin_user[1].id + 1,
+            30,
+            True,
+        ),
+        job_timeout=60 * 12,
     )
-    merge_request_after = ColumnMergeRequest.by_id_persistent(
-        merge_request_user_fast_forward_disable_origin.id_persistent,
-        merge_request_user_fast_forward_disable_origin.created_by,
+    conflicts = list(
+        ColumnConflictResolution.objects.filter(  # pylint: disable=no-member
+            merge_request=merge_request_user_fast_forward
+        )
     )
-    assert merge_request_after.state == ColumnMergeRequest.State.MERGED
-    assert Column.most_recent_by_id(
-        merge_request_user_fast_forward_disable_origin.id_origin_persistent
-    ).disabled
+    for conflict in conflicts:
+        assert conflict.replacement_state == ColumnConflictResolution.REPLACE
 
 
-def test_fast_forward_origin_empty(
+def test_compute_conflicts_origin_empty(
     merge_request_user_fast_forward, instance_merge_request_destination_user_no_conflict
 ):
     "Fast forward a merge request if the origin column has no data."
-    q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
+    q.merge_request_compute_conflicts(merge_request_user_fast_forward.id_persistent)
     merge_request_after = ColumnMergeRequest.by_id_persistent(
         merge_request_user_fast_forward.id_persistent,
         merge_request_user_fast_forward.created_by,
     )
-    assert merge_request_after.state == ColumnMergeRequest.State.MERGED
+    assert merge_request_after.state == ColumnMergeRequest.State.RESOLVED
 
 
-def test_fast_forward_no_value(
-    merge_request_user_fast_forward,
-    instances_merge_request_origin_user,
-    instance_merge_request_destination_user_no_conflict_fast_forward,
-):
-    q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = ColumnMergeRequest.by_id_persistent(
-        merge_request_user_fast_forward.id_persistent,
-        merge_request_user_fast_forward.created_by,
-    )
-    assert merge_request_after.state == ColumnMergeRequest.State.CONFLICTS
-
-
-def test_fast_forward_conflict(
-    merge_request_user_fast_forward,
-    instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict_fast_forward,
-):
-    "Does not fast forward on conflict."
-    q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
-    merge_request_after = ColumnMergeRequest.by_id_persistent(
-        merge_request_user_fast_forward.id_persistent,
-        merge_request_user_fast_forward.created_by,
-    )
-    assert merge_request_after.state == ColumnMergeRequest.State.CONFLICTS
-
-
-def test_fast_forward_no_conflict_same_value(
-    merge_request_user_fast_forward,
+def test_compute_conflict_same_value(
+    merge_request_user_conflicts,
     instances_merge_request_origin_user,
     instance_merge_request_destination_user_same_value1,
 ):
     "Does fast forward for same value."
-    q.merge_request_fast_forward(merge_request_user_fast_forward.id_persistent)
+    q.merge_request_compute_conflicts(merge_request_user_conflicts.id_persistent)
     merge_request_after = ColumnMergeRequest.by_id_persistent(
-        merge_request_user_fast_forward.id_persistent,
-        merge_request_user_fast_forward.created_by,
+        merge_request_user_conflicts.id_persistent,
+        merge_request_user_conflicts.created_by,
     )
-    assert merge_request_after.state == ColumnMergeRequest.State.MERGED
+    assert merge_request_after.state == ColumnMergeRequest.State.CONFLICTS
+    conflicts = ColumnConflictResolution.objects.filter(  # pylint: disable=no-member
+        merge_request=merge_request_user_conflicts
+    )
+    assert len(conflicts) == 1
+    assert conflicts[0].replacement_state == ColumnConflictResolution.REPLACE
+    assert conflicts[0].value_origin.id == instances_merge_request_origin_user[0].id
 
 
 def test_applies_resolutions(

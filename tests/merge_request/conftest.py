@@ -106,6 +106,7 @@ def merge_request_user_fast_forward(
         created_at=c.time_merge_request,
         id_persistent=c.id_persistent_merge_request_fast_forward,
         contribution_candidate=contribution_for_mr,
+        state=ColumnMergeRequest.State.CONFLICTS,
     )
 
 
@@ -448,7 +449,9 @@ def instance_merge_request_destination_user_no_conflict_fast_forward(
 
 
 @pytest.fixture
-def instance_merge_request_destination_user_same_value1(merge_request_user, entity1):
+def instance_merge_request_destination_user_same_value1(
+    merge_request_user, destination_column_for_mr_user1, entity1
+):
     id_column = merge_request_user.id_destination_persistent
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=ce.id_persistent_test_1,
