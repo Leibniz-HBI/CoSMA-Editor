@@ -17,11 +17,7 @@ from cosmae.merge_request.models_django import (
     ColumnMergeRequest,
 )
 from cosmae.util import CosmaeUser, timestamp
-from cosmae.value.models_django import (
-    Value,
-    ValueHistory,
-    value_objects,
-)
+from cosmae.value.models_django import ValueHistory
 
 
 def disable_origin(
@@ -49,64 +45,6 @@ def disable_origin(
             disabled=True,
         )
         disabled.save()
-
-
-def merge_request_fast_forward(id_merge_request_persistent):
-    "Tries to fast forward a merge request."
-    merge_request_query = (
-        ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
-            id_persistent=id_merge_request_persistent
-        )
-    )
-    try:
-        with transaction.atomic():
-            try:
-                merge_request = merge_request_query.select_for_update().get()
-            except OperationalError:
-                return
-            column_destination = Column.most_recent_by_id(
-                merge_request.id_destination_persistent
-            )
-            if column_destination.curated or not column_destination.has_write_access(
-                merge_request.created_by.id_persistent
-            ):
-                return
-            values_destination = value_objects().by_column_chunked_queryset(
-                merge_request.id_destination_persistent, 0, 1
-            )
-            time_merge = timestamp()
-            if len(values_destination) == 0:
-                value_query = Value.objects.filter(  # pylint: disable=no-member
-                    id_column_persistent=merge_request.id_origin_persistent
-                )
-                for value in value_query:
-                    value, _do_write = ValueHistory.change_or_create_versioned(
-                        id_persistent=str(uuid4()),
-                        written_by_session=merge_request.created_by.edit_session,
-                        time_edit=time_merge,
-                        id_entity_persistent=value.id_entity_persistent,
-                        id_column_persistent=merge_request.id_destination_persistent,
-                        value=value.value,
-                        version=None,
-                    )
-                    value.save()
-                merge_request.state = ColumnMergeRequest.State.MERGED
-                merge_request.save()
-                disable_origin(
-                    merge_request,
-                    merge_request.created_by.edit_session,
-                    None,
-                    time_merge,
-                )
-                return
-            merge_request.state = merge_request.State.CONFLICTS
-            merge_request.save(update_fields=["state"])
-    except Exception as exc:  # pylint: disable=broad-except
-        logging.warning(None, exc_info=exc)
-        with transaction.atomic():
-            merge_request = merge_request_query.get()
-            merge_request.state = ColumnMergeRequest.State.ERROR
-            merge_request.save()
 
 
 class NotResolvedException(Exception):
