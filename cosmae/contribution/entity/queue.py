@@ -13,7 +13,6 @@ from cosmae.contribution.models_django import ContributionCandidate
 from cosmae.entity.models_django import EntityHistory
 from cosmae.entity.queue import update_display_txt_cache
 from cosmae.justification.models_django import EntityJustification
-from cosmae.merge_request.queue import merge_request_fast_forward
 from cosmae.util import timestamp
 from cosmae.value.models_django import Value, ValueHistory
 
@@ -58,10 +57,8 @@ def eliminate_duplicates(id_contribution_persistent):
             )
             update_entities(replaced_entities_with_duplicates, contribution, time_edit)
             for merge_request in contribution.columnmergerequest_set.all():
-                django_rq.enqueue(
-                    merge_request_fast_forward,
-                    merge_request.id_persistent,
-                )
+                merge_request.state = merge_request.State.CONFLICTS
+                merge_request.save(update_fields=["state"])
             contribution.set_state(ContributionCandidate.MERGED)
             contribution.save()
     except Exception as exc:  # pylint: disable=broad-except
