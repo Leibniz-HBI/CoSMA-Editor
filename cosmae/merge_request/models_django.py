@@ -146,6 +146,13 @@ class ColumnMergeRequest(AbstractMergeRequest):
         null=True,
     )
     disable_origin_on_merge = models.BooleanField(default=False)
+    approved_by_session = models.ForeignKey(
+        "EditSession",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        default=None,
+    )
 
     def has_read_access(self, user: CosmaeUser):
         "Check wether a user can read the merge request."

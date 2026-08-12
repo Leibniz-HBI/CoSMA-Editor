@@ -52,7 +52,7 @@ class NotResolvedException(Exception):
 
 
 def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
-    id_merge_request_persistent, id_approved_by_persistent
+    id_merge_request_persistent,
 ):
     "Merges a merge request while incorporating conflict resolutions."
     merge_request_query = (
@@ -60,7 +60,6 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             id_persistent=id_merge_request_persistent
         )
     )
-    approved_by_query = CosmaeUser.by_id_persistent_query_set(id_approved_by_persistent)
     try:
         with transaction.atomic():
             try:
@@ -69,7 +68,9 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
                     if merge_request.state == ColumnMergeRequest.State.MERGED:
                         return
                     raise NotResolvedException("Column Merge request is not resolved.")
-                approved_by = approved_by_query.get()
+                approved_by = CosmaeUser.by_id_persistent_query_set(
+                    merge_request.approved_by_session.id_owner_persistent
+                ).get()
             except OperationalError:
                 return
             time_merge = timestamp()
@@ -276,9 +277,6 @@ def column_conflicts_signal_handler(  # pylint: disable=unused-argument
     elif instance.state == ColumnMergeRequest.State.RESOLVED:
         enqueue(
             merge_request_resolve_conflicts,
-            args=(
-                str(instance.id_persistent),
-                str(instance.created_by.id_persistent),
-            ),
+            args=(str(instance.id_persistent),),
             job_timeout=60 * 12,
         )
