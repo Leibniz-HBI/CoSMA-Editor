@@ -94,6 +94,10 @@ class VersionedHistoryQuerysetMixin:
             id_persistent__in=self.values("id_persistent")
         )
 
+    def from_most_recent(self, most_recent_queryset):
+        "Get a specific version of a versioned model"
+        return self.filter(id=models.Subquery(most_recent_queryset.values("id")[:1]))
+
 
 class Versioned(models.Model):
     "Abstract ORM for versioned models"

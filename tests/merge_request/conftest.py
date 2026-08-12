@@ -142,6 +142,13 @@ def merge_request_user(
 
 
 @pytest.fixture
+def merge_request_user_conflicts(merge_request_user):
+    merge_request_user.state = ColumnMergeRequest.State.CONFLICTS
+    merge_request_user.save()
+    return merge_request_user
+
+
+@pytest.fixture
 def merge_request_user_resolved(merge_request_user):
     merge_request_user.state = ColumnMergeRequest.State.RESOLVED
     merge_request_user.save()

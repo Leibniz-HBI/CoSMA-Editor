@@ -23,7 +23,12 @@ from cosmae.exception import (
     NoSelfParentColumnException,
 )
 from cosmae.util import CosmaeUser
-from cosmae.versioned.models_django import HistoryMixin, Versioned, VersionedQueryset
+from cosmae.versioned.models_django import (
+    HistoryMixin,
+    Versioned,
+    VersionedHistoryQuerysetMixin,
+    VersionedQueryset,
+)
 
 _T = TypeVar("_T")
 
@@ -229,12 +234,16 @@ class Column(ColumnAbstract):
         return val
 
 
+class ColumnHistoryQuerySet(ColumnQuerySet, VersionedHistoryQuerysetMixin):
+    "QuerySet for ColumnHistory"
+
+
 class ColumnHistory(ColumnAbstract, HistoryMixin):
     "Django ORM model for columns history."
 
     unmodifiable_fields = {"id_persistent", "type"}
 
-    objects = ColumnQuerySet.as_manager()
+    objects = ColumnHistoryQuerySet.as_manager()
 
     @classmethod
     def most_recent_query_set(

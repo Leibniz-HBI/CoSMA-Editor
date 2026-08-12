@@ -10,7 +10,7 @@ from django_rq import enqueue
 
 from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.edit_session.models_django import EditSession
-from cosmae.entity.models_django import entity_objects
+from cosmae.entity.models_django import EntityHistory, entity_objects
 from cosmae.exception import EntityUpdatedException
 from cosmae.merge_request.models_django import (
     ColumnConflictResolution,
@@ -138,33 +138,18 @@ def merge_request_resolve_conflicts(  # pylint: disable=too-many-locals
             conflicts_resolution_set = (
                 merge_request.columnconflictresolution_set.select_related()
             )
-            non_recent = conflicts_resolution_set.non_recent()
-            if len(non_recent) > 0:
-                for resolution in non_recent:
-                    logging.error(
-                        "Non recent resolution found: %s", resolution.__dict__
-                    )
-                merge_request.state = merge_request.State.CONFLICTS
-                merge_request.save(update_fields=["state"])
-                return
             recent = conflicts_resolution_set.only_recent()
-            conflicts = merge_request.compute_instance_conflicts().unresolved(recent)
-            if len(conflicts) > 0:
-                merge_request.state = merge_request.State.OPEN
-                merge_request.save(update_fields=["state"])
-                return
             try:
                 with transaction.atomic():
                     perform_instance_replacement(recent, approved_by, time_merge)
                     perform_value_replacement(recent, approved_by, time_merge)
+                    merge_request.state = merge_request.State.MERGED
+                    merge_request.save()
             except EntityUpdatedException as exc:
                 logging.warning(None, exc_info=exc)
                 merge_request.state = merge_request.State.OPEN
                 merge_request.save()
                 return
-
-            merge_request.state = merge_request.State.MERGED
-            merge_request.save()
             disable_origin(
                 merge_request,
                 merge_request.created_by.edit_session,
@@ -235,7 +220,9 @@ def perform_value_replacement(recent_queryset, approved_by, time_merge):
         )[0].save()
 
 
-def merge_request_compute_conflicts(id_merge_request_persistent, min_idx=-2, limit=30):
+def merge_request_compute_conflicts(
+    id_merge_request_persistent, min_idx=-2, limit=30, needs_resolution=False
+):
     "Compute conflicts for a merge request and store them in the database."
     merge_request_query = (
         ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
@@ -250,33 +237,36 @@ def merge_request_compute_conflicts(id_merge_request_persistent, min_idx=-2, lim
                 return
             if merge_request.state != ColumnMergeRequest.State.CONFLICTS:
                 return
-            all_conflicts = merge_request.compute_instance_conflicts(
-                min_idx, limit
-            ).filter(value_origin__id__gte=min_idx)
+            all_conflicts = merge_request.compute_instance_conflicts(min_idx)
+            # only recent resolutions are relevant.
             resolutions = merge_request.columnconflictresolution_set.only_recent()
-            updated_conflicts = all_conflicts.exclude_resolved(resolutions)
-            column_origin = (
-                column_objects()
-                .by_id_persistent(merge_request.id_origin_persistent)
-                .get()
-            )
-            column_destination = (
-                column_objects()
-                .by_id_persistent(merge_request.id_destination_persistent)
-                .get()
-            )
+            # need to look for unresolved conflicts.
+            updated_conflicts = all_conflicts.unresolved(resolutions).order_by("id")[
+                :limit
+            ]
+            column_origin = ColumnHistory.objects.from_most_recent(
+                column_objects().by_id_persistent(merge_request.id_origin_persistent)
+            ).get()
+            column_destination = ColumnHistory.objects.from_most_recent(
+                column_objects().by_id_persistent(
+                    merge_request.id_destination_persistent
+                )
+            ).get()
             max_idx = store_conflicts(
                 merge_request, updated_conflicts, column_origin, column_destination
             )
             if max_idx >= 0:
                 enqueue(
                     merge_request_compute_conflicts,
-                    args=(str(merge_request.id_persistent), max_idx, limit),
+                    args=(str(merge_request.id_persistent), max_idx + 1, limit, True),
                     job_timeout=60 * 12,
                 )
             else:
-                merge_request.state = ColumnMergeRequest.State.OPEN
-                merge_request.save()
+                if not needs_resolution:
+                    merge_request.state = ColumnMergeRequest.State.RESOLVED
+                else:
+                    merge_request.state = ColumnMergeRequest.State.OPEN
+                merge_request.save(update_fields=["state"])
     except Exception as exc:  # pylint: disable=broad-except
         logging.warning(None, exc_info=exc)
         with transaction.atomic():
@@ -289,16 +279,24 @@ def store_conflicts(merge_request, conflicts, column_origin, column_destination)
     "Store conflicts in the database."
     max_idx = -1
     for conflict in conflicts:
-        entity = entity_objects().by_id_persistent(conflict.id_entity_persistent).get()
-        max_idx = max(max_idx, conflict.idx)
-        entity = conflict.id_entity_persistent
+        entity = EntityHistory.objects.from_most_recent(
+            entity_objects().by_id_persistent(conflict.id_entity_persistent)
+        ).get()
+        max_idx = max(max_idx, conflict.id)
+        if conflict.value_destination is None:
+            value_destination_id = None
+            replacement_state = ColumnConflictResolution.REPLACE
+        else:
+            value_destination_id = conflict.value_destination["id"]
+            replacement_state = None
         resolution = ColumnConflictResolution(
             merge_request=merge_request,
             entity=entity,
             column_origin=column_origin,
             column_destination=column_destination,
             value_origin_id=conflict.id,
-            value_destination_id=conflict.value_destination__id,
+            value_destination_id=value_destination_id,
+            replacement_state=replacement_state,
         )
         resolution.save()
     return max_idx
@@ -331,6 +329,15 @@ def column_conflicts_signal_handler(  # pylint: disable=unused-argument
                 str(
                     instance.id_persistent,
                 ),
+            ),
+            job_timeout=60 * 12,
+        )
+    elif instance.state == ColumnMergeRequest.State.RESOLVED:
+        enqueue(
+            merge_request_resolve_conflicts,
+            args=(
+                str(instance.id_persistent),
+                str(instance.created_by.id_persistent),
             ),
             job_timeout=60 * 12,
         )
