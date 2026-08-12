@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from django.db import models
+from django.db import models, transaction
 
 from cosmae.column.models_django import Column, ColumnHistory, column_objects
 from cosmae.contribution.models_django import ContributionCandidate
@@ -159,6 +159,41 @@ class ColumnMergeRequest(AbstractMergeRequest):
                 in {CosmaeUser.COMMISSIONER, CosmaeUser.EDITOR}
             )
         )
+
+    def resolve(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        id_entity_persistent,
+        id_column_origin_persistent,
+        id_value_origin_persistent,
+        id_column_destination_persistent,
+        id_entity_version,
+        id_column_origin_version,
+        id_value_origin_version,
+        id_column_destination_version,
+        id_value_destination_version,
+        replacement_state,
+        replacement_value,
+    ):
+        "Resolve a conflict for this merge request."
+        with transaction.atomic():
+            ColumnConflictResolution.objects.filter(  # pylint: disable=no-member
+                entity__id_persistent=id_entity_persistent,
+                column_origin__id_persistent=(id_column_origin_persistent),
+                value_origin__id_persistent=id_value_origin_persistent,
+                column_destination__id_persistent=(id_column_destination_persistent),
+                merge_request=self,
+            ).delete()
+            resolution = ColumnConflictResolution(
+                entity_id=id_entity_version,
+                column_origin_id=id_column_origin_version,
+                value_origin_id=id_value_origin_version,
+                column_destination_id=id_column_destination_version,
+                value_destination_id=id_value_destination_version,
+                merge_request=self,
+                replacement_state=replacement_state,
+                replacement_value=replacement_value,
+            )
+            resolution.save()
 
     @classmethod
     def change_assigned_for_column(

@@ -278,28 +278,21 @@ def post_resolve_conflict(
         )
         status = None
         return_value = None
-        ColumnConflictResolution.objects.filter(  # pylint: disable=no-member
-            entity__id_persistent=resolution_info.id_entity_persistent,
-            column_origin__id_persistent=(resolution_info.id_column_origin_persistent),
-            value_origin__id_persistent=resolution_info.id_value_origin_persistent,
-            column_destination__id_persistent=(
-                resolution_info.id_column_destination_persistent
-            ),
-            merge_request=merge_request,
-        ).delete()
-        resolution = ColumnConflictResolution(
-            entity_id=resolution_info.id_entity_version,
-            column_origin_id=resolution_info.id_column_origin_version,
-            value_origin_id=resolution_info.id_value_origin_version,
-            column_destination_id=resolution_info.id_column_destination_version,
-            value_destination_id=resolution_info.id_value_destination_version,
-            merge_request=merge_request,
+        merge_request.resolve(
+            id_entity_persistent=resolution_info.id_entity_persistent,
+            id_column_origin_persistent=resolution_info.id_column_origin_persistent,
+            id_value_origin_persistent=resolution_info.id_value_origin_persistent,
+            id_column_destination_persistent=resolution_info.id_column_destination_persistent,
+            id_entity_version=resolution_info.id_entity_version,
+            id_column_origin_version=resolution_info.id_column_origin_version,
+            id_value_origin_version=resolution_info.id_value_origin_version,
+            id_column_destination_version=resolution_info.id_column_destination_version,
+            id_value_destination_version=resolution_info.id_value_destination_version,
+            replacement_value=resolution_info.replacement_value,
             replacement_state=REPLACEMENT_STATE_API_TO_DB_MAP.get(
                 resolution_info.replacement_state
             ),
-            replacement_value=resolution_info.replacement_value,
         )
-        resolution.save()
         status, return_value = 200, None
     except MergeRequestDb.DoesNotExist:  # pylint: disable=no-member
         status, return_value = 404, ApiError(msg="Merge request does not exists.")

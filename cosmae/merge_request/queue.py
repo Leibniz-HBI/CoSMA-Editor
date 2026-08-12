@@ -289,16 +289,19 @@ def store_conflicts(merge_request, conflicts, column_origin, column_destination)
         else:
             value_destination_id = conflict.value_destination["id"]
             replacement_state = None
-        resolution = ColumnConflictResolution(
-            merge_request=merge_request,
-            entity=entity,
-            column_origin=column_origin,
-            column_destination=column_destination,
-            value_origin_id=conflict.id,
-            value_destination_id=value_destination_id,
+        merge_request.resolve(
+            id_entity_persistent=entity.id_persistent,
+            id_column_origin_persistent=column_origin.id_persistent,
+            id_column_destination_persistent=column_destination.id_persistent,
+            id_value_origin_persistent=conflict.id_persistent,
+            id_entity_version=entity.id,
+            id_column_origin_version=column_origin.id,
+            id_column_destination_version=column_destination.id,
+            id_value_origin_version=conflict.id,
+            id_value_destination_version=value_destination_id,
             replacement_state=replacement_state,
+            replacement_value=None,
         )
-        resolution.save()
     return max_idx
 
 
