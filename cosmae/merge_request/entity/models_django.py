@@ -38,15 +38,24 @@ class AbstractMergeRequest(models.Model):
     objects = AbstractMergeRequestQuerySet.as_manager()
 
     class State(models.TextChoices):
-        "Enum for merge request states."
+        """Enum for merge request states.
+        The state descriptions currently apply only to column merge requests."""
 
         CREATED = "CRT", "created"
+        """Newly created merge request not yet available for processing.
+        E.g., due to not yet merged entities or columns. This state is not visible to users."""
         OPEN = "OPN", "open"
+        "Can be edited by users"
         CONFLICTS = "CNF", "conflicts"
+        "The System computes the conflicts"
         CLOSED = "CLS", "closed"
+        "The merge request is closed and cannot be edited by users"
         RESOLVED = "RSL", "resolved"
+        "All conflicts have been resolved and the merge request is ready for merging."
         MERGED = "MRG", "merged"
+        "The merge request was merged into the destination."
         ERROR = "ERR", "error"
+        "There was an error during the processing of the merge request."
 
     id_destination_persistent = models.TextField()
     id_origin_persistent = models.TextField()

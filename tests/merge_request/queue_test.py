@@ -1,10 +1,23 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 
+from pytest import fixture
+
 import cosmae.merge_request.queue as q
 import tests.merge_request.common as c
 from cosmae.column.models_django import Column
-from cosmae.merge_request.models_django import ColumnMergeRequest
+from cosmae.merge_request.models_django import (
+    ColumnConflictResolution,
+    ColumnMergeRequest,
+)
 from cosmae.value.models_django import Value
+
+
+@fixture
+def mock_enqueue(mocker):
+    "Mock the queue functions"
+    mock_enqueue = mocker.MagicMock()
+    mocker.patch("cosmae.merge_request.queue.enqueue", mock_enqueue)
+    return mock_enqueue
 
 
 def test_fast_forward_destination_empty(
@@ -147,51 +160,77 @@ def test_applies_resolutions_disable_origin(merge_request_user_disable_origin_re
 
 
 def test_incomplete_resolution_stays_open_keep(
-    merge_request_user_resolved, conflict_resolution_keep
+    merge_request_user_conflicts,
+    instances_merge_request_origin_user,
+    conflict_resolution_keep,
+    mock_enqueue,
 ):
     """The merge request should stay open if not all conflicts are resolved.
     This is the case for an existing keep resolution."""
-    q.merge_request_resolve_conflicts(
-        merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to.id_persistent,
+    q.merge_request_compute_conflicts(
+        merge_request_user_conflicts.id_persistent,
     )
     merge_request = ColumnMergeRequest.by_id_persistent(
-        merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to,
+        merge_request_user_conflicts.id_persistent,
+        merge_request_user_conflicts.assigned_to,
     )
-    assert merge_request.state == ColumnMergeRequest.State.OPEN
-    instances = list(
-        Value.objects.filter(  # pylint: disable=no-member
-            id_column_persistent=merge_request_user_resolved.id_destination_persistent
+    assert merge_request.state == ColumnMergeRequest.State.CONFLICTS
+    resolutions = list(
+        ColumnConflictResolution.objects.filter(  # pylint: disable=no-member
+            merge_request=merge_request_user_conflicts
         )
     )
-    assert len(instances) == 1
-    instance = instances[0]
-    assert instance.value == "value destination"
+    assert len(resolutions) == 2
+    resolutions = sorted(resolutions, key=lambda x: x.id)
+    assert resolutions[0].replacement_state == ColumnConflictResolution.KEEP
+    assert resolutions[1].replacement_state == ColumnConflictResolution.REPLACE
+    mock_enqueue.assert_called_once_with(
+        q.merge_request_compute_conflicts,
+        args=(
+            str(merge_request_user_conflicts.id_persistent),
+            instances_merge_request_origin_user[1].id + 1,
+            30,
+            True,
+        ),
+        job_timeout=60 * 12,
+    )
 
 
-def test_incomplete_resolution_stays_open_replace(
-    merge_request_user_resolved, conflict_resolution_replace1
+def test_incomplete_resolution(
+    merge_request_user_conflicts,
+    instances_merge_request_origin_user,
+    conflict_resolution_replace1,
+    mock_enqueue,
 ):
     """The merge request should stay open if not all conflicts are resolved.
     This is the case for an existing replace resolution."""
-    q.merge_request_resolve_conflicts(
-        merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to.id_persistent,
+    q.merge_request_compute_conflicts(
+        merge_request_user_conflicts.id_persistent,
     )
     merge_request = ColumnMergeRequest.by_id_persistent(
-        merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to,
+        merge_request_user_conflicts.id_persistent,
+        merge_request_user_conflicts.assigned_to,
     )
-    assert merge_request.state == ColumnMergeRequest.State.OPEN
-    instances = list(
-        Value.objects.filter(  # pylint: disable=no-member
-            id_column_persistent=merge_request_user_resolved.id_destination_persistent
+    assert merge_request.state == ColumnMergeRequest.State.CONFLICTS
+    resolutions = list(
+        ColumnConflictResolution.objects.filter(  # pylint: disable=no-member
+            merge_request=merge_request_user_conflicts
         )
     )
-    assert len(instances) == 1
-    instance = instances[0]
-    assert instance.value == "value destination 1"
+    assert len(resolutions) == 2
+    resolutions = sorted(resolutions, key=lambda x: x.id)
+    assert resolutions[0].replacement_state == ColumnConflictResolution.REPLACE
+    assert resolutions[1].replacement_state == ColumnConflictResolution.REPLACE
+    mock_enqueue.assert_called_once_with(
+        q.merge_request_compute_conflicts,
+        args=(
+            str(merge_request_user_conflicts.id_persistent),
+            instances_merge_request_origin_user[0].id + 1,
+            30,
+            True,
+        ),
+        job_timeout=60 * 12,
+    )
 
 
 def test_merges_for_equal_value_replace(
@@ -249,22 +288,24 @@ def test_merges_for_equal_value_keep(
     assert instance.id == instance_merge_request_destination_user_same_value1.id
 
 
-def test_merges_for_equal_value_updated(
-    merge_request_user_resolved, instance_destination_updated_same_value1
+def test_no_conflict_for_equal_value_updated(
+    merge_request_user_conflicts,
+    instances_merge_request_origin_user,
+    instance_destination_updated_same_value1,
+    mock_enqueue,
 ):
     """Should merge if an update leads to equal value"""
-    q.merge_request_resolve_conflicts(
-        merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to.id_persistent,
+    q.merge_request_compute_conflicts(
+        merge_request_user_conflicts.id_persistent,
     )
     merge_request = ColumnMergeRequest.by_id_persistent(
-        merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to,
+        merge_request_user_conflicts.id_persistent,
+        merge_request_user_conflicts.assigned_to,
     )
-    assert merge_request.state == ColumnMergeRequest.State.MERGED
+    assert merge_request.state == ColumnMergeRequest.State.CONFLICTS
     instances = list(
         Value.objects.filter(  # pylint: disable=no-member
-            id_column_persistent=merge_request_user_resolved.id_destination_persistent
+            id_column_persistent=merge_request_user_conflicts.id_destination_persistent
         )
     )
     assert len(instances) == 1
@@ -273,17 +314,59 @@ def test_merges_for_equal_value_updated(
 
 
 def test_instance_changed(
-    merge_request_user_resolved,
+    mock_enqueue,
+    merge_request_user_conflicts,
     conflict_resolution_replace1,
     instance_merge_request_origin_user_changed,
 ):
     "Merge request should stay open when the instance has changed to a different value."
-    q.merge_request_resolve_conflicts(
-        merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to.id_persistent,
+    q.merge_request_compute_conflicts(
+        merge_request_user_conflicts.id_persistent,
     )
     merge_request = ColumnMergeRequest.by_id_persistent(
-        merge_request_user_resolved.id_persistent,
-        merge_request_user_resolved.assigned_to,
+        merge_request_user_conflicts.id_persistent,
+        merge_request_user_conflicts.assigned_to,
     )
     assert merge_request.state == ColumnMergeRequest.State.CONFLICTS
+    mock_enqueue.assert_called_once_with(
+        q.merge_request_compute_conflicts,
+        args=(
+            str(merge_request_user_conflicts.id_persistent),
+            instance_merge_request_origin_user_changed.id + 1,
+            30,
+            True,
+        ),
+        job_timeout=60 * 12,
+    )
+
+
+def test_resolves_when_no_resolution_needed(
+    mock_enqueue,
+    merge_request_user_conflicts,
+):
+    "Merge request should be resolved when no resolution is needed."
+    q.merge_request_compute_conflicts(
+        merge_request_user_conflicts.id_persistent,
+    )
+    merge_request = ColumnMergeRequest.by_id_persistent(
+        merge_request_user_conflicts.id_persistent,
+        merge_request_user_conflicts.assigned_to,
+    )
+    assert merge_request.state == ColumnMergeRequest.State.RESOLVED
+    mock_enqueue.assert_not_called()
+
+
+def test_open_when_resolution_needed(
+    mock_enqueue,
+    merge_request_user_conflicts,
+):
+    "Merge request should be open when a resolution is needed."
+    q.merge_request_compute_conflicts(
+        merge_request_user_conflicts.id_persistent, 0, 30, True
+    )
+    merge_request = ColumnMergeRequest.by_id_persistent(
+        merge_request_user_conflicts.id_persistent,
+        merge_request_user_conflicts.assigned_to,
+    )
+    assert merge_request.state == ColumnMergeRequest.State.OPEN
+    mock_enqueue.assert_not_called()
