@@ -25,9 +25,6 @@ from cosmae.merge_request.entity.api import (
 )
 from cosmae.merge_request.models_django import ColumnConflictResolution
 from cosmae.merge_request.models_django import ColumnMergeRequest as MergeRequestDb
-from cosmae.merge_request.queue import (
-    dispatch_resolve_conflicts,
-)
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util.auth import check_user
@@ -350,30 +347,10 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 return 403, ApiError(
                     msg="You do not have write permissions for the destination column."
                 )
-            resolutions = ColumnConflictResolution.for_merge_request_query_set(
-                merge_request
-            )
-            updated = resolutions.non_recent()
-            if len(updated) > 0:
-                merge_request.state = MergeRequestDb.State.CONFLICTS
-                merge_request.approved_by_session = user.edit_session
-                merge_request.save(update_fields=["state", "approved_by_session"])
-                return 400, ApiError(
-                    msg="There are conflicts for the merge request, "
-                    "where the underlying data has changed."
-                )
-            conflicts = merge_request.compute_instance_conflicts().unresolved(
-                resolutions
-            )
-            if len(conflicts) > 0:
-                merge_request.state = MergeRequestDb.State.CONFLICTS
-                merge_request.save(update_fields=["state"])
-                return 400, ApiError(
-                    msg="There are unresolved conflicts for the merge request."
-                )
-            merge_request.state = MergeRequestDb.State.RESOLVED
-            merge_request.save(update_fields=["state"])
-            dispatch_resolve_conflicts(merge_request, user)
+            merge_request.state = MergeRequestDb.State.CONFLICTS
+            merge_request.approved_by_session = user.edit_session
+            merge_request.save(update_fields=["state", "approved_by_session"])
+            merge_request.approved_by_session = user.edit_session
         return 200, None
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")
