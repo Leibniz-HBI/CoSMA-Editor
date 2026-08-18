@@ -312,6 +312,36 @@ def test_instance_changed(
     )
 
 
+def test_destination_value_added(
+    mock_enqueue,
+    merge_request_user_conflicts,
+    conflict_resolution_replace_missing0,
+    conflict_resolution_replace1,
+    instance_merge_request_destination_user_conflict0,
+):
+    "Merge request should stay open when a new value is added to the destination column."
+    q.merge_request_compute_conflicts(
+        merge_request_user_conflicts.id_persistent,
+    )
+    merge_request = ColumnMergeRequest.by_id_persistent(
+        merge_request_user_conflicts.id_persistent,
+        merge_request_user_conflicts.assigned_to,
+    )
+    assert merge_request.state == ColumnMergeRequest.State.CONFLICTS
+    # Checking args would require more fixtures.
+    # Skipped here as it is covered in other tests.
+    mock_enqueue.assert_called_once()
+    resolutions = sorted(
+        list(ColumnConflictResolution.objects.all()), key=lambda x: x.id
+    )
+    assert len(resolutions) == 2
+    assert (
+        resolutions[1].value_destination.id
+        == instance_merge_request_destination_user_conflict0.id
+    )
+    assert resolutions[1].replacement_state is None
+
+
 def test_resolves_when_no_resolution_needed(
     mock_enqueue,
     merge_request_user_conflicts,

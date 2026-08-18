@@ -489,6 +489,25 @@ def conflict_resolution_replace1(
 
 
 @pytest.fixture
+def conflict_resolution_replace_missing0(
+    merge_request_user,
+    origin_column_for_mr,
+    destination_column_for_mr,
+    entity0,
+    instances_merge_request_origin_user,
+):
+    return ColumnConflictResolution.objects.create(  # pylint: disable=no-member
+        entity=entity0,
+        column_origin=origin_column_for_mr,
+        column_destination=destination_column_for_mr,
+        value_origin=instances_merge_request_origin_user[0],
+        value_destination=None,
+        merge_request=merge_request_user,
+        replacement_state=ColumnConflictResolution.REPLACE,
+    )
+
+
+@pytest.fixture
 def conflict_resolution_replace0(
     merge_request_user,
     origin_column_for_mr,

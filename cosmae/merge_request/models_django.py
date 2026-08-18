@@ -96,13 +96,24 @@ class InstanceConflictQuerySet(ValueQuerySet):
         "Exclude resolved conflicts from the queryset."
         resolutions_sub_query = resolution_values.filter(
             # make sure to use ids to register changed data
-            column_origin__id_persistent=models.OuterRef("id_column_persistent"),
-            value_origin__id=models.OuterRef("id"),
-            value_destination__id=models.functions.Cast(
-                models.OuterRef("value_destination__id"), models.BigIntegerField()
+            models.Q(
+                column_origin__id_persistent=models.OuterRef("id_column_persistent")
+            )
+            & models.Q(value_origin__id=models.OuterRef("id"))
+            & (  # make sure both are null or they are equal
+                (  # To check whether both are null, check that one is null and bot are equal,
+                    # as there is no direct access to the outer ref value.
+                    models.Q(value_destination__isnull=True)
+                )
+                | models.Q(
+                    value_destination_id=models.functions.Cast(
+                        models.OuterRef("value_destination__id"),
+                        models.BigIntegerField(),
+                    )
+                )
             ),
         )
-        return self.annotate(
+        with_resolutions = self.annotate(
             conflict_resolution_replacement_state=models.functions.Cast(
                 models.Subquery(resolutions_sub_query.values("replacement_state")),
                 models.CharField(max_length=5),
@@ -111,7 +122,11 @@ class InstanceConflictQuerySet(ValueQuerySet):
                 models.Subquery(resolutions_sub_query.values("replacement_value")),
                 models.TextField(),
             ),
-        ).filter(
+            conflict_resolution_value_destination=models.Subquery(
+                resolutions_sub_query.values("value_destination_id")
+            ),
+        )
+        invalid_resolutions = with_resolutions.filter(
             # no resolution exists
             models.Q(conflict_resolution_replacement_state__isnull=True)
             # resolution by value but no value provided
@@ -124,7 +139,12 @@ class InstanceConflictQuerySet(ValueQuerySet):
                     | models.Q(conflict_resolution_replacement_value__isnull=True)
                 )
             )
+            | (
+                models.Q(conflict_resolution_value_destination__isnull=True)
+                & models.Q(value_destination__isnull=False)
+            )
         )
+        return invalid_resolutions
 
 
 class ColumnMergeRequest(AbstractMergeRequest):
