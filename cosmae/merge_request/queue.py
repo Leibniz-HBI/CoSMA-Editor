@@ -207,7 +207,7 @@ def merge_request_compute_conflicts(
                     merge_request.state = ColumnMergeRequest.State.OPEN
                 merge_request.save(update_fields=["state"])
     except Exception as exc:  # pylint: disable=broad-except
-        logging.warning(None, exc_info=exc)
+        logging.error(None, exc_info=exc)
         with transaction.atomic():
             merge_request = merge_request_query.get()
             merge_request.state = ColumnMergeRequest.State.ERROR
@@ -242,20 +242,6 @@ def store_conflicts(merge_request, conflicts, column_origin, column_destination)
             replacement_value=None,
         )
     return max_idx
-
-
-def dispatch_resolve_conflicts(
-    merge_request: ColumnMergeRequest, approved_by: CosmaeUser
-):
-    "Dispatch method for resolving conflicts to queue"
-    enqueue(
-        merge_request_resolve_conflicts,
-        args=(
-            str(merge_request.id_persistent),
-            str(approved_by.id_persistent),
-        ),
-        job_timeout=60 * 12,
-    )
 
 
 def column_conflicts_signal_handler(  # pylint: disable=unused-argument
