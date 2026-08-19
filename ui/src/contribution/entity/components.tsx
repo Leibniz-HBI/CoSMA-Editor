@@ -339,6 +339,7 @@ export function EntitySimilarityItem({
     const [tooltip, setTooltip] = useState<
         { val: string; bounds: IBounds } | undefined
     >()
+    const ref = useRef<HTMLDivElement>(null)
     const { layerProps: tooltipLayerProps, renderLayer: tooltipRenderLayer } = useLayer(
         {
             isOpen: tooltip !== undefined,
@@ -414,6 +415,16 @@ export function EntitySimilarityItem({
             <Row
                 className="h-100 w-100 mb-2 ms-3 me-3"
                 data-testid="table-container-outer"
+                ref={ref}
+                /**
+                 * Required to prevent ghost inputs on the table
+                 */
+                onFocusCapture={(e) => {
+                    if (document.activeElement?.localName == 'canvas') {
+                        ref.current?.focus()
+                        e.stopPropagation()
+                    }
+                }}
             >
                 <div
                     className="br-12 ps-0 pe-0 h-100 w-100 overflow-hidden"
