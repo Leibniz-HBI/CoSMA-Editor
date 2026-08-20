@@ -60,6 +60,6 @@ def check_key(key: str):
         if not (c.isalnum() or c in {"+", "/", "="}):
             return ["The key has to be base64 encoded"]
     for c in name:
-        if not (c.isalnum() or c in {"@", "+", "-", "_", "."}):
+        if not (c.isalnum() or c in {"@", "+", "-", "_", ".", "\\"}):
             return [f'The character "{c}" is not allowed in key names.']
     return split
