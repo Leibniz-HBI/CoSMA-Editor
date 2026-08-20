@@ -1,6 +1,6 @@
 "Queue methods for removing duplicates of a contribution candidate."
 
-import logging
+from logging import getLogger
 from uuid import uuid4
 
 import django_rq
@@ -15,6 +15,8 @@ from cosmae.entity.queue import update_display_txt_cache
 from cosmae.justification.models_django import EntityJustification
 from cosmae.util import timestamp
 from cosmae.value.models_django import Value, ValueHistory
+
+_LOGGER = getLogger(__name__)
 
 
 class MissingJustificationException(Exception):
@@ -39,7 +41,7 @@ def eliminate_duplicates(id_contribution_persistent):
                 return
             time_edit = timestamp()
             duplicates = EntityDuplicate.objects.filter(  # pylint: disable=no-member
-                contribution_candidate=contribution, discard=False
+                contribution_candidate=contribution
             )
             values_with_duplicates = annotate_with_replacement_info(
                 Value.objects.all(),  # pylint: disable=no-member
@@ -62,7 +64,7 @@ def eliminate_duplicates(id_contribution_persistent):
             contribution.set_state(ContributionCandidate.MERGED)
             contribution.save()
     except Exception as exc:  # pylint: disable=broad-except
-        logging.error(None, exc_info=exc)
+        _LOGGER.error(None, exc_info=exc)
         with transaction.atomic():
             contribution_candidate = contribution_query.get()
             contribution_candidate.set_state(
@@ -148,7 +150,7 @@ def update_entities(
         justification=models.Subquery(
             EntityJustification.objects.filter(  # pylint: disable=no-member
                 id_entity_persistent=models.OuterRef("id_persistent")
-            ).values("text")
+            ).values("text")[:1]
         )
     ).filter(justification__isnull=True)
     if len(missing_justification) > 0:
