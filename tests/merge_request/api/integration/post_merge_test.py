@@ -5,8 +5,6 @@ import tests.merge_request.api.integration.requests as req
 import tests.merge_request.common as c
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.models_django import ColumnMergeRequest
-from cosmae.util import timestamp
-from cosmae.value.models_django import ValueHistory
 
 
 def test_unknown_user(auth_server):
@@ -45,11 +43,12 @@ def test_wrong_user(auth_server1, merge_request_user):
     }
 
 
-def test_resolved_conflict(
+def test_sets_conflicts_state(
     auth_server,
     merge_request_user,
     conflict_resolutions_replace_replace,
 ):
+    "API endpoint just sets the state to CONFLICTS. Check happens in queue."
     server, cookies = auth_server
     rsp = req.post_start_merge(
         server.url, str(merge_request_user.id_persistent), cookies=cookies
@@ -60,44 +59,4 @@ def test_resolved_conflict(
             merge_request_user.id_persistent
         )
     ).get()
-    assert merge_request.state == ColumnMergeRequest.State.RESOLVED
-
-
-def test_open_conflicts(
-    auth_server, merge_request_user, instances_merge_request_origin_user
-):
-    server, cookies = auth_server
-    rsp = req.post_start_merge(
-        server.url, str(merge_request_user.id_persistent), cookies=cookies
-    )
-    assert rsp.status_code == 400
-    assert rsp.json() == {
-        "msg": "There are unresolved conflicts for the merge request."
-    }
-
-
-def test_updated_data(
-    auth_server,
-    merge_request_user,
-    conflict_resolutions_empty_replace,
-    conflict_resolution_keep,
-):
-    server, cookies = auth_server
-    old_instance = conflict_resolutions_empty_replace[1].value_destination
-    instance, _ = ValueHistory.change_or_create_versioned(
-        id_persistent=old_instance.id_persistent,
-        id_entity_persistent=old_instance.id_entity_persistent,
-        id_column_persistent=old_instance.id_column_persistent,
-        version=old_instance.id,
-        written_by_session=merge_request_user.assigned_to.edit_session,
-        time_edit=timestamp(),
-        value="updated value test",
-    )
-    instance.save()
-    rsp = req.post_start_merge(
-        server.url, str(merge_request_user.id_persistent), cookies=cookies
-    )
-    assert rsp.status_code == 400
-    assert rsp.json() == {
-        "msg": "There are conflicts for the merge request, where the underlying data has changed."
-    }
+    assert merge_request.state == ColumnMergeRequest.State.CONFLICTS
