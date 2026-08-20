@@ -49,13 +49,17 @@ export function MergeRequestConflictView() {
     const dispatch = useAppDispatch()
     const mergeRequest = useAppSelector(selectConflictsMergeRequest)
     useEffect(() => {
-        if (mergeRequest.value === undefined && !mergeRequest.isLoading) {
+        if (
+            mergeRequest.value === undefined &&
+            !mergeRequest.isLoading &&
+            idMergeRequestPersistent !== undefined
+        ) {
             dispatch(getMergeRequest(idMergeRequestPersistent))
         }
         return () => {
             dispatch(clearMergeRequest())
         }
-    }, [])
+    }, [idMergeRequestPersistent])
     if (mergeRequest.value === undefined) {
         return CosmaeLoading()
     }
