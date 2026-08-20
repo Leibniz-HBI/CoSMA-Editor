@@ -47,6 +47,19 @@ class ValueAbstract(Versioned):
         )
         return comparison
 
+    def __hash__(self) -> int:
+        return hash(
+            (
+                self.id,  # pylint: disable=no-member
+                self.id_persistent,
+                self.id_entity_persistent,
+                self.id_column_persistent,
+                self.value,
+                self.time_edit,
+                self.previous_version_id,  # pylint: disable=no-member
+            )
+        )
+
 
 class ValueQuerySet(VersionedQueryset):
     "Custom queryset for recent values"
