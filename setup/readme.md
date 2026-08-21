@@ -83,3 +83,48 @@ Host cosmae
 Afterwards, run `ssh cosmae` from a terminal.
 If there is no error message you connected successfully.
 Open you browser and go to http://127.0.0.1:7070
+
+## Backups
+### Create
+You can create backups by launching a docker container that mounts the database volume.
+```
+docker run --user $(id -u cosmae):$(id -g cosmae) --rm -i -t -v cosmae_db_volume:/data -v /srv/cosmae/backup:/backup  ubuntu tar -czf /backup/backup-$(date +%Y%m%d).tar.gz data --strip-components=1
+```
+You may need to change the user/group, volume name and backup location if you deviated from the defaults.
+### Restore
+```
+docker run --rm --user $(id -u cosmae):$(id -g cosmae) -v -i -t "cosmae_db_volume:/data" -v "$/backup:/backup-dir" ubuntu tar -xvzf /backup-dir/backup-$(date +%Y%m%d).tar.gz /data
+```
+Again change user/group, volume name, backup location and backup file name.
+
+## Upgrading Postgres Version
+When upgrading PostgreSQL a simple backup of the database files is not sufficient.
+The on disk format may have changed between versions
+### Create
+```
+docker run  --rm -i -t -v cosmae_db_volume:/data -v /srv/cosmae/backup:/backup  127.0.0.1:5000/cosmae_db bash -c "pg_dumpall > /backup/dump-$(date +%Y%m%d).sql"
+```
+You may need to change the volume name and backup location if you deviated from the defaults.
+### Restore
+1) Add the file to the running database container.
+```
+docker cp /srv/cosmae/backup/dump.sql ${DB_CONTAINER_INSTANCE}:/
+```
+Where you replace `dump.sql` with the dump created in the previous step and `${DB_CONTAINER_INSTANCE}` with the hash of your database container instance.
+2) Remove the running database container
+```
+docker service scale cosmae_db=0
+```
+3) remove the db volume
+```
+docker volume rm cosmae-audit_db_volume
+```
+4) Restart the container which will recreate the volume
+```
+docker service scale cosmae_db=0
+```
+5) Then you need to restore it using the following command
+```
+docker exec -i -t ${DB_CONTAINER_INSTANCE} bash -c 'psql -d $(cat /var/run/secrets/cosmae_db_name) -U $(cat /var/run/secrets/cosmae_db_user) -f /dump.sql'
+```
+Again, replace the container hash and the dump file name to match your circumstances
