@@ -2,11 +2,11 @@
 from unittest.mock import MagicMock, patch
 
 import tests.column.common as cc
+from cosmae.exception import NotAuthenticatedException
 from tests.merge_request.entity import common as c
 from tests.merge_request.entity.api.integration import requests as req
 from tests.user import common as cu
 from tests.utils import assert_versioned
-from cosmae.exception import NotAuthenticatedException
 
 
 def test_unknown_user(auth_server_commissioner, merge_request_user):
@@ -97,29 +97,30 @@ def test_no_mr(auth_server_commissioner):
 
 def test_resolve_conflicts(
     auth_server_commissioner,
-    column_curated,
+    column_curated1,
     origin_entity_for_mr,
     destination_entity_for_mr,
     merge_request_user,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
+    conflict_resolution_user,
 ):
     server, cookies = auth_server_commissioner
     rsp = req.post_resolution(
         server.url,
         c.id_merge_request_persistent,
-        id_column_persistent=column_curated.id_persistent,
-        id_column_version=column_curated.id,
+        id_column_persistent=column_curated1.id_persistent,
+        id_column_version=column_curated1.id,
         id_entity_origin_persistent=origin_entity_for_mr.id_persistent,
         id_entity_origin_version=origin_entity_for_mr.id,
         id_entity_destination_persistent=destination_entity_for_mr.id_persistent,
         id_entity_destination_version=destination_entity_for_mr.id,
-        id_value_origin_persistent=instances_merge_request_origin_user[2].id_persistent,
-        id_value_origin_version=instances_merge_request_origin_user[2].id,
+        id_value_origin_persistent=instances_merge_request_origin_user[0].id_persistent,
+        id_value_origin_version=instances_merge_request_origin_user[0].id,
         id_value_destination_persistent=(
-            instance_merge_request_destination_user_conflict.id_persistent
+            instance_merge_request_destination_user_conflict1.id_persistent
         ),
-        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict1.id,
         replacement_state="REPLACE",
         cookies=cookies,
     )
@@ -127,7 +128,7 @@ def test_resolve_conflicts(
     rsp = req.get_conflicts(server.url, c.id_merge_request_persistent, cookies=cookies)
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
+    assert len(json) == 5
     assert_versioned(
         json["merge_request"],
         {
@@ -153,16 +154,36 @@ def test_resolve_conflicts(
         },
     )
 
+    unresolvable = {
+        "replacement_state": "KEEP",
+        "replacement_value": None,
+        "column": {
+            "name_path": [cc.name_column_test],
+            "id_parent_persistent": None,
+            "id_persistent": cc.id_column_persistent_test,
+            "curated": False,
+            "hidden": False,
+        },
+        "value_origin": {
+            "id_persistent": c.id_instance_origin,
+            "value": c.value_origin,
+        },
+        "value_destination": {
+            "id_persistent": c.id_instance_destination,
+            "value": c.value_destination,
+        },
+    }
     assert_versioned(
-        json["resolvable_conflicts"],
+        json["conflicts"],
         [
+            unresolvable,
             {
                 "replacement_state": "REPLACE",
                 "replacement_value": None,
                 "column": {
-                    "name_path": [cc.name_column_curated_test],
+                    "name_path": [cc.name_column_curated_test1],
                     "id_parent_persistent": None,
-                    "id_persistent": cc.id_column_curated_test,
+                    "id_persistent": cc.id_column_curated_test1,
                     "curated": True,
                     "hidden": False,
                 },
@@ -170,49 +191,16 @@ def test_resolve_conflicts(
                     "id_persistent": c.id_instance_origin_curated,
                     "value": c.value_origin_curated,
                 },
-                "value_destination": None,
+                "value_destination": {
+                    "id_persistent": c.id_instance_destination1,
+                    "value": c.value_destination1,
+                },
             },
         ],
     )
     assert_versioned(
         json["unresolvable_conflicts"],
-        [
-            {
-                "replacement_state": None,
-                "replacement_value": None,
-                "column": {
-                    "name_path": [cc.name_column_test],
-                    "id_parent_persistent": None,
-                    "id_persistent": cc.id_column_persistent_test,
-                    "curated": False,
-                    "hidden": False,
-                },
-                "value_origin": {
-                    "id_persistent": c.id_instance_origin,
-                    "value": c.value_origin,
-                },
-                "value_destination": None,
-            },
-            {
-                "replacement_state": None,
-                "replacement_value": None,
-                "column": {
-                    "name_path": [cc.name_column_test1],
-                    "id_parent_persistent": None,
-                    "id_persistent": cc.id_column_persistent_test_user1,
-                    "curated": False,
-                    "hidden": False,
-                },
-                "value_origin": {
-                    "id_persistent": c.id_instance_origin1,
-                    "value": c.value_origin1,
-                },
-                "value_destination": {
-                    "id_persistent": c.id_instance_destination,
-                    "value": c.value_destination,
-                },
-            },
-        ],
+        [unresolvable],
     )
     assert json["updated"] == []
 
@@ -222,7 +210,7 @@ def test_can_not_write_column(
     column,
     merge_request_user,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
 ):
     server, cookies = auth_server_commissioner
     rsp = req.post_resolution(
@@ -237,9 +225,9 @@ def test_can_not_write_column(
         id_value_origin_persistent=instances_merge_request_origin_user[0].id_persistent,
         id_value_origin_version=instances_merge_request_origin_user[0].id,
         id_value_destination_persistent=(
-            instance_merge_request_destination_user_conflict.id_persistent
+            instance_merge_request_destination_user_conflict1.id_persistent
         ),
-        id_value_destination_version=instance_merge_request_destination_user_conflict.id,
+        id_value_destination_version=instance_merge_request_destination_user_conflict1.id,
         replacement_state="REPLACE",
         cookies=cookies,
     )

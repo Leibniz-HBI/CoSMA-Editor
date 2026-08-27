@@ -1,11 +1,11 @@
 # pylint: disable=missing-module-docstring, missing-function-docstring,redefined-outer-name,invalid-name,unused-argument,too-many-locals,too-many-arguments,too-many-statements,duplicate-code
 from unittest.mock import MagicMock, patch
 
+from cosmae.exception import NotAuthenticatedException
 from tests.merge_request.entity import common as c
 from tests.merge_request.entity.api.integration import requests as req
 from tests.user import common as cu
 from tests.utils import assert_versioned
-from cosmae.exception import NotAuthenticatedException
 
 
 def test_unknown_user(auth_server_commissioner):
@@ -79,6 +79,6 @@ def test_put_entity_merge_request(
                 "username": cu.test_username_commissioner,
                 "permission_group": "COMMISSIONER",
             },
-            "state": "OPEN",
+            "state": "CONFLICTS",
         },
     )
