@@ -41,7 +41,8 @@ def get_merge_requests(url, cookies=None):
 def get_conflicts(url, id_merge_request_persistent, cookies=None):
     return requests.get(
         url
-        + f"/cosmae/api/merge_requests/entities/{id_merge_request_persistent}/conflicts",
+        + f"/cosmae/api/merge_requests/entities/{id_merge_request_persistent}/conflicts"
+        "?offset=0&limit=10",
         cookies=cookies,
         timeout=900,
     )

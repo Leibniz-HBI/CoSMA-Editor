@@ -1,5 +1,6 @@
 "API methods for entity merge requests"
 
+from logging import getLogger
 from typing import List, Literal
 from uuid import uuid4
 
@@ -32,6 +33,7 @@ from cosmae.util import CosmaeUser as CosmaeUserDb
 from cosmae.util import timestamp
 from cosmae.util.auth import check_user
 
+_LOGGER = getLogger(__name__)
 router = Router()
 
 
@@ -91,9 +93,10 @@ class GetEntityMergeRequestConflictsResponse(Schema):
 
     # pylint: disable=too-few-public-methods
     merge_request: EntityMergeRequest
-    resolvable_conflicts: List[EntityMergeRequestConflict]
+    conflicts: List[EntityMergeRequestConflict]
     updated: List[EntityMergeRequestConflict]
     unresolvable_conflicts: List[EntityMergeRequestConflict]
+    next_offset: int
 
 
 class EntityConflictResolutionPostRequest(Schema):
@@ -125,7 +128,9 @@ class EntityConflictResolutionPostRequest(Schema):
         500: ApiError,
     },
 )
-def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persistent: str):
+def get_merge_request_conflicts(
+    request: HttpRequest, id_merge_request_persistent: str, offset: int, limit: int
+):
     "API method for getting merge request conflicts."
     try:
         user = check_user(request)
@@ -134,23 +139,28 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
         )
         writable_columns = column_objects().for_user(user, True)
         (
-            resolvable_query_set,
+            conflicts_query_set,
             unresolvable_query_set,
             updated_query_set,
-        ) = merge_request.resolvable_unresolvable_updated(writable_columns)
+        ) = merge_request.conflicts_unresolvable_updated(writable_columns, offset)
+        resolvable_response = []
+        max_offset = -2
+        for conflict in conflicts_query_set[:limit]:
+            resolvable_response.append(resolution_db_to_api(conflict))
+            max_offset = max(max_offset, conflict.id)
+        unresolvable_query_set = unresolvable_query_set.filter(id__lte=max_offset)
+        updated_query_set = updated_query_set.filter(id__lte=max_offset)
         return 200, GetEntityMergeRequestConflictsResponse(
-            resolvable_conflicts=[
-                annotated_value_db_to_api(conflict) for conflict in resolvable_query_set
-            ],
+            conflicts=resolvable_response,
             unresolvable_conflicts=[
-                annotated_value_db_to_api(conflict)
-                for conflict in unresolvable_query_set
+                resolution_db_to_api(conflict) for conflict in unresolvable_query_set
             ],
             updated=[
                 conflict_with_updated_data_db_to_api(updated)
                 for updated in updated_query_set
             ],
             merge_request=entity_merge_request_db_to_api(merge_request),
+            next_offset=max_offset + 1,
         )
     except EntityMergeRequestDb.DoesNotExist:  # pylint: disable=no-member
         return 404, ApiError(msg="Merge request does not exist.")
@@ -162,8 +172,10 @@ def get_merge_request_conflicts(request: HttpRequest, id_merge_request_persisten
         return 500, ApiError(
             msg="Could not get the merge request conflicts from the database."
         )
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not get the requested merge request conflicts.")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not get the requested merge request conflicts."
+        _LOGGER.exception(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.post(
@@ -200,28 +212,21 @@ def post_resolve_conflict(
         column = ColumnDb.most_recent_by_id(resolution_info.id_column_persistent)
         if not column.has_write_access(user.id_persistent):
             raise ApiException(403, "You can not write to the column.")
-        EntityConflictResolutionDb.objects.filter(  # pylint: disable=no-member
-            column__id_persistent=resolution_info.id_column_persistent,
-            entity_origin__id_persistent=(resolution_info.id_entity_origin_persistent),
-            value_origin__id_persistent=resolution_info.id_value_origin_persistent,
-            entity_destination__id_persistent=(
-                resolution_info.id_entity_destination_persistent
-            ),
-            merge_request=merge_request,
-        ).delete()
-        resolution = EntityConflictResolutionDb(
-            column_id=resolution_info.id_column_version,
-            entity_origin_id=resolution_info.id_entity_origin_version,
-            value_origin_id=resolution_info.id_value_origin_version,
-            entity_destination_id=resolution_info.id_entity_destination_version,
-            value_destination_id=resolution_info.id_value_destination_version,
-            merge_request=merge_request,
+        merge_request.resolve(
+            id_column_persistent=resolution_info.id_column_persistent,
+            id_entity_origin_persistent=resolution_info.id_entity_origin_persistent,
+            id_entity_destination_persistent=resolution_info.id_entity_destination_persistent,
+            id_value_origin_persistent=resolution_info.id_value_origin_persistent,
+            id_column_version=resolution_info.id_column_version,
+            id_entity_origin_version=resolution_info.id_entity_origin_version,
+            id_entity_destination_version=resolution_info.id_entity_destination_version,
+            id_value_origin_version=resolution_info.id_value_origin_version,
+            id_value_destination_version=resolution_info.id_value_destination_version,
             replacement_state=REPLACEMENT_STATE_API_TO_DB_MAP.get(
                 resolution_info.replacement_state
             ),
             replacement_value=resolution_info.replacement_value,
         )
-        resolution.save()
         return 200, None
     except ApiException as exc:
         status, response = exc.status_code, ApiError(msg=exc.msg)
@@ -278,7 +283,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
             ):
                 return 400, ApiError(msg="Merge request not available for merging.")
             writable_columns = column_objects().for_user(user, True)
-            resolvable, _, updated = merge_request.resolvable_unresolvable_updated(
+            resolvable, _, updated = merge_request.conflicts_unresolvable_updated(
                 writable_columns
             )
             if len(updated) > 0:
@@ -291,7 +296,7 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                     [
                         conflict
                         for conflict in resolvable
-                        if conflict.conflict_resolution_replacement_state is None
+                        if conflict.replacement_state is None
                     ]
                 )
                 > 0
@@ -315,8 +320,10 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
         return 500, ApiError(
             msg="Could not mark the merge request for merging in the database."
         )
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not mark the merge request for merging.")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not mark the merge request for merging."
+        _LOGGER.exception(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 @router.post(
@@ -409,20 +416,22 @@ def put(
             return 400, ApiError(msg="Merge Request exists but is not open")
         except EntityMergeRequestDb.DoesNotExist:  # pylint: disable=no-member
             pass
-        (
-            entity_merge_request,
-            _,
-        ) = EntityMergeRequestDb.objects.get_or_create(  # pylint: disable=no-member
+        entity_merge_request = EntityMergeRequestDb(  # pylint: disable=no-member
             id_origin_persistent=id_entity_origin_persistent,
             id_destination_persistent=id_entity_destination_persistent,
             created_by=user,
             created_at=timestamp(),
             id_persistent=uuid4(),
-            state=EntityMergeRequestDb.State.OPEN,
+            state=EntityMergeRequestDb.State.CONFLICTS,
         )
+        entity_merge_request.save()
         return 200, entity_merge_request_db_to_api(entity_merge_request)
     except EntityDb.DoesNotExist:  # pylint: disable=no-member
         return 400, ApiError(msg="One of the entities does not exist")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not create entity merge request."
+        _LOGGER.exception(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
 
 
 merge_request_step_db_to_api_map = {
@@ -547,44 +556,44 @@ def entity_merge_request_db_to_api(merge_request: EntityMergeRequestDb):
     )
 
 
-def annotated_value_db_to_api(annotated_instance):
+def resolution_db_to_api(resolution):
     "Converts an annotated value from DB to API representation"
-    column = annotated_instance.column
-    value_destination_db = annotated_instance.value_destination
+    column = resolution.column
+    value_destination_db = resolution.value_destination
     if value_destination_db is None:
         value_destination = None
     else:
         value_destination = Value(
-            id_persistent=value_destination_db["id_persistent"],
-            version=value_destination_db["id"],
-            value=value_destination_db["value"],
+            id_persistent=value_destination_db.id_persistent,
+            version=value_destination_db.id,
+            value=value_destination_db.value,
         )
     return EntityMergeRequestConflict(
-        column=column_json_field_to_api(column),
+        column=column_to_api(column),
         value_origin=Value(
-            id_persistent=annotated_instance.id_persistent,
-            version=annotated_instance.id,
-            value=annotated_instance.value,
+            id_persistent=resolution.value_origin.id_persistent,
+            version=resolution.value_origin.id,
+            value=resolution.value_origin.value,
         ),
         value_destination=value_destination,
         replacement_state=REPLACEMENT_STATE_DB_TO_API_MAP.get(
-            annotated_instance.conflict_resolution_replacement_state
+            resolution.replacement_state
         ),
-        replacement_value=annotated_instance.conflict_resolution_replacement_value,
+        replacement_value=resolution.replacement_value,
     )
 
 
 def conflict_with_updated_data_db_to_api(annotated_conflict):
     "Transform an annotated conflict from DB to API representation."
     column = annotated_conflict.column_most_recent
-    value_destination_db = annotated_conflict.value_destination_most_recent
-    if value_destination_db is None:
+    value_destination_id = annotated_conflict.id_value_destination_most_recent
+    if value_destination_id is None:
         value_destination = None
     else:
         value_destination = Value(
-            id_persistent=value_destination_db["id_persistent"],
-            version=value_destination_db["id"],
-            value=value_destination_db["value"],
+            id_persistent=annotated_conflict.value_destination.id_persistent,
+            version=annotated_conflict.id_value_destination_most_recent,
+            value=annotated_conflict.value_destination_most_recent_value,
         )
 
     value_origin = annotated_conflict.value_origin_most_recent
@@ -608,9 +617,23 @@ def column_json_field_to_api(column_dict):
     id_version = column_dict["id"]
     name = column_dict["name"]
     return Column(
-        version=column_dict["id"],
+        version=id_version,
         name_path=get_column_name_path_from_parts(id_version, name, None),
         id_persistent=id_persistent,
         id_parent_persistent=column_dict["id_parent_persistent"],
         curated=column_dict["curated"],
+    )
+
+
+def column_to_api(column):
+    "Converts an as JSONField annotated column to API representation."
+    id_persistent = column.id_persistent
+    id_version = column.id
+    name = column.name
+    return Column(
+        version=id_version,
+        name_path=get_column_name_path_from_parts(id_version, name, None),
+        id_persistent=id_persistent,
+        id_parent_persistent=column.id_parent_persistent,
+        curated=column.curated,
     )

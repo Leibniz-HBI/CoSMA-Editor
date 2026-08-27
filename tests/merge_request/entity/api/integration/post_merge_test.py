@@ -3,9 +3,9 @@ from unittest.mock import MagicMock, patch
 
 import tests.merge_request.entity.common as c
 import tests.user.common as cu
-from tests.merge_request.entity.api.integration import requests as req
 from cosmae.exception import NotAuthenticatedException
 from cosmae.merge_request.entity.queue import apply_entity_merge_request
+from tests.merge_request.entity.api.integration import requests as req
 
 
 def test_unknown_user(auth_server_commissioner):
@@ -43,7 +43,7 @@ def test_normal_user(auth_server1, merge_request_user):
 
 def test_start_merge(
     auth_server_commissioner,
-    conflict_resolution_keep,
+    conflict_resolution_keep1,
     resolution_curated_destination_none,
 ):
     server, cookies = auth_server_commissioner
@@ -64,8 +64,8 @@ def test_start_merge(
 
 def test_conflict_updated_merge(
     auth_server_commissioner,
-    conflict_resolution_keep,
-    value_curated_updated,
+    conflict_resolution_keep1,
+    value_curated_updated1,
 ):
     server, cookies = auth_server_commissioner
     mock = MagicMock()
@@ -80,7 +80,9 @@ def test_conflict_updated_merge(
 
 
 def test_unresolved_conflict(
-    auth_server_commissioner, instances_merge_request_origin_user, conflict_curated
+    auth_server_commissioner,
+    instances_merge_request_origin_user,
+    conflict_resolution_unresolved0,
 ):
     server, cookies = auth_server_commissioner
     mock = MagicMock()

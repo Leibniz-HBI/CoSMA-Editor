@@ -2,11 +2,11 @@
 from unittest.mock import MagicMock, patch
 
 import tests.column.common as cc
+from cosmae.exception import NotAuthenticatedException
 from tests.merge_request.entity import common as c
 from tests.merge_request.entity.api.integration import requests as req
 from tests.user import common as cu
 from tests.utils import assert_versioned
-from cosmae.exception import NotAuthenticatedException
 
 
 def test_unknown_user(auth_server_commissioner):
@@ -44,7 +44,7 @@ def test_normal_user(auth_server):
 def test_reverse(
     auth_server_commissioner,
     merge_request_user,
-    conflict_resolution_replace,
+    conflict_resolution_replace0,
     resolution_curated_destination_none,
 ):
     server, cookies = auth_server_commissioner
@@ -59,7 +59,7 @@ def test_reverse(
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
+    assert len(json) == 5
     assert_versioned(
         json["merge_request"],
         {
@@ -86,33 +86,30 @@ def test_reverse(
     )
 
     assert_versioned(
-        json["resolvable_conflicts"],
-        [],
-    )
-    assert_versioned(
-        json["unresolvable_conflicts"],
+        json["conflicts"],
         [
             {
                 "replacement_state": "KEEP",
                 "replacement_value": None,
                 "column": {
-                    "name_path": [cc.name_column_test1],
+                    "name_path": [cc.name_column_curated_test],
                     "id_parent_persistent": None,
-                    "id_persistent": cc.id_column_persistent_test_user1,
-                    "curated": False,
+                    "id_persistent": cc.id_column_curated_test,
+                    "curated": True,
                     "hidden": False,
                 },
                 "value_origin": {
-                    "id_persistent": c.id_instance_destination,
-                    "value": c.value_destination,
+                    "id_persistent": c.id_instance_destination_curated,
+                    "value": c.value_destination_curated,
                 },
                 "value_destination": {
-                    "id_persistent": c.id_instance_origin1,
-                    "value": c.value_origin1,
+                    "id_persistent": c.id_instance_origin_curated,
+                    "value": c.value_origin_curated,
                 },
             },
         ],
     )
+    assert json["unresolvable_conflicts"] == []
     assert json["updated"] == []
 
 
@@ -134,7 +131,7 @@ def test_reverse_replacement_value(
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
+    assert len(json) == 5
     assert_versioned(
         json["merge_request"],
         {
@@ -160,43 +157,41 @@ def test_reverse_replacement_value(
         },
     )
 
+    conflict = {
+        "replacement_state": "VALUE",
+        "replacement_value": c.replacement_value,
+        "column": {
+            "name_path": [cc.name_column_curated_test1],
+            "id_parent_persistent": None,
+            "id_persistent": cc.id_column_curated_test1,
+            "curated": True,
+            "hidden": False,
+        },
+        "value_origin": {
+            "id_persistent": c.id_instance_destination1,
+            "value": c.value_destination1,
+        },
+        "value_destination": {
+            "id_persistent": c.id_instance_origin1,
+            "value": c.value_origin1,
+        },
+    }
     assert_versioned(
-        json["resolvable_conflicts"],
-        [],
-    )
-    assert_versioned(
-        json["unresolvable_conflicts"],
+        json["conflicts"],
         [
-            {
-                "replacement_state": "VALUE",
-                "replacement_value": c.replacement_value,
-                "column": {
-                    "name_path": [cc.name_column_test1],
-                    "id_parent_persistent": None,
-                    "id_persistent": cc.id_column_persistent_test_user1,
-                    "curated": False,
-                    "hidden": False,
-                },
-                "value_origin": {
-                    "id_persistent": c.id_instance_destination,
-                    "value": c.value_destination,
-                },
-                "value_destination": {
-                    "id_persistent": c.id_instance_origin1,
-                    "value": c.value_origin1,
-                },
-            },
+            conflict,
         ],
     )
+    assert_versioned(json["unresolvable_conflicts"], [])
     assert json["updated"] == []
 
 
 def test_double_reverse(
     auth_server_commissioner,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
     merge_request_user,
-    conflict_resolution_replace,
-    resolution_curated_destination_none,
+    conflict_resolution_replace0,
+    conflict_resolution_keep1,
 ):
     server, cookies = auth_server_commissioner
     rsp = req.post_reverse_origin_destination(
@@ -216,7 +211,7 @@ def test_double_reverse(
     )
     assert rsp.status_code == 200
     json = rsp.json()
-    assert len(json) == 4
+    assert len(json) == 5
     assert_versioned(
         json["merge_request"],
         {
@@ -242,8 +237,26 @@ def test_double_reverse(
         },
     )
 
+    unresolvable = {
+        "replacement_state": "KEEP",
+        "replacement_value": None,
+        "column": {
+            "name_path": [cc.name_column_curated_test1],
+            "id_parent_persistent": None,
+            "id_persistent": cc.id_column_curated_test1,
+            "curated": True,
+        },
+        "value_origin": {
+            "id_persistent": c.id_instance_origin1,
+            "value": c.value_origin1,
+        },
+        "value_destination": {
+            "id_persistent": c.id_instance_destination1,
+            "value": c.value_destination1,
+        },
+    }
     assert_versioned(
-        json["resolvable_conflicts"],
+        json["conflicts"],
         [
             {
                 "replacement_state": "REPLACE",
@@ -258,46 +271,13 @@ def test_double_reverse(
                     "id_persistent": c.id_instance_origin_curated,
                     "value": c.value_origin_curated,
                 },
-                "value_destination": None,
-            },
-        ],
-    )
-    assert_versioned(
-        json["unresolvable_conflicts"],
-        [
-            {
-                "replacement_state": None,
-                "replacement_value": None,
-                "column": {
-                    "name_path": [cc.name_column_test],
-                    "id_parent_persistent": None,
-                    "id_persistent": cc.id_column_persistent_test,
-                    "curated": False,
-                },
-                "value_origin": {
-                    "id_persistent": c.id_instance_origin,
-                    "value": c.value_origin,
-                },
-                "value_destination": None,
-            },
-            {
-                "replacement_state": "REPLACE",
-                "replacement_value": None,
-                "column": {
-                    "name_path": [cc.name_column_test1],
-                    "id_parent_persistent": None,
-                    "id_persistent": cc.id_column_persistent_test_user1,
-                    "curated": False,
-                },
-                "value_origin": {
-                    "id_persistent": c.id_instance_origin1,
-                    "value": c.value_origin1,
-                },
                 "value_destination": {
-                    "id_persistent": c.id_instance_destination,
-                    "value": c.value_destination,
+                    "value": c.value_destination_curated,
+                    "id_persistent": c.id_instance_destination_curated,
                 },
             },
+            unresolvable,
         ],
     )
+    assert json["unresolvable_conflicts"] == []
     assert json["updated"] == []

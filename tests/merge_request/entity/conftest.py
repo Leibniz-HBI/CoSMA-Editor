@@ -78,27 +78,16 @@ def merge_request_user(
 
 
 @pytest.fixture
+def merge_request_user_conflicts(merge_request_user):
+    merge_request_user.state = EntityMergeRequest.State.CONFLICTS
+    merge_request_user.save()
+    return merge_request_user
+
+
+@pytest.fixture
 def instances_merge_request_origin_user(
-    merge_request_user, column, column1, column_curated, user_commissioner
+    merge_request_user, column, column_curated, column_curated1, user_commissioner
 ):
-    value = ValueHistory.objects.create(  # pylint: disable=no-member
-        id_entity_persistent=c.id_entity_origin_persistent,
-        id_column_persistent=column.id_persistent,
-        value=c.value_origin,
-        id_persistent=c.id_instance_origin,
-        time_edit=c.time_instance_origin,
-        written_by_session=column.owner.edit_session,
-        approved_by=column.owner.id_persistent,
-    )
-    value1 = ValueHistory.objects.create(  # pylint: disable=no-member
-        id_entity_persistent=c.id_entity_origin_persistent,
-        id_column_persistent=column1.id_persistent,
-        value=c.value_origin1,
-        id_persistent=c.id_instance_origin1,
-        time_edit=c.time_instance_origin1,
-        written_by_session=column1.owner.edit_session,
-        approved_by=column1.owner.id_persistent,
-    )
     value_curated = ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_origin_persistent,
         id_column_persistent=column_curated.id_persistent,
@@ -108,12 +97,30 @@ def instances_merge_request_origin_user(
         written_by_session=user_commissioner.edit_session,
         approved_by=user_commissioner.id_persistent,
     )
-    return [value, value1, value_curated]
+    value_curated1 = ValueHistory.objects.create(  # pylint: disable=no-member
+        id_entity_persistent=c.id_entity_origin_persistent,
+        id_column_persistent=column_curated1.id_persistent,
+        value=c.value_origin1,
+        id_persistent=c.id_instance_origin1,
+        time_edit=c.time_instance_origin1,
+        written_by_session=user_commissioner.edit_session,
+        approved_by=user_commissioner.id_persistent,
+    )
+    value_user = ValueHistory.objects.create(  # pylint: disable=no-member
+        id_entity_persistent=c.id_entity_origin_persistent,
+        id_column_persistent=column.id_persistent,
+        value=c.value_origin,
+        id_persistent=c.id_instance_origin,
+        time_edit=c.time_instance_origin,
+        written_by_session=column.owner.edit_session,
+        approved_by=column.owner.id_persistent,
+    )
+    return [value_curated, value_curated1, value_user]
 
 
 @pytest.fixture
 def instance_merge_request_origin_user_changed(
-    user1, instances_merge_request_origin_user
+    user_commissioner, instances_merge_request_origin_user
 ):
     old_value = instances_merge_request_origin_user[1]
     value, _ = ValueHistory.change_or_create_versioned(
@@ -121,7 +128,7 @@ def instance_merge_request_origin_user_changed(
         id_column_persistent=old_value.id_column_persistent,
         id_persistent=old_value.id_persistent,
         version=old_value.id,
-        written_by_session=user1.edit_session,
+        written_by_session=user_commissioner.edit_session,
         value=9001,
         time_edit=c.time_instance_origin1_changed,
     )
@@ -130,33 +137,65 @@ def instance_merge_request_origin_user_changed(
 
 
 @pytest.fixture
-def instance_merge_request_destination_user_no_conflict(merge_request_user, column1):
+def instance_merge_request_destination_user_no_conflict(merge_request_user, column):
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_destination_persistent,
-        id_column_persistent=column1.id_persistent,
+        id_column_persistent=column.id_persistent,
         id_persistent=c.id_instance_destination,
         value=c.value_origin,
         time_edit=c.time_instance_destination,
-        written_by_session=column1.owner.edit_session,
-        approved_by=column1.owner.id_persistent,
+        written_by_session=column.owner.edit_session,
+        approved_by=column.owner.id_persistent,
     )
 
 
 @pytest.fixture
-def instance_merge_request_destination_user_conflict(merge_request_user, column1):
+def instance_merge_request_destination_user_conflict0(
+    merge_request_user, column_curated, user_commissioner
+):
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_destination_persistent,
-        id_column_persistent=column1.id_persistent,
+        id_column_persistent=column_curated.id_persistent,
+        id_persistent=c.id_instance_destination_curated,
+        value=c.value_destination_curated,
+        time_edit=c.time_instance_destination_curated,
+        written_by_session=user_commissioner.edit_session,
+        approved_by=user_commissioner.id_persistent,
+    )
+
+
+@pytest.fixture
+def instance_merge_request_destination_user_conflict1(
+    merge_request_user, column_curated1, user_commissioner
+):
+    return ValueHistory.objects.create(  # pylint: disable=no-member
+        id_entity_persistent=c.id_entity_destination_persistent,
+        id_column_persistent=column_curated1.id_persistent,
+        id_persistent=c.id_instance_destination1,
+        value=c.value_destination1,
+        time_edit=c.time_instance_destination1,
+        written_by_session=user_commissioner.edit_session,
+        approved_by=user_commissioner.id_persistent,
+    )
+
+
+@pytest.fixture
+def instance_merge_request_destination_user_unresolvable(
+    merge_request_user, column, user_commissioner
+):
+    return ValueHistory.objects.create(  # pylint: disable=no-member
+        id_entity_persistent=c.id_entity_destination_persistent,
+        id_column_persistent=column.id_persistent,
         id_persistent=c.id_instance_destination,
         value=c.value_destination,
         time_edit=c.time_instance_destination,
-        written_by_session=column1.owner.edit_session,
-        approved_by=column1.owner.id_persistent,
+        written_by_session=user_commissioner.edit_session,
+        approved_by=user_commissioner.id_persistent,
     )
 
 
 @pytest.fixture
-def conflict_curated(merge_request_user, column_curated, user_commissioner):
+def instance_conflict_curated(merge_request_user, column_curated, user_commissioner):
     return ValueHistory.objects.create(  # pylint: disable=no-member
         id_entity_persistent=c.id_entity_destination_persistent,
         id_column_persistent=column_curated.id_persistent,
@@ -188,18 +227,16 @@ def resolution_curated_destination_none(
 
 
 @pytest.fixture
-def instance_merge_request_destination_user_conflict_changed(
-    user1,
-    instance_merge_request_destination_user_conflict,
+def instance_merge_request_destination_user_conflict_changed1(
+    instance_merge_request_destination_user_conflict1,
 ):
+    old_instance = instance_merge_request_destination_user_conflict1
     value, _ = ValueHistory.change_or_create_versioned(
-        id_entity_persistent=instance_merge_request_destination_user_conflict.id_entity_persistent,
-        id_column_persistent=(
-            instance_merge_request_destination_user_conflict.id_column_persistent
-        ),
-        id_persistent=instance_merge_request_destination_user_conflict.id_persistent,
-        version=instance_merge_request_destination_user_conflict.id,
-        written_by_session=user1.edit_session,
+        id_entity_persistent=old_instance.id_entity_persistent,
+        id_column_persistent=(old_instance.id_column_persistent),
+        id_persistent=old_instance.id_persistent,
+        version=old_instance.id,
+        written_by_session=old_instance.written_by_session,
         value=9001,
         time_edit=c.time_instance_destination_changed,
     )
@@ -222,42 +259,40 @@ def instance_merge_request_destination_user_same_value1(merge_request_user):
 
 
 @pytest.fixture()
-def column_for_mr_changed(column1):
+def column_for_mr_changed(column):
     column, _ = ColumnHistory.change_or_create_versioned(
-        id_persistent=column1.id_persistent,
-        version=column1.id,
+        id_persistent=column.id_persistent,
+        version=column.id,
         time_edit=c.time_column_changed,
         name="changed column 1",
-        written_by_session=column1.owner.edit_session,
+        written_by_session=column.owner.edit_session,
     )
     column.save()
     return column
 
 
 @pytest.fixture()
-def column_for_mr_changed_owner(column1, user_commissioner):
-    column, _ = column1.set_owner(
-        user_commissioner, column1.owner, c.time_column_changed
-    )
+def column_for_mr_changed_owner(column, user_commissioner):
+    column, _ = column.set_owner(user_commissioner, column.owner, c.time_column_changed)
     column.save()
     return column
 
 
 @pytest.fixture
-def conflict_resolution_replace(
+def conflict_resolution_replace0(
     merge_request_user,
     origin_entity_for_mr,
     destination_entity_for_mr,
-    column1,
+    column_curated,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict0,
 ):
     return EntityConflictResolution.objects.create(  # pylint: disable=no-member
-        column=column1,
+        column=column_curated,
         entity_origin=origin_entity_for_mr,
         entity_destination=destination_entity_for_mr,
-        value_origin=instances_merge_request_origin_user[1],
-        value_destination=instance_merge_request_destination_user_conflict,
+        value_origin=instances_merge_request_origin_user[0],
+        value_destination=instance_merge_request_destination_user_conflict0,
         merge_request=merge_request_user,
         replacement_state=EntityConflictResolution.REPLACE,
     )
@@ -268,16 +303,16 @@ def conflict_resolution_replacement_value(
     merge_request_user,
     origin_entity_for_mr,
     destination_entity_for_mr,
-    column1,
+    column_curated1,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
 ):
     return EntityConflictResolution.objects.create(  # pylint: disable=no-member
-        column=column1,
+        column=column_curated1,
         entity_origin=origin_entity_for_mr,
         entity_destination=destination_entity_for_mr,
         value_origin=instances_merge_request_origin_user[1],
-        value_destination=instance_merge_request_destination_user_conflict,
+        value_destination=instance_merge_request_destination_user_conflict1,
         merge_request=merge_request_user,
         # replacement_state=EntityConflictResolution.REPLACE,
         replacement_state=EntityConflictResolution.VALUE,
@@ -305,20 +340,60 @@ def conflict_resolution_replace_empty_destination(
 
 
 @pytest.fixture
-def conflict_resolution_keep(
+def conflict_resolution_unresolved0(
+    origin_entity_for_mr,
+    destination_entity_for_mr,
+    instances_merge_request_origin_user,
+    instance_conflict_curated,
+    column_curated,
+    merge_request_user,
+):
+    return EntityConflictResolution.objects.create(  # pylint: disable=no-member
+        column=column_curated,
+        entity_origin=origin_entity_for_mr,
+        entity_destination=destination_entity_for_mr,
+        value_origin=instances_merge_request_origin_user[0],
+        value_destination=instance_conflict_curated,
+        merge_request=merge_request_user,
+        replacement_state=None,
+    )
+
+
+@pytest.fixture
+def conflict_resolution_keep1(
+    merge_request_user,
+    origin_entity_for_mr,
+    destination_entity_for_mr,
+    column_curated1,
+    instances_merge_request_origin_user,
+    instance_merge_request_destination_user_conflict1,
+):
+    return EntityConflictResolution.objects.create(  # pylint: disable=no-member
+        column=column_curated1,
+        entity_origin=origin_entity_for_mr,
+        entity_destination=destination_entity_for_mr,
+        value_origin=instances_merge_request_origin_user[1],
+        value_destination=instance_merge_request_destination_user_conflict1,
+        merge_request=merge_request_user,
+        replacement_state=EntityConflictResolution.KEEP,
+    )
+
+
+@pytest.fixture
+def conflict_resolution_user(
     merge_request_user,
     origin_entity_for_mr,
     destination_entity_for_mr,
     column,
     instances_merge_request_origin_user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_unresolvable,
 ):
     return EntityConflictResolution.objects.create(  # pylint: disable=no-member
         column=column,
         entity_origin=origin_entity_for_mr,
         entity_destination=destination_entity_for_mr,
-        value_origin=instances_merge_request_origin_user[0],
-        value_destination=None,
+        value_origin=instances_merge_request_origin_user[2],
+        value_destination=instance_merge_request_destination_user_unresolvable,
         merge_request=merge_request_user,
         replacement_state=EntityConflictResolution.KEEP,
     )
@@ -340,9 +415,9 @@ def value_destination_same_value(merge_request_user):
 @pytest.fixture
 def value_destination_updated_same_value1(
     user,
-    instance_merge_request_destination_user_conflict,
+    instance_merge_request_destination_user_conflict1,
 ):
-    old_instance = instance_merge_request_destination_user_conflict
+    old_instance = instance_merge_request_destination_user_conflict1
     value, _ = ValueHistory.change_or_create_versioned(  # pylint: disable=no-member
         id_persistent=old_instance.id_persistent,
         id_entity_persistent=old_instance.id_entity_persistent,
@@ -357,8 +432,8 @@ def value_destination_updated_same_value1(
 
 
 @pytest.fixture
-def value_curated_updated(instances_merge_request_origin_user, user_commissioner):
-    instance_curated = instances_merge_request_origin_user[2]
+def value_curated_updated1(instances_merge_request_origin_user, user_commissioner):
+    instance_curated = instances_merge_request_origin_user[1]
     updated, _ = ValueHistory.change_or_create_versioned(
         id_persistent=instance_curated.id_persistent,
         version=instance_curated.id,
@@ -369,3 +444,4 @@ def value_curated_updated(instances_merge_request_origin_user, user_commissioner
         time_edit=c.time_instance_destination_changed,
     )
     updated.save()
+    return updated

@@ -167,6 +167,20 @@ def column_curated(user):
 
 
 @pytest.fixture()
+def column_curated1(user):
+    return ColumnHistory.objects.create(  # pylint: disable=no-member
+        id_persistent=c.id_column_curated_test1,
+        name=c.name_column_curated_test1,
+        time_edit=c.time_edit_curated_test1,
+        type=Column.STRING,
+        owner=None,
+        curated=True,
+        written_by_session=user.edit_session,
+        approved_by=user.id_persistent,
+    )
+
+
+@pytest.fixture()
 def mock_mfa(mocker):
     mock = MagicMock(return_value=True)
     mocker.patch("cosmae.util.auth.check_mfa", mock)
