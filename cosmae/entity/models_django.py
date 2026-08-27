@@ -107,16 +107,20 @@ class EntityHistory(EntityAbstract, HistoryMixin):
         )
 
 
-def entity_objects(date: Optional[datetime] = None):
+def entity_objects(date: Optional[datetime] = None, include_disabled: bool = False):
     "Get correct entity query set depending on whether a time limit is set."
     if date is None:
-        return Entity.objects
-    queryset = EntityHistory.objects.filter(time_edit__lte=date)
-    return queryset.filter(
-        id=models.Subquery(
-            queryset.filter(id_persistent=models.OuterRef("id_persistent"))
-            .values("id_persistent")
-            .annotate(max_id=Max("id"))
-            .values("max_id")[:1]
+        queryset = Entity.objects
+    else:
+        queryset = EntityHistory.objects.filter(time_edit__lte=date)
+        queryset = queryset.filter(
+            id=models.Subquery(
+                queryset.filter(id_persistent=models.OuterRef("id_persistent"))
+                .values("id_persistent")
+                .annotate(max_id=Max("id"))
+                .values("max_id")[:1]
+            )
         )
-    )
+    if include_disabled:
+        return queryset
+    return queryset.filter(disabled=False)
