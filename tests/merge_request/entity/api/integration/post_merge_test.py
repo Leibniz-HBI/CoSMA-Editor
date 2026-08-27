@@ -2,9 +2,8 @@
 from unittest.mock import MagicMock, patch
 
 import tests.merge_request.entity.common as c
-import tests.user.common as cu
 from cosmae.exception import NotAuthenticatedException
-from cosmae.merge_request.entity.queue import apply_entity_merge_request
+from cosmae.merge_request.entity.models_django import EntityMergeRequest
 from tests.merge_request.entity.api.integration import requests as req
 
 
@@ -43,54 +42,20 @@ def test_normal_user(auth_server1, merge_request_user):
 
 def test_start_merge(
     auth_server_commissioner,
+    user_commissioner,
     conflict_resolution_keep1,
     resolution_curated_destination_none,
 ):
     server, cookies = auth_server_commissioner
-    mock = MagicMock()
-    with patch("cosmae.merge_request.entity.api.enqueue", mock):
-        rsp = req.post_start_merge(
-            server.url,
-            c.id_merge_request_persistent,
-            cookies=cookies,
-        )
-    assert rsp.status_code == 200
-    mock.assert_called_once_with(
-        apply_entity_merge_request,
+    rsp = req.post_start_merge(
+        server.url,
         c.id_merge_request_persistent,
-        cu.test_uuid_commissioner,
+        cookies=cookies,
     )
-
-
-def test_conflict_updated_merge(
-    auth_server_commissioner,
-    conflict_resolution_keep1,
-    value_curated_updated1,
-):
-    server, cookies = auth_server_commissioner
-    mock = MagicMock()
-    with patch("cosmae.merge_request.entity.api.enqueue", mock):
-        rsp = req.post_start_merge(
-            server.url,
-            c.id_merge_request_persistent,
-            cookies=cookies,
-        )
-    assert rsp.status_code == 400
-    mock.assert_not_called()
-
-
-def test_unresolved_conflict(
-    auth_server_commissioner,
-    instances_merge_request_origin_user,
-    conflict_resolution_unresolved0,
-):
-    server, cookies = auth_server_commissioner
-    mock = MagicMock()
-    with patch("cosmae.merge_request.entity.api.enqueue", mock):
-        rsp = req.post_start_merge(
-            server.url,
-            c.id_merge_request_persistent,
-            cookies=cookies,
-        )
-    assert rsp.status_code == 400
-    mock.assert_not_called()
+    assert rsp.status_code == 200
+    mr = EntityMergeRequest.objects.get(id_persistent=c.id_merge_request_persistent)
+    assert mr.state == EntityMergeRequest.State.RESOLVED
+    assert (
+        mr.approved_by_session.id_persistent
+        == user_commissioner.edit_session.id_persistent
+    )

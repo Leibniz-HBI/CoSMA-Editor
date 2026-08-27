@@ -6,7 +6,6 @@ from uuid import uuid4
 
 from django.db import DatabaseError, transaction
 from django.http import HttpRequest
-from django_rq import enqueue
 from ninja import Router, Schema
 
 from cosmae.column.models_django import Column as ColumnDb
@@ -26,7 +25,6 @@ from cosmae.merge_request.entity.models_django import (
 from cosmae.merge_request.entity.models_django import (
     EntityMergeRequest as EntityMergeRequestDb,
 )
-from cosmae.merge_request.entity.queue import apply_entity_merge_request
 from cosmae.user.model_conversion.public import user_db_to_public_user_info
 from cosmae.user.models_api.public import PublicUserInfo
 from cosmae.util import CosmaeUser as CosmaeUserDb
@@ -282,35 +280,9 @@ def post_merge_request_merge(  # pylint: disable=too-many-return-statements
                 or EntityMergeRequestDb.State.ERROR
             ):
                 return 400, ApiError(msg="Merge request not available for merging.")
-            writable_columns = column_objects().for_user(user, True)
-            resolvable, _, updated = merge_request.conflicts_unresolvable_updated(
-                writable_columns
-            )
-            if len(updated) > 0:
-                return 400, ApiError(
-                    msg="There are conflicts for the merge request, "
-                    "where the underlying data has changed."
-                )
-            if (
-                len(
-                    [
-                        conflict
-                        for conflict in resolvable
-                        if conflict.replacement_state is None
-                    ]
-                )
-                > 0
-            ):
-                return 400, ApiError(
-                    msg="There are unresolved conflicts, that are resolvable by you."
-                )
+            merge_request.approved_by_session = user.edit_session
             merge_request.state = EntityMergeRequestDb.State.RESOLVED
-            merge_request.save(update_fields=["state"])
-            enqueue(
-                apply_entity_merge_request,
-                str(merge_request.id_persistent),
-                str(user.id_persistent),
-            )
+            merge_request.save(update_fields=["state", "approved_by_session"])
             return 200, None
     except NotAuthenticatedException:
         return 401, ApiError(msg="Not authenticated.")

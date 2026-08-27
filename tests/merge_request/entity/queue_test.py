@@ -22,8 +22,9 @@ def test_creates_column_merge_requests(conflict_resolution_unresolved0, user):
     "Make sure a column merge request is created for an unresolved conflict"
     merge_request = conflict_resolution_unresolved0.merge_request
     merge_request.state = EntityMergeRequest.State.RESOLVED
+    merge_request.approved_by_session = user.edit_session
     merge_request.save()
-    apply_entity_merge_request(merge_request.id_persistent, user.id_persistent)
+    apply_entity_merge_request(merge_request.id_persistent)
     most_recent = Entity.objects.exclude_disabled().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
     column_merge_requests = (
@@ -54,8 +55,9 @@ def test_applies_resolution_empty_destination(
     resolution = conflict_resolution_replace_empty_destination
     merge_request = resolution.merge_request
     merge_request.state = EntityMergeRequest.State.RESOLVED
+    merge_request.approved_by_session = user1.edit_session
     merge_request.save()
-    apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
+    apply_entity_merge_request(merge_request.id_persistent)
     most_recent = Entity.objects.exclude_disabled().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
     assert most_recent.merged_from == c.id_entity_origin_persistent
@@ -80,8 +82,9 @@ def test_applies_resolution_empty_destination(
 def test_applies_resolutions(conflict_resolution_replace0, user1):
     merge_request = conflict_resolution_replace0.merge_request
     merge_request.state = EntityMergeRequest.State.RESOLVED
+    merge_request.approved_by_session = user1.edit_session
     merge_request.save()
-    apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
+    apply_entity_merge_request(merge_request.id_persistent)
     most_recent = Entity.objects.exclude_disabled().get()
     assert most_recent.merged_from == c.id_entity_origin_persistent
     assert most_recent.display_txt == c.display_txt_entity_destination
@@ -99,8 +102,9 @@ def test_applies_resolution_replacement_value(
     resolution = conflict_resolution_replacement_value
     merge_request = resolution.merge_request
     merge_request.state = EntityMergeRequest.State.RESOLVED
+    merge_request.approved_by_session = user1.edit_session
     merge_request.save()
-    apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
+    apply_entity_merge_request(merge_request.id_persistent)
     most_recent = Entity.objects.exclude_disabled().get()
     assert most_recent.merged_from == c.id_entity_origin_persistent
     assert most_recent.display_txt == c.display_txt_entity_destination
@@ -123,6 +127,7 @@ def test_applies_resolution_replacement_value(
 
 def test_copies_justification(conflict_resolution_replace0, user_commissioner):
     merge_request = conflict_resolution_replace0.merge_request
+    merge_request.approved_by_session = user_commissioner.edit_session
     merge_request.state = EntityMergeRequest.State.RESOLVED
     merge_request.save()
     time = c.time_merge_request
@@ -140,9 +145,7 @@ def test_copies_justification(conflict_resolution_replace0, user_commissioner):
         time,
         merge_request.created_by,
     )
-    apply_entity_merge_request(
-        merge_request.id_persistent, user_commissioner.id_persistent
-    )
+    apply_entity_merge_request(merge_request.id_persistent)
     assert (
         len(
             EntityJustification.for_id_entity_persistent_unordered(
@@ -160,8 +163,9 @@ def test_creates_column_merge_request_for_updated(
 ):
     merge_request = conflict_resolution_keep1.merge_request
     merge_request.state = EntityMergeRequest.State.RESOLVED
+    merge_request.approved_by_session = user1.edit_session
     merge_request.save()
-    apply_entity_merge_request(merge_request.id_persistent, user1.id_persistent)
+    apply_entity_merge_request(merge_request.id_persistent)
     most_recent = Entity.objects.exclude_disabled().get()
     assert most_recent.display_txt == c.display_txt_entity_destination
     column_merge_requests = list(
