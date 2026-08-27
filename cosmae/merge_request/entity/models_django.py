@@ -1,7 +1,6 @@
 "Models for entity merge requests."
 
 from __future__ import annotations
-
 from typing import Optional
 
 from django.db import models
