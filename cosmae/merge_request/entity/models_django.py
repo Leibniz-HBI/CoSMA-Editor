@@ -64,6 +64,13 @@ class AbstractMergeRequest(models.Model):
     created_at = models.DateTimeField()
     id_persistent = models.UUIDField(primary_key=True)
     state = models.TextField(max_length=3, choices=State, default=State.CREATED)
+    approved_by_session = models.ForeignKey(
+        "EditSession",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        default=None,
+    )
 
     class Meta:
         "Meta class for abstract merge request django model"

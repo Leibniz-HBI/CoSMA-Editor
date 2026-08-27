@@ -142,9 +142,11 @@ def connect_data_publication_signal():
     )
 
 
-def connect_compute_column_conflicts_signal():
+def connect_compute_conflicts_signals():
     "Connect the signal for reading csv files on uploads."
     # pylint: disable=import-outside-toplevel
+    from cosmae.merge_request.entity.models_django import EntityMergeRequest
+    from cosmae.merge_request.entity.queue import entity_conflicts_signal_handler
     from cosmae.merge_request.models_django import ColumnMergeRequest
     from cosmae.merge_request.queue import column_conflicts_signal_handler
 
@@ -152,4 +154,9 @@ def connect_compute_column_conflicts_signal():
         column_conflicts_signal_handler,
         sender=ColumnMergeRequest,
         dispatch_uid="cosmae.start_conflict_computation",
+    )
+    post_save.connect(
+        entity_conflicts_signal_handler,
+        sender=EntityMergeRequest,
+        dispatch_uid="cosmae.start_entity_conflict_computation",
     )

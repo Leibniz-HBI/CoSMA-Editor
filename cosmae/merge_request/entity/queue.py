@@ -33,16 +33,13 @@ class NotResolvedException(Exception):
     "Raised when resolving is tried for unresolved merge requests."
 
 
-def apply_entity_merge_request(
-    id_entity_merge_request_persistent: str, id_user_persistent
-):
+def apply_entity_merge_request(id_entity_merge_request_persistent: str):
     """Queue method for applying merge requests.
     Unresolved conflicts will result in a column merge request."""
     # pylint: disable=too-many-locals
     mr_query = EntityMergeRequest.objects.filter(  # pylint: disable=no-member
         id_persistent=id_entity_merge_request_persistent
     )
-    user_query = CosmaeUser.by_id_persistent_query_set(id_user_persistent)
     time_edit = timestamp()
     try:
         with transaction.atomic():
@@ -52,7 +49,9 @@ def apply_entity_merge_request(
                 if merge_request.state == EntityMergeRequest.State.MERGED:
                     return
                 raise NotResolvedException("Entity Merge request is not resolved.")
-            user = user_query.get()
+            user = CosmaeUser.by_id_persistent_query_set(
+                merge_request.approved_by_session.id_owner_persistent
+            ).get()
             resolutions = EntityConflictResolution.for_merge_request_query_set(
                 merge_request
             )
@@ -307,3 +306,27 @@ def store_conflicts(merge_request, conflicts, entity_origin, entity_destination)
             replacement_value=None,
         )
     return max_idx
+
+
+def entity_conflicts_signal_handler(  # pylint: disable=unused-argument
+    sender, instance, created, update_fields, **kwargs
+):
+    "Signal handler for triggering column conflict computation."
+    if not (created or (update_fields and "state" in update_fields)):
+        return
+    if instance.state == EntityMergeRequest.State.CONFLICTS:
+        enqueue(
+            merge_request_compute_conflicts,
+            args=(
+                str(
+                    instance.id_persistent,
+                ),
+            ),
+            job_timeout=60 * 12,
+        )
+    elif instance.state == ColumnMergeRequest.State.RESOLVED:
+        enqueue(
+            apply_entity_merge_request,
+            args=(str(instance.id_persistent),),
+            job_timeout=60 * 12,
+        )
