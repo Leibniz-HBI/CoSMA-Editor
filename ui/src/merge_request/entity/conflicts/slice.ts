@@ -41,9 +41,15 @@ export const entityMergeRequestConflictSlice = createSlice({
         },
         getEntityMergeRequestConflictsSuccess(
             state: EntityMergeRequestConflictsState,
-            action: PayloadAction<EntityMergeRequestConflicts>
+            action: PayloadAction<{
+                conflicts: EntityMergeRequestConflicts
+                idMergeRequestPersistent: string
+            }>
         ) {
-            state.conflicts = newRemote(action.payload)
+            if (action.payload.idMergeRequestPersistent !== state.mergeRequest.value?.idPersistent) {
+                return
+            }
+            state.conflicts = newRemote(action.payload.conflicts)
         },
         getEntityMergeRequestConflictsError(state: EntityMergeRequestConflictsState) {
             state.conflicts.isLoading = false
@@ -71,8 +77,7 @@ export const entityMergeRequestConflictSlice = createSlice({
             if (conflicts === undefined) {
                 return
             }
-            const updatedIdx =
-                conflicts.updatedColumnIdMap[idColumnPersistent]
+            const updatedIdx = conflicts.updatedColumnIdMap[idColumnPersistent]
             if (updatedIdx !== undefined) {
                 conflicts.updated.splice(updatedIdx, 1)
             }
@@ -82,15 +87,11 @@ export const entityMergeRequestConflictSlice = createSlice({
                     idx
                 ])
             )
-            updateRelevantEntityConflict(
-                state,
-                idColumnPersistent,
-                (conflict) => {
-                    conflict.isLoading = false
-                    conflict.value.replacementState = replacementState
-                    conflict.value.replacementValue = replacementValue
-                }
-            )
+            updateRelevantEntityConflict(state, idColumnPersistent, (conflict) => {
+                conflict.isLoading = false
+                conflict.value.replacementState = replacementState
+                conflict.value.replacementValue = replacementValue
+            })
         },
         resolveEntityConflictError(
             state: EntityMergeRequestConflictsState,
@@ -167,6 +168,7 @@ export const entityMergeRequestConflictSlice = createSlice({
         },
         clearEntityMergeState(state: EntityMergeRequestConflictsState) {
             state.merge = newRemote(undefined)
+            state.conflicts = newRemote(undefined)
         }
     }
 })
@@ -180,9 +182,7 @@ function updateRelevantEntityConflict(
         return
     }
     const conflictIdx =
-        state.conflicts.value.resolvableConflictsColumnIdMap[
-            idColumnPersistent
-        ]
+        state.conflicts.value.resolvableConflictsColumnIdMap[idColumnPersistent]
     if (conflictIdx !== undefined) {
         strategy(state.conflicts.value.resolvableConflicts[conflictIdx])
     }

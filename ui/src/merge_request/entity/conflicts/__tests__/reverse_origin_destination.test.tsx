@@ -5,9 +5,7 @@ import { vi, Mock } from 'vitest'
 import { waitFor, screen } from '@testing-library/react'
 import { newRemote } from '../../../../util/state'
 import { UserPermissionGroup } from '../../../../user/state'
-import {
-    newEntityMergeRequestConflict
-} from '../state'
+import { newEntityMergeRequestConflict } from '../state'
 import { EntityMergeRequestConflictHeader } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
 import { ReplacementState } from '../../../conflicts/state'
@@ -146,7 +144,8 @@ function addSuccessResponse(fetchMock: Mock) {
             200,
             {
                 merge_request: entityMergeRequestApi,
-                resolvable_conflicts: [
+                next_offset: 1,
+                conflicts: [
                     {
                         column: {
                             name_path: namePathResolvable0,
@@ -230,6 +229,16 @@ function addSuccessResponse(fetchMock: Mock) {
                         }
                     }
                 ]
+            }
+        ],
+        [
+            200,
+            {
+                merge_request: entityMergeRequestApi,
+                next_offset: -1,
+                conflicts: [],
+                updated: [],
+                unresolvable_conflicts: []
             }
         ]
     ])
@@ -450,7 +459,11 @@ test('swap origin and destination', async () => {
             { credentials: 'include', method: 'POST' }
         ],
         [
-            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts`,
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts?offset=0&limit=30`,
+            { credentials: 'include' }
+        ],
+        [
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts?offset=1&limit=30`,
             { credentials: 'include' }
         ]
     ])

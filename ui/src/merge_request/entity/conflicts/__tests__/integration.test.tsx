@@ -2,16 +2,10 @@
  * @vitest-environment jsdom
  */
 import { vi, Mock } from 'vitest'
-import {
-    waitFor,
-    screen,
-    getByText
-} from '@testing-library/react'
+import { waitFor, screen, getByText } from '@testing-library/react'
 import { newRemote } from '../../../../util/state'
 import { UserPermissionGroup } from '../../../../user/state'
-import {
-    newEntityMergeRequestConflict
-} from '../state'
+import { newEntityMergeRequestConflict } from '../state'
 import { EntityMergeRequestConflictView } from '../components'
 import { EntityMergeRequestStep, newEntityMergeRequest } from '../../state'
 import { ReplacementState } from '../../../conflicts/state'
@@ -145,8 +139,9 @@ function addSuccessResponse(fetchMock: Mock) {
         [
             200,
             {
+                next_offset: 1,
                 merge_request: entityMergeRequestApi,
-                resolvable_conflicts: [
+                conflicts: [
                     {
                         column: {
                             name_path: namePathResolvable0,
@@ -226,6 +221,16 @@ function addSuccessResponse(fetchMock: Mock) {
                         }
                     }
                 ]
+            }
+        ],
+        [
+            200,
+            {
+                merge_request: entityMergeRequestApi,
+                next_offset: -1,
+                conflicts: [],
+                updated: [],
+                unresolvable_conflicts: []
             }
         ],
         [200, {}]
