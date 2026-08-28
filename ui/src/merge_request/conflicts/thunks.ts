@@ -76,17 +76,24 @@ export function getMergeRequestConflicts(
                     query: { offset, limit: 30 }
                 })
                 if (rsp.data) {
-                    const updatedSet = new Set(
-                        rsp.data.id_value_origin_persistent_updated_list
+                    const newUpdatedList = rsp.data.updated_conflicts.map((conflict) =>
+                        parseMergeRequestConflictFromApi(conflict)
                     )
                     rsp.data.conflicts.forEach(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (conflictRsp: any) => {
                             const conflict =
                                 parseMergeRequestConflictFromApi(conflictRsp)
-                            conflicts.push(conflict)
-                            if (updatedSet.has(conflict.valueOrigin.idPersistent)) {
-                                updated.push(conflict)
+                            const newUpdated = newUpdatedList.find(
+                                (updated: MergeRequestConflict) =>
+                                    updated.valueOrigin.idPersistent ==
+                                    conflict.valueOrigin.idPersistent
+                            )
+                            if (newUpdated !== undefined) {
+                                updated.push(newUpdated)
+                                conflicts.push(newUpdated)
+                            } else {
+                                conflicts.push(conflict)
                             }
                         }
                     )

@@ -708,9 +708,9 @@ function initialResponseSequence(fetchMock: Mock) {
         [
             200,
             {
-                id_value_origin_persistent_updated_list: [
-                    sharedConflictJson.value_origin.id_persistent,
-                    sharedConflictJson1.value_origin.id_persistent
+                updated_conflicts: [
+                    sharedConflictJson,
+                    sharedConflictJson1
                 ],
                 next_offset: 12,
                 conflicts: [
@@ -765,7 +765,7 @@ function initialResponseSequence(fetchMock: Mock) {
             {
                 next_offset: -1,
                 conflicts: [],
-                id_value_origin_persistent_updated_list: []
+                updated_conflicts: []
             }
         ]
     ])

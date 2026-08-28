@@ -145,7 +145,8 @@ function addSuccessResponse(fetchMock: Mock) {
             200,
             {
                 merge_request: entityMergeRequestApi,
-                resolvable_conflicts: [
+                next_offset: 1,
+                conflicts: [
                     {
                         column: {
                             name_path: namePathResolvable0,
@@ -229,6 +230,16 @@ function addSuccessResponse(fetchMock: Mock) {
                         }
                     }
                 ]
+            }
+        ],
+        [
+            200,
+            {
+                next_offset: -1,
+                merge_request: entityMergeRequestApi,
+                conflicts: [],
+                updated: [],
+                unresolvable_conflicts: []
             }
         ],
         [200, {}]
@@ -446,7 +457,11 @@ test('apply conflicts', async () => {
     })
     await expectFetchCallList(fetchMock.mock.calls, [
         [
-            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts`,
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts?offset=0&limit=30`,
+            { credentials: 'include' }
+        ],
+        [
+            `http://127.0.0.1:8000/cosmae/api/merge_requests/entities/${idEntityMr0}/conflicts?offset=1&limit=30`,
             { credentials: 'include' }
         ],
         [

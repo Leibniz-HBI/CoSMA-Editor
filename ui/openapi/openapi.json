@@ -4070,6 +4070,24 @@
                             "type": "string"
                         },
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "offset",
+                        "schema": {
+                            "title": "Offset",
+                            "type": "integer"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "title": "Limit",
+                            "type": "integer"
+                        },
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -8870,11 +8888,11 @@
                     "merge_request": {
                         "$ref": "#/components/schemas/EntityMergeRequest"
                     },
-                    "resolvable_conflicts": {
+                    "conflicts": {
                         "items": {
                             "$ref": "#/components/schemas/EntityMergeRequestConflict"
                         },
-                        "title": "Resolvable Conflicts",
+                        "title": "Conflicts",
                         "type": "array"
                     },
                     "updated": {
@@ -8890,13 +8908,18 @@
                         },
                         "title": "Unresolvable Conflicts",
                         "type": "array"
+                    },
+                    "next_offset": {
+                        "title": "Next Offset",
+                        "type": "integer"
                     }
                 },
                 "required": [
                     "merge_request",
-                    "resolvable_conflicts",
+                    "conflicts",
                     "updated",
-                    "unresolvable_conflicts"
+                    "unresolvable_conflicts",
+                    "next_offset"
                 ],
                 "title": "GetEntityMergeRequestConflictsResponse",
                 "type": "object"

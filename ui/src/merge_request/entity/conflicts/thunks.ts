@@ -109,23 +109,54 @@ export function getEntityMergeRequestConflicts(
     return async (dispatch: AppDispatch, _getState, _fetch) => {
         try {
             dispatch(getEntityMergeRequestConflictsStart())
-            const rsp = await cosmaeMergeRequestEntityApiGetMergeRequestConflicts({
-                path: { id_merge_request_persistent: idEntityMergeRequest }
-            })
-            if (rsp.data) {
-                const resolvableConflicts = rsp.data.resolvable_conflicts.map(
-                    (conflictJson) =>
-                        newRemote(parseEntityMergeRequestConflictFromJson(conflictJson))
-                )
-                const unresolvableConflicts = rsp.data.unresolvable_conflicts.map(
-                    (conflictJson) =>
-                        newRemote(parseEntityMergeRequestConflictFromJson(conflictJson))
-                )
-                const updated = rsp.data.updated.map((conflictJson) =>
-                    newRemote(parseEntityMergeRequestConflictFromJson(conflictJson))
-                )
-                dispatch(
-                    getEntityMergeRequestConflictsSuccess({
+            const resolvableConflicts: RemoteInterface<EntityMergeRequestConflict>[] =
+                []
+            const updated: RemoteInterface<EntityMergeRequestConflict>[] = []
+            const unresolvableConflicts: RemoteInterface<EntityMergeRequestConflict>[] =
+                []
+            for (let offset = 0; offset >= 0; ) {
+                const rsp = await cosmaeMergeRequestEntityApiGetMergeRequestConflicts({
+                    path: { id_merge_request_persistent: idEntityMergeRequest },
+                    query: { offset, limit: 30 }
+                })
+                if (rsp.data) {
+                    const newUnresolvable = rsp.data.unresolvable_conflicts.map(
+                        (conflictJson) =>
+                            parseEntityMergeRequestConflictFromJson(conflictJson)
+                    )
+                    newUnresolvable.forEach((conflict) => {
+                        unresolvableConflicts.push(newRemote(conflict))
+                    })
+                    const newUpdated = rsp.data.updated.map((conflictJson) =>
+                        parseEntityMergeRequestConflictFromJson(conflictJson)
+                    )
+                    offset = rsp.data.next_offset
+                    rsp.data.conflicts.forEach((conflictRsp) => {
+                        const conflict =
+                            parseEntityMergeRequestConflictFromJson(conflictRsp)
+
+                        const updatedConflict = newUpdated.find(
+                            (updated: EntityMergeRequestConflict) =>
+                                updated.valueOrigin.idPersistent ==
+                                conflict.valueOrigin.idPersistent
+                        )
+                        if (updatedConflict !== undefined) {
+                            updated.push(newRemote(updatedConflict))
+                            resolvableConflicts.push(newRemote(updatedConflict))
+                        } else {
+                            resolvableConflicts.push(newRemote(conflict))
+                        }
+                    })
+                } else {
+                    dispatch(getEntityMergeRequestConflictsError())
+                    dispatch(addError(errorMessageFromApi(rsp.error)))
+                    return
+                }
+            }
+            dispatch(
+                getEntityMergeRequestConflictsSuccess({
+                    idMergeRequestPersistent: idEntityMergeRequest,
+                    conflicts: {
                         resolvableConflicts,
                         unresolvableConflicts,
                         updated,
@@ -145,12 +176,9 @@ export function getEntityMergeRequestConflicts(
                                 ) => [conflict.value.column.idPersistent, idx]
                             )
                         )
-                    })
-                )
-            } else {
-                dispatch(getEntityMergeRequestConflictsError())
-                dispatch(addError(errorMessageFromApi(rsp.error)))
-            }
+                    }
+                })
+            )
         } catch (e: unknown) {
             dispatch(getEntityMergeRequestConflictsError())
             dispatch(addError(exceptionMessage(e)))
