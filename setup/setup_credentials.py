@@ -58,7 +58,7 @@ def mk_parser():
         help="Specify where the data should be located",
         default="/srv/cosmae",
     )
-    parser.add_argument("--ssh-key", help="Path to the public ssh key", required=True)
+    parser.add_argument("--ssh-key", help="Path to the public ssh key")
     parser.add_argument(
         "--system-user", help="Name of the created user.", default="cosmae"
     )
@@ -277,7 +277,7 @@ def copy_matching_lines(file_path, target_path, match_idx, match_set):
 def run_setup_credentials(
     base_dir, group_name, system_user, initial_user, ssh_key_path
 ):
-    "Perform all necessary steps to setup credentials for SSH tunnel proxy."
+    "Perform all necessary steps to setup folders and credentials."
     # group is used on host and in containers
     group_id = create_group(group_name)
     # system user is used on host and in containers
@@ -287,6 +287,18 @@ def run_setup_credentials(
     contributions_dir = path.join(base_dir, "contributions")
     mkdir(contributions_dir)
     chown(contributions_dir, system_user_id, group_id)
+    if ssh_key_path is None:
+        setup_no_ssh(base_dir, group_id, system_user_id)
+    else:
+        setup_ssh(
+            base_dir, system_user, initial_user, ssh_key_path, group_id, system_user_id
+        )
+
+
+def setup_ssh(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    base_dir, system_user, initial_user, ssh_key_path, group_id, system_user_id
+):
+    "Setup necessary files and folders for ssh."
     credentials_dir = f"{base_dir}/credentials"
     if not path.exists(credentials_dir):
         mkdir(credentials_dir)
@@ -319,6 +331,16 @@ def run_setup_credentials(
     chown(ssh_pth, first_proxy_user_id, group_id)
     chown(user_home, system_user_id, group_id)
     chown(initial_user_home, first_proxy_user_id, group_id)
+
+
+def setup_no_ssh(base_dir, group_id, system_user_id):
+    "Setup necessary files and folders for no ssh variant."
+    challenge_dir = path.join(base_dir, "acme-challenge")
+    mkdir(challenge_dir)
+    chown(challenge_dir, system_user_id, group_id)
+    ssl_dir = path.join(base_dir, "ssl")
+    mkdir(ssl_dir)
+    chown(ssl_dir, system_user_id, group_id)
 
 
 if __name__ == "__main__":
