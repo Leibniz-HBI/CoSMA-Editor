@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from allauth.account.models import EmailAddress
 from django.db import DatabaseError
+from pytest import fixture
 
 import tests.user.common as c
 import tests.user.ssh.common as c_ssh
@@ -33,6 +34,7 @@ def test_contributor(auth_server):
             "email": "other@test.org",
             "names_personal": c.test_names_personal,
             "password": c.test_password,
+            "ssh_key": c_ssh.ssh_key,
         },
         cookies=cookies,
     )
@@ -48,6 +50,7 @@ def test_same_username(auth_server_commissioner):
             "email": "other@test.org",
             "names_personal": c.test_names_personal_commissioner,
             "password": c.test_password_commissioner,
+            "ssh_key": c_ssh.ssh_key,
         },
         cookies=cookies,
     )
@@ -73,6 +76,7 @@ def test_same_email(auth_server_commissioner):
             "email": c.test_email_commissioner,
             "names_personal": c.test_names_personal_commissioner,
             "password": c.test_password_commissioner,
+            "ssh_key": c_ssh.ssh_key,
         },
         cookies=cookies,
     )
@@ -110,6 +114,41 @@ def test_same_personal_names(auth_server_commissioner):
     )
 
 
+def test_missing_ssh(auth_server_commissioner):
+    live_server, cookies = auth_server_commissioner
+    rsp = post_create_user(
+        live_server.url,
+        {
+            "username": "other",
+            "email": "other@test.org",
+            "names_personal": c.test_names_personal_commissioner,
+            "password": c.test_password_commissioner,
+        },
+        cookies=cookies,
+    )
+    assert rsp.status_code == 400
+
+
+@fixture()
+def no_ssh_settings(settings):
+    settings.USE_SSH = False
+
+
+def test_ssh_not_configured(auth_server_commissioner, no_ssh_settings):
+    live_server, cookies = auth_server_commissioner
+    rsp = post_create_user(
+        live_server.url,
+        {
+            "username": "other",
+            "email": "other@test.org",
+            "names_personal": c.test_names_personal_commissioner,
+            "password": c.test_password_commissioner,
+        },
+        cookies=cookies,
+    )
+    assert rsp.status_code == 200
+
+
 def test_rollback(auth_server_commissioner):
     "Test that a user is deleted when sending mail fails."
     live_server, cookies = auth_server_commissioner
@@ -123,6 +162,7 @@ def test_rollback(auth_server_commissioner):
                 "email": "other@test.org",
                 "names_personal": c.test_names_personal_commissioner,
                 "password": c.test_password_commissioner,
+                "ssh_key": c_ssh.ssh_key,
             },
             cookies=cookies,
         )
@@ -154,6 +194,7 @@ def test_bad_db(auth_server_commissioner):
                 "email": "other@test.org",
                 "names_personal": c.test_names_personal,
                 "password": c.test_password,
+                "ssh_key": c_ssh.ssh_key,
             },
             cookies=cookies,
         )

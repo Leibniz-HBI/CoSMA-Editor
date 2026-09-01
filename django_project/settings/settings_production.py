@@ -28,6 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 CONTRIBUTION_DIRECTORY = Path("/srv/cosmae/contributions")
 USER_HOME_BASE_DIR = Path("/srv/cosmae/home")
 CREDENTIALS_DIR = Path("/srv/cosmae/credentials")
+USE_SSH = environ.get("USE_SSH", "true").lower() == "true"
 
 
 def _get_group_info():

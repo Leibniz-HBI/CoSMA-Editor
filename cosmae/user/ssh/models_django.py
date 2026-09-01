@@ -2,6 +2,7 @@
 
 from uuid import uuid4
 
+from django.conf import settings
 from django.db import models
 
 
@@ -20,9 +21,17 @@ class SshKey(models.Model):
         def __init__(self, msg):
             self.msg = msg
 
+    class SshNotEnabledException(Exception):
+        "Indicate that SSH is not enabled."
+
+        def __init__(self, msg):
+            self.msg = msg
+
     @classmethod
     def add_key(cls, user, key):
         "Add a new SSH key for a user."
+        if not settings.USE_SSH:
+            raise cls.SshNotEnabledException(msg="SSH is not configured.")
         uuid = str(uuid4())
         key_verified = check_key(key)
         if len(key_verified) == 1:
