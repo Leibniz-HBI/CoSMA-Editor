@@ -31,6 +31,8 @@ RUN npm run openapi
 RUN npm run build
 
 FROM nginx:1.29.0-alpine
+ARG NGINX_CONF
 COPY --from=builder /cosmae/build /srv/cosmae
 COPY container/resources/robots.txt /srv/cosmae
-COPY container/resources/nginx.conf /etc/nginx
+RUN echo ${NGINX_CONF}
+COPY container/resources/${NGINX_CONF} /etc/nginx/nginx.conf
