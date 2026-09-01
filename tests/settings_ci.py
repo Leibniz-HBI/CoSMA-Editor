@@ -21,6 +21,7 @@ DOMAIN_NAME = "cosmae.test.org"
 BASE_DIR = Path(__file__).resolve().parent / "django_test_base"
 SECRET_DIR = Path(__file__).resolve().parent / ".secrets_local"
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "cosmae/templates"
+USE_SSH = True
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/

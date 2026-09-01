@@ -111,6 +111,8 @@ def connect_password_changed_signal():
 
 def connect_set_ssh_keys():
     "Connect signal for setting SSH keys"
+    if not settings.USE_SSH:
+        return
     # pylint: disable=import-outside-toplevel
     from cosmae.management.user.queue import dispatch_set_ssh_keys
     from cosmae.user.ssh.models_django import SshKey

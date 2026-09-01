@@ -68,11 +68,18 @@ def put_ssh_key(request: HttpRequest, key: SshKeyPutRequest):
         key_db = SshKeyDb.add_key(user_target, key.key)
         return 200, ssh_key_db_to_api_with_id(key_db)
     except SshKeyDb.InvalidSshKeyException as exc:
-        return 400, ApiError(msg=exc.msg)
+        status = 400
+        msg = exc.msg
+    except SshKeyDb.SshNotEnabledException:
+        status = 400
+        msg = "SSH is not configured. Therefore you do not need to add an SSH key."
     except CosmaeUser.DoesNotExist:
-        return 404, ApiError(msg="User does not exist.")
+        status = 404
+        msg = "User does not exist."
     except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not add SSH key.")
+        status = 500
+        msg = "Could not add SSH key."
+    return status, ApiError(msg=msg)
 
 
 @router.get("", response={200: SshKeyList, 401: ApiError, 403: ApiError, 500: ApiError})

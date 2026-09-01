@@ -5,10 +5,11 @@ from logging import getLogger
 from allauth.account import signals
 from allauth.account.models import Login
 from allauth.headless.account.inputs import SignupInput
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from ninja import Field, Router, Schema
 
-from cosmae.exception import ApiError, NotAuthenticatedException
+from cosmae.exception import NotAuthenticatedException
 from cosmae.user.adapter import AccountExistsException
 from cosmae.user.model_conversion.login import user_db_to_login_response
 from cosmae.user.ssh.models_django import SshKey
@@ -30,7 +31,7 @@ class CreateUserRequest(Schema):
     names_family: str | None = Field(None, min_length=2, max_length=150)
     email: str = Field(None, min_length=2, max_length=150)
     password: str = Field(None, min_length=8, max_length=50)
-    ssh_key: str = Field(None, min_length=5)
+    ssh_key: str | None = Field(None, min_length=5)
 
     def __str__(self) -> str:
         as_dict = super().dict()
@@ -71,7 +72,9 @@ def post_create_user(request, user_request_data: CreateUserRequest):
         if user_request.permission_group != CosmaeUser.COMMISSIONER:
             return single_error_allauth_like_response(403, "Insufficient permissions.")
     except NotAuthenticatedException:
-        return 401, ApiError(msg="Not authenticated")
+        return single_error_allauth_like_response(401, msg="Not authenticated")
+    if settings.USE_SSH and user_request_data.ssh_key is None:
+        return single_error_allauth_like_response(400, msg="SSH key is required.")
     try:
         signup_input = user_to_allauth(user_request_data)
         with transaction.atomic():
@@ -99,7 +102,7 @@ def post_create_user(request, user_request_data: CreateUserRequest):
             400, "Username or mail address already in use."
         )
     except SshKey.InvalidSshKeyException as exc:
-        return 400, ApiError(msg=exc.msg)
+        return single_error_allauth_like_response(400, exc.msg)
     except Exception as exc:  # pylint: disable=broad-except:
         _LOGGER.error("", exc_info=exc)
         return single_error_allauth_like_response(500, "Could not create user")

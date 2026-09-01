@@ -52,6 +52,7 @@ class AccountExistsException(Exception):
 
 
 class CosmaeAccountAdapter(DefaultAccountAdapter):
+    # pylint: disable=abstract-method
     "Allauth Account adapter for setting custom fields."
 
     def save_user(self, request, user, form, commit=True):
@@ -96,7 +97,10 @@ class CosmaeAccountAdapter(DefaultAccountAdapter):
                 )
                 user.edit_session = session
                 user.save()
-                SshKey.add_key(user, ssh_key)
+                try:
+                    SshKey.add_key(user, ssh_key)
+                except SshKey.SshNotEnabledException:
+                    pass
 
         return user
 

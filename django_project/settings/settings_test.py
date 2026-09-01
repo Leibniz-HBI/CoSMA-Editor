@@ -31,6 +31,7 @@ DEBUG = True
 CONTRIBUTION_DIRECTORY = Path("/srv/cosmae/contributions")
 USER_HOME_BASE_DIR = Path("/srv/cosmae/home")
 CREDENTIALS_DIR = Path("/srv/cosmae/credentials")
+USE_SSH = environ.get("USE_SSH", "true").lower() == "true"
 
 
 SYSTEM_GROUP_NAME, SYSTEM_GROUP_ID = ("cosmae", 70000)
