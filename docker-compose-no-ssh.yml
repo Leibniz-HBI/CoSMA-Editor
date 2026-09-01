@@ -79,15 +79,20 @@ services:
       - external
       - net_ssh_ui
 
+
   ui:
     build:
       context: ./
       dockerfile: container/ui_dockerfile
+      args:
+        NGINX_CONF: nginx-no-ssh.conf
     restart: unless-stopped
     ports:
       - 80:80
       - 443:443
     volumes:
+      - /srv/cosmae/ssl:/etc/ssl:ro
+      - /srv/cosmae/acme-challenge:/srv/acme-challenge
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_ui
     networks:

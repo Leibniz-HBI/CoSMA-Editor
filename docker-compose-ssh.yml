@@ -1,0 +1,222 @@
+secrets:
+  cosmae_db_password:
+    external: true
+  cosmae_db_user:
+    external: true
+  cosmae_db_name:
+    external: true
+  cosmae_django_key:
+    external: true
+  cosmae_redis_password:
+    external: true
+  cosmae_redis_conf:
+    external: true
+  cosmae_initial_admin_password:
+    external: true
+  orcid_client_id:
+    external: true
+  orcid_client_secret:
+    external: true
+  email_host:
+    external: true
+  email_host_port:
+    external: true
+  email_from:
+    external: true
+
+networks:
+  default:
+    name: cosmae_default
+    driver: overlay
+    internal: true
+  external:
+    name: cosmae_external
+    driver: overlay
+  net_ssh_ui:
+    name: cosmae_net_ssh_ui
+    driver: overlay
+    internal: true
+  net_ui_django:
+    name: cosmae_net_ui_django
+    driver: overlay
+    internal: true
+  net_django_db:
+    name: cosmae_net_django_db
+    driver: overlay
+    internal: true
+  net_django_redis:
+    name: cosmae_net_django_redis
+    driver: overlay
+    internal: true
+  net_queue_redis:
+    name: cosmae_net_redis_queue
+    driver: overlay
+    internal: true
+  net_queue_db:
+    name: cosmae_net_queue_db
+    driver: overlay
+    internal: true
+
+
+volumes:
+  db_volume:
+  redis_volume:
+
+services:
+  ssh:
+    build:
+      context: ./
+      dockerfile: container/ssh_dockerfile
+    volumes:
+      - ${HOST_DATA_DIR-/srv/cosmae}/ssh:/etc/ssh:ro
+      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/credentials:ro
+      - ${HOST_DATA_DIR-/srv/cosmae}/home:/srv/cosmae/home:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 1709:1709
+    image: 127.0.0.1:5000/cosmae_ssh
+    networks:
+      - external
+      - net_ssh_ui
+
+  ui:
+    build:
+      context: ./
+      dockerfile: container/ui_dockerfile
+      args:
+        NGINX_CONF: nginx-no-ssh.conf
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    image: 127.0.0.1:5000/cosmae_ui
+    networks:
+      - net_ssh_ui
+      - net_ui_django
+    # no need to set user as host fs is not written to.
+    # user: ${USER_ID}:${GROUP_ID}
+    # command: [nginx-debug, '-g', 'daemon off;']
+
+  queue_worker:
+    build:
+      context: ./
+      dockerfile: container/django_dockerfile
+    restart: unless-stopped
+    secrets:
+      - cosmae_django_key
+      - cosmae_db_name
+      - cosmae_db_user
+      - cosmae_db_password
+      - cosmae_redis_password
+      - cosmae_initial_admin_password
+      - orcid_client_id
+      - orcid_client_secret
+      - email_host
+      - email_host_port
+      - email_from
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${HOST_DATA_DIR-/srv/cosmae}/contributions:/srv/cosmae/contributions
+      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/srv/cosmae/credentials
+      - ${HOST_DATA_DIR-/srv/cosmae}/home:/srv/cosmae/home
+    image: 127.0.0.1:5000/cosmae_django
+    #  needs to run as root in order to chown
+    # user: ${USER_ID}:${GROUP_ID}
+    networks:
+      - net_queue_redis
+      - net_queue_db
+    command: [
+      "python",
+      "manage.py",
+      "rqworker",
+      "--with-scheduler"
+    ]
+
+  django:
+    build:
+      context: ./
+      dockerfile: container/django_dockerfile
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+    expose:
+      - 8000
+    secrets:
+      - cosmae_django_key
+      - cosmae_db_name
+      - cosmae_db_user
+      - cosmae_db_password
+      - cosmae_redis_password
+      - orcid_client_id
+      - orcid_client_secret
+      - email_host
+      - email_host_port
+      - email_from
+    volumes:
+      - ${HOST_DATA_DIR-/srv/cosmae}/contributions:/srv/cosmae/contributions
+      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/srv/cosmae/credentials
+      - /etc/localtime:/etc/localtime:ro
+    image: 127.0.0.1:5000/cosmae_django
+    user: ${USER_ID}:${GROUP_ID}
+    networks:
+      - net_ui_django
+      - net_django_db
+      - net_django_redis
+    # command: [
+    #   'gunicorn',
+    #   'django_project.asgi:application',
+    #   '-k',
+    #   'uvicorn.workers.UvicornWorker',
+    #   '-b 0.0.0.0:8000',
+    #   '--log-level',
+    #   'debug'
+    # ]
+
+  db:
+    build:
+      context: ./
+      dockerfile: container/db_dockerfile
+    image: 127.0.0.1:5000/cosmae_db
+    shm_size: 265m
+    restart: unless-stopped
+    ports:
+      - 172.0.0.1:5432:5432
+    environment:
+    - POSTGRES_PASSWORD_FILE=/run/secrets/cosmae_db_password
+    - POSTGRES_USER_FILE=/run/secrets/cosmae_db_user
+    - POSTGRES_DB_FILE=/run/secrets/cosmae_db_name
+    secrets:
+    - cosmae_db_password
+    - cosmae_db_user
+    - cosmae_db_name
+    volumes:
+    - db_volume:/var/lib/postgresql/data
+    - /etc/localtime:/etc/localtime:ro
+    user: ${USER_ID}:${GROUP_ID}
+    networks:
+      - net_django_db
+      - net_queue_db
+
+  redis:
+    build:
+      context: ./
+      dockerfile: container/redis_dockerfile
+    image: 127.0.0.1:5000/cosmae_redis
+    expose:
+      - 6379
+    volumes:
+      - redis_volume:/data
+      - /etc/localtime:/etc/localtime:ro
+    secrets:
+      - cosmae_redis_conf
+    user: ${USER_ID}:${GROUP_ID}
+    command: [
+      "redis-server",
+      "/etc/redis/redis.conf"
+    ]
+    restart: unless-stopped
+    networks:
+      - net_django_redis
+      - net_queue_redis
