@@ -56,17 +56,18 @@ Otherwise you would have to remove them from the docker compose file.
  * `email_from` to the address emails are sent from, e.g., `"cosmae@$YOUR_TLD"`
 ### Create Directories
 Create directories using `setup_credentials.py`.
+> If you do to provide an SSH key via the `--ssh-key` argument, the files for the SSH proxy will not be setup.
 The default location is `/srv/cosmae`. You can change it with the `--directory argument`
 ### Configure variables
 Set the following variables `django_project/settings/settings_production.py`
   * `DOMAIN_NAME` to the correct URL.
   * `EMAIL_SUBJECT_PREFIX` to a value indicating the name of the app.
 ## Build and Launch Containers
-
+> If you want to launch without the SSH proxy, use `docker-compose-no-ssh.yml` instead of `docker-compose-ssh.yml` in the commands below
 To build the containers, go to the base directory of the repository and run
-`docker compose build --build-arg USER_ID=$(id -u cosmae) --build-arg GROUP_ID=$(id -g cosmae)` to build the containers.
-Afterwards run `docker compose push` to push the images to the registry.
-Start CoSMA-E using `USER_ID=$(id -u cosmae) GROUP_ID=$(id -g cosmae) docker stack deploy --compose-file docker-compose.yml cosmae`
+`docker compose -f docker-compose-ssh.yml build --build-arg USER_ID=$(id -u cosmae) --build-arg GROUP_ID=$(id -g cosmae)` to build the containers.
+Afterwards run `docker compose -f docker-compose-ssh.yml push` to push the images to the registry.
+Start CoSMA-E using `USER_ID=$(id -u cosmae) GROUP_ID=$(id -g cosmae) docker stack deploy --compose-file docker-compose-ssh.yml cosmae`
 > **_NOTE:_** If you have configured a directory different from `/srv/cosmae` you need to also prepend `HOST_DATA_DIR=${YOUR_DIRECTORY} --detach=true` to the deploy command
 
 ## Post Setup
