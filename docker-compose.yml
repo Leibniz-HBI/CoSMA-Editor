@@ -24,6 +24,40 @@ secrets:
   email_from:
     external: true
 
+networks:
+  default:
+    name: cosmae_default
+    driver: overlay
+    internal: true
+  external:
+    name: cosmae_external
+    driver: overlay
+  net_ssh_ui:
+    name: cosmae_net_ssh_ui
+    driver: overlay
+    internal: true
+  net_ui_django:
+    name: cosmae_net_ui_django
+    driver: overlay
+    internal: true
+  net_django_db:
+    name: cosmae_net_django_db
+    driver: overlay
+    internal: true
+  net_django_redis:
+    name: cosmae_net_django_redis
+    driver: overlay
+    internal: true
+  net_queue_redis:
+    name: cosmae_net_redis_queue
+    driver: overlay
+    internal: true
+  net_queue_db:
+    name: cosmae_net_queue_db
+    driver: overlay
+    internal: true
+
+
 volumes:
   db_volume:
   redis_volume:
@@ -41,6 +75,9 @@ services:
     ports:
       - 1709:1709
     image: 127.0.0.1:5000/cosmae_ssh
+    networks:
+      - external
+      - net_ssh_ui
 
   ui:
     build:
@@ -53,6 +90,9 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_ui
+    networks:
+      - net_ssh_ui
+      - net_ui_django
     # no need to set user as host fs is not written to.
     # user: ${USER_ID}:${GROUP_ID}
     # command: [nginx-debug, '-g', 'daemon off;']
@@ -82,6 +122,9 @@ services:
     image: 127.0.0.1:5000/cosmae_django
     #  needs to run as root in order to chown
     # user: ${USER_ID}:${GROUP_ID}
+    networks:
+      - net_queue_redis
+      - net_queue_db
     command: [
       "python",
       "manage.py",
@@ -115,6 +158,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_django
     user: ${USER_ID}:${GROUP_ID}
+    networks:
+      - net_ui_django
+      - net_django_db
+      - net_django_redis
     # command: [
     #   'gunicorn',
     #   'django_project.asgi:application',
@@ -146,6 +193,9 @@ services:
     - db_volume:/var/lib/postgresql/data
     - /etc/localtime:/etc/localtime:ro
     user: ${USER_ID}:${GROUP_ID}
+    networks:
+      - net_django_db
+      - net_queue_db
 
   redis:
     build:
@@ -165,3 +215,6 @@ services:
       "/etc/redis/redis.conf"
     ]
     restart: unless-stopped
+    networks:
+      - net_django_redis
+      - net_queue_redis
