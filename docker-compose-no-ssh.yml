@@ -21,6 +21,10 @@ secrets:
     external: true
   email_host_port:
     external: true
+  email_host_user:
+    external: true
+  email_host_app_password:
+    external: true
   email_from:
     external: true
 
@@ -63,22 +67,6 @@ volumes:
   redis_volume:
 
 services:
-  ssh:
-    build:
-      context: ./
-      dockerfile: container/ssh_dockerfile
-    volumes:
-      - ${HOST_DATA_DIR-/srv/cosmae}/ssh:/etc/ssh:ro
-      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/credentials:ro
-      - ${HOST_DATA_DIR-/srv/cosmae}/home:/srv/cosmae/home:ro
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - 1709:1709
-    image: 127.0.0.1:5000/cosmae_ssh
-    networks:
-      - external
-      - net_ssh_ui
-
 
   ui:
     build:
@@ -96,7 +84,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_ui
     networks:
-      - net_ssh_ui
+      - external
       - net_ui_django
     # no need to set user as host fs is not written to.
     # user: ${USER_ID}:${GROUP_ID}
@@ -118,12 +106,14 @@ services:
       - orcid_client_secret
       - email_host
       - email_host_port
+      - email_host_user
+      - email_host_app_password
       - email_from
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${HOST_DATA_DIR-/srv/cosmae}/contributions:/srv/cosmae/contributions
-      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/srv/cosmae/credentials
-      - ${HOST_DATA_DIR-/srv/cosmae}/home:/srv/cosmae/home
+    environment:
+      USE_SSH: "false"
     image: 127.0.0.1:5000/cosmae_django
     #  needs to run as root in order to chown
     # user: ${USER_ID}:${GROUP_ID}
@@ -156,13 +146,16 @@ services:
       - orcid_client_secret
       - email_host
       - email_host_port
+      - email_host_user
+      - email_host_app_password
       - email_from
     volumes:
       - ${HOST_DATA_DIR-/srv/cosmae}/contributions:/srv/cosmae/contributions
-      - ${HOST_DATA_DIR-/srv/cosmae}/credentials:/srv/cosmae/credentials
       - /etc/localtime:/etc/localtime:ro
     image: 127.0.0.1:5000/cosmae_django
     user: ${USER_ID}:${GROUP_ID}
+    environment:
+      USE_SSH: "false"
     networks:
       - net_ui_django
       - net_django_db
