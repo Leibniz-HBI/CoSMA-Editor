@@ -337,9 +337,11 @@ def setup_no_ssh(base_dir, group_id, system_user_id):
     "Setup necessary files and folders for no ssh variant."
     challenge_dir = path.join(base_dir, "acme-challenge")
     mkdir(challenge_dir)
+    chmod(challenge_dir, 0o770)
     chown(challenge_dir, system_user_id, group_id)
     ssl_dir = path.join(base_dir, "ssl")
     mkdir(ssl_dir)
+    chmod(ssl_dir, 0o770)
     chown(ssl_dir, system_user_id, group_id)
     key_pth = ssl_dir + "/cosmae.key"
     cert_pth = ssl_dir + "/cosmae.crt"
@@ -367,7 +369,9 @@ def setup_no_ssh(base_dir, group_id, system_user_id):
         ],
         check=True,
     )
+    chmod(key_pth, 0o660)
     chown(key_pth, system_user_id, group_id)
+    chmod(cert_pth, 0o660)
     chown(cert_pth, system_user_id, group_id)
 
 
