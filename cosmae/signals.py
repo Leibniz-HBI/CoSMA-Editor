@@ -38,6 +38,8 @@ def connect_column_queue_process():
 
 def add_initial_users(sender, **kwargs):  # pylint: disable=unused-argument
     "Add superuser if no users exist"
+    if not settings.USE_SSH:
+        return
     user_model = apps.get_model("cosmae", "cosmaeuser")
     _LOGGER.debug("Checking for existing users.")
     if user_model.objects.count() == 0 and not settings.IS_UNITTEST:
@@ -86,6 +88,8 @@ def connect_value_display_txt():
 def connect_user_created_signal():
     "Connect the signal for reading csv files on uploads."
     # pylint: disable=import-outside-toplevel
+    if not settings.USE_SSH:
+        return
     from cosmae.management.user.queue import dispatch_create_system_user
     from cosmae.util import CosmaeUser
 
@@ -99,6 +103,8 @@ def connect_user_created_signal():
 def connect_password_changed_signal():
     "Connect the signal for reading csv files on uploads."
     # pylint: disable=import-outside-toplevel
+    if not settings.USE_SSH:
+        return
     from cosmae.management.user.queue import dispatch_update_password
     from cosmae.util import CosmaeUser
 
