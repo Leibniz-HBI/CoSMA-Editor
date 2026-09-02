@@ -26,12 +26,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 
 CONTRIBUTION_DIRECTORY = Path("/srv/cosmae/contributions")
-USER_HOME_BASE_DIR = Path("/srv/cosmae/home")
-CREDENTIALS_DIR = Path("/srv/cosmae/credentials")
 USE_SSH = environ.get("USE_SSH", "true").lower() == "true"
 
 
+def _get_ssh_dirs():
+    if not USE_SSH:
+        return None, None
+    return Path("/srv/cosmae/home"), Path("/srv/cosmae/credentials")
+
+
+USER_HOME_BASE_DIR, CREDENTIALS_DIR = _get_ssh_dirs()
+
+
 def _get_group_info():
+    if CREDENTIALS_DIR is None:
+        return None, None
     with open(f"{CREDENTIALS_DIR}/group", "r", encoding="ascii") as group_file:
         line = group_file.readline()
         split = line.split(":")
