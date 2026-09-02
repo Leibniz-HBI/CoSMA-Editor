@@ -271,7 +271,9 @@ HEADLESS_FRONTEND_URLS = {
 }
 
 EMAIL_HOST = get_secret("email_host", True)
-EMAIL_PORT = int(get_secret("email_host_port", True, 0))
+EMAIL_PORT = int(get_secret("email_host_port", True, 587))
+EMAIL_HOST_USER = get_secret("email_host_user", True, "")
+EMAIL_HOST_PASSWORD = get_secret("email_host_app_password", True, "")
 DEFAULT_FROM_EMAIL = get_secret("email_from", True)
 
 DEFAULT_EMAIL_SUBJECT_PREFIX = "[CoSMA-E] "
