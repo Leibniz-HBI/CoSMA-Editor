@@ -341,6 +341,34 @@ def setup_no_ssh(base_dir, group_id, system_user_id):
     ssl_dir = path.join(base_dir, "ssl")
     mkdir(ssl_dir)
     chown(ssl_dir, system_user_id, group_id)
+    key_pth = ssl_dir + "/cosmae.key"
+    cert_pth = ssl_dir + "/cosmae.crt"
+    subprocess.run(
+        [
+            "/usr/bin/openssl",
+            "ecparam",
+            "-genkey",
+            "-name",
+            "prime256v1",
+            "-noout",
+            "-out",
+            key_pth,
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
+            "/usr/bin/bash",
+            "-c",
+            f"openssl  req -x509 -out {cert_pth} -key {key_pth} -config "
+            '<( printf "[dn]\nCN=localhost\n[req]\ndistinguished_name = dn\nprompt=no\n'
+            "[EXT]\nsubjectAltName=DNS:localhost\n"
+            'keyUsage=digitalSignature\nextendedKeyUsage=serverAuth" )',
+        ],
+        check=True,
+    )
+    chown(key_pth, system_user_id, group_id)
+    chown(cert_pth, system_user_id, group_id)
 
 
 if __name__ == "__main__":
