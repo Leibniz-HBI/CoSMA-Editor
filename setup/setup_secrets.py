@@ -86,5 +86,5 @@ user={args.db_user}
         print(f"PG_CONF={PG_CONF}")
         print(f"DB_SERVICE_FILE={PG_SERVICE_FILE}")
         print(f"REDIS_PASSWORD={REDIS_PASSWORD}")
-        print(f"REDIS_CONF={REDIS_PASSWORD}")
+        print(f"REDIS_CONF={REDIS_CONF}")
         print(f"INITIAL_ADMIN_PASSWORD={INITIAL_ADMIN_PASSWORD}")
