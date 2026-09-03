@@ -21,7 +21,7 @@ from cosmae.signals import (
     connect_value_display_txt,
 )
 
-logger = logging.getLogger("cosmae.app_config")
+_LOGGER = logging.getLogger("cosmae.app_config")
 
 
 added_permissions = {
@@ -52,26 +52,30 @@ def add_permissions(
     app_config: AppConfig, verbosity=2, **kwargs
 ):  # pylint: disable=unused-argument
     "Create all new groups and permissions."
-    logger.setLevel(10 * (4 - verbosity))
-    logger.info("Create CoSMA-E groups.")
+    _LOGGER.setLevel(10 * (4 - verbosity))
+    _LOGGER.info("Create CoSMA-E groups.")
     permission_model = apps.get_model("auth", "Permission")
     for group, permissions in added_permissions.items():
         try:
             add_permission_for_group(group, permissions)
         except permission_model.DoesNotExist:
-            logger.warning("Permissions do not exist yet.")
+            _LOGGER.warning("Permissions do not exist yet.")
             return
 
 
 def delete_marked_contributions():
     "Delete contributions marked for deletion."
-    contributions_model = apps.get_model("cosmae", "ContributionCandidate")
-    contributions = contributions_model.objects.filter(mark_delete=True)
-    # pylint: disable=import-outside-toplevel
-    from cosmae.contribution.queue import enqueue_delete_contributions
+    try:
+        contributions_model = apps.get_model("cosmae", "ContributionCandidate")
+        contributions = contributions_model.objects.filter(mark_delete=True)
+        # pylint: disable=import-outside-toplevel
+        from cosmae.contribution.queue import enqueue_delete_contributions
 
-    for contribution in contributions:
-        enqueue_delete_contributions(str(contribution.id_persistent))
+        for contribution in contributions:
+            enqueue_delete_contributions(str(contribution.id_persistent))
+    except Exception as exc:  # pylint: disable=broad-except
+        # May happen when migrations have not been applied, or when the model is not ready.
+        _LOGGER.warning("Could not delete marked contributions.", exc_info=exc)
 
 
 class CosmaeConfig(AppConfig):
