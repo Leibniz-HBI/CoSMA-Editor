@@ -8,7 +8,7 @@ from shutil import chown, copy
 from sys import maxsize
 from tempfile import NamedTemporaryFile
 from time import sleep
-from typing import Tuple
+from typing import Optional, Tuple
 from uuid import uuid4
 
 from allauth.account.models import EmailAddress
@@ -35,7 +35,9 @@ def change_prefix_to_django(password_hash: str):
     return "linuxy" + password_hash[1:]
 
 
-def _get_minimum_user_ids() -> Tuple[int, int]:
+def _get_minimum_user_ids() -> Tuple[Optional[int], Optional[int]]:
+    if settings.USE_SSH is False:
+        return None, None
     mins = [maxsize, maxsize - 1, maxsize - 2]
     with open(settings.CREDENTIALS_DIR / "passwd", "r", encoding="ascii") as passwd:
         for line in passwd.readlines():
@@ -247,9 +249,21 @@ def _get_ssh_key_from_file(username):
 
 
 def _create_initial_user():
+    if len(CosmaeUser.objects.filter(is_superuser=False)) > 0:
+        _LOGGER.error("Admin user already exists.")
+        return
     username, linux_password_hash = _get_shadow_file_details()
-    user_id = _get_user_id(username)
-    ssh_key_string = _get_ssh_key_from_file(username)
+    if username is None:
+        # pylint: disable=import-outside-toplevel
+        username = "cosmartin"
+        from cosmae.util.password_hasher import hash_password
+        from django_project.settings import get_secret
+
+        password = get_secret("cosmae_initial_admin_password")
+        linux_password_hash = hash_password(password)
+        user_id = None
+    else:
+        user_id = _get_user_id(username)
     django_password = change_prefix_to_django(linux_password_hash[1:])
     with transaction.atomic():
         new_user = CosmaeUser(
@@ -260,14 +274,16 @@ def _create_initial_user():
             first_name=username,
             permission_group=CosmaeUser.COMMISSIONER,
         )  # pylint: disable=no-member
+        new_user.save()
         verified_email = EmailAddress(
             user_id=new_user.id,
             email=new_user.email,
             primary=True,
             verified=True,
         )
-        new_user.save()
-        _save_ssh_key(new_user, ssh_key_string)
+        if settings.USE_SSH:
+            ssh_key_string = _get_ssh_key_from_file(username)
+            _save_ssh_key(new_user, ssh_key_string)
         verified_email.save()
         edit_session = _create_edit_session(new_user)
         new_user.is_active = True
@@ -297,6 +313,8 @@ def _get_user_id(username):
 
 
 def _get_shadow_file_details():
+    if not settings.USE_SSH:
+        return None, None
     with open(settings.CREDENTIALS_DIR / "shadow", "rt", encoding="ascii") as f:
         lines = f.readlines()
     if len(lines) != 3:

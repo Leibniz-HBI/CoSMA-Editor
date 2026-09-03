@@ -38,11 +38,9 @@ def connect_column_queue_process():
 
 def add_initial_users(sender, **kwargs):  # pylint: disable=unused-argument
     "Add superuser if no users exist"
-    if not settings.USE_SSH:
-        return
     user_model = apps.get_model("cosmae", "cosmaeuser")
     _LOGGER.debug("Checking for existing users.")
-    if user_model.objects.count() == 0 and not settings.IS_UNITTEST:
+    if user_model.objects.count() < 2 and not settings.IS_UNITTEST:
         from cosmae.management.user.queue import (  # pylint: disable=import-outside-toplevel
             dispatch_initial_user,
         )
