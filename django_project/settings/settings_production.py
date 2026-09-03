@@ -81,7 +81,12 @@ def get_secret(secret_name, optional=False, default=None):
 ###################################################################
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", DOMAIN_NAME]
 
-CORS_ALLOWED_ORIGIN_REGEXES = [r"^http://127\.0\.0\.1:\d+$", r"^http://localhost:\d+$"]
+CORS_ALLOWED_ORIGIN_REGEXES = (
+    [r"^http://127\.0\.0\.1:\d+$", r"^http://localhost:\d+$"]
+    if USE_SSH
+    else ["https://" + DOMAIN_NAME]
+)
+CSRF_TRUSTED_ORIGINS = [] if USE_SSH else ["https://" + DOMAIN_NAME]
 
 SESSION_COOKIE_SECURE = True
 
