@@ -3,21 +3,22 @@ import { ChangeEvent, ChangeEventHandler, FormEvent, ReactNode } from 'react'
 import { Button, Col, Row, Form, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { Column, ColumnType } from '../state'
 import * as yup from 'yup'
-import {
-    submitColumn,
-    loadColumnHierarchy,
-    purgeColumn
-} from '../thunks'
+import { submitColumn, loadColumnHierarchy, purgeColumn } from '../thunks'
 import { AppDispatch } from '../../store'
-import { useAppDispatch } from '../../hooks'
+import { useAppDispatch, useAppSelector } from '../../hooks'
 import { FormField, TextConfirmedSubmit } from '../../util/form'
 import { QuestionCircleFill } from 'react-bootstrap-icons'
 import { TabView } from '../../util/components/tabs'
 import { CosmaeCard } from '../../util/components/misc'
 import { addSuccessVanish } from '../../util/notification/slice'
+import { PublicUserInfo, UserPermissionGroup } from '../../user/state'
+import { selectPermissionGroup } from '../../auth/selectors'
 
 const schema = yup.object({
-    columnType: yup.string().required().matches(/STRING|FLOAT|INNER|BOOL/),
+    columnType: yup
+        .string()
+        .required()
+        .matches(/STRING|FLOAT|INNER|BOOL/),
     name: yup.string().required()
 })
 
@@ -138,7 +139,7 @@ export function ColumnEditor({
                         setFieldValue('parent', idPersistent)
                         setFieldValue('parentNamePath', namePath)
                     }}
-                    alreadyExists={existingColumn !== undefined}
+                    ownerInfo={existingColumn && existingColumn.owner}
                 />
             )}
         </Formik>
@@ -157,9 +158,11 @@ function ColumnTypeCreateFormBody(props: {
     }
     setParent: (idPersistent: string, parentNamePath: string[]) => Promise<void>
     formValues: ColumnTypeCreateArgs
-    alreadyExists: boolean
+    ownerInfo: PublicUserInfo | undefined
     children: (formProps: ColumnTypeCreateFormProps) => ReactNode
 }): JSX.Element {
+    const alreadyExists = props.ownerInfo !== undefined
+    const permissionGroup = useAppSelector(selectPermissionGroup)
     return (
         <Form noValidate onSubmit={props.handleSubmit} className="mt-3 d-contents">
             <div className=" d-contents">
@@ -179,6 +182,15 @@ function ColumnTypeCreateFormBody(props: {
                                     />
                                 </Col>
                             </Row>
+                            {(permissionGroup == UserPermissionGroup.COMMISSIONER ||
+                                permissionGroup == UserPermissionGroup.EDITOR) && (
+                                <Row>
+                                    <div>Owned by: </div>
+                                    <div className="fw-bold">
+                                        {props.ownerInfo?.username ?? 'Unknown'}
+                                    </div>
+                                </Row>
+                            )}
                             <Row className="mb-3">
                                 <Col xs={4} className="align-self-center">
                                     {props.touchedValues.columnType &&
@@ -204,7 +216,7 @@ function ColumnTypeCreateFormBody(props: {
                                                     ColumnType.Boolean
                                                 }
                                                 onChange={props.handleChange}
-                                                disabled={props.alreadyExists}
+                                                disabled={alreadyExists}
                                                 isInvalid={
                                                     props.touchedValues.columnType &&
                                                     !!props.formErrors.columnType
@@ -223,7 +235,7 @@ function ColumnTypeCreateFormBody(props: {
                                                     ColumnType.String
                                                 }
                                                 onChange={props.handleChange}
-                                                disabled={props.alreadyExists}
+                                                disabled={alreadyExists}
                                                 isInvalid={
                                                     props.touchedValues.columnType &&
                                                     !!props.formErrors.columnType
@@ -242,7 +254,7 @@ function ColumnTypeCreateFormBody(props: {
                                                     ColumnType.Float
                                                 }
                                                 onChange={props.handleChange}
-                                                disabled={props.alreadyExists}
+                                                disabled={alreadyExists}
                                                 isInvalid={
                                                     props.touchedValues.columnType &&
                                                     !!props.formErrors.columnType
@@ -256,7 +268,7 @@ function ColumnTypeCreateFormBody(props: {
                                                     ColumnType.Inner
                                                 }
                                                 onChange={props.handleChange}
-                                                disabled={props.alreadyExists}
+                                                disabled={alreadyExists}
                                                 isInvalid={
                                                     props.touchedValues.columnType &&
                                                     !!props.formErrors.columnType
@@ -298,9 +310,7 @@ function ColumnTypeCreateFormBody(props: {
             </div>
             <Row className="pt-2 pb-1 ms-0 me-0 flex-grow-0 flex-shrink-0 justify-content-end">
                 <Col xs="auto">
-                    <Button type="submit">
-                        {props.alreadyExists ? 'Save' : 'Create'}
-                    </Button>
+                    <Button type="submit">{alreadyExists ? 'Save' : 'Create'}</Button>
                 </Col>
             </Row>
         </Form>
@@ -374,10 +384,11 @@ export function ColumnDeleteForm({ column }: { column: Column }) {
                                             <span>in the </span>
                                             <span className="fst-italic">Confirm </span>
                                             <span>
-                                                text box and submit to disable the column.
-                                                This will make it and the contained data
-                                                inaccessible from now on but the data
-                                                will still be available in the history.
+                                                text box and submit to disable the
+                                                column. This will make it and the
+                                                contained data inaccessible from now on
+                                                but the data will still be available in
+                                                the history.
                                             </span>
                                         </Col>
                                     </Row>
@@ -389,13 +400,8 @@ export function ColumnDeleteForm({ column }: { column: Column }) {
                                                     ...column,
                                                     type: column.columnType,
                                                     parentNamePath:
-                                                        column.namePath.slice(
-                                                            0,
-                                                            -1
-                                                        ),
-                                                    name:
-                                                        column.namePath.at(-1) ??
-                                                        '',
+                                                        column.namePath.slice(0, -1),
+                                                    name: column.namePath.at(-1) ?? '',
                                                     namePath: column.namePath,
                                                     description:
                                                         column.description ?? '',
@@ -429,16 +435,14 @@ export function ColumnDeleteForm({ column }: { column: Column }) {
                                         <span>in the </span>
                                         <span className="fst-italic">Confirm </span>
                                         <span>
-                                            text box and submit to purge the column and all
-                                            contained data from the history.
+                                            text box and submit to purge the column and
+                                            all contained data from the history.
                                         </span>
                                     </Col>
                                 </Row>
                                 <TextConfirmedSubmit
                                     requiredInput="PURGE"
-                                    onSubmit={() =>
-                                        dispatch(purgeColumn(column))
-                                    }
+                                    onSubmit={() => dispatch(purgeColumn(column))}
                                 />
                             </CosmaeCard>
                         </Col>
