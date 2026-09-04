@@ -43,6 +43,12 @@ To reset a password search a user from the text field.
 Then type the new password and confirm it.
 The user will have to assign a different password after signing in for the first time.
 
+## Multi-Factor
+Here you can delete the multi factor authentication for a user
+
+## SSH-Key
+Set a SSH key for a user.
+
 
 ## Display Text
 To easily tell entities should have a *display text*.
