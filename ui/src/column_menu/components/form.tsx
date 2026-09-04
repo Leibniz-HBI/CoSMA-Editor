@@ -185,10 +185,12 @@ function ColumnTypeCreateFormBody(props: {
                             {(permissionGroup == UserPermissionGroup.COMMISSIONER ||
                                 permissionGroup == UserPermissionGroup.EDITOR) && (
                                 <Row>
-                                    <div>Owned by: </div>
-                                    <div className="fw-bold">
-                                        {props.ownerInfo?.username ?? 'Unknown'}
-                                    </div>
+                                    <Col>
+                                        <span>Owned by: </span>
+                                        <span className="fw-bold">
+                                            {props.ownerInfo?.username ?? 'Unknown'}
+                                        </span>
+                                    </Col>
                                 </Row>
                             )}
                             <Row className="mb-3">
