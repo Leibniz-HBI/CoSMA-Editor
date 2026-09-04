@@ -84,7 +84,7 @@ services:
       context: ./
       dockerfile: container/ui_dockerfile
       args:
-        NGINX_CONF: nginx-no-ssh.conf
+        NGINX_CONF: nginx-ssh.conf
     restart: unless-stopped
     ports:
       - 80:80
