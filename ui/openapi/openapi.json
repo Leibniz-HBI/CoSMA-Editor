@@ -706,6 +706,79 @@
                 "description": "Get information of a single user."
             }
         },
+        "/cosmae/api/user/2fa/{id_user_persistent}": {
+            "delete": {
+                "operationId": "cosmae_user_api_delete_user_2fa",
+                "summary": "Delete User 2Fa",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id_user_persistent",
+                        "schema": {
+                            "title": "Id User Persistent",
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "description": "API method for deleting all 2FA authenticators of a user."
+            }
+        },
         "/cosmae/api/user/ssh": {
             "put": {
                 "operationId": "cosmae_user_ssh_api_put_ssh_key",
@@ -9089,9 +9162,16 @@
                         "type": "string"
                     },
                     "ssh_key": {
-                        "minLength": 5,
-                        "title": "Ssh Key",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "minLength": 5,
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Ssh Key"
                     }
                 },
                 "title": "CreateUserRequest",

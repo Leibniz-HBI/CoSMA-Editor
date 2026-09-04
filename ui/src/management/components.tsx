@@ -8,11 +8,13 @@ import { useAppDispatch } from '../hooks'
 import { Subpage } from '../util/components/subpage'
 import { ManagementPasswordComponent } from './password/components'
 import { DataPublicationManagement } from './data_publication/components'
+import { Reset2faComponent } from './2fa/components'
 
 enum ManagementCategory {
     UserCreation = 'user-creation',
     UserPermission = 'user-permission',
     Password = 'password',
+    MFA = 'mfa',
     DisplayTxt = 'display-txt',
     DataPublication = 'data-publication'
 }
@@ -31,6 +33,7 @@ export function ManagementPage() {
                 'Create User': ManagementCategory.UserCreation,
                 'User Permissions': ManagementCategory.UserPermission,
                 'Reset User Password': ManagementCategory.Password,
+                'Multi-Factor': ManagementCategory.MFA,
                 'Display Text': ManagementCategory.DisplayTxt,
                 'Data Publication': ManagementCategory.DataPublication
             }}
@@ -54,6 +57,8 @@ export function ManagementCategoryBody({
         return <UserPermissionGroupComponent />
     } else if (selectedCategory === ManagementCategory.Password) {
         return <ManagementPasswordComponent />
+    } else if(selectedCategory === ManagementCategory.MFA){
+        return <Reset2faComponent />
     } else if (selectedCategory === ManagementCategory.UserCreation) {
         return <RegisterUserManagementComponent />
     } else if (selectedCategory == ManagementCategory.DisplayTxt) {
