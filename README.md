@@ -34,6 +34,7 @@ You can find instructions on installing node at [https://github.com/nodesource/d
 ## Installing dependencies
 * For the backend run `poetry install` from the root of the directory.
 * For the frontend run `npm install` from  the `ui` directory.
+* Then run `npm run openapi` to create API methods from the spec
 
 ## Preparing the backend
 The following steps are required for the initial setup.
@@ -48,7 +49,15 @@ You need to run a redis instance for managing task queues.
 The easiest way is to launch it in a container: `docker run -p 6379:6379 redis`.
 ## Running
 * Start the backend by running `poetry run ./manage.py  runserver`.
-* In a separate shell switch to the `ui` directory and run `npm start`.
+* In a separate shell run the background worker using `./manage.py rqworker --with-scheduler`
+*In another shell switch to the `ui` directory and run `npm start`.
+## Notes
+When a new API method has been added you need to update the generated API methods for the UI.
+1. Start the backend
+2. Go to http://127.0.0.1:8000/cosmae/api/openapi.json
+3. Save the file to `ui/openapi.json`
+4. Go to the `ui` folder and run `npm run openapi`
+
 
 # Acknowledgements
 ## Community Input
