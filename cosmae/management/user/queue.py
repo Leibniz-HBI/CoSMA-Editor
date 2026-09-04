@@ -25,6 +25,10 @@ _LOGGER = logging.getLogger("cosmae.management.user.queue")
 _epoch = datetime.fromtimestamp(0, timezone.utc)
 
 
+class UserDirMissingException(Exception):
+    "Exception raised when the home directory for a user is missing."
+
+
 def change_prefix_to_linux(password_hash: str):
     "Change the password prefix to linux format."
     return "$y" + password_hash[password_hash.find("$") :]
@@ -78,7 +82,7 @@ def check_hashed_password(hashed_password: str):
         return True
 
 
-def set_system_ssh_keys(id_user: int):
+def set_system_ssh_keys(id_user: int, user_created=False):
     "Queue method for setting ssh keys."
     user_query = CosmaeUser.objects.filter(id=id_user)
     key_query = SshKey.objects.filter(user_id=id_user)
@@ -97,8 +101,29 @@ def set_system_ssh_keys(id_user: int):
     if msg is not None:
         _LOGGER.error(msg, id_user)
     else:
-        username = user.username
-        set_ssh_key_list(username, _MIN_USER_ID + id_user, ssh_key_list)
+        try:
+            username = user.username
+            set_ssh_key_list(username, _MIN_USER_ID + id_user, ssh_key_list)
+        except UserDirMissingException:
+            if not user_created:
+                _LOGGER.warning(
+                    "Home directory for user with id %d is missing. Creating system user.",
+                    id_user,
+                )
+                create_system_user(user.id_persistent)  # will also set one ssh key.
+            else:
+                _LOGGER.error(
+                    "Home directory still missing for user with id %d after creating system user. "
+                    "Cancelling operation.",
+                    id_user,
+                )
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.error(
+                "Could not set SSH keys for user %s with id %d",
+                username,
+                id_user,
+                exc_info=exc,
+            )
 
 
 def set_ssh_key_list(username, user_id_system, ssh_key_list):
@@ -106,8 +131,7 @@ def set_ssh_key_list(username, user_id_system, ssh_key_list):
     _LOGGER.info("Set SSH keys for user %s", username)
     target_dir = settings.USER_HOME_BASE_DIR / username / ".ssh"
     if not exists(target_dir):
-        # is not yet created want to do this on user creation
-        return
+        raise UserDirMissingException()
     target_pth = target_dir / "authorized_keys"
     with NamedTemporaryFile("w", encoding="ascii", delete_on_close=False) as tmp_file:
         for key in ssh_key_list:
@@ -128,7 +152,7 @@ def create_system_user(id_user_persistent):
                 id_persistent=id_user_persistent
             )
             user = user_query.get()
-            ssh_key = SshKey.objects.filter(user=user).get()
+            ssh_key = SshKey.objects.filter(user=user)[:1].get()
             break
         except (CosmaeUser.DoesNotExist, SshKey.DoesNotExist) as exc:
             if i == 9:
