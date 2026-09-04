@@ -399,6 +399,38 @@ def get_user(request: HttpRequest, id_user_persistent: str):
         return 500, ApiError(msg="could not get user info")
 
 
+@router.delete(
+    "2fa/{id_user_persistent}",
+    response={
+        200: None,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def delete_user_2fa(request: HttpRequest, id_user_persistent: str):
+    "API method for deleting all 2FA authenticators of a user."
+    try:
+        request_user = check_user(request)
+        if request_user.permission_group != CosmaeUser.COMMISSIONER:
+            return 403, ApiError(msg="Insufficient permissions")
+        target_user = CosmaeUser.objects.filter(id_persistent=id_user_persistent).get()
+        if target_user.id_persistent == request_user.id_persistent:
+            return 400, ApiError(msg="You can not delete your own 2FA authenticators.")
+        Authenticator.objects.filter(user=target_user).delete()
+        return 200, None
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    except CosmaeUser.DoesNotExist:
+        return 404, ApiError(msg="User does not exist")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not delete user's 2FA authenticators."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
+
+
 permission_group_api_to_db = {
     "APPLICANT": CosmaeUser.APPLICANT,
     "READER": CosmaeUser.READER,
