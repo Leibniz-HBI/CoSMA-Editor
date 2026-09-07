@@ -45,12 +45,6 @@ from cosmae.util.auth import (
 _LOGGER = getLogger(__name__)
 
 
-class PutGroupRequest(Schema):
-    # pylint: disable=too-few-public-methods
-    "API model for body of request setting the permission group of a user."
-    permission_group: str
-
-
 class SetEditSessionRequest(Schema):
     # pylint: disable=too-few-public-methods
     "Request body for setting the current edit session."
@@ -166,53 +160,6 @@ def change_columns_by_idx(request: HttpRequest, start_idx: int, end_idx: int):
         return 500, ApiError(
             msg="Could not switch the persistent column ids in the user profile."
         )
-
-
-@router.put(
-    "/id/{id_user_persistent}/permission_group",
-    response={
-        200: LoginResponse,
-        400: ApiError,
-        401: ApiError,
-        403: ApiError,
-        404: ApiError,
-        500: ApiError,
-    },
-)
-def put_user_permission_group(  # pylint: disable=too-many-return-statements
-    request: HttpRequest, id_user_persistent: str, request_body: PutGroupRequest
-):
-    "API method for setting the user permission group"
-    try:
-        try:
-            request_user = check_user(request)
-        except NotAuthenticatedException:
-            return 401, ApiError(msg="Not authenticated")
-        if request_user.permission_group != CosmaeUser.COMMISSIONER:
-            return 403, ApiError(msg="Insufficient permissions.")
-        user = CosmaeUser.objects.filter(
-            id_persistent=id_user_persistent
-        ).get()  # pylint: disable=no-member
-        if user == request_user:
-            return 400, ApiError(msg="You can not change your own permission group.")
-        if user.is_superuser:
-            return 400, ApiError(
-                msg="Can not change the permission group  of a super user."
-            )
-
-        user.permission_group = permission_group_api_to_db[
-            request_body.permission_group
-        ]
-        user.save()
-        return 200, user_db_to_login_response(user)
-    except CosmaeUser.DoesNotExist:  # pylint: disable=no-member
-        return 404, ApiError(msg="User does not exist.")
-    except KeyError:
-        return 400, ApiError(msg="Unknown permission group")
-    except DatabaseError:
-        return 500, ApiError(msg="Could not store the permission in the database.")
-    except Exception:  # pylint: disable=broad-except
-        return 500, ApiError(msg="Could not set permission group of user.")
 
 
 @router.get(
@@ -429,15 +376,6 @@ def delete_user_2fa(request: HttpRequest, id_user_persistent: str):
         msg = "Could not delete user's 2FA authenticators."
         _LOGGER.error(msg, exc_info=exc)
         return 500, ApiError(msg=msg)
-
-
-permission_group_api_to_db = {
-    "APPLICANT": CosmaeUser.APPLICANT,
-    "READER": CosmaeUser.READER,
-    "CONTRIBUTOR": CosmaeUser.CONTRIBUTOR,
-    "EDITOR": CosmaeUser.EDITOR,
-    "COMMISSIONER": CosmaeUser.COMMISSIONER,
-}
 
 
 def create_unauthorized_response(request):

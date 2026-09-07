@@ -36,6 +36,7 @@ class LoginResponse(Schema):
     permission_group: str
     edit_session: EditSession
     password_changed: bool
+    is_active: bool
 
 
 class LoginResponseList(Schema):
