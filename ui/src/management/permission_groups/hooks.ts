@@ -1,6 +1,6 @@
 import { useAppDispatch } from '../../hooks'
 import { useThunkReducer } from '../../util/state'
-import { UserInfo, UserPermissionGroup } from '../state'
+import { UserInfo, UserPermissionGroup } from '../../user/state'
 import { SelectUserInfoAction } from './actions'
 import { GetUserInfoListAction, SetUserPermissionAction } from './async_actions'
 import { permissionGroupReducer } from './reducer'
@@ -24,12 +24,15 @@ export function useUserPermissionGroup() {
         },
         setUserPermissionCallback: (
             idUserPersistent: string,
-            permission: UserPermissionGroup
+            permission?: UserPermissionGroup,
+            isActive?: boolean
         ) => {
             if (state.selectedUser.isLoading) {
                 return
             }
-            dispatch(new SetUserPermissionAction(idUserPersistent, permission))
+            dispatch(
+                new SetUserPermissionAction(idUserPersistent, permission, isActive)
+            )
         },
         selectUserCallback: (userInfo: UserInfo) =>
             dispatch(new SelectUserInfoAction(userInfo))

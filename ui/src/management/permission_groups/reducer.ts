@@ -1,5 +1,5 @@
 import { Remote } from '../../util/state'
-import { newUserInfo } from '../state'
+import { newUserInfo } from '../../user/state'
 import {
     GetUserInfoListErrorAction,
     GetUserInfoListStartAction,
@@ -37,7 +37,11 @@ export function permissionGroupReducer(
             if (user !== undefined && user.idPersistent == action.idUserPersistent) {
                 newUserList = new Remote([
                     ...newUserList.value.slice(0, idx),
-                    newUserInfo({ ...user, permissionGroup: action.permission }),
+                    newUserInfo({
+                        ...user,
+                        permissionGroup: action.permission ?? user.permissionGroup,
+                        isActive: action.isActive ?? user.isActive
+                    }),
                     ...newUserList.value.slice(idx + 1)
                 ])
             }
@@ -50,7 +54,9 @@ export function permissionGroupReducer(
             newSelectedUser = new Remote(
                 newUserInfo({
                     ...newSelectedUser.value,
-                    permissionGroup: action.permission
+                    permissionGroup:
+                        action.permission ?? newSelectedUser.value.permissionGroup,
+                    isActive: action.isActive ?? newSelectedUser.value.isActive
                 })
             )
         }

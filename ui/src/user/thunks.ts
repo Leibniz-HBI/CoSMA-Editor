@@ -215,7 +215,8 @@ export function parseUserInfoFromJson(json: any): UserInfo {
         namesPersonal: json['names_personal'],
         namesFamily: json['names_family'],
         idColumnPersistentList: json['id_column_persistent_list'],
-        permissionGroup: permissionGroupApiMap[json['permission_group']]
+        permissionGroup: permissionGroupApiMap[json['permission_group']],
+        isActive: json['is_active'],
     }
 }
 

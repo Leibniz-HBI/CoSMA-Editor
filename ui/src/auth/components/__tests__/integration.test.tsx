@@ -665,6 +665,7 @@ const userInfoApiResponse = {
         names_personal: namesPersonalTest,
         email: emailTest,
         names_family: '',
+        is_active: true,
         id_column_persistent_list: [],
         id_persistent: idPersistentTest,
         permission_group: 'CONTRIBUTOR',

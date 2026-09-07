@@ -10,13 +10,13 @@ import {
     UserPermissionGroupAction
 } from './actions'
 import { exceptionMessage } from '../../util/exception'
-import { parseUserInfoFromJson } from '../thunks'
-import { UserInfo, UserPermissionGroup } from '../state'
+import { parseUserInfoFromJson } from '../../user/thunks'
+import { UserInfo, UserPermissionGroup } from '../../user/state'
 import { AppDispatch } from '../../store'
 import { addError } from '../../util/notification/slice'
 import {
-    cosmaeUserApiGetUserChunk,
-    cosmaeUserApiPutUserPermissionGroup
+    cosmaeManagementUserApiPutUserPermissionGroup,
+    cosmaeUserApiGetUserChunk
 } from '../../openapi/cosmae'
 
 export class GetUserInfoListAction extends AsyncAction<
@@ -63,12 +63,18 @@ export class SetUserPermissionAction extends AsyncAction<
     void
 > {
     idUserPersistent: string
-    permission: UserPermissionGroup
+    permission?: UserPermissionGroup
+    isActive?: boolean
 
-    constructor(idUserPersistent: string, permission: UserPermissionGroup) {
+    constructor(
+        idUserPersistent: string,
+        permission: UserPermissionGroup | undefined,
+        isActive: boolean | undefined = undefined
+    ) {
         super()
         this.idUserPersistent = idUserPersistent
         this.permission = permission
+        this.isActive = isActive
     }
     async run(
         dispatch: Dispatch<UserPermissionGroupAction>,
@@ -76,15 +82,19 @@ export class SetUserPermissionAction extends AsyncAction<
     ) {
         dispatch(new SetUserPermissionStartAction())
         try {
-            const rsp = await cosmaeUserApiPutUserPermissionGroup({
+            const rsp = await cosmaeManagementUserApiPutUserPermissionGroup({
                 path: { id_user_persistent: this.idUserPersistent },
-                body: { permission_group: this.permission.toString().toUpperCase() }
+                body: {
+                    permission_group: this.permission?.toString().toUpperCase(),
+                    is_active: this.isActive
+                }
             })
             if (rsp.data) {
                 dispatch(
                     new SetUserPermissionSuccessAction(
                         this.idUserPersistent,
-                        this.permission
+                        this.permission,
+                        this.isActive
                     )
                 )
             } else {

@@ -1,6 +1,6 @@
 import { vi, Mock } from 'vitest'
 import { Remote, useThunkReducer } from '../../../util/state'
-import { UserPermissionGroup, newUserInfo } from '../../state'
+import { UserPermissionGroup, newUserInfo } from '../../../user/state'
 import { SelectUserInfoAction } from '../actions'
 import { GetUserInfoListAction, SetUserPermissionAction } from '../async_actions'
 import { useUserPermissionGroup } from '../hooks'

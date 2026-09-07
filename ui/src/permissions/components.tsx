@@ -5,7 +5,7 @@ import { newUserPermissionSet, PermissionSet, UserPermissionSet } from './state'
 import { ChangeEvent } from 'react'
 import { useAppDispatch } from '../hooks'
 import { setPermissionThunk } from './thunks'
-import { UserSearch } from '../user/permission_groups/components'
+import { UserSearch } from '../management/permission_groups/components'
 import { useUserInfo } from '../user/hooks'
 
 type ChangePermissionCallback = (userPermissionSet: UserPermissionSet) => void
