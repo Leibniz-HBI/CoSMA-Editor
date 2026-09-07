@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event'
 import { addResponseSequence, expectFetchCallList } from '../../../util/tests/response'
 import { renderWithProviders } from '../../../util/tests/provider'
 
-describe('set password', () => {
+describe('set SSH key', () => {
     test('success', async () => {
         const fetchMock = vi.fn()
         addResponseSequence(fetchMock, [
@@ -114,7 +114,8 @@ async function submitSshKey(
     sshKey: string,
 ) {
     const user = userEvent.setup()
-    const searchBox = screen.getByRole('textbox')
+    const textBoxes = screen.getAllByRole('textbox')
+    const searchBox = textBoxes[0]
     await user.click(searchBox)
     await user.paste(userSearch)
     let searchResult = undefined
@@ -126,8 +127,8 @@ async function submitSshKey(
     if (searchResult !== undefined) {
         await user.click(searchResult)
     }
-    const passwordInput = screen.getByLabelText('User SSH Key')
-    await user.click(passwordInput)
+    const keyInput = screen.getByLabelText('User SSH Key')
+    await user.click(keyInput)
     await user.paste(sshKey)
     const button = screen.getByRole('button')
     await user.click(button)
