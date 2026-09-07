@@ -16,15 +16,12 @@ import { loadColumnHierarchy } from '../../column_menu/thunks'
 
 export function DisplayTxtManagementComponent() {
     const dispatch: AppDispatch = useDispatch()
-    useEffect(
-        () => {
-            dispatch(getDisplayTxtColumns())
-            dispatch(loadColumnHierarchy({ expand: true }))
-        },
-        []
-    )
+    useEffect(() => {
+        dispatch(getDisplayTxtColumns())
+        dispatch(loadColumnHierarchy({ expand: true }))
+    }, [])
     return (
-        <Row className="h-100 overflow-hidden d-flex flex-row">
+        <Row className="h-100">
             <Col className="pt-2" xs={6}>
                 <DisplayTxtOrder />
             </Col>
@@ -88,17 +85,19 @@ function DisplayTxtAddMenu() {
     )
     const appendColumnCallback = (column: Column) => dispatch(appendColumnThunk(column))
     return (
-        <ColumnSelector
-            mkTailElement={(column) => (
-                <DisplayTxtAddTailElement
-                    column={column}
-                    alreadyPresent={
-                        alreadyPresentColumnIdPersistentList[column.idPersistent]
-                    }
-                    appendColumnCallback={appendColumnCallback}
-                />
-            )}
-        />
+        <div className="vh-85 d-flex flex-column bg-secondary pb-4">
+            <ColumnSelector
+                mkTailElement={(column) => (
+                    <DisplayTxtAddTailElement
+                        column={column}
+                        alreadyPresent={
+                            alreadyPresentColumnIdPersistentList[column.idPersistent]
+                        }
+                        appendColumnCallback={appendColumnCallback}
+                    />
+                )}
+            />
+        </div>
     )
 }
 
