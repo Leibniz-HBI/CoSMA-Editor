@@ -6,12 +6,15 @@ from allauth.account import signals
 from allauth.account.models import Login
 from allauth.headless.account.inputs import SignupInput
 from django.conf import settings
-from django.db import IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, transaction
+from django.http import HttpRequest
 from ninja import Field, Router, Schema
 
-from cosmae.exception import NotAuthenticatedException
+from cosmae.exception import ApiError, NotAuthenticatedException
 from cosmae.user.adapter import AccountExistsException
 from cosmae.user.model_conversion.login import user_db_to_login_response
+from cosmae.user.models_api.login import LoginResponse
+from cosmae.user.models_api.public import permission_group_api_to_db
 from cosmae.user.ssh.models_django import SshKey
 from cosmae.util import CosmaeUser
 from cosmae.util.auth import (
@@ -21,6 +24,13 @@ from cosmae.util.auth import (
     single_error_allauth_like_response,
     success_allauth_like_response,
 )
+
+
+class PutGroupRequest(Schema):
+    # pylint: disable=too-few-public-methods
+    "API model for body of request setting the permission group of a user."
+    permission_group: str | None = None
+    is_active: bool | None = None
 
 
 class CreateUserRequest(Schema):
@@ -106,6 +116,55 @@ def post_create_user(request, user_request_data: CreateUserRequest):
     except Exception as exc:  # pylint: disable=broad-except:
         _LOGGER.error("", exc_info=exc)
         return single_error_allauth_like_response(500, "Could not create user")
+
+
+@router.put(
+    "/id/{id_user_persistent}/permission_group",
+    response={
+        200: LoginResponse,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def put_user_permission_group(  # pylint: disable=too-many-return-statements
+    request: HttpRequest, id_user_persistent: str, request_body: PutGroupRequest
+):
+    "API method for setting the user permission group"
+    try:
+        try:
+            request_user = check_user(request)
+        except NotAuthenticatedException:
+            return 401, ApiError(msg="Not authenticated")
+        if request_user.permission_group != CosmaeUser.COMMISSIONER:
+            return 403, ApiError(msg="Insufficient permissions.")
+        user = CosmaeUser.objects.filter(
+            id_persistent=id_user_persistent
+        ).get()  # pylint: disable=no-member
+        if user == request_user:
+            return 400, ApiError(msg="You can not change your own permission group.")
+        if user.is_superuser:
+            return 400, ApiError(
+                msg="Can not change the permission group  of a super user."
+            )
+        if request_body.permission_group is not None:
+            user.permission_group = permission_group_api_to_db[
+                request_body.permission_group
+            ]
+        if request_body.is_active is not None:
+            user.is_active = request_body.is_active
+        user.save()
+        return 200, user_db_to_login_response(user)
+    except CosmaeUser.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="User does not exist.")
+    except KeyError:
+        return 400, ApiError(msg="Unknown permission group")
+    except DatabaseError:
+        return 500, ApiError(msg="Could not store the permission in the database.")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not set permission group of user.")
 
 
 def user_to_allauth(user_data: CreateUserRequest) -> SignupInput:

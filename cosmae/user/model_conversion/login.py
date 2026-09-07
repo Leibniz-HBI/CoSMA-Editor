@@ -18,4 +18,5 @@ def user_db_to_login_response(user: CosmaeUser):
         permission_group=permission_group_db_to_api[user.permission_group],
         edit_session=edit_session_db_to_api(user.edit_session),
         password_changed=user.password_changed,
+        is_active=user.is_active,
     )

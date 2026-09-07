@@ -46,6 +46,7 @@ def test_success(auth_server):
                 "name": cs.name_session_user,
                 "participant_list": [edit_session_participant_api],
             },
+            "is_active": True,
         },
     }
 
