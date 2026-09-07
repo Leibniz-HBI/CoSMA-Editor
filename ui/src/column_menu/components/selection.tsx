@@ -50,7 +50,7 @@ export function ColumnSelector({
     allowEdit?: boolean
     upUntilDate?: Date | undefined
     initialScroll?: number
-    setScroll?: ((scroll: number) => void)| undefined
+    setScroll?: ((scroll: number) => void) | undefined
 }) {
     return (
         <ColumnSearchProvider>
@@ -79,16 +79,18 @@ function ColumnSelectorBody({
     allowEdit?: boolean
     upUntilDate?: Date | undefined
     initialScroll?: number
-    setScroll?: ((scroll: number) => void)| undefined
+    setScroll?: ((scroll: number) => void) | undefined
 }) {
     let body
     const searchResultList = useContext(ColumnSearchContext)
     if (searchResultList.value !== undefined) {
         body = (
-            <ColumnExplorerSearchResults
-                upUntilDate={upUntilDate}
-                mkTailElement={mkTailElement}
-            />
+            <div className="vh-50 overflow-y-scroll scroll-gutter">
+                <ColumnExplorerSearchResults
+                    upUntilDate={upUntilDate}
+                    mkTailElement={mkTailElement}
+                />
+            </div>
         )
     } else {
         body = (
@@ -125,7 +127,7 @@ function ColumnExplorerList({
     allowEdit?: boolean
     upUntilDate?: Date | undefined
     initialScroll?: number
-    setScroll?: ((scroll: number) => void)| undefined
+    setScroll?: ((scroll: number) => void) | undefined
 }) {
     const ref = useRef<HTMLDivElement>(null)
     const isLoading = useAppSelector(selectColumnSelectionLoading)
