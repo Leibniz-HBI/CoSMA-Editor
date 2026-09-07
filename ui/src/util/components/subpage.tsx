@@ -14,15 +14,15 @@ export function Subpage<T extends string | number>({
     children: (page: T | undefined) => ReactNode
 }) {
     return (
-        <Row className="h-100 overflow-hidden d-flex flex-row">
-            <Col xs={2} className="overflow-y-scroll">
+        <Row className="vh-85 overflow-hidden">
+            <Col xs={2} className="h-100 overflow-y-scroll pb-3">
                 <SubpageSelection
                     pages={pages}
                     selectedPage={selectedPage}
                     pathPrefix={pathPrefix}
                 />
             </Col>
-            <Col className="h-100 overflow-y-hidden">{children(selectedPage)}</Col>
+            <Col className="h-100 overflow-hidden d-flex flex-column">{children(selectedPage)}</Col>
         </Row>
     )
 }
