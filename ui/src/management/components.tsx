@@ -1,6 +1,6 @@
 import { Row } from 'react-bootstrap'
 import { useLoaderData } from 'react-router-dom'
-import { UserPermissionGroupComponent } from '../user/permission_groups/components'
+import { UserPermissionGroupComponent } from './permission_groups/components'
 import { DisplayTxtManagementComponent } from './display_txt/components'
 import { RegistrationForm } from '../auth/components/registration_form'
 import { createUserThunk } from '../auth/thunks'

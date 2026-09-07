@@ -1,5 +1,5 @@
 import { Remote } from '../../../util/state'
-import { UserPermissionGroup, newUserInfo } from '../../state'
+import { UserPermissionGroup, newUserInfo } from '../../../user/state'
 import {
     GetUserInfoListErrorAction,
     GetUserInfoListStartAction,

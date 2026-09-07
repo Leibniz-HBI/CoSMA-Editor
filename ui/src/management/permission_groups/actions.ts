@@ -1,4 +1,4 @@
-import { UserInfo, UserPermissionGroup } from '../state'
+import { UserInfo, UserPermissionGroup } from '../../user/state'
 
 export class GetUserInfoListStartAction {}
 
@@ -22,11 +22,13 @@ export class SelectUserInfoAction {
 export class SetUserPermissionStartAction {}
 export class SetUserPermissionSuccessAction {
     idUserPersistent: string
-    permission: UserPermissionGroup
+    permission?: UserPermissionGroup
+    isActive?: boolean
 
-    constructor(idUserPersistent: string, permission: UserPermissionGroup) {
+    constructor(idUserPersistent: string, permission?: UserPermissionGroup, isActive?: boolean) {
         this.idUserPersistent = idUserPersistent
         this.permission = permission
+        this.isActive = isActive
     }
 }
 

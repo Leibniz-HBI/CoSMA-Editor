@@ -1,5 +1,5 @@
 import { Remote } from '../../util/state'
-import { UserInfo } from '../state'
+import { UserInfo } from '../../user/state'
 
 export class PermissionGroupState {
     userList: Remote<UserInfo[]>

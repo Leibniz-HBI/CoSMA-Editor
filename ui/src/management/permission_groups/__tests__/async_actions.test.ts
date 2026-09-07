@@ -1,6 +1,6 @@
 vi.spyOn(global, 'fetch')
 import { vi, Mock } from 'vitest'
-import { UserPermissionGroup, newUserInfo } from '../../state'
+import { UserPermissionGroup, newUserInfo } from '../../../user/state'
 import {
     GetUserInfoListErrorAction,
     GetUserInfoListStartAction,
@@ -40,7 +40,8 @@ const userInfoTest1 = newUserInfo({
     email: emailTest1,
     namesPersonal: namesPersonalTest1,
     idPersistent: idPersistentTest1,
-    permissionGroup: permissionGroupTest1
+    permissionGroup: permissionGroupTest1,
+    isActive: false
 })
 
 const userInfoJsonTest = {
@@ -49,7 +50,8 @@ const userInfoJsonTest = {
     names_personal: namesPersonalTest,
     id_persistent: idPersistentTest,
     permission_group: 'EDITOR',
-    id_column_persistent_list: []
+    id_column_persistent_list: [],
+    is_active: true
 }
 
 const userInfoJsonTest1 = {
@@ -58,7 +60,8 @@ const userInfoJsonTest1 = {
     names_personal: namesPersonalTest1,
     id_persistent: idPersistentTest1,
     permission_group: 'CONTRIBUTOR',
-    id_column_persistent_list: []
+    id_column_persistent_list: [],
+    is_active: false
 }
 
 beforeAll(() => {
@@ -115,7 +118,7 @@ describe('get users', () => {
     })
 })
 describe('set user permissions', () => {
-    test('success', async () => {
+    test('success permission group', async () => {
         responseSequence([[200, {}]])
         const dispatch = vi.fn()
         const reduxDispatch = vi.fn()
@@ -134,11 +137,34 @@ describe('set user permissions', () => {
         ])
         await expectFetchCallList((fetch as Mock).mock.calls, [
             [
-                `http://127.0.0.1:8000/cosmae/api/user/id/${idPersistentTest}/permission_group`,
+                `http://127.0.0.1:8000/cosmae/api/manage/user/id/${idPersistentTest}/permission_group`,
                 {
                     method: 'PUT',
                     credentials: 'include',
                     body: { permission_group: 'APPLICANT' }
+                }
+            ]
+        ])
+    })
+    test('success active', async () => {
+        responseSequence([[200, {}]])
+        const dispatch = vi.fn()
+        const reduxDispatch = vi.fn()
+        await new SetUserPermissionAction(idPersistentTest, undefined, false).run(
+            dispatch,
+            reduxDispatch
+        )
+        expect(dispatch.mock.calls).toEqual([
+            [new SetUserPermissionStartAction()],
+            [new SetUserPermissionSuccessAction(idPersistentTest, undefined, false)]
+        ])
+        await expectFetchCallList((fetch as Mock).mock.calls, [
+            [
+                `http://127.0.0.1:8000/cosmae/api/manage/user/id/${idPersistentTest}/permission_group`,
+                {
+                    method: 'PUT',
+                    credentials: 'include',
+                    body: { is_active: false }
                 }
             ]
         ])

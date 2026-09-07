@@ -1,16 +1,16 @@
 import { ChangeEvent, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useUserPermissionGroup } from './hooks'
 import { CosmaeLoading } from '../../util/components/misc'
-import { Col, FormCheck, ListGroup, Overlay, Row } from 'react-bootstrap'
-import { PublicUserInfo, UserInfo, UserPermissionGroup } from '../state'
+import { Col, Form, FormCheck, ListGroup, Overlay, Row } from 'react-bootstrap'
+import { PublicUserInfo, UserInfo, UserPermissionGroup } from '../../user/state'
 import { Remote } from '../../util/state'
 import { debounce } from 'debounce'
 import { AppDispatch } from '../../store'
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import { FormField } from '../../util/form'
-import { selectSearchResults } from '../selectors'
-import { userSearch } from '../thunks'
-import { userSearchClear } from '../slice'
+import { selectSearchResults } from '../../user/selectors'
+import { userSearch } from '../../user/thunks'
+import { userSearchClear } from '../../user/slice'
 export function UserPermissionGroupComponent() {
     const {
         userInfoList,
@@ -19,12 +19,9 @@ export function UserPermissionGroupComponent() {
         selectUserCallback,
         setUserPermissionCallback
     } = useUserPermissionGroup()
-    useLayoutEffect(
-        () => {
-            getUserInfoListCallback()
-        },
-        []
-    )
+    useLayoutEffect(() => {
+        getUserInfoListCallback()
+    }, [])
     if (userInfoList.isLoading) {
         return <CosmaeLoading />
     }
@@ -81,7 +78,8 @@ export function UserPermissionGroupForm({
     userInfo: Remote<UserInfo | undefined>
     setUserPermissionCallback: (
         idUserPersistent: string,
-        permission: UserPermissionGroup
+        permission?: UserPermissionGroup,
+        isActive?: boolean
     ) => void
 }) {
     if (userInfo.value === undefined) {
@@ -114,7 +112,8 @@ export function UserPermissionGroupForm({
                             }
                             setUserPermissionCallback(
                                 userInfo.value.idPersistent,
-                                permission
+                                permission,
+                                undefined
                             )
                         }}
                         label={permission.toString()}
@@ -124,6 +123,24 @@ export function UserPermissionGroupForm({
                         key={permission}
                     />
                 ))}
+            </Row>
+            <Row>
+                <Form.Check
+                    type="switch"
+                    label={<span>User Active </span>}
+                    checked={userInfo.value?.isActive}
+                    onChange={(evt) => {
+                        evt.stopPropagation()
+                        if (userInfo.value == undefined) {
+                            return
+                        }
+                        setUserPermissionCallback(
+                            userInfo.value?.idPersistent,
+                            undefined,
+                            evt.target.checked
+                        )
+                    }}
+                />
             </Row>
         </>
     )

@@ -34,6 +34,7 @@ export interface UserInfo extends PublicUserInfo {
     namesPersonal: string
     namesFamily?: string
     idColumnPersistentList: string[]
+    isActive: boolean
 }
 export function newUserInfo({
     username,
@@ -42,7 +43,8 @@ export function newUserInfo({
     namesPersonal,
     namesFamily = undefined,
     permissionGroup,
-    idColumnPersistentList: idColumnPersistentList = []
+    idColumnPersistentList: idColumnPersistentList = [],
+    isActive = true
 }: {
     username: string
     idPersistent: string
@@ -51,6 +53,7 @@ export function newUserInfo({
     namesFamily?: string
     permissionGroup: UserPermissionGroup
     idColumnPersistentList?: string[]
+    isActive?: boolean
 }): UserInfo {
     return {
         username: username,
@@ -59,7 +62,8 @@ export function newUserInfo({
         email: email,
         namesPersonal: namesPersonal,
         namesFamily: namesFamily,
-        idColumnPersistentList
+        idColumnPersistentList,
+        isActive
     }
 }
 

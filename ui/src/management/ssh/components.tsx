@@ -3,7 +3,7 @@ import { useAppDispatch } from '../../hooks'
 import { Formik } from 'formik'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
-import { UserSearch } from '../../user/permission_groups/components'
+import { UserSearch } from '../permission_groups/components'
 import { useUserInfo } from '../../user/hooks'
 import { setSshKeyThunk } from './thunks'
 

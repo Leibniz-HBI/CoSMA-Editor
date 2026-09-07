@@ -277,96 +277,6 @@
                 "description": "API method for removing a column given by its persistent id from the user profile."
             }
         },
-        "/cosmae/api/user/id/{id_user_persistent}/permission_group": {
-            "put": {
-                "operationId": "cosmae_user_api_put_user_permission_group",
-                "summary": "Put User Permission Group",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id_user_persistent",
-                        "schema": {
-                            "title": "Id User Persistent",
-                            "type": "string"
-                        },
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/LoginResponse"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiError"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiError"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiError"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiError"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiError"
-                                }
-                            }
-                        }
-                    }
-                },
-                "description": "API method for setting the user permission group",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PutGroupRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                }
-            }
-        },
         "/cosmae/api/user/chunks/{offset}/{count}": {
             "get": {
                 "operationId": "cosmae_user_api_get_user_chunk",
@@ -5001,6 +4911,101 @@
                 ]
             }
         },
+        "/cosmae/api/manage/user/id/{id_user_persistent}/permission_group": {
+            "put": {
+                "operationId": "cosmae_management_user_api_put_user_permission_group",
+                "summary": "Put User Permission Group",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id_user_persistent",
+                        "schema": {
+                            "title": "Id User Persistent",
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "description": "API method for setting the user permission group",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PutGroupRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ]
+            }
+        },
         "/cosmae/api/manage/data_publication": {
             "get": {
                 "operationId": "cosmae_management_data_publication_api_get_data_publication_metadata",
@@ -6540,6 +6545,10 @@
                     "password_changed": {
                         "title": "Password Changed",
                         "type": "boolean"
+                    },
+                    "is_active": {
+                        "title": "Is Active",
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -6551,23 +6560,10 @@
                     "id_column_persistent_list",
                     "permission_group",
                     "edit_session",
-                    "password_changed"
+                    "password_changed",
+                    "is_active"
                 ],
                 "title": "LoginResponse",
-                "type": "object"
-            },
-            "PutGroupRequest": {
-                "description": "API model for body of request setting the permission group of a user.",
-                "properties": {
-                    "permission_group": {
-                        "title": "Permission Group",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "permission_group"
-                ],
-                "title": "PutGroupRequest",
                 "type": "object"
             },
             "LoginResponseList": {
@@ -6604,6 +6600,13 @@
                         "type": "string"
                     },
                     "permission_group": {
+                        "enum": [
+                            "APPLICANT",
+                            "READER",
+                            "CONTRIBUTOR",
+                            "EDITOR",
+                            "COMMISSIONER"
+                        ],
                         "title": "Permission Group",
                         "type": "string"
                     }
@@ -9175,6 +9178,35 @@
                     }
                 },
                 "title": "CreateUserRequest",
+                "type": "object"
+            },
+            "PutGroupRequest": {
+                "description": "API model for body of request setting the permission group of a user.",
+                "properties": {
+                    "permission_group": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Permission Group"
+                    },
+                    "is_active": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Active"
+                    }
+                },
+                "title": "PutGroupRequest",
                 "type": "object"
             },
             "DataPublicationMetadata": {

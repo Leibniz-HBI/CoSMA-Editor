@@ -4,7 +4,7 @@ import { Formik } from 'formik'
 import { setPasswordThunk } from './thunks'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 import { FormField } from '../../util/form'
-import { UserSearch } from '../../user/permission_groups/components'
+import { UserSearch } from '../permission_groups/components'
 import { useUserInfo } from '../../user/hooks'
 
 const passwordHint =
