@@ -133,6 +133,44 @@ def get_merge_requests(request: HttpRequest):
         return 500, ApiError(msg=msg)
 
 
+@router.put(
+    "new/{id_origin_persistent}/{id_destination_persistent}",
+    response={
+        200: MergeRequest,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def put_merge_request(
+    request: HttpRequest, id_origin_persistent: str, id_destination_persistent: str
+):
+    "Create a new merge request"
+    try:
+        user = check_user(request)
+        merge_request = MergeRequestDb.create(
+            id_origin_persistent=id_origin_persistent,
+            id_destination_persistent=id_destination_persistent,
+            created_by=user,
+        )
+        return 200, merge_request_db_to_api(merge_request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    except ColumnDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Origin or destination column does not exist.")
+    except ForbiddenException:
+        return 403, ApiError(msg="Insufficient permissions")
+    except PermissionError:
+        return 403, ApiError(
+            msg="Neither origin nor destination column is writable by you."
+        )
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not create the merge request."
+        _LOGGER.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
+
+
 @router.patch(
     "{id_merge_request_persistent}",
     response={

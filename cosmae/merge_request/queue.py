@@ -248,7 +248,7 @@ def column_conflicts_signal_handler(  # pylint: disable=unused-argument
     sender, instance, created, update_fields, **kwargs
 ):
     "Signal handler for triggering column conflict computation."
-    if not (update_fields and "state" in update_fields):
+    if not ((update_fields and "state" in update_fields) or created):
         return
     if instance.state == ColumnMergeRequest.State.CONFLICTS:
         enqueue(

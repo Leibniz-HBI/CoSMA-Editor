@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Optional
+from uuid import uuid4
 
 from django.db import models, transaction
 
@@ -15,7 +16,7 @@ from cosmae.merge_request.entity.models_django import (
     AbstractMergeRequest,
     AbstractMergeRequestQuerySet,
 )
-from cosmae.util import CosmaeUser
+from cosmae.util import CosmaeUser, timestamp
 from cosmae.util.django import get_json_array_agg
 from cosmae.value.models_django import Value, ValueQuerySet, value_objects
 
@@ -214,6 +215,37 @@ class ColumnMergeRequest(AbstractMergeRequest):
                 replacement_value=replacement_value,
             )
             resolution.save()
+
+    @classmethod
+    def create(
+        cls,
+        id_origin_persistent: str,
+        id_destination_persistent: str,
+        created_by: CosmaeUser,
+    ):
+        "Create a new merge request."
+        column_origin = column_objects().by_id_persistent(id_origin_persistent).get()
+        column_destination = (
+            column_objects().by_id_persistent(id_destination_persistent).get()
+        )
+        if not (
+            column_origin.has_write_access(created_by.id_persistent)
+            or column_destination.has_write_access(created_by.id_persistent)
+        ):
+            raise PermissionError(
+                f"User {created_by} does not have write access to the columns."
+            )
+        merge_request = ColumnMergeRequest(
+            id_origin_persistent=id_origin_persistent,
+            id_destination_persistent=id_destination_persistent,
+            created_by=created_by,
+            assigned_to=column_destination.owner,
+            created_at=timestamp(),
+            id_persistent=uuid4(),
+            state=ColumnMergeRequest.State.CONFLICTS,
+        )
+        merge_request.save()
+        return merge_request
 
     @classmethod
     def change_assigned_for_column(

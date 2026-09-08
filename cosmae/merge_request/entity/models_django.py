@@ -1,6 +1,7 @@
 "Models for entity merge requests."
 
 from __future__ import annotations
+
 from typing import Optional
 
 from django.db import models
@@ -37,8 +38,7 @@ class AbstractMergeRequest(models.Model):
     objects = AbstractMergeRequestQuerySet.as_manager()
 
     class State(models.TextChoices):
-        """Enum for merge request states.
-        The state descriptions currently apply only to column merge requests."""
+        """Enum for merge request states."""
 
         CREATED = "CRT", "created"
         """Newly created merge request not yet available for processing.
