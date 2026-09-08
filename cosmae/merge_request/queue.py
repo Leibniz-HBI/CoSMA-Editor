@@ -218,9 +218,12 @@ def store_conflicts(merge_request, conflicts, column_origin, column_destination)
     "Store conflicts in the database."
     max_idx = -1
     for conflict in conflicts:
-        entity = EntityHistory.objects.from_most_recent(
-            entity_objects().by_id_persistent(conflict.id_entity_persistent)
-        ).get()
+        try:
+            entity = EntityHistory.objects.from_most_recent(
+                entity_objects().by_id_persistent(conflict.id_entity_persistent)
+            ).get()
+        except EntityHistory.DoesNotExist:
+            continue
         max_idx = max(max_idx, conflict.id)
         if conflict.value_destination is None:
             value_destination_id = None
