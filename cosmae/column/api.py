@@ -288,6 +288,38 @@ def post_get_column_children(
         return 500, ApiError(msg="Could not get children columns.")
 
 
+@router.put(
+    "{id_persistent}/clone",
+    response={
+        200: ColumnResponse,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def put_clone(request: HttpRequest, id_persistent: str):
+    "Clone a column."
+    try:
+        user = check_user(request)
+        column = ColumnHistoryDb.objects.from_most_recent(
+            column_objects().by_id_persistent(id_persistent)
+        ).get()
+        new_column = column.clone(user, timestamp())
+        update_column_name_path(new_column.id)
+        return 200, column_db_to_api(new_column)
+    except ColumnHistoryDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Column not found")
+    except ForbiddenException:
+        return 403, ApiError(msg="Insufficient permissions")
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated")
+    except Exception as exc:  # pylint: disable=broad-except
+        msg = "Could not clone column"
+        logger.error(msg, exc_info=exc)
+        return 500, ApiError(msg=msg)
+
+
 @router.delete(
     "{id_persistent}",
     response={200: None, 401: ApiError, 403: ApiError, 404: ApiError, 500: ApiError},

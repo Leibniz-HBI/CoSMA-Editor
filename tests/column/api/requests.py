@@ -4,7 +4,11 @@ from datetime import datetime
 
 from django.http import HttpRequest
 
-from cosmae.column.api import PostGetChildrenRequest, post_get_column_children
+from cosmae.column.api import (
+    PostGetChildrenRequest,
+    post_get_column_children,
+    put_clone,
+)
 
 
 def post_column_children(
@@ -19,3 +23,9 @@ def post_column_children(
             id_parent_persistent=id_parent_persistent, up_until_time=up_until_time
         ),
     )
+
+
+def clone_column(request: HttpRequest, id_persistent):
+    """Test method for cloning a column."""
+
+    return put_clone(request, id_persistent=id_persistent)
