@@ -2,17 +2,21 @@ import { MergeRequestStep, newMergeRequest, MergeRequest } from './state'
 import { parsePublicUserInfoFromJson } from '../user/thunks'
 import { exceptionMessage } from '../util/exception'
 import { parseColumnsFromApi } from '../column_menu/thunks'
-import { addError } from '../util/notification/slice'
+import { addError, addSuccessVanish } from '../util/notification/slice'
 import { ThunkWithFetch } from '../util/type'
 import {
     getMergeRequestsError,
     getMergeRequestsStart,
     getMergeRequestsSuccess
 } from './slice'
-import { cosmaeMergeRequestApiGetMergeRequests, MergeRequest as MergeRequestApi } from '../openapi/cosmae'
+import {
+    cosmaeMergeRequestApiGetMergeRequests,
+    cosmaeMergeRequestApiPutMergeRequest,
+    MergeRequest as MergeRequestApi
+} from '../openapi/cosmae'
 
 export function getColumnMergeRequests(): ThunkWithFetch<void> {
-    return async (dispatch, _getState,_fetch) => {
+    return async (dispatch, _getState, _fetch) => {
         dispatch(getMergeRequestsStart())
         try {
             const rsp = await cosmaeMergeRequestApiGetMergeRequests({})
@@ -34,6 +38,30 @@ export function getColumnMergeRequests(): ThunkWithFetch<void> {
             dispatch(getMergeRequestsError())
             dispatch(addError(exceptionMessage(exc)))
         }
+    }
+}
+
+export function createColumnMergeRequestThunk(
+    idOriginPersistent: string,
+    idDestinationPersistent: string
+): ThunkWithFetch<string | undefined> {
+    return async (dispatch, _getState, _fetch) => {
+        try {
+            const rsp = await cosmaeMergeRequestApiPutMergeRequest({
+                path: {
+                    id_origin_persistent: idOriginPersistent,
+                    id_destination_persistent: idDestinationPersistent
+                }
+            })
+            if (rsp.data) {
+                dispatch(addSuccessVanish('Merge request created successfully'))
+                return rsp.data.id_persistent
+            }
+            dispatch(addError(rsp.error.msg))
+        } catch (exc: unknown) {
+            dispatch(addError(exceptionMessage(exc)))
+        }
+        return undefined
     }
 }
 
@@ -66,5 +94,5 @@ const mergeRequestStateFromApiMap: { [key: string]: MergeRequestStep } = {
     CLOSED: MergeRequestStep.Closed,
     RESOLVED: MergeRequestStep.Resolved,
     MERGED: MergeRequestStep.Merged,
-    ERROR: MergeRequestStep.Error,
+    ERROR: MergeRequestStep.Error
 }
