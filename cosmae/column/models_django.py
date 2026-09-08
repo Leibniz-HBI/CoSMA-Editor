@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional, TypeVar
+from uuid import uuid4
 
 from django.contrib.postgres.indexes import GistIndex
 from django.contrib.postgres.search import (
@@ -244,6 +245,30 @@ class ColumnHistory(ColumnAbstract, HistoryMixin):
     unmodifiable_fields = {"id_persistent", "type"}
 
     objects = ColumnHistoryQuerySet.as_manager()
+
+    def clone(self, user: CosmaeUser, time_edit: datetime) -> ColumnHistory:
+        "Create a copy of the column."
+        for idx in range(10):
+            try:
+                column, do_write = self.change_or_create_versioned(
+                    id_persistent=str(uuid4()),
+                    id_parent_persistent=self.id_parent_persistent,
+                    version=None,
+                    written_by_session=user.edit_session,
+                    time_edit=time_edit,
+                    name=self.name + f" copy {idx+1}",
+                    description=self.description,
+                    owner_id=self.owner.id if self.owner is not None else None,
+                    type=self.type,
+                    curated=self.curated,
+                )
+                if do_write:
+                    column.save()
+                return column
+            except Exception as exc:  # pylint: disable=broad-except
+                if idx < 9:
+                    continue
+                raise exc
 
     @classmethod
     def most_recent_query_set(
