@@ -67,6 +67,7 @@ export interface TableState {
     historyDateSinceEpoch: number | undefined
     showFilterEditor: boolean
     filter: FilterClause | undefined
+    showMergeRequestForm: boolean
 }
 
 export function newTableState({
@@ -90,7 +91,8 @@ export function newTableState({
     showSearch = false,
     historyDateSinceEpoch = undefined,
     showFilterEditor = false,
-    filter = undefined
+    filter = undefined,
+    showMergeRequestForm = false
 }: {
     columnStates?: ColumnState[]
     columnIndices?: { [key: string]: number }
@@ -115,6 +117,7 @@ export function newTableState({
     historyDateSinceEpoch?: number | undefined
     showFilterEditor?: boolean
     filter?: FilterClause | undefined
+    showMergeRequestForm?: boolean
 }): TableState {
     let newEntityIndices: { [key: string]: number } = {}
     if (entityIdList !== undefined) {
@@ -148,7 +151,8 @@ export function newTableState({
         showSearch: showSearch,
         historyDateSinceEpoch,
         showFilterEditor,
-        filter: filter
+        filter: filter,
+        showMergeRequestForm
     }
 }
 

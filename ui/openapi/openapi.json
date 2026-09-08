@@ -3623,6 +3623,90 @@
                 ]
             }
         },
+        "/cosmae/api/merge_requests/new/{id_origin_persistent}/{id_destination_persistent}": {
+            "put": {
+                "operationId": "cosmae_merge_request_api_put_merge_request",
+                "summary": "Put Merge Request",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id_origin_persistent",
+                        "schema": {
+                            "title": "Id Origin Persistent",
+                            "type": "string"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "id_destination_persistent",
+                        "schema": {
+                            "title": "Id Destination Persistent",
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MergeRequest"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "description": "Create a new merge request",
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ]
+            }
+        },
         "/cosmae/api/merge_requests/{id_merge_request_persistent}": {
             "patch": {
                 "operationId": "cosmae_merge_request_api_patch_merge_request",

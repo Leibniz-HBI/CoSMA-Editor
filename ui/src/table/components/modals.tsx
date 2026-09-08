@@ -1,4 +1,4 @@
-import { Col, Modal, ModalBody, Row } from 'react-bootstrap'
+import { Button, Col, Modal, ModalBody, Row } from 'react-bootstrap'
 
 import { useAppDispatch, useAppSelector } from '../../hooks'
 import { EntityMergeRequestConflictComponent } from '../../merge_request/entity/conflicts/components'
@@ -9,7 +9,8 @@ import {
     selectShowColumnMenu,
     selectShowEntityAddMenu,
     selectShowEntityMerging,
-    selectShowFilterEditor
+    selectShowFilterEditor,
+    selectShowMergeRequestForm
 } from '../selectors'
 import {
     addJustificationToOpenHistory,
@@ -19,6 +20,7 @@ import {
     hideEntityJustificationHistory,
     removeColumnByIdPersistent,
     setShowFilterEditor,
+    setShowMergeRequestForm,
     toggleEntityMergingModal
 } from '../slice'
 import {
@@ -29,12 +31,12 @@ import {
 } from '../thunks'
 import { AddEntityForm, EntityDetails } from '../../entity/components'
 import { ColumnMenu } from '../../column_menu/components/menu'
-import { Column } from '../../column_menu/state'
+import { Column, ColumnType } from '../../column_menu/state'
 import {
     remoteUserProfileColumnAppendThunk,
     remoteUserProfileColumnDeleteThunk
 } from '../../auth/thunks'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { CommentForm, CommentsHistory } from '../../comments/components'
 import { clearSelection } from '../selection/slice'
 import { selectShowDetailsForEntityWithIdPersistent } from '../../entity/selectors'
@@ -44,6 +46,12 @@ import { constructColumnTitle } from '../../contribution/entity/hooks'
 import { submitEntityJustificationThunk } from '../../entity/thunks'
 import { FilterEditor } from './filter'
 import { FilterClause } from '../state'
+import * as yup from 'yup'
+import { Formik } from 'formik'
+import { ColumnNamePathFromId } from '../../column_menu/components/misc'
+import { ColumnSelector } from '../../column_menu/components/selection'
+import { loadColumnHierarchy } from '../../column_menu/thunks'
+import { createColumnMergeRequestThunk } from '../../merge_request/thunks'
 
 export function EntityMergingModal() {
     const dispatch = useAppDispatch()
@@ -317,4 +325,190 @@ export function DisplayTextDetails({
         }
     }
     return <div>{`Display text source: ${tooltipValue}`}</div>
+}
+
+type MergeRequestFormData = {
+    idOriginPersistent: string | undefined
+    idDestinationPersistent: string | undefined
+}
+
+const mergeRequestFormSchema = yup.object({
+    idOriginPersistent: yup.string().required('Origin column is required'),
+    idDestinationPersistent: yup.string().required('Destination column is required')
+})
+
+export function ColumnMergeRequestModal() {
+    const dispatch = useAppDispatch()
+    const showMergeRequestForm = useAppSelector(selectShowMergeRequestForm)
+    const initialValues: MergeRequestFormData = {
+        idOriginPersistent: undefined,
+        idDestinationPersistent: undefined
+    }
+    return (
+        <Modal
+            show={showMergeRequestForm}
+            onHide={() => dispatch(setShowMergeRequestForm(false))}
+            size="xl"
+            // fullscreen={true}
+            key="entity-merging-modal"
+        >
+            <Modal.Header closeButton={true}>
+                <Modal.Title>Create Column Merge Request</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="display-block vh-85 overflow-y-hidden">
+                <Formik
+                    validationSchema={mergeRequestFormSchema}
+                    initialValues={initialValues}
+                    onSubmit={(values) => {
+                        if (
+                            values.idOriginPersistent === undefined ||
+                            values.idDestinationPersistent === undefined
+                        ) {
+                            return
+                        }
+                        dispatch(
+                            createColumnMergeRequestThunk(
+                                values.idOriginPersistent,
+                                values.idDestinationPersistent
+                            )
+                        )
+                    }}
+                >
+                    {({ values, setValues, submitForm, errors }) => (
+                        <ColumnMergeRequestModalBody
+                            values={values}
+                            setValues={setValues}
+                            submit={submitForm}
+                        />
+                    )}
+                </Formik>
+            </Modal.Body>
+        </Modal>
+    )
+}
+
+function ColumnMergeRequestModalBody({
+    values,
+    setValues,
+    submit
+}: {
+    values: MergeRequestFormData
+    setValues: (values: MergeRequestFormData) => void
+    submit: () => void
+}) {
+    const dispatch = useAppDispatch()
+    useEffect(() => {
+        dispatch(loadColumnHierarchy({ expand: true }))
+    }, [])
+    const [showOriginModal, setShowOriginModal] = useState(false)
+    const [showDestinationModal, setShowDestinationModal] = useState(false)
+    return (
+        <>
+            <Col>
+                <Row className="mb-3">
+                    <Col xs={2} className="justify-content-center d-flex">
+                        <Button onClick={() => setShowOriginModal(true)}>
+                            Select Origin
+                        </Button>
+                    </Col>
+                    <Col className="ps-3">
+                        {values.idOriginPersistent ? (
+                            <ColumnNamePathFromId
+                                idColumnPersistent={values.idOriginPersistent}
+                            />
+                        ) : (
+                            <span>No origin column selected</span>
+                        )}
+                    </Col>
+                </Row>
+                <Row className="mb-3">
+                    <Col xs={2} className="justify-content-center d-flex">
+                        <Button onClick={() => setShowDestinationModal(true)}>
+                            Select Destination
+                        </Button>
+                    </Col>
+                    <Col className="ps-3">
+                        {values.idDestinationPersistent ? (
+                            <ColumnNamePathFromId
+                                idColumnPersistent={values.idDestinationPersistent}
+                            />
+                        ) : (
+                            <span>No destination column selected</span>
+                        )}
+                    </Col>
+                </Row>
+                <Row className="mt-2">
+                    <Col></Col>
+                    <Col xs="auto">
+                        <Button onClick={() => submit()}>Create</Button>
+                    </Col>
+                </Row>
+            </Col>
+            <SelectColumnModal
+                key="select-origin-column-modal"
+                show={showOriginModal}
+                onHide={() => setShowOriginModal(false)}
+                variant="Origin"
+                selectCallback={(idPersistent) => {
+                    // Need to close before redraw
+                    setShowOriginModal(false)
+                    setValues({ ...values, idOriginPersistent: idPersistent })
+                }}
+            />
+            <SelectColumnModal
+                key="select-destination-column-modal"
+                show={showDestinationModal}
+                onHide={() => setShowDestinationModal(false)}
+                variant="Destination"
+                selectCallback={(idPersistent) => {
+                    // Need to close before redraw
+                    setShowDestinationModal(false)
+                    setValues({ ...values, idDestinationPersistent: idPersistent })
+                }}
+            />
+        </>
+    )
+}
+
+function SelectColumnModal({
+    show,
+    onHide,
+    variant,
+    selectCallback
+}: {
+    show: boolean
+    onHide: () => void
+    variant: 'Origin' | 'Destination'
+    selectCallback: (idPersistent: string) => void
+}) {
+    return (
+        <Modal
+            show={show}
+            onHide={onHide}
+            size="xl"
+            className="overflow-hidden"
+            contentClassName="vh-95 d-flex flex-column bg-secondary flex-sm-wrap flex-md-nowrap"
+        >
+            <Modal.Header closeButton className="flex-grow-0 flex-shrink-0 bg-white">
+                <Modal.Title className="text-dark">{`Select ${variant} Column`}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="bg-secondary d-contents">
+                <ColumnSelector
+                    mkTailElement={(column: Column) => {
+                        if (column.columnType === ColumnType.Inner) {
+                            return <div />
+                        }
+                        return (
+                            <Button
+                                onClick={() => selectCallback(column.idPersistent)}
+                                variant="outline-primary"
+                            >
+                                Select
+                            </Button>
+                        )
+                    }}
+                />
+            </Modal.Body>
+        </Modal>
+    )
 }

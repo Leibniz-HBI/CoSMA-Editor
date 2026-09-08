@@ -1,6 +1,6 @@
 import { Badge, Button } from 'react-bootstrap'
 import { AppDispatch } from '../../store'
-import { showEntityAdd, toggleSearch } from '../slice'
+import { setShowMergeRequestForm, showEntityAdd, toggleSearch } from '../slice'
 
 import { OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
@@ -13,7 +13,7 @@ import { toggleRowSelection } from '../selection/slice'
 import { selectRowSelectionOrder } from '../selection/selectors'
 import { downloadWorkAround } from './table'
 import { useColumnDefinitionList } from '../../column_menu/hooks'
-import { useAppSelector } from '../../hooks'
+import { useAppDispatch, useAppSelector } from '../../hooks'
 import { RemoteInterface } from '../../util/state'
 
 export function AddEntityButton({
@@ -144,6 +144,15 @@ export function FilterButton({
     return (
         <Button className="position-relative" onClick={onClick}>
             {content}
+        </Button>
+    )
+}
+
+export function MergeRequestButton() {
+    const dispatch = useAppDispatch()
+    return (
+        <Button onClick={() => dispatch(setShowMergeRequestForm(true))}>
+            New Merge Request
         </Button>
     )
 }

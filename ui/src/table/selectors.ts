@@ -174,3 +174,8 @@ export const selectFilter = createSelector(
     selectTableState,
     (state) => state.filter
 )
+
+export const selectShowMergeRequestForm = createSelector(
+    selectTableState,
+    (state) => state.showMergeRequestForm
+)

@@ -14,7 +14,7 @@ import { ColumnAddButton } from '../../column_menu/components/misc'
 import { HeaderMenu } from '../../header_menu'
 import { loadingCellRenderer } from '../draw'
 import { ChangeOwnershipModal } from '../../column_management/components'
-import { FilterButton, MergeEntitiesButton } from './buttons'
+import { FilterButton, MergeEntitiesButton, MergeRequestButton } from './buttons'
 import { clearSelection, mkGridSelectionCallback } from '../selection/slice'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch } from '../../store'
@@ -72,7 +72,8 @@ import {
     EntityMergingModal,
     EntityJustificationModal,
     DisplayTextDetails,
-    FilterModal
+    FilterModal,
+    ColumnMergeRequestModal
 } from './modals'
 import { createCellContentCallback } from '../cell'
 import { AddEntityButton } from './buttons'
@@ -180,6 +181,9 @@ export function RemoteDataTable() {
                                     filter={filter}
                                 />
                             </Col>
+                            <Col className="ps-0" xs="auto">
+                                <MergeRequestButton />
+                            </Col>
                         </Row>
                     </Col>
                     <Col xs="auto" className="pe-0">
@@ -255,6 +259,7 @@ export function RemoteDataTable() {
                                 dispatch(setShowFilterEditor(false))
                             }}
                         />
+                        <ColumnMergeRequestModal />
                     </div>
                 </Row>
                 <div id="portal" />

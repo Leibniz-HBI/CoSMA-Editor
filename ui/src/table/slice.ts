@@ -264,6 +264,9 @@ const tableSlice = createSlice({
                 return { ...state, cellContents: newRemote([]) }
             })
             generateColumnStateIndices(state)
+        },
+        setShowMergeRequestForm(state: TableState, action: PayloadAction<boolean>) {
+            state.showMergeRequestForm = action.payload
         }
     }
 })
@@ -329,5 +332,6 @@ export const {
     setHistoryDate,
     addJustificationToOpenHistory,
     setShowFilterEditor,
-    setFilter
+    setFilter,
+    setShowMergeRequestForm
 } = tableSlice.actions
