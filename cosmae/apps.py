@@ -15,6 +15,7 @@ from cosmae.signals import (
     connect_data_publication_signal,
     connect_entity_display_txt,
     connect_password_changed_signal,
+    connect_quality_check_signals,
     connect_read_csv_signal,
     connect_set_ssh_keys,
     connect_user_created_signal,
@@ -99,6 +100,7 @@ class CosmaeConfig(AppConfig):
                 connect_password_changed_signal()
                 connect_set_ssh_keys()
                 delete_marked_contributions()
+                connect_quality_check_signals()
         except AppRegistryNotReady:
             pass
         super().ready()

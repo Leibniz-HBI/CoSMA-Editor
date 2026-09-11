@@ -9042,7 +9042,14 @@
                         "$ref": "#/components/schemas/EntityRequest"
                     },
                     "created_by": {
-                        "$ref": "#/components/schemas/PublicUserInfo"
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PublicUserInfo"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "state": {
                         "enum": [

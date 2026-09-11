@@ -62,7 +62,7 @@ class EntityMergeRequest(Schema):
     id_persistent: str
     origin: EntityRequest
     destination: EntityRequest
-    created_by: PublicUserInfo
+    created_by: PublicUserInfo | None
     state: Literal[
         "CREATED", "OPEN", "CONFLICTS", "CLOSED", "RESOLVED", "MERGED", "ERROR"
     ]
@@ -519,11 +519,15 @@ def entity_merge_request_db_to_api(merge_request: EntityMergeRequestDb):
         ).annotate_justification()
     except IndexError:
         return None
+    if merge_request.created_by is None:
+        created_by = None
+    else:
+        created_by = user_db_to_public_user_info(merge_request.created_by)
     return EntityMergeRequest(
         id_persistent=str(merge_request.id_persistent),
         origin=entity_db_to_api(origin.get()),
         destination=entity_db_to_api(destination.get()),
-        created_by=user_db_to_public_user_info(merge_request.created_by),
+        created_by=created_by,
         state=merge_request_step_db_to_api_map[merge_request.state],
     )
 

@@ -17,6 +17,7 @@ from cosmae.management.data_publication.models_django import (
     DataPublicationStepInput,
 )
 from cosmae.management.models_django import ConfigValue
+from cosmae.management.process.models_django import ProcessRun
 from cosmae.merge_request.entity.models_django import (
     EntityConflictResolution,
     EntityMergeRequest,

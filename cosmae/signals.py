@@ -2,7 +2,7 @@
 
 from logging import getLogger
 
-from allauth.account.signals import password_changed, user_signed_up
+from allauth.account.signals import password_changed, user_logged_in, user_signed_up
 from django.apps import apps
 from django.conf import settings
 from django.db.models.signals import post_delete, post_migrate, post_save
@@ -165,4 +165,17 @@ def connect_compute_conflicts_signals():
         entity_conflicts_signal_handler,
         sender=EntityMergeRequest,
         dispatch_uid="cosmae.start_entity_conflict_computation",
+    )
+
+
+def connect_quality_check_signals():
+    "Connect the signal for quality checks."
+    # pylint: disable=import-outside-toplevel
+    from cosmae.quality.queue_dispatch import login_duplicate_signal
+
+    user_model = apps.get_model("cosmae", "cosmaeuser")
+    user_logged_in.connect(
+        login_duplicate_signal,
+        sender=user_model,
+        dispatch_uid="cosmae.login_duplicate_signal",
     )
