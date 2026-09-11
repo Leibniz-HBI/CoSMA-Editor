@@ -33,7 +33,31 @@ def find_duplicates_in_column(id_column_persistent):
         duplicate_candidate_pairs = with_duplicate_info.filter(
             id_duplicate_entity_candidate_persistent__isnull=False
         ).values("id_entity_persistent", "id_duplicate_entity_candidate_persistent")
-        for duplicate_candidate_pair in duplicate_candidate_pairs:
+        mr_subquery = EntityMergeRequest.objects.filter(
+            (
+                Q(id_origin_persistent=OuterRef("id_entity_persistent"))
+                & Q(
+                    id_destination_persistent=OuterRef(
+                        "id_duplicate_entity_candidate_persistent"
+                    )
+                )
+            )
+            | (
+                Q(
+                    id_origin_persistent=OuterRef(
+                        "id_duplicate_entity_candidate_persistent"
+                    )
+                )
+                & Q(id_destination_persistent=OuterRef("id_entity_persistent"))
+            )
+        )[:1].values("id_persistent")
+        with_existing_mr_info = duplicate_candidate_pairs.annotate(
+            existing_mr_id_persistent=Subquery(mr_subquery)
+        )
+        new_duplicate_candidate_pairs = with_existing_mr_info.filter(
+            existing_mr_id_persistent__isnull=True
+        )
+        for duplicate_candidate_pair in new_duplicate_candidate_pairs:
             EntityMergeRequest.objects.get_or_create(
                 state=EntityMergeRequest.State.CONFLICTS,
                 id_origin_persistent=duplicate_candidate_pair["id_entity_persistent"],
