@@ -1,6 +1,8 @@
 # pylint: disable=unused-argument,redefined-outer-name, invalid-name
 "Tests for quality queue methods"
 
+from datetime import datetime
+
 from pytest import fixture
 
 import tests.column.common as cc
@@ -38,3 +40,38 @@ def test_creates_merge_request(values_curated, value_duplicate):
     assert merge_request.state == EntityMergeRequest.State.CONFLICTS
     assert merge_request.id_origin_persistent == ce.id_persistent_test_0
     assert merge_request.id_destination_persistent == id_entity_duplicate
+
+
+def test_does_not_create_duplicate_merge_request(values_curated, value_duplicate):
+    "Make sure no duplicate entity merge request is created when it already exists"
+    id_persistent = "d9f78a21-b538-466a-ad7b-98639ee6e675"
+    EntityMergeRequest.objects.create(
+        state=EntityMergeRequest.State.CONFLICTS,
+        id_origin_persistent=ce.id_persistent_test_0,
+        id_destination_persistent=id_entity_duplicate,
+        created_at=datetime(2022, 1, 1),
+        id_persistent=id_persistent,
+    )
+    find_duplicates_in_column(cc.id_column_curated_test)
+
+    merge_request = EntityMergeRequest.objects.get()
+    assert str(merge_request.id_persistent) == id_persistent
+
+
+def test_does_not_create_duplicate_merge_request_reversed(
+    values_curated, value_duplicate
+):
+    """Make sure no duplicate entity merge request is created when it already exists
+    but with reversed origin and destination"""
+    id_persistent = "d9f78a21-b538-466a-ad7b-98639ee6e675"
+    EntityMergeRequest.objects.create(
+        state=EntityMergeRequest.State.CONFLICTS,
+        id_origin_persistent=id_entity_duplicate,
+        id_destination_persistent=ce.id_persistent_test_0,
+        created_at=datetime(2022, 1, 1),
+        id_persistent=id_persistent,
+    )
+    find_duplicates_in_column(cc.id_column_curated_test)
+
+    merge_request = EntityMergeRequest.objects.get()
+    assert str(merge_request.id_persistent) == id_persistent
