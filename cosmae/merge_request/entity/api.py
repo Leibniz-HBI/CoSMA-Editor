@@ -86,6 +86,14 @@ class EntityMergeRequestConflict(Schema):
     replacement_value: str | None = None
 
 
+class EntityMergeRequestPatchRequest(Schema):
+    """Body for changing entity merge requests.
+    Currently only used for closing a merge request."""
+
+    # pylint: disable=too-few-public-methods
+    state: Literal["CLOSED"] | None = None
+
+
 class GetEntityMergeRequestConflictsResponse(Schema):
     "Response for get entity merge request requests."
 
@@ -506,6 +514,44 @@ def get(request: HttpRequest, id_merge_request_persistent):
             return ApiError(msg="Entity merge request does not exist")
     except Exception:  # pylint: disable=broad-except
         return ApiError(msg="Could not get requested merge request.")
+
+
+@router.patch(
+    "{id_merge_request_persistent}",
+    response={
+        200: EntityMergeRequest,
+        400: ApiError,
+        401: ApiError,
+        403: ApiError,
+        404: ApiError,
+        500: ApiError,
+    },
+)
+def patch_merge_request(
+    request: HttpRequest,
+    id_merge_request_persistent: str,
+    patch_request: EntityMergeRequestPatchRequest,
+):
+    "API method for patching an entity merge request."
+    try:
+        user = check_user(request)
+    except NotAuthenticatedException:
+        return 401, ApiError(msg="Not authenticated.")
+    if user.permission_group not in {CosmaeUserDb.EDITOR, CosmaeUserDb.COMMISSIONER}:
+        return 403, ApiError(msg="Insufficient permissions.")
+    try:
+        merge_request = EntityMergeRequestDb.objects.by_id_persistent(
+            id_merge_request_persistent
+        ).get()
+        if patch_request.state == "CLOSED":
+            merge_request.state = EntityMergeRequestDb.State.CLOSED
+            merge_request.save(update_fields=["state"])
+            return 200, entity_merge_request_db_to_api(merge_request)
+        return 400, ApiError(msg="Invalid state change requested.")
+    except EntityMergeRequestDb.DoesNotExist:  # pylint: disable=no-member
+        return 404, ApiError(msg="Entity merge request does not exist")
+    except Exception:  # pylint: disable=broad-except
+        return 500, ApiError(msg="Could not patch requested merge request.")
 
 
 def entity_merge_request_db_to_api(merge_request: EntityMergeRequestDb):
