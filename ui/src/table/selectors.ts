@@ -2,10 +2,14 @@ import { createSelector } from '@reduxjs/toolkit'
 import { AppDispatch, RootState } from '../store'
 import { selectPermissionGroup } from '../auth/selectors'
 import { removeSelectedColumn, columnChangeOwnershipShow } from './slice'
-import { remoteUserProfileColumnDeleteThunk } from '../auth/thunks'
+import {
+    remoteUserProfileColumnAppendThunk,
+    remoteUserProfileColumnDeleteThunk
+} from '../auth/thunks'
 import { UserPermissionGroup } from '../user/state'
-import { curateAsync } from '../column_menu/thunks'
+import { cloneColumnThunk, curateAsync } from '../column_menu/thunks'
 import { justificationColumnId } from './state'
+import { getColumnAsync } from './thunks'
 
 function selectTableState(state: RootState) {
     return state.table
@@ -33,7 +37,6 @@ export const selectEntityIdList = createSelector(
     selectTableState,
     (state) => state.entityIdList
 )
-
 
 export const selectEntityIndices = createSelector(
     selectTableState,
@@ -116,6 +119,18 @@ export const selectColumnHeaderMenu = createSelector(
                 labelClassName: '',
                 onClick: () => dispatch(columnChangeOwnershipShow(idPersistent))
             })
+            ret.push({
+                label: 'Clone Column',
+                labelClassName: '',
+                onClick: () => {
+                    dispatch(cloneColumnThunk(idPersistent)).then((newIdPersistent) => {
+                        if (newIdPersistent) {
+                            dispatch(getColumnAsync(idPersistent, undefined))
+                            dispatch(remoteUserProfileColumnAppendThunk(idPersistent))
+                        }
+                    })
+                }
+            })
             if (
                 permissionGroup == UserPermissionGroup.EDITOR ||
                 permissionGroup == UserPermissionGroup.COMMISSIONER
@@ -170,10 +185,7 @@ export const selectShowFilterEditor = createSelector(
     (state) => state.showFilterEditor
 )
 
-export const selectFilter = createSelector(
-    selectTableState,
-    (state) => state.filter
-)
+export const selectFilter = createSelector(selectTableState, (state) => state.filter)
 
 export const selectShowMergeRequestForm = createSelector(
     selectTableState,

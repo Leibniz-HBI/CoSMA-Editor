@@ -28,7 +28,8 @@ import {
     ColumnRequest,
     cosmaeColumnApiPostDetails,
     cosmaeColumnApiPurge,
-    cosmaeColumnApiPermissionsPostCuration
+    cosmaeColumnApiPermissionsPostCuration,
+    cosmaeColumnApiPutClone
 } from '../openapi/cosmae'
 
 export function loadColumnHierarchy({
@@ -325,6 +326,27 @@ export function curateAsync(idColumnPersistent: string): ThunkWithFetch<void> {
             dispatch(curateColumnError())
             dispatch(addError(exceptionMessage(e)))
         }
+    }
+}
+
+export function cloneColumnThunk(
+    idColumnPersistent: string
+): ThunkWithFetch<string | undefined> {
+    return async (dispatch, _getState, _fetch) => {
+        try {
+            const rsp = await cosmaeColumnApiPutClone({
+                path: { id_persistent: idColumnPersistent }
+            })
+            if (rsp.data) {
+                dispatch(addSuccessVanish('Successfully cloned column definition.'))
+                return rsp.data.id_persistent
+            } else {
+                dispatch(addError(errorMessageFromApi(rsp.error)))
+            }
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+        }
+        return undefined
     }
 }
 
