@@ -13,7 +13,7 @@ export enum EntityMergeRequestStep {
 export interface EntityMergeRequest {
     entityOrigin: Entity
     entityDestination: Entity
-    createdBy: PublicUserInfo
+    createdBy: PublicUserInfo | undefined
     state: EntityMergeRequestStep
     idPersistent: string
 }
@@ -22,7 +22,7 @@ export function newEntityMergeRequest(args: {
     idPersistent: string
     entityOrigin: Entity
     entityDestination: Entity
-    createdBy: PublicUserInfo
+    createdBy: PublicUserInfo | undefined
     state: EntityMergeRequestStep
 }): EntityMergeRequest {
     return args

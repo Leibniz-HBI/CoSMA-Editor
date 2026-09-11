@@ -59,7 +59,7 @@ class AbstractMergeRequest(models.Model):
     id_destination_persistent = models.TextField()
     id_origin_persistent = models.TextField()
     created_by = models.ForeignKey(
-        "CosmaeUser", related_name="+", on_delete=models.CASCADE
+        "CosmaeUser", related_name="+", on_delete=models.CASCADE, blank=True, null=True
     )
     created_at = models.DateTimeField()
     id_persistent = models.UUIDField(primary_key=True)

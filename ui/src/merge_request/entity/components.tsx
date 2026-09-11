@@ -12,12 +12,9 @@ import { ArrowLeftCircle, ArrowRightCircleFill } from 'react-bootstrap-icons'
 export function EntityMergeRequests() {
     const navigateCallback = useNavigate()
     const dispatch: AppDispatch = useDispatch()
-    useEffect(
-        () => {
-            dispatch(getEntityMergeRequests())
-        },
-        []
-    )
+    useEffect(() => {
+        dispatch(getEntityMergeRequests())
+    }, [])
     const remoteEntityMergeRequests = useSelector(selectEntityMergeRequests)
     const entityMergeRequestValue = remoteEntityMergeRequests.value
     if (remoteEntityMergeRequests.isLoading || entityMergeRequestValue === undefined) {
@@ -63,7 +60,11 @@ export function EntityMergeRequestListItem({
                 <Col xs={3}>
                     <Row>
                         <span>Opened by:</span>
-                        <span className="fw-bold">{`${mergeRequest.createdBy.username}`}</span>
+                        {mergeRequest.createdBy === undefined ? (
+                            <span>Nobody</span>
+                        ) : (
+                            <span className="fw-bold">{`${mergeRequest.createdBy.username}`}</span>
+                        )}
                     </Row>
                 </Col>
             </Row>

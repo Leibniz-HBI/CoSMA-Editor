@@ -46,7 +46,10 @@ export function parseEntityMergeRequestFromJson(
         idPersistent: mergeRequest.id_persistent,
         entityOrigin: parseEntityObjectFromJson(mergeRequest.origin),
         entityDestination: parseEntityObjectFromJson(mergeRequest.destination),
-        createdBy: parsePublicUserInfoFromJson(mergeRequest.created_by),
+        createdBy:
+            mergeRequest.created_by === null
+                ? undefined
+                : parsePublicUserInfoFromJson(mergeRequest.created_by),
         state: entityMergeRequestStateJsonToEnumMap[mergeRequest.state]
     })
 }
