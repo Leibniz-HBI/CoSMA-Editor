@@ -4785,6 +4785,99 @@
                         "SessionAuth": []
                     }
                 ]
+            },
+            "patch": {
+                "operationId": "cosmae_merge_request_entity_api_patch_merge_request",
+                "summary": "Patch Merge Request",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id_merge_request_persistent",
+                        "schema": {
+                            "title": "Id Merge Request Persistent",
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EntityMergeRequest"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "description": "API method for patching an entity merge request.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EntityMergeRequestPatchRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "SessionAuth": []
+                    }
+                ]
             }
         },
         "/cosmae/api/manage/display_txt/order": {
@@ -9274,6 +9367,25 @@
                     "entity_merge_requests"
                 ],
                 "title": "EntityMergeRequestList",
+                "type": "object"
+            },
+            "EntityMergeRequestPatchRequest": {
+                "description": "Body for changing entity merge requests.\nCurrently only used for closing a merge request.",
+                "properties": {
+                    "state": {
+                        "anyOf": [
+                            {
+                                "const": "CLOSED",
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "State"
+                    }
+                },
+                "title": "EntityMergeRequestPatchRequest",
                 "type": "object"
             },
             "DisplayTxtOrderAppend": {

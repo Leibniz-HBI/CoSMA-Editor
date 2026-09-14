@@ -26,9 +26,10 @@ import {
     getEntityMergeRequestConflicts,
     getEntityMergeRequest,
     reverseOriginDestination,
-    mergeEntityMergeRequest
+    mergeEntityMergeRequest,
+    closeEntityMergeRequest
 } from './thunks'
-import { useLoaderData } from 'react-router-dom'
+import { useLoaderData, useNavigate } from 'react-router-dom'
 import { clearEntityMergeState } from './slice'
 import { ColumnType } from '../../../column_menu/state'
 import { ResolutionFormArgs } from '../../conflicts/components'
@@ -294,6 +295,9 @@ export function EntityMergeRequestConflictHeader({
                     </span>
                 </OverlayTrigger>
             </Col>
+            <Col xs="auto">
+                <CloseButton idMergeRequestPersistent={mergeRequest.idPersistent} />
+            </Col>
         </Row>
     )
 }
@@ -305,6 +309,44 @@ function mkDebouncedResolveCallback() {
             callback: (args: ResolveEntityConflictArg) => void
         ) => callback(args),
         400
+    )
+}
+
+export function CloseButton({
+    idMergeRequestPersistent
+}: {
+    idMergeRequestPersistent: string
+}) {
+    const dispatch: AppDispatch = useDispatch()
+    const navigate = useNavigate()
+    return (
+        <OverlayTrigger
+            placement="left"
+            delay={{ show: 250, hide: 400 }}
+            overlay={
+                <Tooltip id="button-tooltip">
+                    Close the merge request, preventing automatic duplicate matching for
+                    the two entities in the future.
+                </Tooltip>
+            }
+        >
+            {/* Empty div to allow tooltip showing   */}
+            <span>
+                <Button
+                    onClick={() => {
+                        dispatch(
+                            closeEntityMergeRequest(idMergeRequestPersistent)
+                        ).then((success) => {
+                            if (success) {
+                                navigate('/review')
+                            }
+                        })
+                    }}
+                >
+                    Close
+                </Button>
+            </span>
+        </OverlayTrigger>
     )
 }
 
