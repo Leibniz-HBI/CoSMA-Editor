@@ -39,6 +39,7 @@ import {
 import {
     cosmaeMergeRequestEntityApiGet,
     cosmaeMergeRequestEntityApiGetMergeRequestConflicts,
+    cosmaeMergeRequestEntityApiPatchMergeRequest,
     cosmaeMergeRequestEntityApiPostMergeRequestMerge,
     cosmaeMergeRequestEntityApiPostResolveConflict,
     cosmaeMergeRequestEntityApiPut,
@@ -240,6 +241,28 @@ export function resolveEntityConflict({
             dispatch(resolveEntityConflictError(column.idPersistent))
             dispatch(addError(exceptionMessage(e)))
         }
+    }
+}
+
+export function closeEntityMergeRequest(
+    idMergeRequestPersistent: string
+): ThunkWithFetch<boolean> {
+    return async (dispatch, _getState, _fetch) => {
+        try {
+            const rsp = await cosmaeMergeRequestEntityApiPatchMergeRequest({
+                path: { id_merge_request_persistent: idMergeRequestPersistent },
+                body: { state: 'CLOSED' }
+            })
+            if (rsp.error) {
+                dispatch(addError(errorMessageFromApi(rsp.error)))
+            } else {
+                dispatch(addSuccessVanish('Merge request closed.'))
+                return true
+            }
+        } catch (e: unknown) {
+            dispatch(addError(exceptionMessage(e)))
+        }
+        return false
     }
 }
 
