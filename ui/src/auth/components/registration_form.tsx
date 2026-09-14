@@ -49,7 +49,7 @@ const registrationSchema = yup.object({
         .string()
         .oneOf([yup.ref('password')], 'The password fields have to be the same.')
         .required(),
-    sshKey: yup.string().required().trim()
+    sshKey: yup.string().trim()
 })
 
 export function RegistrationForm({
