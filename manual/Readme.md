@@ -208,9 +208,10 @@ In that case, search for the entity by entering its details in the search field.
 # Review
 The **Review** section of the app contains merge requests created by or assigned to you.
 As a normal user you will mostly create merge requests as part of the upload process.
-## Comments
+## Column Merge Requests
+### Comments
 Here you can exchange messages with the person the merge request is assigned to.
-## Resolve
+### Resolve
 If a merge request is assigned to you, go through each conflict and make a decision.
 There are three possible resolutions
 * **Keep Existing Value** will discard the proposed change from the merge request.
@@ -221,6 +222,17 @@ This may be helpful, when the proposed is nearly correct but has a typo.
 When all conflicts are resolved, click on **Apply Resolutions to Destination**
 
 ![Merge Request Resolution](images/review-merge-request.png)
+
+## Entity Merge Requests
+There are two ways entity merge requests are created.
+1. User can propose the merging of two entities from the **View** section.
+2. Entity merge requests are created automatically by the system when the same value is detected in a curated column for the same entity.
+### Processing Entity Merge Requests.
+Completing entity merge requests progresses similarly to column merge requests.
+In addition you can change the origin and destination of the merge request.
+This allows you to choose the display text of the resulting entity.
+Furthermore you can **close** an entity merge request in order mark it as done without merging.
+For entity pairs that have a closed merge request, no further merge requests will be automatically generated.
 
 # Column Ownership
 When you create a new column it belongs to your account.
