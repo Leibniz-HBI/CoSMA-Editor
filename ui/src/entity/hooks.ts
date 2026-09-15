@@ -19,17 +19,14 @@ export function useEntity(idPersistent: string, upUntilTime: Date | undefined) {
         selectAuxiliaryEntityByIdPersistent(state, idPersistent, upUntilTime)
     const auxiliaryEntity = useAppSelector(selectAuxiliaryEntity)
     const dispatch = useAppDispatch()
-    useEffect(
-        () => {
-            if (
-                auxiliaryEntity === undefined ||
-                (auxiliaryEntity.value === undefined && !auxiliaryEntity.isLoading)
-            ) {
-                dispatch(getEntityThunk([idPersistent], upUntilTime))
-            }
-        },
-        [idPersistent]
-    )
+    useEffect(() => {
+        if (
+            auxiliaryEntity === undefined ||
+            (auxiliaryEntity.value === undefined && !auxiliaryEntity.isLoading)
+        ) {
+            dispatch(getEntityThunk([idPersistent], upUntilTime))
+        }
+    }, [idPersistent])
     return auxiliaryEntity ? auxiliaryEntity : newRemote(undefined)
 }
 
@@ -43,9 +40,12 @@ export function useEntityByIdPersistentList(
         toLoad: string[] = []
     idPersistentList.forEach((idPersistent) => {
         const key = mkUpUntilDateColumnId(idPersistent, upUntilTime)
-        const entity = entitiesCache.list.at(entitiesCache.indexMap[key])
-        if (entity !== undefined) {
-            ret.push(entity)
+        const idx = entitiesCache.indexMap[key]
+        if (idx !== undefined) {
+            const entity = entitiesCache.list.at(idx)
+            if (entity !== undefined) {
+                ret.push(entity)
+            }
         } else {
             ret.push(newRemote(undefined))
             toLoad.push(idPersistent)
