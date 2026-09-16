@@ -14,7 +14,6 @@ from ninja import Field, Router, Schema
 from cosmae.column.models_api import ColumnResponse
 from cosmae.column.models_conversion import column_db_dict_to_api
 from cosmae.comments.api import Comment
-from cosmae.entity.filter_conversion import filter_to_django_q
 from cosmae.entity.models_api import FilterClause
 from cosmae.entity.models_django import Entity as EntityDb
 from cosmae.entity.models_django import EntityHistory, entity_objects
@@ -369,7 +368,6 @@ def filter_entities(request: HttpRequest, filter_body: FilterRequest):
         look_ahead = min(100, filter_body.limit)
         batch_offset = filter_body.offset
         entity_id_list: List[str] = []
-        django_q = filter_to_django_q(filter_body.filter)
         next_request_offset = -1
         while len(entity_id_list) < filter_body.limit:
             offset_queryset = entity_queryset.gte_id_version(batch_offset)
@@ -378,10 +376,9 @@ def filter_entities(request: HttpRequest, filter_body: FilterRequest):
             look_ahead_queryset = offset_queryset.lt_id_version(
                 batch_offset + look_ahead
             ).order_by("id")
-            if django_q is not None:
-                look_ahead_queryset = look_ahead_queryset.filter_by_values(
-                    value_objects(filter_body.up_until_time), django_q
-                )
+            look_ahead_queryset = look_ahead_queryset.filter_by_values(
+                value_objects(filter_body.up_until_time), filter_body.filter
+            )
             entity_id_list += look_ahead_queryset.values_list(
                 "id_persistent", flat=True
             )
