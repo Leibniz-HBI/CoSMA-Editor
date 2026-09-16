@@ -80,8 +80,7 @@ def test_literal_neq(request_user, entity0, entity1, values_user):
     )
     assert status_code == 200
     entity_ids = rsp.dict()["id_entity_persistent_list"]
-    assert len(entity_ids) == 2
-    assert set(entity_ids) == {entity0.id_persistent, entity1.id_persistent}
+    assert entity_ids == [entity0.id_persistent]
 
 
 def test_negation(request_user, entity0, entity1, values_user):
@@ -102,8 +101,7 @@ def test_negation(request_user, entity0, entity1, values_user):
     )
     assert status_code == 200
     entity_ids = rsp.dict()["id_entity_persistent_list"]
-    assert len(entity_ids) == 2
-    assert set(entity_ids) == {entity0.id_persistent, entity1.id_persistent}
+    assert entity_ids == [entity0.id_persistent]
 
 
 def test_no_filter(request_user, entity0, entity1, values_user):
@@ -147,3 +145,66 @@ def test_composite_empty_set(request_user, entity0, entity1, values_user):
     assert status_code == 200
     entity_ids = rsp.dict()["id_entity_persistent_list"]
     assert entity_ids == []
+
+
+def test_composite_same_entity(request_user, entity0, entity1, values_user):
+    """Test filtering entities with a composite filter that should return a single entity."""
+    status_code, rsp = r.post_entity_filter(
+        request_user,
+        FilterClause(
+            filter=FilterComposite(
+                operator="AND",
+                clause_list=[
+                    FilterClause(
+                        filter=FilterLiteral(
+                            id_column_persistent=cc.id_column_persistent_test_user,
+                            value="value 1",
+                            predicate="EQ",
+                        )
+                    ),
+                    FilterClause(
+                        filter=FilterLiteral(
+                            id_column_persistent=cc.id_column_persistent_test_user1,
+                            value="value 3",
+                            predicate="EQ",
+                        )
+                    ),
+                ],
+            ),
+        ),
+    )
+    assert status_code == 200
+    entity_ids = rsp.dict()["id_entity_persistent_list"]
+    assert entity_ids == [entity1.id_persistent]
+
+
+def test_composite_wildcard(request_user, entity0, entity1, values_user):
+    """Test filtering entities with a composite filter that uses wildcards."""
+    status_code, rsp = r.post_entity_filter(
+        request_user,
+        FilterClause(
+            filter=FilterComposite(
+                operator="OR",
+                clause_list=[
+                    FilterClause(
+                        filter=FilterLiteral(
+                            id_column_persistent=cc.id_column_persistent_test_user,
+                            value="*",
+                            predicate="EQ",
+                        )
+                    ),
+                    FilterClause(
+                        filter=FilterLiteral(
+                            id_column_persistent=cc.id_column_persistent_test_user1,
+                            value="*",
+                            predicate="EQ",
+                        )
+                    ),
+                ],
+            ),
+        ),
+    )
+    assert status_code == 200
+    entity_ids = rsp.dict()["id_entity_persistent_list"]
+    assert len(entity_ids) == 2
+    assert set(entity_ids) == {entity0.id_persistent, entity1.id_persistent}
