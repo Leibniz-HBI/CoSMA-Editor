@@ -79,6 +79,16 @@ def delete_marked_contributions():
         _LOGGER.warning("Could not delete marked contributions.", exc_info=exc)
 
 
+def recover_conflict_processing():
+    "Recover conflict processing for entity merge requests in CONFLICTS state."
+    # pylint: disable=import-outside-toplevel
+    from cosmae.merge_request.entity.queue import enqueue_recover as entity_recover
+    from cosmae.merge_request.queue import enqueue_recover as column_recover
+
+    column_recover()
+    entity_recover()
+
+
 class CosmaeConfig(AppConfig):
     """Configuration for the CoSMA-Editor Django app"""
 
@@ -100,6 +110,7 @@ class CosmaeConfig(AppConfig):
                 connect_password_changed_signal()
                 connect_set_ssh_keys()
                 delete_marked_contributions()
+                recover_conflict_processing()
                 connect_quality_check_signals()
         except AppRegistryNotReady:
             pass

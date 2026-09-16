@@ -282,9 +282,12 @@ def store_conflicts(merge_request, conflicts, entity_origin, entity_destination)
     "Store conflicts in the database."
     max_idx = -1
     for conflict in conflicts:
-        column = ColumnHistory.objects.from_most_recent(
-            Column.objects.filter(id_persistent=conflict.id_column_persistent)
-        ).get()
+        try:
+            column = ColumnHistory.objects.from_most_recent(
+                Column.objects.filter(id_persistent=conflict.id_column_persistent)
+            ).get()
+        except ColumnHistory.DoesNotExist:
+            continue
         if conflict.value_destination is None:
             value_destination_id = None
             replacement_state = EntityConflictResolution.REPLACE
@@ -324,9 +327,30 @@ def entity_conflicts_signal_handler(  # pylint: disable=unused-argument
             ),
             job_timeout=60 * 12,
         )
-    elif instance.state == ColumnMergeRequest.State.RESOLVED:
+    elif instance.state == EntityMergeRequest.State.RESOLVED:
         enqueue(
             apply_entity_merge_request,
             args=(str(instance.id_persistent),),
             job_timeout=60 * 12,
         )
+
+
+def recover_conflict_processing():
+    "Recover conflict processing for entity merge requests in CONFLICTS state."
+    for merge_request in EntityMergeRequest.objects.filter(  # pylint: disable=no-member
+        state=EntityMergeRequest.State.CONFLICTS
+    ):
+        enqueue(
+            merge_request_compute_conflicts,
+            args=(
+                str(
+                    merge_request.id_persistent,
+                ),
+            ),
+            job_timeout=60 * 12,
+        )
+
+
+def enqueue_recover():
+    "Enqueue recovery of conflict processing for entity merge requests in CONFLICTS state."
+    enqueue(recover_conflict_processing, job_timeout=60 * 12)
