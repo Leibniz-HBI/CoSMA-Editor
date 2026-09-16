@@ -269,3 +269,24 @@ def column_conflicts_signal_handler(  # pylint: disable=unused-argument
             args=(str(instance.id_persistent),),
             job_timeout=60 * 12,
         )
+
+
+def recover_conflict_processing():
+    "Recover conflict processing for entity merge requests in CONFLICTS state."
+    for merge_request in ColumnMergeRequest.objects.filter(  # pylint: disable=no-member
+        state=ColumnMergeRequest.State.CONFLICTS
+    ):
+        enqueue(
+            merge_request_compute_conflicts,
+            args=(
+                str(
+                    merge_request.id_persistent,
+                ),
+            ),
+            job_timeout=60 * 12,
+        )
+
+
+def enqueue_recover():
+    "Enqueue recovery of conflict processing for entity merge requests in CONFLICTS state."
+    enqueue(recover_conflict_processing, job_timeout=60 * 12)
