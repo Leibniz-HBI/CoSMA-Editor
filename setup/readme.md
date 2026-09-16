@@ -85,6 +85,24 @@ Afterwards, run `ssh cosmae` from a terminal.
 If there is no error message you connected successfully.
 Open you browser and go to http://127.0.0.1:7070
 
+### SSL Setup
+If you decided to use CoSMA-Editor without SSH proxy you should setup SSL certificate via [Let's Encrypt](https://letsencrypt.org).
+You can do using [getssl](https://github.com/srvrco/getssl).
+After installation of getssl and adding a `cosmae` entry to your SSH config, follow these steps:
+
+* Create an initial configuration `getssl -c ${YOUR_DOMAIN}`
+*	Update `.getssl/${YOUR_DOMIAN}/getssl.cfg`
+    * `CA=https://acme-v02.api.letsencrypt.org`
+      * For testing purposes this should be commented out. Otherwise you risk blacklisting the domain from letsencrypt
+    * ACL=('ssh:dboes-editor:/srv/cosmae/acme-challenge')
+    * DOMAIN_CERT_LOCATION="ssh:cosmae:/srv/cosmae/ssl/cosmae.crt"
+    * DOMAIN_KEY_LOCATION="ssh:dboes-editor:/srv/cosmae/ssl/cosmae.key"
+* Make sure your user has write permissions on /srv/cosmae/acme-challenge and /srv/cosmae/ssl – including all contained files.
+* Run getssl `${YOUR_DOMAIN}`
+  * Include the -d flag for debugging
+*	Add the following con job configuration to your local system `23  5 * * * ${PATH_TO_GETSSL}/getssl -u -a -q`
+
+
 ## Backups
 ### Create
 You can create backups by launching a docker container that mounts the database volume.
