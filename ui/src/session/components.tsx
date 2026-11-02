@@ -44,7 +44,7 @@ import {
 } from './thunks'
 import { Placement } from 'react-bootstrap/esm/types'
 import { FormField } from '../util/form'
-import { debounce } from 'debounce'
+import debounce from 'debounce'
 import { AppDispatch } from '../store'
 import {
     EditSession,

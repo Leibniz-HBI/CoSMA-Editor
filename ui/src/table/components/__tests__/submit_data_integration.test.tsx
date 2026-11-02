@@ -49,7 +49,7 @@ import {
 } from '../../../session/state'
 import { GridCellKind, Item } from '@glideapps/glide-data-grid'
 import userEvent from '@testing-library/user-event'
-import { debounce } from 'debounce'
+import debounce from 'debounce'
 import { newRemote } from '../../../util/state'
 import { newAuthState } from '../../../auth/state'
 import { addResponseSequence, expectFetchCall } from '../../../util/tests/response'

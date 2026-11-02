@@ -6,7 +6,7 @@ import { userSearch } from '../user/thunks'
 import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { AppDispatch } from '../store'
 import { selectSearchResults } from '../user/selectors'
-import { debounce } from 'debounce'
+import debounce from 'debounce'
 import {
     acceptOwnershipRequest,
     deleteOwnershipRequest,

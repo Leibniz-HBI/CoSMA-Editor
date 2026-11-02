@@ -27,7 +27,7 @@ import { useColumn } from '../column_menu/hooks'
 import { ColumnNamePath, ColumnNamePathFromId } from '../column_menu/components/misc'
 import { Entity, EntitySearchResult } from './state'
 import { AppDispatch } from '../store'
-import { debounce } from 'debounce'
+import debounce from 'debounce'
 import { clearEntitySearchResults } from './slice'
 import { useEntity } from './hooks'
 
