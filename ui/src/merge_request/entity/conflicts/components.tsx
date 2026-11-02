@@ -36,7 +36,7 @@ import { ResolutionFormArgs } from '../../conflicts/components'
 import { ReplacementState, Value } from '../../conflicts/state'
 import { Entity } from '../../../entity/state'
 import { Formik } from 'formik'
-import { debounce } from 'debounce'
+import debounce from 'debounce'
 import { FormField } from '../../../util/form'
 
 export function EntityMergeRequestConflictView() {

@@ -40,7 +40,7 @@ import { ArrowLeftCircle } from 'react-bootstrap-icons'
 import { TabView } from '../../util/components/tabs'
 import { CommentHistoryAndForm } from '../../comments/components'
 import { Formik } from 'formik'
-import { debounce } from 'debounce'
+import debounce from 'debounce'
 import { FormField } from '../../util/form'
 import { clearMergeRequest } from './slice'
 

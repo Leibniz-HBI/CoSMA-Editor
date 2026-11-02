@@ -13,7 +13,7 @@ import {
 } from 'react'
 import { FormField } from '../../util/form'
 import { useAppDispatch } from '../../hooks'
-import { debounce } from 'debounce'
+import debounce from 'debounce'
 import { Col, ListGroup, Overlay, ProgressBar, Row } from 'react-bootstrap'
 import { ColumnNamePath, ColumnNamePathFromId } from './misc'
 import { useColumn } from '../hooks'
